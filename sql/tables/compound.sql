@@ -36,7 +36,7 @@ grant select on compound_relations__reftable to "SPARQL";
 create table compound_relations
 (
     compound_from    integer  not null,
-    relation         smallint not null references compound_relations__reftable(id),
+    relation         smallint not null,
     compound_to      integer  not null,
     primary key(compound_from, relation, compound_to)
 );
@@ -89,7 +89,7 @@ grant select on compound_roles__reftable to "SPARQL";
 create table compound_roles
 (
     compound    integer not null,
-    roleid      smallint not null references compound_roles__reftable(id),
+    roleid      smallint not null,
     primary key(compound, roleid)
 );
 
@@ -160,7 +160,7 @@ grant select on compound_type_units__reftable to "SPARQL";
 create table compound_types
 (
     compound    integer not null,
-    unit        smallint not null references compound_type_units__reftable(id),
+    unit        smallint not null,
     type        integer not null,
     primary key(compound, unit, type)
 );

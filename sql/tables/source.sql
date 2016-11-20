@@ -52,8 +52,8 @@ grant select on source_subjects__reftable to "SPARQL";
 
 create table source_subjects
 (
-    source     smallint not null references source_bases(id),
-    subject    smallint not null references source_subjects__reftable(id),
+    source     smallint not null,
+    subject    smallint not null,
     primary key(source, subject)
 );
 
@@ -81,7 +81,7 @@ grant select on source_subjects to "SPARQL";
 create table source_alternatives
 (
     __             smallint identity,
-    source         smallint not null references source_bases(id),
+    source         smallint not null,
     alternative    varchar not null,
     primary key(__)
 );
