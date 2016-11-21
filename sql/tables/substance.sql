@@ -96,43 +96,6 @@ grant select on substance_types to "SPARQL";
 
 --============================================================================--
 
-create table substance_measuregroups
-(
-    substance       integer not null,
-    bioassay        integer not null,
-    measuregroup    integer not null,
-    primary key(substance, bioassay, measuregroup)
-);
-
-
-insert into substance_measuregroups(substance, bioassay, measuregroup)
-select
-    sprintf_inverse(S, 'http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID%d', 0)[0] as substance,
-    coalesce(
-        sprintf_inverse(M, 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID%d', 0),
-        sprintf_inverse(M, 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID%d_%U', 0)
-    )[0] as bioassay,
-    coalesce(
-        -2147483647 + 0 * sprintf_inverse(M, 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID%d', 2)[0],
-        -1 * sprintf_inverse(M, 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID%d_%d', 2)[1],
-        sprintf_inverse(M, 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID%d_PMID%d', 2)[1],
-        0
-    ) as measuregroup
-from (
-    sparql select ?S ?M from pubchem:substance where
-    {
-        ?S obo:BFO_0000056 ?M
-    }
-) as tbl;
-
-
-create index substance_measuregroups__substance on substance_measuregroups(substance);
-create index substance_measuregroups__bioassay on substance_measuregroups(bioassay);
-create index substance_measuregroups__bioassay_measuregroup on substance_measuregroups(bioassay, measuregroup);
-grant select on substance_measuregroups to "SPARQL";
-
---============================================================================--
-
 create table substance_chembl_matches
 (
     substance    integer not null,

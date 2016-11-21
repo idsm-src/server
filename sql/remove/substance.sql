@@ -19,7 +19,6 @@ drop table substance_pdblinks;
 drop table substance_references;
 drop table substance_schembl_matches;
 drop table substance_chembl_matches;
-drop table substance_measuregroups;
 drop table substance_types;
 drop table substance_bases;
 drop view substance_compounds;

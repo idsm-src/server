@@ -3,11 +3,11 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.substance_bases           as substance_bases
     from DB.rdf.substance_compounds       as substance_compounds
     from DB.rdf.substance_types           as substance_types
-    from DB.rdf.substance_measuregroups   as substance_measuregroups
     from DB.rdf.substance_chembl_matches  as substance_chembl_matches
     from DB.rdf.substance_schembl_matches as substance_schembl_matches
     from DB.rdf.substance_references      as substance_references
     from DB.rdf.substance_pdblinks        as substance_pdblinks
+    from DB.rdf.endpoint_bases            as endpoint_bases
 {
     create map:substance as graph pubchem:substance option (exclusive)
     {
@@ -22,8 +22,8 @@ alter quad storage virtrdf:PubchemQuadStorage
         iri:substance(substance_types.substance)
             rdf:type iri:substance_type(substance_types.chebi) .
 
-        iri:substance(substance_measuregroups.substance)
-            obo:BFO_0000056 iri:measuregroup(substance_measuregroups.bioassay, substance_measuregroups.measuregroup) .
+        iri:substance(endpoint_bases.substance)
+            obo:BFO_0000056 iri:measuregroup(endpoint_bases.bioassay, endpoint_bases.measuregroup) .
 
         iri:substance(substance_chembl_matches.substance)
             skos:exactMatch iri:substance_chembl(substance_chembl_matches.chembl) ;
