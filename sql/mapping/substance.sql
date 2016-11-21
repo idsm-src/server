@@ -15,7 +15,7 @@ alter quad storage virtrdf:PubchemQuadStorage
             dcterms:available substance_bases.available ;
             dcterms:source substance_bases.source ;
             dcterms:modified substance_bases.modified .
-            
+
         iri:substance(substance_compounds.substance)
             sio:CHEMINF_000477 iri:compound(substance_compounds.compound) .
 
