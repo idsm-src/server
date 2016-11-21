@@ -5,7 +5,6 @@ create iri class iri:source using
     option (bijection,
         returns "http://rdf.ncbi.nlm.nih.gov/pubchem/source/%U" ).;
 
---------------------------------------------------------------------------------
 
 sparql
 create iri class iri:source_subject using

@@ -5,7 +5,6 @@ create iri class iri:concept using
     option (bijection,
         returns "http://rdf.ncbi.nlm.nih.gov/pubchem/concept/%U" ).;
 
---------------------------------------------------------------------------------
 
 sparql
 create iri class iri:concept_type using
