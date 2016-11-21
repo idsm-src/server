@@ -1,3 +1,7 @@
+log_enable(2);
+
+--============================================================================--
+
 create table source_bases
 (
     id       smallint identity,
