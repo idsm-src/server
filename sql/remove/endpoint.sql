@@ -5,9 +5,9 @@ sparql alter quad storage virtrdf:PubchemQuadStorage
 
 --------------------------------------------------------------------------------
 
-sparql drop iri class iri:endpoint using .;
-sparql drop iri class iri:endpoint_outcome using .;
-sparql drop iri class iri:endpoint_type using .;
+sparql drop iri class iri:endpoint .;
+sparql drop iri class iri:endpoint_outcome .;
+sparql drop iri class iri:endpoint_type .;
 
 --------------------------------------------------------------------------------
 
