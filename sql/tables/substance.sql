@@ -65,9 +65,6 @@ create index substance_bases__modified on substance_bases(modified);
 create index substance_bases__compound on substance_bases(compound);
 grant select on substance_bases to "SPARQL";
 
-create view substance_compounds as select id as substance, compound from substance_bases where compound is not null;
-grant select on substance_compounds TO "SPARQL";
-
 --============================================================================--
 
 create table substance_types

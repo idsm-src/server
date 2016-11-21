@@ -61,14 +61,4 @@ inner join concept_bases as rt1 on rt1.iri=tbl.iri
 inner join concept_bases as rt2 on rt2.iri=tbl.broader;
 
 
-create view concept_imports as
-    select id from concept_bases where iri like 'http://rdf.ncbi.nlm.nih.gov/pubchem/concept/ATC%';
-
-
-create view concept_types as
-    select id, isnull(scheme) as type from concept_bases;
-
-
 grant select on concept_bases to "SPARQL";
-grant select on concept_imports to "SPARQL";
-grant select on concept_types to "SPARQL";

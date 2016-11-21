@@ -1,7 +1,6 @@
 sparql
 alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.substance_bases           as substance_bases
-    from DB.rdf.substance_compounds       as substance_compounds
     from DB.rdf.substance_types           as substance_types
     from DB.rdf.substance_chembl_matches  as substance_chembl_matches
     from DB.rdf.substance_schembl_matches as substance_schembl_matches
@@ -14,10 +13,8 @@ alter quad storage virtrdf:PubchemQuadStorage
         iri:substance(substance_bases.id)
             dcterms:available substance_bases.available ;
             dcterms:source substance_bases.source ;
-            dcterms:modified substance_bases.modified .
-
-        iri:substance(substance_compounds.substance)
-            sio:CHEMINF_000477 iri:compound(substance_compounds.compound) .
+            dcterms:modified substance_bases.modified ;
+            sio:CHEMINF_000477 iri:compound(substance_bases.compound) where (^{substance_bases.}^.compound is not null) .
 
         iri:substance(substance_types.substance)
             rdf:type iri:substance_type(substance_types.chebi) .
