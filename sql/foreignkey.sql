@@ -23,5 +23,10 @@ alter table substance_pdblinks add foreign key (substance) references substance_
 -- endpoint
 alter table endpoint_bases add foreign key (outcome) references endpoint_outcomes__reftable(id);
 alter table endpoint_bases add foreign key (substance) references substance_bases(id);
+alter table endpoint_bases add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
 alter table endpoint_measurements add foreign key (substance, bioassay, measuregroup) references endpoint_bases(substance, bioassay, measuregroup);
 alter table endpoint_references add foreign key (substance, bioassay, measuregroup) references endpoint_bases(substance, bioassay, measuregroup);
+
+-- measuregroup
+alter table measuregroup_proteins add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
+alter table measuregroup_genes add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
