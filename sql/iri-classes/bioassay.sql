@@ -4,14 +4,6 @@ create iri class iri:bioassay "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID%
 
 
 sparql
-create iri class iri:bioassay_data_type using
-    function db.rdf.iri_bioassay_data_type (in id integer) returns varchar,
-    function db.rdf.iri_bioassay_data_type_INVERSE (in id varchar) returns integer
-    option (bijection,
-        returns "http://semanticscience.org/resource/SIO_%d" ).;
-
-
-sparql
 create iri class iri:bioassay_data using
     function db.rdf.iri_bioassay_data (in id1 integer, in id2 integer) returns varchar,
     function db.rdf.iri_bioassay_data_INV_1 (in id varchar) returns integer,

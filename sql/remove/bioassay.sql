@@ -6,13 +6,10 @@ sparql alter quad storage virtrdf:PubchemQuadStorage
 --------------------------------------------------------------------------------
 
 sparql drop iri class iri:bioassay .;
-sparql drop iri class iri:bioassay_data_type .;
 sparql drop iri class iri:bioassay_data .;
 
 --------------------------------------------------------------------------------
 
-drop function iri_bioassay_data_type;
-drop function iri_bioassay_data_type_INVERSE;
 drop function iri_bioassay_data;
 drop function iri_bioassay_data_INV_1;
 drop function iri_bioassay_data_INV_2;

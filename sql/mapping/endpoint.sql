@@ -12,7 +12,7 @@ alter quad storage virtrdf:PubchemQuadStorage
 
         iri:endpoint(endpoint_measurements.substance, endpoint_measurements.bioassay, endpoint_measurements.measuregroup)
             sio:has-unit obo:UO_0000064 ;
-            rdf:type iri:endpoint_type(endpoint_measurements.type) ;
+            rdf:type iri:bao(endpoint_measurements.type) ;
             rdfs:label endpoint_measurements.label ;
             sio:has-value endpoint_measurements.value .
 

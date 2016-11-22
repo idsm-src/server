@@ -98,27 +98,3 @@ create function iri_endpoint_outcome_INVERSE (in iri_value varchar) returns inte
 
 grant execute on iri_endpoint_outcomes to "SPARQL";
 grant execute on iri_endpoint_outcomes_INVERSE to "SPARQL";
-
---------------------------------------------------------------------------------
-
-create function iri_endpoint_type(in type integer) returns varchar
-{
-    vectored;
-    return sprintf('http://www.bioassayontology.org/bao#BAO_%07d', type);
-};
-
-create function iri_endpoint_type_INVERSE (in id varchar) returns integer
-{
-    vectored;
-
-    declare parts any;
-    parts := sprintf_inverse(id, 'http://www.bioassayontology.org/bao#BAO_%d', 0);
-
-    if (parts is not null)
-        return parts[0];
-
-    return null;
-};
-
-grant execute on iri_endpoint_type to "SPARQL";
-grant execute on iri_endpoint_type_INVERSE to "SPARQL";

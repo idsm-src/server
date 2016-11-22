@@ -7,7 +7,6 @@ sparql alter quad storage virtrdf:PubchemQuadStorage
 
 sparql drop iri class iri:endpoint .;
 sparql drop iri class iri:endpoint_outcome .;
-sparql drop iri class iri:endpoint_type .;
 
 --------------------------------------------------------------------------------
 
@@ -17,8 +16,6 @@ drop function iri_endpoint_INV_2;
 drop function iri_endpoint_INV_3;
 drop function iri_endpoint_outcome;
 drop function iri_endpoint_outcome_INVERSE;
-drop function iri_endpoint_type;
-drop function iri_endpoint_type_INVERSE;
 
 --------------------------------------------------------------------------------
 

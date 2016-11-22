@@ -15,7 +15,7 @@ alter quad storage virtrdf:PubchemQuadStorage
             bao:BAO_0000209 iri:measuregroup(bioassay_measuregroups.bioassay, bioassay_measuregroups.measuregroup) .
 
         iri:bioassay_data(bioassay_data.bioassay, bioassay_data.type)
-            rdf:type iri:bioassay_data_type(bioassay_data.type) ;
+            rdf:type iri:sio(bioassay_data.type) ;
             sio:is-attribute-of iri:bioassay(bioassay_data.bioassay) ;
             sio:has-value bioassay_data.value .
     }.

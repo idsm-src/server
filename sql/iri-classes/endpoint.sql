@@ -17,11 +17,3 @@ create iri class iri:endpoint_outcome using
     function db.rdf.iri_endpoint_outcome_INVERSE (in id varchar) returns integer
     option (bijection,
         returns "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#%U" ).;
-
-
-sparql
-create iri class iri:endpoint_type using
-    function db.rdf.iri_endpoint_type (in id integer) returns varchar,
-    function db.rdf.iri_endpoint_type_INVERSE (in id varchar) returns integer
-    option (bijection,
-        returns "http://www.bioassayontology.org/bao#BAO_%d" ).;

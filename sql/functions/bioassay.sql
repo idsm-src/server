@@ -1,27 +1,3 @@
-create function iri_bioassay_data_type(in type integer) returns varchar
-{
-    vectored;
-    return sprintf('http://semanticscience.org/resource/SIO_%06d', type);
-};
-
-create function iri_bioassay_data_type_INVERSE (in id varchar) returns integer
-{
-    vectored;
-
-    declare parts any;
-    parts := sprintf_inverse(id, 'http://semanticscience.org/resource/SIO_%d', 0);
-
-    if (parts is not null)
-        return parts[0];
-
-    return null;
-};
-
-grant execute on iri_bioassay_data_type to "SPARQL";
-grant execute on iri_bioassay_data_type_INVERSE to "SPARQL";
-
---------------------------------------------------------------------------------
-
 create function iri_bioassay_data (in bioassay integer, in type integer) returns varchar
 {
     vectored;
