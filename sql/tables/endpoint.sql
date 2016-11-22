@@ -70,7 +70,7 @@ create table endpoint_measurements
     measuregroup    integer not null,
     type            smallint not null,
     value           float not null,
-    label           varchar not null,
+    label           nvarchar not null,
     primary key(substance, bioassay, measuregroup)
 );
 
