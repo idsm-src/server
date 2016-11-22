@@ -22,6 +22,7 @@ drop function iri_endpoint_type_INVERSE;
 
 --------------------------------------------------------------------------------
 
+drop table bioassay_measuregroups;
 drop table endpoint_references;
 drop table endpoint_measurements;
 drop table endpoint_bases;

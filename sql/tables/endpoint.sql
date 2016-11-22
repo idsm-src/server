@@ -149,3 +149,21 @@ create index endpoint_references__bioassay_measuregroup on endpoint_references(b
 create index endpoint_references__substance_bioassay_measuregroup on endpoint_references(substance, bioassay, measuregroup);
 create index endpoint_references__reference on endpoint_references(reference);
 grant select on endpoint_references TO "SPARQL";
+
+--============================================================================--
+
+-- Note: The table is used by bioassays, but based on endpoint data.
+create table bioassay_measuregroups
+(
+    bioassay        integer not null,
+    measuregroup    integer not null,
+    primary key(bioassay, measuregroup)
+);
+
+
+insert into bioassay_measuregroups(bioassay, measuregroup)
+select distinct bioassay, measuregroup from endpoint_bases;
+
+
+create index bioassay_measuregroups__bioassay on bioassay_measuregroups(bioassay);
+grant select on bioassay_measuregroups to "SPARQL";
