@@ -30,3 +30,7 @@ alter table endpoint_references add foreign key (substance, bioassay, measuregro
 -- measuregroup
 alter table measuregroup_proteins add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
 alter table measuregroup_genes add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
+
+-- inchikey
+alter table inchikey_subjects add foreign key (inchikey) references inchikey_bases(id);
+alter table inchikey_compounds add foreign key (inchikey) references inchikey_bases(id);
