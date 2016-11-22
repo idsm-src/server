@@ -4,8 +4,8 @@ log_enable(2);
 
 create table compound_sdfiles_gzip
 (
-    id      integer not null,
-    sdf_gz  varchar not null,
+    id        integer not null,
+    sdf_gz    varchar not null,
     primary key(id)
 );
 

@@ -115,7 +115,7 @@ create table endpoint_references
     substance       integer not null,
     bioassay        integer not null,
     measuregroup    integer not null,
-    reference        integer not null,
+    reference       integer not null,
     primary key(substance, bioassay, measuregroup, reference)
 );
 

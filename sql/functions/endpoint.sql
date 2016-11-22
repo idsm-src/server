@@ -27,7 +27,7 @@ create function iri_endpoint_INV_1 (in id varchar) returns integer
     if (parts is not null)
         return parts[0];
 
-    return NULL;
+    return null;
 };
 
 create function iri_endpoint_INV_2 (in id varchar) returns integer
@@ -115,11 +115,9 @@ create function iri_endpoint_type_INVERSE (in id varchar) returns integer
     parts := sprintf_inverse(id, 'http://www.bioassayontology.org/bao#BAO_%d', 0);
 
     if (parts is not null)
-    {
         return parts[0];
-    }
 
-    return NULL;
+    return null;
 };
 
 grant execute on iri_endpoint_type to "SPARQL";
