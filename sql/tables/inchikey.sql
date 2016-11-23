@@ -21,7 +21,6 @@ from (
 ) as tbl;
 
 
-create unique index inchikey_bases__inchikey on inchikey_bases(inchikey);
 grant select on inchikey_bases to "SPARQL";
 
 --============================================================================--
