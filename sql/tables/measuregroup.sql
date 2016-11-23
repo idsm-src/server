@@ -2,6 +2,20 @@ log_enable(2);
 
 --============================================================================--
 
+-- workaround: add missing sources
+insert into source_bases(iri)
+select
+    tbl.R as iri
+from (
+    sparql select distinct (str(str(?R)) as ?R) from pubchem:measuregroup where
+    {
+        ?S dcterms:source ?R
+    }
+) as tbl
+left join source_bases as rt2 on rt2.iri = tbl.R where rt2.id is null;
+
+--------------------------------------------------------------------------------
+
 create table measuregroup_bases
 (
     bioassay        integer not null,

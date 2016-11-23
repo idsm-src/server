@@ -2,6 +2,20 @@ log_enable(2);
 
 --============================================================================--
 
+-- workaround: add missing sources
+insert into source_bases(iri)
+select
+    tbl.R as iri
+from (
+    sparql select distinct (str(str(?R)) as ?R) from pubchem:substance where
+    {
+        ?S dcterms:source ?R
+    }
+) as tbl
+left join source_bases as rt2 on rt2.iri = tbl.R where rt2.id is null;
+
+--------------------------------------------------------------------------------
+
 create table substance_bases
 (
     id           integer not null,
@@ -58,6 +72,17 @@ from (
     }
 ) as tbl;
 
+
+-- add missing ...
+insert soft substance_bases(id)
+select
+    sprintf_inverse(S, 'http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID%d', 0)[0] as id
+from (
+    sparql select distinct ?S from pubchem:substance where
+    {
+        ?S cito:isDiscussedBy []
+    }
+) as tbl;
 
 create index substance_bases__source on substance_bases(source);
 create index substance_bases__available on substance_bases(available);
