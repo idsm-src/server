@@ -11,7 +11,7 @@ alter quad storage virtrdf:PubchemQuadStorage
             sio:has-value inchikey_bases.inchikey .
 
         iri:inchikey(inchikey_compounds.inchikey)
-            sio:is-attribute-of iri:substance(inchikey_compounds.compound) .
+            sio:is-attribute-of iri:compound(inchikey_compounds.compound) .
 
         iri:inchikey(inchikey_subjects.inchikey)
             dcterms:subject iri:mesh(inchikey_subjects.subject) .
