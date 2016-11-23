@@ -42,3 +42,6 @@ alter table synonym_compounds add foreign key (synonym) references synonym_bases
 alter table synonym_mesh_subjects add foreign key (synonym) references synonym_bases(id);
 alter table synonym_concept_subjects add foreign key (synonym) references synonym_bases(id);
 alter table synonym_concept_subjects add foreign key (subject) references concept_bases(id);
+
+-- conserveddomain
+alter table conserveddomain_references add foreign key (domain) references  conserveddomain_bases(id);
