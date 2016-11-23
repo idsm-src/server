@@ -19,27 +19,3 @@ create function iri_inchikey_INVERSE (in iri_value varchar) returns integer
 
 grant execute on iri_inchikey to "SPARQL";
 grant execute on iri_inchikey_INVERSE to "SPARQL";
-
---------------------------------------------------------------------------------
-
-create function iri_inchikey_subject(in type integer) returns varchar
-{
-    vectored;
-    return sprintf('http://id.nlm.nih.gov/mesh/M%07d', type);
-};
-
-create function iri_inchikey_subject_INVERSE (in id varchar) returns integer
-{
-    vectored;
-
-    declare parts any;
-    parts := sprintf_inverse(id, 'http://id.nlm.nih.gov/mesh/M%d', 0);
-
-    if (parts is not null)
-        return parts[0];
-
-    return null;
-};
-
-grant execute on iri_inchikey_subject to "SPARQL";
-grant execute on iri_inchikey_subject_INVERSE to "SPARQL";
