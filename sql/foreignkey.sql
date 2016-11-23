@@ -14,10 +14,10 @@ alter table source_alternatives add foreign key (source) references source_bases
 
 -- substance
 alter table substance_bases add foreign key (source) references source_bases(id);
-alter table substance_types add foreign key (source) references source_bases(id);
+alter table substance_types add foreign key (substance) references substance_bases(id);
 alter table substance_chembl_matches add foreign key (substance) references substance_bases(id);
 alter table substance_schembl_matches add foreign key (substance) references substance_bases(id);
-alter table substance_references add foreign key (source) references source_bases(id);
+alter table substance_references add foreign key (substance) references substance_bases(id);
 alter table substance_pdblinks add foreign key (substance) references substance_bases(id);
 
 -- endpoint
