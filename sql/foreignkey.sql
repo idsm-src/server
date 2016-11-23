@@ -34,3 +34,11 @@ alter table measuregroup_genes add foreign key (bioassay, measuregroup) referenc
 -- inchikey
 alter table inchikey_subjects add foreign key (inchikey) references inchikey_bases(id);
 alter table inchikey_compounds add foreign key (inchikey) references inchikey_bases(id);
+
+-- synonym
+alter table synonym_values add foreign key (synonym) references synonym_bases(id);
+alter table synonym_types add foreign key (synonym) references synonym_bases(id);
+alter table synonym_compounds add foreign key (synonym) references synonym_bases(id);
+alter table synonym_mesh_subjects add foreign key (synonym) references synonym_bases(id);
+alter table synonym_concept_subjects add foreign key (synonym) references synonym_bases(id);
+alter table synonym_concept_subjects add foreign key (subject) references concept_bases(id);
