@@ -45,3 +45,9 @@ alter table synonym_concept_subjects add foreign key (subject) references concep
 
 -- conserveddomain
 alter table conserveddomain_references add foreign key (domain) references  conserveddomain_bases(id);
+
+-- biosystem
+alter table biosystem_bases add foreign key (source) references  source_bases(id);
+alter table biosystem_components add foreign key (biosystem) references  biosystem_bases(id);
+alter table biosystem_references add foreign key (biosystem) references  biosystem_bases(id);
+alter table biosystem_matches add foreign key (biosystem) references  biosystem_bases(id);
