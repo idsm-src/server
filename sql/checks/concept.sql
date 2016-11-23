@@ -26,3 +26,11 @@ select distinct ?I from pubchem:concept where
     ?S <http://purl.org/pav/importedFrom> ?I
     filter(?I != source:WHO)
 };
+
+sparql
+select distinct ?S from pubchem:concept where
+{
+    ?S rdf:type skos:ConceptScheme
+    filter(?S != concept:ATC)
+    filter(?S != concept:SubstanceCategorization)
+};
