@@ -105,7 +105,7 @@ where sprintf_inverse(E, 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID
 create index endpoint_measurements__substance on endpoint_measurements(substance);
 create index endpoint_measurements__bioassay on endpoint_measurements(bioassay);
 create index endpoint_measurements__bioassay_measuregroup on endpoint_measurements(bioassay, measuregroup);
-create bitmap index bendpoint_measurements__type on endpoint_measurements(type);
+create bitmap index endpoint_measurements__type on endpoint_measurements(type);
 grant select on endpoint_measurements to "SPARQL";
 
 --============================================================================--
