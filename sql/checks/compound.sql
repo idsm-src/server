@@ -33,3 +33,11 @@ select distinct ?R from pubchem:compound where
     ?S obo:has-role ?R
     filter(?R != vocab:FDAApprovedDrugs)
 };
+
+sparql
+select distinct ?T from pubchem:compound where
+{
+    ?S vocab:is_active_ingredient_of ?T .
+    filter(! strstarts(str(?T), "http://purl.bioontology.org/ontology/SNOMEDCT/"))
+    filter(! strstarts(str(?T), "http://purl.bioontology.org/ontology/NDFRT/N"))
+};

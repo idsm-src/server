@@ -1,10 +1,11 @@
 sparql
 alter quad storage virtrdf:PubchemQuadStorage
-    from DB.rdf.compound_bases      as compound_bases
-    from DB.rdf.compound_relations  as compound_relations
-    from DB.rdf.compound_roles      as compound_roles
-    from DB.rdf.compound_biosystems as compound_biosystems
-    from DB.rdf.compound_types      as compound_types
+    from DB.rdf.compound_bases              as compound_bases
+    from DB.rdf.compound_relations          as compound_relations
+    from DB.rdf.compound_roles              as compound_roles
+    from DB.rdf.compound_biosystems         as compound_biosystems
+    from DB.rdf.compound_types              as compound_types
+    from DB.rdf.compound_active_ingredients as compound_active_ingredients
 {
     create map:compound as graph pubchem:compound option (exclusive)
     {
@@ -27,5 +28,8 @@ alter quad storage virtrdf:PubchemQuadStorage
 
         iri:compound(compound_types.compound)
             rdf:type iri:compound_type(compound_types.unit, compound_types.type) .
+
+        iri:compound(compound_active_ingredients.compound)
+            vocab:is_active_ingredient_of iri:compound_type(compound_active_ingredients.unit, compound_active_ingredients.ingredient) .
     }.
 }.;

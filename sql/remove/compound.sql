@@ -24,6 +24,7 @@ drop function iri_compound_type_INV_2;
 --------------------------------------------------------------------------------
 
 drop view compound_bases;
+drop table compound_active_ingredients;
 drop table compound_types;
 drop table compound_type_units__reftable;
 drop table compound_biosystems;

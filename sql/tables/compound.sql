@@ -239,3 +239,47 @@ create index compound_types__compound     on compound_types(compound);
 create bitmap index compound_types__unit  on compound_types(unit);
 create index compound_types__unit_type    on compound_types(unit, type);
 grant select on compound_types to "SPARQL";
+
+--============================================================================--
+
+create table compound_active_ingredients
+(
+    compound      integer not null,
+    unit          smallint not null,
+    ingredient    integer not null,
+    primary key(compound, unit, ingredient)
+);
+
+
+insert into compound_active_ingredients(compound, unit, ingredient)
+select
+    cast(sprintf_inverse(S, 'http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID%d', 0)[0] as integer) as compound,
+    1 as unit,
+    cast(sprintf_inverse(O, 'http://purl.bioontology.org/ontology/SNOMEDCT/%d', 0)[0] as integer) as ingredient
+from (
+    sparql select ?S ?O from pubchem:compound where
+    {
+        ?S vocab:is_active_ingredient_of ?O .
+        filter( strstarts(str(?O), "http://purl.bioontology.org/ontology/SNOMEDCT/"))
+    }
+) as tbl;
+
+
+insert into compound_active_ingredients(compound, unit, ingredient)
+select
+    cast(sprintf_inverse(S, 'http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID%d', 0)[0] as integer) as compound,
+    2 as unit,
+    cast(sprintf_inverse(O, 'http://purl.bioontology.org/ontology/NDFRT/N%d', 0)[0] as integer) as ingredient
+from (
+    sparql select ?S ?O from pubchem:compound where
+    {
+        ?S vocab:is_active_ingredient_of ?O .
+        filter( strstarts(str(?O), "http://purl.bioontology.org/ontology/NDFRT/N"))
+    }
+) as tbl;
+
+
+create index compound_active_ingredients__compound        on compound_active_ingredients(compound);
+create bitmap index compound_active_ingredients__unit     on compound_active_ingredients(unit);
+create index compound_active_ingredients__unit_ingredient on compound_active_ingredients(unit, ingredient);
+grant select on compound_active_ingredients to "SPARQL";
