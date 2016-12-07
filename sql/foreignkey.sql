@@ -60,3 +60,7 @@ alter table reference_discusses_mesh add foreign key (reference) references refe
 alter table reference_discusses_cmesh add foreign key (reference) references reference_bases(id);
 alter table reference_subject_descriptors add foreign key (reference) references reference_bases(id);
 alter table reference_subject_descriptor_qualifiers add foreign key (reference) references reference_bases(id);
+alter table biosystem_references add foreign key (reference) references reference_bases(id);
+alter table conserveddomain_references add foreign key (reference) references reference_bases(id);
+alter table endpoint_references add foreign key (reference) references reference_bases(id);
+alter table substance_references add foreign key (reference) references reference_bases(id);
