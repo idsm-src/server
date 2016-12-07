@@ -64,3 +64,10 @@ alter table biosystem_references add foreign key (reference) references referenc
 alter table conserveddomain_references add foreign key (reference) references reference_bases(id);
 alter table endpoint_references add foreign key (reference) references reference_bases(id);
 alter table substance_references add foreign key (reference) references reference_bases(id);
+
+-- gene
+alter table gene_biosystems add foreign key (gene) references gene_bases(id);
+alter table gene_biosystems add foreign key (biosystem) references biosystem_bases(id);
+alter table gene_alternatives add foreign key (gene) references gene_bases(id);
+alter table gene_references add foreign key (gene) references gene_bases(id);
+alter table gene_references add foreign key (reference) references reference_bases(id);
