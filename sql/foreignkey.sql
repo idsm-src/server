@@ -71,3 +71,4 @@ alter table gene_biosystems add foreign key (biosystem) references biosystem_bas
 alter table gene_alternatives add foreign key (gene) references gene_bases(id);
 alter table gene_references add foreign key (gene) references gene_bases(id);
 alter table gene_references add foreign key (reference) references reference_bases(id);
+alter table measuregroup_genes add foreign key (gene) references gene_bases(id);
