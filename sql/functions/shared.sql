@@ -91,3 +91,89 @@ create function iri_mesh_INVERSE (in id varchar) returns integer
 
 grant execute on iri_mesh to "SPARQL";
 grant execute on iri_mesh_INVERSE to "SPARQL";
+
+--------------------------------------------------------------------------------
+
+create function iri_cmesh(in type integer) returns varchar
+{
+    vectored;
+    return sprintf('http://id.nlm.nih.gov/mesh/C%09d', type);
+};
+
+create function iri_cmesh_INVERSE (in id varchar) returns integer
+{
+    vectored;
+
+    declare parts any;
+    parts := sprintf_inverse(id, 'http://id.nlm.nih.gov/mesh/C%d', 0);
+
+    if (parts is not null)
+        return parts[0];
+
+    return null;
+};
+
+grant execute on iri_cmesh to "SPARQL";
+grant execute on iri_cmesh_INVERSE to "SPARQL";
+
+--------------------------------------------------------------------------------
+
+create function iri_dmesh(in type integer) returns varchar
+{
+    vectored;
+    return sprintf('http://id.nlm.nih.gov/mesh/D%06d', type);
+};
+
+create function iri_dmesh_INVERSE (in id varchar) returns integer
+{
+    vectored;
+
+    declare parts any;
+    parts := sprintf_inverse(id, 'http://id.nlm.nih.gov/mesh/D%d', 0);
+
+    if (parts is not null)
+        return parts[0];
+
+    return null;
+};
+
+grant execute on iri_dmesh to "SPARQL";
+grant execute on iri_dmesh_INVERSE to "SPARQL";
+
+--------------------------------------------------------------------------------
+
+create function iri_dqmesh(in descriptor integer, in qualifier integer) returns varchar
+{
+    vectored;
+    return sprintf('http://id.nlm.nih.gov/mesh/D%06dQ%06d', type, );
+};
+
+create function iri_dqmesh_INV_1 (in id varchar) returns integer
+{
+    vectored;
+
+    declare parts any;
+    parts := sprintf_inverse(id, 'http://id.nlm.nih.gov/mesh/D%dQ%d', 0);
+
+    if (parts is not null)
+        return parts[0];
+
+    return null;
+};
+
+create function iri_dqmesh_INV_2 (in id varchar) returns integer
+{
+    vectored;
+
+    declare parts any;
+    parts := sprintf_inverse(id, 'http://id.nlm.nih.gov/mesh/D%dQ%d', 0);
+
+    if (parts is not null)
+        return parts[1];
+
+    return null;
+};
+
+grant execute on iri_dqmesh to "SPARQL";
+grant execute on iri_dqmesh_INV_1 to "SPARQL";
+grant execute on iri_dqmesh_INV_2 to "SPARQL";

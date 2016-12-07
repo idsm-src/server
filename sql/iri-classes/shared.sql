@@ -28,3 +28,28 @@ create iri class iri:mesh using
     function db.rdf.iri_mesh_INVERSE (in id varchar) returns integer
     option (bijection,
         returns "http://id.nlm.nih.gov/mesh/M%d" ) .;
+
+
+sparql
+create iri class iri:cmesh using
+    function db.rdf.iri_cmesh (in id integer) returns varchar,
+    function db.rdf.iri_cmesh_INVERSE (in id varchar) returns integer
+    option (bijection,
+        returns "http://id.nlm.nih.gov/mesh/C%d" ) .;
+
+
+sparql
+create iri class iri:dmesh using
+    function db.rdf.iri_dmesh (in id integer) returns varchar,
+    function db.rdf.iri_dmesh_INVERSE (in id varchar) returns integer
+    option (bijection,
+        returns "http://id.nlm.nih.gov/mesh/D%d" ) .;
+
+
+sparql
+create iri class iri:dqmesh using
+    function db.rdf.iri_dqmesh (in id1 integer, in id2 integer) returns varchar,
+    function db.rdf.iri_dqmesh_INV_1 (in id varchar) returns integer,
+    function db.rdf.iri_dqmesh_INV_2 (in id varchar) returns integer
+    option (bijection,
+        returns "http://id.nlm.nih.gov/mesh/D%dQ%d" ) .;

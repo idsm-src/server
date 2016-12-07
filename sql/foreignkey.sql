@@ -52,3 +52,11 @@ alter table biosystem_bases add foreign key (source) references  source_bases(id
 alter table biosystem_components add foreign key (biosystem) references  biosystem_bases(id);
 alter table biosystem_references add foreign key (biosystem) references  biosystem_bases(id);
 alter table biosystem_matches add foreign key (biosystem) references  biosystem_bases(id);
+
+-- reference
+alter table reference_bases add foreign key (type) references reference_types__reftable(id);
+alter table reference_citations_long add foreign key (reference) references reference_bases(id);
+alter table reference_discusses_mesh add foreign key (reference) references reference_bases(id);
+alter table reference_discusses_cmesh add foreign key (reference) references reference_bases(id);
+alter table reference_subject_descriptors add foreign key (reference) references reference_bases(id);
+alter table reference_subject_descriptor_qualifiers add foreign key (reference) references reference_bases(id);
