@@ -6,7 +6,6 @@ sparql alter quad storage virtrdf:PubchemQuadStorage
 --------------------------------------------------------------------------------
 
 sparql drop iri class iri:biosystem .;
-sparql drop iri class iri:taxonomy .;
 sparql drop iri class iri:wikipathway .;
 
 --------------------------------------------------------------------------------

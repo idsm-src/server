@@ -34,6 +34,6 @@ alter quad storage virtrdf:PubchemQuadStorage
             cito:isDiscussedBy iri:reference(substance_references.reference) .
 
         iri:substance(substance_pdblinks.substance)
-            pdbo:link_to_pdb iri:substance_pdblink(substance_pdblinks.pdblink) .
+            pdbo:link_to_pdb iri:pdblink(substance_pdblinks.pdblink) .
     }.
 }.;

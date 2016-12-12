@@ -5,6 +5,8 @@ sparql drop iri class iri:mesh .;
 sparql drop iri class iri:cmesh .;
 sparql drop iri class iri:dmesh .;
 sparql drop iri class iri:dqmesh .;
+sparql drop iri class iri:taxonomy .;
+sparql drop iri class iri:pdblink .;
 
 --------------------------------------------------------------------------------
 

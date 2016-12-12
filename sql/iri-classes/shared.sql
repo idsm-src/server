@@ -53,3 +53,13 @@ create iri class iri:dqmesh using
     function db.rdf.iri_dqmesh_INV_2 (in id varchar) returns integer
     option (bijection,
         returns "http://id.nlm.nih.gov/mesh/D%dQ%d" ) .;
+
+
+sparql
+create iri class iri:taxonomy "http://identifiers.org/taxonomy/%d"
+    (in taxonomy integer not null) option (bijection) .;
+
+
+sparql
+create iri class iri:pdblink "http://rdf.wwpdb.org/pdb/%U"
+    (in pdblink integer not null) option (bijection) .;

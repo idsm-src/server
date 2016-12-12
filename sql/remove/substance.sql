@@ -11,7 +11,6 @@ sparql drop iri class iri:substance_chembl .;
 sparql drop iri class iri:substance_ebi_chembl .;
 sparql drop iri class iri:substance_schembl .;
 sparql drop iri class iri:substance_ebi_schembl .;
-sparql drop iri class iri:substance_pdblink .;
 
 --------------------------------------------------------------------------------
 

@@ -26,8 +26,3 @@ create iri class iri:substance_schembl "http://linkedchemistry.info/chembl/chemb
 sparql
 create iri class iri:substance_ebi_schembl "http://rdf.ebi.ac.uk/resource/chembl/molecule/SCHEMBL%d"
     (in ebi_schembl integer not null) option (bijection) .;
-
-
-sparql
-create iri class iri:substance_pdblink "http://rdf.wwpdb.org/pdb/%U"
-    (in pdblink integer not null) option (bijection) .;
