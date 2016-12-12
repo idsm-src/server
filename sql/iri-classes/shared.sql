@@ -62,4 +62,4 @@ create iri class iri:taxonomy "http://identifiers.org/taxonomy/%d"
 
 sparql
 create iri class iri:pdblink "http://rdf.wwpdb.org/pdb/%U"
-    (in pdblink integer not null) option (bijection) .;
+    (in pdblink varchar not null) option (bijection) .;
