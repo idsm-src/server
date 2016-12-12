@@ -76,7 +76,7 @@ inner join source_bases as rt1 on rt1.iri=tbl.source
 inner join source_subjects__reftable as rt2 on rt2.iri=tbl.subject;
 
 
-create index source_subjects__source  on source_subjects(source);
+create index source_subjects__source on source_subjects(source);
 create index source_subjects__subject on source_subjects(subject);
 grant select on source_subjects to "SPARQL";
 
@@ -104,6 +104,6 @@ from (
 inner join source_bases as rt on rt.iri=tbl.source;
 
 
-create index source_alternatives__source  on source_alternatives(source);
+create index source_alternatives__source on source_alternatives(source);
 create index source_alternatives__alternative on source_alternatives(alternative);
 grant select on source_alternatives to "SPARQL";

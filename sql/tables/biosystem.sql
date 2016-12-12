@@ -81,7 +81,7 @@ grant select on biosystem_components to "SPARQL";
 
 create table biosystem_references
 (
-    biosystem       integer not null,
+    biosystem    integer not null,
     reference    integer not null,
     primary key(biosystem, reference)
 );

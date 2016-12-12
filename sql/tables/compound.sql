@@ -65,9 +65,9 @@ from (
 inner join compound_relations__reftable as rt on rt.iri=tbl.p;
 
 
-create index compound_relations__compound_from   on compound_relations(compound_from);
+create index compound_relations__compound_from on compound_relations(compound_from);
 create bitmap index compound_relations__relation on compound_relations(relation);
-create index compound_relations__compound_to     on compound_relations(compound_to);
+create index compound_relations__compound_to on compound_relations(compound_to);
 grant select on compound_relations to "SPARQL";
 
 --============================================================================--
@@ -107,7 +107,7 @@ from (
 inner join compound_roles__reftable as rt on rt.iri=tbl.o;
 
 
-create index compound_roles__compound      on compound_roles(compound);
+create index compound_roles__compound on compound_roles(compound);
 create bitmap index compound_roles__roleid on compound_roles(roleid);
 grant select on compound_roles to "SPARQL";
 
@@ -133,7 +133,7 @@ from (
 ) as tbl;
 
 
-create index compound_biosystems__compound  on compound_biosystems(compound);
+create index compound_biosystems__compound on compound_biosystems(compound);
 create index compound_biosystems__biosystem on compound_biosystems(biosystem);
 grant select on compound_biosystems to "SPARQL";
 
@@ -235,9 +235,9 @@ from (
 ) as tbl;
 
 
-create index compound_types__compound     on compound_types(compound);
-create bitmap index compound_types__unit  on compound_types(unit);
-create index compound_types__unit_type    on compound_types(unit, type);
+create index compound_types__compound on compound_types(compound);
+create bitmap index compound_types__unit on compound_types(unit);
+create index compound_types__unit_type on compound_types(unit, type);
 grant select on compound_types to "SPARQL";
 
 --============================================================================--
@@ -279,7 +279,7 @@ from (
 ) as tbl;
 
 
-create index compound_active_ingredients__compound        on compound_active_ingredients(compound);
-create bitmap index compound_active_ingredients__unit     on compound_active_ingredients(unit);
+create index compound_active_ingredients__compound on compound_active_ingredients(compound);
+create bitmap index compound_active_ingredients__unit on compound_active_ingredients(unit);
 create index compound_active_ingredients__unit_ingredient on compound_active_ingredients(unit, ingredient);
 grant select on compound_active_ingredients to "SPARQL";
