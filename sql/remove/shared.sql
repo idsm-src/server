@@ -10,18 +10,18 @@ sparql drop iri class iri:pdblink .;
 
 --------------------------------------------------------------------------------
 
-create function iri_sio;
-create function iri_sio_INVERSE;
-create function iri_bao;
-create function iri_bao_INVERSE;
-create function iri_cheminf;
-create function iri_cheminf_INVERSE;
-create function iri_mesh;
-create function iri_mesh_INVERSE;
-create function iri_cmesh;
-create function iri_cmesh_INVERSE;
-create function iri_dmesh;
-create function iri_dmesh_INVERSE;
-create function iri_dqmesh;
-create function iri_dqmesh_INV_1;
-create function iri_dqmesh_INV_2;
+drop function iri_sio;
+drop function iri_sio_INVERSE;
+drop function iri_bao;
+drop function iri_bao_INVERSE;
+drop function iri_cheminf;
+drop function iri_cheminf_INVERSE;
+drop function iri_mesh;
+drop function iri_mesh_INVERSE;
+drop function iri_cmesh;
+drop function iri_cmesh_INVERSE;
+drop function iri_dmesh;
+drop function iri_dmesh_INVERSE;
+drop function iri_dqmesh;
+drop function iri_dqmesh_INV_1;
+drop function iri_dqmesh_INV_2;
