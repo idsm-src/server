@@ -63,3 +63,24 @@ create iri class iri:taxonomy "http://identifiers.org/taxonomy/%d"
 sparql
 create iri class iri:pdblink "http://rdf.wwpdb.org/pdb/%U"
     (in pdblink varchar not null) option (bijection) .;
+
+
+sparql
+create iri class iri:go using
+    function db.rdf.iri_go (in id integer) returns varchar,
+    function db.rdf.iri_go_INVERSE (in id varchar) returns integer
+    option (bijection,
+        returns "http://purl.obolibrary.org/obo/GO_%d" ).;
+
+
+sparql
+create iri class iri:pr using
+    function db.rdf.iri_pr (in id integer) returns varchar,
+    function db.rdf.iri_pr_INVERSE (in id varchar) returns integer
+    option (bijection,
+        returns "http://purl.obolibrary.org/obo/PR_%d" ).;
+
+
+sparql
+create iri class iri:uniprot "http://purl.uniprot.org/uniprot/%U"
+    (in uniprot varchar not null) option (bijection) .;

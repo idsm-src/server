@@ -67,11 +67,10 @@ grant select on measuregroup_bases to "SPARQL";
 
 create table measuregroup_proteins
 (
-    __              integer identity,
     bioassay        integer not null,
     measuregroup    integer not null,
-    protein         varchar not null,
-    primary key(__)
+    protein         integer not null,
+    primary key(bioassay, measuregroup, protein)
 );
 
 
@@ -87,15 +86,16 @@ select
         sprintf_inverse(S, 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID%d_PMID%d', 2)[1],
         0
     ) as measuregroup,
-    sprintf_inverse(P, 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/%U', 0)[0] as protein
+    rt.id as protein
 from (
-    sparql select ?S ?P from pubchem:measuregroup where
+    sparql select ?S (str(replace(str(?P), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/", "")) as ?P) from pubchem:measuregroup where
     {
         ?S obo:BFO_0000057 ?P .
         filter(strstarts(str(?P), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"))
         filter(?S != measuregroup:AID493040)
     }
-) as tbl;
+) as tbl
+left join protein_bases as rt on rt.name = tbl.P;
 
 
 create index measuregroup_proteins__bioassay on measuregroup_proteins(bioassay);

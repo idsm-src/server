@@ -30,6 +30,7 @@ alter table endpoint_references add foreign key (substance, bioassay, measuregro
 
 -- measuregroup
 alter table measuregroup_proteins add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
+alter table measuregroup_proteins add foreign key (protein) references protein_bases(id);
 alter table measuregroup_genes add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
 
 -- inchikey
@@ -72,3 +73,24 @@ alter table gene_alternatives add foreign key (gene) references gene_bases(id);
 alter table gene_references add foreign key (gene) references gene_bases(id);
 alter table gene_references add foreign key (reference) references reference_bases(id);
 alter table measuregroup_genes add foreign key (gene) references gene_bases(id);
+
+-- protein
+alter table protein_references add foreign key (protein) references protein_bases(id);
+alter table protein_references add foreign key (reference) references reference_bases(id);
+alter table protein_pdblinks add foreign key (protein) references protein_bases(id);
+alter table protein_similarproteins add foreign key (protein) references protein_bases(id);
+alter table protein_similarproteins add foreign key (similar) references protein_bases(id);
+alter table protein_genes add foreign key (protein) references protein_bases(id);
+-- alter table protein_genes add foreign key (gene) references gene_bases(id);
+alter table protein_closematches add foreign key (protein) references protein_bases(id);
+alter table protein_conserveddomains add foreign key (protein) references protein_bases(id);
+alter table protein_conserveddomains add foreign key (domain) references conserveddomain_bases(id);
+alter table protein_continuantparts add foreign key (protein) references protein_bases(id);
+alter table protein_continuantparts add foreign key (part) references protein_bases(id);
+alter table protein_participates_goes add foreign key (protein) references protein_bases(id);
+alter table protein_participates_biosystems add foreign key (protein) references protein_bases(id);
+alter table protein_participates_biosystems add foreign key (biosystem) references biosystem_bases(id);
+alter table protein_functions add foreign key (protein) references protein_bases(id);
+alter table protein_locations add foreign key (protein) references protein_bases(id);
+alter table protein_types add foreign key (protein) references protein_bases(id);
+alter table protein_complexes add foreign key (protein) references protein_bases(id);

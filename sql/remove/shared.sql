@@ -7,6 +7,9 @@ sparql drop iri class iri:dmesh .;
 sparql drop iri class iri:dqmesh .;
 sparql drop iri class iri:taxonomy .;
 sparql drop iri class iri:pdblink .;
+sparql drop iri class iri:go .;
+sparql drop iri class iri:pr .;
+sparql drop iri class iri:uniprot .;
 
 --------------------------------------------------------------------------------
 
@@ -25,3 +28,7 @@ drop function iri_dmesh_INVERSE;
 drop function iri_dqmesh;
 drop function iri_dqmesh_INV_1;
 drop function iri_dqmesh_INV_2;
+drop function iri_go;
+drop function iri_go_INVERSE;
+drop function iri_pr;
+drop function iri_pr_INVERSE;
