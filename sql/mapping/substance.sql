@@ -1,12 +1,13 @@
 sparql
 alter quad storage virtrdf:PubchemQuadStorage
-    from DB.rdf.substance_bases           as substance_bases
-    from DB.rdf.substance_types           as substance_types
-    from DB.rdf.substance_chembl_matches  as substance_chembl_matches
-    from DB.rdf.substance_schembl_matches as substance_schembl_matches
-    from DB.rdf.substance_references      as substance_references
-    from DB.rdf.substance_pdblinks        as substance_pdblinks
-    from DB.rdf.endpoint_bases            as endpoint_bases
+    from DB.rdf.substance_bases            as substance_bases
+    from DB.rdf.substance_types            as substance_types
+    from DB.rdf.substance_chembl_matches   as substance_chembl_matches
+    from DB.rdf.substance_schembl_matches  as substance_schembl_matches
+    from DB.rdf.substance_references       as substance_references
+    from DB.rdf.substance_pdblinks         as substance_pdblinks
+    from DB.rdf.endpoint_bases             as endpoint_bases
+    from DB.rdf.descriptor_substance_bases as descriptor_substance_bases
 {
     create map:substance as graph pubchem:substance option (exclusive)
     {
@@ -35,5 +36,9 @@ alter quad storage virtrdf:PubchemQuadStorage
 
         iri:substance(substance_pdblinks.substance)
             pdbo:link_to_pdb iri:pdblink(substance_pdblinks.pdblink) .
+
+
+        iri:substance(descriptor_substance_bases.substance)
+            sio:has-attribute iri:descriptor_substance_version(descriptor_substance_bases.substance) .
     }.
 }.;

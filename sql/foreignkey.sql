@@ -94,3 +94,6 @@ alter table protein_functions add foreign key (protein) references protein_bases
 alter table protein_locations add foreign key (protein) references protein_bases(id);
 alter table protein_types add foreign key (protein) references protein_bases(id);
 alter table protein_complexes add foreign key (protein) references protein_bases(id);
+
+-- descriptor-substance
+alter table descriptor_substance_bases add foreign key (substance) references substance_bases(id);
