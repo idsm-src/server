@@ -7,6 +7,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.substance_references       as substance_references
     from DB.rdf.substance_pdblinks         as substance_pdblinks
     from DB.rdf.endpoint_bases             as endpoint_bases
+    from DB.rdf.substance_synonyms         as substance_synonyms
     from DB.rdf.descriptor_substance_bases as descriptor_substance_bases
 {
     create map:substance as graph pubchem:substance option (exclusive)
@@ -36,6 +37,9 @@ alter quad storage virtrdf:PubchemQuadStorage
 
         iri:substance(substance_pdblinks.substance)
             pdbo:link_to_pdb iri:pdblink(substance_pdblinks.pdblink) .
+
+        iri:substance(substance_synonyms.substance)
+            sio:has-attribute iri:synonym(substance_synonyms.synonym) .
 
 
         iri:substance(descriptor_substance_bases.substance)

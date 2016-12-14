@@ -225,3 +225,34 @@ from (
 create index substance_pdblinks__substance on substance_pdblinks(substance);
 create index substance_pdblinks__pdblink on substance_pdblinks(pdblink);
 grant select on substance_pdblinks to "SPARQL";
+
+--============================================================================--
+
+create table substance_synonyms
+(
+    substance    integer not null,
+    synonym      integer not null,
+    primary key(substance, synonym)
+);
+
+
+insert into substance_synonyms(substance, synonym)
+select
+    coalesce(
+        sprintf_inverse(tbl.S, 'http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID%d', 0),
+        sprintf_inverse(tbl.S, 'http://rdf.ncbi.nlm.nih.gov/pubchem/substance/%d', 0)
+    )[0] as substance,
+    rt.id as synonym
+from (
+    sparql select ?S ?A from pubchem:substance where
+    {
+        ?S sio:has-attribute ?A.
+        filter(strstarts(str(?A), "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"))
+    }
+) as tbl
+inner join synonym_bases as rt on rt.md5 = sprintf_inverse(tbl.A, 'http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_%U', 2)[0];
+
+
+create index substance_synonyms__substance on substance_synonyms(substance);
+create index substance_synonyms__synonym on substance_synonyms(synonym);
+grant select on substance_synonyms to "SPARQL";

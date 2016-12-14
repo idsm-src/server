@@ -20,6 +20,8 @@ alter table substance_chembl_matches add foreign key (substance) references subs
 alter table substance_schembl_matches add foreign key (substance) references substance_bases(id);
 alter table substance_references add foreign key (substance) references substance_bases(id);
 alter table substance_pdblinks add foreign key (substance) references substance_bases(id);
+alter table substance_synonyms add foreign key (substance) references substance_bases(id);
+alter table substance_synonyms add foreign key (synonym) references synonym_bases(id);
 
 -- endpoint
 alter table endpoint_bases add foreign key (outcome) references endpoint_outcomes__reftable(id);

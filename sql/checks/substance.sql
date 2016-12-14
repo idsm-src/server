@@ -23,6 +23,14 @@ select distinct ?T from pubchem:substance where
     filter(! strstarts(str(?T), "http://purl.obolibrary.org/obo/CHEBI_"))
 };
 
+sparql
+select ?A from pubchem:substance where
+{
+    ?S sio:has-attribute ?A
+    filter(!strstarts(str(?A), "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"))
+    filter(!strends(str(?A), "_Substance_Version"))
+};
+
 
 -- select probably incorrect references
 sparql

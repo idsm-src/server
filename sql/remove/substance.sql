@@ -14,6 +14,7 @@ sparql drop iri class iri:substance_ebi_schembl .;
 
 --------------------------------------------------------------------------------
 
+drop table substance_synonyms;
 drop table substance_pdblinks;
 drop table substance_references;
 drop table substance_schembl_matches;
