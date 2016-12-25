@@ -40,7 +40,7 @@ xml_set_ns_decl('dcterms', 'http://purl.org/dc/terms/', 2);
 --------------------------------------------------------------------------------
 
 xml_set_ns_decl('iri', 'http://bioinfo.iocb.cz/rdf/quad-storage/linked-data-view/iri-class/pubchem#', 2);
-xml_set_ns_decl('map', 'http://bioinfo.iocb.cz/rdf/quad-storage/linked-data-view/quad-map/pubchem/#', 2);
+xml_set_ns_decl('map', 'http://bioinfo.iocb.cz/rdf/quad-storage/linked-data-view/quad-map/pubchem#', 2);
 xml_set_ns_decl('pubchem', 'http://rdf.ncbi.nlm.nih.gov/pubchem/', 2);
 xml_set_ns_decl('descriptor', 'http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/', 2);
 
