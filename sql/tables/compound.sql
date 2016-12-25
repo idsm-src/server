@@ -2,16 +2,16 @@ log_enable(2);
 
 --============================================================================--
 
-create table compound_sdfiles_gzip
+create table compound_sdfiles_gz
 (
-    id        integer not null,
-    sdf_gz    varchar not null,
-    primary key(id)
+    compound    integer not null,
+    sdf_gz      long varbinary not null,
+    primary key(compound)
 );
 
 
-create view compound_bases as select id, gz_decompress(sdf_gz) as sdf from compound_sdfiles_gzip;
-grant select on compound_bases TO "SPARQL";
+create view compound_sdfiles as select compound, gz_decompress(cast(sdf_gz as varchar)) as sdf from compound_sdfiles_gz;
+grant select on compound_sdfiles TO "SPARQL";
 
 --============================================================================--
 
@@ -283,3 +283,34 @@ create index compound_active_ingredients__compound on compound_active_ingredient
 create bitmap index compound_active_ingredients__unit on compound_active_ingredients(unit);
 create index compound_active_ingredients__unit_ingredient on compound_active_ingredients(unit, ingredient);
 grant select on compound_active_ingredients to "SPARQL";
+
+--============================================================================--
+
+create table compound_bases
+(
+    id    integer not null,
+    primary key(id)
+);
+
+insert into compound_bases(id)
+select compound from compound_sdfiles_gz;
+
+insert replacing compound_bases(id)
+select compound_from from compound_relations;
+
+insert replacing compound_bases(id)
+select compound_to from compound_relations;
+
+insert replacing compound_bases(id)
+select compound from compound_roles;
+
+insert replacing compound_bases(id)
+select compound from compound_biosystems;
+
+insert replacing compound_bases(id)
+select compound from compound_types;
+
+insert replacing compound_bases(id)
+select compound from compound_active_ingredients;
+
+grant select on compound_bases to "SPARQL";

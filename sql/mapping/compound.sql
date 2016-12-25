@@ -1,6 +1,7 @@
 sparql
 alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.compound_bases                                 as compound_bases
+    from DB.rdf.compound_sdfiles                               as compound_sdfiles
     from DB.rdf.compound_relations                             as compound_relations
     from DB.rdf.compound_roles                                 as compound_roles
     from DB.rdf.compound_biosystems                            as compound_biosystems
@@ -20,10 +21,10 @@ alter quad storage virtrdf:PubchemQuadStorage
         iri:compound(compound_bases.id)
             rdf:type sio:SIO_010004 .
 
-        iri:compound_sdfile(compound_bases.id)
+        iri:compound_sdfile(compound_sdfiles.compound)
             rdf:type sio:SIO_011120 ;
-            sio:is-attribute-of iri:compound(compound_bases.id) ;
-            sio:has-value compound_bases.sdf .
+            sio:is-attribute-of iri:compound(compound_sdfiles.compound) ;
+            sio:has-value compound_sdfiles.sdf .
 
         iri:compound(compound_relations.compound_from)
             iri:compound_relation(compound_relations.relation) iri:compound(compound_relations.compound_to) .
