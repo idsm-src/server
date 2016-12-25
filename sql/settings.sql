@@ -44,6 +44,15 @@ xml_set_ns_decl('map', 'http://bioinfo.iocb.cz/rdf/quad-storage/linked-data-view
 xml_set_ns_decl('pubchem', 'http://rdf.ncbi.nlm.nih.gov/pubchem/', 2);
 xml_set_ns_decl('descriptor', 'http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/', 2);
 
+xml_set_ns_decl('map-orchem', 'http://bioinfo.iocb.cz/rdf/quad-storage/linked-data-view/quad-map/orchem#', 2);
+xml_set_ns_decl('orchem', 'http://bioinfo.iocb.cz/rdf/0.9/orchem#', 2);
+xml_set_ns_decl('iri-proc', 'http://bioinfo.iocb.cz/rdf/quad-storage/linked-data-view/iri-class/procedure-calls#', 2);
+xml_set_ns_decl('proc', 'http://bioinfo.iocb.cz/rdf/0.9/procedure-calls#', 2);
+
+xml_set_ns_decl('orchem', 'http://bioinfo.iocb.cz/0.9/orchem#', 2);
+xml_set_ns_decl('template', 'http://bioinfo.iocb.cz/0.9/template#', 2);
+
+--------------------------------------------------------------------------------
 
 sparql
 create quad storage virtrdf:PubchemQuadStorage
