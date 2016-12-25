@@ -17,3 +17,9 @@ ld_dir ('pubchem/RDF/concept' ,'*.ttl.gz', 'http://rdf.ncbi.nlm.nih.gov/pubchem/
 ld_dir ('pubchem/RDF' ,'void.ttl', 'http://rdf.ncbi.nlm.nih.gov/pubchem/void');
 rdf_loader_run();
 checkpoint;
+
+
+
+ld_dir ('base/ontology' ,'*', 'http://bioinfo.iocb.cz/rdf/ontologies');
+rdf_loader_run();
+checkpoint;
