@@ -19,7 +19,9 @@ alter quad storage virtrdf:PubchemQuadStorage
     create map:compound as graph pubchem:compound option (exclusive)
     {
         iri:compound(compound_bases.id)
-            rdf:type sio:SIO_010004 .
+            rdf:type sio:SIO_010004 ;
+            template:itemTemplate "pubchem/Compound.vm" ;
+            template:pageTemplate "pubchem/Compound.vm" .
 
         iri:compound_sdfile(compound_sdfiles.compound)
             rdf:type sio:SIO_011120 ;

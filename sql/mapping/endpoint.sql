@@ -1,8 +1,9 @@
 sparql
 alter quad storage virtrdf:PubchemQuadStorage
-    from DB.rdf.endpoint_bases        as endpoint_bases
-    from DB.rdf.endpoint_measurements as endpoint_measurements
-    from DB.rdf.endpoint_references   as endpoint_references
+    from DB.rdf.endpoint_bases              as endpoint_bases
+    from DB.rdf.endpoint_measurements       as endpoint_measurements
+    from DB.rdf.endpoint_references         as endpoint_references
+    from DB.rdf.endpoint_outcomes__reftable as endpoint_outcomes
 {
     create map:endpoint as graph pubchem:endpoint option (exclusive)
     {
@@ -18,5 +19,10 @@ alter quad storage virtrdf:PubchemQuadStorage
 
         iri:endpoint(endpoint_references.substance, endpoint_references.bioassay, endpoint_references.measuregroup)
             cito:citesAsDataSource iri:reference(endpoint_references.reference) .
+        
+        iri:endpoint_outcome(endpoint_outcomes.id) 
+            rdf:type vocab:PubChemBioAssayOutcomeCategory ;
+            template:itemTemplate "pubchem/PubChemBioAssayOutcomeCategory.vm" ;
+            template:pageTemplate "pubchem/PubChemBioAssayOutcomeCategory.vm" .
     }.
 }.;

@@ -8,6 +8,8 @@ alter quad storage virtrdf:PubchemQuadStorage
     {
         iri:bioassay(bioassay_bases.id)
             rdf:type bao:BAO_0000015 ;
+            template:itemTemplate "pubchem/Bioassay.vm" ;
+            template:pageTemplate "pubchem/Bioassay.vm" ;
             dcterms:title bioassay_bases.title ;
             dcterms:source iri:source(bioassay_bases.source) .
 
