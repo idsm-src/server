@@ -52,6 +52,8 @@ xml_set_ns_decl('proc', 'http://bioinfo.iocb.cz/rdf/0.9/procedure-calls#', 2);
 xml_set_ns_decl('orchem', 'http://bioinfo.iocb.cz/0.9/orchem#', 2);
 xml_set_ns_decl('template', 'http://bioinfo.iocb.cz/0.9/template#', 2);
 
+xml_set_ns_decl('map-template', 'http://bioinfo.iocb.cz/rdf/quad-storage/linked-data-view/quad-map/template#', 2);
+
 --------------------------------------------------------------------------------
 
 sparql
