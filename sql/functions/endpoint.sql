@@ -96,5 +96,5 @@ create function iri_endpoint_outcome_INVERSE (in iri_value varchar) returns inte
     return (select id from endpoint_outcomes__reftable where iri = iri_value);
 };
 
-grant execute on iri_endpoint_outcomes to "SPARQL";
-grant execute on iri_endpoint_outcomes_INVERSE to "SPARQL";
+grant execute on iri_endpoint_outcome to "SPARQL";
+grant execute on iri_endpoint_outcome_INVERSE to "SPARQL";
