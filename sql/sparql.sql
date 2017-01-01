@@ -4,3 +4,4 @@ db..user_set_qualifier ('SPARQL', 'DB');
 
 
 grant execute on DB.DBA.RL_I2ID TO "SPARQL";
+grant execute on DB.DBA.RL_I2ID_NP TO "SPARQL";
