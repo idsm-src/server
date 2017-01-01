@@ -20,6 +20,6 @@ checkpoint;
 
 
 
-ld_dir ('base/ontology' ,'*', 'http://bioinfo.iocb.cz/rdf/ontologies');
+ld_dir ('base/ontology' ,'*', 'http://rdf.ncbi.nlm.nih.gov/pubchem/ontology');
 rdf_loader_run();
 checkpoint;
