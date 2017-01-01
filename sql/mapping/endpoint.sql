@@ -19,8 +19,8 @@ alter quad storage virtrdf:PubchemQuadStorage
 
         iri:endpoint(endpoint_references.substance, endpoint_references.bioassay, endpoint_references.measuregroup)
             cito:citesAsDataSource iri:reference(endpoint_references.reference) .
-        
-        iri:endpoint_outcome(endpoint_outcomes.id) 
+
+        iri:endpoint_outcome(endpoint_outcomes.id)
             rdf:type vocab:PubChemBioAssayOutcomeCategory ;
             template:itemTemplate "pubchem/PubChemBioAssayOutcomeCategory.vm" ;
             template:pageTemplate "pubchem/PubChemBioAssayOutcomeCategory.vm" .
