@@ -1,0 +1,18 @@
+select distinct ?iri where
+{
+    {
+        ?S ?iri ?O .
+        filter(?iri != dcterms:title)
+        filter(?iri != dcterms:source)
+        filter(?iri != bp:organism)
+        filter(?iri != bp:pathwayComponent)
+        filter(?iri != cito:isDiscussedBy)
+        filter(?iri != skos:exactMatch)
+        filter(?iri != rdf:type)
+    }
+    union
+    {
+        ?S rdf:type ?iri .
+        filter(?iri != bp:Pathway)
+    }
+}
