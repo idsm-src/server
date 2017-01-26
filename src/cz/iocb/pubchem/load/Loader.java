@@ -40,7 +40,7 @@ public class Loader
         {
             try (Connection connection = getConnection())
             {
-                try (PreparedStatement insertStatement = connection.prepareStatement("insert into " + sql))
+                try (PreparedStatement insertStatement = connection.prepareStatement(sql))
                 {
                     statement = insertStatement;
                     int count = 0;

@@ -15,7 +15,7 @@ public class Compound extends Loader
         check(model, "compound/check-biosystems.sparql");
 
         new TableLoader(model, patternQuery("?compound obo:BFO_0000056 ?biosystem"),
-                "compound_biosystems(compound, biosystem) values (?,?)")
+                "insert into compound_biosystems(compound, biosystem) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -35,7 +35,7 @@ public class Compound extends Loader
         check(model, "compound/check-components.sparql");
 
         new TableLoader(model, patternQuery("?compound_from sio:CHEMINF_000480 ?compound_to"),
-                "compound_relations(compound_from, relation, compound_to) values (?, 480, ?)")
+                "insert into compound_relations(compound_from, relation, compound_to) values (?, 480, ?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -55,7 +55,7 @@ public class Compound extends Loader
         check(model, "compound/check-drugproducts.sparql");
 
         new TableLoader(model, patternQuery("?compound vocab:is_active_ingredient_of ?ingredient"),
-                "compound_active_ingredients(compound, unit, ingredient) values (?, ?, ?)")
+                "insert into compound_active_ingredients(compound, unit, ingredient) values (?, ?, ?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -90,7 +90,7 @@ public class Compound extends Loader
         check(model, "compound/check-isotopologues.sparql");
 
         new TableLoader(model, patternQuery("?compound_from sio:CHEMINF_000455 ?compound_to"),
-                "compound_relations(compound_from, relation, compound_to) values (?, 455, ?)")
+                "insert into compound_relations(compound_from, relation, compound_to) values (?, 455, ?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -110,7 +110,7 @@ public class Compound extends Loader
         check(model, "compound/check-parents.sparql");
 
         new TableLoader(model, patternQuery("?compound_from vocab:has_parent ?compound_to"),
-                "compound_relations(compound_from, relation, compound_to) values (?, 1024, ?)")
+                "insert into compound_relations(compound_from, relation, compound_to) values (?, 1024, ?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -130,7 +130,7 @@ public class Compound extends Loader
         check(model, "compound/check-same-connectivities.sparql");
 
         new TableLoader(model, patternQuery("?compound_from sio:CHEMINF_000462 ?compound_to"),
-                "compound_relations(compound_from, relation, compound_to) values (?, 462, ?)")
+                "insert into compound_relations(compound_from, relation, compound_to) values (?, 462, ?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -150,7 +150,7 @@ public class Compound extends Loader
         check(model, "compound/check-stereoisomers.sparql");
 
         new TableLoader(model, patternQuery("?compound_from sio:CHEMINF_000461 ?compound_to"),
-                "compound_relations(compound_from, relation, compound_to) values (?, 461, ?)")
+                "insert into compound_relations(compound_from, relation, compound_to) values (?, 461, ?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -170,7 +170,7 @@ public class Compound extends Loader
         check(model, "compound/check-roles.sparql");
 
         new TableLoader(model, patternQuery("?compound obo:has-role vocab:FDAApprovedDrugs"),
-                "compound_roles(compound, roleid) values (?, 0)")
+                "insert into compound_roles(compound, roleid) values (?, 0)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -189,7 +189,7 @@ public class Compound extends Loader
         check(model, "compound/check-types.sparql");
 
         new TableLoader(model, patternQuery("?compound rdf:type ?type"),
-                "compound_types(compound, unit, type) values (?, ?, ?)")
+                "insert into compound_types(compound, unit, type) values (?, ?, ?)")
         {
             @Override
             public void insert() throws SQLException, IOException

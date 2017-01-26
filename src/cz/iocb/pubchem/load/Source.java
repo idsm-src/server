@@ -14,7 +14,8 @@ public class Source extends Loader
     {
         Map<String, Short> map = new HashMap<String, Short>();
 
-        new TableLoader(model, loadQuery("source/bases.sparql"), "source_bases (id, iri, title) values (?,?,?)")
+        new TableLoader(model, loadQuery("source/bases.sparql"),
+                "insert into source_bases (id, iri, title) values (?,?,?)")
         {
             short nextID = 0;
 
@@ -39,7 +40,7 @@ public class Source extends Loader
         Map<String, Short> map = new HashMap<String, Short>();
 
         new TableLoader(model, distinctPatternQuery("[] dcterms:subject ?iri"),
-                "source_subjects__reftable (id, iri) values (?,?)")
+                "insert into source_subjects__reftable (id, iri) values (?,?)")
         {
             short nextID = 0;
 
@@ -62,7 +63,7 @@ public class Source extends Loader
             throws IOException, SQLException
     {
         new TableLoader(model, patternQuery("?source dcterms:subject ?subject"),
-                "source_subjects (source, subject) values (?,?)")
+                "insert into source_subjects (source, subject) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -77,7 +78,7 @@ public class Source extends Loader
     public static void loadAlternatives(Model model, Map<String, Short> sources) throws IOException, SQLException
     {
         new TableLoader(model, patternQuery("?source dcterms:alternative ?alternative"),
-                "source_alternatives (__, source, alternative) values (?, ?,?)")
+                "insert into source_alternatives (__, source, alternative) values (?, ?,?)")
         {
             short nextID = 0;
 

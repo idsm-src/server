@@ -13,7 +13,8 @@ public class Biosystem extends Loader
     {
         Map<String, Short> map = getMapping("source_bases");
 
-        new TableLoader(model, distinctPatternQuery("[] dcterms:source ?source"), "source_bases (id, iri) values (?,?)")
+        new TableLoader(model, distinctPatternQuery("[] dcterms:source ?source"),
+                "insert into source_bases (id, iri) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -40,7 +41,7 @@ public class Biosystem extends Loader
     public static void loadBases(Model model, Map<String, Short> sources) throws IOException, SQLException
     {
         new TableLoader(model, loadQuery("biosystem/bases.sparql"),
-                "biosystem_bases(id, source, title, organism) values (?,?,?,?)")
+                "insert into biosystem_bases(id, source, title, organism) values (?,?,?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -57,7 +58,7 @@ public class Biosystem extends Loader
     public static void loadComponents(Model model) throws IOException, SQLException
     {
         new TableLoader(model, patternQuery("?biosystem bp:pathwayComponent ?component"),
-                "biosystem_components(biosystem, component) values (?,?)")
+                "insert into biosystem_components(biosystem, component) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -72,7 +73,7 @@ public class Biosystem extends Loader
     public static void loadReferences(Model model) throws IOException, SQLException
     {
         new TableLoader(model, patternQuery("?biosystem cito:isDiscussedBy ?reference"),
-                "biosystem_references(biosystem, reference) values (?,?)")
+                "insert into biosystem_references(biosystem, reference) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -87,7 +88,7 @@ public class Biosystem extends Loader
     public static void loadMatches(Model model) throws IOException, SQLException
     {
         new TableLoader(model, patternQuery("?biosystem skos:exactMatch ?wikipathway"),
-                "biosystem_matches(biosystem, wikipathway) values (?,?)")
+                "insert into biosystem_matches(biosystem, wikipathway) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
