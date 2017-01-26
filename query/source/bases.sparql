@@ -1,0 +1,6 @@
+select ?iri ?title where
+{
+    ?iri rdf:type dcterms:Dataset .
+
+    optional { ?iri dcterms:title ?title }
+}
