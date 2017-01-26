@@ -1,0 +1,11 @@
+select distinct ?iri where
+{
+    {
+        ?S ?iri ?O .
+        filter(?iri != obo:BFO_0000056)
+    }
+    union
+    {
+        ?S rdf:type ?iri .
+    }
+}
