@@ -1,0 +1,5 @@
+select ?iri ?label where
+{
+    ?iri rdf:type ?type.
+    optional { ?iri skos:prefLabel ?label }
+}
