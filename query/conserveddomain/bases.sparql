@@ -1,0 +1,6 @@
+select ?domain ?title ?abstract where
+{
+    ?domain rdf:type obo:SO_0000417 .
+    optional { ?domain dcterms:title ?title }
+    optional { ?domain dcterms:abstract ?abstract }
+}
