@@ -12,13 +12,13 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import cz.iocb.pubchem.load.common.Loader;
-import cz.iocb.pubchem.load.common.SimpleFileTableLoader;
+import cz.iocb.pubchem.load.common.PubchemFileTableLoader;
 
 
 
 public class CompoundDescriptor extends Loader
 {
-    private static abstract class DescriptorSimpleFileTableLoader extends SimpleFileTableLoader
+    private static abstract class DescriptorSimpleFileTableLoader extends PubchemFileTableLoader
     {
         private static final BitSet ids = new BitSet();
         protected final ArrayList<Integer> idList = new ArrayList<Integer>(Loader.batchSize);
@@ -62,20 +62,6 @@ public class CompoundDescriptor extends Loader
 
             idList.clear();
             idList.ensureCapacity(Loader.batchSize);
-        }
-
-
-        @Override
-        public void prefix(String name, String iri) throws SQLException, IOException
-        {
-            if(name.equals("xsd:") && !iri.equals("<http://www.w3.org/2001/XMLSchema#>"))
-                throw new IOException();
-
-            if(name.equals("sio:") && !iri.equals("<http://semanticscience.org/resource/>"))
-                throw new IOException();
-
-            if(name.equals("descriptor:") && !iri.equals("<http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/>"))
-                throw new IOException();
         }
     }
 
@@ -158,7 +144,7 @@ public class CompoundDescriptor extends Loader
         BufferedReader reader = getReader(file);
         LinkedHashMap<Integer, String> bigValues = new LinkedHashMap<Integer, String>();
 
-        new SimpleFileTableLoader(reader, "insert into " + table + "(compound, " + field + ") values (?,?)")
+        new PubchemFileTableLoader(reader, "insert into " + table + "(compound, " + field + ") values (?,?)")
         {
             @Override
             public void insert(String subject, String predicate, String object) throws SQLException, IOException
@@ -178,16 +164,6 @@ public class CompoundDescriptor extends Loader
                     setValue(1, compound);
                     setValue(2, value);
                 }
-            }
-
-            @Override
-            public void prefix(String name, String iri) throws SQLException, IOException
-            {
-                if(name.equals("sio:") && !iri.equals("<http://semanticscience.org/resource/>"))
-                    throw new IOException();
-
-                if(name.equals("descriptor:") && !iri.equals("<http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/>"))
-                    throw new IOException();
             }
         }.load();
 
