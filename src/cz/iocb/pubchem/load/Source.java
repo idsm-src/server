@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.pubchem.load.common.Loader;
+import cz.iocb.pubchem.load.common.ModelTableLoader;
 
 
 
@@ -14,7 +16,7 @@ public class Source extends Loader
     {
         Map<String, Short> map = new HashMap<String, Short>();
 
-        new TableLoader(model, loadQuery("source/bases.sparql"),
+        new ModelTableLoader(model, loadQuery("source/bases.sparql"),
                 "insert into source_bases (id, iri, title) values (?,?,?)")
         {
             short nextID = 0;
@@ -29,7 +31,7 @@ public class Source extends Loader
                 setValue(2, iri);
                 setValue(3, getLiteralValue("title"));
             }
-        };
+        }.load();
 
         return map;
     }
@@ -39,7 +41,7 @@ public class Source extends Loader
     {
         Map<String, Short> map = new HashMap<String, Short>();
 
-        new TableLoader(model, distinctPatternQuery("[] dcterms:subject ?iri"),
+        new ModelTableLoader(model, distinctPatternQuery("[] dcterms:subject ?iri"),
                 "insert into source_subjects__reftable (id, iri) values (?,?)")
         {
             short nextID = 0;
@@ -53,7 +55,7 @@ public class Source extends Loader
                 setValue(1, nextID++);
                 setValue(2, iri);
             }
-        };
+        }.load();
 
         return map;
     }
@@ -62,7 +64,7 @@ public class Source extends Loader
     public static void loadSubjects(Model model, Map<String, Short> sources, Map<String, Short> subjects)
             throws IOException, SQLException
     {
-        new TableLoader(model, patternQuery("?source dcterms:subject ?subject"),
+        new ModelTableLoader(model, patternQuery("?source dcterms:subject ?subject"),
                 "insert into source_subjects (source, subject) values (?,?)")
         {
             @Override
@@ -71,13 +73,13 @@ public class Source extends Loader
                 setValue(1, getMapID("source", sources));
                 setValue(2, getMapID("subject", subjects));
             }
-        };
+        }.load();
     }
 
 
     public static void loadAlternatives(Model model, Map<String, Short> sources) throws IOException, SQLException
     {
-        new TableLoader(model, patternQuery("?source dcterms:alternative ?alternative"),
+        new ModelTableLoader(model, patternQuery("?source dcterms:alternative ?alternative"),
                 "insert into source_alternatives (__, source, alternative) values (?, ?,?)")
         {
             short nextID = 0;
@@ -89,13 +91,13 @@ public class Source extends Loader
                 setValue(2, getMapID("source", sources));
                 setValue(3, getLiteralValue("alternative"));
             }
-        };
+        }.load();
     }
 
 
     public static void load(String file) throws IOException, SQLException
     {
-        Model model = loadModel(file);
+        Model model = getModel(file);
 
         check(model, "source/check.sparql");
         Map<String, Short> sources = loadBases(model);

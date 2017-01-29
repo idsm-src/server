@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.pubchem.load.common.Loader;
+import cz.iocb.pubchem.load.common.ModelTableLoader;
 
 
 
@@ -13,7 +15,7 @@ public class Biosystem extends Loader
     {
         Map<String, Short> map = getMapping("source_bases");
 
-        new TableLoader(model, distinctPatternQuery("[] dcterms:source ?source"),
+        new ModelTableLoader(model, distinctPatternQuery("[] dcterms:source ?source"),
                 "insert into source_bases (id, iri) values (?,?)")
         {
             @Override
@@ -32,7 +34,7 @@ public class Biosystem extends Loader
                     setValue(2, iri);
                 }
             }
-        };
+        }.load();
 
         return map;
     }
@@ -40,7 +42,7 @@ public class Biosystem extends Loader
 
     public static void loadBases(Model model, Map<String, Short> sources) throws IOException, SQLException
     {
-        new TableLoader(model, loadQuery("biosystem/bases.sparql"),
+        new ModelTableLoader(model, loadQuery("biosystem/bases.sparql"),
                 "insert into biosystem_bases(id, source, title, organism) values (?,?,?,?)")
         {
             @Override
@@ -51,13 +53,13 @@ public class Biosystem extends Loader
                 setValue(3, getLiteralValue("title"));
                 setValue(4, getIntID("organism", "http://identifiers.org/taxonomy/"));
             }
-        };
+        }.load();
     }
 
 
     public static void loadComponents(Model model) throws IOException, SQLException
     {
-        new TableLoader(model, patternQuery("?biosystem bp:pathwayComponent ?component"),
+        new ModelTableLoader(model, patternQuery("?biosystem bp:pathwayComponent ?component"),
                 "insert into biosystem_components(biosystem, component) values (?,?)")
         {
             @Override
@@ -66,13 +68,13 @@ public class Biosystem extends Loader
                 setValue(1, getIntID("biosystem", "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID"));
                 setValue(2, getIntID("component", "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID"));
             }
-        };
+        }.load();
     }
 
 
     public static void loadReferences(Model model) throws IOException, SQLException
     {
-        new TableLoader(model, patternQuery("?biosystem cito:isDiscussedBy ?reference"),
+        new ModelTableLoader(model, patternQuery("?biosystem cito:isDiscussedBy ?reference"),
                 "insert into biosystem_references(biosystem, reference) values (?,?)")
         {
             @Override
@@ -81,13 +83,13 @@ public class Biosystem extends Loader
                 setValue(1, getIntID("biosystem", "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID"));
                 setValue(2, getIntID("reference", "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID"));
             }
-        };
+        }.load();
     }
 
 
     public static void loadMatches(Model model) throws IOException, SQLException
     {
-        new TableLoader(model, patternQuery("?biosystem skos:exactMatch ?wikipathway"),
+        new ModelTableLoader(model, patternQuery("?biosystem skos:exactMatch ?wikipathway"),
                 "insert into biosystem_matches(biosystem, wikipathway) values (?,?)")
         {
             @Override
@@ -96,13 +98,13 @@ public class Biosystem extends Loader
                 setValue(1, getIntID("biosystem", "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID"));
                 setValue(2, getIntID("wikipathway", "http://identifiers.org/wikipathways/WP"));
             }
-        };
+        }.load();
     }
 
 
     public static void load(String file) throws IOException, SQLException
     {
-        Model model = loadModel(file);
+        Model model = getModel(file);
 
         check(model, "biosystem/check.sparql");
         Map<String, Short> sources = loadSources(model);

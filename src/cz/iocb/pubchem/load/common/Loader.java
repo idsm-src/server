@@ -1,24 +1,27 @@
-package cz.iocb.pubchem.load;
+package cz.iocb.pubchem.load.common;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.zip.GZIPInputStream;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -29,135 +32,6 @@ import virtuoso.jdbc4.VirtuosoConnectionPoolDataSource;
 
 public class Loader
 {
-    abstract protected static class TableLoader
-    {
-        protected QuerySolution solution = null;
-        protected PreparedStatement statement = null;
-        protected boolean set;
-
-
-        public TableLoader(Model model, String sparql, String sql) throws SQLException, IOException
-        {
-            try (Connection connection = getConnection())
-            {
-                try (PreparedStatement insertStatement = connection.prepareStatement(sql))
-                {
-                    statement = insertStatement;
-                    int count = 0;
-
-                    Query query = QueryFactory.create(getPrefixes() + sparql);
-
-                    try (QueryExecution qexec = QueryExecutionFactory.create(query, model))
-                    {
-                        ResultSet results = qexec.execSelect();
-                        while(results.hasNext())
-                        {
-                            solution = results.nextSolution();
-                            set = false;
-
-                            insert();
-
-                            if(!set)
-                                continue;
-
-
-                            insertStatement.addBatch();
-
-                            if(++count % batchSize == 0)
-                                insertStatement.executeBatch();
-                        }
-                    }
-
-                    if(count % batchSize != 0)
-                        insertStatement.executeBatch();
-                }
-            }
-        }
-
-
-        public abstract void insert() throws SQLException, IOException;
-
-
-        protected String getIRI(String name)
-        {
-            Resource resource = solution.getResource(name);
-
-            if(resource == null)
-                return null;
-
-            return resource.getURI();
-        }
-
-
-        protected Integer getIntID(String name, String prefix) throws IOException
-        {
-            Resource resource = solution.getResource(name);
-
-            if(resource == null)
-                return null;
-
-            String value = resource.getURI();
-
-            if(!value.startsWith(prefix))
-                throw new IOException();
-
-            return Integer.parseInt(value.substring(prefix.length()));
-        }
-
-
-        protected Short getMapID(String name, Map<String, Short> map)
-        {
-            Resource resource = solution.getResource(name);
-
-            if(resource == null)
-                return null;
-
-            return map.get(resource.getURI());
-        }
-
-
-        protected String getLiteralValue(String name)
-        {
-            Literal literal = solution.getLiteral(name);
-
-            if(literal == null)
-                return null;
-
-            return literal.getString();
-        }
-
-
-        protected void setValue(int idx, Integer value) throws SQLException
-        {
-            set = true;
-
-            if(value != null)
-                statement.setInt(idx, value);
-            else
-                statement.setNull(idx, Types.INTEGER);
-        }
-
-
-        protected void setValue(int idx, Short value) throws SQLException
-        {
-            set = true;
-
-            if(value != null)
-                statement.setInt(idx, value);
-            else
-                statement.setNull(idx, Types.SMALLINT);
-        }
-
-
-        protected void setValue(int idx, String value) throws SQLException
-        {
-            set = true;
-
-            statement.setString(idx, value);
-        }
-    }
-
-
     protected static final int batchSize = 10000;
     private static Properties properties = null;
     private static VirtuosoConnectionPoolDataSource connectionPool = null;
@@ -252,7 +126,17 @@ public class Loader
     }
 
 
-    protected static Model loadModel(String file) throws IOException
+    protected static BufferedReader getReader(String file) throws FileNotFoundException, IOException
+    {
+        System.out.println("load " + file);
+
+        GZIPInputStream fis = new GZIPInputStream(new FileInputStream(getPubchemDirectory() + file));
+        InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
+        return new BufferedReader(isr);
+    }
+
+
+    protected static Model getModel(String file) throws IOException
     {
         System.out.println("load " + file);
 

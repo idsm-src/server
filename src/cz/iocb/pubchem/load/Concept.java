@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.pubchem.load.common.Loader;
+import cz.iocb.pubchem.load.common.ModelTableLoader;
 
 
 
@@ -14,7 +16,7 @@ public class Concept extends Loader
     {
         Map<String, Short> map = new HashMap<String, Short>();
 
-        new TableLoader(model, loadQuery("concept/bases.sparql"),
+        new ModelTableLoader(model, loadQuery("concept/bases.sparql"),
                 "insert into concept_bases(id, iri, label) values (?,?,?)")
         {
             @Override
@@ -28,7 +30,7 @@ public class Concept extends Loader
                 setValue(2, iri);
                 setValue(3, getLiteralValue("label"));
             }
-        };
+        }.load();
 
         return map;
     }
@@ -36,7 +38,7 @@ public class Concept extends Loader
 
     public static void loadScheme(Model model, Map<String, Short> concepts) throws IOException, SQLException
     {
-        new TableLoader(model, patternQuery("?concept skos:inScheme ?scheme"),
+        new ModelTableLoader(model, patternQuery("?concept skos:inScheme ?scheme"),
                 "update concept_bases set scheme=? where id=?")
         {
             @Override
@@ -45,14 +47,14 @@ public class Concept extends Loader
                 setValue(1, getMapID("scheme", concepts));
                 setValue(2, getMapID("concept", concepts));
             }
-        };
+        }.load();
     }
 
 
     public static void loadBroader(Model model, Map<String, Short> concepts) throws IOException, SQLException
     {
         // workaround: filter(?concept != ?broader)
-        new TableLoader(model, patternQuery("?concept skos:broader ?broader filter(?concept != ?broader)"),
+        new ModelTableLoader(model, patternQuery("?concept skos:broader ?broader filter(?concept != ?broader)"),
                 "update concept_bases set broader=? where id=?")
         {
             @Override
@@ -61,13 +63,13 @@ public class Concept extends Loader
                 setValue(1, getMapID("broader", concepts));
                 setValue(2, getMapID("concept", concepts));
             }
-        };
+        }.load();
     }
 
 
     public static void load(String file) throws IOException, SQLException
     {
-        Model model = loadModel(file);
+        Model model = getModel(file);
 
         check(model, "concept/check.sparql");
         Map<String, Short> concepts = loadBases(model);
