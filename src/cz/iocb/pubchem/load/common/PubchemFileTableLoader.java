@@ -9,10 +9,12 @@ import java.util.HashMap;
 
 public abstract class PubchemFileTableLoader extends SimpleFileTableLoader
 {
-    private static final HashMap<String, String> prefixes = new HashMap<String, String>();
+    protected final HashMap<String, String> prefixes = new HashMap<String, String>();
 
-    static
+    public PubchemFileTableLoader(BufferedReader reader, String sql)
     {
+        super(reader, sql);
+
         prefixes.put("rdf:", "<http://www.w3.org/1999/02/22-rdf-syntax-ns#>");
         prefixes.put("rdfs:", "<http://www.w3.org/2000/01/rdf-schema#>");
         prefixes.put("xsd:", "<http://www.w3.org/2001/XMLSchema#>");
@@ -55,12 +57,6 @@ public abstract class PubchemFileTableLoader extends SimpleFileTableLoader
         prefixes.put("foaf:", "<http://xmlns.com/foaf/0.1/>");
         prefixes.put("void:", "<http://rdfs.org/ns/void#>");
         prefixes.put("dcterms:", "<http://purl.org/dc/terms/>");
-    }
-
-
-    public PubchemFileTableLoader(BufferedReader reader, String sql)
-    {
-        super(reader, sql);
     }
 
     @Override
