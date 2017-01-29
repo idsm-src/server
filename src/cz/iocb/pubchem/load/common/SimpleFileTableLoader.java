@@ -29,6 +29,10 @@ public abstract class SimpleFileTableLoader extends TableLoader
             {
                 statement = insertStatement;
                 int count = 0;
+                boolean nextObjectOnly = false;
+                String subject = null;
+                String predicate = null;
+
 
                 for(String line = reader.readLine(); line != null; line = reader.readLine())
                 {
@@ -52,12 +56,28 @@ public abstract class SimpleFileTableLoader extends TableLoader
                     if(parts.length != 3)
                         throw new IOException();
 
-                    if(!parts[2].endsWith(" ."))
+                    if(nextObjectOnly)
+                    {
+                        if(!parts[0].equals("") && !parts[1].equals(""))
+                            throw new IOException();
+                    }
+                    else
+                    {
+                        subject = parts[0];
+                        predicate = parts[1];
+                    }
+
+                    if(parts[2].endsWith(" ,"))
+                        nextObjectOnly = true;
+                    else if(parts[2].endsWith(" ."))
+                        nextObjectOnly = false;
+                    else
                         throw new IOException();
+
 
                     set = false;
 
-                    insert(parts[0], parts[1], parts[2].substring(0, parts[2].length() - 2));
+                    insert(subject, predicate, parts[2].substring(0, parts[2].length() - 2));
 
                     if(!set)
                         continue;
@@ -81,6 +101,7 @@ public abstract class SimpleFileTableLoader extends TableLoader
                 }
             }
         }
+
     }
 
 
@@ -92,6 +113,15 @@ public abstract class SimpleFileTableLoader extends TableLoader
 
     public void beforeBatch() throws SQLException, IOException
     {
+    }
+
+
+    public static int getIntID(String node, String prefix) throws IOException
+    {
+        if(!node.startsWith(prefix))
+            throw new IOException();
+
+        return Integer.parseInt(node.substring(prefix.length()));
     }
 
 
