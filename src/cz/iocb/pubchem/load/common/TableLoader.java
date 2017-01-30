@@ -12,6 +12,27 @@ public abstract class TableLoader
     protected boolean set;
 
 
+    protected void setValue(int idx, int value) throws SQLException
+    {
+        set = true;
+        statement.setInt(idx, value);
+    }
+
+
+    protected void setValue(int idx, short value) throws SQLException
+    {
+        set = true;
+        statement.setInt(idx, value);
+    }
+
+
+    protected void setValue(int idx, float value) throws SQLException
+    {
+        set = true;
+        statement.setFloat(idx, value);
+    }
+
+
     protected void setValue(int idx, Integer value) throws SQLException
     {
         set = true;
