@@ -1,5 +1,6 @@
 package cz.iocb.pubchem.load.common;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -126,12 +127,23 @@ public class Loader
     }
 
 
+    protected static InputStream getStream(String file) throws FileNotFoundException, IOException
+    {
+        System.out.println("load " + file);
+
+        FileInputStream fis = new FileInputStream(getPubchemDirectory() + file);
+        GZIPInputStream gis = new GZIPInputStream(fis, 65536);
+        return new BufferedInputStream(gis);
+    }
+
+
     protected static BufferedReader getReader(String file) throws FileNotFoundException, IOException
     {
         System.out.println("load " + file);
 
-        GZIPInputStream fis = new GZIPInputStream(new FileInputStream(getPubchemDirectory() + file));
-        InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
+        FileInputStream fis = new FileInputStream(getPubchemDirectory() + file);
+        GZIPInputStream gis = new GZIPInputStream(fis, 65536);
+        InputStreamReader isr = new InputStreamReader(gis, Charset.forName("UTF-8"));
         return new BufferedReader(isr);
     }
 
@@ -142,9 +154,7 @@ public class Loader
 
         Model model = ModelFactory.createDefaultModel();
         InputStream in = FileManager.get().open(getPubchemDirectory() + file);
-        model.read(in, null, "TTL");
-
-        return model;
+        return model.read(in, null, "TTL");
     }
 
 
