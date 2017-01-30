@@ -1,8 +1,9 @@
 package cz.iocb.pubchem.load;
 
-import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -11,74 +12,83 @@ import java.util.BitSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import cz.iocb.pubchem.load.common.Loader;
-import cz.iocb.pubchem.load.common.PubchemFileTableLoader;
+import cz.iocb.pubchem.load.common.StreamTableLoader;
+import cz.iocb.pubchem.load.common.VoidStreamRDF;
 
 
 
 public class CompoundDescriptor extends Loader
 {
-    private static abstract class DescriptorSimpleFileTableLoader extends PubchemFileTableLoader
+    private static abstract class DescriptorSimpleFileTableLoader extends StreamTableLoader
     {
         private static final BitSet ids = new BitSet();
         protected final ArrayList<Integer> idList = new ArrayList<Integer>(Loader.batchSize);
 
 
-        public DescriptorSimpleFileTableLoader(BufferedReader reader, String field)
+        public DescriptorSimpleFileTableLoader(InputStream stream, String field)
         {
-            super(reader, "update descriptor_compound_bases set " + field + "=? where compound=?");
+            super(stream, "update descriptor_compound_bases set " + field + "=? where compound=?");
         }
 
 
         @Override
         public void beforeBatch() throws SQLException, IOException
         {
-            synchronized(CompoundDescriptor.class)
-            {
-                try (Connection connection = Loader.getConnection())
-                {
-                    try (PreparedStatement insertStatement = connection
-                            .prepareStatement("insert into descriptor_compound_bases(compound) values (?)"))
-                    {
-                        int count = 0;
+            ArrayList<Integer> idAddList = new ArrayList<Integer>(Loader.batchSize);
 
-                        for(Integer id : idList)
-                        {
-                            if(ids.length() <= id || ids.get(id) == false)
-                            {
-                                count++;
-                                ids.set(id);
-
-                                insertStatement.setInt(1, id);
-                                insertStatement.addBatch();
-                            }
-                        }
-
-                        if(count > 0)
-                            insertStatement.executeBatch();
-                    }
-                }
-            }
+            for(Integer id : idList)
+                if(ids.length() <= id || ids.get(id) == false)
+                    idAddList.add(id);
 
             idList.clear();
             idList.ensureCapacity(Loader.batchSize);
+
+            if(idAddList.size() == 0)
+                return;
+
+
+            try (Connection connection = Loader.getConnection())
+            {
+                try (PreparedStatement insertStatement = connection
+                        .prepareStatement("insert soft descriptor_compound_bases(compound) values (?)"))
+                {
+                    for(Integer id : idAddList)
+                    {
+                        insertStatement.setInt(1, id);
+                        insertStatement.addBatch();
+                    }
+
+                    insertStatement.executeBatch();
+                }
+            }
+
+            synchronized(CompoundDescriptor.class)
+            {
+                for(Integer id : idAddList)
+                    ids.set(id);
+            }
         }
     }
 
 
-    protected static void processIntegerFile(String file, String suffix, String field) throws IOException, SQLException
+    protected static void StreamTableLoader(String file, String suffix, String field) throws IOException, SQLException
     {
-        BufferedReader reader = getReader(file);
+        InputStream stream = getStream(file);
 
-        new DescriptorSimpleFileTableLoader(reader, field)
+        new DescriptorSimpleFileTableLoader(stream, field)
         {
             @Override
-            public void insert(String subject, String predicate, String object) throws SQLException, IOException
+            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
             {
-                if(!predicate.equals("sio:has-value"))
+                if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
                     throw new IOException();
 
-                Integer id = getIntID(subject, "descriptor:CID", suffix);
+                int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
                 idList.add(id);
 
                 setValue(1, getInteger(object));
@@ -86,22 +96,47 @@ public class CompoundDescriptor extends Loader
             }
         }.load();
 
-        reader.close();
+        stream.close();
     }
+
+
+    protected static void processIntegerFile(String file, String suffix, String field) throws IOException, SQLException
+    {
+        InputStream stream = getStream(file);
+
+        new DescriptorSimpleFileTableLoader(stream, field)
+        {
+            @Override
+            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
+            {
+                if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
+                    throw new IOException();
+
+                int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
+                idList.add(id);
+
+                setValue(1, getInteger(object));
+                setValue(2, id);
+            }
+        }.load();
+
+        stream.close();
+    }
+
 
     protected static void processFloatFile(String file, String suffix, String field) throws IOException, SQLException
     {
-        BufferedReader reader = getReader(file);
+        InputStream stream = getStream(file);
 
-        new DescriptorSimpleFileTableLoader(reader, field)
+        new DescriptorSimpleFileTableLoader(stream, field)
         {
             @Override
-            public void insert(String subject, String predicate, String object) throws SQLException, IOException
+            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
             {
-                if(!predicate.equals("sio:has-value"))
+                if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
                     throw new IOException();
 
-                Integer id = getIntID(subject, "descriptor:CID", suffix);
+                int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
                 idList.add(id);
 
                 setValue(1, getFloat(object));
@@ -109,24 +144,24 @@ public class CompoundDescriptor extends Loader
             }
         }.load();
 
-        reader.close();
+        stream.close();
     }
 
 
     protected static void processXLogP3File(String file, String field) throws IOException, SQLException
     {
-        BufferedReader reader = getReader(file);
+        InputStream stream = getStream(file);
 
-        new DescriptorSimpleFileTableLoader(reader, field)
+        new DescriptorSimpleFileTableLoader(stream, field)
         {
             @Override
-            public void insert(String subject, String predicate, String object) throws SQLException, IOException
+            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
             {
-                if(!predicate.equals("sio:has-value"))
+                if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
                     throw new IOException();
 
-                String suffix = subject.endsWith("-AA") ? "_XLogP3-AA" : "_XLogP3";
-                Integer id = getIntID(subject, "descriptor:CID", suffix);
+                String suffix = subject.getURI().endsWith("-AA") ? "_XLogP3-AA" : "_XLogP3";
+                int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
                 idList.add(id);
 
                 setValue(1, getFloat(object));
@@ -134,25 +169,25 @@ public class CompoundDescriptor extends Loader
             }
         }.load();
 
-        reader.close();
+        stream.close();
     }
 
 
     protected static void processStringFile(String file, String suffix, String table, String field, int limit)
             throws IOException, SQLException
     {
-        BufferedReader reader = getReader(file);
+        InputStream stream = getStream(file);
         LinkedHashMap<Integer, String> bigValues = new LinkedHashMap<Integer, String>();
 
-        new PubchemFileTableLoader(reader, "insert into " + table + "(compound, " + field + ") values (?,?)")
+        new StreamTableLoader(stream, "insert into " + table + "(compound, " + field + ") values (?,?)")
         {
             @Override
-            public void insert(String subject, String predicate, String object) throws SQLException, IOException
+            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
             {
-                if(!predicate.equals("sio:has-value"))
+                if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
                     throw new IOException();
 
-                Integer compound = getIntID(subject, "descriptor:CID", suffix);
+                int compound = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
                 String value = getString(object);
 
                 if(limit > 0 && value.length() >= limit)
@@ -186,7 +221,38 @@ public class CompoundDescriptor extends Loader
             }
         }
 
-        reader.close();
+        stream.close();
+    }
+
+
+    protected static void processUnitFile(String file, String suffix, String unit)
+            throws FileNotFoundException, IOException
+    {
+        InputStream stream = getStream(file);
+
+        try
+        {
+            RDFDataMgr.parse(new VoidStreamRDF()
+            {
+                @Override
+                public void triple(Triple triple)
+                {
+                    String object = triple.getObject().getURI();
+
+                    if(!object.equals(unit))
+                        throw new RuntimeException(new IOException());
+                }
+            }, stream, Lang.TURTLE);
+        }
+        catch (RuntimeException e)
+        {
+            if(e.getCause() instanceof IOException)
+                throw(IOException) e.getCause();
+            else
+                throw e;
+        }
+
+        stream.close();
     }
 
 
@@ -264,6 +330,15 @@ public class CompoundDescriptor extends Loader
                                 processIntegerFile(loc, "_Undefined_Bond_Stereo_Count", "undefined_bond_stereo_count");
                             else if(name.startsWith("pc_descr_XLogP3_value"))
                                 processXLogP3File(loc, "xlogp3_aa");
+                            else if(name.startsWith("pc_descr_ExactMass_unit"))
+                                processUnitFile(loc, "_Exact_Mass", "http://purl.obolibrary.org/obo/UO_0000055");
+                            else if(name.startsWith("pc_descr_MolecularWeight_unit"))
+                                processUnitFile(loc, "_Molecular_Weight", "http://purl.obolibrary.org/obo/UO_0000055");
+                            else if(name.startsWith("pc_descr_MonoIsotopicWeight_unit"))
+                                processUnitFile(loc, "_Mono_Isotopic_Weight",
+                                        "http://purl.obolibrary.org/obo/UO_0000055");
+                            else if(name.startsWith("pc_descr_TPSA_unit"))
+                                processUnitFile(loc, "_TPSA", "http://purl.obolibrary.org/obo/UO_0000324");
                             else if(name.matches("pc_descr_.*_type_[0-9]+.ttl.gz"))
                                 System.out.println("ignore " + loc);
                             else
