@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Arrays;
 import org.apache.jena.graph.Node;
 import cz.iocb.pubchem.load.common.Loader;
 import cz.iocb.pubchem.load.common.StreamTableLoader;
@@ -39,46 +39,27 @@ public class SubstanceDescriptor extends Loader
     public static void loadDirectory(String path) throws IOException, SQLException, InterruptedException
     {
         File dir = new File(getPubchemDirectory() + path);
-        File[] files = dir.listFiles();
 
-        Thread[] threads = new Thread[Runtime.getRuntime().availableProcessors()];
-        AtomicInteger counter = new AtomicInteger(-1);
+        Arrays.asList(dir.listFiles()).parallelStream().forEach(file -> {
+            String name = file.getName();
+            String loc = path + File.separatorChar + name;
 
-        for(int i = 0; i < threads.length; i++)
-        {
-            threads[i] = new Thread()
+            try
             {
-                @Override
-                public void run()
-                {
-                    try
-                    {
-                        for(int i = counter.incrementAndGet(); i < files.length; i = counter.incrementAndGet())
-                        {
-                            String name = files[i].getName();
-                            String loc = path + File.separatorChar + files[i].getName();
-
-                            if(name.startsWith("pc_descr_SubstanceVersion_value"))
-                                processVersionFile(loc);
-                            else if(name.matches("pc_descr_.*_type_[0-9]+.ttl.gz"))
-                                System.out.println("ignore " + loc);
-                            else
-                                System.out.println("unsupported " + loc);
-                        }
-                    }
-                    catch (Throwable e)
-                    {
-                        e.printStackTrace();
-                        System.exit(1);
-                    }
-                }
-            };
-
-            threads[i].start();
-        }
-
-        for(int i = 0; i < threads.length; i++)
-            threads[i].join();
+                if(name.startsWith("pc_descr_SubstanceVersion_value"))
+                    processVersionFile(loc);
+                else if(name.matches("pc_descr_.*_type_[0-9]+.ttl.gz"))
+                    System.out.println("ignore " + loc);
+                else
+                    System.out.println("unsupported " + loc);
+            }
+            catch (IOException | SQLException e)
+            {
+                System.err.println("exception for " + name);
+                e.printStackTrace();
+                System.exit(1);
+            }
+        });
     }
 
 

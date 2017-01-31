@@ -8,10 +8,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.Lang;
@@ -259,105 +259,83 @@ public class CompoundDescriptor extends Loader
     public static void loadDirectory(String path) throws IOException, SQLException, InterruptedException
     {
         File dir = new File(getPubchemDirectory() + path);
-        File[] files = dir.listFiles();
 
-        Thread[] threads = new Thread[Runtime.getRuntime().availableProcessors()];
-        AtomicInteger counter = new AtomicInteger(-1);
+        Arrays.asList(dir.listFiles()).parallelStream().forEach(file -> {
+            String name = file.getName();
+            String loc = path + File.separatorChar + name;
 
-        for(int i = 0; i < threads.length; i++)
-        {
-            threads[i] = new Thread()
+            try
             {
-                @Override
-                public void run()
-                {
-                    try
-                    {
-                        for(int i = counter.incrementAndGet(); i < files.length; i = counter.incrementAndGet())
-                        {
-                            String name = files[i].getName();
-                            String loc = path + File.separatorChar + files[i].getName();
-
-                            if(name.startsWith("pc_descr_canSMILES_value"))
-                                processStringFile(loc, "_Canonical_SMILES", "descriptor_compound_canonical_smileses",
-                                        "canonical_smiles", 0);
-                            else if(name.startsWith("pc_descr_Complexity_value"))
-                                processFloatFile(loc, "_Structure_Complexity", "structure_complexity");
-                            else if(name.startsWith("pc_descr_CovalentUnitCount_value"))
-                                processIntegerFile(loc, "_Covalent_Unit_Count", "covalent_unit_count");
-                            else if(name.startsWith("pc_descr_DefinedAtomStereoCount_value"))
-                                processIntegerFile(loc, "_Defined_Atom_Stereo_Count", "defined_atom_stereo_count");
-                            else if(name.startsWith("pc_descr_DefinedBondStereoCount_value"))
-                                processIntegerFile(loc, "_Defined_Bond_Stereo_Count", "defined_bond_stereo_count");
-                            else if(name.startsWith("pc_descr_ExactMass_value"))
-                                processFloatFile(loc, "_Exact_Mass", "exact_mass");
-                            else if(name.startsWith("pc_descr_FormalCharge_value"))
-                                processIntegerFile(loc, "_Total_Formal_Charge", "total_formal_charge");
-                            else if(name.startsWith("pc_descr_HBondAcceptor_value"))
-                                processIntegerFile(loc, "_Hydrogen_Bond_Acceptor_Count",
-                                        "hydrogen_bond_acceptor_count");
-                            else if(name.startsWith("pc_descr_HBondDonor_value"))
-                                processIntegerFile(loc, "_Hydrogen_Bond_Donor_Count", "hydrogen_bond_donor_count");
-                            else if(name.startsWith("pc_descr_HeavyAtomCount_value"))
-                                processIntegerFile(loc, "_Non-hydrogen_Atom_Count", "non_hydrogen_atom_count");
-                            else if(name.startsWith("pc_descr_InChI_value"))
-                                processStringFile(loc, "_IUPAC_InChI", "descriptor_compound_iupac_inchis",
-                                        "iupac_inchi", 2048);
-                            else if(name.startsWith("pc_descr_isoSMILES_value"))
-                                processStringFile(loc, "_Isomeric_SMILES", "descriptor_compound_isomeric_smileses",
-                                        "isomeric_smiles", 0);
-                            else if(name.startsWith("pc_descr_IsotopeAtomCount_value"))
-                                processIntegerFile(loc, "_Isotope_Atom_Count", "isotope_atom_count");
-                            else if(name.startsWith("pc_descr_IUPACName_value"))
-                                processStringFile(loc, "_Preferred_IUPAC_Name",
-                                        "descriptor_compound_preferred_iupac_names", "preferred_iupac_name", 2048);
-                            else if(name.startsWith("pc_descr_MolecularFormula_value"))
-                                processStringFile(loc, "_Molecular_Formula", "descriptor_compound_molecular_formulas",
-                                        "molecular_formula", 0);
-                            else if(name.startsWith("pc_descr_MolecularWeight_value"))
-                                processFloatFile(loc, "_Molecular_Weight", "molecular_weight");
-                            else if(name.startsWith("pc_descr_MonoIsotopicWeight_value"))
-                                processFloatFile(loc, "_Mono_Isotopic_Weight", "mono_isotopic_weight");
-                            else if(name.startsWith("pc_descr_RotatableBond_value"))
-                                processIntegerFile(loc, "_Rotatable_Bond_Count", "rotatable_bond_count");
-                            else if(name.startsWith("pc_descr_TautomerCount_value"))
-                                processIntegerFile(loc, "_Tautomer_Count", "tautomer_count");
-                            else if(name.startsWith("pc_descr_TPSA_value"))
-                                processFloatFile(loc, "_TPSA", "tpsa");
-                            else if(name.startsWith("pc_descr_UndefinedAtomStereoCount_value"))
-                                processIntegerFile(loc, "_Undefined_Atom_Stereo_Count", "undefined_atom_stereo_count");
-                            else if(name.startsWith("pc_descr_UndefinedBondStereoCount_value"))
-                                processIntegerFile(loc, "_Undefined_Bond_Stereo_Count", "undefined_bond_stereo_count");
-                            else if(name.startsWith("pc_descr_XLogP3_value"))
-                                processXLogP3File(loc, "xlogp3_aa");
-                            else if(name.startsWith("pc_descr_ExactMass_unit"))
-                                processUnitFile(loc, "_Exact_Mass", "http://purl.obolibrary.org/obo/UO_0000055");
-                            else if(name.startsWith("pc_descr_MolecularWeight_unit"))
-                                processUnitFile(loc, "_Molecular_Weight", "http://purl.obolibrary.org/obo/UO_0000055");
-                            else if(name.startsWith("pc_descr_MonoIsotopicWeight_unit"))
-                                processUnitFile(loc, "_Mono_Isotopic_Weight",
-                                        "http://purl.obolibrary.org/obo/UO_0000055");
-                            else if(name.startsWith("pc_descr_TPSA_unit"))
-                                processUnitFile(loc, "_TPSA", "http://purl.obolibrary.org/obo/UO_0000324");
-                            else if(name.matches("pc_descr_.*_type_[0-9]+.ttl.gz"))
-                                System.out.println("ignore " + loc);
-                            else
-                                System.out.println("unsupported " + loc);
-                        }
-                    }
-                    catch (Throwable e)
-                    {
-                        e.printStackTrace();
-                        System.exit(1);
-                    }
-                }
-            };
-
-            threads[i].start();
-        }
-
-        for(int i = 0; i < threads.length; i++)
-            threads[i].join();
+                if(name.startsWith("pc_descr_canSMILES_value"))
+                    processStringFile(loc, "_Canonical_SMILES", "descriptor_compound_canonical_smileses",
+                            "canonical_smiles", 0);
+                else if(name.startsWith("pc_descr_Complexity_value"))
+                    processFloatFile(loc, "_Structure_Complexity", "structure_complexity");
+                else if(name.startsWith("pc_descr_CovalentUnitCount_value"))
+                    processIntegerFile(loc, "_Covalent_Unit_Count", "covalent_unit_count");
+                else if(name.startsWith("pc_descr_DefinedAtomStereoCount_value"))
+                    processIntegerFile(loc, "_Defined_Atom_Stereo_Count", "defined_atom_stereo_count");
+                else if(name.startsWith("pc_descr_DefinedBondStereoCount_value"))
+                    processIntegerFile(loc, "_Defined_Bond_Stereo_Count", "defined_bond_stereo_count");
+                else if(name.startsWith("pc_descr_ExactMass_value"))
+                    processFloatFile(loc, "_Exact_Mass", "exact_mass");
+                else if(name.startsWith("pc_descr_FormalCharge_value"))
+                    processIntegerFile(loc, "_Total_Formal_Charge", "total_formal_charge");
+                else if(name.startsWith("pc_descr_HBondAcceptor_value"))
+                    processIntegerFile(loc, "_Hydrogen_Bond_Acceptor_Count", "hydrogen_bond_acceptor_count");
+                else if(name.startsWith("pc_descr_HBondDonor_value"))
+                    processIntegerFile(loc, "_Hydrogen_Bond_Donor_Count", "hydrogen_bond_donor_count");
+                else if(name.startsWith("pc_descr_HeavyAtomCount_value"))
+                    processIntegerFile(loc, "_Non-hydrogen_Atom_Count", "non_hydrogen_atom_count");
+                else if(name.startsWith("pc_descr_InChI_value"))
+                    processStringFile(loc, "_IUPAC_InChI", "descriptor_compound_iupac_inchis", "iupac_inchi", 2048);
+                else if(name.startsWith("pc_descr_isoSMILES_value"))
+                    processStringFile(loc, "_Isomeric_SMILES", "descriptor_compound_isomeric_smileses",
+                            "isomeric_smiles", 0);
+                else if(name.startsWith("pc_descr_IsotopeAtomCount_value"))
+                    processIntegerFile(loc, "_Isotope_Atom_Count", "isotope_atom_count");
+                else if(name.startsWith("pc_descr_IUPACName_value"))
+                    processStringFile(loc, "_Preferred_IUPAC_Name", "descriptor_compound_preferred_iupac_names",
+                            "preferred_iupac_name", 2048);
+                else if(name.startsWith("pc_descr_MolecularFormula_value"))
+                    processStringFile(loc, "_Molecular_Formula", "descriptor_compound_molecular_formulas",
+                            "molecular_formula", 0);
+                else if(name.startsWith("pc_descr_MolecularWeight_value"))
+                    processFloatFile(loc, "_Molecular_Weight", "molecular_weight");
+                else if(name.startsWith("pc_descr_MonoIsotopicWeight_value"))
+                    processFloatFile(loc, "_Mono_Isotopic_Weight", "mono_isotopic_weight");
+                else if(name.startsWith("pc_descr_RotatableBond_value"))
+                    processIntegerFile(loc, "_Rotatable_Bond_Count", "rotatable_bond_count");
+                else if(name.startsWith("pc_descr_TautomerCount_value"))
+                    processIntegerFile(loc, "_Tautomer_Count", "tautomer_count");
+                else if(name.startsWith("pc_descr_TPSA_value"))
+                    processFloatFile(loc, "_TPSA", "tpsa");
+                else if(name.startsWith("pc_descr_UndefinedAtomStereoCount_value"))
+                    processIntegerFile(loc, "_Undefined_Atom_Stereo_Count", "undefined_atom_stereo_count");
+                else if(name.startsWith("pc_descr_UndefinedBondStereoCount_value"))
+                    processIntegerFile(loc, "_Undefined_Bond_Stereo_Count", "undefined_bond_stereo_count");
+                else if(name.startsWith("pc_descr_XLogP3_value"))
+                    processXLogP3File(loc, "xlogp3_aa");
+                else if(name.startsWith("pc_descr_ExactMass_unit"))
+                    processUnitFile(loc, "_Exact_Mass", "http://purl.obolibrary.org/obo/UO_0000055");
+                else if(name.startsWith("pc_descr_MolecularWeight_unit"))
+                    processUnitFile(loc, "_Molecular_Weight", "http://purl.obolibrary.org/obo/UO_0000055");
+                else if(name.startsWith("pc_descr_MonoIsotopicWeight_unit"))
+                    processUnitFile(loc, "_Mono_Isotopic_Weight", "http://purl.obolibrary.org/obo/UO_0000055");
+                else if(name.startsWith("pc_descr_TPSA_unit"))
+                    processUnitFile(loc, "_TPSA", "http://purl.obolibrary.org/obo/UO_0000324");
+                else if(name.matches("pc_descr_.*_type_[0-9]+.ttl.gz"))
+                    System.out.println("ignore " + loc);
+                else
+                    System.out.println("unsupported " + loc);
+            }
+            catch (IOException | SQLException e)
+            {
+                System.err.println("exception for " + name);
+                e.printStackTrace();
+                System.exit(1);
+            }
+        });
     }
 
 
