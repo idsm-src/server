@@ -2,17 +2,17 @@ create function iri_endpoint (in substance integer, in bioassay integer, in meas
 {
     vectored;
 
-    if(measuregroup = -2147483647)
+    if(measuregroup = 2147483647)
       return sprintf ('http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d', substance, bioassay);
 
+    if(measuregroup = -2147483648)
+      return sprintf ('http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d_PMID', substance, bioassay);
+
+    if(measuregroup >= 0)
+        return sprintf ('http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d_%d', substance, bioassay, measuregroup);
+
     if(measuregroup < 0)
-        return sprintf ('http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d_%d', substance, bioassay, -1 * measuregroup);
-
-    if(measuregroup > 0)
-        return sprintf ('http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d_PMID%d', substance, bioassay, measuregroup);
-
-    if(measuregroup = 0)
-        return sprintf ('http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d_PMID', substance, bioassay);
+        return sprintf ('http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d_PMID%d', substance, bioassay, -1 * measuregroup);
 
     return null;
 };
@@ -57,22 +57,22 @@ create function iri_endpoint_INV_3 (in id varchar) returns integer
     parts := sprintf_inverse (id, 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d', 0);
 
     if (parts is not null)
-        return -2147483647;
+        return 2147483647;
 
     parts := sprintf_inverse (id, 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d_%d', 0);
 
     if (parts is not null)
-        return -1 * parts[2];
+        return parts[2];
 
     parts := sprintf_inverse (id, 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d_PMID%d', 0);
 
     if (parts is not null)
-        return parts[2];
+        return -1 * parts[2];
 
     parts := sprintf_inverse (id, 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d_PMID', 0);
 
     if (parts is not null)
-        return 0;
+        return -2147483648;
 
     return null;
 };

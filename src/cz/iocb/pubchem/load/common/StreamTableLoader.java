@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Map;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Node_Literal;
 import org.apache.jena.graph.Triple;
@@ -153,5 +154,16 @@ public abstract class StreamTableLoader extends TableLoader
             throw new IOException();
 
         return Float.parseFloat(literal.getLiteralLexicalForm());
+    }
+
+
+    public short getMapID(Node node, Map<String, Short> map) throws IOException
+    {
+        Short value = map.get(node.getURI());
+
+        if(value == null)
+            throw new IOException();
+
+        return value;
     }
 }
