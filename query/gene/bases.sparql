@@ -1,0 +1,5 @@
+select ?gene ?title ?description where
+{
+    ?gene dcterms:title ?title .
+    ?gene dcterms:description ?description .
+}

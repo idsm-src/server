@@ -1,0 +1,17 @@
+select distinct ?iri where
+{
+	{
+	    ?S ?iri ?O .
+	    filter(?iri != dcterms:alternative)
+	    filter(?iri != dcterms:description)
+	    filter(?iri != dcterms:title)
+	    filter(?iri != obo:BFO_0000056)
+	    filter(?iri != cito:isDiscussedBy)
+	    filter(?iri != rdf:type)
+	}
+    union
+	{
+	    ?S rdf:type ?iri .
+	    filter(?iri != bp:Gene)
+	}
+}
