@@ -90,7 +90,7 @@ public class Endpoint extends Loader
     }
 
 
-    private static void loadOutcome(String file, Map<String, Short> outcomes) throws IOException, SQLException
+    private static void loadOutcomes(String file, Map<String, Short> outcomes) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
@@ -118,7 +118,7 @@ public class Endpoint extends Loader
     }
 
 
-    private static void loadReference(String file) throws IOException, SQLException
+    private static void loadReferences(String file) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
@@ -140,7 +140,7 @@ public class Endpoint extends Loader
     }
 
 
-    private static void loadValue(String file) throws IOException, SQLException
+    private static void loadValues(String file) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
@@ -162,7 +162,7 @@ public class Endpoint extends Loader
     }
 
 
-    private static void loadType(String file) throws IOException, SQLException
+    private static void loadTypes(String file) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
@@ -184,7 +184,7 @@ public class Endpoint extends Loader
     }
 
 
-    private static Set<String> loadLabel(String file) throws IOException, SQLException
+    private static Set<String> loadLabels(String file) throws IOException, SQLException
     {
         final Set<String> hasEmptyLabel = new HashSet<String>();
         InputStream stream = getStream(file);
@@ -213,7 +213,7 @@ public class Endpoint extends Loader
     }
 
 
-    protected static void checkUnit(String file) throws FileNotFoundException, IOException
+    protected static void checkUnits(String file) throws FileNotFoundException, IOException
     {
         InputStream stream = getStream(file);
 
@@ -248,8 +248,8 @@ public class Endpoint extends Loader
         File dir = new File(getPubchemDirectory() + path);
         Map<String, Short> outcomes = getMapping("endpoint_outcomes__reftable");
 
-        loadValue("RDF/endpoint/pc_endpoint_value.ttl.gz");
-        Set<String> hasEmptyLabel = loadLabel("RDF/endpoint/pc_endpoint_label.ttl.gz");
+        loadValues("RDF/endpoint/pc_endpoint_value.ttl.gz");
+        Set<String> hasEmptyLabel = loadLabels("RDF/endpoint/pc_endpoint_label.ttl.gz");
 
         Arrays.asList(dir.listFiles()).parallelStream().forEach(file -> {
             String name = file.getName();
@@ -257,13 +257,13 @@ public class Endpoint extends Loader
             try
             {
                 if(name.startsWith("pc_endpoint_outcome"))
-                    loadOutcome(path + File.separatorChar + file.getName(), outcomes);
+                    loadOutcomes(path + File.separatorChar + file.getName(), outcomes);
                 else if(name.startsWith("pc_endpoint_type"))
-                    loadType(path + File.separatorChar + file.getName());
+                    loadTypes(path + File.separatorChar + file.getName());
                 else if(name.startsWith("pc_endpoint_unit"))
-                    checkUnit(path + File.separatorChar + file.getName());
+                    checkUnits(path + File.separatorChar + file.getName());
                 else if(name.startsWith("pc_endpoint2reference"))
-                    loadReference(path + File.separatorChar + file.getName());
+                    loadReferences(path + File.separatorChar + file.getName());
                 else if(name.startsWith("pc_endpoint2substance"))
                     System.out.println("ignore " + path + File.separator + file.getName());
                 else if(!name.equals("pc_endpoint_value.ttl.gz") && !name.equals("pc_endpoint_label.ttl.gz"))
