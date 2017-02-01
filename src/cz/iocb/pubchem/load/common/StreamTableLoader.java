@@ -77,7 +77,7 @@ public abstract class StreamTableLoader extends TableLoader
     }
 
 
-    public void insertStub(Node subject, Node predicate, Node object) throws SQLException, IOException
+    protected void insertStub(Node subject, Node predicate, Node object) throws SQLException, IOException
     {
         set = false;
 
