@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.Arrays;
 import org.apache.jena.graph.Node;
 import cz.iocb.pubchem.load.common.Loader;
 import cz.iocb.pubchem.load.common.StreamTableLoader;
@@ -254,33 +255,40 @@ public class Compound extends Loader
     {
         File dir = new File(getPubchemDirectory() + path);
 
-        for(File file : dir.listFiles())
-        {
-            String name = file.getName();
 
-            if(name.startsWith("pc_compound2biosystem"))
-                loadBiosystems(path + File.separatorChar + name);
-            else if(name.startsWith("pc_compound2component"))
-                loadComponents(path + File.separatorChar + name);
-            else if(name.startsWith("pc_compound2drugproduct"))
-                loadDrugproducts(path + File.separatorChar + name);
-            else if(name.startsWith("pc_compound2isotopologue"))
-                loadIsotopologues(path + File.separatorChar + name);
-            else if(name.startsWith("pc_compound2parent"))
-                loadParents(path + File.separatorChar + name);
-            else if(name.startsWith("pc_compound2sameconnectivity"))
-                loadSameConnectivities(path + File.separatorChar + name);
-            else if(name.startsWith("pc_compound2stereoisomer"))
-                loadStereoisomers(path + File.separatorChar + name);
-            else if(name.startsWith("pc_compound_role"))
-                loadRoles(path + File.separatorChar + name);
-            else if(name.startsWith("pc_compound_type"))
-                loadTypes(path + File.separatorChar + name);
-            else if(name.startsWith("pc_compound2descriptor"))
-                System.out.println("ignore " + path + File.separator + name);
-            else
-                System.out.println("unsupported " + path + File.separator + name);
-        }
+        Arrays.asList(dir.listFiles()).parallelStream().map(f -> f.getName()).forEach(name -> {
+            try
+            {
+                if(name.startsWith("pc_compound2biosystem"))
+                    loadBiosystems(path + File.separatorChar + name);
+                else if(name.startsWith("pc_compound2component"))
+                    loadComponents(path + File.separatorChar + name);
+                else if(name.startsWith("pc_compound2drugproduct"))
+                    loadDrugproducts(path + File.separatorChar + name);
+                else if(name.startsWith("pc_compound2isotopologue"))
+                    loadIsotopologues(path + File.separatorChar + name);
+                else if(name.startsWith("pc_compound2parent"))
+                    loadParents(path + File.separatorChar + name);
+                else if(name.startsWith("pc_compound2sameconnectivity"))
+                    loadSameConnectivities(path + File.separatorChar + name);
+                else if(name.startsWith("pc_compound2stereoisomer"))
+                    loadStereoisomers(path + File.separatorChar + name);
+                else if(name.startsWith("pc_compound_role"))
+                    loadRoles(path + File.separatorChar + name);
+                else if(name.startsWith("pc_compound_type"))
+                    loadTypes(path + File.separatorChar + name);
+                else if(name.startsWith("pc_compound2descriptor"))
+                    System.out.println("ignore " + path + File.separator + name);
+                else
+                    System.out.println("unsupported " + path + File.separator + name);
+            }
+            catch (IOException | SQLException e)
+            {
+                System.err.println("exception for " + name);
+                e.printStackTrace();
+                System.exit(1);
+            }
+        });
     }
 
 
