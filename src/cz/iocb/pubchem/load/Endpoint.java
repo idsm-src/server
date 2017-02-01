@@ -251,23 +251,21 @@ public class Endpoint extends Loader
         loadValues("RDF/endpoint/pc_endpoint_value.ttl.gz");
         Set<String> hasEmptyLabel = loadLabels("RDF/endpoint/pc_endpoint_label.ttl.gz");
 
-        Arrays.asList(dir.listFiles()).parallelStream().forEach(file -> {
-            String name = file.getName();
-
+        Arrays.asList(dir.listFiles()).parallelStream().map(f -> f.getName()).forEach(name -> {
             try
             {
                 if(name.startsWith("pc_endpoint_outcome"))
-                    loadOutcomes(path + File.separatorChar + file.getName(), outcomes);
+                    loadOutcomes(path + File.separatorChar + name, outcomes);
                 else if(name.startsWith("pc_endpoint_type"))
-                    loadTypes(path + File.separatorChar + file.getName());
+                    loadTypes(path + File.separatorChar + name);
                 else if(name.startsWith("pc_endpoint_unit"))
-                    checkUnits(path + File.separatorChar + file.getName());
+                    checkUnits(path + File.separatorChar + name);
                 else if(name.startsWith("pc_endpoint2reference"))
-                    loadReferences(path + File.separatorChar + file.getName());
+                    loadReferences(path + File.separatorChar + name);
                 else if(name.startsWith("pc_endpoint2substance"))
-                    System.out.println("ignore " + path + File.separator + file.getName());
+                    System.out.println("ignore " + path + File.separator + name);
                 else if(!name.equals("pc_endpoint_value.ttl.gz") && !name.equals("pc_endpoint_label.ttl.gz"))
-                    System.out.println("unsupported " + path + File.separator + file.getName());
+                    System.out.println("unsupported " + path + File.separator + name);
             }
             catch (IOException | SQLException e)
             {

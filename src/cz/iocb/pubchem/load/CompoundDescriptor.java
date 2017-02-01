@@ -260,8 +260,7 @@ public class CompoundDescriptor extends Loader
     {
         File dir = new File(getPubchemDirectory() + path);
 
-        Arrays.asList(dir.listFiles()).parallelStream().forEach(file -> {
-            String name = file.getName();
+        Arrays.asList(dir.listFiles()).parallelStream().map(f -> f.getName()).forEach(name -> {
             String loc = path + File.separatorChar + name;
 
             try

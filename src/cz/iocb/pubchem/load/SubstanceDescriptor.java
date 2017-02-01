@@ -40,18 +40,15 @@ public class SubstanceDescriptor extends Loader
     {
         File dir = new File(getPubchemDirectory() + path);
 
-        Arrays.asList(dir.listFiles()).parallelStream().forEach(file -> {
-            String name = file.getName();
-            String loc = path + File.separatorChar + name;
-
+        Arrays.asList(dir.listFiles()).parallelStream().map(f -> f.getName()).forEach(name -> {
             try
             {
                 if(name.startsWith("pc_descr_SubstanceVersion_value"))
-                    processVersionFile(loc);
+                    processVersionFile(path + File.separatorChar + name);
                 else if(name.matches("pc_descr_.*_type_[0-9]+.ttl.gz"))
-                    System.out.println("ignore " + loc);
+                    System.out.println("ignore " + path + File.separatorChar + name);
                 else
-                    System.out.println("unsupported " + loc);
+                    System.out.println("unsupported " + path + File.separatorChar + name);
             }
             catch (IOException | SQLException e)
             {
