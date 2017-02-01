@@ -36,7 +36,7 @@ public class SubstanceDescriptor extends Loader
     }
 
 
-    public static void loadDirectory(String path) throws IOException, SQLException, InterruptedException
+    public static void loadDirectory(String path) throws IOException, SQLException
     {
         File dir = new File(getPubchemDirectory() + path);
 
@@ -60,7 +60,7 @@ public class SubstanceDescriptor extends Loader
     }
 
 
-    public static void main(String[] args) throws IOException, SQLException, InterruptedException
+    public static void main(String[] args) throws IOException, SQLException
     {
         loadDirectory("RDF/descriptor/substance");
     }
