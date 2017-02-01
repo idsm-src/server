@@ -140,13 +140,13 @@ public class Loader
     }
 
 
-    protected static InputStream getStream(String file) throws FileNotFoundException, IOException
+    protected static InputStream getStream(String file) throws IOException
     {
         return getStream(file, false);
     }
 
 
-    protected static BufferedReader getReader(String file) throws FileNotFoundException, IOException
+    protected static BufferedReader getReader(String file) throws IOException
     {
         System.out.println("load " + file);
 
