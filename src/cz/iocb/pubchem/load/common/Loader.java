@@ -142,7 +142,7 @@ public class Loader
 
     protected static InputStream getStream(String file) throws IOException
     {
-        return getStream(file, false);
+        return getStream(file, true);
     }
 
 
