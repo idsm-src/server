@@ -129,6 +129,17 @@ public abstract class StreamTableLoader extends TableLoader
     }
 
 
+    public static String getStringID(Node node, String prefix) throws IOException
+    {
+        String value = node.getURI();
+
+        if(!value.startsWith(prefix))
+            throw new IOException();
+
+        return value.substring(prefix.length());
+    }
+
+
     public String getString(Node node) throws IOException
     {
         return ((Node_Literal) node).getLiteralLexicalForm();
