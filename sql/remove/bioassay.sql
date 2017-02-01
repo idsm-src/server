@@ -16,5 +16,6 @@ drop function iri_bioassay_data_INV_2;
 
 --------------------------------------------------------------------------------
 
+drop table bioassay_measuregroups;
 drop table bioassay_data;
 drop table bioassay_bases;

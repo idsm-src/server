@@ -127,13 +127,22 @@ public class Loader
     }
 
 
-    protected static InputStream getStream(String file) throws FileNotFoundException, IOException
+    protected static InputStream getStream(String file, boolean gzipped) throws FileNotFoundException, IOException
     {
         System.out.println("load " + file);
 
-        FileInputStream fis = new FileInputStream(getPubchemDirectory() + file);
-        GZIPInputStream gis = new GZIPInputStream(fis, 65536);
-        return new BufferedInputStream(gis);
+        InputStream fis = new FileInputStream(getPubchemDirectory() + file);
+
+        if(gzipped)
+            fis = new GZIPInputStream(fis, 65536);
+
+        return new BufferedInputStream(fis);
+    }
+
+
+    protected static InputStream getStream(String file) throws FileNotFoundException, IOException
+    {
+        return getStream(file, false);
     }
 
 
