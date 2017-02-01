@@ -12,7 +12,7 @@ import cz.iocb.pubchem.load.common.ModelTableLoader;
 
 public class Concept extends Loader
 {
-    public static Map<String, Short> loadBases(Model model) throws IOException, SQLException
+    private static Map<String, Short> loadBases(Model model) throws IOException, SQLException
     {
         Map<String, Short> map = new HashMap<String, Short>();
 
@@ -36,7 +36,7 @@ public class Concept extends Loader
     }
 
 
-    public static void loadScheme(Model model, Map<String, Short> concepts) throws IOException, SQLException
+    private static void loadScheme(Model model, Map<String, Short> concepts) throws IOException, SQLException
     {
         new ModelTableLoader(model, patternQuery("?concept skos:inScheme ?scheme"),
                 "update concept_bases set scheme=? where id=?")
@@ -51,7 +51,7 @@ public class Concept extends Loader
     }
 
 
-    public static void loadBroader(Model model, Map<String, Short> concepts) throws IOException, SQLException
+    private static void loadBroader(Model model, Map<String, Short> concepts) throws IOException, SQLException
     {
         // workaround: filter(?concept != ?broader)
         new ModelTableLoader(model, patternQuery("?concept skos:broader ?broader filter(?concept != ?broader)"),

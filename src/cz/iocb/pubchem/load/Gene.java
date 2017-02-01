@@ -10,7 +10,7 @@ import cz.iocb.pubchem.load.common.ModelTableLoader;
 
 public class Gene extends Loader
 {
-    public static void loadBases(Model model) throws IOException, SQLException
+    private static void loadBases(Model model) throws IOException, SQLException
     {
         new ModelTableLoader(model, loadQuery("gene/bases.sparql"),
                 "insert into gene_bases(id, title, description) values (?,?,?)")
@@ -26,7 +26,7 @@ public class Gene extends Loader
     }
 
 
-    public static void loadBiosystems(Model model) throws IOException, SQLException
+    private static void loadBiosystems(Model model) throws IOException, SQLException
     {
         new ModelTableLoader(model, patternQuery("?gene obo:BFO_0000056 ?biosystem"),
                 "insert into gene_biosystems(gene, biosystem) values (?,?)")
@@ -41,7 +41,7 @@ public class Gene extends Loader
     }
 
 
-    public static void loadAlternatives(Model model) throws IOException, SQLException
+    private static void loadAlternatives(Model model) throws IOException, SQLException
     {
         new ModelTableLoader(model, patternQuery("?gene dcterms:alternative ?alternative"),
                 //"insert into gene_alternatives (__, gene, alternative) values (?,?,?)")
@@ -60,7 +60,7 @@ public class Gene extends Loader
     }
 
 
-    public static void loadReferences(Model model) throws IOException, SQLException
+    private static void loadReferences(Model model) throws IOException, SQLException
     {
         new ModelTableLoader(model, patternQuery("?gene cito:isDiscussedBy ?reference"),
                 "insert into gene_references(gene, reference) values (?,?)")

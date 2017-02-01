@@ -11,7 +11,7 @@ import cz.iocb.pubchem.load.common.ModelTableLoader;
 
 public class Biosystem extends Loader
 {
-    public static Map<String, Short> loadSources(Model model) throws IOException, SQLException
+    private static Map<String, Short> loadSources(Model model) throws IOException, SQLException
     {
         Map<String, Short> map = getMapping("source_bases");
 
@@ -40,7 +40,7 @@ public class Biosystem extends Loader
     }
 
 
-    public static void loadBases(Model model, Map<String, Short> sources) throws IOException, SQLException
+    private static void loadBases(Model model, Map<String, Short> sources) throws IOException, SQLException
     {
         new ModelTableLoader(model, loadQuery("biosystem/bases.sparql"),
                 "insert into biosystem_bases(id, source, title, organism) values (?,?,?,?)")
@@ -57,7 +57,7 @@ public class Biosystem extends Loader
     }
 
 
-    public static void loadComponents(Model model) throws IOException, SQLException
+    private static void loadComponents(Model model) throws IOException, SQLException
     {
         new ModelTableLoader(model, patternQuery("?biosystem bp:pathwayComponent ?component"),
                 "insert into biosystem_components(biosystem, component) values (?,?)")
@@ -72,7 +72,7 @@ public class Biosystem extends Loader
     }
 
 
-    public static void loadReferences(Model model) throws IOException, SQLException
+    private static void loadReferences(Model model) throws IOException, SQLException
     {
         new ModelTableLoader(model, patternQuery("?biosystem cito:isDiscussedBy ?reference"),
                 "insert into biosystem_references(biosystem, reference) values (?,?)")
@@ -87,7 +87,7 @@ public class Biosystem extends Loader
     }
 
 
-    public static void loadMatches(Model model) throws IOException, SQLException
+    private static void loadMatches(Model model) throws IOException, SQLException
     {
         new ModelTableLoader(model, patternQuery("?biosystem skos:exactMatch ?wikipathway"),
                 "insert into biosystem_matches(biosystem, wikipathway) values (?,?)")

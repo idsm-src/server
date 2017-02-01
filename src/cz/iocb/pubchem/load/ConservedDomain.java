@@ -10,7 +10,7 @@ import cz.iocb.pubchem.load.common.ModelTableLoader;
 
 public class ConservedDomain extends Loader
 {
-    public static void loadBases(Model model) throws IOException, SQLException
+    private static void loadBases(Model model) throws IOException, SQLException
     {
         new ModelTableLoader(model, loadQuery("conserveddomain/bases.sparql"),
                 "insert into conserveddomain_bases(id, title, abstract) values (?,?,?)")
@@ -26,7 +26,7 @@ public class ConservedDomain extends Loader
     }
 
 
-    public static void loadReferences(Model model) throws IOException, SQLException
+    private static void loadReferences(Model model) throws IOException, SQLException
     {
         new ModelTableLoader(model, patternQuery("?domain cito:isDiscussedBy ?reference"),
                 "insert into conserveddomain_references(domain, reference) values (?,?)")

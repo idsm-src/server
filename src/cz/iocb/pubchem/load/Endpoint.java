@@ -213,7 +213,7 @@ public class Endpoint extends Loader
     }
 
 
-    protected static void checkUnits(String file) throws FileNotFoundException, IOException
+    private static void checkUnits(String file) throws FileNotFoundException, IOException
     {
         InputStream stream = getStream(file);
 

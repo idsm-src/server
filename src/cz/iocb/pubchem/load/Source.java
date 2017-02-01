@@ -12,7 +12,7 @@ import cz.iocb.pubchem.load.common.ModelTableLoader;
 
 public class Source extends Loader
 {
-    public static Map<String, Short> loadBases(Model model) throws IOException, SQLException
+    private static Map<String, Short> loadBases(Model model) throws IOException, SQLException
     {
         Map<String, Short> map = new HashMap<String, Short>();
 
@@ -37,7 +37,7 @@ public class Source extends Loader
     }
 
 
-    public static Map<String, Short> loadSubjectsReftable(Model model) throws IOException, SQLException
+    private static Map<String, Short> loadSubjectsReftable(Model model) throws IOException, SQLException
     {
         Map<String, Short> map = new HashMap<String, Short>();
 
@@ -61,7 +61,7 @@ public class Source extends Loader
     }
 
 
-    public static void loadSubjects(Model model, Map<String, Short> sources, Map<String, Short> subjects)
+    private static void loadSubjects(Model model, Map<String, Short> sources, Map<String, Short> subjects)
             throws IOException, SQLException
     {
         new ModelTableLoader(model, patternQuery("?source dcterms:subject ?subject"),
@@ -77,7 +77,7 @@ public class Source extends Loader
     }
 
 
-    public static void loadAlternatives(Model model, Map<String, Short> sources) throws IOException, SQLException
+    private static void loadAlternatives(Model model, Map<String, Short> sources) throws IOException, SQLException
     {
         new ModelTableLoader(model, patternQuery("?source dcterms:alternative ?alternative"),
                 "insert into source_alternatives (__, source, alternative) values (?, ?,?)")

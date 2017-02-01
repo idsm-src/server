@@ -76,7 +76,7 @@ public class CompoundDescriptor extends Loader
     }
 
 
-    protected static void StreamTableLoader(String file, String suffix, String field) throws IOException, SQLException
+    private static void StreamTableLoader(String file, String suffix, String field) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
@@ -100,7 +100,7 @@ public class CompoundDescriptor extends Loader
     }
 
 
-    protected static void processIntegerFile(String file, String suffix, String field) throws IOException, SQLException
+    private static void processIntegerFile(String file, String suffix, String field) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
@@ -124,7 +124,7 @@ public class CompoundDescriptor extends Loader
     }
 
 
-    protected static void processFloatFile(String file, String suffix, String field) throws IOException, SQLException
+    private static void processFloatFile(String file, String suffix, String field) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
@@ -148,7 +148,7 @@ public class CompoundDescriptor extends Loader
     }
 
 
-    protected static void processXLogP3File(String file, String field) throws IOException, SQLException
+    private static void processXLogP3File(String file, String field) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
@@ -173,7 +173,7 @@ public class CompoundDescriptor extends Loader
     }
 
 
-    protected static void processStringFile(String file, String suffix, String table, String field, int limit)
+    private static void processStringFile(String file, String suffix, String table, String field, int limit)
             throws IOException, SQLException
     {
         InputStream stream = getStream(file);
@@ -225,7 +225,7 @@ public class CompoundDescriptor extends Loader
     }
 
 
-    protected static void processUnitFile(String file, String suffix, String unit)
+    private static void processUnitFile(String file, String suffix, String unit)
             throws FileNotFoundException, IOException
     {
         InputStream stream = getStream(file);

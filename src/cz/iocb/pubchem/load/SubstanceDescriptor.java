@@ -13,7 +13,7 @@ import cz.iocb.pubchem.load.common.StreamTableLoader;
 
 public class SubstanceDescriptor extends Loader
 {
-    protected static void processVersionFile(String file) throws IOException, SQLException
+    private static void processVersionFile(String file) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
