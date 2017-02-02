@@ -1,0 +1,19 @@
+select ?protein ?organism ?title where
+{
+    {
+        # workaround instead of ?protein rdf:type bp:Protein
+        select distinct ?protein where
+        {
+            {
+                ?protein ?P ?O
+            }
+            union
+            {
+                ?S vocab:hasSimilarProtein ?protein     
+            }
+        }
+    }
+    
+    optional { ?protein dcterms:title ?title }
+    optional { ?protein bp:organism ?organism }
+}

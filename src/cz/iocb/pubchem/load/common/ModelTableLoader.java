@@ -102,6 +102,22 @@ public abstract class ModelTableLoader extends TableLoader
     }
 
 
+    protected String getStringID(String name, String prefix) throws IOException
+    {
+        Resource resource = solution.getResource(name);
+
+        if(resource == null)
+            return null;
+
+        String value = resource.getURI();
+
+        if(!value.startsWith(prefix))
+            throw new IOException();
+
+        return value.substring(prefix.length());
+    }
+
+
     protected Short getMapID(String name, Map<String, Short> map)
     {
         Resource resource = solution.getResource(name);

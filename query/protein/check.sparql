@@ -1,0 +1,32 @@
+select distinct ?iri where
+{
+    {
+        ?S ?iri ?iri .
+        filter(?iri != obo:BFO_0000056)
+        filter(?iri != obo:BFO_0000110)
+        filter(?iri != obo:BFO_0000160)
+        filter(?iri != obo:BFO_0000171)
+        filter(?iri != obo:BFO_0000178)
+        filter(?iri != dcterms:title)
+        filter(?iri != cito:isDiscussedBy)
+        filter(?iri != vocab:encodedBy)
+        filter(?iri != vocab:hasSimilarProtein)
+        filter(?iri != pdbo:link_to_pdb)
+        filter(?iri != bp:organism)
+        filter(?iri != skos:closeMatch)
+        filter(?iri != rdf:type)
+    }
+    union
+    {
+        ?S rdf:type ?iri .
+        filter(?iri != bp:Protein)
+        filter(?iri != obo:GO_0043234)
+        filter(! strstarts(str(?iri), "http://purl.obolibrary.org/obo/PR_"))
+    }
+    union
+    {
+        ?S obo:BFO_0000056 ?iri .
+        filter(! strstarts(str(?iri), "http://purl.obolibrary.org/obo/GO_"))
+        filter(! strstarts(str(?iri), "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID"))
+    }
+}
