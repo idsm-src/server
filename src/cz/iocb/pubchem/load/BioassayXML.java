@@ -122,6 +122,7 @@ public class BioassayXML extends Loader
     {
         Map<String, Short> sourceTable = getSources();
         ArrayList<String> newSources = new ArrayList<String>();
+        int newSourceOffset = sourceTable.size();
 
         File dir = new File(getPubchemDirectory() + File.separatorChar + path);
 
@@ -263,11 +264,9 @@ public class BioassayXML extends Loader
             try (PreparedStatement insertStatement = connection
                     .prepareStatement("insert into source_bases (id, iri, title) values (?,?,?)"))
             {
-                int newSourceOffset = sourceTable.size();
-
                 for(int i = 0; i < newSources.size(); i++)
                 {
-                    short sourceID = (short) (newSourceOffset + i + 1);
+                    short sourceID = (short) (newSourceOffset + i);
                     String sourceName = newSources.get(i);
                     String sourceIri = "http://rdf.ncbi.nlm.nih.gov/pubchem/source/"
                             + sourceName.replaceAll("\\(.*\\)", "").replaceAll("[.&]", "").replace('/', '-')
