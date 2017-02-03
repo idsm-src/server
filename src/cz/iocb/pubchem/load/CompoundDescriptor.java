@@ -76,30 +76,6 @@ public class CompoundDescriptor extends Loader
     }
 
 
-    private static void StreamTableLoader(String file, String suffix, String field) throws IOException, SQLException
-    {
-        InputStream stream = getStream(file);
-
-        new DescriptorSimpleFileTableLoader(stream, field)
-        {
-            @Override
-            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
-            {
-                if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
-                    throw new IOException();
-
-                int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
-                idList.add(id);
-
-                setValue(1, getInteger(object));
-                setValue(2, id);
-            }
-        }.load();
-
-        stream.close();
-    }
-
-
     private static void processIntegerFile(String file, String suffix, String field) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
