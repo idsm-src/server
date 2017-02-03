@@ -15,10 +15,8 @@ drop function iri_reference_type_INVERSE;
 
 --------------------------------------------------------------------------------
 
-drop table reference_subject_descriptor_qualifiers;
 drop table reference_subject_descriptors;
-drop table reference_discusses_cmesh;
-drop table reference_discusses_mesh;
+drop table reference_discusses;
 drop table reference_citations_long;
 drop table reference_bases;
 drop table reference_types__reftable;

@@ -73,7 +73,11 @@ grant execute on iri_cheminf_INVERSE to "SPARQL";
 create function iri_mesh(in type integer) returns varchar
 {
     vectored;
-    return sprintf('http://id.nlm.nih.gov/mesh/M%07d', type);
+    
+    if(type >= 0)
+        return sprintf('http://id.nlm.nih.gov/mesh/M%07d', type);
+    else
+        return sprintf('http://id.nlm.nih.gov/mesh/C%09d', type);
 };
 
 create function iri_mesh_INVERSE (in id varchar) returns integer
@@ -86,6 +90,11 @@ create function iri_mesh_INVERSE (in id varchar) returns integer
     if (parts is not null)
         return parts[0];
 
+    parts := sprintf_inverse(id, 'http://id.nlm.nih.gov/mesh/C%d', 0);
+
+    if (parts is not null)
+        return -parts[0];
+
     return null;
 };
 
@@ -94,57 +103,13 @@ grant execute on iri_mesh_INVERSE to "SPARQL";
 
 --------------------------------------------------------------------------------
 
-create function iri_cmesh(in type integer) returns varchar
-{
-    vectored;
-    return sprintf('http://id.nlm.nih.gov/mesh/C%09d', type);
-};
-
-create function iri_cmesh_INVERSE (in id varchar) returns integer
-{
-    vectored;
-
-    declare parts any;
-    parts := sprintf_inverse(id, 'http://id.nlm.nih.gov/mesh/C%d', 0);
-
-    if (parts is not null)
-        return parts[0];
-
-    return null;
-};
-
-grant execute on iri_cmesh to "SPARQL";
-grant execute on iri_cmesh_INVERSE to "SPARQL";
-
---------------------------------------------------------------------------------
-
-create function iri_dmesh(in type integer) returns varchar
-{
-    vectored;
-    return sprintf('http://id.nlm.nih.gov/mesh/D%06d', type);
-};
-
-create function iri_dmesh_INVERSE (in id varchar) returns integer
-{
-    vectored;
-
-    declare parts any;
-    parts := sprintf_inverse(id, 'http://id.nlm.nih.gov/mesh/D%d', 0);
-
-    if (parts is not null)
-        return parts[0];
-
-    return null;
-};
-
-grant execute on iri_dmesh to "SPARQL";
-grant execute on iri_dmesh_INVERSE to "SPARQL";
-
---------------------------------------------------------------------------------
-
 create function iri_dqmesh(in descriptor integer, in qualifier integer) returns varchar
 {
     vectored;
+
+    if(qualifier == -1)
+        return sprintf('http://id.nlm.nih.gov/mesh/D%06d', descriptor);
+
     return sprintf('http://id.nlm.nih.gov/mesh/D%06dQ%06d', descriptor, qualifier);
 };
 
@@ -153,6 +118,11 @@ create function iri_dqmesh_INV_1 (in id varchar) returns integer
     vectored;
 
     declare parts any;
+        parts := sprintf_inverse(id, 'http://id.nlm.nih.gov/mesh/D%d', 0);
+
+    if (parts is not null)
+        return parts[0];
+
     parts := sprintf_inverse(id, 'http://id.nlm.nih.gov/mesh/D%dQ%d', 0);
 
     if (parts is not null)
@@ -166,6 +136,11 @@ create function iri_dqmesh_INV_2 (in id varchar) returns integer
     vectored;
 
     declare parts any;
+    parts := sprintf_inverse(id, 'http://id.nlm.nih.gov/mesh/D%d', 0);
+
+    if (parts is not null)
+        return -1;
+
     parts := sprintf_inverse(id, 'http://id.nlm.nih.gov/mesh/D%dQ%d', 0);
 
     if (parts is not null)

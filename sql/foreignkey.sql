@@ -84,10 +84,8 @@ alter table protein_complexes add foreign key (protein) references protein_bases
 -- reference
 alter table reference_bases add foreign key (type) references reference_types__reftable(id);
 alter table reference_citations_long add foreign key (reference) references reference_bases(id);
-alter table reference_discusses_mesh add foreign key (reference) references reference_bases(id);
-alter table reference_discusses_cmesh add foreign key (reference) references reference_bases(id);
+alter table reference_discusses add foreign key (reference) references reference_bases(id);
 alter table reference_subject_descriptors add foreign key (reference) references reference_bases(id);
-alter table reference_subject_descriptor_qualifiers add foreign key (reference) references reference_bases(id);
 
 -- source
 alter table source_subjects add foreign key (source) references source_bases(id);
