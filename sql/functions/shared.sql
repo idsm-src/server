@@ -145,7 +145,7 @@ grant execute on iri_dmesh_INVERSE to "SPARQL";
 create function iri_dqmesh(in descriptor integer, in qualifier integer) returns varchar
 {
     vectored;
-    return sprintf('http://id.nlm.nih.gov/mesh/D%06dQ%06d', type, );
+    return sprintf('http://id.nlm.nih.gov/mesh/D%06dQ%06d', descriptor, qualifier);
 };
 
 create function iri_dqmesh_INV_1 (in id varchar) returns integer
