@@ -140,7 +140,7 @@ public class Reference extends Loader
 
                 setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID"));
 
-                if(object.getURI().charAt(27) == 'M')
+                if(object.getURI().length() > 27 && object.getURI().charAt(27) == 'M')
                     setValue(2, getIntID(object, "http://id.nlm.nih.gov/mesh/M"));
                 else
                     setValue(2, -getIntID(object, "http://id.nlm.nih.gov/mesh/C"));
