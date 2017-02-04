@@ -192,7 +192,7 @@ public class BioassayXML extends Loader
 
                                                     if(sourceId == null)
                                                     {
-                                                        sourceId = (short) (sourceTable.size() + 1);
+                                                        sourceId = (short) sourceTable.size();
                                                         sourceTable.put(sourceName, sourceId);
                                                         newSources.add(sourceName);
                                                     }
