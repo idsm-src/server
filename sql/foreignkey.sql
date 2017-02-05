@@ -110,7 +110,7 @@ alter table synonym_compounds add foreign key (synonym) references synonym_bases
 -- alter table synonym_compounds add foreign key (compound) references compound_bases(id);
 alter table synonym_mesh_subjects add foreign key (synonym) references synonym_bases(id);
 alter table synonym_concept_subjects add foreign key (synonym) references synonym_bases(id);
-alter table synonym_concept_subjects add foreign key (subject) references concept_bases(id);
+alter table synonym_concept_subjects add foreign key (concept) references concept_bases(id);
 
 
 

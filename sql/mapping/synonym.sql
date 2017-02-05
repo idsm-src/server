@@ -22,6 +22,6 @@ alter quad storage virtrdf:PubchemQuadStorage
             dcterms:subject iri:mesh(synonym_mesh_subjects.subject) .
 
         iri:synonym(synonym_concept_subjects.synonym)
-            dcterms:subject iri:concept(synonym_concept_subjects.subject) .
+            dcterms:subject iri:concept(synonym_concept_subjects.concept) .
     }.
 }.;
