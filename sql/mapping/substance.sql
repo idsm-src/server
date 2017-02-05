@@ -2,8 +2,7 @@ sparql
 alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.substance_bases            as substance_bases
     from DB.rdf.substance_types            as substance_types
-    from DB.rdf.substance_chembl_matches   as substance_chembl_matches
-    from DB.rdf.substance_schembl_matches  as substance_schembl_matches
+    from DB.rdf.substance_matches          as substance_matches
     from DB.rdf.substance_references       as substance_references
     from DB.rdf.substance_pdblinks         as substance_pdblinks
     from DB.rdf.endpoint_bases             as endpoint_bases
@@ -24,13 +23,9 @@ alter quad storage virtrdf:PubchemQuadStorage
         iri:substance(endpoint_bases.substance)
             obo:BFO_0000056 iri:measuregroup(endpoint_bases.bioassay, endpoint_bases.measuregroup) .
 
-        iri:substance(substance_chembl_matches.substance)
-            skos:exactMatch iri:substance_chembl(substance_chembl_matches.chembl) ;
-            skos:exactMatch iri:substance_ebi_chembl(substance_chembl_matches.chembl) .
-
-        iri:substance(substance_schembl_matches.substance)
-            skos:exactMatch iri:substance_schembl(substance_schembl_matches.schembl) ;
-            skos:exactMatch iri:substance_ebi_schembl(substance_schembl_matches.schembl) .
+        iri:substance(substance_matches.substance)
+            skos:exactMatch iri:substance_chembl(substance_matches.match) ;
+            skos:exactMatch iri:substance_ebi_chembl(substance_matches.match) .
 
         iri:substance(substance_references.substance)
             cito:isDiscussedBy iri:reference(substance_references.reference) .
