@@ -56,13 +56,13 @@ public class Measuregroup extends Loader
 
                 if(part.isEmpty())
                 {
-                    measuregroup = -2147483648; // magic number
+                    measuregroup = -2147483647; // magic number
                 }
                 else
                 {
                     measuregroup = -Integer.parseInt(part);
 
-                    if(measuregroup == -2147483648 || measuregroup == 0)
+                    if(measuregroup == -2147483647 || measuregroup == 0)
                         throw new IOException();
                 }
             }

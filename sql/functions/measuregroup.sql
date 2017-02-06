@@ -5,7 +5,7 @@ create function iri_measuregroup (in bioassay integer, in measuregroup integer) 
     if(measuregroup = 2147483647)
         return sprintf ('http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID%d', bioassay);
         
-    if(measuregroup = -2147483648)
+    if(measuregroup = -2147483647)
         return sprintf ('http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID%d_PMID', bioassay);
 
     if(measuregroup >= 0)
@@ -58,7 +58,7 @@ create function iri_measuregroup_INV_2 (in id varchar) returns integer
     parts := sprintf_inverse (id, 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID%d_PMID', 0);
 
     if (parts is not null)
-        return -2147483648;
+        return -2147483647;
 
     return null;
 };

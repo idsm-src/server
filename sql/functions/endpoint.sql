@@ -5,7 +5,7 @@ create function iri_endpoint (in substance integer, in bioassay integer, in meas
     if(measuregroup = 2147483647)
       return sprintf ('http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d', substance, bioassay);
 
-    if(measuregroup = -2147483648)
+    if(measuregroup = -2147483647)
       return sprintf ('http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d_PMID', substance, bioassay);
 
     if(measuregroup >= 0)
@@ -72,7 +72,7 @@ create function iri_endpoint_INV_3 (in id varchar) returns integer
     parts := sprintf_inverse (id, 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID%d_AID%d_PMID', 0);
 
     if (parts is not null)
-        return -2147483648;
+        return -2147483647;
 
     return null;
 };
