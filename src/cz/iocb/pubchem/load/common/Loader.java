@@ -157,13 +157,19 @@ public class Loader
     }
 
 
-    protected static Model getModel(String file) throws IOException
+    protected static Model getModel(String file, String lang) throws IOException
     {
         System.out.println("load " + file);
 
         Model model = ModelFactory.createDefaultModel();
         InputStream in = FileManager.get().open(getPubchemDirectory() + file);
-        return model.read(in, null, "TTL");
+        return model.read(in, null, lang);
+    }
+
+
+    protected static Model getModel(String file) throws IOException
+    {
+        return getModel(file, "TTL");
     }
 
 

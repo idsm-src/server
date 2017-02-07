@@ -1,10 +1,8 @@
 sparql
 alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.class_bases            as class_bases
-    from DB.rdf.class_labels           as class_labels
     from DB.rdf.class_subclasses       as class_subclasses
     from DB.rdf.property_bases         as property_bases
-    from DB.rdf.property_labels        as property_labels
     from DB.rdf.property_subproperties as property_subproperties
     from DB.rdf.property_domains       as property_domains
     from DB.rdf.property_ranges        as property_ranges
@@ -16,8 +14,8 @@ alter quad storage virtrdf:PubchemQuadStorage
             template:itemTemplate "base/Class.vm" ;
             template:pageTemplate "base/Class.vm" .
 
-        iri:class(class_labels.class)
-            rdfs:label class_labels.label .
+        iri:class(class_bases.class)
+            rdfs:label class_bases.label .
 
         iri:class(class_subclasses.class)
             rdfs:subClassOf iri:class(class_subclasses.subclass).
@@ -27,8 +25,8 @@ alter quad storage virtrdf:PubchemQuadStorage
             template:itemTemplate "base/Property.vm" ;
             template:pageTemplate "base/Property.vm" .
 
-        iri:property(property_labels.property)
-            rdfs:label property_labels.label .
+        iri:property(property_bases.property)
+            rdfs:label property_bases.label .
 
         iri:property(property_subproperties.property)
             rdfs:subPropertyOf iri:property(property_subproperties.subproperty).

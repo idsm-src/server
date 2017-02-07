@@ -1,0 +1,29 @@
+select ?iri (max(?lbl) as ?label) where
+{
+    {
+        ?iri rdf:type rdf:Property
+    }
+    union
+    {
+        ?P rdfs:subPropertyOf ?iri
+    }
+    union
+    {
+        ?iri rdfs:subPropertyOf ?S
+    }
+    union
+    {
+        ?iri rdfs:domain ?D
+    }
+    union
+    {
+        ?iri rdfs:range ?P
+    }
+
+    optional
+    {
+        ?iri rdfs:label ?lbl
+        filter(lang(?lbl) = "en")
+    }
+}
+group by ?iri

@@ -1,0 +1,34 @@
+select ?iri (max(?lbl) as ?label) where
+{
+    {
+        select distinct ?iri where
+        {    
+            {
+                ?iri rdf:type owl:Class
+            }
+            union
+            {
+                ?iri rdfs:subClassOf ?S
+            }
+            union
+            {
+                ?C rdfs:subClassOf ?iri
+            }
+            union
+            {
+                ?S rdfs:domain ?iri
+            }
+            union
+            {
+                ?S rdfs:range ?iri
+            }
+        }
+    }
+
+    optional
+    {
+        ?iri rdfs:label ?lbl
+        filter(lang(?lbl) = "en")
+    }
+}
+group by ?iri
