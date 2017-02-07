@@ -171,7 +171,7 @@ public class Ontology extends Loader
     }
 
 
-    private static void loadDirectory(String path) throws IOException, SQLException
+    public static void loadDirectory(String path) throws IOException, SQLException
     {
         Model ontologyModel = ModelFactory.createDefaultModel();
         File dir = new File(getPubchemDirectory() + path);
