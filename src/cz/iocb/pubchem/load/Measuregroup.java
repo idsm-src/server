@@ -163,17 +163,19 @@ public class Measuregroup extends Loader
         try (Connection connection = getConnection())
         {
             try (PreparedStatement insertStatement = connection
-                    .prepareStatement("insert into source_bases (id, iri) values (?,?)"))
+                    .prepareStatement("insert into source_bases (id, iri, title) values (?,?,?)"))
             {
                 for(int i = 0; i < newSources.size(); i++)
                 {
                     short sourceID = (short) (newSourceOffset + i);
                     String sourceIri = newSources.get(i);
+                    String sourceTitle = generateSourceTitle(sourceIri);
 
-                    System.out.println("  add missing source: " + sourceIri);
+                    System.out.println("  add missing source: " + sourceIri + " (" + sourceTitle + ")");
 
                     insertStatement.setShort(1, sourceID);
                     insertStatement.setString(2, sourceIri);
+                    insertStatement.setString(3, sourceTitle);
 
                     insertStatement.addBatch();
                 }

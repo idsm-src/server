@@ -16,7 +16,7 @@ public class Biosystem extends Loader
         Map<String, Short> map = getMapping("source_bases");
 
         new ModelTableLoader(model, distinctPatternQuery("[] dcterms:source ?source"),
-                "insert into source_bases (id, iri) values (?,?)")
+                "insert into source_bases (id, iri, title) values (?,?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -25,13 +25,15 @@ public class Biosystem extends Loader
 
                 if(map.get(iri) == null)
                 {
-                    System.out.println("  add missing source: " + iri);
-
+                    String title = generateSourceTitle(iri);
                     short id = (short) map.size();
                     map.put(iri, id);
 
+                    System.out.println("  add missing source: " + iri + " (" + title + ")");
+
                     setValue(1, id);
                     setValue(2, iri);
+                    setValue(3, title);
                 }
             }
         }.load();

@@ -272,7 +272,7 @@ public class BioassayXML extends Loader
                             + sourceName.replaceAll("\\(.*\\)", "").replaceAll("[.&]", "").replace('/', '-')
                                     .replace(',', '_').replace(' ', '_').replaceAll("^([0-9])", "ID\\1");
 
-                    System.out.println("  add missing source: " + sourceIri);
+                    System.out.println("  add missing source: " + sourceIri + " (" + sourceName + ")");
 
                     insertStatement.setShort(1, sourceID);
                     insertStatement.setString(2, sourceIri);

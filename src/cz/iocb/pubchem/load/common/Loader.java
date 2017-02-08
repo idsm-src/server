@@ -234,4 +234,15 @@ public class Loader
 
         return map;
     }
+
+
+    protected static String generateSourceTitle(String iri)
+    {
+        String base = iri.replaceFirst("^http://rdf.ncbi.nlm.nih.gov/pubchem/source/", "");
+
+        if(base.startsWith("ID"))
+            return base.substring(2);
+        else
+            return base.replace('_', ' ');
+    }
 }
