@@ -106,6 +106,27 @@ public class Measuregroup extends Loader
     }
 
 
+    private static void loadTypes(String file) throws IOException, SQLException
+    {
+        InputStream stream = getStream(file);
+
+        new MeasuregroupStreamTableLoader(stream, "insert into measuregroup_bases(bioassay, measuregroup) values (?,?)")
+        {
+            @Override
+            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
+            {
+                if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                    throw new IOException();
+
+                if(!object.getURI().equals("http://www.bioassayontology.org/bao#BAO_0000040"))
+                    throw new IOException();
+
+                setIDValues(1, subject);
+            }
+        }.load();
+    }
+
+
     private static void loadSources(String file) throws IOException, SQLException
     {
         Map<String, Short> sources = getMapping("source_bases");
@@ -115,7 +136,7 @@ public class Measuregroup extends Loader
         InputStream stream = getStream(file);
 
         new MeasuregroupStreamTableLoader(stream,
-                "insert into measuregroup_bases(bioassay, measuregroup, source) values (?,?,?)")
+                "update measuregroup_bases set source=? where bioassay=? and measuregroup=?")
         {
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
@@ -131,8 +152,8 @@ public class Measuregroup extends Loader
                     newSources.add(iri);
                 }
 
-                setIDValues(1, subject);
-                setValue(3, getMapID(object, sources));
+                setValue(1, getMapID(object, sources));
+                setIDValues(2, subject);
             }
         }.load();
 
@@ -168,8 +189,7 @@ public class Measuregroup extends Loader
         InputStream stream = getStream(file);
 
         new MeasuregroupStreamTableLoader(stream,
-                "insert replacing measuregroup_bases(bioassay, measuregroup, source, title) values (?,?,"
-                        + "(select source from measuregroup_bases where bioassay=? and measuregroup=?),?)")
+                "update measuregroup_bases set title=? where bioassay=? and measuregroup=?")
         {
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
@@ -177,9 +197,8 @@ public class Measuregroup extends Loader
                 if(!predicate.getURI().equals("http://purl.org/dc/terms/title"))
                     throw new IOException();
 
-                setIDValues(1, subject);
-                setIDValues(3, subject);
-                setValue(5, getString(object));
+                setValue(1, getString(object));
+                setIDValues(2, subject);
             }
         }.load();
     }
@@ -286,31 +305,40 @@ public class Measuregroup extends Loader
     }
 
 
+    private static void loadGenesAndProteins(String file) throws SQLException, IOException
+    {
+        loadGenes(file);
+        loadProteins(file);
+    }
+
+
     public static void loadDirectory(String path) throws IOException, SQLException
     {
+        loadTypes(path + File.separatorChar + "pc_measuregroup_type.ttl.gz");
+
         File dir = new File(getPubchemDirectory() + path);
 
         Arrays.asList(dir.listFiles()).stream().map(f -> f.getName()).forEach(name -> {
-            if(name.equals("pc_measuregroup_source.ttl.gz"))
-                return;
-
-            if(name.equals("pc_measuregroup_title.ttl.gz"))
-                return;
-
-            if(name.equals("pc_measuregroup2protein.ttl.gz"))
-                return;
-
-            if(name.startsWith("pc_measuregroup2endpoint") || name.equals("pc_measuregroup_type.ttl.gz"))
-                System.out.println("ignore " + path + File.separatorChar + name);
-            else
-                System.out.println("unsupported " + path + File.separatorChar + name);
+            try
+            {
+                if(name.equals("pc_measuregroup_source.ttl.gz"))
+                    loadSources(path + File.separatorChar + "pc_measuregroup_source.ttl.gz");
+                else if(name.equals("pc_measuregroup_title.ttl.gz"))
+                    loadTitles(path + File.separatorChar + "pc_measuregroup_title.ttl.gz");
+                else if(name.equals("pc_measuregroup2protein.ttl.gz"))
+                    loadGenesAndProteins(path + File.separatorChar + "pc_measuregroup2protein.ttl.gz");
+                else if(name.startsWith("pc_measuregroup2endpoint"))
+                    System.out.println("ignore " + path + File.separatorChar + name);
+                else if(!name.equals("pc_measuregroup_type.ttl.gz"))
+                    System.out.println("unsupported " + path + File.separatorChar + name);
+            }
+            catch (IOException | SQLException e)
+            {
+                System.err.println("exception for " + name);
+                e.printStackTrace();
+                System.exit(1);
+            }
         });
-
-
-        loadSources(path + File.separatorChar + "pc_measuregroup_source.ttl.gz");
-        loadTitles(path + File.separatorChar + "pc_measuregroup_title.ttl.gz");
-        loadProteins(path + File.separatorChar + "pc_measuregroup2protein.ttl.gz");
-        loadGenes(path + File.separatorChar + "pc_measuregroup2protein.ttl.gz");
     }
 
 
