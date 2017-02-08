@@ -53,8 +53,7 @@ public class Concept extends Loader
 
     private static void loadBroader(Model model, Map<String, Short> concepts) throws IOException, SQLException
     {
-        // workaround: filter(?concept != ?broader)
-        new ModelTableLoader(model, patternQuery("?concept skos:broader ?broader filter(?concept != ?broader)"),
+        new ModelTableLoader(model, patternQuery("?concept skos:broader ?broader"),
                 "update concept_bases set broader=? where id=?")
         {
             @Override
