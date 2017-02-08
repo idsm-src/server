@@ -33,7 +33,7 @@ import virtuoso.jdbc4.VirtuosoConnectionPoolDataSource;
 
 public class Loader
 {
-    protected static final int batchSize = 10000;
+    protected static final int batchSize = 1000;
     private static Properties properties = null;
     private static VirtuosoConnectionPoolDataSource connectionPool = null;
     private static String prefixes = null;

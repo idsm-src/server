@@ -28,9 +28,9 @@ public class Synonym extends Loader
     {
         InputStream stream = getStream(file);
 
-        new StreamTableLoader(stream, "insert into synonym_values(__, synonym, value) values (?,?,?)", 1000)
+        new StreamTableLoader(stream, "insert into synonym_values(__, synonym, value) values (?,?,?)")
         {
-            LinkedHashMap<Integer, String> newMd5Hashes = new LinkedHashMap<Integer, String>(2000);
+            LinkedHashMap<Integer, String> newMd5Hashes = new LinkedHashMap<Integer, String>(2 * Loader.batchSize);
 
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException

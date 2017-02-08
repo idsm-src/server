@@ -16,7 +16,6 @@ import org.apache.jena.riot.RDFDataMgr;
 
 public abstract class StreamTableLoader extends TableLoader
 {
-    final private int batchSize;
     private InputStream stream;
     private String sql;
     private int count = 0;
@@ -26,15 +25,6 @@ public abstract class StreamTableLoader extends TableLoader
     {
         this.stream = stream;
         this.sql = sql;
-        batchSize = Loader.batchSize;
-    }
-
-
-    public StreamTableLoader(InputStream stream, String sql, int batchSize)
-    {
-        this.stream = stream;
-        this.sql = sql;
-        this.batchSize = batchSize;
     }
 
 
@@ -74,7 +64,7 @@ public abstract class StreamTableLoader extends TableLoader
                         throw e;
                 }
 
-                if(count % batchSize != 0)
+                if(count % Loader.batchSize != 0)
                 {
                     beforeBatch();
                     insertStatement.executeBatch();
@@ -98,7 +88,7 @@ public abstract class StreamTableLoader extends TableLoader
 
         statement.addBatch();
 
-        if(++count % batchSize == 0)
+        if(++count % Loader.batchSize == 0)
         {
             beforeBatch();
             statement.executeBatch();
