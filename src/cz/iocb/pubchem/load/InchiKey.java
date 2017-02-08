@@ -58,7 +58,7 @@ public class InchiKey extends Loader
                 String inchikey = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/");
 
                 if(!ids.contains(inchikey))
-                    System.out.println("missing inchikey for a compound: " + inchikey);
+                    System.out.println("  missing inchikey " + inchikey + " for sio:is-attribute-of");
 
                 setValue(1, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
                 setValue(2, inchikey);
@@ -85,7 +85,7 @@ public class InchiKey extends Loader
                 String inchikey = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/");
 
                 if(!ids.contains(inchikey))
-                    System.out.println("missing inchikey for a subject: " + inchikey);
+                    System.out.println("  missing inchikey " + inchikey + " for dcterms:subject");
 
                 setValue(1, getIntID(object, "http://id.nlm.nih.gov/mesh/M"));
                 setValue(2, inchikey);

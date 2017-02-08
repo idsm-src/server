@@ -184,7 +184,7 @@ public class Substance extends Loader
                 }
                 else if(!value.startsWith("http://linkedchemistry.info/chembl/chemblid/"))
                 {
-                    System.out.println("  ignore match " + value);
+                    System.out.println("  ignore skos:exactMatch " + value);
                 }
             }
         }.load();

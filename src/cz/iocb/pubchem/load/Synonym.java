@@ -99,16 +99,18 @@ public class Synonym extends Loader
                 if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                     throw new IOException();
 
-                Integer md5ID = md5hashes.get(getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
+                String md5 = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_");
+                Integer md5ID = md5hashes.get(md5);
 
-                if(md5ID == null)
+                if(md5ID != null)
                 {
-                    System.out.println(" ignore md5 synonym: " + subject.getURI());
-                    return;
+                    setValue(1, md5ID);
+                    setValue(2, getIntID(object, "http://semanticscience.org/resource/CHEMINF_"));
                 }
-
-                setValue(1, md5ID);
-                setValue(2, getIntID(object, "http://semanticscience.org/resource/CHEMINF_"));
+                else
+                {
+                    System.out.println("  ignore md5 synonym " + md5 + " for rdf:type");
+                }
             }
         }.load();
 
@@ -128,16 +130,18 @@ public class Synonym extends Loader
                 if(!predicate.getURI().equals("http://semanticscience.org/resource/is-attribute-of"))
                     throw new IOException();
 
-                Integer md5ID = md5hashes.get(getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
+                String md5 = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_");
+                Integer md5ID = md5hashes.get(md5);
 
-                if(md5ID == null)
+                if(md5ID != null)
                 {
-                    System.out.println(" ignore md5 synonym: " + subject.getURI());
-                    return;
+                    setValue(1, md5ID);
+                    setValue(2, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
                 }
-
-                setValue(1, md5ID);
-                setValue(2, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
+                else
+                {
+                    System.out.println("  ignore md5 synonym " + md5 + " for sio:is-attribute-of");
+                }
             }
         }.load();
 
@@ -167,16 +171,18 @@ public class Synonym extends Loader
                 if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/concept/"))
                     return;
 
-                Integer md5ID = md5hashes.get(getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
+                String md5 = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_");
+                Integer md5ID = md5hashes.get(md5);
 
-                if(md5ID == null)
+                if(md5ID != null)
                 {
-                    System.out.println(" ignore md5 synonym: " + subject.getURI());
-                    return;
+                    setValue(1, md5ID);
+                    setValue(2, getIntID(object, "http://id.nlm.nih.gov/mesh/M"));
                 }
-
-                setValue(1, md5ID);
-                setValue(2, getIntID(object, "http://id.nlm.nih.gov/mesh/M"));
+                else
+                {
+                    System.out.println("  ignore md5 synonym " + md5 + " for mesh dcterms:subject");
+                }
             }
         }.load();
 
@@ -207,25 +213,28 @@ public class Synonym extends Loader
                 if(value.startsWith("http://id.nlm.nih.gov/mesh/M"))
                     return;
 
-                Integer md5ID = md5hashes.get(getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
+                String md5 = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_");
+                Integer md5ID = md5hashes.get(md5);
 
-                if(md5ID == null)
+                if(md5ID != null)
                 {
-                    System.out.println(" ignore md5 synonym: " + subject.getURI());
-                    return;
+
+                    Short conceptID = concepts.get(value);
+
+                    if(conceptID == null)
+                    {
+                        conceptID = (short) concepts.size();
+                        concepts.put(value, conceptID);
+                        newConcepts.add(value);
+                    }
+
+                    setValue(1, md5ID);
+                    setValue(2, conceptID);
                 }
-
-                Short conceptID = concepts.get(value);
-
-                if(conceptID == null)
+                else
                 {
-                    conceptID = (short) concepts.size();
-                    concepts.put(value, conceptID);
-                    newConcepts.add(value);
+                    System.out.println("  ignore md5 synonym " + md5 + " for concept dcterms:subject");
                 }
-
-                setValue(1, md5ID);
-                setValue(2, conceptID);
             }
         }.load();
 
