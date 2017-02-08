@@ -4,6 +4,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.gene_biosystems   as gene_biosystems
     from DB.rdf.gene_alternatives as gene_alternatives
     from DB.rdf.gene_references   as gene_references
+    from DB.rdf.gene_matches      as gene_matches
 {
     create map:gene as graph pubchem:gene option (exclusive)
     {
@@ -19,6 +20,9 @@ alter quad storage virtrdf:PubchemQuadStorage
             dcterms:alternative gene_alternatives.alternative .
 
         iri:gene(gene_references.gene)
-            cito:isDiscussedBy iri:reference(gene_references.reference)
+            cito:isDiscussedBy iri:reference(gene_references.reference) .
+
+        iri:gene(gene_matches.gene)
+            skos:closeMatch iri:ensembl(gene_matches.match) .
     }.
 }.;

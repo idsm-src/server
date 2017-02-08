@@ -19,3 +19,9 @@ grant select on gene_alternatives to "SPARQL";
 create index gene_references__gene on gene_references(gene);
 create index gene_references__reference on gene_references(reference);
 grant select on gene_references to "SPARQL";
+
+--------------------------------------------------------------------------------
+
+create index gene_matches__gene on gene_matches(gene);
+create index gene_matches__match on gene_matches(match);
+grant select on gene_matches to "SPARQL";

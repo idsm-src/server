@@ -75,6 +75,24 @@ public class Gene extends Loader
     }
 
 
+    private static void loadCloseMatches(Model model) throws IOException, SQLException
+    {
+        new ModelTableLoader(model, patternQuery("?gene skos:closeMatch ?match"),
+                "insert into gene_matches(__, gene, match) values (?,?,?)")
+        {
+            int nextID = 0;
+
+            @Override
+            public void insert() throws SQLException, IOException
+            {
+                setValue(1, nextID++);
+                setValue(2, getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"));
+                setValue(3, getStringID("match", "http://rdf.ebi.ac.uk/resource/ensembl/"));
+            }
+        }.load();
+    }
+
+
     public static void load(String file) throws IOException, SQLException
     {
         Model model = getModel(file);
@@ -84,6 +102,7 @@ public class Gene extends Loader
         loadBiosystems(model);
         loadAlternatives(model);
         loadReferences(model);
+        loadCloseMatches(model);
 
         model.close();
     }

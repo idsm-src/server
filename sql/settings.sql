@@ -36,6 +36,7 @@ xml_set_ns_decl('chemblchembl', 'http://linkedchemistry.info/chembl/chemblid/', 
 xml_set_ns_decl('foaf', 'http://xmlns.com/foaf/0.1/', 2);
 xml_set_ns_decl('void', 'http://rdfs.org/ns/void#', 2);
 xml_set_ns_decl('dcterms', 'http://purl.org/dc/terms/', 2);
+xml_set_ns_decl('ensembl', 'http://rdf.ebi.ac.uk/resource/ensembl/', 2);
 
 --------------------------------------------------------------------------------
 

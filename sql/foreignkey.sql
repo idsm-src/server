@@ -46,6 +46,7 @@ alter table gene_biosystems add foreign key (biosystem) references biosystem_bas
 alter table gene_alternatives add foreign key (gene) references gene_bases(id);
 alter table gene_references add foreign key (gene) references gene_bases(id);
 alter table gene_references add foreign key (reference) references reference_bases(id);
+alter table gene_matches add foreign key (gene) references gene_bases(id);
 
 -- inchikey
 alter table inchikey_compounds add foreign key (inchikey) references inchikey_bases(id);

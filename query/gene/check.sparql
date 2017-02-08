@@ -7,6 +7,7 @@ select distinct ?iri where
 	    filter(?iri != dcterms:title)
 	    filter(?iri != obo:BFO_0000056)
 	    filter(?iri != cito:isDiscussedBy)
+	    filter(?iri != skos:closeMatch)
 	    filter(?iri != rdf:type)
 	}
     union

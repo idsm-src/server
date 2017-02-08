@@ -31,3 +31,12 @@ create table gene_references
     reference    integer not null,
     primary key(gene, reference)
 );
+
+
+create table gene_matches
+(
+    __       integer identity,
+    gene     integer not null,
+    match    varchar not null,
+    primary key(__)
+);
