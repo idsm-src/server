@@ -1,7 +1,6 @@
 package cz.iocb.pubchem.load;
 
 import java.io.File;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -127,43 +126,7 @@ public class Substance extends Loader
     {
         InputStream stream = getStream(file);
 
-        // workaround: for RiotException: Illegal character in IRI
-        FilterInputStream filter = new FilterInputStream(stream)
-        {
-            @Override
-            public int read() throws IOException
-            {
-                int value = super.read();
-
-                if(value == '|')
-                    value = '_';
-
-                return value;
-            }
-
-            @Override
-            public int read(byte[] b) throws IOException
-            {
-                return read(b, 0, b.length);
-            }
-
-            @Override
-            public int read(byte[] b, int off, int len) throws IOException
-            {
-                int value = super.read(b, off, len);
-
-                if(value != -1)
-                {
-                    for(int i = off; i < off + value; i++)
-                        if(b[i] == '|')
-                            b[i] = '_';
-                }
-
-                return value;
-            }
-        };
-
-        new StreamTableLoader(filter, "insert into substance_matches(substance, match) values (?,?)")
+        new StreamTableLoader(stream, "insert into substance_matches(substance, match) values (?,?)")
         {
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
@@ -173,19 +136,12 @@ public class Substance extends Loader
 
                 String value = object.getURI();
 
-                if(value.matches("http://rdf.ebi.ac.uk/resource/chembl/molecule/S?CHEMBL[0-9]+"))
-                {
-                    setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID"));
+                setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID"));
 
-                    if(value.length() > 46 && value.charAt(46) == 'C')
-                        setValue(2, getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL"));
-                    else
-                        setValue(2, -getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/molecule/SCHEMBL"));
-                }
-                else if(!value.startsWith("http://linkedchemistry.info/chembl/chemblid/"))
-                {
-                    System.out.println("  ignore skos:exactMatch " + value);
-                }
+                if(value.length() > 46 && value.charAt(46) == 'C')
+                    setValue(2, getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL"));
+                else
+                    setValue(2, -getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/molecule/SCHEMBL"));
             }
         }.load();
 
