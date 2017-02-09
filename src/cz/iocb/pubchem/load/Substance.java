@@ -136,12 +136,15 @@ public class Substance extends Loader
 
                 String value = object.getURI();
 
-                setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID"));
+                if(!value.startsWith("http://linkedchemistry.info/chembl/chemblid/"))
+                {
+                    setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID"));
 
-                if(value.length() > 46 && value.charAt(46) == 'C')
-                    setValue(2, getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL"));
-                else
-                    setValue(2, -getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/molecule/SCHEMBL"));
+                    if(value.length() > 46 && value.charAt(46) == 'C')
+                        setValue(2, getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL"));
+                    else
+                        setValue(2, -getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/molecule/SCHEMBL"));
+                }
             }
         }.load();
 
