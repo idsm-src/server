@@ -276,7 +276,7 @@ public class Synonym extends Loader
         AtomicInteger valueID = new AtomicInteger();
 
         // workaround: parallel stream cannot be used due to a virtuoso/jdbc issue
-        files.parallelStream().map(f -> f.getName()).filter(n -> n.startsWith("pc_synonym_value")).forEach(name -> {
+        files.stream().map(f -> f.getName()).filter(n -> n.startsWith("pc_synonym_value")).forEach(name -> {
             try
             {
                 loadValues(path + File.separatorChar + name, md5SynHashes, valueID);
