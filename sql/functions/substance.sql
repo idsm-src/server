@@ -2,7 +2,7 @@ create function iri_substance_chembl(in id integer) returns varchar
 {
     vectored;
     
-    if(type >= 0)
+    if(id >= 0)
         return sprintf('http://linkedchemistry.info/chembl/chemblid/CHEMBL%d', id);
     else
         return sprintf('http://linkedchemistry.info/chembl/chemblid/SCHEMBL%d', id);
@@ -35,7 +35,7 @@ create function iri_substance_ebi_chembl(in id integer) returns varchar
 {
     vectored;
     
-    if(type >= 0)
+    if(id >= 0)
         return sprintf('http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL%d', id);
     else
         return sprintf('http://rdf.ebi.ac.uk/resource/chembl/molecule/SCHEMBL%d', id);
