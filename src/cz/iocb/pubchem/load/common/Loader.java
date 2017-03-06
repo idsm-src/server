@@ -76,6 +76,7 @@ public class Loader
             pool.setUser(properties.getProperty("username"));
             pool.setPassword(properties.getProperty("password"));
             pool.setMaxPoolSize(new Integer(properties.getProperty("maxPoolSize")));
+            pool.setLog_Enable(2);
 
             connectionPool = pool;
             return connectionPool;
