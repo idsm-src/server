@@ -14,7 +14,7 @@ alter quad storage virtrdf:PubchemQuadStorage
             template:itemTemplate "base/Class.vm" ;
             template:pageTemplate "base/Class.vm" .
 
-        iri:class(class_bases.class)
+        iri:class(class_bases.id)
             rdfs:label class_bases.label .
 
         iri:class(class_subclasses.class)
@@ -25,7 +25,7 @@ alter quad storage virtrdf:PubchemQuadStorage
             template:itemTemplate "base/Property.vm" ;
             template:pageTemplate "base/Property.vm" .
 
-        iri:property(property_bases.property)
+        iri:property(property_bases.id)
             rdfs:label property_bases.label .
 
         iri:property(property_subproperties.property)
