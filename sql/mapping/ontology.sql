@@ -21,7 +21,7 @@ alter quad storage virtrdf:PubchemQuadStorage
             rdfs:subClassOf iri:class(class_subclasses.subclass).
 
         iri:property(property_bases.id)
-            rdf:type rdfs:Property ;
+            rdf:type rdf:Property ;
             template:itemTemplate "base/Property.vm" ;
             template:pageTemplate "base/Property.vm" .
 
