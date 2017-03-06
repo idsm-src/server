@@ -107,7 +107,7 @@ create function iri_dqmesh(in descriptor integer, in qualifier integer) returns 
 {
     vectored;
 
-    if(qualifier == -1)
+    if(qualifier = -1)
         return sprintf('http://id.nlm.nih.gov/mesh/D%06d', descriptor);
 
     return sprintf('http://id.nlm.nih.gov/mesh/D%06dQ%06d', descriptor, qualifier);
