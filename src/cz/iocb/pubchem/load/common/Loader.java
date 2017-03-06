@@ -11,6 +11,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -86,7 +87,14 @@ public class Loader
 
     protected static synchronized Connection getConnection() throws SQLException, IOException
     {
-        return getConnectionPool().getConnection();
+        //workaround: use newly created connections instead of connection pool connections
+        //return getConnectionPool().getConnection();
+
+        Properties properties = getProperties();
+
+        String url = "jdbc:virtuoso://localhost:" + properties.getProperty("port")
+                + "/TIMEOUT=60000/CHARSET=UTF-8/log_enable=2";
+        return DriverManager.getConnection(url, properties.getProperty("username"), properties.getProperty("password"));
     }
 
 
