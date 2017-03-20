@@ -41,6 +41,7 @@ create iri class iri:property using
         union   "http://semanticscience.org/%s"
         union   "http://schema.org/%s"
         union   "http://usefulinc.com/%s"
+        union   "http://www.bioassayontology.org/%s"
         union   "http://www.biopax.org/%s"
         union   "http://www.geneontology.org/%s"
         union   "http://www.obofoundry.org/%s"
