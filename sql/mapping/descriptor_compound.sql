@@ -9,7 +9,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.descriptor_compound_preferred_iupac_names      as descriptor_compound_preferred_iupac_names
     from DB.rdf.descriptor_compound_preferred_iupac_names_long as descriptor_compound_preferred_iupac_names_long
 {
-    create map:descriptor_compound as graph descriptor:compound option (exclusive)
+    create map:descriptor_compound as graph descriptor:compound
     {
         iri:descriptor_hydrogen_bond_acceptor_count(descriptor_compound_bases.compound)
             rdf:type sio:CHEMINF_000388 where (^{descriptor_compound_bases.}^.hydrogen_bond_acceptor_count is not null) ;

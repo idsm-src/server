@@ -7,7 +7,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.synonym_concept_subjects as synonym_concept_subjects
 
 {
-    create map:synonym as graph pubchem:synonym option (exclusive)
+    create map:synonym as graph pubchem:synonym
     {
         iri:synonym(synonym_values.synonym)
             sio:has-value synonym_values.value .

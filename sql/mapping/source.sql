@@ -4,7 +4,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.source_subjects as source_subjects
     from DB.rdf.source_alternatives as source_alternatives
 {
-    create map:source as graph pubchem:source option (exclusive)
+    create map:source as graph pubchem:source
     {
         iri:source(source_bases.id)
             rdf:type dcterms:Dataset ;

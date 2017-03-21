@@ -5,7 +5,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.biosystem_references as biosystem_references
     from DB.rdf.biosystem_matches    as biosystem_matches
 {
-    create map:biosystem as graph pubchem:biosystem option (exclusive)
+    create map:biosystem as graph pubchem:biosystem
     {
         iri:biosystem(biosystem_bases.id)
             rdf:type bp:Pathway ;

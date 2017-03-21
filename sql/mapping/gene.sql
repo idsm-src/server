@@ -6,7 +6,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.gene_references   as gene_references
     from DB.rdf.gene_matches      as gene_matches
 {
-    create map:gene as graph pubchem:gene option (exclusive)
+    create map:gene as graph pubchem:gene
     {
         iri:gene(gene_bases.id)
             rdf:type bp:Gene ;

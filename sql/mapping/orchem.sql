@@ -3,7 +3,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.orchem_simsearch_parameters as orchem_simsearch_parameters
     from DB.rdf.orchem_simsearch_results as orchem_simsearch_results
 {
-    create map-orchem:similaritySearch as graph proc:orchem_similaritySearch option (exclusive)
+    create map-orchem:similaritySearch as graph proc:orchem_similaritySearch
     {
         iri-proc:call(orchem_simsearch_parameters.call_id)
             proc:context orchem_simsearch_parameters.context_id ;
@@ -26,7 +26,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.orchem_simsearch_parameters as orchem_simsearch_parameters
     from DB.rdf.orchem_simsearch_results as orchem_simsearch_results
 {
-    create map-orchem:similarCompoundSearch as graph proc:orchem_similarCompoundSearch option (exclusive)
+    create map-orchem:similarCompoundSearch as graph proc:orchem_similarCompoundSearch
     {
         iri-proc:call(orchem_simsearch_parameters.call_id)
             proc:context orchem_simsearch_parameters.context_id ;
@@ -48,7 +48,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.orchem_subsearch_parameters as orchem_subsearch_parameters
     from DB.rdf.orchem_subsearch_results as orchem_subsearch_results
 {
-    create map-orchem:substructureSearch as graph proc:orchem_substructureSearch option (exclusive)
+    create map-orchem:substructureSearch as graph proc:orchem_substructureSearch
     {
         iri-proc:call(orchem_subsearch_parameters.call_id)
             proc:context orchem_subsearch_parameters.context_id ;
@@ -72,7 +72,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.orchem_smartssearch_parameters as orchem_smartssearch_parameters
     from DB.rdf.orchem_smartssearch_results as orchem_smartssearch_results
 {
-    create map-orchem:smartsSearch as graph proc:orchem_smartsSearch option (exclusive)
+    create map-orchem:smartsSearch as graph proc:orchem_smartsSearch
     {
         iri-proc:call(orchem_smartssearch_parameters.call_id)
             proc:context orchem_smartssearch_parameters.context_id ;

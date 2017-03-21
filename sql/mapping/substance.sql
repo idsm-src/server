@@ -9,7 +9,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.substance_synonyms         as substance_synonyms
     from DB.rdf.descriptor_substance_bases as descriptor_substance_bases
 {
-    create map:substance as graph pubchem:substance option (exclusive)
+    create map:substance as graph pubchem:substance
     {
         iri:substance(substance_bases.id)
             dcterms:available substance_bases.available ;

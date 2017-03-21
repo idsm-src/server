@@ -7,7 +7,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.property_domains       as property_domains
     from DB.rdf.property_ranges        as property_ranges
 {
-    create map:ontology as graph pubchem:ontology option (exclusive)
+    create map:ontology as graph pubchem:ontology
     {
         iri:class(class_bases.id)
             rdf:type owl:Class ;

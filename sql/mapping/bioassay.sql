@@ -4,7 +4,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.bioassay_measuregroups as bioassay_measuregroups
     from DB.rdf.bioassay_data          as bioassay_data text literal value
 {
-    create map:bioassay as graph pubchem:bioassay option (exclusive)
+    create map:bioassay as graph pubchem:bioassay
     {
         iri:bioassay(bioassay_bases.id)
             rdf:type bao:BAO_0000015 ;

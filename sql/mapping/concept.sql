@@ -2,7 +2,7 @@ sparql
 alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.concept_bases as concept_bases
 {
-    create map:concept as graph pubchem:concept option (exclusive)
+    create map:concept as graph pubchem:concept
     {
         concept:ATC
             rdf:type skos:ConceptScheme .

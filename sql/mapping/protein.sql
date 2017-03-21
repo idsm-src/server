@@ -15,7 +15,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.protein_types                   as protein_types
     from DB.rdf.protein_complexes               as protein_complexes
 {
-    create map:protein as graph pubchem:protein option (exclusive)
+    create map:protein as graph pubchem:protein
     {
         iri:protein(protein_bases.id)
             rdf:type bp:Protein ;

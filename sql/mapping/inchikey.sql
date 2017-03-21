@@ -4,7 +4,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.inchikey_compounds as inchikey_compounds
     from DB.rdf.inchikey_subjects  as inchikey_subjects
 {
-    create map:inchikey as graph pubchem:inchikey option (exclusive)
+    create map:inchikey as graph pubchem:inchikey
     {
         iri:inchikey(inchikey_bases.id)
             rdf:type sio:CHEMINF_000399 ;

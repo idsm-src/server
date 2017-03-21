@@ -16,7 +16,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.descriptor_compound_preferred_iupac_names      as descriptor_compound_preferred_iupac_names
     from DB.rdf.descriptor_compound_preferred_iupac_names_long as descriptor_compound_preferred_iupac_names_long
 {
-    create map:compound as graph pubchem:compound option (exclusive)
+    create map:compound as graph pubchem:compound
     {
         iri:compound(compound_bases.id)
             rdf:type sio:SIO_010004 ;

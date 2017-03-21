@@ -5,7 +5,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.reference_discusses           as reference_discusses
     from DB.rdf.reference_subject_descriptors as reference_subject_descriptors
 {
-    create map:reference as graph pubchem:reference option (exclusive)
+    create map:reference as graph pubchem:reference
     {
         iri:reference(reference_bases.id)
             rdf:type iri:reference_type(reference_bases.type) ;

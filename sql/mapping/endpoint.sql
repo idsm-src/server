@@ -5,7 +5,7 @@ alter quad storage virtrdf:PubchemQuadStorage
     from DB.rdf.endpoint_references         as endpoint_references
     from DB.rdf.endpoint_outcomes__reftable as endpoint_outcomes
 {
-    create map:endpoint as graph pubchem:endpoint option (exclusive)
+    create map:endpoint as graph pubchem:endpoint
     {
         iri:endpoint(endpoint_bases.substance, endpoint_bases.bioassay, endpoint_bases.measuregroup)
             obo:IAO_0000136 iri:substance(endpoint_bases.substance) ;
