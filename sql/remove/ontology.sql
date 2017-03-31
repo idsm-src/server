@@ -19,7 +19,7 @@ drop function iri_property_INVERSE;
 
 drop table property_ranges;
 drop table property_domains;
-drop table property_subproperties;
+drop table property_superproperties;
 drop table property_bases;
-drop table class_subclasses;
+drop table class_superclasses;
 drop table class_bases;

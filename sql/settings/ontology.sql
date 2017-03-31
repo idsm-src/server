@@ -3,9 +3,9 @@ grant select on class_bases to "SPARQL";
 
 --------------------------------------------------------------------------------
 
-create index class_subclasses__class on class_subclasses(class);
-create index class_subclasses__subclass on class_subclasses(subclass);
-grant select on class_subclasses to "SPARQL";
+create index class_superclasses__class on class_superclasses(class);
+create index class_superclasses__superclass on class_superclasses(superclass);
+grant select on class_superclasses to "SPARQL";
 
 --------------------------------------------------------------------------------
 
@@ -14,9 +14,9 @@ grant select on property_bases to "SPARQL";
 
 --------------------------------------------------------------------------------
 
-create index property_subproperties__property on property_subproperties(property);
-create index property_subproperties__subproperty on property_subproperties(subproperty);
-grant select on property_subproperties to "SPARQL";
+create index property_superproperties__property on property_superproperties(property);
+create index property_superproperties__superproperty on property_superproperties(superproperty);
+grant select on property_superproperties to "SPARQL";
 
 --------------------------------------------------------------------------------
 

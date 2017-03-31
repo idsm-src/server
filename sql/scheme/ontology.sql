@@ -8,11 +8,11 @@ create table class_bases
 );
 
 
-create table class_subclasses
+create table class_superclasses
 (
-    class       integer not null,
-    subclass    integer not null,
-    primary key(class, subclass)
+    class         integer not null,
+    superclass    integer not null,
+    primary key(class, superclass)
 );
 
 
@@ -26,11 +26,11 @@ create table property_bases
 );
 
 
-create table property_subproperties
+create table property_superproperties
 (
-    property       integer not null,
-    subproperty    integer not null,
-    primary key(property, subproperty)
+    property         integer not null,
+    superproperty    integer not null,
+    primary key(property, superproperty)
 );
 
 

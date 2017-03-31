@@ -84,25 +84,26 @@ public class Ontology extends Loader
     }
 
 
-    private static void loadSubClasses(Model model, Map<String, Short> classes) throws IOException, SQLException
+    private static void loadSuperClasses(Model model, Map<String, Short> classes) throws IOException, SQLException
     {
-        new OntologyModelTableLoader(model, patternQuery("?class rdfs:subClassOf ?subclass"),
-                "insert into class_subclasses(class, subclass) values (?,?)")
+        new OntologyModelTableLoader(model, patternQuery("?class rdfs:subClassOf ?superclass"),
+                "insert into class_superclasses(class, superclass) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
             {
                 setValue(1, classes.get(getClassIRI("class")));
-                setValue(2, classes.get(getClassIRI("subclass")));
+                setValue(2, classes.get(getClassIRI("superclass")));
             }
         }.load();
     }
 
 
-    private static void loadMissingSubClasses(Model model, Map<String, Short> classes) throws IOException, SQLException
+    private static void loadMissingSuperClasses(Model model, Map<String, Short> classes)
+            throws IOException, SQLException
     {
-        new OntologyModelTableLoader(model, loadQuery("ontology/subclasses.sparql"),
-                "insert into class_subclasses(class, subclass) values (?,?)")
+        new OntologyModelTableLoader(model, loadQuery("ontology/superclasses.sparql"),
+                "insert into class_superclasses(class, superclass) values (?,?)")
         {
             short thing = classes.get("http://www.w3.org/2002/07/owl#Thing");
 
@@ -141,16 +142,16 @@ public class Ontology extends Loader
     }
 
 
-    private static void loadSubProperties(Model model, Map<String, Short> properties) throws IOException, SQLException
+    private static void loadSuperProperties(Model model, Map<String, Short> properties) throws IOException, SQLException
     {
-        new OntologyModelTableLoader(model, patternQuery("?property rdfs:subPropertyOf ?subproperty"),
-                "insert into property_subproperties(property, subproperty) values (?,?)")
+        new OntologyModelTableLoader(model, patternQuery("?property rdfs:subPropertyOf ?superproperty"),
+                "insert into property_superproperties(property, superproperty) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
             {
                 setValue(1, properties.get(getPropertyIRI("property")));
-                setValue(2, properties.get(getPropertyIRI("subproperty")));
+                setValue(2, properties.get(getPropertyIRI("superproperty")));
             }
         }.load();
     }
@@ -202,11 +203,11 @@ public class Ontology extends Loader
         } ;
 
         Map<String, Short> classes = loadClassBases(ontologyModel);
-        loadSubClasses(ontologyModel, classes);
-        loadMissingSubClasses(ontologyModel, classes);
+        loadSuperClasses(ontologyModel, classes);
+        loadMissingSuperClasses(ontologyModel, classes);
 
         Map<String, Short> properties = loadPropertyBases(ontologyModel);
-        loadSubProperties(ontologyModel, properties);
+        loadSuperProperties(ontologyModel, properties);
 
         loadDomains(ontologyModel, classes, properties);
         loadRanges(ontologyModel, classes, properties);
