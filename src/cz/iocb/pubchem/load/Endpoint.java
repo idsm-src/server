@@ -90,6 +90,11 @@ public class Endpoint extends Loader
     }
 
 
+    private static final Set<Integer> validEndpointTypes = new HashSet<Integer>(
+            Arrays.asList(34, 186, 187, 188, 189, 190, 192, 194, 349, 477, 2117, 2144, 2145, 2146, 2162, 2862, 2877,
+                    2878, 2879, 2880, 2881, 2882, 2883, 2884, 2886, 2887, 3036));
+
+
     private static void loadOutcomes(String file, Map<String, Short> outcomes) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
@@ -175,7 +180,12 @@ public class Endpoint extends Loader
                 if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                     throw new IOException();
 
-                setValue(1, getIntID(object, "http://www.bioassayontology.org/bao#BAO_"));
+                int type = getIntID(object, "http://www.bioassayontology.org/bao#BAO_");
+
+                if(!validEndpointTypes.contains(type))
+                    System.out.println("unsupported endpoint type " + type);
+
+                setValue(1, type);
                 setIDValues(2, subject);
             }
         }.load();

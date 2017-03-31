@@ -1,5 +1,4 @@
 sparql drop iri class iri:sio .;
-sparql drop iri class iri:bao .;
 sparql drop iri class iri:cheminf .;
 sparql drop iri class iri:mesh .;
 sparql drop iri class iri:dqmesh .;
