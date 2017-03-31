@@ -99,6 +99,23 @@ public class Ontology extends Loader
     }
 
 
+    private static void loadMissingSubClasses(Model model, Map<String, Short> classes) throws IOException, SQLException
+    {
+        new OntologyModelTableLoader(model, loadQuery("ontology/subclasses.sparql"),
+                "insert into class_subclasses(class, subclass) values (?,?)")
+        {
+            short thing = classes.get("http://www.w3.org/2002/07/owl#Thing");
+
+            @Override
+            public void insert() throws SQLException, IOException
+            {
+                setValue(1, classes.get(getClassIRI("class")));
+                setValue(2, thing);
+            }
+        }.load();
+    }
+
+
     private static Map<String, Short> loadPropertyBases(Model model) throws IOException, SQLException
     {
         Map<String, Short> map = new HashMap<String, Short>();
@@ -186,6 +203,7 @@ public class Ontology extends Loader
 
         Map<String, Short> classes = loadClassBases(ontologyModel);
         loadSubClasses(ontologyModel, classes);
+        loadMissingSubClasses(ontologyModel, classes);
 
         Map<String, Short> properties = loadPropertyBases(ontologyModel);
         loadSubProperties(ontologyModel, properties);
