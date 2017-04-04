@@ -1,19 +1,3 @@
-sparql alter quad storage virtrdf:PubchemQuadStorage
-{
-    drop map:protein
-}.;
-
---------------------------------------------------------------------------------
-
-sparql drop iri class iri:protein .;
-
---------------------------------------------------------------------------------
-
-drop function iri_protein;
-drop function iri_protein_INVERSE;
-
---------------------------------------------------------------------------------
-
 drop table protein_complexes;
 drop table protein_types;
 drop table protein_locations;
