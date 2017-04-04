@@ -1,16 +1,16 @@
 create table synonym_bases
 (
-    id       integer identity,
-    md5      varchar(32) unique not null,
+    id       integer,
+    md5      char(32) unique not null,
     primary key(id)
 );
 
 
 create table synonym_values
 (
-    __         integer identity,
+    __         integer,
     synonym    integer not null,
-    value      nvarchar not null,
+    value      varchar not null,
     primary key(__)
 );
 
