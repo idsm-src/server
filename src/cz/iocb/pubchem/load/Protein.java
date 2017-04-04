@@ -71,7 +71,7 @@ public class Protein extends Loader
     private static void loadSimilarProteins(Model model, Map<String, Integer> proteins) throws IOException, SQLException
     {
         new ModelTableLoader(model, patternQuery("?protein vocab:hasSimilarProtein ?similar"),
-                "insert into protein_similarproteins(protein, similar) values (?,?)")
+                "insert into protein_similarproteins(protein, simprotein) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException

@@ -1,9 +1,9 @@
 create table protein_bases
 (
-    id          integer identity,
+    id          integer,
     name        varchar unique not null,
     organism    integer,
-    title       nvarchar,
+    title       varchar,
     primary key(id)
 );
 
@@ -26,9 +26,9 @@ create table protein_pdblinks
 
 create table protein_similarproteins
 (
-    protein    integer not null,
-    similar    integer not null,
-    primary key(protein, similar)
+    protein       integer not null,
+    simprotein    integer not null,
+    primary key(protein, simprotein)
 );
 
 
@@ -42,7 +42,7 @@ create table protein_genes
 
 create table protein_closematches
 (
-    __         integer identity,
+    __         integer,
     protein    integer not null,
     match      varchar not null,
     primary key(__)
@@ -75,7 +75,7 @@ create table protein_participates_goes
 
 create table protein_participates_biosystems
 (
-    protein          integer not null,
+    protein      integer not null,
     biosystem    integer not null,
     primary key(protein, biosystem)
 );
