@@ -2,7 +2,7 @@ create table biosystem_bases
 (
     id          integer not null,
     source      smallint not null,
-    title       nvarchar not null,
+    title       varchar not null,
     organism    integer,
     primary key(id)
 );
