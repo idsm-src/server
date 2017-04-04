@@ -17,11 +17,10 @@ create table gene_biosystems
 
 create table gene_alternatives
 (
---  __             smallint identity,
+    __             integer,
     gene           integer not null,
-    alternative    nvarchar not null,
---  primary key(__)
-    primary key(gene, alternative) -- ugly workaround
+    alternative    varchar not null,
+    primary key(__)
 );
 
 
@@ -35,7 +34,7 @@ create table gene_references
 
 create table gene_matches
 (
-    __       integer identity,
+    __       integer,
     gene     integer not null,
     match    varchar not null,
     primary key(__)

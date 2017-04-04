@@ -44,17 +44,16 @@ public class Gene extends Loader
     private static void loadAlternatives(Model model) throws IOException, SQLException
     {
         new ModelTableLoader(model, patternQuery("?gene dcterms:alternative ?alternative"),
-                //"insert into gene_alternatives (__, gene, alternative) values (?,?,?)")
-                "insert into gene_alternatives (gene, alternative) values (?,?)")
+                "insert into gene_alternatives (__, gene, alternative) values (?,?,?)")
         {
-            //short nextID = 0;
+            int nextID = 0;
 
             @Override
             public void insert() throws SQLException, IOException
             {
-                //setValue(1, nextID++);
-                setValue(1/*2*/, getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"));
-                setValue(2/*3*/, getLiteralValue("alternative"));
+                setValue(1, nextID++);
+                setValue(2, getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"));
+                setValue(3, getLiteralValue("alternative"));
             }
         }.load();
     }
