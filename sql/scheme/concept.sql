@@ -1,8 +1,8 @@
 create table concept_bases
 (
-    id         smallint identity,
+    id         smallint,
     iri        varchar not null,
-    label      nvarchar,
+    label      varchar,
     scheme     smallint,
     broader    smallint,
     primary key(id),
