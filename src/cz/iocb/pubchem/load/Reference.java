@@ -3,14 +3,10 @@ package cz.iocb.pubchem.load;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import org.apache.jena.graph.Node;
 import cz.iocb.pubchem.load.common.Loader;
 import cz.iocb.pubchem.load.common.StreamTableLoader;
@@ -50,16 +46,15 @@ public class Reference extends Loader
                 if(!predicate.getURI().equals("http://purl.org/dc/terms/date"))
                     throw new IOException();
 
-                setValue(1, getString(object));
+                setValue(1, getString(object).replaceAll("[-+][0-9][0-9]:[0-9][0-9]$", ""));
                 setValue(2, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID"));
             }
         }.load();
     }
 
 
-    private static void loadCitations(String file, int limit) throws IOException, SQLException
+    private static void loadCitations(String file) throws IOException, SQLException
     {
-        LinkedHashMap<Integer, String> bigValues = new LinkedHashMap<Integer, String>();
         InputStream stream = getStream(file);
 
         new StreamTableLoader(stream, "update reference_bases set citation=? where id=?")
@@ -70,40 +65,10 @@ public class Reference extends Loader
                 if(!predicate.getURI().equals("http://purl.org/dc/terms/bibliographicCitation"))
                     throw new IOException();
 
-                int reference = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID");
-                String value = getString(object);
-
-                if(limit > 0 && value.length() >= limit)
-                {
-                    bigValues.put(reference, value);
-                }
-                else
-                {
-                    setValue(1, value);
-                    setValue(2, reference);
-                }
+                setValue(1, getString(object));
+                setValue(2, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID"));
             }
         }.load();
-
-
-        if(bigValues.size() > 0)
-        {
-            try (Connection connection = Loader.getConnection())
-            {
-                try (PreparedStatement insertStatement = connection
-                        .prepareStatement("insert into reference_citations_long(reference, citation) values (?,?)"))
-                {
-                    for(Entry<Integer, String> entry : bigValues.entrySet())
-                    {
-                        insertStatement.setInt(1, entry.getKey());
-                        insertStatement.setString(2, entry.getValue());
-                        insertStatement.addBatch();
-                    }
-
-                    insertStatement.executeBatch();
-                }
-            }
-        }
     }
 
 
@@ -193,7 +158,7 @@ public class Reference extends Loader
             try
             {
                 if(name.startsWith("pc_reference_citation"))
-                    loadCitations(path + File.separatorChar + name, 2048);
+                    loadCitations(path + File.separatorChar + name);
                 else if(name.startsWith("pc_reference_date"))
                     loadDates(path + File.separatorChar + name);
                 else if(name.startsWith("pc_reference_title"))

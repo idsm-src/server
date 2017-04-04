@@ -2,13 +2,9 @@ grant select on reference_types__reftable to "SPARQL";
 
 --------------------------------------------------------------------------------
 
-create bitmap index reference_bases__type on reference_bases(type);
+create index reference_bases__type on reference_bases(type);
 create index reference_bases__dcdate on reference_bases(dcdate);
 grant select on reference_bases to "SPARQL";
-
---------------------------------------------------------------------------------
-
-grant select on reference_citations_long to "SPARQL";
 
 --------------------------------------------------------------------------------
 

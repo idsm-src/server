@@ -11,18 +11,10 @@ create table reference_bases
 (
     id          integer not null,
     type        smallint not null,
-    dcdate      datetime,
-    title       nvarchar,
-    citation    nvarchar,
+    dcdate      date,
+    title       varchar,
+    citation    varchar,
     primary key(id)
-);
-
-
-create table reference_citations_long
-(
-    reference    integer not null,
-    citation     long nvarchar not null,
-    primary key(reference)
 );
 
 
