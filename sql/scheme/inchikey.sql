@@ -1,7 +1,7 @@
 create table inchikey_bases
 (
-    id          integer identity,
-    inchikey    varchar(27) unique not null,
+    id          integer,
+    inchikey    char(27) unique not null,
     primary key(id)
 );
 

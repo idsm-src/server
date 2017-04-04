@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.jena.graph.Node;
 import cz.iocb.pubchem.load.common.Loader;
 import cz.iocb.pubchem.load.common.StreamTableLoader;
@@ -16,11 +17,12 @@ import cz.iocb.pubchem.load.common.StreamTableLoader;
 
 public class InchiKey extends Loader
 {
-    private static void loadBases(String file, Set<String> idsSet) throws IOException, SQLException
+    private static void loadBases(String file, Set<String> idsSet, AtomicInteger nextID)
+            throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
-        new StreamTableLoader(stream, "insert into inchikey_bases(inchikey) values (?)")
+        new StreamTableLoader(stream, "insert into inchikey_bases(id, inchikey) values (?,?)")
         {
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
@@ -34,7 +36,8 @@ public class InchiKey extends Loader
                     throw new IOException();
 
                 idsSet.add(inchikey);
-                setValue(1, inchikey);
+                setValue(1, nextID.getAndIncrement());
+                setValue(2, inchikey);
             }
         }.load();
 
@@ -101,13 +104,14 @@ public class InchiKey extends Loader
     {
         File dir = new File(getPubchemDirectory() + path);
         Set<String> idsSet = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>(125000000));
+        AtomicInteger nextID = new AtomicInteger();
 
 
         Arrays.asList(dir.listFiles()).stream().map(f -> f.getName())
                 .filter(name -> name.startsWith("pc_inchikey_value")).parallel().forEach(name -> {
                     try
                     {
-                        loadBases(path + File.separatorChar + name, idsSet);
+                        loadBases(path + File.separatorChar + name, idsSet, nextID);
                     }
                     catch (IOException | SQLException e)
                     {
