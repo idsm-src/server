@@ -1,8 +1,8 @@
 create table source_bases
 (
-    id       smallint identity,
+    id       smallint,
     iri      varchar not null,
-    title    nvarchar,
+    title    varchar,
     primary key(id),
     unique(iri)
 );
@@ -10,7 +10,7 @@ create table source_bases
 
 create table source_subjects__reftable
 (
-    id     smallint identity,
+    id     smallint,
     iri    varchar not null,
     primary key(id),
     unique(iri)
@@ -27,8 +27,8 @@ create table source_subjects
 
 create table source_alternatives
 (
-    __             smallint identity,
+    __             smallint,
     source         smallint not null,
-    alternative    nvarchar not null,
+    alternative    varchar not null,
     primary key(__)
 );
