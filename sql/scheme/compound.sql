@@ -1,7 +1,7 @@
-create table compound_sdfiles_gz
+create table compound_sdfiles
 (
     compound    integer not null,
-    sdf_gz      long varbinary not null,
+    sdf         varchar not null,
     primary key(compound)
 );
 

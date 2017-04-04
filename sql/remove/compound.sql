@@ -1,4 +1,4 @@
-drop view compound_bases;
+drop table compound_bases;
 drop table compound_active_ingredients;
 drop table compound_types;
 drop table compound_type_units__reftable;
@@ -7,4 +7,4 @@ drop table compound_roles;
 drop table compound_roles__reftable;
 drop table compound_relations;
 drop table compound_relations__reftable;
-drop table compound_sdfiles_gz;
+drop table compound_sdfiles;
