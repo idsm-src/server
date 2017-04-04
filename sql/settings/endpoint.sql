@@ -5,7 +5,7 @@ grant select on endpoint_outcomes__reftable to "SPARQL";
 create index endpoint_bases__substance on endpoint_bases(substance);
 create index endpoint_bases__bioassay on endpoint_bases(bioassay);
 create index endpoint_bases__bioassay_measuregroup on endpoint_bases(bioassay, measuregroup);
-create bitmap index endpoint_bases__outcome on endpoint_bases(outcome);
+create index endpoint_bases__outcome on endpoint_bases(outcome);
 grant select on endpoint_bases to "SPARQL";
 
 --------------------------------------------------------------------------------
@@ -13,7 +13,7 @@ grant select on endpoint_bases to "SPARQL";
 create index endpoint_measurements__substance on endpoint_measurements(substance);
 create index endpoint_measurements__bioassay on endpoint_measurements(bioassay);
 create index endpoint_measurements__bioassay_measuregroup on endpoint_measurements(bioassay, measuregroup);
-create bitmap index endpoint_measurements__type on endpoint_measurements(type);
+create index endpoint_measurements__type on endpoint_measurements(type);
 grant select on endpoint_measurements to "SPARQL";
 
 --------------------------------------------------------------------------------
