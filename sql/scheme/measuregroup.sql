@@ -3,7 +3,7 @@ create table measuregroup_bases
     bioassay        integer not null,
     measuregroup    integer not null,
     source          smallint,
-    title           nvarchar,
+    title           varchar,
     primary key(bioassay, measuregroup)
 );
 
