@@ -1,8 +1,8 @@
 create table conserveddomain_bases
 (
     id          integer not null,
-    title       nvarchar,
-    abstract    long nvarchar,
+    title       varchar,
+    abstract    varchar,
     primary key(id)
 );
 
