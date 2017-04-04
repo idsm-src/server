@@ -11,7 +11,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -28,7 +27,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.util.FileManager;
-import virtuoso.jdbc4.VirtuosoConnectionPoolDataSource;
+import org.postgresql.ds.PGPoolingDataSource;
 
 
 
@@ -36,7 +35,7 @@ public class Loader
 {
     protected static final int batchSize = 1000;
     private static Properties properties = null;
-    private static VirtuosoConnectionPoolDataSource connectionPool = null;
+    private static PGPoolingDataSource connectionPool = null;
     private static String prefixes = null;
     private static String pubchemDirectory = null;
 
@@ -60,7 +59,7 @@ public class Loader
     }
 
 
-    protected static VirtuosoConnectionPoolDataSource getConnectionPool() throws SQLException, IOException
+    protected static PGPoolingDataSource getConnectionPool() throws SQLException, IOException
     {
         if(connectionPool != null)
             return connectionPool;
@@ -71,13 +70,16 @@ public class Loader
                 return connectionPool;
 
             Properties properties = getProperties();
-            VirtuosoConnectionPoolDataSource pool = new VirtuosoConnectionPoolDataSource();
-            pool.setCharset("UTF-8");
+            PGPoolingDataSource pool = new PGPoolingDataSource();
+            pool.setServerName("localhost");
             pool.setPortNumber(Integer.parseInt(properties.getProperty("port")));
+            pool.setDatabaseName(properties.getProperty("database"));
             pool.setUser(properties.getProperty("username"));
             pool.setPassword(properties.getProperty("password"));
-            pool.setMaxPoolSize(new Integer(properties.getProperty("maxPoolSize")));
-            pool.setLog_Enable(2);
+            pool.setSocketTimeout(Integer.parseInt(properties.getProperty("socketTimeout")));
+            pool.setTcpKeepAlive(properties.getProperty("tcpKeepAlive").equals("true"));
+            pool.setCompatible(properties.getProperty("assumeMinServerVersion"));
+            pool.setMaxConnections(Integer.parseInt(properties.getProperty("maxConnections")));
 
             connectionPool = pool;
             return connectionPool;
@@ -87,14 +89,7 @@ public class Loader
 
     protected static synchronized Connection getConnection() throws SQLException, IOException
     {
-        //workaround: use newly created connections instead of connection pool connections
-        //return getConnectionPool().getConnection();
-
-        Properties properties = getProperties();
-
-        String url = "jdbc:virtuoso://localhost:" + properties.getProperty("port")
-                + "/TIMEOUT=60000/CHARSET=UTF-8/log_enable=2";
-        return DriverManager.getConnection(url, properties.getProperty("username"), properties.getProperty("password"));
+        return getConnectionPool().getConnection();
     }
 
 
