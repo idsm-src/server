@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 import javax.xml.parsers.DocumentBuilder;
@@ -122,6 +123,7 @@ public class BioassayXML extends Loader
     {
         Map<String, Short> sourceTable = getSources();
         ArrayList<String> newSources = new ArrayList<String>();
+        AtomicInteger dataID = new AtomicInteger();
         int newSourceOffset = sourceTable.size();
 
         File dir = new File(getPubchemDirectory() + File.separatorChar + path);
@@ -159,7 +161,7 @@ public class BioassayXML extends Loader
                                     .prepareStatement("insert into bioassay_bases (id, source, title) values (?,?,?)"))
                             {
                                 try (PreparedStatement insertExtraStatement = connection.prepareStatement(
-                                        "insert into bioassay_data (bioassay, type, value) values (?,?,?)"))
+                                        "insert into bioassay_data (__, bioassay, type, value) values (?,?,?,?)"))
                                 {
                                     InputStream fileStream = getStream(path + File.separatorChar + name, false);
                                     MyZipInputStream zipStream = new MyZipInputStream(fileStream);
@@ -209,9 +211,10 @@ public class BioassayXML extends Loader
 
                                             if(!description.isEmpty())
                                             {
-                                                insertExtraStatement.setInt(1, id);
-                                                insertExtraStatement.setShort(2, descriptionClassID);
-                                                insertExtraStatement.setString(3, description);
+                                                insertExtraStatement.setInt(1, dataID.getAndIncrement());
+                                                insertExtraStatement.setInt(2, id);
+                                                insertExtraStatement.setShort(3, descriptionClassID);
+                                                insertExtraStatement.setString(4, description);
                                                 insertExtraStatement.addBatch();
                                             }
 
@@ -220,9 +223,10 @@ public class BioassayXML extends Loader
 
                                             if(!protocol.isEmpty())
                                             {
-                                                insertExtraStatement.setInt(1, id);
-                                                insertExtraStatement.setShort(2, protocolClassID);
-                                                insertExtraStatement.setString(3, protocol);
+                                                insertExtraStatement.setInt(1, dataID.getAndIncrement());
+                                                insertExtraStatement.setInt(2, id);
+                                                insertExtraStatement.setShort(3, protocolClassID);
+                                                insertExtraStatement.setString(4, protocol);
                                                 insertExtraStatement.addBatch();
                                             }
 
@@ -231,9 +235,10 @@ public class BioassayXML extends Loader
 
                                             if(!comment.isEmpty())
                                             {
-                                                insertExtraStatement.setInt(1, id);
-                                                insertExtraStatement.setShort(2, commentClassID);
-                                                insertExtraStatement.setString(3, comment);
+                                                insertExtraStatement.setInt(1, dataID.getAndIncrement());
+                                                insertExtraStatement.setInt(2, id);
+                                                insertExtraStatement.setShort(3, commentClassID);
+                                                insertExtraStatement.setString(4, comment);
                                                 insertExtraStatement.addBatch();
                                             }
                                         }

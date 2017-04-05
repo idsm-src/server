@@ -5,7 +5,7 @@ grant select on bioassay_bases to "SPARQL";
 
 create index bioassay_data__bioassay_type on bioassay_data(bioassay, type);
 create index bioassay_data__bioassay on bioassay_data(bioassay);
-create bitmap index bioassay_data__type on bioassay_data(type);
+create index bioassay_data__type on bioassay_data(type);
 grant select on bioassay_data to "SPARQL";
 
 --------------------------------------------------------------------------------
