@@ -1,8 +1,8 @@
 create table class_bases
 (
-    id       integer identity,
+    id       integer,
     iri      varchar not null,
-    label    nvarchar,
+    label    varchar,
     primary key(id),
     unique(iri)
 );
@@ -18,9 +18,9 @@ create table class_superclasses
 
 create table property_bases
 (
-    id       integer identity,
+    id       integer,
     iri      varchar not null,
-    label    nvarchar,
+    label    varchar,
     primary key(id),
     unique(iri)
 );
