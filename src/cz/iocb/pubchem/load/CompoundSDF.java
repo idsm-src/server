@@ -1,7 +1,6 @@
 package cz.iocb.pubchem.load;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,32 +10,23 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.zip.Deflater;
 import cz.iocb.pubchem.load.common.Loader;
 
 
 
 public class CompoundSDF extends Loader
 {
-    private static AtomicLong compressedSize = new AtomicLong();
-    private static AtomicLong uncompressedSize = new AtomicLong();
-
-
     private static void loadSDFile(String name) throws Exception
     {
         try (Connection connection = getConnection())
         {
             try (PreparedStatement insertStatement = connection
-                    .prepareStatement("insert into compound_sdfiles_gz (compound, sdf_gz) values (?,?)"))
+                    .prepareStatement("insert into compound_sdfiles (compound, sdf) values (?,?)"))
             {
                 try (InputStream stream = getStream(name))
                 {
                     Reader decoder = new InputStreamReader(stream, "US-ASCII");
                     BufferedReader reader = new BufferedReader(decoder);
-
-                    long localCompressedSize = 0;
-                    long localUncompressedSize = 0;
                     String line;
 
                     while((line = reader.readLine()) != null)
@@ -90,31 +80,6 @@ public class CompoundSDF extends Loader
 
                         String sdf = sdfBuilder.toString();
 
-
-                        Deflater deflater = new Deflater();
-                        deflater.setLevel(9);
-                        deflater.setInput(sdf.getBytes());
-                        deflater.finish();
-
-                        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                        byte[] buffer = new byte[1024];
-
-                        while(!deflater.finished())
-                        {
-                            int count = deflater.deflate(buffer); // returns the generated code... index
-                            outputStream.write(buffer, 0, count);
-                        }
-
-                        deflater.end();
-                        outputStream.close();
-
-
-                        byte[] data = outputStream.toByteArray();
-
-                        localCompressedSize += data.length;
-                        localUncompressedSize += sdf.length();
-
-
                         while((line = reader.readLine()) != null)
                         {
                             if(line.equals("$$$$"))
@@ -128,12 +93,9 @@ public class CompoundSDF extends Loader
                         }
 
                         insertStatement.setInt(1, compoundID);
-                        insertStatement.setBytes(2, data);
+                        insertStatement.setString(2, sdf);
                         insertStatement.addBatch();
                     }
-
-                    compressedSize.addAndGet(localCompressedSize);
-                    uncompressedSize.addAndGet(localUncompressedSize);
                 }
 
                 insertStatement.executeBatch();
@@ -166,9 +128,5 @@ public class CompoundSDF extends Loader
     public static void main(String[] args) throws Exception
     {
         loadDirectory("SDF");
-
-        System.out.println(uncompressedSize.get());
-        System.out.println(compressedSize.get());
-        System.out.println(100.0 * compressedSize.get() / uncompressedSize.get());
     }
 }
