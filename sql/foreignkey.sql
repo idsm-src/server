@@ -13,7 +13,7 @@ alter table biosystem_matches add foreign key (biosystem) references  biosystem_
 
 
 -- compound
-alter table compound_sdfiles_gz add foreign key (compound) references compound_bases(id);
+alter table compound_sdfiles add foreign key (compound) references compound_bases(id);
 alter table compound_relations add foreign key (compound_from) references compound_bases(id);
 alter table compound_relations add foreign key (compound_to) references compound_bases(id);
 alter table compound_relations add foreign key (relation) references compound_relations__reftable(id);
@@ -75,7 +75,7 @@ alter table protein_references add foreign key (protein) references protein_base
 alter table protein_references add foreign key (reference) references reference_bases(id);
 alter table protein_pdblinks add foreign key (protein) references protein_bases(id);
 alter table protein_similarproteins add foreign key (protein) references protein_bases(id);
-alter table protein_similarproteins add foreign key (similar) references protein_bases(id);
+alter table protein_similarproteins add foreign key (simprotein) references protein_bases(id);
 alter table protein_genes add foreign key (protein) references protein_bases(id);
 alter table protein_genes add foreign key (gene) references gene_bases(id);
 alter table protein_closematches add foreign key (protein) references protein_bases(id);
@@ -94,7 +94,6 @@ alter table protein_complexes add foreign key (protein) references protein_bases
 
 -- reference
 alter table reference_bases add foreign key (type) references reference_types__reftable(id);
-alter table reference_citations_long add foreign key (reference) references reference_bases(id);
 alter table reference_discusses add foreign key (reference) references reference_bases(id);
 alter table reference_subject_descriptors add foreign key (reference) references reference_bases(id);
 
@@ -128,8 +127,6 @@ alter table synonym_concept_subjects add foreign key (concept) references concep
 
 
 -- descriptor-compound
-alter table descriptor_compound_iupac_inchis_long add foreign key (compound) references compound_bases(id);
-alter table descriptor_compound_preferred_iupac_names_long add foreign key (compound) references compound_bases(id);
 --        9 : alter table descriptor_compound_bases add foreign key (compound) references compound_bases(id);
 --        9 : alter table descriptor_compound_molecular_formulas add foreign key (compound) references compound_bases(id);
 --        9 : alter table descriptor_compound_isomeric_smileses add foreign key (compound) references compound_bases(id);
