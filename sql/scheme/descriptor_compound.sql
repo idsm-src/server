@@ -55,25 +55,9 @@ create table descriptor_compound_iupac_inchis
 );
 
 
-create table descriptor_compound_iupac_inchis_long
-(
-    compound       integer not null,
-    iupac_inchi    long varchar not null,
-    primary key(compound)
-);
-
-
 create table descriptor_compound_preferred_iupac_names
 (
     compound                integer not null,
-    preferred_iupac_name    nvarchar not null,
-    primary key(compound)
-);
-
-
-create table descriptor_compound_preferred_iupac_names_long
-(
-    compound                integer not null,
-    preferred_iupac_name    long nvarchar not null,
+    preferred_iupac_name    varchar not null,
     primary key(compound)
 );

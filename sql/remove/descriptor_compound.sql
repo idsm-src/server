@@ -1,6 +1,4 @@
-drop table descriptor_compound_preferred_iupac_names_long;
 drop table descriptor_compound_preferred_iupac_names;
-drop table descriptor_compound_iupac_inchis_long;
 drop table descriptor_compound_iupac_inchis;
 drop table descriptor_compound_canonical_smileses;
 drop table descriptor_compound_isomeric_smileses;

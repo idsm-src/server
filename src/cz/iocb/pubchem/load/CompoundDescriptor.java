@@ -10,8 +10,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.LinkedHashMap;
-import java.util.Map.Entry;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.Lang;
@@ -39,36 +37,36 @@ public class CompoundDescriptor extends Loader
         @Override
         public void beforeBatch() throws SQLException, IOException
         {
-            ArrayList<Integer> idAddList = new ArrayList<Integer>(Loader.batchSize);
-
-            for(Integer id : idList)
-                if(ids.length() <= id || ids.get(id) == false)
-                    idAddList.add(id);
-
-            idList.clear();
-            idList.ensureCapacity(Loader.batchSize);
-
-            if(idAddList.size() == 0)
-                return;
-
-
-            try (Connection connection = Loader.getConnection())
-            {
-                try (PreparedStatement insertStatement = connection
-                        .prepareStatement("insert soft descriptor_compound_bases(compound) values (?)"))
-                {
-                    for(Integer id : idAddList)
-                    {
-                        insertStatement.setInt(1, id);
-                        insertStatement.addBatch();
-                    }
-
-                    insertStatement.executeBatch();
-                }
-            }
-
             synchronized(CompoundDescriptor.class)
             {
+                ArrayList<Integer> idAddList = new ArrayList<Integer>(Loader.batchSize);
+
+                for(Integer id : idList)
+                    if(ids.length() <= id || ids.get(id) == false)
+                        idAddList.add(id);
+
+                idList.clear();
+                idList.ensureCapacity(Loader.batchSize);
+
+                if(idAddList.size() == 0)
+                    return;
+
+
+                try (Connection connection = Loader.getConnection())
+                {
+                    try (PreparedStatement insertStatement = connection
+                            .prepareStatement("insert into descriptor_compound_bases(compound) values (?)"))
+                    {
+                        for(Integer id : idAddList)
+                        {
+                            insertStatement.setInt(1, id);
+                            insertStatement.addBatch();
+                        }
+
+                        insertStatement.executeBatch();
+                    }
+                }
+
                 for(Integer id : idAddList)
                     ids.set(id);
             }
@@ -153,7 +151,6 @@ public class CompoundDescriptor extends Loader
             throws IOException, SQLException
     {
         InputStream stream = getStream(file);
-        LinkedHashMap<Integer, String> bigValues = new LinkedHashMap<Integer, String>();
 
         new StreamTableLoader(stream, "insert into " + table + "(compound, " + field + ") values (?,?)")
         {
@@ -163,39 +160,10 @@ public class CompoundDescriptor extends Loader
                 if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
                     throw new IOException();
 
-                int compound = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
-                String value = getString(object);
-
-                if(limit > 0 && value.length() >= limit)
-                {
-                    bigValues.put(compound, value);
-                }
-                else
-                {
-                    setValue(1, compound);
-                    setValue(2, value);
-                }
+                setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix));
+                setValue(2, getString(object));
             }
         }.load();
-
-        if(bigValues.size() > 0)
-        {
-            try (Connection connection = Loader.getConnection())
-            {
-                try (PreparedStatement insertStatement = connection
-                        .prepareStatement("insert into " + table + "_long(compound, " + field + ") values (?,?)"))
-                {
-                    for(Entry<Integer, String> entry : bigValues.entrySet())
-                    {
-                        insertStatement.setInt(1, entry.getKey());
-                        insertStatement.setString(2, entry.getValue());
-                        insertStatement.addBatch();
-                    }
-
-                    insertStatement.executeBatch();
-                }
-            }
-        }
 
         stream.close();
     }
