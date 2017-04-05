@@ -2,8 +2,8 @@ create table substance_bases
 (
     id           integer not null,
     source       smallint,
-    available    datetime,
-    modified     datetime,
+    available    date,
+    modified     date,
     compound     integer,
     primary key(id)
 );

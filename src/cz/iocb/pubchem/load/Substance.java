@@ -52,7 +52,7 @@ public class Substance extends Loader
                 if(!predicate.getURI().equals("http://purl.org/dc/terms/available"))
                     throw new IOException();
 
-                setValue(1, getString(object));
+                setValue(1, getString(object).replaceAll("[-+][0-9][0-9]:[0-9][0-9]$", ""));
                 setValue(2, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID"));
             }
         }.load();
@@ -73,7 +73,7 @@ public class Substance extends Loader
                 if(!predicate.getURI().equals("http://purl.org/dc/terms/modified"))
                     throw new IOException();
 
-                setValue(1, getString(object));
+                setValue(1, getString(object).replaceAll("[-+][0-9][0-9]:[0-9][0-9]$", ""));
                 setValue(2, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID"));
             }
         }.load();
