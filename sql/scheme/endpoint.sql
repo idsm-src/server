@@ -23,7 +23,7 @@ create table endpoint_measurements
     bioassay        integer not null,
     measuregroup    integer not null,
     type            smallint not null,
-    value           float not null,
+    value           real not null,
     label           varchar not null,
     primary key(substance, bioassay, measuregroup)
 );

@@ -13,12 +13,12 @@ create table descriptor_compound_bases
     rotatable_bond_count            smallint,
     undefined_atom_stereo_count     smallint,
     total_formal_charge             smallint,
-    structure_complexity            float,
-    mono_isotopic_weight            float,
-    xlogp3_aa                       float,
-    exact_mass                      float,
-    molecular_weight                float,
-    tpsa                            float,
+    structure_complexity            real,
+    mono_isotopic_weight            real,
+    xlogp3_aa                       real,
+    exact_mass                      real,
+    molecular_weight                real,
+    tpsa                            real,
     primary key(compound)
 );
 
