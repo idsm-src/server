@@ -1,3 +1,10 @@
+drop function compound(id in integer);
+drop function compound_inverse(iri in varchar);
+drop function compound_sdfile(id in integer);
+drop function compound_sdfile_inverse(iri in varchar);
+
+--------------------------------------------------------------------------------
+
 drop table compound_bases;
 drop table compound_active_ingredients;
 drop table compound_types;

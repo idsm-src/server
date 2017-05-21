@@ -1,3 +1,8 @@
+drop function protein(id in integer);
+drop function protein_inverse(iri in varchar);
+
+--------------------------------------------------------------------------------
+
 drop table protein_complexes;
 drop table protein_types;
 drop table protein_locations;
