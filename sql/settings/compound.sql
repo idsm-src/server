@@ -1,3 +1,7 @@
+grant select on compound_sdfiles to "SPARQL";
+
+--------------------------------------------------------------------------------
+
 grant select on compound_relations__reftable to "SPARQL";
 
 --------------------------------------------------------------------------------
