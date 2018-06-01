@@ -17,7 +17,7 @@ grant select on protein_pdblinks to "SPARQL";
 --------------------------------------------------------------------------------
 
 create index protein_similarproteins__protein on protein_similarproteins(protein);
-create index protein_similarproteins__similar on protein_similarproteins(similar);
+create index protein_similarproteins__simprotein on protein_similarproteins(simprotein);
 grant select on protein_similarproteins to "SPARQL";
 
 --------------------------------------------------------------------------------
