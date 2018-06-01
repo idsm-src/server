@@ -113,7 +113,7 @@ public class InchiKey extends Loader
                     {
                         loadBases(path + File.separatorChar + name, idsSet, nextID);
                     }
-                    catch (IOException | SQLException e)
+                    catch(IOException | SQLException e)
                     {
                         System.err.println("exception for " + name);
                         e.printStackTrace();
@@ -134,7 +134,7 @@ public class InchiKey extends Loader
                 else if(!name.startsWith("pc_inchikey_value"))
                     System.out.println("unsupported " + path + File.separator + name);
             }
-            catch (IOException | SQLException e)
+            catch(IOException | SQLException e)
             {
                 System.err.println("exception for " + name);
                 e.printStackTrace();

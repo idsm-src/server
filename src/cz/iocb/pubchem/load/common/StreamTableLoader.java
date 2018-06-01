@@ -30,9 +30,9 @@ public abstract class StreamTableLoader extends TableLoader
 
     public void load() throws SQLException, IOException
     {
-        try (Connection connection = Loader.getConnection())
+        try(Connection connection = Loader.getConnection())
         {
-            try (PreparedStatement insertStatement = connection.prepareStatement(sql))
+            try(PreparedStatement insertStatement = connection.prepareStatement(sql))
             {
                 statement = insertStatement;
 
@@ -47,14 +47,14 @@ public abstract class StreamTableLoader extends TableLoader
                             {
                                 insertStub(triple.getSubject(), triple.getPredicate(), triple.getObject());
                             }
-                            catch (SQLException | IOException e)
+                            catch(SQLException | IOException e)
                             {
                                 throw new RuntimeException(e);
                             }
                         }
                     }, stream, Lang.TURTLE);
                 }
-                catch (RuntimeException e)
+                catch(RuntimeException e)
                 {
                     if(e.getCause() instanceof IOException)
                         throw(IOException) e.getCause();

@@ -50,7 +50,7 @@ public class SubstanceDescriptor extends Loader
                 else
                     System.out.println("unsupported " + path + File.separatorChar + name);
             }
-            catch (IOException | SQLException e)
+            catch(IOException | SQLException e)
             {
                 System.err.println("exception for " + name);
                 e.printStackTrace();

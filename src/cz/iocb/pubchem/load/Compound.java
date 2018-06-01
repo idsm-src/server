@@ -282,7 +282,7 @@ public class Compound extends Loader
                 else
                     System.out.println("unsupported " + path + File.separator + name);
             }
-            catch (IOException | SQLException e)
+            catch(IOException | SQLException e)
             {
                 System.err.println("exception for " + name);
                 e.printStackTrace();

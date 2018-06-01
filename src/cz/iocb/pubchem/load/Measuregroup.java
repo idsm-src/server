@@ -160,9 +160,9 @@ public class Measuregroup extends Loader
         stream.close();
 
 
-        try (Connection connection = getConnection())
+        try(Connection connection = getConnection())
         {
-            try (PreparedStatement insertStatement = connection
+            try(PreparedStatement insertStatement = connection
                     .prepareStatement("insert into source_bases (id, iri, title) values (?,?,?)"))
             {
                 for(int i = 0; i < newSources.size(); i++)
@@ -210,11 +210,11 @@ public class Measuregroup extends Loader
     {
         Map<String, Integer> proteinTable = new HashMap<String, Integer>();
 
-        try (Connection connection = getConnection())
+        try(Connection connection = getConnection())
         {
-            try (PreparedStatement statement = connection.prepareStatement("select id, name from protein_bases"))
+            try(PreparedStatement statement = connection.prepareStatement("select id, name from protein_bases"))
             {
-                try (java.sql.ResultSet result = statement.executeQuery())
+                try(java.sql.ResultSet result = statement.executeQuery())
                 {
                     while(result.next())
                         proteinTable.put(result.getString(2), result.getInt(1));
@@ -258,9 +258,9 @@ public class Measuregroup extends Loader
         stream.close();
 
 
-        try (Connection connection = getConnection())
+        try(Connection connection = getConnection())
         {
-            try (PreparedStatement insertStatement = connection
+            try(PreparedStatement insertStatement = connection
                     .prepareStatement("insert into protein_bases (id, name) values (?,?)"))
             {
                 for(int i = 0; i < newProteins.size(); i++)
@@ -334,7 +334,7 @@ public class Measuregroup extends Loader
                 else if(!name.equals("pc_measuregroup_type.ttl.gz"))
                     System.out.println("unsupported " + path + File.separatorChar + name);
             }
-            catch (IOException | SQLException e)
+            catch(IOException | SQLException e)
             {
                 System.err.println("exception for " + name);
                 e.printStackTrace();

@@ -257,7 +257,7 @@ public class Substance extends Loader
                     {
                         loadCompounds(path + File.separatorChar + name);
                     }
-                    catch (IOException | SQLException e)
+                    catch(IOException | SQLException e)
                     {
                         System.err.println("exception for " + name);
                         e.printStackTrace();
@@ -294,7 +294,7 @@ public class Substance extends Loader
                 else if(!name.startsWith("pc_substance2compound"))
                     System.out.println("unsupported " + path + File.separator + name);
             }
-            catch (IOException | SQLException e)
+            catch(IOException | SQLException e)
             {
                 System.err.println("exception for " + name);
                 e.printStackTrace();
@@ -303,9 +303,9 @@ public class Substance extends Loader
         });
 
 
-        try (Connection connection = getConnection())
+        try(Connection connection = getConnection())
         {
-            try (PreparedStatement insertStatement = connection
+            try(PreparedStatement insertStatement = connection
                     .prepareStatement("insert into source_bases (id, iri, title) values (?,?,?)"))
             {
                 for(int i = 0; i < newSources.size(); i++)

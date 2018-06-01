@@ -18,12 +18,12 @@ public class CompoundSDF extends Loader
 {
     private static void loadSDFile(String name) throws Exception
     {
-        try (Connection connection = getConnection())
+        try(Connection connection = getConnection())
         {
-            try (PreparedStatement insertStatement = connection
+            try(PreparedStatement insertStatement = connection
                     .prepareStatement("insert into compound_sdfiles (compound, sdf) values (?,?)"))
             {
-                try (InputStream stream = getStream(name))
+                try(InputStream stream = getStream(name))
                 {
                     Reader decoder = new InputStreamReader(stream, "US-ASCII");
                     BufferedReader reader = new BufferedReader(decoder);
@@ -115,7 +115,7 @@ public class CompoundSDF extends Loader
                     {
                         loadSDFile(path + File.separatorChar + name);
                     }
-                    catch (Exception e)
+                    catch(Exception e)
                     {
                         System.err.println("exception for " + name);
                         e.printStackTrace();

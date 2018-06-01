@@ -59,11 +59,11 @@ public class BioassayXML extends Loader
     {
         Hashtable<String, Short> sourceTable = new Hashtable<String, Short>();
 
-        try (Connection connection = getConnection())
+        try(Connection connection = getConnection())
         {
-            try (PreparedStatement statement = connection.prepareStatement("select id, iri, title from source_bases"))
+            try(PreparedStatement statement = connection.prepareStatement("select id, iri, title from source_bases"))
             {
-                try (ResultSet result = statement.executeQuery())
+                try(ResultSet result = statement.executeQuery())
                 {
                     while(result.next())
                     {
@@ -155,12 +155,12 @@ public class BioassayXML extends Loader
 
 
 
-                        try (Connection connection = getConnection())
+                        try(Connection connection = getConnection())
                         {
-                            try (PreparedStatement insertStatement = connection
+                            try(PreparedStatement insertStatement = connection
                                     .prepareStatement("insert into bioassay_bases (id, source, title) values (?,?,?)"))
                             {
-                                try (PreparedStatement insertExtraStatement = connection.prepareStatement(
+                                try(PreparedStatement insertExtraStatement = connection.prepareStatement(
                                         "insert into bioassay_data (__, bioassay, type, value) values (?,?,?,?)"))
                                 {
                                     InputStream fileStream = getStream(path + File.separatorChar + name, false);
@@ -168,7 +168,7 @@ public class BioassayXML extends Loader
 
                                     while(zipStream.getNextEntry() != null)
                                     {
-                                        try (InputStream gzipStream = new GZIPInputStream(zipStream))
+                                        try(InputStream gzipStream = new GZIPInputStream(zipStream))
                                         {
                                             DocumentBuilder db = dbf.newDocumentBuilder();
                                             Document document = db.parse(gzipStream);
@@ -254,7 +254,7 @@ public class BioassayXML extends Loader
                             }
                         }
                     }
-                    catch (Exception e)
+                    catch(Exception e)
                     {
                         System.err.println("exception for " + name);
                         e.printStackTrace();
@@ -264,9 +264,9 @@ public class BioassayXML extends Loader
 
 
 
-        try (Connection connection = getConnection())
+        try(Connection connection = getConnection())
         {
-            try (PreparedStatement insertStatement = connection
+            try(PreparedStatement insertStatement = connection
                     .prepareStatement("insert into source_bases (id, iri, title) values (?,?,?)"))
             {
                 for(int i = 0; i < newSources.size(); i++)

@@ -35,16 +35,16 @@ public abstract class ModelTableLoader extends TableLoader
 
     public void load() throws SQLException, IOException
     {
-        try (Connection connection = Loader.getConnection())
+        try(Connection connection = Loader.getConnection())
         {
-            try (PreparedStatement insertStatement = connection.prepareStatement(sql))
+            try(PreparedStatement insertStatement = connection.prepareStatement(sql))
             {
                 statement = insertStatement;
                 int count = 0;
 
                 Query query = QueryFactory.create(Loader.getPrefixes() + sparql);
 
-                try (QueryExecution qexec = QueryExecutionFactory.create(query, model))
+                try(QueryExecution qexec = QueryExecutionFactory.create(query, model))
                 {
                     ResultSet results = qexec.execSelect();
                     while(results.hasNext())

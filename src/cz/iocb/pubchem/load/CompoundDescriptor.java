@@ -52,9 +52,9 @@ public class CompoundDescriptor extends Loader
                     return;
 
 
-                try (Connection connection = Loader.getConnection())
+                try(Connection connection = Loader.getConnection())
                 {
-                    try (PreparedStatement insertStatement = connection
+                    try(PreparedStatement insertStatement = connection
                             .prepareStatement("insert into descriptor_compound_bases(compound) values (?)"))
                     {
                         for(Integer id : idAddList)
@@ -188,7 +188,7 @@ public class CompoundDescriptor extends Loader
                 }
             }, stream, Lang.TURTLE);
         }
-        catch (RuntimeException e)
+        catch(RuntimeException e)
         {
             if(e.getCause() instanceof IOException)
                 throw(IOException) e.getCause();
@@ -272,7 +272,7 @@ public class CompoundDescriptor extends Loader
                 else
                     System.out.println("unsupported " + loc);
             }
-            catch (IOException | SQLException e)
+            catch(IOException | SQLException e)
             {
                 System.err.println("exception for " + name);
                 e.printStackTrace();

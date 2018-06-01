@@ -241,7 +241,7 @@ public class Endpoint extends Loader
                 }
             }, stream, Lang.TURTLE);
         }
-        catch (RuntimeException e)
+        catch(RuntimeException e)
         {
             if(e.getCause() instanceof IOException)
                 throw(IOException) e.getCause();
@@ -277,7 +277,7 @@ public class Endpoint extends Loader
                 else if(!name.equals("pc_endpoint_value.ttl.gz") && !name.equals("pc_endpoint_label.ttl.gz"))
                     System.out.println("unsupported " + path + File.separator + name);
             }
-            catch (IOException | SQLException e)
+            catch(IOException | SQLException e)
             {
                 System.err.println("exception for " + name);
                 e.printStackTrace();
@@ -287,12 +287,12 @@ public class Endpoint extends Loader
 
 
         // check ...
-        try (Connection connection = getConnection())
+        try(Connection connection = getConnection())
         {
-            try (PreparedStatement statement = connection
+            try(PreparedStatement statement = connection
                     .prepareStatement("select * from endpoint_measurements where type=-1"))
             {
-                try (ResultSet result = statement.executeQuery())
+                try(ResultSet result = statement.executeQuery())
                 {
                     while(result.next())
                     {
@@ -302,12 +302,12 @@ public class Endpoint extends Loader
             }
         }
 
-        try (Connection connection = getConnection())
+        try(Connection connection = getConnection())
         {
-            try (PreparedStatement statement = connection
+            try(PreparedStatement statement = connection
                     .prepareStatement("select count(*) from endpoint_measurements where label=''"))
             {
-                try (ResultSet result = statement.executeQuery())
+                try(ResultSet result = statement.executeQuery())
                 {
                     while(result.next())
                     {

@@ -170,7 +170,7 @@ public class Reference extends Loader
                 else if(!name.startsWith("pc_reference_type"))
                     System.out.println("unsupported " + path + File.separatorChar + name);
             }
-            catch (IOException | SQLException e)
+            catch(IOException | SQLException e)
             {
                 System.err.println("exception for " + name);
                 e.printStackTrace();

@@ -202,7 +202,7 @@ public class Loader
         String sparql = loadQuery(file);
         Query query = QueryFactory.create(getPrefixes() + sparql);
 
-        try (QueryExecution qexec = QueryExecutionFactory.create(query, model))
+        try(QueryExecution qexec = QueryExecutionFactory.create(query, model))
         {
             ResultSet results = qexec.execSelect();
             while(results.hasNext())
@@ -220,11 +220,11 @@ public class Loader
     {
         Map<String, Short> map = new HashMap<String, Short>();
 
-        try (Connection connection = getConnection())
+        try(Connection connection = getConnection())
         {
-            try (PreparedStatement statement = connection.prepareStatement("select id, iri from " + table))
+            try(PreparedStatement statement = connection.prepareStatement("select id, iri from " + table))
             {
-                try (java.sql.ResultSet result = statement.executeQuery())
+                try(java.sql.ResultSet result = statement.executeQuery())
                 {
                     while(result.next())
                     {
