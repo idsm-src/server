@@ -154,7 +154,7 @@ public class Reference extends Loader
 
         File dir = new File(getPubchemDirectory() + path);
 
-        Arrays.asList(dir.listFiles()).parallelStream().map(f -> f.getName()).forEach(name -> {
+        Arrays.asList(dir.listFiles()).stream().map(f -> f.getName()).forEach(name -> {
             try
             {
                 if(name.startsWith("pc_reference_citation"))

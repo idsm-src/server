@@ -67,7 +67,11 @@ public abstract class StreamTableLoader extends TableLoader
                 if(count % Loader.batchSize != 0)
                 {
                     beforeBatch();
-                    insertStatement.executeBatch();
+
+                    synchronized(TableLoader.class)
+                    {
+                        insertStatement.executeBatch();
+                    }
                 }
 
                 stream.close();
@@ -91,7 +95,11 @@ public abstract class StreamTableLoader extends TableLoader
         if(++count % Loader.batchSize == 0)
         {
             beforeBatch();
-            statement.executeBatch();
+
+            synchronized(TableLoader.class)
+            {
+                statement.executeBatch();
+            }
         }
     }
 
