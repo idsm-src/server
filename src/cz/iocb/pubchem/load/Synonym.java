@@ -23,7 +23,34 @@ import cz.iocb.pubchem.load.common.StreamTableLoader;
 
 public class Synonym extends Loader
 {
-    static private void loadValues(String file, Map<String, Integer> md5hashes, AtomicInteger nextID)
+    private static class MD5
+    {
+        private final long hi;
+        private final long lo;
+
+        public MD5(String value)
+        {
+            hi = Long.parseUnsignedLong(value.substring(0, 16), 16);
+            lo = Long.parseUnsignedLong(value.substring(16, 32), 16);
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            MD5 other = (MD5) obj;
+            return hi == other.hi && lo == other.lo;
+        }
+
+
+        @Override
+        public int hashCode()
+        {
+            return (int) lo;
+        }
+    }
+
+
+    static private void loadValues(String file, Map<MD5, Integer> md5hashes, AtomicInteger nextID)
             throws IOException, SQLException
     {
         InputStream stream = getStream(file);
@@ -38,7 +65,8 @@ public class Synonym extends Loader
                 if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
                     throw new IOException();
 
-                String md5 = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_");
+                String md5String = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_");
+                MD5 md5 = new MD5(md5String);
                 Integer md5ID = md5hashes.get(md5);
 
                 if(md5ID == null)
@@ -51,7 +79,7 @@ public class Synonym extends Loader
                         {
                             md5ID = md5hashes.size();
                             md5hashes.put(md5, md5ID);
-                            newMd5Hashes.put(md5ID, md5);
+                            newMd5Hashes.put(md5ID, md5String);
                         }
                     }
                 }
@@ -64,9 +92,9 @@ public class Synonym extends Loader
             @Override
             public void beforeBatch() throws SQLException, IOException
             {
-                try (Connection connection = getConnection())
+                try(Connection connection = getConnection())
                 {
-                    try (PreparedStatement insertStatement = connection
+                    try(PreparedStatement insertStatement = connection
                             .prepareStatement("insert into synonym_bases (id, md5) values (?,?)"))
                     {
                         for(Entry<Integer, String> entry : newMd5Hashes.entrySet())
@@ -87,7 +115,7 @@ public class Synonym extends Loader
     }
 
 
-    static private void loadTypes(String file, Map<String, Integer> md5hashes) throws IOException, SQLException
+    static private void loadTypes(String file, Map<MD5, Integer> md5hashes) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
@@ -99,7 +127,7 @@ public class Synonym extends Loader
                 if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                     throw new IOException();
 
-                String md5 = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_");
+                MD5 md5 = new MD5(getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
                 Integer md5ID = md5hashes.get(md5);
 
                 if(md5ID != null)
@@ -118,7 +146,7 @@ public class Synonym extends Loader
     }
 
 
-    static private void loadCompounds(String file, Map<String, Integer> md5hashes) throws IOException, SQLException
+    static private void loadCompounds(String file, Map<MD5, Integer> md5hashes) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
@@ -130,7 +158,7 @@ public class Synonym extends Loader
                 if(!predicate.getURI().equals("http://semanticscience.org/resource/is-attribute-of"))
                     throw new IOException();
 
-                String md5 = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_");
+                MD5 md5 = new MD5(getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
                 Integer md5ID = md5hashes.get(md5);
 
                 if(md5ID != null)
@@ -149,14 +177,14 @@ public class Synonym extends Loader
     }
 
 
-    static private void loadTopics(String file, Map<String, Integer> md5hashes) throws IOException, SQLException
+    static private void loadTopics(String file, Map<MD5, Integer> md5hashes) throws IOException, SQLException
     {
         loadMeshSubjects(file, md5hashes);
         loadConceptSubjects(file, md5hashes);
     }
 
 
-    static private void loadMeshSubjects(String file, Map<String, Integer> md5hashes) throws IOException, SQLException
+    static private void loadMeshSubjects(String file, Map<MD5, Integer> md5hashes) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
@@ -171,7 +199,7 @@ public class Synonym extends Loader
                 if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/concept/"))
                     return;
 
-                String md5 = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_");
+                MD5 md5 = new MD5(getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
                 Integer md5ID = md5hashes.get(md5);
 
                 if(md5ID != null)
@@ -190,7 +218,7 @@ public class Synonym extends Loader
     }
 
 
-    static synchronized private void loadConceptSubjects(String file, Map<String, Integer> md5hashes)
+    static synchronized private void loadConceptSubjects(String file, Map<MD5, Integer> md5hashes)
             throws IOException, SQLException
     {
         Map<String, Short> concepts = getMapping("concept_bases");
@@ -213,7 +241,7 @@ public class Synonym extends Loader
                 if(value.startsWith("http://id.nlm.nih.gov/mesh/M"))
                     return;
 
-                String md5 = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_");
+                MD5 md5 = new MD5(getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
                 Integer md5ID = md5hashes.get(md5);
 
                 if(md5ID != null)
@@ -241,9 +269,9 @@ public class Synonym extends Loader
         stream.close();
 
 
-        try (Connection connection = getConnection())
+        try(Connection connection = getConnection())
         {
-            try (PreparedStatement insertStatement = connection
+            try(PreparedStatement insertStatement = connection
                     .prepareStatement("insert into concept_bases (id, iri) values (?,?)"))
             {
                 for(int i = 0; i < newConcepts.size(); i++)
@@ -271,8 +299,8 @@ public class Synonym extends Loader
         List<File> files = Arrays.asList(dir.listFiles());
 
 
-        HashMap<String, Integer> md5hashes = new HashMap<String, Integer>(250000000);
-        Map<String, Integer> md5SynHashes = Collections.synchronizedMap(md5hashes);
+        HashMap<MD5, Integer> md5hashes = new HashMap<MD5, Integer>(2000000000);
+        Map<MD5, Integer> md5SynHashes = Collections.synchronizedMap(md5hashes);
         AtomicInteger valueID = new AtomicInteger();
 
         files.parallelStream().map(f -> f.getName()).filter(n -> n.startsWith("pc_synonym_value")).forEach(name -> {
@@ -280,7 +308,7 @@ public class Synonym extends Loader
             {
                 loadValues(path + File.separatorChar + name, md5SynHashes, valueID);
             }
-            catch (IOException | SQLException e)
+            catch(IOException | SQLException e)
             {
                 System.err.println("exception for " + name);
                 e.printStackTrace();
@@ -301,7 +329,7 @@ public class Synonym extends Loader
                 else if(!name.startsWith("pc_synonym_value"))
                     System.out.println("unsupported " + path + File.separator + name);
             }
-            catch (IOException | SQLException e)
+            catch(IOException | SQLException e)
             {
                 System.err.println("exception for " + name);
                 e.printStackTrace();
