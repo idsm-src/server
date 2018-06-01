@@ -80,6 +80,7 @@ public class Loader
             pool.setTcpKeepAlive(properties.getProperty("tcpKeepAlive").equals("true"));
             pool.setCompatible(properties.getProperty("assumeMinServerVersion"));
             pool.setMaxConnections(Integer.parseInt(properties.getProperty("maxConnections")));
+            pool.setCurrentSchema(properties.getProperty("schema"));
 
             connectionPool = pool;
             return connectionPool;
