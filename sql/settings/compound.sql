@@ -1,7 +1,3 @@
-grant select on compound_sdfiles to "SPARQL";
-
---------------------------------------------------------------------------------
-
 grant select on compound_relations__reftable to "SPARQL";
 
 --------------------------------------------------------------------------------
@@ -48,7 +44,7 @@ grant select on compound_active_ingredients to "SPARQL";
 --------------------------------------------------------------------------------
 
 insert into compound_bases(id)
-select compound from compound_sdfiles;
+select distinct id from compounds as t where not exists (select id from compound_bases where id = t.id);
 
 insert into compound_bases(id)
 select distinct compound_from from compound_relations as t where not exists (select id from compound_bases where id = t.compound_from);

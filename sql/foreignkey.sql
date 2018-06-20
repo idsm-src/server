@@ -13,7 +13,6 @@ alter table biosystem_matches add foreign key (biosystem) references  biosystem_
 
 
 -- compound
-alter table compound_sdfiles add foreign key (compound) references compound_bases(id);
 alter table compound_relations add foreign key (compound_from) references compound_bases(id);
 alter table compound_relations add foreign key (compound_to) references compound_bases(id);
 alter table compound_relations add foreign key (relation) references compound_relations__reftable(id);

@@ -14,4 +14,3 @@ drop table compound_roles;
 drop table compound_roles__reftable;
 drop table compound_relations;
 drop table compound_relations__reftable;
-drop table compound_sdfiles;

@@ -29,7 +29,6 @@ public class PubChemRDF
         SubstanceDescriptor.loadDirectory("RDF/descriptor/substance");
 
         BioassayXML.loadDirectory("Bioassay/XML");
-        //CompoundSDF.loadDirectory("SDF");
 
         Ontology.loadDirectory("ontology");
     }

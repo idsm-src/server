@@ -1,11 +1,3 @@
-create table compound_sdfiles
-(
-    compound    integer not null,
-    sdf         varchar not null,
-    primary key(compound)
-);
-
-
 create table compound_relations__reftable
 (
     id     smallint not null,
