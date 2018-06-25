@@ -4,12 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.Lang;
@@ -24,52 +20,10 @@ public class CompoundDescriptor extends Loader
 {
     private static abstract class DescriptorSimpleFileTableLoader extends StreamTableLoader
     {
-        private static final BitSet ids = new BitSet();
-        protected final ArrayList<Integer> idList = new ArrayList<Integer>(Loader.batchSize);
-
-
         public DescriptorSimpleFileTableLoader(InputStream stream, String field)
         {
-            super(stream, "update descriptor_compound_bases set " + field + "=? where compound=?");
-        }
-
-
-        @Override
-        public void beforeBatch() throws SQLException, IOException
-        {
-            synchronized(CompoundDescriptor.class)
-            {
-                ArrayList<Integer> idAddList = new ArrayList<Integer>(Loader.batchSize);
-
-                for(Integer id : idList)
-                    if(ids.length() <= id || ids.get(id) == false)
-                        idAddList.add(id);
-
-                idList.clear();
-                idList.ensureCapacity(Loader.batchSize);
-
-                if(idAddList.size() == 0)
-                    return;
-
-
-                try(Connection connection = Loader.getConnection())
-                {
-                    try(PreparedStatement insertStatement = connection
-                            .prepareStatement("insert into descriptor_compound_bases(compound) values (?)"))
-                    {
-                        for(Integer id : idAddList)
-                        {
-                            insertStatement.setInt(1, id);
-                            insertStatement.addBatch();
-                        }
-
-                        insertStatement.executeBatch();
-                    }
-                }
-
-                for(Integer id : idAddList)
-                    ids.set(id);
-            }
+            super(stream, "insert into descriptor_compound_bases (" + field + ", compound) values (?,?) "
+                    + "on conflict (compound) do update set " + field + "=EXCLUDED." + field);
         }
     }
 
@@ -87,7 +41,6 @@ public class CompoundDescriptor extends Loader
                     throw new IOException();
 
                 int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
-                idList.add(id);
 
                 setValue(1, getInteger(object));
                 setValue(2, id);
@@ -111,7 +64,6 @@ public class CompoundDescriptor extends Loader
                     throw new IOException();
 
                 int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
-                idList.add(id);
 
                 setValue(1, getFloat(object));
                 setValue(2, id);
@@ -136,7 +88,6 @@ public class CompoundDescriptor extends Loader
 
                 String suffix = subject.getURI().endsWith("-AA") ? "_XLogP3-AA" : "_XLogP3";
                 int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
-                idList.add(id);
 
                 setValue(1, getFloat(object));
                 setValue(2, id);
