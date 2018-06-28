@@ -1,5 +1,17 @@
-select ?iri (max(?lbl) as ?label) where
+select distinct ?iri (max(?lbl) as ?label) where
 {
+    {
+        ?iri rdf:type owl:ObjectProperty
+    }
+    union
+    {
+        ?iri rdf:type owl:DatatypeProperty
+    }
+    union
+    {
+        ?iri rdf:type owl:AnnotationProperty
+    }
+    union
     {
         ?iri rdf:type rdf:Property
     }
