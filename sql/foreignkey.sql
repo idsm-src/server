@@ -9,7 +9,7 @@ alter table biosystem_components add foreign key (biosystem) references  biosyst
 alter table biosystem_references add foreign key (biosystem) references  biosystem_bases(id);
 alter table biosystem_references add foreign key (reference) references reference_bases(id);
 alter table biosystem_matches add foreign key (biosystem) references  biosystem_bases(id);
---  168257 : alter table biosystem_components add foreign key (component) references  biosystem_bases(id);
+--  175140 : alter table biosystem_components add foreign key (component) references  biosystem_bases(id);
 
 
 -- compound
@@ -40,9 +40,10 @@ alter table conserveddomain_references add foreign key (reference) references re
 alter table endpoint_bases add foreign key (outcome) references endpoint_outcomes__reftable(id);
 alter table endpoint_measurements add foreign key (substance, bioassay, measuregroup) references endpoint_bases(substance, bioassay, measuregroup);
 alter table endpoint_references add foreign key (reference) references reference_bases(id);
---  394284 : alter table endpoint_bases add foreign key (substance) references substance_bases(id);
+--  508564 : alter table endpoint_bases add foreign key (substance) references substance_bases(id);
 --     276 : alter table endpoint_bases add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
 --    1497 : alter table endpoint_references add foreign key (substance, bioassay, measuregroup) references endpoint_bases(substance, bioassay, measuregroup);
+alter table endpoint_bases add foreign key (bioassay, measuregroup) references bioassay_measuregroups(bioassay, measuregroup);
 
 
 -- gene
@@ -57,7 +58,7 @@ alter table gene_matches add foreign key (gene) references gene_bases(id);
 -- inchikey
 alter table inchikey_compounds add foreign key (inchikey) references inchikey_bases(id);
 alter table inchikey_subjects add foreign key (inchikey) references inchikey_bases(id);
---       9 : alter table inchikey_compounds add foreign key (compound) references compound_bases(id);
+alter table inchikey_compounds add foreign key (compound) references compound_bases(id);
 
 
 -- measuregroup
@@ -65,7 +66,7 @@ alter table measuregroup_bases add foreign key (bioassay) references bioassay_ba
 alter table measuregroup_bases add foreign key (source) references source_bases(id);
 alter table measuregroup_proteins add foreign key (protein) references protein_bases(id);
 alter table measuregroup_genes add foreign key (gene) references gene_bases(id);
---      82 : alter table measuregroup_proteins add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
+--      78 : alter table measuregroup_proteins add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
 --       1 : alter table measuregroup_genes add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
 
 
@@ -76,7 +77,7 @@ alter table protein_pdblinks add foreign key (protein) references protein_bases(
 alter table protein_similarproteins add foreign key (protein) references protein_bases(id);
 alter table protein_similarproteins add foreign key (simprotein) references protein_bases(id);
 alter table protein_genes add foreign key (protein) references protein_bases(id);
-alter table protein_genes add foreign key (gene) references gene_bases(id);
+--       1 : alter table protein_genes add foreign key (gene) references gene_bases(id);
 alter table protein_closematches add foreign key (protein) references protein_bases(id);
 alter table protein_conserveddomains add foreign key (protein) references protein_bases(id);
 alter table protein_conserveddomains add foreign key (domain) references conserveddomain_bases(id);
@@ -107,12 +108,12 @@ alter table source_alternatives add foreign key (source) references source_bases
 alter table substance_bases add foreign key (source) references source_bases(id);
 alter table substance_references add foreign key (reference) references reference_bases(id);
 alter table substance_synonyms add foreign key (synonym) references synonym_bases(id);
---       9 : alter table substance_bases add foreign key (compound) references compound_bases(id);
---  376791 : alter table substance_types add foreign key (substance) references substance_bases(id);
---    8459 : alter table substance_matches add foreign key (substance) references substance_bases(id);
---   15262 : alter table substance_references add foreign key (substance) references substance_bases(id);
---    1059 : alter table substance_pdblinks add foreign key (substance) references substance_bases(id);
--- 3129740 : alter table substance_synonyms add foreign key (substance) references substance_bases(id);
+alter table substance_bases add foreign key (compound) references compound_bases(id);
+--  487849 : alter table substance_types add foreign key (substance) references substance_bases(id);
+--    8484 : alter table substance_matches add foreign key (substance) references substance_bases(id);
+--   15885 : alter table substance_references add foreign key (substance) references substance_bases(id);
+--    1178 : alter table substance_pdblinks add foreign key (substance) references substance_bases(id);
+-- 3239522 : alter table substance_synonyms add foreign key (substance) references substance_bases(id);
 
 
 -- synonym
@@ -122,17 +123,28 @@ alter table synonym_compounds add foreign key (synonym) references synonym_bases
 alter table synonym_mesh_subjects add foreign key (synonym) references synonym_bases(id);
 alter table synonym_concept_subjects add foreign key (synonym) references synonym_bases(id);
 alter table synonym_concept_subjects add foreign key (concept) references concept_bases(id);
---        9 : alter table synonym_compounds add foreign key (compound) references compound_bases(id);
+alter table synonym_compounds add foreign key (compound) references compound_bases(id);
 
 
 -- descriptor-compound
---        9 : alter table descriptor_compound_bases add foreign key (compound) references compound_bases(id);
---        9 : alter table descriptor_compound_molecular_formulas add foreign key (compound) references compound_bases(id);
---        9 : alter table descriptor_compound_isomeric_smileses add foreign key (compound) references compound_bases(id);
---        9 : alter table descriptor_compound_canonical_smileses add foreign key (compound) references compound_bases(id);
---        9 : alter table descriptor_compound_iupac_inchis add foreign key (compound) references compound_bases(id);
---        9 : alter table descriptor_compound_preferred_iupac_names add foreign key (compound) references compound_bases(id);
+alter table descriptor_compound_bases add foreign key (compound) references compound_bases(id);
+alter table descriptor_compound_molecular_formulas add foreign key (compound) references compound_bases(id);
+alter table descriptor_compound_isomeric_smileses add foreign key (compound) references compound_bases(id);
+alter table descriptor_compound_canonical_smileses add foreign key (compound) references compound_bases(id);
+alter table descriptor_compound_iupac_inchis add foreign key (compound) references compound_bases(id);
+alter table descriptor_compound_preferred_iupac_names add foreign key (compound) references compound_bases(id);
 
 
 -- descriptor-substance
---  8925739 : alter table descriptor_substance_bases add foreign key (substance) references substance_bases(id);
+--  9201097 : alter table descriptor_substance_bases add foreign key (substance) references substance_bases(id);
+
+
+-- ontology
+alter table class_superclasses add foreign key (class) references class_bases(id);
+alter table class_superclasses add foreign key (superclass) references class_bases(id);
+alter table property_superproperties add foreign key (property) references property_bases(id);
+alter table property_superproperties add foreign key (superproperty) references property_bases(id);
+alter table property_domains add foreign key (property) references property_bases(id);
+alter table property_domains add foreign key (domain) references class_bases(id);
+alter table property_ranges add foreign key (property) references property_bases(id);
+alter table property_ranges add foreign key (range) references class_bases(id);
