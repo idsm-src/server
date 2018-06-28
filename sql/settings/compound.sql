@@ -64,4 +64,10 @@ select distinct compound from compound_types where not exists (select id from co
 insert into compound_bases(id)
 select distinct compound from compound_active_ingredients where not exists (select id from compound_bases where id = compound);
 
+insert into compound_bases(id)
+select distinct compound from substance_bases where not exists (select id from compound_bases where id = compound);
+
+insert into compound_bases(id)
+select distinct compound from descriptor_compound_bases where not exists (select id from compound_bases where id = compound);
+
 grant select on compound_bases to "SPARQL";
