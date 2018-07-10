@@ -1,7 +1,7 @@
 drop function compound(id in integer);
 drop function compound_inverse(iri in varchar);
-drop function compound_sdfile(id in integer);
-drop function compound_sdfile_inverse(iri in varchar);
+drop function compound_molfile(id in integer);
+drop function compound_molfile_inverse(iri in varchar);
 
 --------------------------------------------------------------------------------
 

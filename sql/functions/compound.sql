@@ -13,15 +13,15 @@ immutable;
 
 --------------------------------------------------------------------------------
 
-create function compound_sdfile(id in integer) returns varchar language sql as
+create function compound_molfile(id in integer) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID' || id || '_SDfile';
+  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID' || id || '_Molfile';
 $$
 immutable;
 
 
-create function compound_sdfile_inverse(iri in varchar) returns integer language sql as
+create function compound_molfile_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID([0-9]+)_SDfile$', '\1')::integer;
+  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID([0-9]+)_Molfile$', '\1')::integer;
 $$
 immutable;
