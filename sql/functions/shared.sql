@@ -13,21 +13,6 @@ immutable;
 
 --------------------------------------------------------------------------------
 
-create function go(id in integer) returns varchar language sql as
-$$
-  select 'http://purl.obolibrary.org/obo/GO_' || id;
-$$
-immutable;
-
-
-create function go_inverse(iri in varchar) returns integer language sql as
-$$
-  select regexp_replace(iri, '^http://purl.obolibrary.org/obo/GO_', '')::integer;
-$$
-immutable;
-
---------------------------------------------------------------------------------
-
 create function dqmesh(descriptor in integer, qualifier in integer) returns varchar language sql as
 $$
   select case qualifier
@@ -87,21 +72,6 @@ immutable;
 create function pdblink_inverse(iri in varchar) returns varchar language sql as
 $$
   select regexp_replace(iri, '^http://rdf.wwpdb.org/pdb/', '');
-$$
-immutable;
-
---------------------------------------------------------------------------------
-
-create function taxonomy(id in integer) returns varchar language sql as
-$$
-  select 'http://identifiers.org/taxonomy/' || id;
-$$
-immutable;
-
-
-create function taxonomy_inverse(iri in varchar) returns integer language sql as
-$$
-  select regexp_replace(iri, '^http://identifiers.org/taxonomy/', '')::integer;
 $$
 immutable;
 

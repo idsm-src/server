@@ -8,7 +8,7 @@ grant select on synonym_values to "SPARQL";
 --------------------------------------------------------------------------------
 
 create index synonym_types__synonym on synonym_types(synonym);
-create index synonym_types__type on synonym_types(type);
+create index synonym_types__type on synonym_types(type_id);
 grant select on synonym_types to "SPARQL";
 
 --------------------------------------------------------------------------------

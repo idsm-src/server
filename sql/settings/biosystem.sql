@@ -1,5 +1,5 @@
 create index biosystem_bases__source on biosystem_bases(source);
-create index biosystem_bases__organism on biosystem_bases(organism);
+create index biosystem_bases__organism on biosystem_bases(organism_id);
 grant select on biosystem_bases to "SPARQL";
 
 --------------------------------------------------------------------------------

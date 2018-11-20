@@ -24,13 +24,14 @@ import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import cz.iocb.pubchem.load.Ontology.Identifier;
 import cz.iocb.pubchem.load.common.Loader;
 
 
 
 public class BioassayXML extends Loader
 {
-    static private class MyZipInputStream extends ZipInputStream
+    private static class MyZipInputStream extends ZipInputStream
     {
         public MyZipInputStream(InputStream in)
         {
@@ -48,11 +49,6 @@ public class BioassayXML extends Loader
             super.close();
         }
     }
-
-
-    private static final short descriptionClassID = 136;
-    private static final short protocolClassID = 1041;
-    private static final short commentClassID = 1167;
 
 
     private static Map<String, Short> getSources() throws SQLException, IOException
@@ -121,6 +117,15 @@ public class BioassayXML extends Loader
 
     public static void loadDirectory(String path) throws SQLException, IOException
     {
+        final Identifier descriptionClass = Ontology.getId("http://semanticscience.org/resource/SIO_000136");
+        final Identifier protocolClass = Ontology.getId("http://semanticscience.org/resource/SIO_001041");
+        final Identifier commentClass = Ontology.getId("http://semanticscience.org/resource/SIO_001167");
+
+        if(descriptionClass.unit != Ontology.unitSIO || protocolClass.unit != Ontology.unitSIO
+                || protocolClass.unit != Ontology.unitSIO)
+            throw new IOException();
+
+
         Map<String, Short> sourceTable = getSources();
         ArrayList<String> newSources = new ArrayList<String>();
         AtomicInteger dataID = new AtomicInteger();
@@ -161,7 +166,7 @@ public class BioassayXML extends Loader
                                     .prepareStatement("insert into bioassay_bases (id, source, title) values (?,?,?)"))
                             {
                                 try(PreparedStatement insertExtraStatement = connection.prepareStatement(
-                                        "insert into bioassay_data (__, bioassay, type, value) values (?,?,?,?)"))
+                                        "insert into bioassay_data (__, bioassay, type_id, value) values (?,?,?,?)"))
                                 {
                                     InputStream fileStream = getStream(path + File.separatorChar + name, false);
                                     MyZipInputStream zipStream = new MyZipInputStream(fileStream);
@@ -213,7 +218,7 @@ public class BioassayXML extends Loader
                                             {
                                                 insertExtraStatement.setInt(1, dataID.getAndIncrement());
                                                 insertExtraStatement.setInt(2, id);
-                                                insertExtraStatement.setShort(3, descriptionClassID);
+                                                insertExtraStatement.setInt(3, descriptionClass.id);
                                                 insertExtraStatement.setString(4, description);
                                                 insertExtraStatement.addBatch();
                                             }
@@ -225,7 +230,7 @@ public class BioassayXML extends Loader
                                             {
                                                 insertExtraStatement.setInt(1, dataID.getAndIncrement());
                                                 insertExtraStatement.setInt(2, id);
-                                                insertExtraStatement.setShort(3, protocolClassID);
+                                                insertExtraStatement.setInt(3, protocolClass.id);
                                                 insertExtraStatement.setString(4, protocol);
                                                 insertExtraStatement.addBatch();
                                             }
@@ -237,7 +242,7 @@ public class BioassayXML extends Loader
                                             {
                                                 insertExtraStatement.setInt(1, dataID.getAndIncrement());
                                                 insertExtraStatement.setInt(2, id);
-                                                insertExtraStatement.setShort(3, commentClassID);
+                                                insertExtraStatement.setInt(3, commentClass.id);
                                                 insertExtraStatement.setString(4, comment);
                                                 insertExtraStatement.addBatch();
                                             }

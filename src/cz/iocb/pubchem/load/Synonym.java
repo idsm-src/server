@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.jena.graph.Node;
+import cz.iocb.pubchem.load.Ontology.Identifier;
 import cz.iocb.pubchem.load.common.Loader;
 import cz.iocb.pubchem.load.common.StreamTableLoader;
 
@@ -119,12 +120,17 @@ public class Synonym extends Loader
     {
         InputStream stream = getStream(file);
 
-        new StreamTableLoader(stream, "insert into synonym_types(synonym, type) values (?,?)")
+        new StreamTableLoader(stream, "insert into synonym_types(synonym, type_id) values (?,?)")
         {
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
             {
                 if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                    throw new IOException();
+
+                Identifier type = Ontology.getId(object.getURI());
+
+                if(type.unit != Ontology.unitCHEMINF)
                     throw new IOException();
 
                 MD5 md5 = new MD5(getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
@@ -133,7 +139,7 @@ public class Synonym extends Loader
                 if(md5ID != null)
                 {
                     setValue(1, md5ID);
-                    setValue(2, getIntID(object, "http://semanticscience.org/resource/CHEMINF_"));
+                    setValue(2, type.id);
                 }
                 else
                 {

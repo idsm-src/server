@@ -36,18 +36,3 @@ $$
   from (select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID[0-9]+_AID[0-9]+', '') as part) as tab;
 $$
 immutable;
-
---------------------------------------------------------------------------------
-
-create function outcome(id in smallint) returns varchar language sql as
-$$
-  select iri from endpoint_outcomes__reftable where endpoint_outcomes__reftable.id = outcome.id;
-$$
-immutable;
-
-
-create function outcome_inverse(iri in varchar) returns smallint language sql as
-$$
-  select id from endpoint_outcomes__reftable where endpoint_outcomes__reftable.iri = outcome_inverse.iri;
-$$
-immutable;

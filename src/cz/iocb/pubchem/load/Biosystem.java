@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.pubchem.load.Ontology.Identifier;
 import cz.iocb.pubchem.load.common.Loader;
 import cz.iocb.pubchem.load.common.ModelTableLoader;
 
@@ -45,15 +46,20 @@ public class Biosystem extends Loader
     private static void loadBases(Model model, Map<String, Short> sources) throws IOException, SQLException
     {
         new ModelTableLoader(model, loadQuery("biosystem/bases.sparql"),
-                "insert into biosystem_bases(id, source, title, organism) values (?,?,?,?)")
+                "insert into biosystem_bases(id, source, title, organism_id) values (?,?,?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
             {
+                Identifier organism = Ontology.getId(getIRI("organism"));
+
+                if(organism.unit != Ontology.unitTaxonomy)
+                    throw new IOException();
+
                 setValue(1, getIntID("biosystem", "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID"));
                 setValue(2, getMapID("source", sources));
                 setValue(3, getLiteralValue("title"));
-                setValue(4, getIntID("organism", "http://identifiers.org/taxonomy/"));
+                setValue(4, organism.id);
             }
         }.load();
     }

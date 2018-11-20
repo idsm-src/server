@@ -1,8 +1,4 @@
-grant select on reference_types__reftable to "SPARQL";
-
---------------------------------------------------------------------------------
-
-create index reference_bases__type on reference_bases(type);
+create index reference_bases__type on reference_bases(type_id);
 create index reference_bases__dcdate on reference_bases(dcdate);
 grant select on reference_bases to "SPARQL";
 

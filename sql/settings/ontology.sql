@@ -1,31 +1,46 @@
-create index class_bases__label on class_bases(label);
-grant select on class_bases to "SPARQL";
+grant select on ontology_resource_classes to "SPARQL";
 
 --------------------------------------------------------------------------------
 
-create index class_superclasses__class on class_superclasses(class);
-create index class_superclasses__superclass on class_superclasses(superclass);
-grant select on class_superclasses to "SPARQL";
+grant select on ontology_resource_properties to "SPARQL";
 
 --------------------------------------------------------------------------------
 
-create index property_bases__label on property_bases(label);
-grant select on property_bases to "SPARQL";
+grant select on ontology_resource_individuals to "SPARQL";
 
 --------------------------------------------------------------------------------
 
-create index property_superproperties__property on property_superproperties(property);
-create index property_superproperties__superproperty on property_superproperties(superproperty);
-grant select on property_superproperties to "SPARQL";
+create index ontology_resource_labels__label on ontology_resource_labels(label);
+grant select on ontology_resource_labels to "SPARQL";
 
 --------------------------------------------------------------------------------
 
-create index property_domains__property on property_domains(property);
-create index property_domains__domain on property_domains(domain);
-grant select on property_domains to "SPARQL";
+create index ontology_resource_superclasses__class on ontology_resource_superclasses(class_unit, class_id);
+create index ontology_resource_superclasses__superclass on ontology_resource_superclasses(superclass_unit, superclass_id);
+grant select on ontology_resource_superclasses to "SPARQL";
 
 --------------------------------------------------------------------------------
 
-create index property_ranges__property on property_ranges(property);
-create index property_ranges__range on property_ranges(range);
-grant select on property_ranges to "SPARQL";
+create index ontology_resource_superproperties__property on ontology_resource_superproperties(property_unit, property_id);
+create index ontology_resource_superproperties__superproperty on ontology_resource_superproperties(superproperty_unit, superproperty_id);
+grant select on ontology_resource_superproperties to "SPARQL";
+
+--------------------------------------------------------------------------------
+
+create index ontology_resource_domains__property on ontology_resource_domains(property_unit, property_id);
+create index ontology_resource_domains__domain on ontology_resource_domains(domain_unit, domain_id);
+grant select on ontology_resource_domains to "SPARQL";
+
+--------------------------------------------------------------------------------
+
+create index ontology_resource_ranges__property on ontology_resource_ranges(property_unit, property_id);
+create index ontology_resource_ranges__range on ontology_resource_ranges(range_unit, range_id);
+grant select on ontology_resource_ranges to "SPARQL";
+
+--------------------------------------------------------------------------------
+
+grant select on ontology_resources__reftable to "SPARQL";
+
+--------------------------------------------------------------------------------
+
+grant select on ontology_resource_categories__reftable to "SPARQL";

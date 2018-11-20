@@ -10,12 +10,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import cz.iocb.pubchem.load.Ontology.Identifier;
 import cz.iocb.pubchem.load.common.Loader;
 import cz.iocb.pubchem.load.common.StreamTableLoader;
 import cz.iocb.pubchem.load.common.VoidStreamRDF;
@@ -90,17 +90,12 @@ public class Endpoint extends Loader
     }
 
 
-    private static final Set<Integer> validEndpointTypes = new HashSet<Integer>(
-            Arrays.asList(34, 186, 187, 188, 189, 190, 192, 194, 349, 477, 2117, 2144, 2145, 2146, 2162, 2862, 2877,
-                    2878, 2879, 2880, 2881, 2882, 2883, 2884, 2886, 2887, 3036));
-
-
-    private static void loadOutcomes(String file, Map<String, Short> outcomes) throws IOException, SQLException
+    private static void loadOutcomes(String file) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
         new EndpointStreamTableLoader(stream,
-                "insert into endpoint_bases(substance, bioassay, measuregroup, outcome) values (?,?,?,?)")
+                "insert into endpoint_bases(substance, bioassay, measuregroup, outcome_id) values (?,?,?,?)")
         {
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
@@ -108,14 +103,17 @@ public class Endpoint extends Loader
                 if(!predicate.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PubChemAssayOutcome"))
                     throw new IOException();
 
-                short outcome = getMapID(object, outcomes);
+                Identifier outcome = Ontology.getId(object.getURI());
+
+                if(outcome.unit != Ontology.unitUncategorized)
+                    throw new IOException();
 
                 setIDValues(1, subject);
-                setValue(4, outcome);
+                setValue(4, outcome.id);
 
                 // workaround
                 if(subject.getURI().matches("http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID[0-9]*_AID493040"))
-                    setValue(3, outcome);
+                    setValue(3, outcome.id);
             }
         }.load();
 
@@ -150,7 +148,7 @@ public class Endpoint extends Loader
         InputStream stream = getStream(file);
 
         new EndpointStreamTableLoader(stream,
-                "insert into endpoint_measurements(substance, bioassay, measuregroup, type, value, label) values (?,?,?,-1,?,'')")
+                "insert into endpoint_measurements(substance, bioassay, measuregroup, type_id, value, label) values (?,?,?,-1,?,'')")
         {
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
@@ -172,7 +170,7 @@ public class Endpoint extends Loader
         InputStream stream = getStream(file);
 
         new EndpointStreamTableLoader(stream,
-                "update endpoint_measurements set type=? where substance=? and bioassay=? and measuregroup=?")
+                "update endpoint_measurements set type_id=? where substance=? and bioassay=? and measuregroup=?")
         {
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
@@ -180,12 +178,12 @@ public class Endpoint extends Loader
                 if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                     throw new IOException();
 
-                int type = getIntID(object, "http://www.bioassayontology.org/bao#BAO_");
+                Identifier type = Ontology.getId(object.getURI());
 
-                if(!validEndpointTypes.contains(type))
-                    System.out.println("unsupported endpoint type " + type);
+                if(type.unit != Ontology.unitBAO)
+                    throw new IOException();
 
-                setValue(1, type);
+                setValue(1, type.id);
                 setIDValues(2, subject);
             }
         }.load();
@@ -256,25 +254,24 @@ public class Endpoint extends Loader
     public static void loadDirectory(String path) throws IOException, SQLException
     {
         File dir = new File(getPubchemDirectory() + path);
-        Map<String, Short> outcomes = getMapping("endpoint_outcomes__reftable");
 
         loadValues("RDF/endpoint/pc_endpoint_value.ttl.gz");
+        loadTypes("RDF/endpoint/pc_endpoint_type.ttl.gz");
         Set<String> hasEmptyLabel = loadLabels("RDF/endpoint/pc_endpoint_label.ttl.gz");
 
         Arrays.asList(dir.listFiles()).parallelStream().map(f -> f.getName()).forEach(name -> {
             try
             {
                 if(name.startsWith("pc_endpoint_outcome"))
-                    loadOutcomes(path + File.separatorChar + name, outcomes);
-                else if(name.startsWith("pc_endpoint_type"))
-                    loadTypes(path + File.separatorChar + name);
+                    loadOutcomes(path + File.separatorChar + name);
                 else if(name.startsWith("pc_endpoint_unit"))
                     checkUnits(path + File.separatorChar + name);
                 else if(name.startsWith("pc_endpoint2reference"))
                     loadReferences(path + File.separatorChar + name);
                 else if(name.startsWith("pc_endpoint2substance"))
                     System.out.println("ignore " + path + File.separator + name);
-                else if(!name.equals("pc_endpoint_value.ttl.gz") && !name.equals("pc_endpoint_label.ttl.gz"))
+                else if(!name.equals("pc_endpoint_value.ttl.gz") && !name.equals("pc_endpoint_label.ttl.gz")
+                        && !name.equals("pc_endpoint_type.ttl.gz"))
                     System.out.println("unsupported " + path + File.separator + name);
             }
             catch(IOException | SQLException e)
@@ -290,7 +287,7 @@ public class Endpoint extends Loader
         try(Connection connection = getConnection())
         {
             try(PreparedStatement statement = connection
-                    .prepareStatement("select * from endpoint_measurements where type=-1"))
+                    .prepareStatement("select * from endpoint_measurements where type_id=-1"))
             {
                 try(ResultSet result = statement.executeQuery())
                 {

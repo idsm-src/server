@@ -6,8 +6,8 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.Map;
 import org.apache.jena.graph.Node;
+import cz.iocb.pubchem.load.Ontology.Identifier;
 import cz.iocb.pubchem.load.common.Loader;
 import cz.iocb.pubchem.load.common.StreamTableLoader;
 
@@ -15,11 +15,11 @@ import cz.iocb.pubchem.load.common.StreamTableLoader;
 
 public class Reference extends Loader
 {
-    private static void loadTypes(String file, Map<String, Short> types) throws IOException, SQLException
+    private static void loadTypes(String file) throws IOException, SQLException
     {
         InputStream stream = getStream(file);
 
-        new StreamTableLoader(stream, "insert into reference_bases(id, type) values (?,?)")
+        new StreamTableLoader(stream, "insert into reference_bases(id, type_id) values (?,?)")
         {
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
@@ -27,8 +27,13 @@ public class Reference extends Loader
                 if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                     throw new IOException();
 
+                Identifier type = Ontology.getId(object.getURI());
+
+                if(type.unit != Ontology.unitUncategorized)
+                    throw new IOException();
+
                 setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID"));
-                setValue(2, getMapID(object, types));
+                setValue(2, type.id);
             }
         }.load();
     }
@@ -149,8 +154,7 @@ public class Reference extends Loader
 
     public static void loadDirectory(String path) throws IOException, SQLException
     {
-        Map<String, Short> types = getMapping("reference_types__reftable");
-        loadTypes(path + File.separatorChar + "pc_reference_type.ttl.gz", types);
+        loadTypes(path + File.separatorChar + "pc_reference_type.ttl.gz");
 
         File dir = new File(getPubchemDirectory() + path);
 

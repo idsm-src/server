@@ -1,13 +1,16 @@
-drop function class(id in integer);
-drop function class_inverse(iri in varchar);
-drop function property(id in integer);
-drop function property_inverse(iri in varchar);
+drop function ontology_resource(unit in smallint, id in integer);
+drop function ontology_resource_inv1(iri in varchar);
+drop function ontology_resource_inv2(iri in varchar);
 
 --------------------------------------------------------------------------------
 
-drop table property_ranges;
-drop table property_domains;
-drop table property_superproperties;
-drop table property_bases;
-drop table class_superclasses;
-drop table class_bases;
+drop table ontology_resource_categories__reftable;
+drop table ontology_resources__reftable;
+drop table ontology_resource_ranges;
+drop table ontology_resource_domains;
+drop table ontology_resource_superproperties;
+drop table ontology_resource_superclasses;
+drop table ontology_resource_labels;
+drop table ontology_resource_individuals;
+drop table ontology_resource_properties;
+drop table ontology_resource_classes;

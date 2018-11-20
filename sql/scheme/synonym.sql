@@ -18,8 +18,8 @@ create table synonym_values
 create table synonym_types
 (
     synonym    integer not null,
-    type       smallint not null,
-    primary key(synonym, type)
+    type_id    integer not null,
+    primary key(synonym, type_id)
 );
 
 

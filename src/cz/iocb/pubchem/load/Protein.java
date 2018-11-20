@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.pubchem.load.Ontology.Identifier;
 import cz.iocb.pubchem.load.common.Loader;
 import cz.iocb.pubchem.load.common.ModelTableLoader;
 
@@ -17,7 +18,7 @@ public class Protein extends Loader
         Map<String, Integer> map = new HashMap<String, Integer>();
 
         new ModelTableLoader(model, loadQuery("protein/bases.sparql"),
-                "insert into protein_bases(id, name, organism, title) values (?,?,?,?)")
+                "insert into protein_bases(id, name, organism_id, title) values (?,?,?,?)")
         {
             int nextID = 0;
 
@@ -27,9 +28,14 @@ public class Protein extends Loader
                 String iri = getIRI("protein");
                 map.put(iri, nextID);
 
+                Identifier organism = Ontology.getId(getIRI("organism"));
+
+                if(organism.unit != Ontology.unitTaxonomy)
+                    throw new IOException();
+
                 setValue(1, nextID++);
                 setValue(2, getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
-                setValue(3, getIntID("organism", "http://identifiers.org/taxonomy/"));
+                setValue(3, organism.id);
                 setValue(4, getLiteralValue("title"));
             }
         }.load();
@@ -147,31 +153,34 @@ public class Protein extends Loader
     }
 
 
-    private static void loadParticipatesGoes(Model model, Map<String, Integer> proteins)
-            throws IOException, SQLException
+    private static void loadProcesses(Model model, Map<String, Integer> proteins) throws IOException, SQLException
     {
         new ModelTableLoader(model,
-                patternQuery("?protein obo:BFO_0000056 ?participation "
-                        + "filter(strstarts(str(?participation), \"http://purl.obolibrary.org/obo/GO_\"))"),
-                "insert into protein_participates_goes(protein, participation) values (?,?)")
+                patternQuery("?protein obo:BFO_0000056 ?process "
+                        + "filter(strstarts(str(?process), \"http://purl.obolibrary.org/obo/GO_\"))"),
+                "insert into protein_processes(protein, process_id) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
             {
+                Identifier process = Ontology.getId(getIRI("process"));
+
+                if(process.unit != Ontology.unitGO)
+                    throw new IOException();
+
                 setValue(1, proteins.get(getIRI("protein")));
-                setValue(2, getIntID("participation", "http://purl.obolibrary.org/obo/GO_"));
+                setValue(2, process.id);
             }
         }.load();
     }
 
 
-    private static void loadParticipatesBiosystems(Model model, Map<String, Integer> proteins)
-            throws IOException, SQLException
+    private static void loadBiosystems(Model model, Map<String, Integer> proteins) throws IOException, SQLException
     {
         new ModelTableLoader(model,
                 patternQuery("?protein obo:BFO_0000056 ?biosystem "
                         + "filter(strstarts(str(?biosystem), \"http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID\"))"),
-                "insert into protein_participates_biosystems(protein, biosystem) values (?,?)")
+                "insert into protein_biosystems(protein, biosystem) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
@@ -185,14 +194,19 @@ public class Protein extends Loader
 
     private static void loadFunctions(Model model, Map<String, Integer> proteins) throws IOException, SQLException
     {
-        new ModelTableLoader(model, patternQuery("?protein obo:BFO_0000160 ?gofunction"),
-                "insert into protein_functions(protein, gofunction) values (?,?)")
+        new ModelTableLoader(model, patternQuery("?protein obo:BFO_0000160 ?function"),
+                "insert into protein_functions(protein, function_id) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
             {
+                Identifier function = Ontology.getId(getIRI("function"));
+
+                if(function.unit != Ontology.unitGO)
+                    throw new IOException();
+
                 setValue(1, proteins.get(getIRI("protein")));
-                setValue(2, getIntID("gofunction", "http://purl.obolibrary.org/obo/GO_"));
+                setValue(2, function.id);
             }
         }.load();
     }
@@ -201,13 +215,18 @@ public class Protein extends Loader
     private static void loadLocations(Model model, Map<String, Integer> proteins) throws IOException, SQLException
     {
         new ModelTableLoader(model, patternQuery("?protein obo:BFO_0000171 ?location"),
-                "insert into protein_locations(protein, location) values (?,?)")
+                "insert into protein_locations(protein, location_id) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
             {
+                Identifier location = Ontology.getId(getIRI("location"));
+
+                if(location.unit != Ontology.unitGO)
+                    throw new IOException();
+
                 setValue(1, proteins.get(getIRI("protein")));
-                setValue(2, getIntID("location", "http://purl.obolibrary.org/obo/GO_"));
+                setValue(2, location.id);
             }
         }.load();
     }
@@ -218,13 +237,18 @@ public class Protein extends Loader
         new ModelTableLoader(model,
                 patternQuery("?protein rdf:type ?type "
                         + "filter(strstarts(str(?type), \"http://purl.obolibrary.org/obo/PR_\"))"),
-                "insert into protein_types(protein, type) values (?,?)")
+                "insert into protein_types(protein, type_id) values (?,?)")
         {
             @Override
             public void insert() throws SQLException, IOException
             {
+                Identifier type = Ontology.getId(getIRI("type"));
+
+                if(type.unit != Ontology.unitPR)
+                    throw new IOException();
+
                 setValue(1, proteins.get(getIRI("protein")));
-                setValue(2, getIntID("type", "http://purl.obolibrary.org/obo/PR_"));
+                setValue(2, type.id);
             }
         }.load();
     }
@@ -243,8 +267,8 @@ public class Protein extends Loader
         loadCloseMatches(model, proteins);
         loadConservedDomains(model, proteins);
         loadContinuantParts(model, proteins);
-        loadParticipatesGoes(model, proteins);
-        loadParticipatesBiosystems(model, proteins);
+        loadProcesses(model, proteins);
+        loadBiosystems(model, proteins);
         loadFunctions(model, proteins);
         loadLocations(model, proteins);
         loadTypes(model, proteins);

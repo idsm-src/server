@@ -15,15 +15,11 @@ alter table biosystem_matches add foreign key (biosystem) references  biosystem_
 -- compound
 alter table compound_relations add foreign key (compound_from) references compound_bases(id);
 alter table compound_relations add foreign key (compound_to) references compound_bases(id);
-alter table compound_relations add foreign key (relation) references compound_relations__reftable(id);
 alter table compound_roles add foreign key (compound) references compound_bases(id);
-alter table compound_roles add foreign key (roleid) references compound_roles__reftable(id);
 alter table compound_biosystems add foreign key (compound) references compound_bases(id);
 alter table compound_biosystems add foreign key (biosystem) references biosystem_bases(id);
 alter table compound_types add foreign key (compound) references compound_bases(id);
-alter table compound_types add foreign key (unit) references compound_type_units__reftable(id);
 alter table compound_active_ingredients add foreign key (compound) references compound_bases(id);
-alter table compound_active_ingredients add foreign key (unit) references compound_type_units__reftable(id);
 
 
 -- concept
@@ -37,7 +33,6 @@ alter table conserveddomain_references add foreign key (reference) references re
 
 
 -- endpoint
-alter table endpoint_bases add foreign key (outcome) references endpoint_outcomes__reftable(id);
 alter table endpoint_measurements add foreign key (substance, bioassay, measuregroup) references endpoint_bases(substance, bioassay, measuregroup);
 alter table endpoint_references add foreign key (reference) references reference_bases(id);
 --  508564 : alter table endpoint_bases add foreign key (substance) references substance_bases(id);
@@ -83,9 +78,9 @@ alter table protein_conserveddomains add foreign key (protein) references protei
 alter table protein_conserveddomains add foreign key (domain) references conserveddomain_bases(id);
 alter table protein_continuantparts add foreign key (protein) references protein_bases(id);
 alter table protein_continuantparts add foreign key (part) references protein_bases(id);
-alter table protein_participates_goes add foreign key (protein) references protein_bases(id);
-alter table protein_participates_biosystems add foreign key (protein) references protein_bases(id);
-alter table protein_participates_biosystems add foreign key (biosystem) references biosystem_bases(id);
+alter table protein_processes add foreign key (protein) references protein_bases(id);
+alter table protein_biosystems add foreign key (protein) references protein_bases(id);
+alter table protein_biosystems add foreign key (biosystem) references biosystem_bases(id);
 alter table protein_functions add foreign key (protein) references protein_bases(id);
 alter table protein_locations add foreign key (protein) references protein_bases(id);
 alter table protein_types add foreign key (protein) references protein_bases(id);
@@ -93,7 +88,6 @@ alter table protein_complexes add foreign key (protein) references protein_bases
 
 
 -- reference
-alter table reference_bases add foreign key (type) references reference_types__reftable(id);
 alter table reference_discusses add foreign key (reference) references reference_bases(id);
 alter table reference_subject_descriptors add foreign key (reference) references reference_bases(id);
 
@@ -140,11 +134,11 @@ alter table descriptor_compound_preferred_iupac_names add foreign key (compound)
 
 
 -- ontology
-alter table class_superclasses add foreign key (class) references class_bases(id);
-alter table class_superclasses add foreign key (superclass) references class_bases(id);
-alter table property_superproperties add foreign key (property) references property_bases(id);
-alter table property_superproperties add foreign key (superproperty) references property_bases(id);
-alter table property_domains add foreign key (property) references property_bases(id);
-alter table property_domains add foreign key (domain) references class_bases(id);
-alter table property_ranges add foreign key (property) references property_bases(id);
-alter table property_ranges add foreign key (range) references class_bases(id);
+alter table ontology_resource_superclasses add foreign key (class_unit, class_id) references ontology_resource_classes(class_unit, class_id);
+alter table ontology_resource_superclasses add foreign key (superclass_unit, superclass_id) references ontology_resource_classes(class_unit, class_id);
+alter table ontology_resource_superproperties add foreign key (property_unit, property_id) references ontology_resource_properties(property_unit, property_id);
+alter table ontology_resource_superproperties add foreign key (superproperty_unit, superproperty_id) references ontology_resource_properties(property_unit, property_id);
+alter table ontology_resource_domains add foreign key (property_unit, property_id) references ontology_resource_properties(property_unit, property_id);
+alter table ontology_resource_domains add foreign key (domain_unit, domain_id) references ontology_resource_classes(class_unit, class_id);
+alter table ontology_resource_ranges add foreign key (property_unit, property_id) references ontology_resource_properties(property_unit, property_id);
+alter table ontology_resource_ranges add foreign key (range_unit, range_id) references ontology_resource_classes(class_unit, class_id);

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
+import cz.iocb.pubchem.load.Ontology.Identifier;
 import cz.iocb.pubchem.load.common.Loader;
 import cz.iocb.pubchem.load.common.StreamTableLoader;
 
@@ -23,15 +24,6 @@ public class Measuregroup extends Loader
     static private abstract class MeasuregroupStreamTableLoader extends StreamTableLoader
     {
         static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID";
-        static private Map<String, Short> outcomes;
-
-        static private synchronized Map<String, Short> getOutcomes() throws SQLException, IOException
-        {
-            if(outcomes == null)
-                outcomes = getMapping("endpoint_outcomes__reftable");
-
-            return outcomes;
-        }
 
         public MeasuregroupStreamTableLoader(InputStream stream, String sql)
         {
@@ -96,9 +88,17 @@ public class Measuregroup extends Loader
             else
             {
                 // workaround
-                for(int id : getOutcomes().values())
+                String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#";
+                String[] suffixes = { "active", "inactive", "inconclusive", "unspecified", "probe" };
+
+                for(String suffix : suffixes)
                 {
-                    Node fakeSubject = NodeFactory.createURI(iri + "_" + id);
+                    Identifier outcome = Ontology.getId(prefix + suffix);
+
+                    if(outcome.unit != Ontology.unitUncategorized)
+                        throw new IOException();
+
+                    Node fakeSubject = NodeFactory.createURI(iri + "_" + outcome.id);
                     super.insertStub(fakeSubject, predicate, object);
                 }
             }

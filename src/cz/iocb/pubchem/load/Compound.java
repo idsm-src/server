@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Arrays;
 import org.apache.jena.graph.Node;
+import cz.iocb.pubchem.load.Ontology.Identifier;
 import cz.iocb.pubchem.load.common.Loader;
 import cz.iocb.pubchem.load.common.StreamTableLoader;
 
@@ -39,8 +40,10 @@ public class Compound extends Loader
         InputStream stream = getStream(file);
 
         new StreamTableLoader(stream,
-                "insert into compound_relations(compound_from, relation, compound_to) values (?, 480, ?)")
+                "insert into compound_relations(compound_from, relation_unit, relation_id, compound_to) values (?,?,?,?)")
         {
+            final Identifier relation = Ontology.getId("http://semanticscience.org/resource/CHEMINF_000480");
+
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
             {
@@ -48,7 +51,9 @@ public class Compound extends Loader
                     throw new IOException();
 
                 setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
-                setValue(2, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
+                setValue(2, relation.unit);
+                setValue(3, relation.id);
+                setValue(4, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
             }
         }.load();
 
@@ -61,7 +66,7 @@ public class Compound extends Loader
         InputStream stream = getStream(file);
 
         new StreamTableLoader(stream,
-                "insert into compound_active_ingredients(compound, unit, ingredient) values (?, ?, ?)")
+                "insert into compound_active_ingredients(compound, ingredient_unit, ingredient_id) values (?,?,?)")
         {
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
@@ -69,22 +74,11 @@ public class Compound extends Loader
                 if(!predicate.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#is_active_ingredient_of"))
                     throw new IOException();
 
-                setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
+                Identifier ingredient = Ontology.getId(object.getURI());
 
-                if(object.getURI().startsWith("http://purl.bioontology.org/ontology/SNOMEDCT/"))
-                {
-                    setValue(2, 1);
-                    setValue(3, getIntID(object, "http://purl.bioontology.org/ontology/SNOMEDCT/"));
-                }
-                else if(object.getURI().startsWith("http://purl.bioontology.org/ontology/NDFRT/N"))
-                {
-                    setValue(2, 2);
-                    setValue(3, getIntID(object, "http://purl.bioontology.org/ontology/NDFRT/N"));
-                }
-                else
-                {
-                    throw new IOException();
-                }
+                setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
+                setValue(2, ingredient.unit);
+                setValue(3, ingredient.id);
             }
         }.load();
 
@@ -97,8 +91,10 @@ public class Compound extends Loader
         InputStream stream = getStream(file);
 
         new StreamTableLoader(stream,
-                "insert into compound_relations(compound_from, relation, compound_to) values (?, 455, ?)")
+                "insert into compound_relations(compound_from, relation_unit, relation_id, compound_to) values (?,?,?,?)")
         {
+            final Identifier relation = Ontology.getId("http://semanticscience.org/resource/CHEMINF_000455");
+
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
             {
@@ -106,7 +102,9 @@ public class Compound extends Loader
                     throw new IOException();
 
                 setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
-                setValue(2, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
+                setValue(2, relation.unit);
+                setValue(3, relation.id);
+                setValue(4, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
             }
         }.load();
 
@@ -119,8 +117,10 @@ public class Compound extends Loader
         InputStream stream = getStream(file);
 
         new StreamTableLoader(stream,
-                "insert into compound_relations(compound_from, relation, compound_to) values (?, 1024, ?)")
+                "insert into compound_relations(compound_from, relation_unit, relation_id, compound_to) values (?,?,?,?)")
         {
+            final Identifier relation = Ontology.getId("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#has_parent");
+
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
             {
@@ -128,7 +128,9 @@ public class Compound extends Loader
                     throw new IOException();
 
                 setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
-                setValue(2, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
+                setValue(2, relation.unit);
+                setValue(3, relation.id);
+                setValue(4, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
             }
         }.load();
 
@@ -141,8 +143,10 @@ public class Compound extends Loader
         InputStream stream = getStream(file);
 
         new StreamTableLoader(stream,
-                "insert into compound_relations(compound_from, relation, compound_to) values (?, 462, ?)")
+                "insert into compound_relations(compound_from, relation_unit, relation_id, compound_to) values (?,?,?,?)")
         {
+            final Identifier relation = Ontology.getId("http://semanticscience.org/resource/CHEMINF_000462");
+
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
             {
@@ -150,7 +154,9 @@ public class Compound extends Loader
                     throw new IOException();
 
                 setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
-                setValue(2, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
+                setValue(2, relation.unit);
+                setValue(3, relation.id);
+                setValue(4, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
             }
         }.load();
 
@@ -163,8 +169,10 @@ public class Compound extends Loader
         InputStream stream = getStream(file);
 
         new StreamTableLoader(stream,
-                "insert into compound_relations(compound_from, relation, compound_to) values (?, 461, ?)")
+                "insert into compound_relations(compound_from, relation_unit, relation_id, compound_to) values (?,?,?,?)")
         {
+            final Identifier relation = Ontology.getId("http://semanticscience.org/resource/CHEMINF_000461");
+
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
             {
@@ -172,7 +180,9 @@ public class Compound extends Loader
                     throw new IOException();
 
                 setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
-                setValue(2, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
+                setValue(2, relation.unit);
+                setValue(3, relation.id);
+                setValue(4, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
             }
         }.load();
 
@@ -184,16 +194,21 @@ public class Compound extends Loader
     {
         InputStream stream = getStream(file);
 
-        new StreamTableLoader(stream, "insert into compound_roles(compound, roleid) values (?, 0)")
+        new StreamTableLoader(stream, "insert into compound_roles(compound, role_id) values (?,?)")
         {
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
             {
-                if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/has-role")
-                        || !object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#FDAApprovedDrugs"))
+                if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/has-role"))
+                    throw new IOException();
+
+                Identifier role = Ontology.getId(object.getURI());
+
+                if(role.unit != Ontology.unitUncategorized)
                     throw new IOException();
 
                 setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
+                setValue(2, role.id);
             }
         }.load();
 
@@ -205,7 +220,7 @@ public class Compound extends Loader
     {
         InputStream stream = getStream(file);
 
-        new StreamTableLoader(stream, "insert into compound_types(compound, unit, type) values (?, ?, ?)")
+        new StreamTableLoader(stream, "insert into compound_types(compound, type_unit, type_id) values (?,?,?)")
         {
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
@@ -213,37 +228,11 @@ public class Compound extends Loader
                 if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                     throw new IOException();
 
-                setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
+                Identifier type = Ontology.getId(object.getURI());
 
-                if(object.getURI().startsWith("http://purl.obolibrary.org/obo/CHEBI_"))
-                {
-                    setValue(2, 0);
-                    setValue(3, getIntID(object, "http://purl.obolibrary.org/obo/CHEBI_"));
-                }
-                else if(object.getURI().startsWith("http://purl.bioontology.org/ontology/SNOMEDCT/"))
-                {
-                    setValue(2, 1);
-                    setValue(3, getIntID(object, "http://purl.bioontology.org/ontology/SNOMEDCT/"));
-                }
-                else if(object.getURI().startsWith("http://purl.bioontology.org/ontology/NDFRT/N"))
-                {
-                    setValue(2, 2);
-                    setValue(3, getIntID(object, "http://purl.bioontology.org/ontology/NDFRT/N"));
-                }
-                else if(object.getURI().startsWith("http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C"))
-                {
-                    setValue(2, 3);
-                    setValue(3, getIntID(object, "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C"));
-                }
-                else if(object.getURI().equals("http://www.biopax.org/release/biopax-level3.owl#SmallMolecule"))
-                {
-                    setValue(2, 4);
-                    setValue(3, -1);
-                }
-                else
-                {
-                    throw new IOException();
-                }
+                setValue(1, getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
+                setValue(2, type.unit);
+                setValue(3, type.id);
             }
         }.load();
 

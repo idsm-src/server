@@ -1,16 +1,7 @@
-create table reference_types__reftable
-(
-    id     smallint not null,
-    iri    varchar not null,
-    primary key(id),
-    unique(iri)
-);
-
-
 create table reference_bases
 (
     id          integer not null,
-    type        smallint not null,
+    type_id     smallint not null,
     dcdate      date,
     title       varchar,
     citation    varchar,
@@ -33,8 +24,3 @@ create table reference_subject_descriptors
     qualifier     integer not null,
     primary key(reference, descriptor, qualifier)
 );
-
---============================================================================--
-
-insert into reference_types__reftable(id, iri) values (0, 'http://purl.org/spar/fabio/ReviewArticle');
-insert into reference_types__reftable(id, iri) values (1, 'http://purl.org/spar/fabio/JournalArticle');

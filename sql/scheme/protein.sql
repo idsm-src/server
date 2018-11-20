@@ -1,9 +1,9 @@
 create table protein_bases
 (
-    id          integer,
-    name        varchar unique not null,
-    organism    integer,
-    title       varchar,
+    id             integer,
+    name           varchar unique not null,
+    organism_id    integer,
+    title          varchar,
     primary key(id)
 );
 
@@ -65,15 +65,15 @@ create table protein_continuantparts
 );
 
 
-create table protein_participates_goes
+create table protein_processes
 (
-    protein          integer not null,
-    participation    integer not null,
-    primary key(protein, participation)
+    protein       integer not null,
+    process_id    integer not null,
+    primary key(protein, process_id)
 );
 
 
-create table protein_participates_biosystems
+create table protein_biosystems
 (
     protein      integer not null,
     biosystem    integer not null,
@@ -83,25 +83,25 @@ create table protein_participates_biosystems
 
 create table protein_functions
 (
-    protein       integer not null,
-    gofunction    integer not null,
-    primary key(protein, gofunction)
+    protein        integer not null,
+    function_id    integer not null,
+    primary key(protein, function_id)
 );
 
 
 create table protein_locations
 (
-    protein     integer not null,
-    location    integer not null,
-    primary key(protein, location)
+    protein        integer not null,
+    location_id    integer not null,
+    primary key(protein, location_id)
 );
 
 
 create table protein_types
 (
-    protein    integer not null,
-    type       integer not null,
-    primary key(protein, type)
+    protein       integer not null,
+    type_id       integer not null,
+    primary key(protein, type_id)
 );
 
 

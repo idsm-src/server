@@ -1,4 +1,4 @@
-create index protein_bases__organism on protein_bases(organism);
+create index protein_bases__organism on protein_bases(organism_id);
 create index protein_bases__title on protein_bases(title);
 grant select on protein_bases to "SPARQL";
 
@@ -44,32 +44,32 @@ grant select on protein_continuantparts to "SPARQL";
 
 --------------------------------------------------------------------------------
 
-create index protein_participates_goes__protein on protein_participates_goes(protein);
-create index protein_participates_goes__participation on protein_participates_goes(participation);
-grant select on protein_participates_goes to "SPARQL";
+create index protein_processes__protein on protein_processes(protein);
+create index protein_processes__process on protein_processes(process_id);
+grant select on protein_processes to "SPARQL";
 
 --------------------------------------------------------------------------------
 
-create index protein_participates_biosystems__protein on protein_participates_biosystems(protein);
-create index protein_participates_biosystems__biosystem on protein_participates_biosystems(biosystem);
-grant select on protein_participates_biosystems to "SPARQL";
+create index protein_biosystems__protein on protein_biosystems(protein);
+create index protein_biosystems__biosystem on protein_biosystems(biosystem);
+grant select on protein_biosystems to "SPARQL";
 
 --------------------------------------------------------------------------------
 
 create index protein_functions__protein on protein_functions(protein);
-create index protein_functions__gofunction on protein_functions(gofunction);
+create index protein_functions__function on protein_functions(function_id);
 grant select on protein_functions to "SPARQL";
 
 --------------------------------------------------------------------------------
 
 create index protein_locations__protein on protein_locations(protein);
-create index protein_locations__location on protein_locations(location);
+create index protein_locations__location on protein_locations(location_id);
 grant select on protein_locations to "SPARQL";
 
 --------------------------------------------------------------------------------
 
 create index protein_types__protein on protein_types(protein);
-create index protein_types__type on protein_types(type);
+create index protein_types__type on protein_types(type_id);
 grant select on protein_types to "SPARQL";
 
 --------------------------------------------------------------------------------
