@@ -138,4 +138,15 @@ public abstract class ModelTableLoader extends TableLoader
 
         return literal.getString();
     }
+
+
+    protected Integer getIntValue(String name)
+    {
+        Literal literal = solution.getLiteral(name);
+
+        if(literal == null)
+            return null;
+
+        return literal.getInt();
+    }
 }

@@ -142,3 +142,10 @@ alter table ontology_resource_domains add foreign key (property_unit, property_i
 alter table ontology_resource_domains add foreign key (domain_unit, domain_id) references ontology_resource_classes(class_unit, class_id);
 alter table ontology_resource_ranges add foreign key (property_unit, property_id) references ontology_resource_properties(property_unit, property_id);
 alter table ontology_resource_ranges add foreign key (range_unit, range_id) references ontology_resource_classes(class_unit, class_id);
+alter table ontology_resource_somevaluesfrom_restrictions add foreign key (property_unit, property_id)  references ontology_resource_properties(property_unit, property_id);
+alter table ontology_resource_somevaluesfrom_restrictions add foreign key (class_unit, class_id) references ontology_resource_classes(class_unit, class_id);
+alter table ontology_resource_allvaluesfrom_restrictions add foreign key (property_unit, property_id)  references ontology_resource_properties(property_unit, property_id);
+alter table ontology_resource_allvaluesfrom_restrictions add foreign key (class_unit, class_id) references ontology_resource_classes(class_unit, class_id);
+alter table ontology_resource_cardinality_restrictions add foreign key (property_unit, property_id)  references ontology_resource_properties(property_unit, property_id);
+alter table ontology_resource_mincardinality_restrictions add foreign key (property_unit, property_id)  references ontology_resource_properties(property_unit, property_id);
+alter table ontology_resource_maxcardinality_restrictions add foreign key (property_unit, property_id)  references ontology_resource_properties(property_unit, property_id);

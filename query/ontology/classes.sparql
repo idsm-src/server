@@ -1,7 +1,7 @@
 select distinct ?iri where
 {
     {
-        ?iri rdf:type owl:Class
+        ?iri rdf:type/rdfs:subClassOf* rdfs:Class
     }
     union
     {
@@ -18,5 +18,13 @@ select distinct ?iri where
     union
     {
         ?S rdfs:range ?iri
+    }
+    union
+    {
+        ?R owl:someValuesFrom ?iri
+    }
+    union
+    {
+        ?R owl:allValuesFrom ?iri
     }
 }

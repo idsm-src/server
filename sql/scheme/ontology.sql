@@ -71,6 +71,58 @@ create table ontology_resource_ranges
 );
 
 
+create table ontology_resource_somevaluesfrom_restrictions
+(
+    restriction_id    integer not null,
+    property_unit     smallint not null,
+    property_id       integer not null,
+    class_unit        smallint not null,
+    class_id          integer not null,
+    primary key(restriction_id)
+);
+
+
+create table ontology_resource_allvaluesfrom_restrictions
+(
+    restriction_id    integer not null,
+    property_unit     smallint not null,
+    property_id       integer not null,
+    class_unit        smallint not null,
+    class_id          integer not null,
+    primary key(restriction_id)
+);
+
+
+create table ontology_resource_cardinality_restrictions
+(
+    restriction_id    integer not null,
+    property_unit     smallint not null,
+    property_id       integer not null,
+    cardinality       integer not null,
+    primary key(restriction_id)
+);
+
+
+create table ontology_resource_mincardinality_restrictions
+(
+    restriction_id    integer not null,
+    property_unit     smallint not null,
+    property_id       integer not null,
+    cardinality       integer not null,
+    primary key(restriction_id)
+);
+
+
+create table ontology_resource_maxcardinality_restrictions
+(
+    restriction_id    integer not null,
+    property_unit     smallint not null,
+    property_id       integer not null,
+    cardinality       integer not null,
+    primary key(restriction_id)
+);
+
+
 create table ontology_resources__reftable
 (
     resource_id      integer not null,

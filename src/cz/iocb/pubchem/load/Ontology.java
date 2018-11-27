@@ -354,6 +354,118 @@ public class Ontology extends Loader
     }
 
 
+    private static void loadSomeValuesFromRestriction(Model model) throws SQLException, IOException
+    {
+        new OntologyModelTableLoader(model,
+                patternQuery(
+                        "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:someValuesFrom ?class"),
+                "insert into ontology_resource_somevaluesfrom_restrictions(restriction_id, property_unit, property_id, class_unit, class_id) values (?,?,?,?,?)")
+        {
+            @Override
+            public void insert() throws SQLException, IOException
+            {
+                Identifier restriction = getId("restriction");
+
+                if(restriction.unit != Ontology.unitBlank)
+                    throw new IOException();
+
+                setValue(1, restriction.id);
+                setValue(2, getId("property"));
+                setValue(4, getId("class"));
+            }
+        }.load();
+    }
+
+
+    private static void loadAllValuesFromRestriction(Model model) throws SQLException, IOException
+    {
+        new OntologyModelTableLoader(model,
+                patternQuery(
+                        "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:allValuesFrom ?class"),
+                "insert into ontology_resource_allvaluesfrom_restrictions(restriction_id, property_unit, property_id, class_unit, class_id) values (?,?,?,?,?)")
+        {
+            @Override
+            public void insert() throws SQLException, IOException
+            {
+                Identifier restriction = getId("restriction");
+
+                if(restriction.unit != Ontology.unitBlank)
+                    throw new IOException();
+
+                setValue(1, restriction.id);
+                setValue(2, getId("property"));
+                setValue(4, getId("class"));
+            }
+        }.load();
+    }
+
+
+    private static void loadCardinalityRestriction(Model model) throws SQLException, IOException
+    {
+        new OntologyModelTableLoader(model, patternQuery(
+                "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:cardinality ?cardinality"),
+                "insert into ontology_resource_cardinality_restrictions(restriction_id, property_unit, property_id, cardinality) values (?,?,?,?)")
+        {
+            @Override
+            public void insert() throws SQLException, IOException
+            {
+                Identifier restriction = getId("restriction");
+
+                if(restriction.unit != Ontology.unitBlank)
+                    throw new IOException();
+
+                setValue(1, restriction.id);
+                setValue(2, getId("property"));
+                setValue(4, getIntValue("cardinality"));
+            }
+        }.load();
+    }
+
+
+    private static void loadMinCardinalityRestriction(Model model) throws SQLException, IOException
+    {
+        new OntologyModelTableLoader(model, patternQuery(
+                "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:minCardinality ?cardinality"),
+                "insert into ontology_resource_mincardinality_restrictions(restriction_id, property_unit, property_id, cardinality) values (?,?,?,?)")
+        {
+            @Override
+            public void insert() throws SQLException, IOException
+            {
+                Identifier restriction = getId("restriction");
+
+                if(restriction.unit != Ontology.unitBlank)
+                    throw new IOException();
+
+                setValue(1, restriction.id);
+                setValue(2, getId("property"));
+                setValue(4, getIntValue("cardinality"));
+            }
+        }.load();
+    }
+
+
+    private static void loadMaxCardinalityRestriction(Model model) throws SQLException, IOException
+    {
+        new OntologyModelTableLoader(model, patternQuery(
+                "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:maxCardinality ?cardinality"),
+                "insert into ontology_resource_maxcardinality_restrictions(restriction_id, property_unit, property_id, cardinality) values (?,?,?,?)")
+        {
+            @Override
+            public void insert() throws SQLException, IOException
+            {
+                Identifier restriction = getId("restriction");
+
+                if(restriction.unit != Ontology.unitBlank)
+                    throw new IOException();
+
+                setValue(1, restriction.id);
+                setValue(2, getId("property"));
+                setValue(4, getIntValue("cardinality"));
+            }
+        }.load();
+    }
+
+
     static void storeUncategorizedResources() throws SQLException, IOException
     {
         try(Connection connection = getConnection())
@@ -398,6 +510,12 @@ public class Ontology extends Loader
         loadSuperProperties(ontologyModel);
         loadDomains(ontologyModel);
         loadRanges(ontologyModel);
+
+        loadSomeValuesFromRestriction(ontologyModel);
+        loadAllValuesFromRestriction(ontologyModel);
+        loadCardinalityRestriction(ontologyModel);
+        loadMinCardinalityRestriction(ontologyModel);
+        loadMaxCardinalityRestriction(ontologyModel);
 
         storeUncategorizedResources();
 

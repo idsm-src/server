@@ -31,4 +31,8 @@ select distinct ?iri where
     {
         ?iri rdfs:range ?P
     }
+    union
+    {
+        ?R owl:onProperty ?iri
+    }
 }
