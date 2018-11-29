@@ -94,7 +94,7 @@ alter table reference_subject_descriptors add foreign key (reference) references
 
 -- source
 alter table source_subjects add foreign key (source) references source_bases(id);
-alter table source_subjects add foreign key (subject) references source_subjects__reftable(id);
+alter table source_subjects add foreign key (subject) references concept_bases(id);
 alter table source_alternatives add foreign key (source) references source_bases(id);
 
 

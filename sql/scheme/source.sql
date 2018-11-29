@@ -8,15 +8,6 @@ create table source_bases
 );
 
 
-create table source_subjects__reftable
-(
-    id     smallint,
-    iri    varchar not null,
-    primary key(id),
-    unique(iri)
-);
-
-
 create table source_subjects
 (
     source     smallint not null,

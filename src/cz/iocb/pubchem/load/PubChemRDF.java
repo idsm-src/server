@@ -9,9 +9,9 @@ public class PubChemRDF
 {
     public static void main(String[] args) throws SQLException, IOException
     {
+        Concept.load("RDF/concept/pc_concept.ttl.gz");
         Source.load("RDF/source/pc_source.ttl.gz");
         Biosystem.load("RDF/biosystem/pc_biosystem.ttl.gz");
-        Concept.load("RDF/concept/pc_concept.ttl.gz");
         ConservedDomain.load("RDF/conserveddomain/pc_conserveddomain.ttl.gz");
         Gene.load("RDF/gene/pc_gene.ttl.gz");
         Protein.load("RDF/protein/pc_protein.ttl.gz");

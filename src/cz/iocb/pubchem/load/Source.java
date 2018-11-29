@@ -39,21 +39,23 @@ public class Source extends Loader
 
     private static Map<String, Short> loadSubjectsReftable(Model model) throws IOException, SQLException
     {
-        Map<String, Short> map = new HashMap<String, Short>();
+        Map<String, Short> map = getMapping("concept_bases");
 
         new ModelTableLoader(model, distinctPatternQuery("[] dcterms:subject ?iri"),
-                "insert into source_subjects__reftable (id, iri) values (?,?)")
+                "insert into concept_bases (id, iri) values (?,?)")
         {
-            short nextID = 0;
-
             @Override
             public void insert() throws SQLException, IOException
             {
                 String iri = getIRI("iri");
-                map.put(iri, nextID);
 
-                setValue(1, nextID++);
-                setValue(2, iri);
+                if(map.get(iri) == null)
+                {
+                    setValue(1, map.size());
+                    setValue(2, iri);
+
+                    map.put(iri, (short) map.size());
+                }
             }
         }.load();
 

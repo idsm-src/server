@@ -2,10 +2,6 @@ grant select on source_bases to "SPARQL";
 
 --------------------------------------------------------------------------------
 
-grant select on source_subjects__reftable to "SPARQL";
-
---------------------------------------------------------------------------------
-
 create index source_subjects__source on source_subjects(source);
 create index source_subjects__subject on source_subjects(subject);
 grant select on source_subjects to "SPARQL";
