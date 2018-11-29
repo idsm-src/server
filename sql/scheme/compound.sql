@@ -1,10 +1,40 @@
-create table compound_relations
+create table compound_components
 (
-    compound_from    integer not null,
-    relation_unit    smallint not null,
-    relation_id      smallint not null,
-    compound_to      integer not null,
-    primary key(compound_from, relation_unit, relation_id, compound_to)
+    compound     integer not null,
+    component    integer not null,
+    primary key(compound, component)
+);
+
+
+create table compound_isotopologues
+(
+    compound        integer not null,
+    isotopologue    integer not null,
+    primary key(compound, isotopologue)
+);
+
+
+create table compound_parents
+(
+    compound    integer not null,
+    parent      integer not null,
+    primary key(compound, parent)
+);
+
+
+create table compound_stereoisomers
+(
+    compound    integer not null,
+    isomer      integer not null,
+    primary key(compound, isomer)
+);
+
+
+create table compound_same_connectivities
+(
+    compound    integer not null,
+    isomer      integer not null,
+    primary key(compound, isomer)
 );
 
 

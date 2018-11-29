@@ -1,7 +1,27 @@
-create index compound_relations__compound_from on compound_relations(compound_from);
-create index compound_relations__relation on compound_relations(relation_unit, relation_id);
-create index compound_relations__compound_to on compound_relations(compound_to);
-grant select on compound_relations to "SPARQL";
+create index compound_components__compound on compound_components(compound);
+create index compound_components__component on compound_components(component);
+grant select on compound_components to "SPARQL";
+
+--------------------------------------------------------------------------------
+create index compound_isotopologues__compound on compound_isotopologues(compound);
+create index compound_isotopologues__isotopologue on compound_isotopologues(isotopologue);
+grant select on compound_isotopologues to "SPARQL";
+
+--------------------------------------------------------------------------------
+create index compound_parents__compound on compound_parents(compound);
+create index compound_parents__parent on compound_parents(parent);
+grant select on compound_parents to "SPARQL";
+
+--------------------------------------------------------------------------------
+create index compound_stereoisomers__compound on compound_stereoisomers(compound);
+create index compound_stereoisomers__isomer on compound_stereoisomers(isomer);
+grant select on compound_stereoisomers to "SPARQL";
+
+--------------------------------------------------------------------------------
+
+create index compound_same_connectivities__compound on compound_same_connectivities(compound);
+create index compound_same_connectivities__isomer on compound_same_connectivities(isomer);
+grant select on compound_same_connectivities to "SPARQL";
 
 --------------------------------------------------------------------------------
 
@@ -33,10 +53,34 @@ insert into compound_bases(id)
 select distinct id from compounds as t where not exists (select id from compound_bases where id = t.id);
 
 insert into compound_bases(id)
-select distinct compound_from from compound_relations as t where not exists (select id from compound_bases where id = t.compound_from);
+select distinct compound from compound_components where not exists (select id from compound_bases where id = compound);
 
 insert into compound_bases(id)
-select distinct compound_to from compound_relations where not exists (select id from compound_bases where id = compound_to);
+select distinct component from compound_components where not exists (select id from compound_bases where id = component);
+
+insert into compound_bases(id)
+select distinct compound from compound_isotopologues where not exists (select id from compound_bases where id = compound);
+
+insert into compound_bases(id)
+select distinct isotopologue from compound_isotopologues where not exists (select id from compound_bases where id = isotopologue);
+
+insert into compound_bases(id)
+select distinct compound from compound_parents where not exists (select id from compound_bases where id = compound);
+
+insert into compound_bases(id)
+select distinct parent from compound_parents where not exists (select id from compound_bases where id = parent);
+
+insert into compound_bases(id)
+select distinct compound from compound_stereoisomers where not exists (select id from compound_bases where id = compound);
+
+insert into compound_bases(id)
+select distinct isomer from compound_stereoisomers where not exists (select id from compound_bases where id = isomer);
+
+insert into compound_bases(id)
+select distinct compound from compound_same_connectivities where not exists (select id from compound_bases where id = compound);
+
+insert into compound_bases(id)
+select distinct isomer from compound_same_connectivities where not exists (select id from compound_bases where id = isomer);
 
 insert into compound_bases(id)
 select distinct compound from compound_roles where not exists (select id from compound_bases where id = compound);

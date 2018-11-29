@@ -13,8 +13,16 @@ alter table biosystem_matches add foreign key (biosystem) references  biosystem_
 
 
 -- compound
-alter table compound_relations add foreign key (compound_from) references compound_bases(id);
-alter table compound_relations add foreign key (compound_to) references compound_bases(id);
+alter table compound_components add foreign key (compound) references compound_bases(id);
+alter table compound_components add foreign key (component) references compound_bases(id);
+alter table compound_isotopologues add foreign key (compound) references compound_bases(id);
+alter table compound_isotopologues add foreign key (isotopologue) references compound_bases(id);
+alter table compound_parents add foreign key (compound) references compound_bases(id);
+alter table compound_parents add foreign key (parent) references compound_bases(id);
+alter table compound_stereoisomers add foreign key (compound) references compound_bases(id);
+alter table compound_stereoisomers add foreign key (isomer) references compound_bases(id);
+alter table compound_same_connectivities add foreign key (compound) references compound_bases(id);
+alter table compound_same_connectivities add foreign key (isomer) references compound_bases(id);
 alter table compound_roles add foreign key (compound) references compound_bases(id);
 alter table compound_biosystems add foreign key (compound) references compound_bases(id);
 alter table compound_biosystems add foreign key (biosystem) references biosystem_bases(id);
