@@ -7,6 +7,6 @@ immutable;
 
 create function protein_inverse(iri in varchar) returns integer language sql as
 $$
-  select id from protein_bases where ('http://rdf.ncbi.nlm.nih.gov/pubchem/protein/' || name) = protein_inverse.iri;
+  select id from protein_bases where name = substring(protein_inverse.iri, 45)::varchar;
 $$
 immutable;

@@ -7,6 +7,6 @@ immutable;
 
 create function synonym_inverse(iri in varchar) returns integer language sql as
 $$
-  select id from synonym_bases where ('http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_' || md5) = synonym_inverse.iri;
+  select id from synonym_bases where md5 = substring(synonym_inverse.iri, 49)::varchar;
 $$
 immutable;
