@@ -15,13 +15,13 @@ immutable;
 
 create function ensembl(id in varchar) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID' || id;
+  select 'http://rdf.ebi.ac.uk/resource/ensembl/' || id;
 $$
 immutable;
 
 
 create function ensembl_inverse(iri in varchar) returns varchar language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID', '');
+  select regexp_replace(iri, '^http://rdf.ebi.ac.uk/resource/ensembl/', '');
 $$
 immutable;
