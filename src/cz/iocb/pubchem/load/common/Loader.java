@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.zip.GZIPInputStream;
+import javax.sql.DataSource;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -31,6 +32,7 @@ import org.postgresql.ds.PGPoolingDataSource;
 
 
 
+@SuppressWarnings("deprecation")
 public class Loader
 {
     protected static final int batchSize = 1000;
@@ -59,7 +61,7 @@ public class Loader
     }
 
 
-    protected static PGPoolingDataSource getConnectionPool() throws SQLException, IOException
+    protected static DataSource getConnectionPool() throws SQLException, IOException
     {
         if(connectionPool != null)
             return connectionPool;
@@ -78,7 +80,6 @@ public class Loader
             pool.setPassword(properties.getProperty("password"));
             pool.setSocketTimeout(Integer.parseInt(properties.getProperty("socketTimeout")));
             pool.setTcpKeepAlive(properties.getProperty("tcpKeepAlive").equals("true"));
-            pool.setCompatible(properties.getProperty("assumeMinServerVersion"));
             pool.setMaxConnections(Integer.parseInt(properties.getProperty("maxConnections")));
             pool.setCurrentSchema(properties.getProperty("schema"));
 
