@@ -1,6 +1,14 @@
-select ?iri ?title where
+select distinct ?iri ?title where
 {
-    ?iri rdf:type dcterms:Dataset .
+    {
+        ?iri rdf:type dcterms:Dataset .
 
-    optional { ?iri dcterms:title ?title }
+        optional { ?iri dcterms:title ?title }
+    }
+    union
+    {
+        values (?iri ?title) {(source:WHO 'WHO')}
+
+        filter not exists { source:WHO rdf:type dcterms:Dataset }  
+    }
 }
