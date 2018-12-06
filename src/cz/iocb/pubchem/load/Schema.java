@@ -1,0 +1,390 @@
+package cz.iocb.pubchem.load;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration;
+import cz.iocb.chemweb.server.sparql.mapping.NodeMapping;
+import cz.iocb.chemweb.server.sparql.mapping.ParametrisedMapping;
+import cz.iocb.chemweb.server.sparql.mapping.QuadMapping;
+import cz.iocb.chemweb.server.sparql.mapping.classes.LiteralClass;
+import cz.iocb.chemweb.server.sparql.mapping.classes.ResourceClass;
+import cz.iocb.chemweb.server.sparql.translator.SparqlDatabaseConfiguration;
+import cz.iocb.pubchem.load.common.Loader;
+
+
+
+public class Schema extends Loader
+{
+    private static class QuadNodeMappingPair
+    {
+        QuadNodeMapping left;
+        QuadNodeMapping right;
+
+        QuadNodeMappingPair(QuadNodeMapping left, QuadNodeMapping right)
+        {
+            this.left = left;
+            this.right = right;
+        }
+    }
+
+
+    private static class QuadNodeMapping
+    {
+        QuadMapping quadMapping;
+        ParametrisedMapping nodeMapping;
+
+        QuadNodeMapping(QuadMapping quadMapping, ParametrisedMapping nodeMapping)
+        {
+            this.quadMapping = quadMapping;
+            this.nodeMapping = nodeMapping;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            QuadNodeMapping mapping = (QuadNodeMapping) o;
+
+            if(!mapping.quadMapping.getTable().equals(quadMapping.getTable()))
+                return false;
+
+            if(mapping.nodeMapping.getResourceClass() != nodeMapping.getResourceClass())
+                return false;
+
+            int count = mapping.nodeMapping.getResourceClass().getPatternPartsCount();
+
+            for(int i = 0; i < count; i++)
+                if(!mapping.nodeMapping.getSqlColumn(i).equals(nodeMapping.getSqlColumn(i)))
+                    return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return quadMapping.getTable().hashCode();
+        }
+    }
+
+
+    private static LinkedHashMap<ResourceClass, ArrayList<QuadNodeMapping>> getResourceMappings(
+            SparqlDatabaseConfiguration configuration)
+    {
+        LinkedHashMap<ResourceClass, ArrayList<QuadNodeMapping>> resourceMappings = new LinkedHashMap<>();
+
+        for(QuadMapping quadMapping : configuration.getMappings())
+        {
+            for(NodeMapping nodeMapping : new NodeMapping[] { quadMapping.getGraph(), quadMapping.getSubject(),
+                    quadMapping.getPredicate(), quadMapping.getObject() })
+            {
+                if(nodeMapping instanceof ParametrisedMapping)
+                {
+                    ResourceClass resourceClass = nodeMapping.getResourceClass();
+
+                    if(resourceClass instanceof LiteralClass)
+                        continue;
+
+                    ArrayList<QuadNodeMapping> mappings = resourceMappings.get(resourceClass);
+
+                    if(mappings == null)
+                    {
+                        mappings = new ArrayList<QuadNodeMapping>();
+                        resourceMappings.put(resourceClass, mappings);
+                    }
+
+                    QuadNodeMapping map = new QuadNodeMapping(quadMapping, (ParametrisedMapping) nodeMapping);
+
+                    if(!mappings.contains(map))
+                        mappings.add(map);
+                }
+            }
+        }
+
+        return resourceMappings;
+    }
+
+
+    private static String buildTableAccess(QuadNodeMapping mapping)
+    {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("select * from ");
+        builder.append(mapping.quadMapping.getTable());
+        builder.append(" where ");
+
+        for(int c = 0; c < mapping.nodeMapping.getResourceClass().getPatternPartsCount(); c++)
+        {
+            if(c > 0)
+                builder.append(" and ");
+
+            builder.append(mapping.nodeMapping.getSqlColumn(c));
+            builder.append(" is not null");
+        }
+
+        return builder.toString();
+    }
+
+
+    private static boolean isAditionalForeignKey(QuadNodeMapping left, QuadNodeMapping right)
+            throws SQLException, IOException
+    {
+        ResourceClass resourceClass = left.nodeMapping.getResourceClass();
+
+        boolean containsConstant = false;
+
+        for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
+            if(left.nodeMapping.getSqlColumn(c).contains("::") || right.nodeMapping.getSqlColumn(c).contains("::"))
+                containsConstant = true;
+
+        if(!containsConstant)
+            return false;
+
+
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("select distinct 1 from (");
+        builder.append(buildTableAccess(left));
+        builder.append(") t1 right join (");
+        builder.append(buildTableAccess(right));
+        builder.append(") t2 on (");
+
+        for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
+        {
+            if(c > 0)
+                builder.append(" and ");
+
+            String c1 = left.nodeMapping.getSqlColumn(c);
+            String c2 = right.nodeMapping.getSqlColumn(c);
+
+            if(!c1.contains("::"))
+                builder.append("t1.");
+
+            builder.append(c1);
+
+            builder.append(" = ");
+
+            if(!c2.contains("::"))
+                builder.append("t2.");
+
+            builder.append(c2);
+        }
+
+        builder.append(") where ");
+
+        for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
+        {
+            if(c > 0)
+                builder.append(" or ");
+
+            String c1 = left.nodeMapping.getSqlColumn(c);
+
+            if(!c1.contains("::"))
+                builder.append("t1.");
+
+            builder.append(c1);
+
+            builder.append(" is null");
+        }
+
+        builder.append(" limit 1");
+
+
+        try(Connection connection = getConnectionPool().getConnection())
+        {
+            try(Statement statement = connection.createStatement())
+            {
+                try(ResultSet result = statement.executeQuery(builder.toString()))
+                {
+                    return !result.next();
+                }
+            }
+        }
+    }
+
+
+    private static boolean isUnjoinable(QuadNodeMapping left, QuadNodeMapping right) throws SQLException, IOException
+    {
+        ResourceClass resourceClass = left.nodeMapping.getResourceClass();
+
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("select distinct 1 from (");
+        builder.append(buildTableAccess(left));
+        builder.append(") t1 inner join (");
+        builder.append(buildTableAccess(right));
+        builder.append(") t2 on (");
+
+        for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
+        {
+            if(c > 0)
+                builder.append(" and ");
+
+            String c1 = left.nodeMapping.getSqlColumn(c);
+            String c2 = right.nodeMapping.getSqlColumn(c);
+
+            if(!c1.contains("::"))
+                builder.append("t1.");
+
+            builder.append(c1);
+
+            builder.append(" = ");
+
+            if(!c2.contains("::"))
+                builder.append("t2.");
+
+            builder.append(c2);
+        }
+
+        builder.append(") limit 1");
+
+
+        try(Connection connection = getConnectionPool().getConnection())
+        {
+            try(Statement statement = connection.createStatement())
+            {
+                try(ResultSet result = statement.executeQuery(builder.toString()))
+                {
+                    return !result.next();
+                }
+            }
+        }
+    }
+
+
+    public static void storeAdditionalForeignKeys(SparqlDatabaseConfiguration configuration,
+            LinkedHashMap<ResourceClass, ArrayList<QuadNodeMapping>> resourceMappings) throws SQLException, IOException
+    {
+        ArrayList<QuadNodeMappingPair> mappingPairs = new ArrayList<QuadNodeMappingPair>();
+
+        for(ArrayList<QuadNodeMapping> mappings : resourceMappings.values())
+            for(int i = 0; i < mappings.size(); i++)
+                for(int j = 0; j < mappings.size(); j++)
+                    if(i != j)
+                        mappingPairs.add(new QuadNodeMappingPair(mappings.get(i), mappings.get(j)));
+
+
+        try(Connection connection = getConnectionPool().getConnection())
+        {
+            try(PreparedStatement statement = connection.prepareStatement(
+                    "insert into schema_foreign_keys(__, parent_table, parent_columns, foreign_table, foreign_columns) values (?,?,?,?,?)"))
+            {
+                AtomicInteger id = new AtomicInteger(0);
+
+                mappingPairs.parallelStream().forEach(mappingPair -> {
+                    ResourceClass resourceClass = mappingPair.left.nodeMapping.getResourceClass();
+
+                    try
+                    {
+                        if(isAditionalForeignKey(mappingPair.left, mappingPair.right))
+                        {
+                            String[] parentColumns = new String[resourceClass.getPatternPartsCount()];
+                            String[] foreignColumns = new String[resourceClass.getPatternPartsCount()];
+
+                            for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
+                            {
+                                parentColumns[c] = mappingPair.left.nodeMapping.getSqlColumn(c);
+                                foreignColumns[c] = mappingPair.right.nodeMapping.getSqlColumn(c);
+                            }
+
+                            synchronized(Schema.class)
+                            {
+                                statement.setInt(1, id.getAndIncrement());
+                                statement.setString(2, mappingPair.left.quadMapping.getTable());
+                                statement.setArray(3, connection.createArrayOf("varchar", parentColumns));
+                                statement.setString(4, mappingPair.right.quadMapping.getTable());
+                                statement.setArray(5, connection.createArrayOf("varchar", foreignColumns));
+                                statement.addBatch();
+                            }
+                        }
+                    }
+                    catch(SQLException | IOException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+                statement.executeBatch();
+            }
+        }
+    }
+
+
+    public static void storeUnjoinableColumns(SparqlDatabaseConfiguration configuration,
+            LinkedHashMap<ResourceClass, ArrayList<QuadNodeMapping>> resourceMappings) throws SQLException, IOException
+    {
+        ArrayList<QuadNodeMappingPair> mappingPairs = new ArrayList<QuadNodeMappingPair>();
+
+        for(ArrayList<QuadNodeMapping> mappings : resourceMappings.values())
+            for(int i = 0; i < mappings.size(); i++)
+                for(int j = i + 1; j < mappings.size(); j++)
+                    mappingPairs.add(new QuadNodeMappingPair(mappings.get(i), mappings.get(j)));
+
+
+        try(Connection connection = getConnectionPool().getConnection())
+        {
+            try(PreparedStatement statement = connection.prepareStatement(
+                    "insert into schema_unjoinable_columns(__, left_table, left_columns, right_table, right_columns) values (?,?,?,?,?)"))
+            {
+                AtomicInteger id = new AtomicInteger(0);
+
+                mappingPairs.parallelStream().forEach(mappingPair -> {
+                    ResourceClass resourceClass = mappingPair.left.nodeMapping.getResourceClass();
+
+                    try
+                    {
+                        if(isUnjoinable(mappingPair.left, mappingPair.right))
+                        {
+                            String[] leftColumns = new String[resourceClass.getPatternPartsCount()];
+                            String[] rightColumns = new String[resourceClass.getPatternPartsCount()];
+
+                            for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
+                            {
+                                leftColumns[c] = mappingPair.left.nodeMapping.getSqlColumn(c);
+                                rightColumns[c] = mappingPair.right.nodeMapping.getSqlColumn(c);
+                            }
+
+                            synchronized(Schema.class)
+                            {
+                                statement.setInt(1, id.getAndIncrement());
+                                statement.setString(2, mappingPair.left.quadMapping.getTable());
+                                statement.setArray(3, connection.createArrayOf("varchar", leftColumns));
+                                statement.setString(4, mappingPair.right.quadMapping.getTable());
+                                statement.setArray(5, connection.createArrayOf("varchar", rightColumns));
+                                statement.addBatch();
+                            }
+                        }
+                    }
+                    catch(SQLException | IOException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+                statement.executeBatch();
+            }
+        }
+    }
+
+
+    public static void load() throws SQLException, IOException
+    {
+        SparqlDatabaseConfiguration configuration = new PubChemConfiguration(getConnectionPool());
+        LinkedHashMap<ResourceClass, ArrayList<QuadNodeMapping>> resourceMappings = getResourceMappings(configuration);
+
+        storeUnjoinableColumns(configuration, resourceMappings);
+        storeAdditionalForeignKeys(configuration, resourceMappings);
+    }
+
+
+    public static void main(String[] args) throws SQLException, IOException
+    {
+        load();
+    }
+}
