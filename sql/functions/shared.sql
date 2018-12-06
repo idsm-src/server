@@ -25,16 +25,19 @@ immutable;
 
 create function dqmesh_inv1(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://id.nlm.nih.gov/mesh/D([0-9]+)(Q[0-9]+)?$', '\1')::integer;
+  select case strpos(iri, 'Q')
+    when 0 then substring(iri, 29)::integer
+    else substring(iri, 29, strpos(iri, 'Q') - 29)::integer
+  end;
 $$
 immutable;
 
 
 create function dqmesh_inv2(iri in varchar) returns integer language sql as
 $$
-  select case
-    when iri like 'http://id.nlm.nih.gov/mesh/D%Q%' then regexp_replace(iri, '^http://id.nlm.nih.gov/mesh/D[0-9]+(Q([0-9]+))?$', '\2')::integer
-    else -1
+  select case strpos(iri, 'Q')
+    when 0 then -1
+    else substring(iri, strpos(iri, 'Q') + 1)::integer
   end;
 $$
 immutable;
@@ -54,8 +57,8 @@ immutable;
 create function mesh_inverse(iri in varchar) returns integer language sql as
 $$
   select case
-    when iri like 'http://id.nlm.nih.gov/mesh/M%' then regexp_replace(iri, '^http://id.nlm.nih.gov/mesh/M([0-9]+)$', '\1')::integer
-    else -1 * regexp_replace(iri, '^http://id.nlm.nih.gov/mesh/C([0-9]+)$', '\1')::integer
+    when iri like 'http://id.nlm.nih.gov/mesh/M%' then substring(iri, 29)::integer
+    else -1 * substring(iri, 29)::integer
   end;
 $$
 immutable;
@@ -71,7 +74,7 @@ immutable;
 
 create function pdblink_inverse(iri in varchar) returns varchar language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.wwpdb.org/pdb/', '');
+  select substring(iri, 26);
 $$
 immutable;
 
@@ -86,6 +89,6 @@ immutable;
 
 create function uniprot_inverse(iri in varchar) returns varchar language sql as
 $$
-  select regexp_replace(iri, '^http://purl.uniprot.org/uniprot/', '');
+  select substring(iri, 33);
 $$
 immutable;

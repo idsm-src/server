@@ -7,7 +7,7 @@ immutable;
 
 create function biosystem_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID', '')::integer;
+  select substring(iri, 51)::integer;
 $$
 immutable;
 
@@ -22,6 +22,6 @@ immutable;
 
 create function wikipathway_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://identifiers.org/wikipathways/WP', '')::integer;
+  select substring(iri, 39)::integer;
 $$
 immutable;

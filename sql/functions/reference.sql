@@ -7,6 +7,6 @@ immutable;
 
 create function reference_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID', '')::integer;
+  select substring(iri, 51)::integer;
 $$
 immutable;

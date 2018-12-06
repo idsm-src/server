@@ -7,7 +7,7 @@ immutable;
 
 create function substance_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID', '')::integer;
+  select substring(iri,  50)::integer;
 $$
 immutable;
 
@@ -26,8 +26,8 @@ immutable;
 create function substance_chembl_inverse(iri in varchar) returns integer language sql as
 $$
   select case
-    when iri like '%SCHEMBL%' then -1 * regexp_replace(iri, '^http://linkedchemistry.info/chembl/chemblid/SCHEMBL', '')::integer
-    else regexp_replace(iri, '^http://linkedchemistry.info/chembl/chemblid/CHEMBL', '')::integer
+    when iri like 'http://linkedchemistry.info/chembl/chemblid/SCHEMBL%' then -1 * substring(iri, 52)::integer
+    else substring(iri, 51)::integer
   end;
 $$
 immutable;
@@ -47,8 +47,8 @@ immutable;
 create function substance_ebi_chembl_inverse(iri in varchar) returns integer language sql as
 $$
   select case
-    when iri like '%SCHEMBL%' then -1 * regexp_replace(iri, '^http://rdf.ebi.ac.uk/resource/chembl/molecule/SCHEMBL', '')::integer
-    else regexp_replace(iri, '^http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL', '')::integer
+    when iri like 'http://rdf.ebi.ac.uk/resource/chembl/molecule/SCHEMBL%' then -1 * substring(iri, 54)::integer
+    else substring(iri, 53)::integer
   end;
 $$
 immutable;

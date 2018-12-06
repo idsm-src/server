@@ -13,7 +13,7 @@ immutable;
 
 create function measuregroup_inv1(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID([0-9]+)(_(PMID[0-9]*|[0-9]+))?$', '\1')::integer;
+  select substring(iri, 53, strpos(iri, '_') - 53)::integer;
 $$
 immutable;
 
@@ -22,10 +22,10 @@ create function measuregroup_inv2(iri in varchar) returns integer language sql a
 $$
   select case
     when part = '' then 2147483647
-    when part = '_PMID' then -2147483647
-    when part like '_PMID%' then -1 * regexp_replace(part, '^_PMID', '')::integer
-    else regexp_replace(part, '^_', '')::integer
+    when part = 'PMID' then -2147483647
+    when left(part, 4) = 'PMID' then -1 * substring(part, 5)::integer
+    else part::integer
   end
-  from (select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID[0-9]+', '') as part) as tab;
+  from (select coalesce(split_part(iri, '_', 2), '') as part) as tab;
 $$
 immutable;

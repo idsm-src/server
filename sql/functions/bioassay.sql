@@ -7,7 +7,7 @@ immutable;
 
 create function bioassay_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID', '')::integer;
+  select substring(iri, 49)::integer;
 $$
 immutable;
 
@@ -28,17 +28,17 @@ immutable;
 
 create function bioassay_data_inv1(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID([0-9]+)_((Description)|(Protocol)|(Comment))$', '\1')::integer;
+  select substring(iri, 49, strpos(iri, '_') - 49)::integer;
 $$
 immutable;
 
 
 create function bioassay_data_inv2(iri in varchar) returns integer language sql as
 $$
-  select case regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID([0-9]+)_((Description)|(Protocol)|(Comment))$', '\2')
-    when 'Description' then 136
-    when 'Protocol'    then 1041
-    when 'Comment'     then 1167
+  select case substring(iri, strpos(iri, '_'))
+    when '_Description' then 136
+    when '_Protocol'    then 1041
+    when '_Comment'     then 1167
     else null
   end;
 $$

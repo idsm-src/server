@@ -7,7 +7,7 @@ immutable;
 
 create function compound_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID', '')::integer;
+  select substring(iri, 49)::integer;
 $$
 immutable;
 
@@ -22,6 +22,6 @@ immutable;
 
 create function compound_molfile_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID([0-9]+)_Molfile$', '\1')::integer;
+  select substring(iri, 49, strpos(iri, '_') - 49)::integer;
 $$
 immutable;

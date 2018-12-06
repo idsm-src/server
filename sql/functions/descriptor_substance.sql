@@ -7,6 +7,6 @@ immutable;
 
 create function substance_version_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/SID([0-9]+)_Substance_Version$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;

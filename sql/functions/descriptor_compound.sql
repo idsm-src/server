@@ -7,7 +7,7 @@ immutable;
 
 create function hydrogen_bond_acceptor_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Hydrogen_Bond_Acceptor_Count$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -22,7 +22,7 @@ immutable;
 
 create function tautomer_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Tautomer_Count$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -37,7 +37,7 @@ immutable;
 
 create function defined_atom_stereo_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Defined_Atom_Stereo_Count$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -52,7 +52,7 @@ immutable;
 
 create function defined_bond_stereo_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Defined_Bond_Stereo_Count$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -67,7 +67,7 @@ immutable;
 
 create function undefined_bond_stereo_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Undefined_Bond_Stereo_Count$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -82,7 +82,7 @@ immutable;
 
 create function isotope_atom_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Isotope_Atom_Count$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -97,7 +97,7 @@ immutable;
 
 create function covalent_unit_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Covalent_Unit_Count$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -112,7 +112,7 @@ immutable;
 
 create function hydrogen_bond_donor_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Hydrogen_Bond_Donor_Count$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -127,7 +127,7 @@ immutable;
 
 create function non_hydrogen_atom_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Non-hydrogen_Atom_Count$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -142,7 +142,7 @@ immutable;
 
 create function rotatable_bond_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Rotatable_Bond_Count$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -157,7 +157,7 @@ immutable;
 
 create function undefined_atom_stereo_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Undefined_Atom_Stereo_Count$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -172,7 +172,7 @@ immutable;
 
 create function total_formal_charge_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Total_Formal_Charge$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -187,7 +187,7 @@ immutable;
 
 create function structure_complexity_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Structure_Complexity$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -202,7 +202,7 @@ immutable;
 
 create function mono_isotopic_weight_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Mono_Isotopic_Weight$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -217,7 +217,7 @@ immutable;
 
 create function xlogp3_aa_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_XLogP3-AA$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -232,7 +232,7 @@ immutable;
 
 create function exact_mass_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Exact_Mass$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -247,7 +247,7 @@ immutable;
 
 create function molecular_weight_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Molecular_Weight$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -262,7 +262,7 @@ immutable;
 
 create function tpsa_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_TPSA$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -277,7 +277,7 @@ immutable;
 
 create function molecular_formula_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Molecular_Formula$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -292,7 +292,7 @@ immutable;
 
 create function isomeric_smiles_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Isomeric_SMILES$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -307,7 +307,7 @@ immutable;
 
 create function canonical_smiles_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Canonical_SMILES$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -322,7 +322,7 @@ immutable;
 
 create function iupac_inchi_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_IUPAC_InChI$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;
 
@@ -337,6 +337,6 @@ immutable;
 
 create function preferred_iupac_name_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID([0-9]+)_Preferred_IUPAC_Name$', '\1')::integer;
+  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
 $$
 immutable;

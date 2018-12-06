@@ -7,7 +7,7 @@ immutable;
 
 create function gene_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID', '')::integer;
+  select substring(iri, 45)::integer;
 $$
 immutable;
 
@@ -22,6 +22,6 @@ immutable;
 
 create function ensembl_inverse(iri in varchar) returns varchar language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ebi.ac.uk/resource/ensembl/', '');
+  select substring(iri, 39);
 $$
 immutable;

@@ -7,6 +7,6 @@ immutable;
 
 create function conserveddomain_inverse(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID', '')::integer;
+  select substring(iri, 59)::integer;
 $$
 immutable;

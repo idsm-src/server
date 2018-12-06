@@ -13,14 +13,14 @@ immutable;
 
 create function endpoint_inv1(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID([0-9]+)_AID[0-9]+(_(PMID[0-9]*|[0-9]+))?$', '\1')::integer;
+  select substring(iri, 49, strpos(iri, '_') - 49)::integer;
 $$
 immutable;
 
 
 create function endpoint_inv2(iri in varchar) returns integer language sql as
 $$
-  select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID[0-9]+_AID([0-9]+)(_(PMID[0-9]*|[0-9]+))?$', '\1')::integer;
+  select substring(split_part(iri, '_', 2), 4)::integer;
 $$
 immutable;
 
@@ -29,10 +29,10 @@ create function endpoint_inv3(iri in varchar) returns integer language sql as
 $$
   select case
     when part = '' then 2147483647
-    when part = '_PMID' then -2147483647
-    when part like '_PMID%' then -1 * regexp_replace(part, '^_PMID', '')::integer
-    else regexp_replace(part, '^_', '')::integer
+    when part = 'PMID' then -2147483647
+    when left(part, 4) = 'PMID' then -1 * substring(part, 5)::integer
+    else part::integer
   end
-  from (select regexp_replace(iri, '^http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID[0-9]+_AID[0-9]+', '') as part) as tab;
+  from (select coalesce(split_part(iri, '_', 3), '') as part) as tab;
 $$
 immutable;
