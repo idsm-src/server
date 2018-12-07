@@ -12,6 +12,13 @@ public abstract class TableLoader
     protected boolean set;
 
 
+    protected void setNull(int idx, int sqlType) throws SQLException
+    {
+        set = true;
+        statement.setNull(idx, sqlType);
+    }
+
+
     protected void setValue(int idx, int value) throws SQLException
     {
         set = true;

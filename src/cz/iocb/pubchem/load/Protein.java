@@ -2,6 +2,7 @@ package cz.iocb.pubchem.load;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.jena.rdf.model.Model;
@@ -18,7 +19,7 @@ public class Protein extends Loader
         Map<String, Integer> map = new HashMap<String, Integer>();
 
         new ModelTableLoader(model, loadQuery("protein/bases.sparql"),
-                "insert into protein_bases(id, name, organism_id, title) values (?,?,?,?)")
+                "insert into protein_bases(id, name, title, organism_id) values (?,?,?,?)")
         {
             int nextID = 0;
 
@@ -28,15 +29,23 @@ public class Protein extends Loader
                 String iri = getIRI("protein");
                 map.put(iri, nextID);
 
-                Identifier organism = Ontology.getId(getIRI("organism"));
-
-                if(organism.unit != Ontology.unitTaxonomy)
-                    throw new IOException();
-
                 setValue(1, nextID++);
                 setValue(2, getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
-                setValue(3, organism.id);
-                setValue(4, getLiteralValue("title"));
+                setValue(3, getLiteralValue("title"));
+
+                if(getIRI("organism") != null)
+                {
+                    Identifier organism = Ontology.getId(getIRI("organism"));
+
+                    if(organism.unit != Ontology.unitTaxonomy)
+                        throw new IOException();
+
+                    setValue(4, organism.id);
+                }
+                else
+                {
+                    setNull(4, Types.INTEGER);
+                }
             }
         }.load();
 

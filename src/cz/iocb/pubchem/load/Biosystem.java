@@ -2,6 +2,7 @@ package cz.iocb.pubchem.load;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Map;
 import org.apache.jena.rdf.model.Model;
 import cz.iocb.pubchem.load.Ontology.Identifier;
@@ -51,15 +52,23 @@ public class Biosystem extends Loader
             @Override
             public void insert() throws SQLException, IOException
             {
-                Identifier organism = Ontology.getId(getIRI("organism"));
-
-                if(organism.unit != Ontology.unitTaxonomy)
-                    throw new IOException();
-
                 setValue(1, getIntID("biosystem", "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID"));
                 setValue(2, getMapID("source", sources));
                 setValue(3, getLiteralValue("title"));
-                setValue(4, organism.id);
+
+                if(getIRI("organism") != null)
+                {
+                    Identifier organism = Ontology.getId(getIRI("organism"));
+
+                    if(organism.unit != Ontology.unitTaxonomy)
+                        throw new IOException();
+
+                    setValue(4, organism.id);
+                }
+                else
+                {
+                    setNull(4, Types.INTEGER);
+                }
             }
         }.load();
     }
