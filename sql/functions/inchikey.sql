@@ -7,6 +7,6 @@ immutable;
 
 create function inchikey_inverse(iri in varchar) returns integer language sql as
 $$
-  select id from inchikey_bases where inchikey = substring(inchikey_inverse.iri, 46)::varchar;
+  select id from inchikey_bases where inchikey = substring(iri, 46)::varchar;
 $$
 immutable;

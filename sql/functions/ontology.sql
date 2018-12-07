@@ -91,7 +91,7 @@ $$
     select unit_id, value_offset into rec from ontology_resource_categories__reftable where iri ~ pattern;
     
     if not found then
-      return (select resource_id from ontology_resources__reftable tab where tab.iri = $1);
+      return (select resource_id from ontology_resources__reftable tab where tab.iri = ontology_resource_inv2.iri);
     end if;
 
     tail := substring(iri, rec.value_offset);
