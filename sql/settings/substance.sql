@@ -1,3 +1,24 @@
+insert into substance_bases(id)
+select distinct substance from endpoint_bases as t where not exists (select id from substance_bases where id = substance);
+
+insert into substance_bases(id)
+select distinct substance from substance_types as t where not exists (select id from substance_bases where id = substance);
+
+insert into substance_bases(id)
+select distinct substance from substance_matches as t where not exists (select id from substance_bases where id = substance);
+
+insert into substance_bases(id)
+select distinct substance from substance_references as t where not exists (select id from substance_bases where id = substance);
+
+insert into substance_bases(id)
+select distinct substance from substance_pdblinks as t where not exists (select id from substance_bases where id = substance);
+
+insert into substance_bases(id)
+select distinct substance from substance_synonyms as t where not exists (select id from substance_bases where id = substance);
+
+insert into substance_bases(id)
+select distinct substance from descriptor_substance_bases as t where not exists (select id from substance_bases where id = substance);
+
 create index substance_bases__source on substance_bases(source);
 create index substance_bases__available on substance_bases(available);
 create index substance_bases__modified on substance_bases(modified);

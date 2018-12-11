@@ -43,7 +43,7 @@ alter table conserveddomain_references add foreign key (reference) references re
 -- endpoint
 alter table endpoint_measurements add foreign key (substance, bioassay, measuregroup) references endpoint_bases(substance, bioassay, measuregroup);
 alter table endpoint_references add foreign key (reference) references reference_bases(id);
---  508564 : alter table endpoint_bases add foreign key (substance) references substance_bases(id);
+alter table endpoint_bases add foreign key (substance) references substance_bases(id);
 --     276 : alter table endpoint_bases add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
 alter table endpoint_references add foreign key (substance, bioassay, measuregroup) references endpoint_bases(substance, bioassay, measuregroup);
 alter table endpoint_bases add foreign key (bioassay, measuregroup) references bioassay_measuregroups(bioassay, measuregroup);
@@ -111,11 +111,11 @@ alter table substance_bases add foreign key (source) references source_bases(id)
 alter table substance_references add foreign key (reference) references reference_bases(id);
 alter table substance_synonyms add foreign key (synonym) references synonym_bases(id);
 alter table substance_bases add foreign key (compound) references compound_bases(id);
---  487849 : alter table substance_types add foreign key (substance) references substance_bases(id);
---    8484 : alter table substance_matches add foreign key (substance) references substance_bases(id);
---   15885 : alter table substance_references add foreign key (substance) references substance_bases(id);
---    1178 : alter table substance_pdblinks add foreign key (substance) references substance_bases(id);
--- 3239522 : alter table substance_synonyms add foreign key (substance) references substance_bases(id);
+alter table substance_types add foreign key (substance) references substance_bases(id);
+alter table substance_matches add foreign key (substance) references substance_bases(id);
+alter table substance_references add foreign key (substance) references substance_bases(id);
+alter table substance_pdblinks add foreign key (substance) references substance_bases(id);
+alter table substance_synonyms add foreign key (substance) references substance_bases(id);
 
 
 -- synonym
@@ -138,7 +138,7 @@ alter table descriptor_compound_preferred_iupac_names add foreign key (compound)
 
 
 -- descriptor-substance
---  9201097 : alter table descriptor_substance_bases add foreign key (substance) references substance_bases(id);
+alter table descriptor_substance_bases add foreign key (substance) references substance_bases(id);
 
 
 -- ontology
