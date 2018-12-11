@@ -1,3 +1,6 @@
+insert into measuregroup_bases(bioassay, measuregroup)
+select distinct bioassay, measuregroup from endpoint_bases as t where not exists (select bioassay, measuregroup from measuregroup_bases where bioassay = t.bioassay and measuregroup = t.measuregroup);
+
 create index measuregroup_bases__bioassay on measuregroup_bases(bioassay);
 create index measuregroup_bases__source on measuregroup_bases(source);
 grant select on measuregroup_bases to "SPARQL";

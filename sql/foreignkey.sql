@@ -44,7 +44,7 @@ alter table conserveddomain_references add foreign key (reference) references re
 alter table endpoint_measurements add foreign key (substance, bioassay, measuregroup) references endpoint_bases(substance, bioassay, measuregroup);
 alter table endpoint_references add foreign key (reference) references reference_bases(id);
 alter table endpoint_bases add foreign key (substance) references substance_bases(id);
---     276 : alter table endpoint_bases add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
+alter table endpoint_bases add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
 alter table endpoint_references add foreign key (substance, bioassay, measuregroup) references endpoint_bases(substance, bioassay, measuregroup);
 alter table endpoint_bases add foreign key (bioassay, measuregroup) references bioassay_measuregroups(bioassay, measuregroup);
 
@@ -69,8 +69,8 @@ alter table measuregroup_bases add foreign key (bioassay) references bioassay_ba
 alter table measuregroup_bases add foreign key (source) references source_bases(id);
 alter table measuregroup_proteins add foreign key (protein) references protein_bases(id);
 alter table measuregroup_genes add foreign key (gene) references gene_bases(id);
---      78 : alter table measuregroup_proteins add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
---       1 : alter table measuregroup_genes add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
+alter table measuregroup_proteins add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
+alter table measuregroup_genes add foreign key (bioassay, measuregroup) references measuregroup_bases(bioassay, measuregroup);
 
 
 -- protein
