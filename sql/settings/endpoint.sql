@@ -20,3 +20,7 @@ create index endpoint_references__bioassay_measuregroup on endpoint_references(b
 create index endpoint_references__substance_bioassay_measuregroup on endpoint_references(substance, bioassay, measuregroup);
 create index endpoint_references__reference on endpoint_references(reference);
 grant select on endpoint_references TO "SPARQL";
+
+-- workaround
+insert into endpoint_references select r.substance, r.bioassay, b.measuregroup, r.reference from endpoint_references r, endpoint_bases b where r.substance = b.substance and r.bioassay = b.bioassay and r.bioassay = 493040 and r.measuregroup = 2147483647;
+delete from endpoint_references where bioassay = 493040 and measuregroup = 2147483647;
