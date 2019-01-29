@@ -12,8 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.jena.graph.Node;
-import org.apache.jena.graph.NodeFactory;
-import cz.iocb.pubchem.load.Ontology.Identifier;
 import cz.iocb.pubchem.load.common.Loader;
 import cz.iocb.pubchem.load.common.StreamTableLoader;
 
@@ -79,29 +77,9 @@ public class Measuregroup extends Loader
         @Override
         public void insertStub(Node subject, Node predicate, Node object) throws SQLException, IOException
         {
-            String iri = subject.getURI();
-
-            if(!iri.equals("http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID493040"))
-            {
+            // workaround: AID493040 is loaded separately
+            if(!subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID493040"))
                 super.insertStub(subject, predicate, object);
-            }
-            else
-            {
-                // workaround
-                String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#";
-                String[] suffixes = { "active", "inactive", "inconclusive", "unspecified", "probe" };
-
-                for(String suffix : suffixes)
-                {
-                    Identifier outcome = Ontology.getId(prefix + suffix);
-
-                    if(outcome.unit != Ontology.unitUncategorized)
-                        throw new IOException();
-
-                    Node fakeSubject = NodeFactory.createURI(iri + "_" + outcome.id);
-                    super.insertStub(fakeSubject, predicate, object);
-                }
-            }
         }
     }
 

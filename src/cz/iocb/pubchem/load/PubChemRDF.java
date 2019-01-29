@@ -31,5 +31,7 @@ public class PubChemRDF
         BioassayXML.loadDirectory("Bioassay/XML");
 
         Ontology.loadDirectory("ontology");
+
+        WorkaroundAID493040.load();
     }
 }

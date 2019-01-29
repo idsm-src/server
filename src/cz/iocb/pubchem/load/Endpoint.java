@@ -103,6 +103,10 @@ public class Endpoint extends Loader
                 if(!predicate.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PubChemAssayOutcome"))
                     throw new IOException();
 
+                // workaround: AID493040 is loaded separately
+                if(subject.getURI().matches("http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID[0-9]*_AID493040"))
+                    return;
+
                 Identifier outcome = Ontology.getId(object.getURI());
 
                 if(outcome.unit != Ontology.unitUncategorized)
@@ -110,10 +114,6 @@ public class Endpoint extends Loader
 
                 setIDValues(1, subject);
                 setValue(4, outcome.id);
-
-                // workaround
-                if(subject.getURI().matches("http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID[0-9]*_AID493040"))
-                    setValue(3, outcome.id);
             }
         }.load();
 
@@ -133,6 +133,10 @@ public class Endpoint extends Loader
             {
                 if(!predicate.getURI().equals("http://purl.org/spar/cito/citesAsDataSource"))
                     throw new IOException();
+
+                // workaround: AID493040 is loaded separately
+                if(subject.getURI().matches("http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID[0-9]*_AID493040"))
+                    return;
 
                 setIDValues(1, subject);
                 setValue(4, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID"));
