@@ -3,6 +3,7 @@ grant select on synonym_bases to "SPARQL";
 --------------------------------------------------------------------------------
 
 create index synonym_values__synonym on synonym_values(synonym);
+create index synonym_values__value__gin on synonym_values using gin (to_tsvector('english', value));
 grant select on synonym_values to "SPARQL";
 
 --------------------------------------------------------------------------------

@@ -41,4 +41,5 @@ grant select on descriptor_compound_iupac_inchis to "SPARQL";
 --------------------------------------------------------------------------------
 
 create index descriptor_compound_preferred_iupac_names__iupac_name on descriptor_compound_preferred_iupac_names(preferred_iupac_name);
+create index descriptor_compound_preferred_iupac_names__iupac_name__gin on descriptor_compound_preferred_iupac_names using gin (to_tsvector('english', preferred_iupac_name));
 grant select on descriptor_compound_preferred_iupac_names to "SPARQL";
