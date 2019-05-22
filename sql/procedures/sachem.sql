@@ -15,7 +15,7 @@ $$
 immutable;
 
 
-create function graphMode_inverse(iri in varchar) returns integer language plpgsql as
+create function searchMode_inverse(iri in varchar) returns integer language plpgsql as
 $$
   declare value record;
   begin
