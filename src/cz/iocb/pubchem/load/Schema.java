@@ -9,13 +9,16 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import cz.iocb.chemweb.server.db.schema.Column;
+import cz.iocb.chemweb.server.db.schema.ConstantColumn;
+import cz.iocb.chemweb.server.db.schema.TableColumn;
+import cz.iocb.chemweb.server.sparql.config.SparqlDatabaseConfiguration;
 import cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration;
 import cz.iocb.chemweb.server.sparql.mapping.NodeMapping;
 import cz.iocb.chemweb.server.sparql.mapping.ParametrisedMapping;
 import cz.iocb.chemweb.server.sparql.mapping.QuadMapping;
 import cz.iocb.chemweb.server.sparql.mapping.classes.LiteralClass;
 import cz.iocb.chemweb.server.sparql.mapping.classes.ResourceClass;
-import cz.iocb.chemweb.server.sparql.translator.SparqlDatabaseConfiguration;
 import cz.iocb.pubchem.load.common.Loader;
 
 
@@ -140,7 +143,8 @@ public class Schema extends Loader
         boolean containsConstant = false;
 
         for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
-            if(left.nodeMapping.getSqlColumn(c).contains("::") || right.nodeMapping.getSqlColumn(c).contains("::"))
+            if(left.nodeMapping.getSqlColumn(c) instanceof ConstantColumn
+                    || right.nodeMapping.getSqlColumn(c) instanceof ConstantColumn)
                 containsConstant = true;
 
         if(!containsConstant)
@@ -160,20 +164,20 @@ public class Schema extends Loader
             if(c > 0)
                 builder.append(" and ");
 
-            String c1 = left.nodeMapping.getSqlColumn(c);
-            String c2 = right.nodeMapping.getSqlColumn(c);
+            Column c1 = left.nodeMapping.getSqlColumn(c);
+            Column c2 = right.nodeMapping.getSqlColumn(c);
 
-            if(!c1.contains("::"))
+            if(c1 instanceof TableColumn)
                 builder.append("t1.");
 
-            builder.append(c1);
+            builder.append(c1.getCode());
 
             builder.append(" = ");
 
-            if(!c2.contains("::"))
+            if(c2 instanceof TableColumn)
                 builder.append("t2.");
 
-            builder.append(c2);
+            builder.append(c2.getCode());
         }
 
         builder.append(") where ");
@@ -183,12 +187,12 @@ public class Schema extends Loader
             if(c > 0)
                 builder.append(" or ");
 
-            String c1 = left.nodeMapping.getSqlColumn(c);
+            Column c1 = left.nodeMapping.getSqlColumn(c);
 
-            if(!c1.contains("::"))
+            if(c1 instanceof TableColumn)
                 builder.append("t1.");
 
-            builder.append(c1);
+            builder.append(c1.getCode());
 
             builder.append(" is null");
         }
@@ -226,20 +230,20 @@ public class Schema extends Loader
             if(c > 0)
                 builder.append(" and ");
 
-            String c1 = left.nodeMapping.getSqlColumn(c);
-            String c2 = right.nodeMapping.getSqlColumn(c);
+            Column c1 = left.nodeMapping.getSqlColumn(c);
+            Column c2 = right.nodeMapping.getSqlColumn(c);
 
-            if(!c1.contains("::"))
+            if(c1 instanceof TableColumn)
                 builder.append("t1.");
 
-            builder.append(c1);
+            builder.append(c1.getCode());
 
             builder.append(" = ");
 
-            if(!c2.contains("::"))
+            if(c2 instanceof TableColumn)
                 builder.append("t2.");
 
-            builder.append(c2);
+            builder.append(c2.getCode());
         }
 
         builder.append(") limit 1");
@@ -289,16 +293,16 @@ public class Schema extends Loader
 
                             for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
                             {
-                                parentColumns[c] = mappingPair.left.nodeMapping.getSqlColumn(c);
-                                foreignColumns[c] = mappingPair.right.nodeMapping.getSqlColumn(c);
+                                parentColumns[c] = mappingPair.left.nodeMapping.getSqlColumn(c).getName();
+                                foreignColumns[c] = mappingPair.right.nodeMapping.getSqlColumn(c).getName();
                             }
 
                             synchronized(Schema.class)
                             {
                                 statement.setInt(1, id.getAndIncrement());
-                                statement.setString(2, mappingPair.left.quadMapping.getTable());
+                                statement.setString(2, mappingPair.left.quadMapping.getTable().getName());
                                 statement.setArray(3, connection.createArrayOf("varchar", parentColumns));
-                                statement.setString(4, mappingPair.right.quadMapping.getTable());
+                                statement.setString(4, mappingPair.right.quadMapping.getTable().getName());
                                 statement.setArray(5, connection.createArrayOf("varchar", foreignColumns));
                                 statement.addBatch();
                             }
@@ -346,16 +350,16 @@ public class Schema extends Loader
 
                             for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
                             {
-                                leftColumns[c] = mappingPair.left.nodeMapping.getSqlColumn(c);
-                                rightColumns[c] = mappingPair.right.nodeMapping.getSqlColumn(c);
+                                leftColumns[c] = mappingPair.left.nodeMapping.getSqlColumn(c).getName();
+                                rightColumns[c] = mappingPair.right.nodeMapping.getSqlColumn(c).getName();
                             }
 
                             synchronized(Schema.class)
                             {
                                 statement.setInt(1, id.getAndIncrement());
-                                statement.setString(2, mappingPair.left.quadMapping.getTable());
+                                statement.setString(2, mappingPair.left.quadMapping.getTable().getName());
                                 statement.setArray(3, connection.createArrayOf("varchar", leftColumns));
-                                statement.setString(4, mappingPair.right.quadMapping.getTable());
+                                statement.setString(4, mappingPair.right.quadMapping.getTable().getName());
                                 statement.setArray(5, connection.createArrayOf("varchar", rightColumns));
                                 statement.addBatch();
                             }
