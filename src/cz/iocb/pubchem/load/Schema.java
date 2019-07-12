@@ -9,11 +9,11 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import cz.iocb.chemweb.server.db.schema.Column;
-import cz.iocb.chemweb.server.db.schema.ConstantColumn;
-import cz.iocb.chemweb.server.db.schema.TableColumn;
 import cz.iocb.chemweb.server.sparql.config.SparqlDatabaseConfiguration;
 import cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration;
+import cz.iocb.chemweb.server.sparql.database.Column;
+import cz.iocb.chemweb.server.sparql.database.ConstantColumn;
+import cz.iocb.chemweb.server.sparql.database.TableColumn;
 import cz.iocb.chemweb.server.sparql.mapping.NodeMapping;
 import cz.iocb.chemweb.server.sparql.mapping.ParametrisedMapping;
 import cz.iocb.chemweb.server.sparql.mapping.QuadMapping;
@@ -119,7 +119,7 @@ public class Schema extends Loader
         StringBuilder builder = new StringBuilder();
 
         builder.append("select * from ");
-        builder.append(mapping.quadMapping.getTable());
+        builder.append(mapping.quadMapping.getTable().getCode());
         builder.append(" where ");
 
         for(int c = 0; c < mapping.nodeMapping.getResourceClass().getPatternPartsCount(); c++)
@@ -127,7 +127,7 @@ public class Schema extends Loader
             if(c > 0)
                 builder.append(" and ");
 
-            builder.append(mapping.nodeMapping.getSqlColumn(c));
+            builder.append(mapping.nodeMapping.getSqlColumn(c).getCode());
             builder.append(" is not null");
         }
 
