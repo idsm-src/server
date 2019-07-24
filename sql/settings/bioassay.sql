@@ -13,7 +13,7 @@ grant select on bioassay_data to "SPARQL";
 --------------------------------------------------------------------------------
 
 insert into bioassay_measuregroups(bioassay, measuregroup)
-select distinct bioassay, measuregroup from endpoint_bases;
+select distinct bioassay, measuregroup from endpoint_outcomes;
 
 create index bioassay_measuregroups__bioassay on bioassay_measuregroups(bioassay);
 grant select on bioassay_measuregroups to "SPARQL";

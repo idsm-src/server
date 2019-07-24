@@ -1,8 +1,19 @@
+insert into endpoint_bases(substance, bioassay, measuregroup)
+select distinct substance, bioassay, measuregroup from endpoint_outcomes;
+
 create index endpoint_bases__substance on endpoint_bases(substance);
 create index endpoint_bases__bioassay on endpoint_bases(bioassay);
 create index endpoint_bases__bioassay_measuregroup on endpoint_bases(bioassay, measuregroup);
-create index endpoint_bases__outcome on endpoint_bases(outcome_id);
 grant select on endpoint_bases to "SPARQL";
+
+--------------------------------------------------------------------------------
+
+create index endpoint_outcomes__substance on endpoint_outcomes(substance);
+create index endpoint_outcomes__bioassay on endpoint_outcomes(bioassay);
+create index endpoint_outcomes__bioassay_measuregroup on endpoint_outcomes(bioassay, measuregroup);
+create index endpoint_outcomes__substance_bioassay_measuregroup on endpoint_outcomes(substance, bioassay, measuregroup);
+create index endpoint_outcomes__outcome on endpoint_outcomes(outcome_id);
+grant select on endpoint_outcomes to "SPARQL";
 
 --------------------------------------------------------------------------------
 

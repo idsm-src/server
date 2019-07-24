@@ -73,14 +73,6 @@ public class Measuregroup extends Loader
             setValue(idx + 0, bioassay);
             setValue(idx + 1, measuregroup);
         }
-
-        @Override
-        public void insertStub(Node subject, Node predicate, Node object) throws SQLException, IOException
-        {
-            // workaround: AID493040 is loaded separately
-            if(!subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID493040"))
-                super.insertStub(subject, predicate, object);
-        }
     }
 
 

@@ -3,8 +3,17 @@ create table endpoint_bases
     substance       integer not null,
     bioassay        integer not null,
     measuregroup    integer not null,
-    outcome_id      smallint not null,
     primary key(substance, bioassay, measuregroup)
+);
+
+
+create table endpoint_outcomes
+(
+    substance       integer not null,
+    bioassay        integer not null,
+    measuregroup    integer not null,
+    outcome_id      smallint not null,
+    primary key(substance, bioassay, measuregroup, outcome_id)
 );
 
 

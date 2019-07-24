@@ -1,5 +1,5 @@
 insert into substance_bases(id)
-select distinct substance from endpoint_bases as t where not exists (select id from substance_bases where id = substance);
+select distinct substance from endpoint_outcomes as t where not exists (select id from substance_bases where id = substance);
 
 insert into substance_bases(id)
 select distinct substance from substance_types as t where not exists (select id from substance_bases where id = substance);

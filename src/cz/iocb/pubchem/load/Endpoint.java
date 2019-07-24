@@ -95,17 +95,13 @@ public class Endpoint extends Loader
         InputStream stream = getStream(file);
 
         new EndpointStreamTableLoader(stream,
-                "insert into endpoint_bases(substance, bioassay, measuregroup, outcome_id) values (?,?,?,?)")
+                "insert into endpoint_outcomes(substance, bioassay, measuregroup, outcome_id) values (?,?,?,?)")
         {
             @Override
             public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
             {
                 if(!predicate.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PubChemAssayOutcome"))
                     throw new IOException();
-
-                // workaround: AID493040 is loaded separately
-                if(subject.getURI().matches("http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID[0-9]*_AID493040"))
-                    return;
 
                 Identifier outcome = Ontology.getId(object.getURI());
 
@@ -133,10 +129,6 @@ public class Endpoint extends Loader
             {
                 if(!predicate.getURI().equals("http://purl.org/spar/cito/citesAsDataSource"))
                     throw new IOException();
-
-                // workaround: AID493040 is loaded separately
-                if(subject.getURI().matches("http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID[0-9]*_AID493040"))
-                    return;
 
                 setIDValues(1, subject);
                 setValue(4, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID"));
