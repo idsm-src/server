@@ -42,11 +42,16 @@ public class Synonym extends Loader
             return hi == other.hi && lo == other.lo;
         }
 
-
         @Override
         public int hashCode()
         {
             return (int) lo;
+        }
+
+        @Override
+        public String toString()
+        {
+            return Long.toHexString(hi) + Long.toHexString(lo);
         }
     }
 
