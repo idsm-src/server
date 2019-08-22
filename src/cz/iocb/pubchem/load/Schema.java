@@ -13,10 +13,13 @@ import cz.iocb.chemweb.server.sparql.config.SparqlDatabaseConfiguration;
 import cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration;
 import cz.iocb.chemweb.server.sparql.database.Column;
 import cz.iocb.chemweb.server.sparql.database.ConstantColumn;
+import cz.iocb.chemweb.server.sparql.database.Table;
 import cz.iocb.chemweb.server.sparql.database.TableColumn;
+import cz.iocb.chemweb.server.sparql.mapping.JoinTableQuadMapping;
 import cz.iocb.chemweb.server.sparql.mapping.NodeMapping;
 import cz.iocb.chemweb.server.sparql.mapping.ParametrisedMapping;
 import cz.iocb.chemweb.server.sparql.mapping.QuadMapping;
+import cz.iocb.chemweb.server.sparql.mapping.SingleTableQuadMapping;
 import cz.iocb.chemweb.server.sparql.mapping.classes.LiteralClass;
 import cz.iocb.chemweb.server.sparql.mapping.classes.ResourceClass;
 import cz.iocb.pubchem.load.common.Loader;
@@ -40,12 +43,12 @@ public class Schema extends Loader
 
     private static class QuadNodeMapping
     {
-        QuadMapping quadMapping;
+        Table table;
         ParametrisedMapping nodeMapping;
 
-        QuadNodeMapping(QuadMapping quadMapping, ParametrisedMapping nodeMapping)
+        QuadNodeMapping(Table table, ParametrisedMapping nodeMapping)
         {
-            this.quadMapping = quadMapping;
+            this.table = table;
             this.nodeMapping = nodeMapping;
         }
 
@@ -54,7 +57,7 @@ public class Schema extends Loader
         {
             QuadNodeMapping mapping = (QuadNodeMapping) o;
 
-            if(!mapping.quadMapping.getTable().equals(quadMapping.getTable()))
+            if(!mapping.table.equals(table))
                 return false;
 
             if(mapping.nodeMapping.getResourceClass() != nodeMapping.getResourceClass())
@@ -72,7 +75,7 @@ public class Schema extends Loader
         @Override
         public int hashCode()
         {
-            return quadMapping.getTable().hashCode();
+            return table.hashCode();
         }
     }
 
@@ -102,7 +105,17 @@ public class Schema extends Loader
                         resourceMappings.put(resourceClass, mappings);
                     }
 
-                    QuadNodeMapping map = new QuadNodeMapping(quadMapping, (ParametrisedMapping) nodeMapping);
+
+                    Table table = null;
+
+                    if(quadMapping instanceof SingleTableQuadMapping)
+                        table = ((SingleTableQuadMapping) quadMapping).getTable();
+                    else if(nodeMapping == quadMapping.getSubject())
+                        table = ((JoinTableQuadMapping) quadMapping).getSubjectTable();
+                    else if(nodeMapping == quadMapping.getObject())
+                        table = ((JoinTableQuadMapping) quadMapping).getObjectTable();
+
+                    QuadNodeMapping map = new QuadNodeMapping(table, (ParametrisedMapping) nodeMapping);
 
                     if(!mappings.contains(map))
                         mappings.add(map);
@@ -119,7 +132,7 @@ public class Schema extends Loader
         StringBuilder builder = new StringBuilder();
 
         builder.append("select * from ");
-        builder.append(mapping.quadMapping.getTable().getCode());
+        builder.append(mapping.table.getCode());
         builder.append(" where ");
 
         for(int c = 0; c < mapping.nodeMapping.getResourceClass().getPatternPartsCount(); c++)
@@ -300,9 +313,9 @@ public class Schema extends Loader
                             synchronized(Schema.class)
                             {
                                 statement.setInt(1, id.getAndIncrement());
-                                statement.setString(2, mappingPair.left.quadMapping.getTable().getName());
+                                statement.setString(2, mappingPair.left.table.getName());
                                 statement.setArray(3, connection.createArrayOf("varchar", parentColumns));
-                                statement.setString(4, mappingPair.right.quadMapping.getTable().getName());
+                                statement.setString(4, mappingPair.right.table.getName());
                                 statement.setArray(5, connection.createArrayOf("varchar", foreignColumns));
                                 statement.addBatch();
                             }
@@ -357,9 +370,9 @@ public class Schema extends Loader
                             synchronized(Schema.class)
                             {
                                 statement.setInt(1, id.getAndIncrement());
-                                statement.setString(2, mappingPair.left.quadMapping.getTable().getName());
+                                statement.setString(2, mappingPair.left.table.getName());
                                 statement.setArray(3, connection.createArrayOf("varchar", leftColumns));
-                                statement.setString(4, mappingPair.right.quadMapping.getTable().getName());
+                                statement.setString(4, mappingPair.right.table.getName());
                                 statement.setArray(5, connection.createArrayOf("varchar", rightColumns));
                                 statement.addBatch();
                             }
