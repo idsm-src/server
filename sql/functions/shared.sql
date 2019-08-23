@@ -25,19 +25,16 @@ immutable parallel safe;
 
 create function dqmesh_inv1(iri in varchar) returns integer language sql as
 $$
-  select case strpos(iri, 'Q')
-    when 0 then substring(iri, 29)::integer
-    else substring(iri, 29, strpos(iri, 'Q') - 29)::integer
-  end;
+  select substring(iri, 29, 6)::integer
 $$
 immutable parallel safe;
 
 
 create function dqmesh_inv2(iri in varchar) returns integer language sql as
 $$
-  select case strpos(iri, 'Q')
-    when 0 then -1
-    else substring(iri, strpos(iri, 'Q') + 1)::integer
+  select case octet_length(iri)
+    when 34 then -1
+    else substring(iri, 36, 6)::integer
   end;
 $$
 immutable parallel safe;

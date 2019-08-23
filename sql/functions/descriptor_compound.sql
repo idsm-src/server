@@ -7,7 +7,7 @@ immutable parallel safe;
 
 create function hydrogen_bond_acceptor_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 79)::integer;
 $$
 immutable parallel safe;
 
@@ -22,7 +22,7 @@ immutable parallel safe;
 
 create function tautomer_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 65)::integer;
 $$
 immutable parallel safe;
 
@@ -37,7 +37,7 @@ immutable parallel safe;
 
 create function defined_atom_stereo_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 76)::integer;
 $$
 immutable parallel safe;
 
@@ -52,7 +52,7 @@ immutable parallel safe;
 
 create function defined_bond_stereo_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 76)::integer;
 $$
 immutable parallel safe;
 
@@ -67,7 +67,7 @@ immutable parallel safe;
 
 create function undefined_bond_stereo_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 78)::integer;
 $$
 immutable parallel safe;
 
@@ -82,7 +82,7 @@ immutable parallel safe;
 
 create function isotope_atom_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 69)::integer;
 $$
 immutable parallel safe;
 
@@ -97,7 +97,7 @@ immutable parallel safe;
 
 create function covalent_unit_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 70)::integer;
 $$
 immutable parallel safe;
 
@@ -112,7 +112,7 @@ immutable parallel safe;
 
 create function hydrogen_bond_donor_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 76)::integer;
 $$
 immutable parallel safe;
 
@@ -127,7 +127,7 @@ immutable parallel safe;
 
 create function non_hydrogen_atom_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 74)::integer;
 $$
 immutable parallel safe;
 
@@ -142,7 +142,7 @@ immutable parallel safe;
 
 create function rotatable_bond_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 71)::integer;
 $$
 immutable parallel safe;
 
@@ -157,7 +157,7 @@ immutable parallel safe;
 
 create function undefined_atom_stereo_count_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 78)::integer;
 $$
 immutable parallel safe;
 
@@ -172,7 +172,7 @@ immutable parallel safe;
 
 create function total_formal_charge_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 70)::integer;
 $$
 immutable parallel safe;
 
@@ -187,7 +187,7 @@ immutable parallel safe;
 
 create function structure_complexity_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 71)::integer;
 $$
 immutable parallel safe;
 
@@ -202,7 +202,7 @@ immutable parallel safe;
 
 create function mono_isotopic_weight_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 71)::integer;
 $$
 immutable parallel safe;
 
@@ -217,7 +217,7 @@ immutable parallel safe;
 
 create function xlogp3_aa_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 60)::integer;
 $$
 immutable parallel safe;
 
@@ -232,7 +232,7 @@ immutable parallel safe;
 
 create function exact_mass_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 61)::integer;
 $$
 immutable parallel safe;
 
@@ -247,7 +247,7 @@ immutable parallel safe;
 
 create function molecular_weight_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 67)::integer;
 $$
 immutable parallel safe;
 
@@ -262,7 +262,7 @@ immutable parallel safe;
 
 create function tpsa_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 55)::integer;
 $$
 immutable parallel safe;
 
@@ -277,7 +277,7 @@ immutable parallel safe;
 
 create function molecular_formula_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 68)::integer;
 $$
 immutable parallel safe;
 
@@ -292,7 +292,7 @@ immutable parallel safe;
 
 create function isomeric_smiles_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 66)::integer;
 $$
 immutable parallel safe;
 
@@ -307,7 +307,7 @@ immutable parallel safe;
 
 create function canonical_smiles_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 67)::integer;
 $$
 immutable parallel safe;
 
@@ -322,7 +322,7 @@ immutable parallel safe;
 
 create function iupac_inchi_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 62)::integer;
 $$
 immutable parallel safe;
 
@@ -337,6 +337,6 @@ immutable parallel safe;
 
 create function preferred_iupac_name_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 71)::integer;
 $$
 immutable parallel safe;

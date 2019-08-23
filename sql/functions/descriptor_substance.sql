@@ -7,6 +7,6 @@ immutable parallel safe;
 
 create function substance_version_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 51, strpos(iri, '_') - 51)::integer;
+  select substring(iri, 51, octet_length(iri) - 68)::integer;
 $$
 immutable parallel safe;
