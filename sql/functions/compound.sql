@@ -22,6 +22,6 @@ immutable;
 
 create function compound_molfile_inverse(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 49, strpos(iri, '_') - 49)::integer;
+  select substring(iri, 49, octet_length(iri) - 56)::integer;
 $$
 immutable;
