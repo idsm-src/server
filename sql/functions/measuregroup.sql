@@ -8,14 +8,14 @@ $$
     else null
   end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function measuregroup_inv1(iri in varchar) returns integer language sql as
 $$
   select substring(iri, 53, strpos(iri, '_') - 53)::integer;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function measuregroup_inv2(iri in varchar) returns integer language sql as
@@ -28,4 +28,4 @@ $$
   end
   from (select coalesce(split_part(iri, '_', 2), '') as part) as tab;
 $$
-immutable;
+immutable parallel safe;

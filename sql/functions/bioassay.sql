@@ -2,14 +2,14 @@ create function bioassay(id in integer) returns varchar language sql as
 $$
   select 'http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID' || id;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function bioassay_inverse(iri in varchar) returns integer language sql as
 $$
   select substring(iri, 49)::integer;
 $$
-immutable;
+immutable parallel safe;
 
 --------------------------------------------------------------------------------
 
@@ -23,14 +23,14 @@ $$
         else null 
       end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function bioassay_data_inv1(iri in varchar) returns integer language sql as
 $$
   select substring(iri, 49, strpos(iri, '_') - 49)::integer;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function bioassay_data_inv2(iri in varchar) returns integer language sql as
@@ -42,4 +42,4 @@ $$
     else null
   end;
 $$
-immutable;
+immutable parallel safe;

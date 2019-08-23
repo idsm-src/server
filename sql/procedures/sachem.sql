@@ -7,7 +7,7 @@ $$
     when 3 then 'http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#RGroup'
   end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function query_format_inverse(iri in varchar) returns integer language sql as
@@ -19,7 +19,7 @@ $$
     when 'http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#RGroup' then 3
   end;
 $$
-immutable;
+immutable parallel safe;
 
 --------------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@ $$
     when 1 then 'http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#exactSearch'
   end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function search_mode_inverse(iri in varchar) returns integer language sql as
@@ -40,7 +40,7 @@ $$
     when 'http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#exactSearch' then 1
   end;
 $$
-immutable;
+immutable parallel safe;
 
 --------------------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ $$
     when 2 then 'http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#defaultChargeAsAny'
   end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function charge_mode_inverse(iri in varchar) returns integer language sql as
@@ -63,7 +63,7 @@ $$
     when 'http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#defaultChargeAsAny' then 2
   end;
 $$
-immutable;
+immutable parallel safe;
 
 --------------------------------------------------------------------------------
 
@@ -75,7 +75,7 @@ $$
     when 2 then 'http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#defaultIsotopeAsAny'
   end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function isotope_mode_inverse(iri varchar) returns integer language sql as
@@ -86,7 +86,7 @@ $$
     when 'http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#defaultIsotopeAsAny' then 2
   end;
 $$
-immutable;
+immutable parallel safe;
 
 --------------------------------------------------------------------------------
 
@@ -97,7 +97,7 @@ $$
     when 1 then 'http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#strictStereo'
   end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function stereo_mode_inverse(iri varchar) returns integer language sql as
@@ -107,7 +107,7 @@ $$
     when 'http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#strictStereo' then 1
   end;
 $$
-immutable;
+immutable parallel safe;
 
 --------------------------------------------------------------------------------
 
@@ -118,7 +118,7 @@ $$
     when 1 then 'http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#inchiTautomers'
   end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function tautomer_mode_inverse(iri varchar) returns integer language sql as
@@ -128,4 +128,4 @@ $$
     when 'http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#inchiTautomers' then 1
   end;
 $$
-immutable;
+immutable parallel safe;

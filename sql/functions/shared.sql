@@ -2,14 +2,14 @@ create function graph(id in smallint) returns varchar language sql as
 $$
   select iri from graphs__reftable where graphs__reftable.id = graph.id;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function graph_inverse(iri in varchar) returns smallint language sql as
 $$
   select id from graphs__reftable where graphs__reftable.iri = graph_inverse.iri;
 $$
-immutable;
+immutable parallel safe;
 
 --------------------------------------------------------------------------------
 
@@ -20,7 +20,7 @@ $$
     else 'http://id.nlm.nih.gov/mesh/D' || lpad(descriptor::text, 6, '0') || 'Q' || lpad(qualifier::text, 6, '0')
   end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function dqmesh_inv1(iri in varchar) returns integer language sql as
@@ -30,7 +30,7 @@ $$
     else substring(iri, 29, strpos(iri, 'Q') - 29)::integer
   end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function dqmesh_inv2(iri in varchar) returns integer language sql as
@@ -40,7 +40,7 @@ $$
     else substring(iri, strpos(iri, 'Q') + 1)::integer
   end;
 $$
-immutable;
+immutable parallel safe;
 
 --------------------------------------------------------------------------------
 
@@ -51,7 +51,7 @@ $$
     else              'http://id.nlm.nih.gov/mesh/C' || lpad((-1 * id)::text, 9, '0')
   end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function mesh_inverse(iri in varchar) returns integer language sql as
@@ -61,7 +61,7 @@ $$
     else -1 * substring(iri, 29)::integer
   end;
 $$
-immutable;
+immutable parallel safe;
 
 --------------------------------------------------------------------------------
 
@@ -69,14 +69,14 @@ create function pdblink(id in varchar) returns varchar language sql as
 $$
   select 'http://rdf.wwpdb.org/pdb/' || id;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function pdblink_inverse(iri in varchar) returns varchar language sql as
 $$
   select substring(iri, 26);
 $$
-immutable;
+immutable parallel safe;
 
 --------------------------------------------------------------------------------
 
@@ -84,11 +84,11 @@ create function uniprot(id in varchar) returns varchar language sql as
 $$
   select 'http://purl.uniprot.org/uniprot/' || id;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function uniprot_inverse(iri in varchar) returns varchar language sql as
 $$
   select substring(iri, 33);
 $$
-immutable;
+immutable parallel safe;

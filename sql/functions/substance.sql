@@ -2,14 +2,14 @@ create function substance(id in integer) returns varchar language sql as
 $$
   select 'http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID' || id;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function substance_inverse(iri in varchar) returns integer language sql as
 $$
   select substring(iri,  50)::integer;
 $$
-immutable;
+immutable parallel safe;
 
 --------------------------------------------------------------------------------
 
@@ -20,7 +20,7 @@ $$
     else 'http://linkedchemistry.info/chembl/chemblid/SCHEMBL' || -id
   end
 $$
-immutable;
+immutable parallel safe;
 
 
 create function substance_chembl_inverse(iri in varchar) returns integer language sql as
@@ -30,7 +30,7 @@ $$
     else substring(iri, 51)::integer
   end;
 $$
-immutable;
+immutable parallel safe;
 
 --------------------------------------------------------------------------------
 
@@ -41,7 +41,7 @@ $$
     else 'http://rdf.ebi.ac.uk/resource/chembl/molecule/SCHEMBL' || -id
   end
 $$
-immutable;
+immutable parallel safe;
 
 
 create function substance_ebi_chembl_inverse(iri in varchar) returns integer language sql as
@@ -51,4 +51,4 @@ $$
     else substring(iri, 53)::integer
   end;
 $$
-immutable;
+immutable parallel safe;

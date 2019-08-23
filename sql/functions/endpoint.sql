@@ -8,21 +8,21 @@ $$
     else null
   end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function endpoint_inv1(iri in varchar) returns integer language sql as
 $$
   select substring(iri, 49, strpos(iri, '_') - 49)::integer;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function endpoint_inv2(iri in varchar) returns integer language sql as
 $$
   select substring(split_part(iri, '_', 2), 4)::integer;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function endpoint_inv3(iri in varchar) returns integer language sql as
@@ -35,4 +35,4 @@ $$
   end
   from (select coalesce(split_part(iri, '_', 3), '') as part) as tab;
 $$
-immutable;
+immutable parallel safe;

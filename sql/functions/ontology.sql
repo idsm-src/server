@@ -62,7 +62,7 @@ $$
     end if;
   end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function ontology_resource_inv1(iri in varchar) returns smallint language plpgsql as
@@ -78,7 +78,7 @@ $$
     return unit;
   end;
 $$
-immutable;
+immutable parallel safe;
 
 
 create function ontology_resource_inv2(iri in varchar) returns integer language plpgsql as
@@ -128,4 +128,4 @@ $$
     end if;
   end;
 $$
-immutable;
+immutable parallel safe;

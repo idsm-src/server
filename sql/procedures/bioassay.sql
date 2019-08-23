@@ -4,4 +4,4 @@ $$
   union
   select id from bioassay_bases where to_tsvector('english', title) @@ to_tsquery('english', query);
 $$
-immutable rows 100000;
+immutable parallel safe rows 100000;

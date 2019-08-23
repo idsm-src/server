@@ -6,4 +6,4 @@ $$
   select cmp.compound, val.value from synonym_values val, synonym_compounds cmp
       where to_tsvector('english', val.value) @@ to_tsquery('english', query) and val.synonym = cmp.synonym;
 $$
-immutable rows 10000;
+immutable parallel safe rows 10000;
