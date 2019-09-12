@@ -1,3 +1,11 @@
+create function sachem_similarity_search(query varchar, query_type int, cutoff float8, topn int = 0) returns table (compound int, score float8) language sql as
+$$
+  select compound, score::float8 from sachem_similarity_search(query, query_type, cutoff::float4, topn);
+$$
+immutable;
+
+--------------------------------------------------------------------------------
+
 create function query_format(id integer) returns varchar language sql as
 $$
   select case id
