@@ -13,7 +13,7 @@ immutable parallel safe;
 
 create function measuregroup_inv1(iri in varchar) returns integer language sql as
 $$
-  select substring(iri, 53, strpos(iri, '_') - 53)::integer;
+  select substring(split_part(iri, '_', 1), 53)::integer;
 $$
 immutable parallel safe;
 
