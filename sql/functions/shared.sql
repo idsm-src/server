@@ -1,18 +1,3 @@
-create function graph(id in smallint) returns varchar language sql as
-$$
-  select iri from graphs__reftable where graphs__reftable.id = graph.id;
-$$
-immutable parallel safe;
-
-
-create function graph_inverse(iri in varchar) returns smallint language sql as
-$$
-  select id from graphs__reftable where graphs__reftable.iri = graph_inverse.iri;
-$$
-immutable parallel safe;
-
---------------------------------------------------------------------------------
-
 create function dqmesh(descriptor in integer, qualifier in integer) returns varchar language sql as
 $$
   select case qualifier
@@ -57,35 +42,5 @@ $$
     when iri like 'http://id.nlm.nih.gov/mesh/M%' then substring(iri, 29)::integer
     else -1 * substring(iri, 29)::integer
   end;
-$$
-immutable parallel safe;
-
---------------------------------------------------------------------------------
-
-create function pdblink(id in varchar) returns varchar language sql as
-$$
-  select 'http://rdf.wwpdb.org/pdb/' || id;
-$$
-immutable parallel safe;
-
-
-create function pdblink_inverse(iri in varchar) returns varchar language sql as
-$$
-  select substring(iri, 26);
-$$
-immutable parallel safe;
-
---------------------------------------------------------------------------------
-
-create function uniprot(id in varchar) returns varchar language sql as
-$$
-  select 'http://purl.uniprot.org/uniprot/' || id;
-$$
-immutable parallel safe;
-
-
-create function uniprot_inverse(iri in varchar) returns varchar language sql as
-$$
-  select substring(iri, 33);
 $$
 immutable parallel safe;

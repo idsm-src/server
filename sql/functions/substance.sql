@@ -1,18 +1,3 @@
-create function substance(id in integer) returns varchar language sql as
-$$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID' || id;
-$$
-immutable parallel safe;
-
-
-create function substance_inverse(iri in varchar) returns integer language sql as
-$$
-  select substring(iri,  50)::integer;
-$$
-immutable parallel safe;
-
---------------------------------------------------------------------------------
-
 create function substance_chembl(id in integer) returns varchar language sql as
 $$
   select case
