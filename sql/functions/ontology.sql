@@ -6,10 +6,10 @@ $$
     val integer;
   begin
     if unit = 0 then
-      return (select iri from ontology_resources__reftable where resource_id = id);
+      return (select iri from pubchem.ontology_resources__reftable where resource_id = id);
     end if;
 	  
-    select prefix, value_length into rec from ontology_resource_categories__reftable where unit_id = unit;
+    select prefix, value_length into rec from pubchem.ontology_resource_categories__reftable where unit_id = unit;
     
 	if unit = 32 or unit = 33 then
       -- [A-Z][0-9][A-Z0-9]{3}[0-9](-([12])?[0-9])?
@@ -69,7 +69,7 @@ create function ontology_resource_inv1(iri in varchar) returns smallint language
 $$
   declare unit smallint;
   begin
-    select unit_id into unit from ontology_resource_categories__reftable where iri ~ pattern;
+    select unit_id into unit from pubchem.ontology_resource_categories__reftable where iri ~ pattern;
     
     if not found then
       return 0;
@@ -88,10 +88,10 @@ $$
   declare val char;
   declare big bigint;
   begin
-    select unit_id, value_offset into rec from ontology_resource_categories__reftable where iri ~ pattern;
+    select unit_id, value_offset into rec from pubchem.ontology_resource_categories__reftable where iri ~ pattern;
     
     if not found then
-      return (select resource_id from ontology_resources__reftable tab where tab.iri = ontology_resource_inv2.iri);
+      return (select resource_id from pubchem.ontology_resources__reftable tab where tab.iri = ontology_resource_inv2.iri);
     end if;
 
     tail := substring(iri, rec.value_offset);
