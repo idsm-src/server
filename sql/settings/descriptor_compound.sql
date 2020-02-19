@@ -16,30 +16,30 @@ create index descriptor_compound_bases__xlogp3_aa on descriptor_compound_bases(x
 create index descriptor_compound_bases__exact_mass on descriptor_compound_bases(exact_mass);
 create index descriptor_compound_bases__molecular_weight on descriptor_compound_bases(molecular_weight);
 create index descriptor_compound_bases__tpsa on descriptor_compound_bases(tpsa);
-grant select on descriptor_compound_bases to "SPARQL";
+grant select on descriptor_compound_bases to sparql;
 
 --------------------------------------------------------------------------------
 
 create index descriptor_compound_molecular_formulas__molecular_formula on descriptor_compound_molecular_formulas(molecular_formula);
-grant select on descriptor_compound_molecular_formulas to "SPARQL";
+grant select on descriptor_compound_molecular_formulas to sparql;
 
 --------------------------------------------------------------------------------
 
 create index descriptor_compound_isomeric_smileses__isomeric_smiles on descriptor_compound_isomeric_smileses(isomeric_smiles);
-grant select on descriptor_compound_isomeric_smileses to "SPARQL";
+grant select on descriptor_compound_isomeric_smileses to sparql;
 
 --------------------------------------------------------------------------------
 
 create index descriptor_compound_canonical_smileses__canonical_smiles on descriptor_compound_canonical_smileses(canonical_smiles);
-grant select on descriptor_compound_canonical_smileses to "SPARQL";
+grant select on descriptor_compound_canonical_smileses to sparql;
 
 --------------------------------------------------------------------------------
 
 -- create index descriptor_compound_iupac_inchis__iupac_inchi on descriptor_compound_iupac_inchis(iupac_inchi); -- Values larger than 1/3 of a buffer page cannot be indexed.
-grant select on descriptor_compound_iupac_inchis to "SPARQL";
+grant select on descriptor_compound_iupac_inchis to sparql;
 
 --------------------------------------------------------------------------------
 
 create index descriptor_compound_preferred_iupac_names__iupac_name on descriptor_compound_preferred_iupac_names(preferred_iupac_name);
 create index descriptor_compound_preferred_iupac_names__iupac_name__gin on descriptor_compound_preferred_iupac_names using gin (to_tsvector('english', preferred_iupac_name));
-grant select on descriptor_compound_preferred_iupac_names to "SPARQL";
+grant select on descriptor_compound_preferred_iupac_names to sparql;

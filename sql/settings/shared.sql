@@ -1,1 +1,1 @@
-grant select on graphs__reftable to "SPARQL";
+grant select on graphs__reftable to sparql;
