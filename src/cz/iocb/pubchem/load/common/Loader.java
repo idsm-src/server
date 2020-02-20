@@ -35,7 +35,7 @@ import org.postgresql.ds.PGPoolingDataSource;
 @SuppressWarnings("deprecation")
 public class Loader
 {
-    protected static final int batchSize = 1000;
+    protected static final int batchSize = 100000;
     private static Properties properties = null;
     private static PGPoolingDataSource connectionPool = null;
     private static String prefixes = null;
