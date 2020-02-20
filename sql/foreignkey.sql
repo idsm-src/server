@@ -28,6 +28,7 @@ alter table compound_biosystems add foreign key (compound) references compound_b
 alter table compound_biosystems add foreign key (biosystem) references biosystem_bases(id);
 alter table compound_types add foreign key (compound) references compound_bases(id);
 alter table compound_active_ingredients add foreign key (compound) references compound_bases(id);
+alter table molecules.pubchem add foreign key (id) references compound_bases(id);
 
 
 -- concept

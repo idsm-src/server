@@ -75,5 +75,6 @@ create table compound_active_ingredients
 create table compound_bases
 (
     id    integer not null,
+    keep  bool not null,
     primary key(id)
 );

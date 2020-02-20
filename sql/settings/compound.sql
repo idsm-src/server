@@ -49,55 +49,71 @@ grant select on compound_active_ingredients to sparql;
 
 --------------------------------------------------------------------------------
 
-insert into compound_bases(id)
-select distinct id from compounds as t where not exists (select id from compound_bases where id = t.id);
+insert into compound_bases(id, keep)
+select distinct compound, true from compound_components where not exists (select id from compound_bases where id = compound);
 
-insert into compound_bases(id)
-select distinct compound from compound_components where not exists (select id from compound_bases where id = compound);
+insert into compound_bases(id, keep)
+select distinct component, true from compound_components where not exists (select id from compound_bases where id = component);
 
-insert into compound_bases(id)
-select distinct component from compound_components where not exists (select id from compound_bases where id = component);
+insert into compound_bases(id, keep)
+select distinct compound, true from compound_isotopologues where not exists (select id from compound_bases where id = compound);
 
-insert into compound_bases(id)
-select distinct compound from compound_isotopologues where not exists (select id from compound_bases where id = compound);
+insert into compound_bases(id, keep)
+select distinct isotopologue, true from compound_isotopologues where not exists (select id from compound_bases where id = isotopologue);
 
-insert into compound_bases(id)
-select distinct isotopologue from compound_isotopologues where not exists (select id from compound_bases where id = isotopologue);
+insert into compound_bases(id, keep)
+select distinct compound, true from compound_parents where not exists (select id from compound_bases where id = compound);
 
-insert into compound_bases(id)
-select distinct compound from compound_parents where not exists (select id from compound_bases where id = compound);
+insert into compound_bases(id, keep)
+select distinct parent, true from compound_parents where not exists (select id from compound_bases where id = parent);
 
-insert into compound_bases(id)
-select distinct parent from compound_parents where not exists (select id from compound_bases where id = parent);
+insert into compound_bases(id, keep)
+select distinct compound, true from compound_stereoisomers where not exists (select id from compound_bases where id = compound);
 
-insert into compound_bases(id)
-select distinct compound from compound_stereoisomers where not exists (select id from compound_bases where id = compound);
+insert into compound_bases(id, keep)
+select distinct isomer, true from compound_stereoisomers where not exists (select id from compound_bases where id = isomer);
 
-insert into compound_bases(id)
-select distinct isomer from compound_stereoisomers where not exists (select id from compound_bases where id = isomer);
+insert into compound_bases(id, keep)
+select distinct compound, true from compound_same_connectivities where not exists (select id from compound_bases where id = compound);
 
-insert into compound_bases(id)
-select distinct compound from compound_same_connectivities where not exists (select id from compound_bases where id = compound);
+insert into compound_bases(id, keep)
+select distinct isomer, true from compound_same_connectivities where not exists (select id from compound_bases where id = isomer);
 
-insert into compound_bases(id)
-select distinct isomer from compound_same_connectivities where not exists (select id from compound_bases where id = isomer);
+insert into compound_bases(id, keep)
+select distinct compound, true from compound_roles where not exists (select id from compound_bases where id = compound);
 
-insert into compound_bases(id)
-select distinct compound from compound_roles where not exists (select id from compound_bases where id = compound);
+insert into compound_bases(id, keep)
+select distinct compound, true from compound_biosystems where not exists (select id from compound_bases where id = compound);
 
-insert into compound_bases(id)
-select distinct compound from compound_biosystems where not exists (select id from compound_bases where id = compound);
+insert into compound_bases(id, keep)
+select distinct compound, true from compound_types where not exists (select id from compound_bases where id = compound);
 
-insert into compound_bases(id)
-select distinct compound from compound_types where not exists (select id from compound_bases where id = compound);
+insert into compound_bases(id, keep)
+select distinct compound, true from compound_active_ingredients where not exists (select id from compound_bases where id = compound);
 
-insert into compound_bases(id)
-select distinct compound from compound_active_ingredients where not exists (select id from compound_bases where id = compound);
+insert into compound_bases(id, keep)
+select distinct compound, true from substance_bases where not exists (select id from compound_bases where id = compound);
 
-insert into compound_bases(id)
-select distinct compound from substance_bases where not exists (select id from compound_bases where id = compound);
+insert into compound_bases(id, keep)
+select distinct compound, true from descriptor_compound_bases where not exists (select id from compound_bases where id = compound);
 
-insert into compound_bases(id)
-select distinct compound from descriptor_compound_bases where not exists (select id from compound_bases where id = compound);
+insert into compound_bases(id, keep)
+select distinct id, false from molecules.pubchem where not exists (select id from compound_bases where id = molecules.pubchem.id);
 
 grant select on compound_bases to sparql;
+
+
+create function compound_bases__sync() returns trigger language plpgsql as
+$$
+  begin
+    if TG_OP = 'INSERT' then
+      insert into pubchem.compound_bases(id, keep) values (NEW.id, false) on conflict do nothing;
+    elsif TG_OP = 'DELETE' then
+      delete from pubchem.compound_bases where id = OLD.id and not keep;
+    end if;
+    return NEW;
+  end;
+$$;
+
+create trigger compound_bases__sync_insert before insert on molecules.pubchem for each row execute procedure compound_bases__sync();
+create trigger compound_bases__sync_delete after  delete on molecules.pubchem for each row execute procedure compound_bases__sync();
