@@ -50,54 +50,6 @@ grant select on compound_active_ingredients to sparql;
 --------------------------------------------------------------------------------
 
 insert into compound_bases(id, keep)
-select distinct compound, true from compound_components where not exists (select id from compound_bases where id = compound);
-
-insert into compound_bases(id, keep)
-select distinct component, true from compound_components where not exists (select id from compound_bases where id = component);
-
-insert into compound_bases(id, keep)
-select distinct compound, true from compound_isotopologues where not exists (select id from compound_bases where id = compound);
-
-insert into compound_bases(id, keep)
-select distinct isotopologue, true from compound_isotopologues where not exists (select id from compound_bases where id = isotopologue);
-
-insert into compound_bases(id, keep)
-select distinct compound, true from compound_parents where not exists (select id from compound_bases where id = compound);
-
-insert into compound_bases(id, keep)
-select distinct parent, true from compound_parents where not exists (select id from compound_bases where id = parent);
-
-insert into compound_bases(id, keep)
-select distinct compound, true from compound_stereoisomers where not exists (select id from compound_bases where id = compound);
-
-insert into compound_bases(id, keep)
-select distinct isomer, true from compound_stereoisomers where not exists (select id from compound_bases where id = isomer);
-
-insert into compound_bases(id, keep)
-select distinct compound, true from compound_same_connectivities where not exists (select id from compound_bases where id = compound);
-
-insert into compound_bases(id, keep)
-select distinct isomer, true from compound_same_connectivities where not exists (select id from compound_bases where id = isomer);
-
-insert into compound_bases(id, keep)
-select distinct compound, true from compound_roles where not exists (select id from compound_bases where id = compound);
-
-insert into compound_bases(id, keep)
-select distinct compound, true from compound_biosystems where not exists (select id from compound_bases where id = compound);
-
-insert into compound_bases(id, keep)
-select distinct compound, true from compound_types where not exists (select id from compound_bases where id = compound);
-
-insert into compound_bases(id, keep)
-select distinct compound, true from compound_active_ingredients where not exists (select id from compound_bases where id = compound);
-
-insert into compound_bases(id, keep)
-select distinct compound, true from substance_bases where not exists (select id from compound_bases where id = compound);
-
-insert into compound_bases(id, keep)
-select distinct compound, true from descriptor_compound_bases where not exists (select id from compound_bases where id = compound);
-
-insert into compound_bases(id, keep)
 select distinct id, false from molecules.pubchem where not exists (select id from compound_bases where id = molecules.pubchem.id);
 
 grant select on compound_bases to sparql;

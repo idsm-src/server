@@ -144,20 +144,6 @@ create table ontology_resource_categories__reftable
 
 --============================================================================--
 
-insert into ontology_resources__reftable(resource_id, iri) values (0, 'http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#active');
-insert into ontology_resources__reftable(resource_id, iri) values (1, 'http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#inactive');
-insert into ontology_resources__reftable(resource_id, iri) values (2, 'http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#inconclusive');
-insert into ontology_resources__reftable(resource_id, iri) values (3, 'http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#unspecified');
-insert into ontology_resources__reftable(resource_id, iri) values (4, 'http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#probe');
-insert into ontology_resources__reftable(resource_id, iri) values (5, 'http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#is_active_ingredient_of');
-insert into ontology_resources__reftable(resource_id, iri) values (6, 'http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#has_parent');
-insert into ontology_resources__reftable(resource_id, iri) values (7, 'http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#FDAApprovedDrugs');
-insert into ontology_resources__reftable(resource_id, iri) values (8, 'http://purl.org/spar/fabio/ReviewArticle');
-insert into ontology_resources__reftable(resource_id, iri) values (9, 'http://purl.org/spar/fabio/JournalArticle');
-insert into ontology_resources__reftable(resource_id, iri) values (10, 'http://www.biopax.org/release/biopax-level3.owl#SmallMolecule');
-
---============================================================================--
-
 insert into ontology_resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (1, 'http://blank/ID_' , 17,  0, '^http://blank/ID_[1-9][0-9]*$');
 insert into ontology_resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (2, 'http://semanticscience.org/resource/SIO_' , 41,  6, '^http://semanticscience\.org/resource/SIO_[0-9]{6}$');
 insert into ontology_resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (3, 'http://semanticscience.org/resource/CHEMINF_' , 45,  6, '^http://semanticscience\.org/resource/CHEMINF_[0-9]{6}$');

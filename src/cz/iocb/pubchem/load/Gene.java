@@ -1,102 +1,208 @@
 package cz.iocb.pubchem.load;
 
 import java.io.IOException;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
-import cz.iocb.pubchem.load.common.Loader;
-import cz.iocb.pubchem.load.common.ModelTableLoader;
+import org.eclipse.collections.api.tuple.primitive.IntIntPair;
+import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
+import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
+import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
+import cz.iocb.pubchem.load.common.QueryResultProcessor;
+import cz.iocb.pubchem.load.common.Updater;
 
 
 
-public class Gene extends Loader
+class Gene extends Updater
 {
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        new ModelTableLoader(model, loadQuery("gene/bases.sparql"),
-                "insert into gene_bases(id, title, description) values (?,?,?)")
+        IntHashSet newGenes = new IntHashSet(100000);
+        IntHashSet oldGenes = getIntSet("select id from gene_bases", 100000);
+
+        new QueryResultProcessor("select distinct ?gene { ?gene ?p ?o }")
         {
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
-                setValue(1, getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"));
-                setValue(2, getLiteralValue("title"));
-                setValue(3, getLiteralValue("description"));
+                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+
+                if(!oldGenes.remove(geneID))
+                    newGenes.add(geneID);
             }
-        }.load();
+        }.load(model);
+
+        batch("delete from gene_bases where id = ?", oldGenes);
+
+
+        IntStringMap newTitles = new IntStringMap(100000);
+        IntStringMap oldTitles = getIntStringMap("select id, title from gene_bases", 100000);
+
+        new QueryResultProcessor(patternQuery("?gene dcterms:title ?title"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                String title = getString("title");
+
+                if(!title.equals(oldTitles.remove(geneID)))
+                    newTitles.put(geneID, title);
+            }
+        }.load(model);
+
+        oldGenes.forEach(key -> oldTitles.remove(key));
+
+        if(!oldTitles.isEmpty())
+            throw new IOException();
+
+
+        IntStringMap newDescription = new IntStringMap(100000);
+        IntStringMap oldDescription = getIntStringMap("select id, description from gene_bases", 100000);
+
+        new QueryResultProcessor(patternQuery("?gene dcterms:description ?description"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                String description = getString("description");
+
+                if(!description.equals(oldDescription.remove(geneID)))
+                    newDescription.put(geneID, description);
+            }
+        }.load(model);
+
+        oldGenes.forEach(key -> oldDescription.remove(key));
+
+        if(!oldDescription.isEmpty())
+            throw new IOException();
+
+
+        batch("insert into gene_bases(id, title, description) values (?,?,?)", newGenes,
+                (PreparedStatement statement, int gene) -> {
+                    statement.setInt(1, gene);
+                    statement.setString(2, newTitles.remove(gene));
+                    statement.setString(3, newDescription.remove(gene));
+                });
+
+        batch("update gene_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
+        batch("update gene_bases set description = ? where id = ?", newDescription, Direction.REVERSE);
     }
 
 
     private static void loadBiosystems(Model model) throws IOException, SQLException
     {
-        new ModelTableLoader(model, patternQuery("?gene obo:BFO_0000056 ?biosystem"),
-                "insert into gene_biosystems(gene, biosystem) values (?,?)")
+        IntPairSet newBiosystems = new IntPairSet(1000000);
+        IntPairSet oldBiosystems = getIntPairSet("select gene, biosystem from gene_biosystems", 1000000);
+
+        new QueryResultProcessor(patternQuery("?gene obo:BFO_0000056 ?biosystem"))
         {
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
-                setValue(1, getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"));
-                setValue(2, getIntID("biosystem", "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID"));
+                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                int biosystemID = getIntID("biosystem", "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID");
+
+                IntIntPair pair = PrimitiveTuples.pair(geneID, biosystemID);
+
+                if(!oldBiosystems.remove(pair))
+                    newBiosystems.add(pair);
             }
-        }.load();
+        }.load(model);
+
+        batch("delete from gene_biosystems where gene = ? and biosystem = ?", oldBiosystems);
+        batch("insert into gene_biosystems(gene, biosystem) values (?,?)", newBiosystems);
     }
 
 
     private static void loadAlternatives(Model model) throws IOException, SQLException
     {
-        new ModelTableLoader(model, patternQuery("?gene dcterms:alternative ?alternative"),
-                "insert into gene_alternatives (__, gene, alternative) values (?,?,?)")
+        IntStringPairIntMap newAlternatives = new IntStringPairIntMap(1000000);
+        IntStringPairIntMap oldAlternatives = getIntStringPairIntMap(
+                "select gene, alternative, __ from gene_alternatives", 1000000);
+
+        new QueryResultProcessor(patternQuery("?gene dcterms:alternative ?alternative"))
         {
-            int nextID = 0;
+            int nextAlternativeID = Updater.getIntValue("select coalesce(max(__)+1,0) from gene_alternatives");
 
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
-                setValue(1, nextID++);
-                setValue(2, getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"));
-                setValue(3, getLiteralValue("alternative"));
+                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                String alternative = getString("alternative");
+
+                IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, alternative);
+
+                if(oldAlternatives.removeKeyIfAbsent(pair, NO_VALUE) == NO_VALUE)
+                    newAlternatives.put(pair, nextAlternativeID++);
             }
-        }.load();
+        }.load(model);
+
+        batch("delete from gene_alternatives where __ = ?", oldAlternatives.values());
+        batch("insert into gene_alternatives(gene, alternative, __) values (?,?,?)", newAlternatives);
     }
 
 
     private static void loadReferences(Model model) throws IOException, SQLException
     {
-        new ModelTableLoader(model, patternQuery("?gene cito:isDiscussedBy ?reference"),
-                "insert into gene_references(gene, reference) values (?,?)")
+        IntPairSet newReferences = new IntPairSet(10000000);
+        IntPairSet oldReferences = getIntPairSet("select gene, reference from gene_references", 10000000);
+
+        new QueryResultProcessor(patternQuery("?gene cito:isDiscussedBy ?reference"))
         {
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
-                setValue(1, getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"));
-                setValue(2, getIntID("reference", "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID"));
+                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                int referenceID = getIntID("reference", "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID");
+
+                IntIntPair pair = PrimitiveTuples.pair(geneID, referenceID);
+
+                if(!oldReferences.remove(pair))
+                    newReferences.add(pair);
             }
-        }.load();
+        }.load(model);
+
+        batch("delete from gene_references where gene = ? and reference = ?", oldReferences);
+        batch("insert into gene_references(gene, reference) values (?,?)", newReferences);
     }
 
 
     private static void loadCloseMatches(Model model) throws IOException, SQLException
     {
-        new ModelTableLoader(model, patternQuery("?gene skos:closeMatch ?match"),
-                "insert into gene_matches(__, gene, match) values (?,?,?)")
+        IntStringPairIntMap newMatches = new IntStringPairIntMap(1000000);
+        IntStringPairIntMap oldMatches = getIntStringPairIntMap("select gene, match, __ from gene_matches", 1000000);
+
+        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match"))
         {
-            int nextID = 0;
+            int nextMatcheID = Updater.getIntValue("select coalesce(max(__)+1,0) from gene_matches");
 
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
-                setValue(1, nextID++);
-                setValue(2, getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"));
-                setValue(3, getStringID("match", "http://rdf.ebi.ac.uk/resource/ensembl/"));
+                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                String match = getStringID("match", "http://rdf.ebi.ac.uk/resource/ensembl/");
+
+                IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, match);
+
+                if(oldMatches.removeKeyIfAbsent(pair, NO_VALUE) == NO_VALUE)
+                    newMatches.put(pair, nextMatcheID++);
             }
-        }.load();
+        }.load(model);
+
+        batch("delete from gene_matches where __ = ?", oldMatches.values());
+        batch("insert into gene_matches(gene, match, __) values (?,?,?)", newMatches);
     }
 
 
-    public static void load(String file) throws IOException, SQLException
+    static void load() throws IOException, SQLException
     {
-        Model model = getModel(file);
+        System.out.println("load genes ...");
 
+        Model model = getModel("RDF/gene/pc_gene.ttl.gz");
         check(model, "gene/check.sparql");
+
         loadBases(model);
         loadBiosystems(model);
         loadAlternatives(model);
@@ -104,11 +210,6 @@ public class Gene extends Loader
         loadCloseMatches(model);
 
         model.close();
-    }
-
-
-    public static void main(String[] args) throws IOException, SQLException
-    {
-        load("RDF/gene/pc_gene.ttl.gz");
+        System.out.println();
     }
 }

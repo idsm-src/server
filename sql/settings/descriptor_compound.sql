@@ -13,6 +13,7 @@ create index descriptor_compound_bases__total_formal_charge on descriptor_compou
 create index descriptor_compound_bases__structure_complexity on descriptor_compound_bases(structure_complexity);
 create index descriptor_compound_bases__mono_isotopic_weight on descriptor_compound_bases(mono_isotopic_weight);
 create index descriptor_compound_bases__xlogp3_aa on descriptor_compound_bases(xlogp3_aa);
+create index descriptor_compound_bases__xlogp3 on descriptor_compound_bases(xlogp3);
 create index descriptor_compound_bases__exact_mass on descriptor_compound_bases(exact_mass);
 create index descriptor_compound_bases__molecular_weight on descriptor_compound_bases(molecular_weight);
 create index descriptor_compound_bases__tpsa on descriptor_compound_bases(tpsa);

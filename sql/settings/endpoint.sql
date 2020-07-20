@@ -1,6 +1,3 @@
-insert into endpoint_bases(substance, bioassay, measuregroup)
-select distinct substance, bioassay, measuregroup from endpoint_outcomes;
-
 create index endpoint_bases__substance on endpoint_bases(substance);
 create index endpoint_bases__bioassay on endpoint_bases(bioassay);
 create index endpoint_bases__bioassay_measuregroup on endpoint_bases(bioassay, measuregroup);

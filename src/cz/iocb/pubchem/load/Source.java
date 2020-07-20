@@ -2,117 +2,197 @@ package cz.iocb.pubchem.load;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.jena.rdf.model.Model;
-import cz.iocb.pubchem.load.common.Loader;
-import cz.iocb.pubchem.load.common.ModelTableLoader;
+import org.eclipse.collections.api.tuple.primitive.IntIntPair;
+import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
+import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
+import cz.iocb.pubchem.load.common.QueryResultProcessor;
+import cz.iocb.pubchem.load.common.Updater;
 
 
 
-public class Source extends Loader
+class Source extends Updater
 {
-    private static Map<String, Short> loadBases(Model model) throws IOException, SQLException
+    private static StringIntMap usedSources;
+    private static StringIntMap newSources;
+    private static StringIntMap oldSources;
+    private static int nextSourceID;
+
+    private static IntStringMap newTitles;
+    private static IntStringMap oldTitles;
+
+
+    private static void loadBases(Model model) throws IOException, SQLException
     {
-        Map<String, Short> map = new HashMap<String, Short>();
+        usedSources = new StringIntMap(1000);
+        newSources = new StringIntMap(1000);
+        oldSources = getStringIntMap("select iri, id from source_bases", 1000);
+        nextSourceID = getIntValue("select coalesce(max(id)+1,0) from source_bases");
 
-        new ModelTableLoader(model, loadQuery("source/bases.sparql"),
-                "insert into source_bases (id, iri, title) values (?,?,?)")
+        new QueryResultProcessor(patternQuery("?iri rdf:type dcterms:Dataset"))
         {
-            short nextID = 0;
-
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
                 String iri = getIRI("iri");
-                map.put(iri, nextID);
+                int sourceID;
 
-                setValue(1, nextID++);
-                setValue(2, iri);
-                setValue(3, getLiteralValue("title"));
+                if((sourceID = oldSources.removeKeyIfAbsent(iri, NO_VALUE)) == NO_VALUE)
+                    newSources.put(iri, sourceID = nextSourceID++);
+
+                usedSources.put(iri, sourceID);
             }
-        }.load();
-
-        return map;
+        }.load(model);
     }
 
 
-    private static Map<String, Short> loadSubjectsReftable(Model model) throws IOException, SQLException
+    private static void loadTitles(Model model) throws IOException, SQLException
     {
-        Map<String, Short> map = getMapping("concept_bases");
+        newTitles = new IntStringMap(1000);
+        oldTitles = getIntStringMap("select id, title from source_bases where title is not null", 1000);
 
-        new ModelTableLoader(model, distinctPatternQuery("[] dcterms:subject ?iri"),
-                "insert into concept_bases (id, iri) values (?,?)")
+        new QueryResultProcessor(patternQuery("?source dcterms:title ?title"))
         {
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
-                String iri = getIRI("iri");
+                int sourceID = usedSources.getOrThrow(getIRI("source"));
+                String title = getString("title");
 
-                if(map.get(iri) == null)
-                {
-                    setValue(1, map.size());
-                    setValue(2, iri);
-
-                    map.put(iri, (short) map.size());
-                }
+                if(!title.equals(oldTitles.remove(sourceID)))
+                    newTitles.put(sourceID, title);
             }
-        }.load();
-
-        return map;
+        }.load(model);
     }
 
 
-    private static void loadSubjects(Model model, Map<String, Short> sources, Map<String, Short> subjects)
-            throws IOException, SQLException
+    private static void loadSubjects(Model model) throws IOException, SQLException
     {
-        new ModelTableLoader(model, patternQuery("?source dcterms:subject ?subject"),
-                "insert into source_subjects (source, subject) values (?,?)")
+        IntPairSet newSubjects = new IntPairSet(1000);
+        IntPairSet oldSubjects = getIntPairSet("select source, subject from source_subjects", 1000);
+
+        new QueryResultProcessor(patternQuery("?source dcterms:subject ?subject"))
         {
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
-                setValue(1, getMapID("source", sources));
-                setValue(2, getMapID("subject", subjects));
+                int sourceID = usedSources.getOrThrow(getIRI("source"));
+                int conceptID = Concept.getConceptID(getIRI("subject"));
+
+                IntIntPair pair = PrimitiveTuples.pair(sourceID, conceptID);
+
+                if(!oldSubjects.remove(pair))
+                    newSubjects.add(pair);
             }
-        }.load();
+        }.load(model);
+
+        batch("delete from source_subjects where source = ? and subject = ?", oldSubjects);
+        batch("insert into source_subjects(source, subject) values (?,?)", newSubjects);
     }
 
 
-    private static void loadAlternatives(Model model, Map<String, Short> sources) throws IOException, SQLException
+    private static void loadAlternatives(Model model) throws IOException, SQLException
     {
-        new ModelTableLoader(model, patternQuery("?source dcterms:alternative ?alternative"),
-                "insert into source_alternatives (__, source, alternative) values (?, ?,?)")
+        IntStringPairIntMap newAlternatives = new IntStringPairIntMap(1000);
+        IntStringPairIntMap oldAlternatives = getIntStringPairIntMap(
+                "select source, alternative, __ from source_alternatives", 1000);
+
+        new QueryResultProcessor(patternQuery("?source dcterms:alternative ?alternative"))
         {
-            short nextID = 0;
+            int nextAlternativeID = Updater.getIntValue("select coalesce(max(__)+1,0) from source_alternatives");
 
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
-                setValue(1, nextID++);
-                setValue(2, getMapID("source", sources));
-                setValue(3, getLiteralValue("alternative"));
+                int sourceID = usedSources.getOrThrow(getIRI("source"));
+                String alternative = getString("alternative");
+
+                IntObjectPair<String> pair = PrimitiveTuples.pair(sourceID, alternative);
+
+                if(oldAlternatives.removeKeyIfAbsent(pair, NO_VALUE) == NO_VALUE)
+                    newAlternatives.put(pair, nextAlternativeID++);
             }
-        }.load();
+        }.load(model);
+
+        batch("delete from source_alternatives where __ = ?", oldAlternatives.values());
+        batch("insert into source_alternatives(source, alternative, __) values (?,?,?)", newAlternatives);
     }
 
 
-    public static void load(String file) throws IOException, SQLException
+    private static String generateSourceTitle(String iri)
     {
-        Model model = getModel(file);
+        String base = iri.replaceFirst("^http://rdf.ncbi.nlm.nih.gov/pubchem/source/", "");
 
+        if(base.startsWith("ID"))
+            return base.substring(2);
+        else
+            return base.replace('_', ' ');
+    }
+
+
+    static int getSourceID(String iri, String title)
+    {
+        synchronized(newSources)
+        {
+            int sourceID = usedSources.getIfAbsent(iri, NO_VALUE);
+
+            if(sourceID == NO_VALUE)
+            {
+                System.out.println("    add missing source <" + iri + ">");
+
+                if((sourceID = oldSources.removeKeyIfAbsent(iri, NO_VALUE)) == NO_VALUE)
+                    newSources.put(iri, sourceID = nextSourceID++);
+
+                if(title == null)
+                    title = generateSourceTitle(iri);
+
+                if(!title.equals(oldTitles.remove(sourceID)))
+                    newTitles.put(sourceID, title);
+
+                usedSources.put(iri, sourceID);
+            }
+
+            return sourceID;
+        }
+    }
+
+
+    static int getSourceID(String iri)
+    {
+        return getSourceID(iri, null);
+    }
+
+
+    static void finish() throws IOException, SQLException
+    {
+        batch("delete from source_bases where id = ?", oldSources.values());
+        batch("insert into source_bases(iri, id) values (?,?)", newSources);
+
+        batch("update source_bases set title = null where id = ?", oldTitles.keySet());
+        batch("update source_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
+
+        usedSources = null;
+        newSources = null;
+        oldSources = null;
+
+        newTitles = null;
+        oldTitles = null;
+    }
+
+
+    static void load() throws IOException, SQLException
+    {
+        System.out.println("load sources ...");
+
+        Model model = getModel("RDF/source/pc_source.ttl.gz");
         check(model, "source/check.sparql");
-        Map<String, Short> sources = loadBases(model);
-        Map<String, Short> subjects = loadSubjectsReftable(model);
-        loadSubjects(model, sources, subjects);
-        loadAlternatives(model, sources);
+
+        loadBases(model);
+        loadTitles(model);
+        loadSubjects(model);
+        loadAlternatives(model);
 
         model.close();
-    }
-
-
-    public static void main(String[] args) throws IOException, SQLException
-    {
-        load("RDF/source/pc_source.ttl.gz");
+        System.out.println();
     }
 }

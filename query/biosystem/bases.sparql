@@ -1,7 +1,0 @@
-select ?biosystem ?source ?title ?organism where
-{
-    ?biosystem rdf:type bp:Pathway .
-    optional { ?biosystem dcterms:source ?source }
-    optional { ?biosystem dcterms:title ?title }
-    optional { ?biosystem bp:organism ?organism }
-}

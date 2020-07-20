@@ -16,6 +16,7 @@ create table descriptor_compound_bases
     structure_complexity            real,
     mono_isotopic_weight            real,
     xlogp3_aa                       real,
+    xlogp3                          real,
     exact_mass                      real,
     molecular_weight                real,
     tpsa                            real,

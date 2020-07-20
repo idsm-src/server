@@ -1,67 +1,61 @@
 package cz.iocb.pubchem.load;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.Arrays;
 import org.apache.jena.graph.Node;
-import cz.iocb.pubchem.load.common.Loader;
-import cz.iocb.pubchem.load.common.StreamTableLoader;
+import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
+import cz.iocb.pubchem.load.common.TripleStreamProcessor;
+import cz.iocb.pubchem.load.common.Updater;
 
 
 
-public class SubstanceDescriptor extends Loader
+class SubstanceDescriptor extends Updater
 {
-    private static void processVersionFile(String file) throws IOException, SQLException
+    private static void loadSubstanceVersions() throws IOException, SQLException
     {
-        InputStream stream = getStream(file);
+        IntIntHashMap newValues = new IntIntHashMap(250000000);
+        IntIntHashMap oldValues = getIntIntMap("select substance, version from descriptor_substance_bases", 250000000);
 
-        new StreamTableLoader(stream, "insert into descriptor_substance_bases(substance, version) values (?,?)")
-        {
-            @Override
-            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
+        processFiles("RDF/descriptor/substance", "pc_descr_SubstanceVersion_value_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getStream(file))
             {
-                if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
-                    throw new IOException();
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
+                            throw new IOException();
 
-                int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/SID", "_Substance_Version");
+                        int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/SID",
+                                "_Substance_Version");
+                        int value = getInteger(object);
 
-                setValue(1, id);
-                setValue(2, getInteger(object));
-            }
-        }.load();
+                        Substance.addSubstanceID(id);
 
-        stream.close();
-    }
-
-
-    public static void loadDirectory(String path) throws IOException, SQLException
-    {
-        File dir = new File(getPubchemDirectory() + path);
-
-        Arrays.asList(dir.listFiles()).parallelStream().map(f -> f.getName()).forEach(name -> {
-            try
-            {
-                if(name.startsWith("pc_descr_SubstanceVersion_value"))
-                    processVersionFile(path + File.separatorChar + name);
-                else if(name.matches("pc_descr_.*_type_[0-9]+.ttl.gz"))
-                    System.out.println("ignore " + path + File.separatorChar + name);
-                else
-                    System.out.println("unsupported " + path + File.separatorChar + name);
-            }
-            catch(IOException | SQLException e)
-            {
-                System.err.println("exception for " + name);
-                e.printStackTrace();
-                System.exit(1);
+                        synchronized(newValues)
+                        {
+                            if(value != oldValues.removeKeyIfAbsent(id, NO_VALUE))
+                                newValues.put(id, value);
+                        }
+                    }
+                }.load(stream);
             }
         });
+
+        batch("delete from descriptor_substance_bases where substance = ?", oldValues.keySet());
+        batch("insert into descriptor_substance_bases(substance, version) values (?,?) "
+                + "on conflict (substance) do update set version=EXCLUDED.version", newValues);
     }
 
 
-    public static void main(String[] args) throws IOException, SQLException
+    static void load() throws IOException, SQLException
     {
-        loadDirectory("RDF/descriptor/substance");
+        System.out.println("load substance descriptors ...");
+
+        loadSubstanceVersions();
+
+        System.out.println();
     }
 }

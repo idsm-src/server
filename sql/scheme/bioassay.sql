@@ -15,11 +15,3 @@ create table bioassay_data
     value       varchar not null,
     primary key(__)
 );
-
-
-create table bioassay_measuregroups
-(
-    bioassay        integer not null,
-    measuregroup    integer not null,
-    primary key(bioassay, measuregroup)
-);

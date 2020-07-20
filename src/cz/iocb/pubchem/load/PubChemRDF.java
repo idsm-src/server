@@ -2,34 +2,60 @@ package cz.iocb.pubchem.load;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import cz.iocb.pubchem.load.common.Updater;
 
 
 
-public class PubChemRDF
+public class PubChemRDF extends Updater
 {
     public static void main(String[] args) throws SQLException, IOException
     {
-        Concept.load("RDF/concept/pc_concept.ttl.gz");
-        Source.load("RDF/source/pc_source.ttl.gz");
-        Biosystem.load("RDF/biosystem/pc_biosystem.ttl.gz");
-        ConservedDomain.load("RDF/conserveddomain/pc_conserveddomain.ttl.gz");
-        Gene.load("RDF/gene/pc_gene.ttl.gz");
-        Protein.load("RDF/protein/pc_protein.ttl.gz");
+        try
+        {
+            init();
 
-        Compound.loadDirectory("RDF/compound/general");
-        Endpoint.loadDirectory("RDF/endpoint");
-        InchiKey.loadDirectory("RDF/inchikey");
-        Measuregroup.loadDirectory("RDF/measuregroup");
-        Reference.loadDirectory("RDF/reference");
+            Ontology.load();
 
-        Synonym.loadDirectory("RDF/synonym");
-        Substance.loadDirectory("RDF/substance");
+            Concept.load();
+            Source.load(); // depends on Concept
+            Biosystem.load(); // depends on Source
+            ConservedDomain.load();
 
-        CompoundDescriptor.loadDirectory("RDF/descriptor/compound");
-        SubstanceDescriptor.loadDirectory("RDF/descriptor/substance");
+            Gene.load();
+            Protein.load();
 
-        BioassayXML.loadDirectory("Bioassay/XML");
+            Compound.load(); // depends on Ontology
+            InchiKey.load(); // depends on Compound
+            Measuregroup.load(); // depends on Source and Protein
+            Protein.finish();
+            Reference.load(); // depends on Ontology
 
-        Ontology.loadDirectory("ontology");
+            Synonym.load(); // depends on Concept and Compound
+            Concept.finish();
+
+            Substance.load(); // depends on Synonym and Compound
+
+            Endpoint.load(); // depends on Ontology, Substance and Measuregroup
+            Measuregroup.finish();
+            Endpoint.finish();
+
+            CompoundDescriptor.load(); // depends on Compound
+            Compound.finish();
+
+            SubstanceDescriptor.load(); // depends on Substance
+            Substance.finish();
+
+            BioassayXML.load(); // depends on Source
+            Source.finish();
+
+            commit();
+
+            ConstraintChecker.check();
+        }
+        catch(Throwable e)
+        {
+            e.printStackTrace();
+            rollback();
+        }
     }
 }

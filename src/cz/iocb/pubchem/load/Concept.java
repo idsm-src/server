@@ -2,85 +2,163 @@ package cz.iocb.pubchem.load;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.jena.rdf.model.Model;
-import cz.iocb.pubchem.load.common.Loader;
-import cz.iocb.pubchem.load.common.ModelTableLoader;
+import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
+import cz.iocb.pubchem.load.common.QueryResultProcessor;
+import cz.iocb.pubchem.load.common.Updater;
 
 
 
-public class Concept extends Loader
+class Concept extends Updater
 {
-    private static Map<String, Short> loadBases(Model model) throws IOException, SQLException
-    {
-        Map<String, Short> map = new HashMap<String, Short>();
+    private static StringIntMap usedConcepts;
+    private static StringIntMap newConcepts;
+    private static StringIntMap oldConcepts;
+    private static int nextConceptID;
 
-        new ModelTableLoader(model, loadQuery("concept/bases.sparql"),
-                "insert into concept_bases(id, iri, label) values (?,?,?)")
+
+    private static void loadBases(Model model) throws IOException, SQLException
+    {
+        usedConcepts = new StringIntMap(10000);
+        newConcepts = new StringIntMap(10000);
+        oldConcepts = getStringIntMap("select iri, id from concept_bases", 10000);
+        nextConceptID = getIntValue("select coalesce(max(id)+1,0) from concept_bases");
+
+        new QueryResultProcessor(patternQuery("?iri rdf:type ?type"))
         {
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
                 String iri = getIRI("iri");
-                short id = (short) map.size();
-                map.put(iri, id);
+                int conceptID;
 
-                setValue(1, id);
-                setValue(2, iri);
-                setValue(3, getLiteralValue("label"));
+                if((conceptID = oldConcepts.removeKeyIfAbsent(iri, NO_VALUE)) == NO_VALUE)
+                    newConcepts.put(iri, conceptID = nextConceptID++);
+
+                usedConcepts.put(iri, conceptID);
             }
-        }.load();
+        }.load(model);
 
-        return map;
+        batch("insert into concept_bases(iri, id) values (?,?)", newConcepts);
+        newConcepts.clear();
     }
 
 
-    private static void loadScheme(Model model, Map<String, Short> concepts) throws IOException, SQLException
+    private static void loadLabels(Model model) throws IOException, SQLException
     {
-        new ModelTableLoader(model, patternQuery("?concept skos:inScheme ?scheme"),
-                "update concept_bases set scheme=? where id=?")
+        IntStringMap newLabels = new IntStringMap(10000);
+        IntStringMap oldLabels = getIntStringMap("select id, label from concept_bases where label is not null", 10000);
+
+        new QueryResultProcessor(patternQuery("?concept skos:prefLabel ?label"))
         {
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
-                setValue(1, getMapID("scheme", concepts));
-                setValue(2, getMapID("concept", concepts));
+                int conceptID = usedConcepts.getOrThrow(getIRI("concept"));
+                String label = getString("label");
+
+                if(!label.equals(oldLabels.remove(conceptID)))
+                    newLabels.put(conceptID, label);
             }
-        }.load();
+        }.load(model);
+
+        batch("update concept_bases set label = null where id = ?", oldLabels.keySet());
+        batch("update concept_bases set label = ? where id = ?", newLabels, Direction.REVERSE);
     }
 
 
-    private static void loadBroader(Model model, Map<String, Short> concepts) throws IOException, SQLException
+    private static void loadScheme(Model model) throws IOException, SQLException
     {
-        new ModelTableLoader(model, patternQuery("?concept skos:broader ?broader"),
-                "update concept_bases set broader=? where id=?")
+        IntIntHashMap newSchemes = new IntIntHashMap(10000);
+        IntIntHashMap oldSchemes = getIntIntMap("select id, scheme from concept_bases where scheme is not null", 10000);
+
+        new QueryResultProcessor(patternQuery("?concept skos:inScheme ?scheme"))
         {
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
-                setValue(1, getMapID("broader", concepts));
-                setValue(2, getMapID("concept", concepts));
+                int conceptID = usedConcepts.getOrThrow(getIRI("concept"));
+                int schemeID = usedConcepts.getOrThrow(getIRI("scheme"));
+
+                if(schemeID != oldSchemes.removeKeyIfAbsent(conceptID, NO_VALUE))
+                    newSchemes.put(conceptID, schemeID);
             }
-        }.load();
+        }.load(model);
+
+        batch("update concept_bases set scheme = null where id = ?", oldSchemes.keySet());
+        batch("update concept_bases set scheme = ? where id = ?", newSchemes, Direction.REVERSE);
     }
 
 
-    public static void load(String file) throws IOException, SQLException
+    private static void loadBroader(Model model) throws IOException, SQLException
     {
-        Model model = getModel(file);
+        IntIntHashMap newBroaders = new IntIntHashMap(10000);
+        IntIntHashMap oldBroaders = getIntIntMap("select id, broader from concept_bases where broader is not null",
+                10000);
 
+        new QueryResultProcessor(patternQuery("?concept skos:broader ?broader"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int conceptID = usedConcepts.getOrThrow(getIRI("concept"));
+                int broaderID = usedConcepts.getOrThrow(getIRI("broader"));
+
+                if(conceptID != broaderID && broaderID != oldBroaders.removeKeyIfAbsent(conceptID, NO_VALUE))
+                    newBroaders.put(conceptID, broaderID);
+            }
+        }.load(model);
+
+        batch("update concept_bases set broader = null where id = ?", oldBroaders.keySet());
+        batch("update concept_bases set broader = ? where id = ?", newBroaders, Direction.REVERSE);
+    }
+
+
+    static int getConceptID(String iri)
+    {
+        synchronized(newConcepts)
+        {
+            int conceptID = usedConcepts.getIfAbsent(iri, NO_VALUE);
+
+            if(conceptID == NO_VALUE)
+            {
+                System.out.println("    add missing concept <" + iri + ">");
+
+                if((conceptID = oldConcepts.removeKeyIfAbsent(iri, NO_VALUE)) == NO_VALUE)
+                    newConcepts.put(iri, conceptID = nextConceptID++);
+
+                usedConcepts.put(iri, conceptID);
+            }
+
+            return conceptID;
+        }
+    }
+
+
+    static void finish() throws IOException, SQLException
+    {
+        batch("delete from concept_bases where id = ?", oldConcepts.values());
+        batch("insert into concept_bases(iri, id) values (?,?)", newConcepts);
+
+        usedConcepts = null;
+        newConcepts = null;
+        oldConcepts = null;
+    }
+
+
+    static void load() throws IOException, SQLException
+    {
+        System.out.println("load concepts ...");
+
+        Model model = getModel("RDF/concept/pc_concept.ttl.gz");
         check(model, "concept/check.sparql");
-        Map<String, Short> concepts = loadBases(model);
-        loadScheme(model, concepts);
-        loadBroader(model, concepts);
+
+        loadBases(model);
+        loadLabels(model);
+        loadScheme(model);
+        loadBroader(model);
 
         model.close();
-    }
-
-
-    public static void main(String[] args) throws IOException, SQLException
-    {
-        load("RDF/concept/pc_concept.ttl.gz");
+        System.out.println();
     }
 }

@@ -24,3 +24,12 @@ create table reference_subject_descriptors
     qualifier     integer not null,
     primary key(reference, descriptor, qualifier)
 );
+
+
+create table reference_primary_subject_descriptors
+(
+    reference     integer not null,
+    descriptor    integer not null,
+    qualifier     integer not null,
+    primary key(reference, descriptor, qualifier)
+);

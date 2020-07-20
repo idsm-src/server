@@ -1,357 +1,246 @@
 package cz.iocb.pubchem.load;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.jena.graph.Node;
-import cz.iocb.pubchem.load.Ontology.Identifier;
-import cz.iocb.pubchem.load.common.Loader;
-import cz.iocb.pubchem.load.common.StreamTableLoader;
+import org.eclipse.collections.api.tuple.primitive.IntIntPair;
+import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
+import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
+import cz.iocb.pubchem.load.common.MD5;
+import cz.iocb.pubchem.load.common.TripleStreamProcessor;
+import cz.iocb.pubchem.load.common.Updater;
 
 
 
-public class Synonym extends Loader
+class Synonym extends Updater
 {
-    private static class MD5
+    private static MD5IntMap usedHashes;
+    private static int nextMd5ID;
+    private static int nextValueID;
+
+
+    static void loadBases() throws IOException, SQLException
     {
-        private final long hi;
-        private final long lo;
+        usedHashes = new MD5IntMap(200000000);
 
-        public MD5(String value)
-        {
-            hi = Long.parseUnsignedLong(value.substring(0, 16), 16);
-            lo = Long.parseUnsignedLong(value.substring(16, 32), 16);
-        }
+        MD5IntMap newHashes = new MD5IntMap(200000000);
+        MD5IntMap oldHashes = getMD5IntMap("select md5, id from synonym_bases", 200000000);
+        nextMd5ID = getIntValue("select coalesce(max(id)+1,0) from synonym_bases");
 
-        @Override
-        public boolean equals(Object obj)
-        {
-            MD5 other = (MD5) obj;
-            return hi == other.hi && lo == other.lo;
-        }
+        IntStringPairIntMap newValues = new IntStringPairIntMap(200000000);
+        IntStringPairIntMap oldValues = getIntStringPairIntMap("select synonym, value, __ from synonym_values",
+                200000000);
+        nextValueID = getIntValue("select coalesce(max(__)+1,0) from synonym_values");
 
-        @Override
-        public int hashCode()
-        {
-            return (int) lo;
-        }
-
-        @Override
-        public String toString()
-        {
-            return Long.toHexString(hi) + Long.toHexString(lo);
-        }
-    }
-
-
-    static private void loadValues(String file, Map<MD5, Integer> md5hashes, AtomicInteger nextID)
-            throws IOException, SQLException
-    {
-        InputStream stream = getStream(file);
-
-        new StreamTableLoader(stream, "insert into synonym_values(__, synonym, value) values (?,?,?)")
-        {
-            LinkedHashMap<Integer, String> newMd5Hashes = new LinkedHashMap<Integer, String>(2 * Loader.batchSize);
-
-            @Override
-            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
+        processFiles("RDF/synonym", "pc_synonym_value_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getStream(file))
             {
-                if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
-                    throw new IOException();
-
-                String md5String = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_");
-                MD5 md5 = new MD5(md5String);
-                Integer md5ID = md5hashes.get(md5);
-
-                if(md5ID == null)
+                new TripleStreamProcessor()
                 {
-                    synchronized(md5hashes)
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws IOException
                     {
-                        md5ID = md5hashes.get(md5);
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
+                            throw new IOException();
 
-                        if(md5ID == null)
+                        String value = getString(object);
+                        MD5 md5 = getSynonymMD5(subject);
+                        int md5ID = Integer.MIN_VALUE;
+
+                        synchronized(newHashes)
                         {
-                            md5ID = md5hashes.size();
-                            md5hashes.put(md5, md5ID);
-                            newMd5Hashes.put(md5ID, md5String);
-                        }
-                    }
-                }
-
-                setValue(1, nextID.getAndIncrement());
-                setValue(2, md5ID);
-                setValue(3, getString(object));
-            }
-
-            @Override
-            public void beforeBatch() throws SQLException, IOException
-            {
-                try(Connection connection = getConnection())
-                {
-                    try(PreparedStatement insertStatement = connection
-                            .prepareStatement("insert into synonym_bases (id, md5) values (?,?)"))
-                    {
-                        for(Entry<Integer, String> entry : newMd5Hashes.entrySet())
-                        {
-                            insertStatement.setInt(1, entry.getKey());
-                            insertStatement.setString(2, entry.getValue());
-                            insertStatement.addBatch();
+                            if((md5ID = oldHashes.removeKeyIfAbsent(md5, Integer.MIN_VALUE)) != Integer.MIN_VALUE)
+                                usedHashes.put(md5, md5ID);
+                            else if((md5ID = usedHashes.getIfAbsentPut(md5, nextMd5ID)) == nextMd5ID)
+                                newHashes.put(md5, nextMd5ID++);
                         }
 
-                        insertStatement.executeBatch();
-                        newMd5Hashes.clear();
+                        IntObjectPair<String> pair = PrimitiveTuples.pair(md5ID, value);
+
+                        synchronized(newValues)
+                        {
+                            if(oldValues.removeKeyIfAbsent(pair, Integer.MIN_VALUE) == Integer.MIN_VALUE)
+                                newValues.put(pair, nextValueID++);
+                        }
                     }
-                }
-            }
-        }.load();
-
-        stream.close();
-    }
-
-
-    static private void loadTypes(String file, Map<MD5, Integer> md5hashes) throws IOException, SQLException
-    {
-        InputStream stream = getStream(file);
-
-        new StreamTableLoader(stream, "insert into synonym_types(synonym, type_id) values (?,?)")
-        {
-            @Override
-            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
-            {
-                if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                    throw new IOException();
-
-                Identifier type = Ontology.getId(object.getURI());
-
-                if(type.unit != Ontology.unitCHEMINF)
-                    throw new IOException();
-
-                MD5 md5 = new MD5(getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
-                Integer md5ID = md5hashes.get(md5);
-
-                if(md5ID != null)
-                {
-                    setValue(1, md5ID);
-                    setValue(2, type.id);
-                }
-                else
-                {
-                    System.out.println("  ignore md5 synonym " + md5 + " for rdf:type");
-                }
-            }
-        }.load();
-
-        stream.close();
-    }
-
-
-    static private void loadCompounds(String file, Map<MD5, Integer> md5hashes) throws IOException, SQLException
-    {
-        InputStream stream = getStream(file);
-
-        new StreamTableLoader(stream, "insert into synonym_compounds(synonym, compound) values (?,?)")
-        {
-            @Override
-            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
-            {
-                if(!predicate.getURI().equals("http://semanticscience.org/resource/is-attribute-of"))
-                    throw new IOException();
-
-                MD5 md5 = new MD5(getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
-                Integer md5ID = md5hashes.get(md5);
-
-                if(md5ID != null)
-                {
-                    setValue(1, md5ID);
-                    setValue(2, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
-                }
-                else
-                {
-                    System.out.println("  ignore md5 synonym " + md5 + " for sio:is-attribute-of");
-                }
-            }
-        }.load();
-
-        stream.close();
-    }
-
-
-    static private void loadTopics(String file, Map<MD5, Integer> md5hashes) throws IOException, SQLException
-    {
-        loadMeshSubjects(file, md5hashes);
-        loadConceptSubjects(file, md5hashes);
-    }
-
-
-    static private void loadMeshSubjects(String file, Map<MD5, Integer> md5hashes) throws IOException, SQLException
-    {
-        InputStream stream = getStream(file);
-
-        new StreamTableLoader(stream, "insert into synonym_mesh_subjects(synonym, subject) values (?,?)")
-        {
-            @Override
-            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
-            {
-                if(!predicate.getURI().equals("http://purl.org/dc/terms/subject"))
-                    throw new IOException();
-
-                if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/concept/"))
-                    return;
-
-                MD5 md5 = new MD5(getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
-                Integer md5ID = md5hashes.get(md5);
-
-                if(md5ID != null)
-                {
-                    setValue(1, md5ID);
-                    setValue(2, getIntID(object, "http://id.nlm.nih.gov/mesh/M"));
-                }
-                else
-                {
-                    System.out.println("  ignore md5 synonym " + md5 + " for mesh dcterms:subject");
-                }
-            }
-        }.load();
-
-        stream.close();
-    }
-
-
-    static synchronized private void loadConceptSubjects(String file, Map<MD5, Integer> md5hashes)
-            throws IOException, SQLException
-    {
-        Map<String, Short> concepts = getMapping("concept_bases");
-        ArrayList<String> newConcepts = new ArrayList<String>();
-        int newConceptOffset = concepts.size();
-
-
-        InputStream stream = getStream(file);
-
-        new StreamTableLoader(stream, "insert into synonym_concept_subjects(synonym, concept) values (?,?)")
-        {
-            @Override
-            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
-            {
-                if(!predicate.getURI().equals("http://purl.org/dc/terms/subject"))
-                    throw new IOException();
-
-                String value = object.getURI();
-
-                if(value.startsWith("http://id.nlm.nih.gov/mesh/M"))
-                    return;
-
-                MD5 md5 = new MD5(getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
-                Integer md5ID = md5hashes.get(md5);
-
-                if(md5ID != null)
-                {
-
-                    Short conceptID = concepts.get(value);
-
-                    if(conceptID == null)
-                    {
-                        conceptID = (short) concepts.size();
-                        concepts.put(value, conceptID);
-                        newConcepts.add(value);
-                    }
-
-                    setValue(1, md5ID);
-                    setValue(2, conceptID);
-                }
-                else
-                {
-                    System.out.println("  ignore md5 synonym " + md5 + " for concept dcterms:subject");
-                }
-            }
-        }.load();
-
-        stream.close();
-
-
-        try(Connection connection = getConnection())
-        {
-            try(PreparedStatement insertStatement = connection
-                    .prepareStatement("insert into concept_bases (id, iri) values (?,?)"))
-            {
-                for(int i = 0; i < newConcepts.size(); i++)
-                {
-                    short conceptID = (short) (newConceptOffset + i);
-                    String conceptIri = newConcepts.get(i);
-
-                    System.out.println("  add missing concept: " + conceptIri);
-
-                    insertStatement.setShort(1, conceptID);
-                    insertStatement.setString(2, conceptIri);
-
-                    insertStatement.addBatch();
-                }
-
-                insertStatement.executeBatch();
-            }
-        }
-    }
-
-
-    public static void loadDirectory(String path) throws IOException, SQLException
-    {
-        File dir = new File(getPubchemDirectory() + path);
-        List<File> files = Arrays.asList(dir.listFiles());
-
-
-        HashMap<MD5, Integer> md5hashes = new HashMap<MD5, Integer>(2000000000);
-        Map<MD5, Integer> md5SynHashes = Collections.synchronizedMap(md5hashes);
-        AtomicInteger valueID = new AtomicInteger();
-
-        files.parallelStream().map(f -> f.getName()).filter(n -> n.startsWith("pc_synonym_value")).forEach(name -> {
-            try
-            {
-                loadValues(path + File.separatorChar + name, md5SynHashes, valueID);
-            }
-            catch(IOException | SQLException e)
-            {
-                System.err.println("exception for " + name);
-                e.printStackTrace();
-                System.exit(1);
+                }.load(stream);
             }
         });
 
+        batch("delete from synonym_bases where id = ?", oldHashes.values());
+        batch("insert into synonym_bases(md5, id) values (?,?)", newHashes);
 
-        files.parallelStream().map(f -> f.getName()).forEach(name -> {
-            try
-            {
-                if(name.startsWith("pc_synonym_type"))
-                    loadTypes(path + File.separatorChar + name, md5hashes);
-                else if(name.startsWith("pc_synonym2compound"))
-                    loadCompounds(path + File.separatorChar + name, md5hashes);
-                else if(name.startsWith("pc_synonym_topic"))
-                    loadTopics(path + File.separatorChar + name, md5hashes);
-                else if(!name.startsWith("pc_synonym_value"))
-                    System.out.println("unsupported " + path + File.separator + name);
-            }
-            catch(IOException | SQLException e)
-            {
-                System.err.println("exception for " + name);
-                e.printStackTrace();
-                System.exit(1);
-            }
-        });
+        batch("delete from synonym_values where __ = ?", oldValues.values());
+        batch("insert into synonym_values(synonym, value, __) values (?,?,?)", newValues);
     }
 
 
-    public static void main(String[] args) throws IOException, SQLException
+    private static void loadTypes() throws IOException, SQLException
     {
-        loadDirectory("RDF/synonym");
+        IntPairSet newTypes = new IntPairSet(200000000);
+        IntPairSet oldTypes = getIntPairSet("select synonym, type_id from synonym_types", 200000000);
+
+        processFiles("RDF/synonym", "pc_synonym_type_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws IOException
+                    {
+                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            throw new IOException();
+
+                        MD5 md5 = getSynonymMD5(subject);
+                        int md5ID = usedHashes.getIfAbsent(md5, Integer.MIN_VALUE);
+                        int typeID = getIntID(object, "http://semanticscience.org/resource/CHEMINF_");
+
+                        if(md5ID != Integer.MIN_VALUE)
+                        {
+                            IntIntPair pair = PrimitiveTuples.pair(md5ID, typeID);
+
+                            synchronized(newTypes)
+                            {
+                                if(!oldTypes.remove(pair))
+                                    newTypes.add(pair);
+                            }
+                        }
+                        else
+                        {
+                            System.out.println("    ignore md5 synonym " + md5 + " for rdf:type");
+                        }
+                    }
+                }.load(stream);
+            }
+        });
+
+        batch("delete from synonym_types where synonym = ? and type_id = ?", oldTypes);
+        batch("insert into synonym_types(synonym, type_id) values (?,?)", newTypes);
+    }
+
+
+    private static void loadCompounds() throws IOException, SQLException
+    {
+        IntPairSet newCompounds = new IntPairSet(200000000);
+        IntPairSet oldCompounds = getIntPairSet("select synonym, compound from synonym_compounds", 200000000);
+
+        processFiles("RDF/synonym", "pc_synonym2compound_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws IOException
+                    {
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/is-attribute-of"))
+                            throw new IOException();
+
+                        MD5 md5 = getSynonymMD5(subject);
+                        int md5ID = usedHashes.getIfAbsent(md5, Integer.MIN_VALUE);
+
+                        if(md5ID != Integer.MIN_VALUE)
+                        {
+                            int compoundID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
+
+                            IntIntPair pair = PrimitiveTuples.pair(md5ID, compoundID);
+                            Compound.addCompoundID(compoundID);
+
+                            synchronized(newCompounds)
+                            {
+                                if(!oldCompounds.remove(pair))
+                                    newCompounds.add(pair);
+                            }
+                        }
+                        else
+                        {
+                            System.out.println("    ignore md5 synonym " + md5 + " for sio:is-attribute-of");
+                        }
+                    }
+                }.load(stream);
+            }
+        });
+
+        batch("delete from synonym_compounds where synonym = ? and compound = ?", oldCompounds);
+        batch("insert into synonym_compounds(synonym, compound) values (?,?)", newCompounds);
+    }
+
+
+    private static void loadTopics() throws IOException, SQLException
+    {
+        IntPairSet newMeshSubjects = new IntPairSet(1000000);
+        IntPairSet oldMeshSubjects = getIntPairSet("select synonym, subject from synonym_mesh_subjects", 1000000);
+
+        IntPairSet newConceptSubjects = new IntPairSet(50000);
+        IntPairSet oldConceptSubjects = getIntPairSet("select synonym, concept from synonym_concept_subjects", 50000);
+
+        try(InputStream stream = getStream("RDF/synonym/pc_synonym_topic.ttl.gz"))
+        {
+            new TripleStreamProcessor()
+            {
+                @Override
+                protected void parse(Node subject, Node predicate, Node object) throws IOException
+                {
+                    if(!predicate.getURI().equals("http://purl.org/dc/terms/subject"))
+                        throw new IOException();
+
+                    String value = object.getURI();
+
+                    MD5 md5 = getSynonymMD5(subject);
+                    int md5ID = usedHashes.getIfAbsent(md5, Integer.MIN_VALUE);
+
+                    if(md5ID == Integer.MIN_VALUE)
+                    {
+                        System.out.println("    ignore md5 synonym " + md5 + " for mesh dcterms:subject");
+                    }
+                    else if(value.startsWith("http://id.nlm.nih.gov/mesh/M"))
+                    {
+                        int mesh = getIntID(object, "http://id.nlm.nih.gov/mesh/M");
+                        IntIntPair pair = PrimitiveTuples.pair(md5ID, mesh);
+
+                        if(!oldMeshSubjects.remove(pair))
+                            newMeshSubjects.add(pair);
+                    }
+                    else if(value.startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/concept/"))
+                    {
+                        int conceptID = Concept.getConceptID(value);
+
+                        IntIntPair pair = PrimitiveTuples.pair(md5ID, conceptID);
+
+                        if(!oldConceptSubjects.remove(pair))
+                            newConceptSubjects.add(pair);
+                    }
+                    else
+                    {
+                        throw new IOException();
+                    }
+                }
+            }.load(stream);
+        }
+
+        batch("delete from synonym_mesh_subjects where synonym = ? and subject = ?", oldMeshSubjects);
+        batch("insert into synonym_mesh_subjects(synonym, subject) values (?,?)", newMeshSubjects);
+
+        batch("delete from synonym_concept_subjects where synonym = ? and concept = ?", oldConceptSubjects);
+        batch("insert into synonym_concept_subjects(synonym, concept) values (?,?)", newConceptSubjects);
+    }
+
+
+    static void load() throws IOException, SQLException
+    {
+        System.out.println("load synonyms ...");
+
+        loadBases();
+        loadTypes();
+        loadCompounds();
+        loadTopics();
+
+        System.out.println();
+    }
+
+
+    public static int getSynonymID(MD5 md5)
+    {
+        return usedHashes.getIfAbsent(md5, Integer.MIN_VALUE);
     }
 }

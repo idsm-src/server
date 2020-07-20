@@ -15,5 +15,11 @@
 	<classpathentry kind="lib" path="lib/slf4j-api-1.7.21.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/chemweb"/>
 	<classpathentry kind="lib" path="lib/postgresql-42.1.4.jar"/>
+	<classpathentry kind="lib" path="lib/eclipse-collections-10.2.0.jar" sourcepath="lib-src/eclipse-collections-10.2.0-sources.jar"/>
+	<classpathentry kind="lib" path="lib/eclipse-collections-api-10.2.0.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-simple-1.7.21.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-annotations-2.7.4.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-core-2.7.4.jar"/>
+	<classpathentry kind="lib" path="lib/jsonld-java-0.8.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

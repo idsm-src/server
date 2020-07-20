@@ -3,58 +3,124 @@ package cz.iocb.pubchem.load;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
-import cz.iocb.pubchem.load.common.Loader;
-import cz.iocb.pubchem.load.common.ModelTableLoader;
+import org.eclipse.collections.api.tuple.primitive.IntIntPair;
+import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
+import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
+import cz.iocb.pubchem.load.common.QueryResultProcessor;
+import cz.iocb.pubchem.load.common.Updater;
 
 
 
-public class ConservedDomain extends Loader
+class ConservedDomain extends Updater
 {
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        new ModelTableLoader(model, loadQuery("conserveddomain/bases.sparql"),
-                "insert into conserveddomain_bases(id, title, abstract) values (?,?,?)")
+        IntHashSet newDomains = new IntHashSet(10000);
+        IntHashSet oldDomains = getIntSet("select id from conserveddomain_bases", 10000);
+
+        new QueryResultProcessor(patternQuery("?domain rdf:type obo:SO_0000417"))
         {
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
-                setValue(1, getIntID("domain", "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID"));
-                setValue(2, getLiteralValue("title"));
-                setValue(3, getLiteralValue("abstract"));
+                int domainID = getIntID("domain", "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID");
+
+                if(!oldDomains.remove(domainID))
+                    newDomains.add(domainID);
             }
-        }.load();
+        }.load(model);
+
+        batch("delete from conserveddomain_bases where id = ?", oldDomains);
+        batch("insert into conserveddomain_bases(id) values (?)", newDomains);
+    }
+
+
+    private static void loadTitles(Model model) throws IOException, SQLException
+    {
+        IntStringMap newTitles = new IntStringMap(10000);
+        IntStringMap oldTitles = getIntStringMap("select id, title from conserveddomain_bases where title is not null",
+                10000);
+
+        new QueryResultProcessor(patternQuery("?domain dcterms:title ?title"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int domainID = getIntID("domain", "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID");
+                String title = getString("title");
+
+                if(!title.equals(oldTitles.remove(domainID)))
+                    newTitles.put(domainID, title);
+            }
+        }.load(model);
+
+        batch("update conserveddomain_bases set title = null where id = ?", oldTitles.keySet());
+        batch("update conserveddomain_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
+    }
+
+
+    private static void loadAbstracts(Model model) throws IOException, SQLException
+    {
+        IntStringMap newAbstracts = new IntStringMap(10000);
+        IntStringMap oldAbstracts = getIntStringMap(
+                "select id, abstract from conserveddomain_bases where abstract is not null", 10000);
+
+        new QueryResultProcessor(patternQuery("?domain dcterms:abstract ?abstract"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int domainID = getIntID("domain", "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID");
+                String value = getString("abstract");
+
+                if(!value.equals(oldAbstracts.remove(domainID)))
+                    newAbstracts.put(domainID, value);
+            }
+        }.load(model);
+
+        batch("update conserveddomain_bases set abstract = null where id = ?", oldAbstracts.keySet());
+        batch("update conserveddomain_bases set abstract = ? where id = ?", newAbstracts, Direction.REVERSE);
     }
 
 
     private static void loadReferences(Model model) throws IOException, SQLException
     {
-        new ModelTableLoader(model, patternQuery("?domain cito:isDiscussedBy ?reference"),
-                "insert into conserveddomain_references(domain, reference) values (?,?)")
+        IntPairSet newReferences = new IntPairSet(10000000);
+        IntPairSet oldReferences = getIntPairSet("select domain, reference from conserveddomain_references", 10000000);
+
+        new QueryResultProcessor(patternQuery("?domain cito:isDiscussedBy ?reference"))
         {
             @Override
-            public void insert() throws SQLException, IOException
+            protected void parse() throws IOException
             {
-                setValue(1, getIntID("domain", "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID"));
-                setValue(2, getIntID("reference", "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID"));
+                int domainID = getIntID("domain", "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID");
+                int referenceID = getIntID("reference", "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID");
+
+                IntIntPair pair = PrimitiveTuples.pair(domainID, referenceID);
+
+                if(!oldReferences.remove(pair))
+                    newReferences.add(pair);
             }
-        }.load();
+        }.load(model);
+
+        batch("delete from conserveddomain_references where domain = ? and reference = ?", oldReferences);
+        batch("insert into conserveddomain_references(domain, reference) values (?,?)", newReferences);
     }
 
 
-    public static void load(String file) throws IOException, SQLException
+    static void load() throws IOException, SQLException
     {
-        Model model = getModel(file);
+        System.out.println("load conserved domains ...");
 
+        Model model = getModel("RDF/conserveddomain/pc_conserveddomain.ttl.gz");
         check(model, "conserveddomain/check.sparql");
+
         loadBases(model);
+        loadTitles(model);
+        loadAbstracts(model);
         loadReferences(model);
 
         model.close();
-    }
-
-
-    public static void main(String[] args) throws IOException, SQLException
-    {
-        load("RDF/conserveddomain/pc_conserveddomain.ttl.gz");
+        System.out.println();
     }
 }

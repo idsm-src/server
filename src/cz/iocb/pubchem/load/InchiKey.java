@@ -1,151 +1,159 @@
 package cz.iocb.pubchem.load;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.jena.graph.Node;
-import cz.iocb.pubchem.load.common.Loader;
-import cz.iocb.pubchem.load.common.StreamTableLoader;
+import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
+import cz.iocb.pubchem.load.common.TripleStreamProcessor;
+import cz.iocb.pubchem.load.common.Updater;
 
 
 
-public class InchiKey extends Loader
+class InchiKey extends Updater
 {
-    private static void loadBases(String file, Set<String> idsSet, AtomicInteger nextID)
-            throws IOException, SQLException
-    {
-        InputStream stream = getStream(file);
+    private static StringIntMap usedKeys;
+    private static int nextkeyID;
 
-        new StreamTableLoader(stream, "insert into inchikey_bases(id, inchikey) values (?,?)")
-        {
-            @Override
-            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
+
+    private static void loadBases() throws IOException, SQLException
+    {
+        usedKeys = new StringIntMap(200000000);
+        StringIntMap newKeys = new StringIntMap(200000000);
+        StringIntMap oldKeys = getStringIntMap("select inchikey, id from inchikey_bases", 200000000);
+        nextkeyID = getIntValue("select coalesce(max(id)+1,0) from inchikey_bases");
+
+        processFiles("RDF/inchikey", "pc_inchikey_value_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getStream(file))
             {
-                if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
-                    throw new IOException();
-
-                String inchikey = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/");
-
-                if(!inchikey.equals(getString(object)))
-                    throw new IOException();
-
-                idsSet.add(inchikey);
-                setValue(1, nextID.getAndIncrement());
-                setValue(2, inchikey);
-            }
-        }.load();
-
-        stream.close();
-    }
-
-
-    private static void loadCompounds(String file, Set<String> ids) throws IOException, SQLException
-    {
-        InputStream stream = getStream(file);
-
-        new StreamTableLoader(stream,
-                "insert into inchikey_compounds(inchikey, compound) select id, ? from inchikey_bases where inchikey=?")
-        {
-            @Override
-            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
-            {
-                if(!predicate.getURI().equals("http://semanticscience.org/resource/is-attribute-of"))
-                    throw new IOException();
-
-                String inchikey = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/");
-
-                if(!ids.contains(inchikey))
-                    System.out.println("  missing inchikey " + inchikey + " for sio:is-attribute-of");
-
-                setValue(1, getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"));
-                setValue(2, inchikey);
-            }
-        }.load();
-
-        stream.close();
-    }
-
-
-    private static void loadSubjects(String file, Set<String> ids) throws IOException, SQLException
-    {
-        InputStream stream = getStream(file);
-
-        new StreamTableLoader(stream,
-                "insert into inchikey_subjects(inchikey, subject) select id, ? from inchikey_bases where inchikey=?")
-        {
-            @Override
-            public void insert(Node subject, Node predicate, Node object) throws SQLException, IOException
-            {
-                if(!predicate.getURI().equals("http://purl.org/dc/terms/subject"))
-                    throw new IOException();
-
-                String inchikey = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/");
-
-                if(!ids.contains(inchikey))
-                    System.out.println("  missing inchikey " + inchikey + " for dcterms:subject");
-
-                setValue(1, getIntID(object, "http://id.nlm.nih.gov/mesh/M"));
-                setValue(2, inchikey);
-            }
-        }.load();
-
-        stream.close();
-    }
-
-
-
-    public static void loadDirectory(String path) throws IOException, SQLException
-    {
-        File dir = new File(getPubchemDirectory() + path);
-        Set<String> idsSet = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>(125000000));
-        AtomicInteger nextID = new AtomicInteger();
-
-
-        Arrays.asList(dir.listFiles()).stream().map(f -> f.getName())
-                .filter(name -> name.startsWith("pc_inchikey_value")).parallel().forEach(name -> {
-                    try
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        loadBases(path + File.separatorChar + name, idsSet, nextID);
-                    }
-                    catch(IOException | SQLException e)
-                    {
-                        System.err.println("exception for " + name);
-                        e.printStackTrace();
-                        System.exit(1);
-                    }
-                });
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
+                            throw new IOException();
 
+                        String inchikey = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/");
 
-        Arrays.asList(dir.listFiles()).stream().map(f -> f.getName()).parallel().forEach(name -> {
-            try
-            {
-                if(name.startsWith("pc_inchikey_topic"))
-                    loadSubjects(path + File.separatorChar + name, idsSet);
-                else if(name.startsWith("pc_inchikey2compound"))
-                    loadCompounds(path + File.separatorChar + name, idsSet);
-                else if(name.startsWith("pc_inchikey_type"))
-                    System.out.println("ignore " + path + File.separator + name);
-                else if(!name.startsWith("pc_inchikey_value"))
-                    System.out.println("unsupported " + path + File.separator + name);
-            }
-            catch(IOException | SQLException e)
-            {
-                System.err.println("exception for " + name);
-                e.printStackTrace();
-                System.exit(1);
+                        if(!inchikey.equals(getString(object)))
+                            throw new IOException();
+
+                        synchronized(newKeys)
+                        {
+                            int inchikeyID;
+
+                            if((inchikeyID = oldKeys.removeKeyIfAbsent(inchikey, NO_VALUE)) == NO_VALUE)
+                                newKeys.put(inchikey, inchikeyID = nextkeyID++);
+
+                            usedKeys.put(inchikey, inchikeyID);
+                        }
+                    }
+                }.load(stream);
             }
         });
+
+        batch("delete from inchikey_bases where id = ?", oldKeys.values());
+        batch("insert into inchikey_bases(inchikey, id) values (?,?)", newKeys);
     }
 
 
-    public static void main(String[] args) throws IOException, SQLException
+    private static void loadCompounds() throws IOException, SQLException
     {
-        loadDirectory("RDF/inchikey");
+        IntIntHashMap newCompounds = new IntIntHashMap(200000000);
+        IntIntHashMap oldCompounds = getIntIntMap("select compound, inchikey from inchikey_compounds", 200000000);
+
+        processFiles("RDF/inchikey", "pc_inchikey2compound_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/is-attribute-of"))
+                            throw new IOException();
+
+                        String inchikey = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/");
+                        int inchikeyID = usedKeys.getIfAbsent(inchikey, NO_VALUE);
+                        int compoundID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
+
+                        Compound.addCompoundID(compoundID);
+
+                        if(inchikeyID != NO_VALUE)
+                        {
+                            synchronized(newCompounds)
+                            {
+                                if(inchikeyID != oldCompounds.removeKeyIfAbsent(compoundID, NO_VALUE))
+                                    newCompounds.put(compoundID, inchikeyID);
+                            }
+                        }
+                        else
+                        {
+                            System.out.println("    missing inchikey " + inchikey + " for sio:is-attribute-of");
+                        }
+                    }
+                }.load(stream);
+            }
+        });
+
+        batch("delete from inchikey_compounds where compound = ?", oldCompounds.keySet());
+        batch("insert into inchikey_compounds(compound, inchikey) values (?,?) "
+                + "on conflict (compound) do update set inchikey=EXCLUDED.inchikey", newCompounds);
+    }
+
+
+    private static void loadSubjects() throws IOException, SQLException
+    {
+        IntIntHashMap newSubjects = new IntIntHashMap(20000);
+        IntIntHashMap oldSubjects = getIntIntMap("select inchikey, subject from inchikey_subjects", 20000);
+
+        try(InputStream stream = getStream("RDF/inchikey/pc_inchikey_topic.ttl.gz"))
+        {
+            new TripleStreamProcessor()
+            {
+                @Override
+                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                {
+                    if(!predicate.getURI().equals("http://purl.org/dc/terms/subject"))
+                        throw new IOException();
+
+                    String inchikey = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/");
+                    int inchikeyID = usedKeys.getIfAbsent(inchikey, NO_VALUE);
+                    int subjectID = getIntID(object, "http://id.nlm.nih.gov/mesh/M");
+
+                    if(inchikeyID != NO_VALUE)
+                    {
+                        synchronized(newSubjects)
+                        {
+                            if(subjectID != oldSubjects.removeKeyIfAbsent(inchikeyID, NO_VALUE))
+                                newSubjects.put(inchikeyID, subjectID);
+                        }
+                    }
+                    else
+                    {
+                        System.out.println("    missing inchikey " + inchikey + " for dcterms:subject");
+                    }
+                }
+            }.load(stream);
+        }
+
+        batch("delete from inchikey_subjects where inchikey = ?", oldSubjects.keySet());
+        batch("insert into inchikey_subjects(inchikey, subject) values (?,?) "
+                + "on conflict (inchikey) do update set subject=EXCLUDED.subject", newSubjects);
+    }
+
+
+    static void load() throws IOException, SQLException
+    {
+        System.out.println("load inchikeys ...");
+
+        loadBases();
+        loadCompounds();
+        loadSubjects();
+
+        usedKeys = null;
+
+        System.out.println();
     }
 }

@@ -74,7 +74,4 @@ grant select on protein_types to sparql;
 
 --------------------------------------------------------------------------------
 
-insert into protein_complexes(protein)
-select id from protein_bases where name like 'GI%GI%';
-
 grant select on protein_complexes to sparql;
