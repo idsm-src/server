@@ -1,8 +1,8 @@
 create table gene_bases
 (
     id           integer not null,
-    title        varchar not null,
-    description  varchar not null,
+    title        varchar,
+    description  varchar,
     primary key(id)
 );
 

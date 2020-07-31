@@ -1,7 +1,6 @@
 package cz.iocb.pubchem.load;
 
 import java.io.IOException;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
@@ -33,8 +32,12 @@ class Gene extends Updater
         }.load(model);
 
         batch("delete from gene_bases where id = ?", oldGenes);
+        batch("insert into gene_bases(id) values (?)", newGenes);
+    }
 
 
+    private static void loadTitles(Model model) throws IOException, SQLException
+    {
         IntStringMap newTitles = new IntStringMap(100000);
         IntStringMap oldTitles = getIntStringMap("select id, title from gene_bases", 100000);
 
@@ -51,14 +54,15 @@ class Gene extends Updater
             }
         }.load(model);
 
-        oldGenes.forEach(key -> oldTitles.remove(key));
+        batch("update gene_bases set title = null where id = ?", oldTitles.keySet());
+        batch("update gene_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
+    }
 
-        if(!oldTitles.isEmpty())
-            throw new IOException();
 
-
-        IntStringMap newDescription = new IntStringMap(100000);
-        IntStringMap oldDescription = getIntStringMap("select id, description from gene_bases", 100000);
+    private static void loadDescriptions(Model model) throws IOException, SQLException
+    {
+        IntStringMap newDescriptions = new IntStringMap(100000);
+        IntStringMap oldDescriptions = getIntStringMap("select id, description from gene_bases", 100000);
 
         new QueryResultProcessor(patternQuery("?gene dcterms:description ?description"))
         {
@@ -68,26 +72,13 @@ class Gene extends Updater
                 int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
                 String description = getString("description");
 
-                if(!description.equals(oldDescription.remove(geneID)))
-                    newDescription.put(geneID, description);
+                if(!description.equals(oldDescriptions.remove(geneID)))
+                    newDescriptions.put(geneID, description);
             }
         }.load(model);
 
-        oldGenes.forEach(key -> oldDescription.remove(key));
-
-        if(!oldDescription.isEmpty())
-            throw new IOException();
-
-
-        batch("insert into gene_bases(id, title, description) values (?,?,?)", newGenes,
-                (PreparedStatement statement, int gene) -> {
-                    statement.setInt(1, gene);
-                    statement.setString(2, newTitles.remove(gene));
-                    statement.setString(3, newDescription.remove(gene));
-                });
-
-        batch("update gene_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
-        batch("update gene_bases set description = ? where id = ?", newDescription, Direction.REVERSE);
+        batch("update gene_bases set description = null where id = ?", oldDescriptions.keySet());
+        batch("update gene_bases set description = ? where id = ?", newDescriptions, Direction.REVERSE);
     }
 
 
@@ -204,6 +195,8 @@ class Gene extends Updater
         check(model, "gene/check.sparql");
 
         loadBases(model);
+        loadTitles(model);
+        loadDescriptions(model);
         loadBiosystems(model);
         loadAlternatives(model);
         loadReferences(model);
