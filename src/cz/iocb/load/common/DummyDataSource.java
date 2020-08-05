@@ -1,4 +1,4 @@
-package cz.iocb.pubchem.load.common;
+package cz.iocb.load.common;
 
 import java.io.PrintWriter;
 import java.sql.Array;

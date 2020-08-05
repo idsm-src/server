@@ -1,4 +1,4 @@
-package cz.iocb.pubchem.load;
+package cz.iocb.load.pubchem;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,8 +7,8 @@ import org.apache.jena.graph.Node;
 import org.eclipse.collections.impl.map.mutable.primitive.IntFloatHashMap;
 import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
-import cz.iocb.pubchem.load.common.TripleStreamProcessor;
-import cz.iocb.pubchem.load.common.Updater;
+import cz.iocb.load.common.TripleStreamProcessor;
+import cz.iocb.load.common.Updater;
 
 
 

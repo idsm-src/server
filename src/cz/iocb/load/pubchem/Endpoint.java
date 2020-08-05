@@ -1,15 +1,15 @@
-package cz.iocb.pubchem.load;
+package cz.iocb.load.pubchem;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
-import cz.iocb.pubchem.load.Ontology.Identifier;
-import cz.iocb.pubchem.load.common.IntQuaterplet;
-import cz.iocb.pubchem.load.common.IntTriplet;
-import cz.iocb.pubchem.load.common.TripleStreamProcessor;
-import cz.iocb.pubchem.load.common.Updater;
+import cz.iocb.load.common.IntQuaterplet;
+import cz.iocb.load.common.IntTriplet;
+import cz.iocb.load.common.TripleStreamProcessor;
+import cz.iocb.load.common.Updater;
+import cz.iocb.load.pubchem.Ontology.Identifier;
 
 
 

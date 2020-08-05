@@ -1,8 +1,8 @@
-package cz.iocb.pubchem.load;
+package cz.iocb.load.pubchem;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import cz.iocb.pubchem.load.common.Updater;
+import cz.iocb.load.common.Updater;
 
 
 

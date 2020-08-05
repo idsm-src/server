@@ -1,4 +1,4 @@
-package cz.iocb.pubchem.load;
+package cz.iocb.load.pubchem;
 
 import java.io.IOException;
 import java.sql.PreparedStatement;
@@ -13,8 +13,8 @@ import java.util.Map.Entry;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
-import cz.iocb.pubchem.load.common.QueryResultProcessor;
-import cz.iocb.pubchem.load.common.Updater;
+import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.Updater;
 
 
 

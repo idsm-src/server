@@ -1,4 +1,4 @@
-package cz.iocb.pubchem.load;
+package cz.iocb.load.pubchem;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,7 +23,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import cz.iocb.pubchem.load.common.Updater;
+import cz.iocb.load.common.Updater;
 
 
 

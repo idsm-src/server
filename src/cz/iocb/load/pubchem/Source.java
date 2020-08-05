@@ -1,4 +1,4 @@
-package cz.iocb.pubchem.load;
+package cz.iocb.load.pubchem;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -6,8 +6,8 @@ import org.apache.jena.rdf.model.Model;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
-import cz.iocb.pubchem.load.common.QueryResultProcessor;
-import cz.iocb.pubchem.load.common.Updater;
+import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.Updater;
 
 
 

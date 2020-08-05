@@ -1,4 +1,4 @@
-package cz.iocb.pubchem.load.common;
+package cz.iocb.load.common;
 
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.system.StreamRDF;

@@ -1,21 +1,19 @@
-package cz.iocb.pubchem.load.common;
+package cz.iocb.load.common;
 
 
 
-public class IntQuaterplet
+public class IntTriplet
 {
     private final int one;
     private final int two;
     private final int three;
-    private final int four;
 
 
-    public IntQuaterplet(int one, int two, int three, int four)
+    public IntTriplet(int one, int two, int three)
     {
         this.one = one;
         this.two = two;
         this.three = three;
-        this.four = four;
     }
 
 
@@ -28,16 +26,16 @@ public class IntQuaterplet
         if(obj == null || obj.getClass() != this.getClass())
             return false;
 
-        IntQuaterplet other = (IntQuaterplet) obj;
+        IntTriplet other = (IntTriplet) obj;
 
-        return one == other.one && two == other.two && three == other.three && four == other.four;
+        return one == other.one && two == other.two && three == other.three;
     }
 
 
     @Override
     public int hashCode()
     {
-        return Integer.hashCode(one) ^ Integer.hashCode(two) ^ Integer.hashCode(three) ^ Integer.hashCode(four);
+        return Integer.hashCode(one) ^ Integer.hashCode(two) ^ Integer.hashCode(three);
     }
 
 
@@ -56,11 +54,5 @@ public class IntQuaterplet
     public int getThree()
     {
         return three;
-    }
-
-
-    public int getFour()
-    {
-        return four;
     }
 }

@@ -1,10 +1,10 @@
-package cz.iocb.pubchem.load;
+package cz.iocb.load.pubchem;
 
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import cz.iocb.pubchem.load.common.Updater;
+import cz.iocb.load.common.Updater;
 
 
 
@@ -57,7 +57,7 @@ public class ConstraintChecker extends Updater
         try(Statement statement = connection.createStatement())
         {
             try(ResultSet results = statement.executeQuery(
-                    "select parent_table, parent_columns, foreign_table, foreign_columns from schema_foreign_keys"))
+                    "select parent_table, parent_columns, foreign_table, foreign_columns, __ from schema_foreign_keys"))
             {
                 while(results.next())
                 {
@@ -119,8 +119,9 @@ public class ConstraintChecker extends Updater
                         try(ResultSet r = s.executeQuery(builder.toString()))
                         {
                             if(r.next())
-                                System.out.println("warning: " + buildLabel(rightTable, rightColumns)
-                                        + " not reference " + buildLabel(leftTable, leftColumns));
+                                System.out.println(
+                                        "warning: [" + results.getInt(5) + "] " + buildLabel(rightTable, rightColumns)
+                                                + " not reference " + buildLabel(leftTable, leftColumns));
                         }
                     }
                 }
@@ -135,7 +136,7 @@ public class ConstraintChecker extends Updater
         try(Statement statement = connection.createStatement())
         {
             try(ResultSet results = statement.executeQuery(
-                    "select left_table, left_columns, right_table, right_columns from schema_unjoinable_columns"))
+                    "select left_table, left_columns, right_table, right_columns, __ from schema_unjoinable_columns"))
             {
                 while(results.next())
                 {
@@ -182,8 +183,9 @@ public class ConstraintChecker extends Updater
                         try(ResultSet r = s.executeQuery(builder.toString()))
                         {
                             if(r.next())
-                                System.out.println("warning: " + buildLabel(leftTable, leftColumns)
-                                        + " is joinable with " + buildLabel(rightTable, rightColumns));
+                                System.out.println(
+                                        "warning: [" + results.getInt(5) + "] " + buildLabel(leftTable, leftColumns)
+                                                + " is joinable with " + buildLabel(rightTable, rightColumns));
                         }
                     }
                 }
