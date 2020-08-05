@@ -168,8 +168,8 @@ class Biosystem extends Updater
 
     private static void loadMatches(Model model) throws IOException, SQLException
     {
-        IntPairSet newMatches = new IntPairSet(1000000);
-        IntPairSet oldMatches = getIntPairSet("select biosystem, wikipathway from biosystem_matches", 1000000);
+        IntIntHashMap newMatches = new IntIntHashMap(1000000);
+        IntIntHashMap oldMatches = getIntIntMap("select biosystem, wikipathway from biosystem_matches", 1000000);
 
         new QueryResultProcessor(patternQuery("?biosystem skos:exactMatch ?wikipathway"))
         {
@@ -179,15 +179,14 @@ class Biosystem extends Updater
                 int biosystemID = getIntID("biosystem", "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID");
                 int wikipathwayID = getIntID("wikipathway", "http://identifiers.org/wikipathways/WP");
 
-                IntIntPair pair = PrimitiveTuples.pair(biosystemID, wikipathwayID);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
+                if(wikipathwayID != oldMatches.removeKeyIfAbsent(biosystemID, NO_VALUE))
+                    newMatches.put(biosystemID, wikipathwayID);
             }
         }.load(model);
 
-        batch("delete from biosystem_matches where biosystem = ? and wikipathway = ?", oldMatches);
-        batch("insert into biosystem_matches(biosystem, wikipathway) values (?,?)", newMatches);
+        batch("delete from biosystem_matches where biosystem = ?", oldMatches.keySet());
+        batch("insert into biosystem_matches(biosystem, wikipathway) values (?,?) "
+                + "on conflict (biosystem) do update set wikipathway=EXCLUDED.wikipathway", newMatches);
     }
 
 

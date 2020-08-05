@@ -188,8 +188,8 @@ class Protein extends Updater
 
     private static void loadGenes(Model model) throws IOException, SQLException
     {
-        IntPairSet newGenes = new IntPairSet(10000);
-        IntPairSet oldGenes = getIntPairSet("select protein, gene from protein_genes", 10000);
+        IntIntHashMap newGenes = new IntIntHashMap(10000);
+        IntIntHashMap oldGenes = getIntIntMap("select protein, gene from protein_genes", 10000);
 
         new QueryResultProcessor(patternQuery("?protein vocab:encodedBy ?gene"))
         {
@@ -200,15 +200,14 @@ class Protein extends Updater
                         .getOrThrow(getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
                 int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
 
-                IntIntPair pair = PrimitiveTuples.pair(proteinID, geneID);
-
-                if(!oldGenes.remove(pair))
-                    newGenes.add(pair);
+                if(geneID != oldGenes.removeKeyIfAbsent(proteinID, NO_VALUE))
+                    newGenes.put(proteinID, geneID);
             }
         }.load(model);
 
-        batch("delete from protein_genes where protein = ? and gene = ?", oldGenes);
-        batch("insert into protein_genes(protein, gene) values (?,?)", newGenes);
+        batch("delete from protein_genes where protein = ?", oldGenes.keySet());
+        batch("insert into protein_genes(protein, gene) values (?,?) "
+                + "on conflict (protein) do update set gene=EXCLUDED.gene", newGenes);
     }
 
 
@@ -243,8 +242,8 @@ class Protein extends Updater
 
     private static void loadConservedDomains(Model model) throws IOException, SQLException
     {
-        IntPairSet newDomains = new IntPairSet(100000);
-        IntPairSet oldDomains = getIntPairSet("select protein, domain from protein_conserveddomains", 100000);
+        IntIntHashMap newDomains = new IntIntHashMap(100000);
+        IntIntHashMap oldDomains = getIntIntMap("select protein, domain from protein_conserveddomains", 100000);
 
         new QueryResultProcessor(patternQuery("?protein obo:BFO_0000110 ?domain"))
         {
@@ -255,15 +254,14 @@ class Protein extends Updater
                         .getOrThrow(getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
                 int domainID = getIntID("domain", "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID");
 
-                IntIntPair pair = PrimitiveTuples.pair(proteinID, domainID);
-
-                if(!oldDomains.remove(pair))
-                    newDomains.add(pair);
+                if(domainID != oldDomains.removeKeyIfAbsent(proteinID, NO_VALUE))
+                    newDomains.put(proteinID, domainID);
             }
         }.load(model);
 
-        batch("delete from protein_conserveddomains where protein = ? and domain = ?", oldDomains);
-        batch("insert into protein_conserveddomains(protein, domain) values (?,?)", newDomains);
+        batch("delete from protein_conserveddomains where protein = ?", oldDomains.keySet());
+        batch("insert into protein_conserveddomains(protein, domain) values (?,?) "
+                + "on conflict (protein) do update set domain=EXCLUDED.domain", newDomains);
     }
 
 
