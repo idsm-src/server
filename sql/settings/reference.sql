@@ -10,11 +10,12 @@ grant select on reference_discusses to sparql;
 
 --------------------------------------------------------------------------------
 
-create index reference_subject_descriptors__reference on reference_subject_descriptors(reference);
-create index reference_subject_descriptors__descriptor_qualifier on reference_subject_descriptors(descriptor, qualifier);
-grant select on reference_subject_descriptors to sparql;
+create index reference_subjects__reference on reference_subjects(reference);
+create index reference_subjects__subject on reference_subjects(subject);
+grant select on reference_subjects to sparql;
+
 --------------------------------------------------------------------------------
 
-create index reference_primary_subject_descriptors__reference on reference_primary_subject_descriptors(reference);
-create index reference_primary_subject_descriptors__descriptor_qualifier on reference_primary_subject_descriptors(descriptor, qualifier);
-grant select on reference_primary_subject_descriptors to sparql;
+create index reference_primary_subjects__reference on reference_primary_subjects(reference);
+create index reference_primary_subjects__subject on reference_primary_subjects(subject);
+grant select on reference_primary_subjects to sparql;

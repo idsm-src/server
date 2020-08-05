@@ -445,80 +445,6 @@ public class Updater
     }
 
 
-    protected static void batch(String command, IntHashSet set, SQLIntProcedure procedure) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + set.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                set.forEach(value -> {
-                    try
-                    {
-                        procedure.apply(statement, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static <T> void batch(String command, Set<T> set, SQLProcedure<T> procedure) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + set.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                set.forEach(value -> {
-                    try
-                    {
-                        procedure.apply(statement, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
     protected static IntIntHashMap getIntIntMap(String query, int capacity) throws SQLException
     {
         long time = System.currentTimeMillis();
@@ -782,31 +708,6 @@ public class Updater
     }
 
 
-    protected static <T> IntObjectHashMap<T> getIntObjectMap(String query, SQLFunction<java.sql.ResultSet, T> func,
-            int capacity) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntObjectHashMap<T> map = new IntObjectHashMap<T>(capacity);
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(result.getInt(1), func.apply(result));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
     protected static int getIntValue(String query) throws SQLException
     {
         System.out.print("  " + query);
@@ -993,6 +894,80 @@ public class Updater
                     {
                         statement.setInt(1, value.getOne());
                         statement.setString(2, value.getTwo());
+                        statement.addBatch();
+
+                        if(++count % batchSize == 0)
+                            statement.executeBatch();
+                    }
+                    catch(SQLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            catch(RuntimeException e)
+            {
+                if(e.getCause() instanceof SQLException)
+                    throw(SQLException) e.getCause();
+            }
+
+            if(count % batchSize != 0)
+                statement.executeBatch();
+        }
+    }
+
+
+    protected static void batch(String command, IntHashSet set, SQLIntProcedure procedure) throws SQLException
+    {
+        System.out.println("  " + command + " -> count: " + set.size());
+
+        try(PreparedStatement statement = connection.prepareStatement(command))
+        {
+            count = 0;
+
+            try
+            {
+                set.forEach(value -> {
+                    try
+                    {
+                        procedure.apply(statement, value);
+                        statement.addBatch();
+
+                        if(++count % batchSize == 0)
+                            statement.executeBatch();
+                    }
+                    catch(SQLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            catch(RuntimeException e)
+            {
+                if(e.getCause() instanceof SQLException)
+                    throw(SQLException) e.getCause();
+            }
+
+            if(count % batchSize != 0)
+                statement.executeBatch();
+        }
+    }
+
+
+    protected static <T> void batch(String command, Set<T> set, SQLProcedure<T> procedure) throws SQLException
+    {
+        System.out.println("  " + command + " -> count: " + set.size());
+
+        try(PreparedStatement statement = connection.prepareStatement(command))
+        {
+            count = 0;
+
+            try
+            {
+                set.forEach(value -> {
+                    try
+                    {
+                        procedure.apply(statement, value);
                         statement.addBatch();
 
                         if(++count % batchSize == 0)

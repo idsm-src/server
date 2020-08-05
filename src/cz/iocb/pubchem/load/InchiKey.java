@@ -105,8 +105,8 @@ class InchiKey extends Updater
 
     private static void loadSubjects() throws IOException, SQLException
     {
-        IntIntHashMap newSubjects = new IntIntHashMap(20000);
-        IntIntHashMap oldSubjects = getIntIntMap("select inchikey, subject from inchikey_subjects", 20000);
+        IntStringMap newSubjects = new IntStringMap(20000);
+        IntStringMap oldSubjects = getIntStringMap("select inchikey, subject from inchikey_subjects", 20000);
 
         try(InputStream stream = getStream("RDF/inchikey/pc_inchikey_topic.ttl.gz"))
         {
@@ -120,13 +120,14 @@ class InchiKey extends Updater
 
                     String inchikey = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/");
                     int inchikeyID = usedKeys.getIfAbsent(inchikey, NO_VALUE);
-                    int subjectID = getIntID(object, "http://id.nlm.nih.gov/mesh/M");
 
                     if(inchikeyID != NO_VALUE)
                     {
+                        String subjectID = getStringID(object, "http://id.nlm.nih.gov/mesh/");
+
                         synchronized(newSubjects)
                         {
-                            if(subjectID != oldSubjects.removeKeyIfAbsent(inchikeyID, NO_VALUE))
+                            if(!subjectID.equals(oldSubjects.remove(inchikeyID)))
                                 newSubjects.put(inchikeyID, subjectID);
                         }
                     }

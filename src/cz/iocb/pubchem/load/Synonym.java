@@ -168,11 +168,12 @@ class Synonym extends Updater
 
     private static void loadTopics() throws IOException, SQLException
     {
-        IntPairSet newMeshSubjects = new IntPairSet(1000000);
-        IntPairSet oldMeshSubjects = getIntPairSet("select synonym, subject from synonym_mesh_subjects", 1000000);
-
         IntPairSet newConceptSubjects = new IntPairSet(50000);
         IntPairSet oldConceptSubjects = getIntPairSet("select synonym, concept from synonym_concept_subjects", 50000);
+
+        IntStringPairSet newMeshSubjects = new IntStringPairSet(1000000);
+        IntStringPairSet oldMeshSubjects = getIntStringPairSet("select synonym, subject from synonym_mesh_subjects",
+                1000000);
 
         try(InputStream stream = getStream("RDF/synonym/pc_synonym_topic.ttl.gz"))
         {
@@ -191,15 +192,7 @@ class Synonym extends Updater
 
                     if(md5ID == Integer.MIN_VALUE)
                     {
-                        System.out.println("    ignore md5 synonym " + md5 + " for mesh dcterms:subject");
-                    }
-                    else if(value.startsWith("http://id.nlm.nih.gov/mesh/M"))
-                    {
-                        int mesh = getIntID(object, "http://id.nlm.nih.gov/mesh/M");
-                        IntIntPair pair = PrimitiveTuples.pair(md5ID, mesh);
-
-                        if(!oldMeshSubjects.remove(pair))
-                            newMeshSubjects.add(pair);
+                        System.out.println("    ignore md5 synonym " + md5 + " for dcterms:subject");
                     }
                     else if(value.startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/concept/"))
                     {
@@ -212,17 +205,21 @@ class Synonym extends Updater
                     }
                     else
                     {
-                        throw new IOException();
+                        String subjectID = getStringID(object, "http://id.nlm.nih.gov/mesh/");
+                        IntObjectPair<String> pair = PrimitiveTuples.pair(md5ID, subjectID);
+
+                        if(!oldMeshSubjects.remove(pair))
+                            newMeshSubjects.add(pair);
                     }
                 }
             }.load(stream);
         }
 
-        batch("delete from synonym_mesh_subjects where synonym = ? and subject = ?", oldMeshSubjects);
-        batch("insert into synonym_mesh_subjects(synonym, subject) values (?,?)", newMeshSubjects);
-
         batch("delete from synonym_concept_subjects where synonym = ? and concept = ?", oldConceptSubjects);
         batch("insert into synonym_concept_subjects(synonym, concept) values (?,?)", newConceptSubjects);
+
+        batch("delete from synonym_mesh_subjects where synonym = ? and subject = ?", oldMeshSubjects);
+        batch("insert into synonym_mesh_subjects(synonym, subject) values (?,?)", newMeshSubjects);
     }
 
 

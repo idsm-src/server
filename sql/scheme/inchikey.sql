@@ -17,6 +17,6 @@ create table inchikey_compounds
 create table inchikey_subjects
 (
     inchikey    integer not null,
-    subject     integer not null,
+    subject     varchar not null,
     primary key(inchikey)
 );

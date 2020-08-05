@@ -33,8 +33,8 @@ create table synonym_compounds
 
 create table synonym_mesh_subjects
 (
-    synonym    integer not null,
-    subject    integer not null,
+    synonym     integer not null,
+    subject     varchar not null,
     primary key(synonym, subject)
 );
 

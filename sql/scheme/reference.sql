@@ -11,25 +11,23 @@ create table reference_bases
 
 create table reference_discusses
 (
-    reference    integer not null,
-    statement    integer not null,
+    reference   integer not null,
+    statement   varchar not null,
     primary key(reference, statement)
 );
 
 
-create table reference_subject_descriptors
+create table reference_subjects
 (
-    reference     integer not null,
-    descriptor    integer not null,
-    qualifier     integer not null,
-    primary key(reference, descriptor, qualifier)
+    reference   integer not null,
+    subject     varchar not null,
+    primary key(reference, subject)
 );
 
 
-create table reference_primary_subject_descriptors
+create table reference_primary_subjects
 (
-    reference     integer not null,
-    descriptor    integer not null,
-    qualifier     integer not null,
-    primary key(reference, descriptor, qualifier)
+    reference   integer not null,
+    subject     varchar not null,
+    primary key(reference, subject)
 );

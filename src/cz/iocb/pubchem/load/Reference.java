@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
-import org.eclipse.collections.api.tuple.primitive.IntIntPair;
+import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
 import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import cz.iocb.pubchem.load.Ontology.Identifier;
-import cz.iocb.pubchem.load.common.IntTriplet;
 import cz.iocb.pubchem.load.common.TripleStreamProcessor;
 import cz.iocb.pubchem.load.common.Updater;
 
@@ -152,8 +151,9 @@ class Reference extends Updater
 
     private static void loadChemicalDiseases() throws IOException, SQLException
     {
-        IntPairSet newDiscusses = new IntPairSet(100000000);
-        IntPairSet oldDiscusses = getIntPairSet("select reference, statement from reference_discusses", 100000000);
+        IntStringPairSet newDiscusses = new IntStringPairSet(100000000);
+        IntStringPairSet oldDiscusses = getIntStringPairSet("select reference, statement from reference_discusses",
+                100000000);
 
         processFiles("RDF/reference", "pc_reference2chemical_disease_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
@@ -167,14 +167,8 @@ class Reference extends Updater
                             throw new IOException();
 
                         int referenceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID");
-                        int statementID;
-
-                        if(object.getURI().length() > 27 && object.getURI().charAt(27) == 'M')
-                            statementID = getIntID(object, "http://id.nlm.nih.gov/mesh/M");
-                        else
-                            statementID = -getIntID(object, "http://id.nlm.nih.gov/mesh/C");
-
-                        IntIntPair pair = PrimitiveTuples.pair(referenceID, statementID);
+                        String statementID = getStringID(object, "http://id.nlm.nih.gov/mesh/");
+                        IntObjectPair<String> pair = PrimitiveTuples.pair(referenceID, statementID);
 
                         synchronized(newDiscusses)
                         {
@@ -193,9 +187,9 @@ class Reference extends Updater
 
     private static void loadMeshheadings() throws IOException, SQLException
     {
-        IntTripletSet newTerms = new IntTripletSet(200000000);
-        IntTripletSet oldTerms = getIntTripletSet(
-                "select reference, descriptor, qualifier from reference_subject_descriptors", 200000000);
+        IntStringPairSet newSubjects = new IntStringPairSet(200000000);
+        IntStringPairSet oldSubjects = getIntStringPairSet("select reference, subject from reference_subjects",
+                200000000);
 
         processFiles("RDF/reference", "pc_reference2meshheading_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
@@ -209,36 +203,29 @@ class Reference extends Updater
                             throw new IOException();
 
                         int referenceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID");
+                        String subjectID = getStringID(object, "http://id.nlm.nih.gov/mesh/");
+                        IntObjectPair<String> pair = PrimitiveTuples.pair(referenceID, subjectID);
 
-                        String value = getStringID(object, "http://id.nlm.nih.gov/mesh/D");
-                        int idx = value.indexOf('Q');
-
-                        int descriptor = Integer.parseInt(idx == -1 ? value : value.substring(0, idx));
-                        int qualifier = idx == -1 ? -1 : Integer.parseInt(value.substring(idx + 1));
-
-                        IntTriplet triplet = new IntTriplet(referenceID, descriptor, qualifier);
-
-                        synchronized(newTerms)
+                        synchronized(newSubjects)
                         {
-                            if(!oldTerms.remove(triplet))
-                                newTerms.add(triplet);
+                            if(!oldSubjects.remove(pair))
+                                newSubjects.add(pair);
                         }
                     }
                 }.load(stream);
             }
         });
 
-        batch("delete from reference_subject_descriptors where reference = ? and descriptor = ? and qualifier = ?",
-                oldTerms);
-        batch("insert into reference_subject_descriptors(reference, descriptor, qualifier) values (?,?,?)", newTerms);
+        batch("delete from reference_subjects where reference = ? and subject = ?", oldSubjects);
+        batch("insert into reference_subjects(reference, subject) values (?,?)", newSubjects);
     }
 
 
     private static void loadPrimaryMeshheadings() throws IOException, SQLException
     {
-        IntTripletSet newTerms = new IntTripletSet(200000000);
-        IntTripletSet oldTerms = getIntTripletSet(
-                "select reference, descriptor, qualifier from reference_primary_subject_descriptors", 200000000);
+        IntStringPairSet newSubjects = new IntStringPairSet(200000000);
+        IntStringPairSet oldSubjects = getIntStringPairSet("select reference, subject from reference_primary_subjects",
+                200000000);
 
         processFiles("RDF/reference", "pc_reference2meshheading_primary_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
@@ -252,29 +239,21 @@ class Reference extends Updater
                             throw new IOException();
 
                         int referenceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID");
+                        String subjectID = getStringID(object, "http://id.nlm.nih.gov/mesh/");
+                        IntObjectPair<String> pair = PrimitiveTuples.pair(referenceID, subjectID);
 
-                        String value = getStringID(object, "http://id.nlm.nih.gov/mesh/D");
-                        int idx = value.indexOf('Q');
-
-                        int descriptor = Integer.parseInt(idx == -1 ? value : value.substring(0, idx));
-                        int qualifier = idx == -1 ? -1 : Integer.parseInt(value.substring(idx + 1));
-
-                        IntTriplet triplet = new IntTriplet(referenceID, descriptor, qualifier);
-
-                        synchronized(newTerms)
+                        synchronized(newSubjects)
                         {
-                            if(!oldTerms.remove(triplet))
-                                newTerms.add(triplet);
+                            if(!oldSubjects.remove(pair))
+                                newSubjects.add(pair);
                         }
                     }
                 }.load(stream);
             }
         });
 
-        batch("delete from reference_primary_subject_descriptors where reference = ? and descriptor = ? and qualifier = ?",
-                oldTerms);
-        batch("insert into reference_primary_subject_descriptors(reference, descriptor, qualifier) values (?,?,?)",
-                newTerms);
+        batch("delete from reference_primary_subjects where reference = ? and subject = ?", oldSubjects);
+        batch("insert into reference_primary_subjects(reference, subject) values (?,?)", newSubjects);
     }
 
 

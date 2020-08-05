@@ -100,8 +100,8 @@ alter table protein_complexes add foreign key (protein) references protein_bases
 
 -- reference
 alter table reference_discusses add foreign key (reference) references reference_bases(id) initially deferred;
-alter table reference_subject_descriptors add foreign key (reference) references reference_bases(id) initially deferred;
-alter table reference_primary_subject_descriptors add foreign key (reference) references reference_bases(id) initially deferred;
+alter table reference_subjects add foreign key (reference) references reference_bases(id) initially deferred;
+alter table reference_primary_subjects add foreign key (reference) references reference_bases(id) initially deferred;
 
 
 -- source
