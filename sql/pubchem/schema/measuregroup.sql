@@ -1,4 +1,4 @@
-create table measuregroup_bases
+create table pubchem.measuregroup_bases
 (
     bioassay        integer not null,
     measuregroup    integer not null,
@@ -8,7 +8,7 @@ create table measuregroup_bases
 );
 
 
-create table measuregroup_proteins
+create table pubchem.measuregroup_proteins
 (
     bioassay        integer not null,
     measuregroup    integer not null,
@@ -17,7 +17,7 @@ create table measuregroup_proteins
 );
 
 
-create table measuregroup_genes
+create table pubchem.measuregroup_genes
 (
     bioassay        integer not null,
     measuregroup    integer not null,

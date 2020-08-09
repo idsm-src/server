@@ -1,4 +1,4 @@
-create function endpoint(substance in integer, bioassay in integer, measuregroup in integer) returns varchar language sql as
+create function pubchem.endpoint(substance in integer, bioassay in integer, measuregroup in integer) returns varchar language sql as
 $$
   select case
     when measuregroup = 2147483647  then 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID' || substance || '_AID' || bioassay
@@ -11,21 +11,21 @@ $$
 immutable parallel safe;
 
 
-create function endpoint_inv1(iri in varchar) returns integer language sql as
+create function pubchem.endpoint_inv1(iri in varchar) returns integer language sql as
 $$
   select substring(iri, 49, strpos(iri, '_') - 49)::integer;
 $$
 immutable parallel safe;
 
 
-create function endpoint_inv2(iri in varchar) returns integer language sql as
+create function pubchem.endpoint_inv2(iri in varchar) returns integer language sql as
 $$
   select substring(split_part(iri, '_', 2), 4)::integer;
 $$
 immutable parallel safe;
 
 
-create function endpoint_inv3(iri in varchar) returns integer language sql as
+create function pubchem.endpoint_inv3(iri in varchar) returns integer language sql as
 $$
   select case
     when part = '' then 2147483647

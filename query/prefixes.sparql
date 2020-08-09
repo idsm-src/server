@@ -41,3 +41,6 @@ prefix foaf:            <http://xmlns.com/foaf/0.1/>
 prefix void:            <http://rdfs.org/ns/void#>
 prefix dcterms:         <http://purl.org/dc/terms/>
 prefix ensembl:         <http://rdf.ebi.ac.uk/resource/ensembl/>
+
+prefix meshv:           <http://id.nlm.nih.gov/mesh/vocab#>
+prefix mesh:            <http://id.nlm.nih.gov/mesh/>

@@ -3,6 +3,7 @@ package cz.iocb.load.pubchem;
 import java.io.IOException;
 import java.sql.SQLException;
 import cz.iocb.load.common.Updater;
+import cz.iocb.load.ontology.Ontology;
 
 
 
@@ -14,7 +15,8 @@ public class PubChemRDF extends Updater
         {
             init();
 
-            Ontology.load();
+            //Ontology.load();
+            Ontology.loadCategories();
 
             Concept.load();
             Source.load(); // depends on Concept
@@ -50,7 +52,7 @@ public class PubChemRDF extends Updater
 
             commit();
 
-            ConstraintChecker.check();
+            //ConstraintChecker.check();
         }
         catch(Throwable e)
         {

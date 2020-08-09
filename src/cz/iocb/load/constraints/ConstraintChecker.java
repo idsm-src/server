@@ -1,21 +1,22 @@
-package cz.iocb.load.pubchem;
+package cz.iocb.load.constraints;
 
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import cz.iocb.chemweb.server.sparql.database.Table;
 import cz.iocb.load.common.Updater;
 
 
 
 public class ConstraintChecker extends Updater
 {
-    private static Object buildTableAccess(String table, String[] columns)
+    private static Object buildTableAccess(Table table, String[] columns)
     {
         StringBuilder builder = new StringBuilder();
 
         builder.append("select * from ");
-        builder.append(table);
+        builder.append(table.getCode());
         builder.append(" where ");
 
         for(int c = 0; c < columns.length; c++)
@@ -31,11 +32,13 @@ public class ConstraintChecker extends Updater
     }
 
 
-    private static String buildLabel(String table, String[] columns)
+    private static String buildLabel(Table table, String[] columns)
     {
         StringBuilder builder = new StringBuilder();
 
-        builder.append(table);
+        builder.append(table.getSchema());
+        builder.append(".");
+        builder.append(table.getName());
         builder.append("(");
 
         for(int c = 0; c < columns.length; c++)
@@ -57,15 +60,15 @@ public class ConstraintChecker extends Updater
         try(Statement statement = connection.createStatement())
         {
             try(ResultSet results = statement.executeQuery(
-                    "select parent_table, parent_columns, foreign_table, foreign_columns, __ from schema_foreign_keys"))
+                    "select parent_schema, parent_table, parent_columns, foreign_schema, foreign_table, foreign_columns, __ from constraints.foreign_keys"))
             {
                 while(results.next())
                 {
-                    String leftTable = results.getString(1);
-                    String[] leftColumns = (String[]) results.getArray(2).getArray();
+                    Table leftTable = new Table(results.getString(1), results.getString(2));
+                    String[] leftColumns = (String[]) results.getArray(3).getArray();
 
-                    String rightTable = results.getString(3);
-                    String[] rightColumns = (String[]) results.getArray(4).getArray();
+                    Table rightTable = new Table(results.getString(4), results.getString(5));
+                    String[] rightColumns = (String[]) results.getArray(6).getArray();
 
                     if(leftColumns.length != rightColumns.length)
                         throw new RuntimeException();
@@ -136,15 +139,15 @@ public class ConstraintChecker extends Updater
         try(Statement statement = connection.createStatement())
         {
             try(ResultSet results = statement.executeQuery(
-                    "select left_table, left_columns, right_table, right_columns, __ from schema_unjoinable_columns"))
+                    "select left_schema, left_table, left_columns, right_schema, right_table, right_columns, __ from constraints.unjoinable_columns"))
             {
                 while(results.next())
                 {
-                    String leftTable = results.getString(1);
-                    String[] leftColumns = (String[]) results.getArray(2).getArray();
+                    Table leftTable = new Table(results.getString(1), results.getString(2));
+                    String[] leftColumns = (String[]) results.getArray(3).getArray();
 
-                    String rightTable = results.getString(3);
-                    String[] rightColumns = (String[]) results.getArray(4).getArray();
+                    Table rightTable = new Table(results.getString(4), results.getString(5));
+                    String[] rightColumns = (String[]) results.getArray(6).getArray();
 
                     if(leftColumns.length != rightColumns.length)
                         throw new RuntimeException();
@@ -199,5 +202,12 @@ public class ConstraintChecker extends Updater
     {
         checkUnjoinableColumns();
         checkAditionalForeignKeys();
+    }
+
+
+    public static void main(String[] args) throws SQLException, IOException
+    {
+        init();
+        check();
     }
 }

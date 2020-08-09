@@ -26,17 +26,17 @@ class Substance extends Updater
     {
         usedSubstances = new IntHashSet(256000000);
         newSubstances = new IntHashSet(256000000);
-        oldSubstances = getIntSet("select id from substance_bases", 256000000);
+        oldSubstances = getIntSet("select id from pubchem.substance_bases", 256000000);
     }
 
 
     private static void loadCompounds() throws IOException, SQLException
     {
         IntIntHashMap newCompounds = new IntIntHashMap(256000000);
-        IntIntHashMap oldCompounds = getIntIntMap("select id, compound from substance_bases where compound is not null",
-                256000000);
+        IntIntHashMap oldCompounds = getIntIntMap(
+                "select id, compound from pubchem.substance_bases where compound is not null", 256000000);
 
-        processFiles("RDF/substance", "pc_substance2compound_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/substance", "pc_substance2compound_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -63,8 +63,8 @@ class Substance extends Updater
             }
         });
 
-        batch("update substance_bases set compound = null where id = ?", oldCompounds.keySet());
-        batch("insert into substance_bases(id, compound) values (?,?) "
+        batch("update pubchem.substance_bases set compound = null where id = ?", oldCompounds.keySet());
+        batch("insert into pubchem.substance_bases(id, compound) values (?,?) "
                 + "on conflict (id) do update set compound=EXCLUDED.compound", newCompounds);
     }
 
@@ -73,9 +73,9 @@ class Substance extends Updater
     {
         IntStringMap newAvailabilities = new IntStringMap(256000000);
         IntStringMap oldAvailabilities = getIntStringMap(
-                "select id, available::varchar from substance_bases where available is not null", 256000000);
+                "select id, available::varchar from pubchem.substance_bases where available is not null", 256000000);
 
-        processFiles("RDF/substance", "pc_substance_available_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/substance", "pc_substance_available_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -101,8 +101,8 @@ class Substance extends Updater
             }
         });
 
-        batch("update substance_bases set available = null where id = ?", oldAvailabilities.keySet());
-        batch("insert into substance_bases(id, available) values (?,cast(? as date)) "
+        batch("update pubchem.substance_bases set available = null where id = ?", oldAvailabilities.keySet());
+        batch("insert into pubchem.substance_bases(id, available) values (?,cast(? as date)) "
                 + "on conflict (id) do update set available=EXCLUDED.available", newAvailabilities);
     }
 
@@ -111,9 +111,9 @@ class Substance extends Updater
     {
         IntStringMap newModifiedDates = new IntStringMap(256000000);
         IntStringMap oldModifiedDates = getIntStringMap(
-                "select id, modified::varchar from substance_bases where modified is not null", 256000000);
+                "select id, modified::varchar from pubchem.substance_bases where modified is not null", 256000000);
 
-        processFiles("RDF/substance", "pc_substance_modified_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/substance", "pc_substance_modified_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -139,8 +139,8 @@ class Substance extends Updater
             }
         });
 
-        batch("update substance_bases set modified = null where id = ?", oldModifiedDates.keySet());
-        batch("insert into substance_bases(id, modified) values (?,cast(? as date)) "
+        batch("update pubchem.substance_bases set modified = null where id = ?", oldModifiedDates.keySet());
+        batch("insert into pubchem.substance_bases(id, modified) values (?,cast(? as date)) "
                 + "on conflict (id) do update set modified=EXCLUDED.modified", newModifiedDates);
     }
 
@@ -148,10 +148,10 @@ class Substance extends Updater
     private static void loadSources() throws IOException, SQLException
     {
         IntIntHashMap newSources = new IntIntHashMap(256000000);
-        IntIntHashMap oldSources = getIntIntMap("select id, source from substance_bases where source is not null",
-                256000000);
+        IntIntHashMap oldSources = getIntIntMap(
+                "select id, source from pubchem.substance_bases where source is not null", 256000000);
 
-        processFiles("RDF/substance", "pc_substance_source_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/substance", "pc_substance_source_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -177,8 +177,8 @@ class Substance extends Updater
             }
         });
 
-        batch("update substance_bases set source = null where id = ?", oldSources.keySet());
-        batch("insert into substance_bases(id, source) values (?,?) "
+        batch("update pubchem.substance_bases set source = null where id = ?", oldSources.keySet());
+        batch("insert into pubchem.substance_bases(id, source) values (?,?) "
                 + "on conflict (id) do update set source=EXCLUDED.source", newSources);
     }
 
@@ -186,9 +186,9 @@ class Substance extends Updater
     private static void loadMatches() throws IOException, SQLException
     {
         IntPairSet newMatches = new IntPairSet(10000000);
-        IntPairSet oldMatches = getIntPairSet("select substance, match from substance_matches", 10000000);
+        IntPairSet oldMatches = getIntPairSet("select substance, match from pubchem.substance_matches", 10000000);
 
-        processFiles("RDF/substance", "pc_substance_match\\.ttl[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/substance", "pc_substance_match\\.ttl[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -226,17 +226,17 @@ class Substance extends Updater
             }
         });
 
-        batch("delete from substance_matches where substance = ? and match = ?", oldMatches);
-        batch("insert into substance_matches(substance, match) values (?,?)", newMatches);
+        batch("delete from pubchem.substance_matches where substance = ? and match = ?", oldMatches);
+        batch("insert into pubchem.substance_matches(substance, match) values (?,?)", newMatches);
     }
 
 
     private static void loadTypes() throws IOException, SQLException
     {
         IntPairSet newTypes = new IntPairSet(10000000);
-        IntPairSet oldTypes = getIntPairSet("select substance, chebi from substance_types", 10000000);
+        IntPairSet oldTypes = getIntPairSet("select substance, chebi from pubchem.substance_types", 10000000);
 
-        try(InputStream stream = getStream("RDF/substance/pc_substance_type.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/substance/pc_substance_type.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -258,17 +258,18 @@ class Substance extends Updater
             }.load(stream);
         }
 
-        batch("delete from substance_types where substance = ? and chebi = ?", oldTypes);
-        batch("insert into substance_types(substance, chebi) values (?,?)", newTypes);
+        batch("delete from pubchem.substance_types where substance = ? and chebi = ?", oldTypes);
+        batch("insert into pubchem.substance_types(substance, chebi) values (?,?)", newTypes);
     }
 
 
     private static void loadPdbLinks() throws IOException, SQLException
     {
         IntStringPairSet newLinks = new IntStringPairSet(200000);
-        IntStringPairSet oldLinks = getIntStringPairSet("select substance, pdblink from substance_pdblinks", 200000);
+        IntStringPairSet oldLinks = getIntStringPairSet("select substance, pdblink from pubchem.substance_pdblinks",
+                200000);
 
-        try(InputStream stream = getStream("RDF/substance/pc_substance2pdb.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/substance/pc_substance2pdb.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -293,17 +294,18 @@ class Substance extends Updater
             }.load(stream);
         }
 
-        batch("delete from substance_pdblinks where substance = ? and pdblink = ?", oldLinks);
-        batch("insert into substance_pdblinks(substance, pdblink) values (?,?)", newLinks);
+        batch("delete from pubchem.substance_pdblinks where substance = ? and pdblink = ?", oldLinks);
+        batch("insert into pubchem.substance_pdblinks(substance, pdblink) values (?,?)", newLinks);
     }
 
 
     private static void loadReferences() throws IOException, SQLException
     {
         IntPairSet newReferences = new IntPairSet(10000000);
-        IntPairSet oldReferences = getIntPairSet("select substance, reference from substance_references", 10000000);
+        IntPairSet oldReferences = getIntPairSet("select substance, reference from pubchem.substance_references",
+                10000000);
 
-        try(InputStream stream = getStream("RDF/substance/pc_substance2reference.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/substance/pc_substance2reference.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -325,17 +327,17 @@ class Substance extends Updater
             }.load(stream);
         }
 
-        batch("delete from substance_references where substance = ? and reference = ?", oldReferences);
-        batch("insert into substance_references(substance, reference) values (?,?)", newReferences);
+        batch("delete from pubchem.substance_references where substance = ? and reference = ?", oldReferences);
+        batch("insert into pubchem.substance_references(substance, reference) values (?,?)", newReferences);
     }
 
 
     private static void loadSynonyms() throws IOException, SQLException
     {
         IntPairSet newSynonyms = new IntPairSet(256000000);
-        IntPairSet oldSynonyms = getIntPairSet("select substance, synonym from substance_synonyms", 256000000);
+        IntPairSet oldSynonyms = getIntPairSet("select substance, synonym from pubchem.substance_synonyms", 256000000);
 
-        processFiles("RDF/substance", "pc_substance2descriptor_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/substance", "pc_substance2descriptor_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -379,8 +381,8 @@ class Substance extends Updater
             }
         });
 
-        batch("delete from substance_synonyms where substance = ? and synonym = ?", oldSynonyms);
-        batch("insert into substance_synonyms(substance, synonym) values (?,?)", newSynonyms);
+        batch("delete from pubchem.substance_synonyms where substance = ? and synonym = ?", oldSynonyms);
+        batch("insert into pubchem.substance_synonyms(substance, synonym) values (?,?)", newSynonyms);
     }
 
 
@@ -406,8 +408,8 @@ class Substance extends Updater
 
     static void finish() throws SQLException
     {
-        batch("delete from substance_bases where id = ?", oldSubstances);
-        batch("insert into substance_bases(id) values(?) on conflict do nothing", newSubstances);
+        batch("delete from pubchem.substance_bases where id = ?", oldSubstances);
+        batch("insert into pubchem.substance_bases(id) values(?) on conflict do nothing", newSubstances);
 
         usedSubstances = null;
         newSubstances = null;

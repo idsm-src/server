@@ -21,10 +21,10 @@ class CompoundDescriptor extends Updater
     {
         IntIntHashMap newValues = new IntIntHashMap(200000000);
         IntIntHashMap oldValues = getIntIntMap(
-                "select compound, " + field + " from descriptor_compound_bases where " + field + " is not null",
+                "select compound, " + field + " from pubchem.descriptor_compound_bases where " + field + " is not null",
                 200000000);
 
-        processFiles("RDF/descriptor/compound", name, file -> {
+        processFiles("pubchem/RDF/descriptor/compound", name, file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -52,8 +52,9 @@ class CompoundDescriptor extends Updater
             }
         });
 
-        batch("update descriptor_compound_bases set " + field + " = null where compound = ?", oldValues.keySet());
-        batch("insert into descriptor_compound_bases (compound, " + field + ") values (?,?) "
+        batch("update pubchem.descriptor_compound_bases set " + field + " = null where compound = ?",
+                oldValues.keySet());
+        batch("insert into pubchem.descriptor_compound_bases (compound, " + field + ") values (?,?) "
                 + "on conflict (compound) do update set " + field + "=EXCLUDED." + field, newValues);
     }
 
@@ -62,10 +63,10 @@ class CompoundDescriptor extends Updater
     {
         IntFloatHashMap newValues = new IntFloatHashMap(200000000);
         IntFloatHashMap oldValues = getIntFloatMap(
-                "select compound, " + field + " from descriptor_compound_bases where " + field + " is not null",
+                "select compound, " + field + " from pubchem.descriptor_compound_bases where " + field + " is not null",
                 200000000);
 
-        processFiles("RDF/descriptor/compound", name, file -> {
+        processFiles("pubchem/RDF/descriptor/compound", name, file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -93,8 +94,9 @@ class CompoundDescriptor extends Updater
             }
         });
 
-        batch("update descriptor_compound_bases set " + field + " = null where compound = ?", oldValues.keySet());
-        batch("insert into descriptor_compound_bases (compound, " + field + ") values (?,?) "
+        batch("update pubchem.descriptor_compound_bases set " + field + " = null where compound = ?",
+                oldValues.keySet());
+        batch("insert into pubchem.descriptor_compound_bases (compound, " + field + ") values (?,?) "
                 + "on conflict (compound) do update set " + field + "=EXCLUDED." + field, newValues);
     }
 
@@ -103,13 +105,14 @@ class CompoundDescriptor extends Updater
     {
         IntFloatHashMap newAAValues = new IntFloatHashMap(200000000);
         IntFloatHashMap oldAAValues = getIntFloatMap(
-                "select compound, xlogp3_aa from descriptor_compound_bases where xlogp3_aa is not null", 200000000);
+                "select compound, xlogp3_aa from pubchem.descriptor_compound_bases where xlogp3_aa is not null",
+                200000000);
 
         IntFloatHashMap newValues = new IntFloatHashMap(4000000);
         IntFloatHashMap oldValues = getIntFloatMap(
-                "select compound, xlogp3 from descriptor_compound_bases where xlogp3 is not null", 4000000);
+                "select compound, xlogp3 from pubchem.descriptor_compound_bases where xlogp3 is not null", 4000000);
 
-        processFiles("RDF/descriptor/compound", name, file -> {
+        processFiles("pubchem/RDF/descriptor/compound", name, file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -156,12 +159,12 @@ class CompoundDescriptor extends Updater
             }
         });
 
-        batch("update descriptor_compound_bases set xlogp3_aa = null where compound = ?", oldAAValues.keySet());
-        batch("insert into descriptor_compound_bases (compound, xlogp3_aa) values (?,?) "
+        batch("update pubchem.descriptor_compound_bases set xlogp3_aa = null where compound = ?", oldAAValues.keySet());
+        batch("insert into pubchem.descriptor_compound_bases (compound, xlogp3_aa) values (?,?) "
                 + "on conflict (compound) do update set xlogp3_aa=EXCLUDED.xlogp3_aa", newAAValues);
 
-        batch("update descriptor_compound_bases set xlogp3 = null where compound = ?", oldValues.keySet());
-        batch("insert into descriptor_compound_bases (compound, xlogp3) values (?,?) "
+        batch("update pubchem.descriptor_compound_bases set xlogp3 = null where compound = ?", oldValues.keySet());
+        batch("insert into pubchem.descriptor_compound_bases (compound, xlogp3) values (?,?) "
                 + "on conflict (compound) do update set xlogp3=EXCLUDED.xlogp3", newValues);
     }
 
@@ -171,9 +174,9 @@ class CompoundDescriptor extends Updater
     {
         IntStringMap newValues = new IntStringMap(200000000);
         IntStringMap oldValues = getIntStringMap(
-                "select compound, " + field + " from " + table + " where " + field + " is not null", 200000000);
+                "select compound, " + field + " from pubchem." + table + " where " + field + " is not null", 200000000);
 
-        processFiles("RDF/descriptor/compound", name, file -> {
+        processFiles("pubchem/RDF/descriptor/compound", name, file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -199,15 +202,15 @@ class CompoundDescriptor extends Updater
             }
         });
 
-        batch("delete from " + table + " where compound = ?", oldValues.keySet());
-        batch("insert into " + table + " (compound, " + field + ") values (?,?) "
+        batch("delete from pubchem." + table + " where compound = ?", oldValues.keySet());
+        batch("insert into pubchem." + table + " (compound, " + field + ") values (?,?) "
                 + "on conflict (compound) do update set " + field + "=EXCLUDED." + field, newValues);
     }
 
 
     private static void loadUnitField(String name, String suffix, String unit) throws IOException, SQLException
     {
-        processFiles("RDF/descriptor/compound", name, file -> {
+        processFiles("pubchem/RDF/descriptor/compound", name, file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -228,7 +231,7 @@ class CompoundDescriptor extends Updater
     {
         System.out.println("load compound descriptors ...");
 
-        oldDescriptors = getIntSet("select compound from descriptor_compound_bases", 200000000);
+        oldDescriptors = getIntSet("select compound from pubchem.descriptor_compound_bases", 200000000);
 
         loadIntegerField("pc_descr_CovalentUnitCount_value_[0-9]+\\.ttl\\.gz", "_Covalent_Unit_Count",
                 "covalent_unit_count");
@@ -263,7 +266,7 @@ class CompoundDescriptor extends Updater
 
         loadXLogP3Field("pc_descr_XLogP3_value_[0-9]+\\.ttl\\.gz");
 
-        batch("delete from descriptor_compound_bases where compound = ?", oldDescriptors);
+        batch("delete from pubchem.descriptor_compound_bases where compound = ?", oldDescriptors);
         oldDescriptors = null;
 
         loadStringField("pc_descr_MolecularFormula_value_[0-9]+\\.ttl\\.gz", "_Molecular_Formula",

@@ -1,4 +1,4 @@
-create table reference_bases
+create table pubchem.reference_bases
 (
     id          integer not null,
     type_id     smallint not null,
@@ -9,7 +9,7 @@ create table reference_bases
 );
 
 
-create table reference_discusses
+create table pubchem.reference_discusses
 (
     reference   integer not null,
     statement   varchar not null,
@@ -17,7 +17,7 @@ create table reference_discusses
 );
 
 
-create table reference_subjects
+create table pubchem.reference_subjects
 (
     reference   integer not null,
     subject     varchar not null,
@@ -25,7 +25,7 @@ create table reference_subjects
 );
 
 
-create table reference_primary_subjects
+create table pubchem.reference_primary_subjects
 (
     reference   integer not null,
     subject     varchar not null,

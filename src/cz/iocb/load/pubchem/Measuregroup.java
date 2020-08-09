@@ -33,13 +33,13 @@ class Measuregroup extends Updater
     {
         usedMeasuregroups = new IntPairSet(2000000);
         newMeasuregroups = new IntPairSet(2000000);
-        oldMeasuregroups = getIntPairSet("select bioassay, measuregroup from measuregroup_bases", 2000000);
+        oldMeasuregroups = getIntPairSet("select bioassay, measuregroup from pubchem.measuregroup_bases", 2000000);
     }
 
 
     private static void loadTypes() throws IOException, SQLException
     {
-        try(InputStream stream = getStream("RDF/measuregroup/pc_measuregroup_type.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/measuregroup/pc_measuregroup_type.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -63,9 +63,10 @@ class Measuregroup extends Updater
     {
         IntPairIntMap newSources = new IntPairIntMap(2000000);
         IntPairIntMap oldSources = getIntPairIntMap(
-                "select bioassay, measuregroup, source from measuregroup_bases where source is not null", 2000000);
+                "select bioassay, measuregroup, source from pubchem.measuregroup_bases where source is not null",
+                2000000);
 
-        try(InputStream stream = getStream("RDF/measuregroup/pc_measuregroup_source.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/measuregroup/pc_measuregroup_source.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -84,13 +85,13 @@ class Measuregroup extends Updater
             }.load(stream);
         }
 
-        batch("update measuregroup_bases set source = null where bioassay = ? and measuregroup = ?",
+        batch("update pubchem.measuregroup_bases set source = null where bioassay = ? and measuregroup = ?",
                 oldSources.keySet(), (PreparedStatement statement, IntIntPair measuregroup) -> {
                     statement.setInt(1, measuregroup.getOne());
                     statement.setInt(2, measuregroup.getTwo());
                 });
 
-        batch("insert into measuregroup_bases(bioassay, measuregroup, source) values (?,?,?) "
+        batch("insert into pubchem.measuregroup_bases(bioassay, measuregroup, source) values (?,?,?) "
                 + "on conflict (bioassay, measuregroup) do update set source=EXCLUDED.source", newSources);
     }
 
@@ -99,9 +100,10 @@ class Measuregroup extends Updater
     {
         IntPairStringMap newTitles = new IntPairStringMap(2000000);
         IntPairStringMap oldTitles = getIntPairStringMap(
-                "select bioassay, measuregroup, title from measuregroup_bases where title is not null", 2000000);
+                "select bioassay, measuregroup, title from pubchem.measuregroup_bases where title is not null",
+                2000000);
 
-        try(InputStream stream = getStream("RDF/measuregroup/pc_measuregroup_title.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/measuregroup/pc_measuregroup_title.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -120,13 +122,13 @@ class Measuregroup extends Updater
             }.load(stream);
         }
 
-        batch("update measuregroup_bases set title = null where bioassay = ? and measuregroup = ?", oldTitles.keySet(),
-                (PreparedStatement statement, IntIntPair measuregroup) -> {
+        batch("update pubchem.measuregroup_bases set title = null where bioassay = ? and measuregroup = ?",
+                oldTitles.keySet(), (PreparedStatement statement, IntIntPair measuregroup) -> {
                     statement.setInt(1, measuregroup.getOne());
                     statement.setInt(2, measuregroup.getTwo());
                 });
 
-        batch("insert into measuregroup_bases(bioassay, measuregroup, title) values (?,?,?) "
+        batch("insert into pubchem.measuregroup_bases(bioassay, measuregroup, title) values (?,?,?) "
                 + "on conflict (bioassay, measuregroup) do update set title=EXCLUDED.title", newTitles);
     }
 
@@ -135,13 +137,13 @@ class Measuregroup extends Updater
     {
         IntTripletSet newProteins = new IntTripletSet(2000000);
         IntTripletSet oldProteins = getIntTripletSet(
-                "select bioassay, measuregroup, protein from measuregroup_proteins", 2000000);
+                "select bioassay, measuregroup, protein from pubchem.measuregroup_proteins", 2000000);
 
         IntTripletSet newGenes = new IntTripletSet(1000000);
-        IntTripletSet oldGenes = getIntTripletSet("select bioassay, measuregroup, gene from measuregroup_genes",
+        IntTripletSet oldGenes = getIntTripletSet("select bioassay, measuregroup, gene from pubchem.measuregroup_genes",
                 1000000);
 
-        try(InputStream stream = getStream("RDF/measuregroup/pc_measuregroup2protein.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/measuregroup/pc_measuregroup2protein.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -173,12 +175,14 @@ class Measuregroup extends Updater
                 }
             }.load(stream);
 
-            batch("delete from measuregroup_proteins where bioassay = ? and measuregroup = ? and protein = ?",
+            batch("delete from pubchem.measuregroup_proteins where bioassay = ? and measuregroup = ? and protein = ?",
                     oldProteins);
-            batch("insert into measuregroup_proteins(bioassay, measuregroup, protein) values (?,?,?)", newProteins);
+            batch("insert into pubchem.measuregroup_proteins(bioassay, measuregroup, protein) values (?,?,?)",
+                    newProteins);
 
-            batch("delete from measuregroup_genes where bioassay = ? and measuregroup = ? and gene = ?", oldGenes);
-            batch("insert into measuregroup_genes(bioassay, measuregroup, gene) values (?,?,?)", newGenes);
+            batch("delete from pubchem.measuregroup_genes where bioassay = ? and measuregroup = ? and gene = ?",
+                    oldGenes);
+            batch("insert into pubchem.measuregroup_genes(bioassay, measuregroup, gene) values (?,?,?)", newGenes);
         }
     }
 
@@ -199,8 +203,8 @@ class Measuregroup extends Updater
 
     static void finish() throws SQLException
     {
-        batch("delete from measuregroup_bases where bioassay = ? and measuregroup = ?", oldMeasuregroups);
-        batch("insert into measuregroup_bases(bioassay, measuregroup) values (?,?) on conflict do nothing",
+        batch("delete from pubchem.measuregroup_bases where bioassay = ? and measuregroup = ?", oldMeasuregroups);
+        batch("insert into pubchem.measuregroup_bases(bioassay, measuregroup) values (?,?) on conflict do nothing",
                 newMeasuregroups);
 
         usedMeasuregroups = null;

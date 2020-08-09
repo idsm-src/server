@@ -1,4 +1,4 @@
-create function measuregroup(bioassay in integer, measuregroup in integer) returns varchar language sql as
+create function pubchem.measuregroup(bioassay in integer, measuregroup in integer) returns varchar language sql as
 $$
   select case
     when measuregroup = 2147483647  then 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID' || bioassay
@@ -11,14 +11,14 @@ $$
 immutable parallel safe;
 
 
-create function measuregroup_inv1(iri in varchar) returns integer language sql as
+create function pubchem.measuregroup_inv1(iri in varchar) returns integer language sql as
 $$
   select substring(split_part(iri, '_', 1), 53)::integer;
 $$
 immutable parallel safe;
 
 
-create function measuregroup_inv2(iri in varchar) returns integer language sql as
+create function pubchem.measuregroup_inv2(iri in varchar) returns integer language sql as
 $$
   select case
     when part = '' then 2147483647

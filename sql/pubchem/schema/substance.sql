@@ -1,4 +1,4 @@
-create table substance_bases
+create table pubchem.substance_bases
 (
     id           integer not null,
     source       smallint,
@@ -9,7 +9,7 @@ create table substance_bases
 );
 
 
-create table substance_types
+create table pubchem.substance_types
 (
     substance    integer not null,
     chebi        integer not null,
@@ -17,7 +17,7 @@ create table substance_types
 );
 
 
-create table substance_matches
+create table pubchem.substance_matches
 (
     substance    integer not null,
     match        integer not null,
@@ -25,7 +25,7 @@ create table substance_matches
 );
 
 
-create table substance_references
+create table pubchem.substance_references
 (
     substance    integer not null,
     reference    integer not null,
@@ -33,7 +33,7 @@ create table substance_references
 );
 
 
-create table substance_pdblinks
+create table pubchem.substance_pdblinks
 (
     substance    integer not null,
     pdblink      char(4) not null,
@@ -41,7 +41,7 @@ create table substance_pdblinks
 );
 
 
-create table substance_synonyms
+create table pubchem.substance_synonyms
 (
     substance    integer not null,
     synonym      integer not null,

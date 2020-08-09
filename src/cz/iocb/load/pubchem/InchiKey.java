@@ -20,10 +20,10 @@ class InchiKey extends Updater
     {
         usedKeys = new StringIntMap(200000000);
         StringIntMap newKeys = new StringIntMap(200000000);
-        StringIntMap oldKeys = getStringIntMap("select inchikey, id from inchikey_bases", 200000000);
-        nextkeyID = getIntValue("select coalesce(max(id)+1,0) from inchikey_bases");
+        StringIntMap oldKeys = getStringIntMap("select inchikey, id from pubchem.inchikey_bases", 200000000);
+        nextkeyID = getIntValue("select coalesce(max(id)+1,0) from pubchem.inchikey_bases");
 
-        processFiles("RDF/inchikey", "pc_inchikey_value_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/inchikey", "pc_inchikey_value_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -53,17 +53,18 @@ class InchiKey extends Updater
             }
         });
 
-        batch("delete from inchikey_bases where id = ?", oldKeys.values());
-        batch("insert into inchikey_bases(inchikey, id) values (?,?)", newKeys);
+        batch("delete from pubchem.inchikey_bases where id = ?", oldKeys.values());
+        batch("insert into pubchem.inchikey_bases(inchikey, id) values (?,?)", newKeys);
     }
 
 
     private static void loadCompounds() throws IOException, SQLException
     {
         IntIntHashMap newCompounds = new IntIntHashMap(200000000);
-        IntIntHashMap oldCompounds = getIntIntMap("select compound, inchikey from inchikey_compounds", 200000000);
+        IntIntHashMap oldCompounds = getIntIntMap("select compound, inchikey from pubchem.inchikey_compounds",
+                200000000);
 
-        processFiles("RDF/inchikey", "pc_inchikey2compound_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/inchikey", "pc_inchikey2compound_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -97,8 +98,8 @@ class InchiKey extends Updater
             }
         });
 
-        batch("delete from inchikey_compounds where compound = ?", oldCompounds.keySet());
-        batch("insert into inchikey_compounds(compound, inchikey) values (?,?) "
+        batch("delete from pubchem.inchikey_compounds where compound = ?", oldCompounds.keySet());
+        batch("insert into pubchem.inchikey_compounds(compound, inchikey) values (?,?) "
                 + "on conflict (compound) do update set inchikey=EXCLUDED.inchikey", newCompounds);
     }
 
@@ -106,9 +107,9 @@ class InchiKey extends Updater
     private static void loadSubjects() throws IOException, SQLException
     {
         IntStringMap newSubjects = new IntStringMap(20000);
-        IntStringMap oldSubjects = getIntStringMap("select inchikey, subject from inchikey_subjects", 20000);
+        IntStringMap oldSubjects = getIntStringMap("select inchikey, subject from pubchem.inchikey_subjects", 20000);
 
-        try(InputStream stream = getStream("RDF/inchikey/pc_inchikey_topic.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/inchikey/pc_inchikey_topic.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -139,8 +140,8 @@ class InchiKey extends Updater
             }.load(stream);
         }
 
-        batch("delete from inchikey_subjects where inchikey = ?", oldSubjects.keySet());
-        batch("insert into inchikey_subjects(inchikey, subject) values (?,?) "
+        batch("delete from pubchem.inchikey_subjects where inchikey = ?", oldSubjects.keySet());
+        batch("insert into pubchem.inchikey_subjects(inchikey, subject) values (?,?) "
                 + "on conflict (inchikey) do update set subject=EXCLUDED.subject", newSubjects);
     }
 

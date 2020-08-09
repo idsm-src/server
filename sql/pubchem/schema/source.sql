@@ -1,4 +1,4 @@
-create table source_bases
+create table pubchem.source_bases
 (
     id       smallint,
     iri      varchar not null,
@@ -8,7 +8,7 @@ create table source_bases
 );
 
 
-create table source_subjects
+create table pubchem.source_subjects
 (
     source     smallint not null,
     subject    smallint not null,
@@ -16,7 +16,7 @@ create table source_subjects
 );
 
 
-create table source_alternatives
+create table pubchem.source_alternatives
 (
     __             smallint,
     source         smallint not null,

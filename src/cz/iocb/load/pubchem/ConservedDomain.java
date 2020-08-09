@@ -16,7 +16,7 @@ class ConservedDomain extends Updater
     private static void loadBases(Model model) throws IOException, SQLException
     {
         IntHashSet newDomains = new IntHashSet(10000);
-        IntHashSet oldDomains = getIntSet("select id from conserveddomain_bases", 10000);
+        IntHashSet oldDomains = getIntSet("select id from pubchem.conserveddomain_bases", 10000);
 
         new QueryResultProcessor(patternQuery("?domain rdf:type obo:SO_0000417"))
         {
@@ -30,16 +30,16 @@ class ConservedDomain extends Updater
             }
         }.load(model);
 
-        batch("delete from conserveddomain_bases where id = ?", oldDomains);
-        batch("insert into conserveddomain_bases(id) values (?)", newDomains);
+        batch("delete from pubchem.conserveddomain_bases where id = ?", oldDomains);
+        batch("insert into pubchem.conserveddomain_bases(id) values (?)", newDomains);
     }
 
 
     private static void loadTitles(Model model) throws IOException, SQLException
     {
         IntStringMap newTitles = new IntStringMap(10000);
-        IntStringMap oldTitles = getIntStringMap("select id, title from conserveddomain_bases where title is not null",
-                10000);
+        IntStringMap oldTitles = getIntStringMap(
+                "select id, title from pubchem.conserveddomain_bases where title is not null", 10000);
 
         new QueryResultProcessor(patternQuery("?domain dcterms:title ?title"))
         {
@@ -54,8 +54,8 @@ class ConservedDomain extends Updater
             }
         }.load(model);
 
-        batch("update conserveddomain_bases set title = null where id = ?", oldTitles.keySet());
-        batch("update conserveddomain_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
+        batch("update pubchem.conserveddomain_bases set title = null where id = ?", oldTitles.keySet());
+        batch("update pubchem.conserveddomain_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
     }
 
 
@@ -63,7 +63,7 @@ class ConservedDomain extends Updater
     {
         IntStringMap newAbstracts = new IntStringMap(10000);
         IntStringMap oldAbstracts = getIntStringMap(
-                "select id, abstract from conserveddomain_bases where abstract is not null", 10000);
+                "select id, abstract from pubchem.conserveddomain_bases where abstract is not null", 10000);
 
         new QueryResultProcessor(patternQuery("?domain dcterms:abstract ?abstract"))
         {
@@ -78,15 +78,16 @@ class ConservedDomain extends Updater
             }
         }.load(model);
 
-        batch("update conserveddomain_bases set abstract = null where id = ?", oldAbstracts.keySet());
-        batch("update conserveddomain_bases set abstract = ? where id = ?", newAbstracts, Direction.REVERSE);
+        batch("update pubchem.conserveddomain_bases set abstract = null where id = ?", oldAbstracts.keySet());
+        batch("update pubchem.conserveddomain_bases set abstract = ? where id = ?", newAbstracts, Direction.REVERSE);
     }
 
 
     private static void loadReferences(Model model) throws IOException, SQLException
     {
         IntPairSet newReferences = new IntPairSet(10000000);
-        IntPairSet oldReferences = getIntPairSet("select domain, reference from conserveddomain_references", 10000000);
+        IntPairSet oldReferences = getIntPairSet("select domain, reference from pubchem.conserveddomain_references",
+                10000000);
 
         new QueryResultProcessor(patternQuery("?domain cito:isDiscussedBy ?reference"))
         {
@@ -103,8 +104,8 @@ class ConservedDomain extends Updater
             }
         }.load(model);
 
-        batch("delete from conserveddomain_references where domain = ? and reference = ?", oldReferences);
-        batch("insert into conserveddomain_references(domain, reference) values (?,?)", newReferences);
+        batch("delete from pubchem.conserveddomain_references where domain = ? and reference = ?", oldReferences);
+        batch("insert into pubchem.conserveddomain_references(domain, reference) values (?,?)", newReferences);
     }
 
 
@@ -112,8 +113,8 @@ class ConservedDomain extends Updater
     {
         System.out.println("load conserved domains ...");
 
-        Model model = getModel("RDF/conserveddomain/pc_conserveddomain.ttl.gz");
-        check(model, "conserveddomain/check.sparql");
+        Model model = getModel("pubchem/RDF/conserveddomain/pc_conserveddomain.ttl.gz");
+        check(model, "pubchem/conserveddomain/check.sparql");
 
         loadBases(model);
         loadTitles(model);

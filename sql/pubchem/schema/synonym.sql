@@ -1,4 +1,4 @@
-create table synonym_bases
+create table pubchem.synonym_bases
 (
     id       integer,
     md5      char(32) unique not null,
@@ -6,7 +6,7 @@ create table synonym_bases
 );
 
 
-create table synonym_values
+create table pubchem.synonym_values
 (
     __         integer,
     synonym    integer not null,
@@ -15,7 +15,7 @@ create table synonym_values
 );
 
 
-create table synonym_types
+create table pubchem.synonym_types
 (
     synonym    integer not null,
     type_id    integer not null,
@@ -23,7 +23,7 @@ create table synonym_types
 );
 
 
-create table synonym_compounds
+create table pubchem.synonym_compounds
 (
     synonym     integer not null,
     compound    integer not null,
@@ -31,7 +31,7 @@ create table synonym_compounds
 );
 
 
-create table synonym_mesh_subjects
+create table pubchem.synonym_mesh_subjects
 (
     synonym     integer not null,
     subject     varchar not null,
@@ -39,7 +39,7 @@ create table synonym_mesh_subjects
 );
 
 
-create table synonym_concept_subjects
+create table pubchem.synonym_concept_subjects
 (
     synonym    integer not null,
     concept    smallint not null,

@@ -1,4 +1,4 @@
-create table gene_bases
+create table pubchem.gene_bases
 (
     id           integer not null,
     title        varchar,
@@ -7,7 +7,7 @@ create table gene_bases
 );
 
 
-create table gene_biosystems
+create table pubchem.gene_biosystems
 (
     gene         integer not null,
     biosystem    integer not null,
@@ -15,7 +15,7 @@ create table gene_biosystems
 );
 
 
-create table gene_alternatives
+create table pubchem.gene_alternatives
 (
     __             integer,
     gene           integer not null,
@@ -24,7 +24,7 @@ create table gene_alternatives
 );
 
 
-create table gene_references
+create table pubchem.gene_references
 (
     gene         integer not null,
     reference    integer not null,
@@ -32,7 +32,7 @@ create table gene_references
 );
 
 
-create table gene_matches
+create table pubchem.gene_matches
 (
     __       integer,
     gene     integer not null,

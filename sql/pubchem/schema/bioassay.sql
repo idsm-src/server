@@ -1,4 +1,4 @@
-create table bioassay_bases
+create table pubchem.bioassay_bases
 (
     id        integer not null,
     source    smallint not null,
@@ -7,7 +7,7 @@ create table bioassay_bases
 );
 
 
-create table bioassay_data
+create table pubchem.bioassay_data
 (
     __          integer,
     bioassay    integer not null,

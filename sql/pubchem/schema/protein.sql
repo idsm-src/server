@@ -1,4 +1,4 @@
-create table protein_bases
+create table pubchem.protein_bases
 (
     id             integer,
     name           varchar unique not null,
@@ -8,7 +8,7 @@ create table protein_bases
 );
 
 
-create table protein_references
+create table pubchem.protein_references
 (
     protein      integer not null,
     reference    integer not null,
@@ -16,7 +16,7 @@ create table protein_references
 );
 
 
-create table protein_pdblinks
+create table pubchem.protein_pdblinks
 (
     protein    integer not null,
     pdblink    char(4) not null,
@@ -24,7 +24,7 @@ create table protein_pdblinks
 );
 
 
-create table protein_similarproteins
+create table pubchem.protein_similarproteins
 (
     protein       integer not null,
     simprotein    integer not null,
@@ -32,7 +32,7 @@ create table protein_similarproteins
 );
 
 
-create table protein_genes
+create table pubchem.protein_genes
 (
     protein    integer not null,
     gene       integer not null,
@@ -40,7 +40,7 @@ create table protein_genes
 );
 
 
-create table protein_closematches
+create table pubchem.protein_closematches
 (
     __         integer,
     protein    integer not null,
@@ -49,7 +49,7 @@ create table protein_closematches
 );
 
 
-create table protein_conserveddomains
+create table pubchem.protein_conserveddomains
 (
     protein    integer not null,
     domain     integer not null,
@@ -57,7 +57,7 @@ create table protein_conserveddomains
 );
 
 
-create table protein_continuantparts
+create table pubchem.protein_continuantparts
 (
     protein    integer not null,
     part       integer not null,
@@ -65,7 +65,7 @@ create table protein_continuantparts
 );
 
 
-create table protein_processes
+create table pubchem.protein_processes
 (
     protein       integer not null,
     process_id    integer not null,
@@ -73,7 +73,7 @@ create table protein_processes
 );
 
 
-create table protein_biosystems
+create table pubchem.protein_biosystems
 (
     protein      integer not null,
     biosystem    integer not null,
@@ -81,7 +81,7 @@ create table protein_biosystems
 );
 
 
-create table protein_functions
+create table pubchem.protein_functions
 (
     protein        integer not null,
     function_id    integer not null,
@@ -89,7 +89,7 @@ create table protein_functions
 );
 
 
-create table protein_locations
+create table pubchem.protein_locations
 (
     protein        integer not null,
     location_id    integer not null,
@@ -97,7 +97,7 @@ create table protein_locations
 );
 
 
-create table protein_types
+create table pubchem.protein_types
 (
     protein       integer not null,
     type_id       integer not null,
@@ -105,7 +105,7 @@ create table protein_types
 );
 
 
-create table protein_complexes
+create table pubchem.protein_complexes
 (
     protein    integer not null,
     primary key(protein)

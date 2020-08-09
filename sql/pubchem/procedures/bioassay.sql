@@ -1,4 +1,4 @@
-create function "bioassay"(query in varchar) returns setof integer language sql as
+create function pubchem."bioassay"(query in varchar) returns setof integer language sql as
 $$
   select bioassay from pubchem.bioassay_data where to_tsvector('english', value) @@ to_tsquery('english', query)
   union

@@ -25,15 +25,15 @@ class Synonym extends Updater
         usedHashes = new MD5IntMap(200000000);
 
         MD5IntMap newHashes = new MD5IntMap(200000000);
-        MD5IntMap oldHashes = getMD5IntMap("select md5, id from synonym_bases", 200000000);
-        nextMd5ID = getIntValue("select coalesce(max(id)+1,0) from synonym_bases");
+        MD5IntMap oldHashes = getMD5IntMap("select md5, id from pubchem.synonym_bases", 200000000);
+        nextMd5ID = getIntValue("select coalesce(max(id)+1,0) from pubchem.synonym_bases");
 
         IntStringPairIntMap newValues = new IntStringPairIntMap(200000000);
-        IntStringPairIntMap oldValues = getIntStringPairIntMap("select synonym, value, __ from synonym_values",
+        IntStringPairIntMap oldValues = getIntStringPairIntMap("select synonym, value, __ from pubchem.synonym_values",
                 200000000);
-        nextValueID = getIntValue("select coalesce(max(__)+1,0) from synonym_values");
+        nextValueID = getIntValue("select coalesce(max(__)+1,0) from pubchem.synonym_values");
 
-        processFiles("RDF/synonym", "pc_synonym_value_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/synonym", "pc_synonym_value_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -68,20 +68,20 @@ class Synonym extends Updater
             }
         });
 
-        batch("delete from synonym_bases where id = ?", oldHashes.values());
-        batch("insert into synonym_bases(md5, id) values (?,?)", newHashes);
+        batch("delete from pubchem.synonym_bases where id = ?", oldHashes.values());
+        batch("insert into pubchem.synonym_bases(md5, id) values (?,?)", newHashes);
 
-        batch("delete from synonym_values where __ = ?", oldValues.values());
-        batch("insert into synonym_values(synonym, value, __) values (?,?,?)", newValues);
+        batch("delete from pubchem.synonym_values where __ = ?", oldValues.values());
+        batch("insert into pubchem.synonym_values(synonym, value, __) values (?,?,?)", newValues);
     }
 
 
     private static void loadTypes() throws IOException, SQLException
     {
         IntPairSet newTypes = new IntPairSet(200000000);
-        IntPairSet oldTypes = getIntPairSet("select synonym, type_id from synonym_types", 200000000);
+        IntPairSet oldTypes = getIntPairSet("select synonym, type_id from pubchem.synonym_types", 200000000);
 
-        processFiles("RDF/synonym", "pc_synonym_type_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/synonym", "pc_synonym_type_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -115,17 +115,17 @@ class Synonym extends Updater
             }
         });
 
-        batch("delete from synonym_types where synonym = ? and type_id = ?", oldTypes);
-        batch("insert into synonym_types(synonym, type_id) values (?,?)", newTypes);
+        batch("delete from pubchem.synonym_types where synonym = ? and type_id = ?", oldTypes);
+        batch("insert into pubchem.synonym_types(synonym, type_id) values (?,?)", newTypes);
     }
 
 
     private static void loadCompounds() throws IOException, SQLException
     {
         IntPairSet newCompounds = new IntPairSet(200000000);
-        IntPairSet oldCompounds = getIntPairSet("select synonym, compound from synonym_compounds", 200000000);
+        IntPairSet oldCompounds = getIntPairSet("select synonym, compound from pubchem.synonym_compounds", 200000000);
 
-        processFiles("RDF/synonym", "pc_synonym2compound_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/synonym", "pc_synonym2compound_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -161,21 +161,22 @@ class Synonym extends Updater
             }
         });
 
-        batch("delete from synonym_compounds where synonym = ? and compound = ?", oldCompounds);
-        batch("insert into synonym_compounds(synonym, compound) values (?,?)", newCompounds);
+        batch("delete from pubchem.synonym_compounds where synonym = ? and compound = ?", oldCompounds);
+        batch("insert into pubchem.synonym_compounds(synonym, compound) values (?,?)", newCompounds);
     }
 
 
     private static void loadTopics() throws IOException, SQLException
     {
         IntPairSet newConceptSubjects = new IntPairSet(50000);
-        IntPairSet oldConceptSubjects = getIntPairSet("select synonym, concept from synonym_concept_subjects", 50000);
+        IntPairSet oldConceptSubjects = getIntPairSet("select synonym, concept from pubchem.synonym_concept_subjects",
+                50000);
 
         IntStringPairSet newMeshSubjects = new IntStringPairSet(1000000);
-        IntStringPairSet oldMeshSubjects = getIntStringPairSet("select synonym, subject from synonym_mesh_subjects",
-                1000000);
+        IntStringPairSet oldMeshSubjects = getIntStringPairSet(
+                "select synonym, subject from pubchem.synonym_mesh_subjects", 1000000);
 
-        try(InputStream stream = getStream("RDF/synonym/pc_synonym_topic.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/synonym/pc_synonym_topic.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -215,11 +216,11 @@ class Synonym extends Updater
             }.load(stream);
         }
 
-        batch("delete from synonym_concept_subjects where synonym = ? and concept = ?", oldConceptSubjects);
-        batch("insert into synonym_concept_subjects(synonym, concept) values (?,?)", newConceptSubjects);
+        batch("delete from pubchem.synonym_concept_subjects where synonym = ? and concept = ?", oldConceptSubjects);
+        batch("insert into pubchem.synonym_concept_subjects(synonym, concept) values (?,?)", newConceptSubjects);
 
-        batch("delete from synonym_mesh_subjects where synonym = ? and subject = ?", oldMeshSubjects);
-        batch("insert into synonym_mesh_subjects(synonym, subject) values (?,?)", newMeshSubjects);
+        batch("delete from pubchem.synonym_mesh_subjects where synonym = ? and subject = ?", oldMeshSubjects);
+        batch("insert into pubchem.synonym_mesh_subjects(synonym, subject) values (?,?)", newMeshSubjects);
     }
 
 

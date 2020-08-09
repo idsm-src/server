@@ -108,4 +108,15 @@ public abstract class QueryResultProcessor
 
         return literal.getInt();
     }
+
+
+    protected Boolean getBoolean(String name)
+    {
+        Literal literal = solution.getLiteral(name);
+
+        if(literal == null)
+            return null;
+
+        return literal.getBoolean();
+    }
 }

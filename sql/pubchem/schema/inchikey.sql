@@ -1,4 +1,4 @@
-create table inchikey_bases
+create table pubchem.inchikey_bases
 (
     id          integer,
     inchikey    char(27) unique not null,
@@ -6,7 +6,7 @@ create table inchikey_bases
 );
 
 
-create table inchikey_compounds
+create table pubchem.inchikey_compounds
 (
     inchikey    integer not null,
     compound    integer not null,
@@ -14,7 +14,7 @@ create table inchikey_compounds
 );
 
 
-create table inchikey_subjects
+create table pubchem.inchikey_subjects
 (
     inchikey    integer not null,
     subject     varchar not null,

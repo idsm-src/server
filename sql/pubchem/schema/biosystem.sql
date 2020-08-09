@@ -1,4 +1,4 @@
-create table biosystem_bases
+create table pubchem.biosystem_bases
 (
     id             integer not null,
     source         smallint not null,
@@ -8,7 +8,7 @@ create table biosystem_bases
 );
 
 
-create table biosystem_components
+create table pubchem.biosystem_components
 (
     biosystem    integer not null,
     component    integer not null,
@@ -16,7 +16,7 @@ create table biosystem_components
 );
 
 
-create table biosystem_references
+create table pubchem.biosystem_references
 (
     biosystem    integer not null,
     reference    integer not null,
@@ -24,7 +24,7 @@ create table biosystem_references
 );
 
 
-create table biosystem_matches
+create table pubchem.biosystem_matches
 (
     biosystem      integer not null,
     wikipathway    integer not null,

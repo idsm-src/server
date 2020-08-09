@@ -1,4 +1,4 @@
-create table descriptor_substance_bases
+create table pubchem.descriptor_substance_bases
 (
     substance    integer not null,
     version      integer not null,

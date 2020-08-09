@@ -1,4 +1,4 @@
-create table conserveddomain_bases
+create table pubchem.conserveddomain_bases
 (
     id          integer not null,
     title       varchar,
@@ -7,7 +7,7 @@ create table conserveddomain_bases
 );
 
 
-create table conserveddomain_references
+create table pubchem.conserveddomain_references
 (
     domain       integer not null,
     reference    integer not null,

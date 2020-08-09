@@ -1,4 +1,4 @@
-create table compound_components
+create table pubchem.compound_components
 (
     compound     integer not null,
     component    integer not null,
@@ -6,7 +6,7 @@ create table compound_components
 );
 
 
-create table compound_isotopologues
+create table pubchem.compound_isotopologues
 (
     compound        integer not null,
     isotopologue    integer not null,
@@ -14,7 +14,7 @@ create table compound_isotopologues
 );
 
 
-create table compound_parents
+create table pubchem.compound_parents
 (
     compound    integer not null,
     parent      integer not null,
@@ -22,7 +22,7 @@ create table compound_parents
 );
 
 
-create table compound_stereoisomers
+create table pubchem.compound_stereoisomers
 (
     compound    integer not null,
     isomer      integer not null,
@@ -30,7 +30,7 @@ create table compound_stereoisomers
 );
 
 
-create table compound_same_connectivities
+create table pubchem.compound_same_connectivities
 (
     compound    integer not null,
     isomer      integer not null,
@@ -38,7 +38,7 @@ create table compound_same_connectivities
 );
 
 
-create table compound_roles
+create table pubchem.compound_roles
 (
     compound    integer not null,
     role_id     integer not null,
@@ -46,7 +46,7 @@ create table compound_roles
 );
 
 
-create table compound_biosystems
+create table pubchem.compound_biosystems
 (
     compound     integer not null,
     biosystem    integer not null,
@@ -54,7 +54,7 @@ create table compound_biosystems
 );
 
 
-create table compound_types
+create table pubchem.compound_types
 (
     compound     integer not null,
     type_unit    smallint not null,
@@ -63,7 +63,7 @@ create table compound_types
 );
 
 
-create table compound_active_ingredients
+create table pubchem.compound_active_ingredients
 (
     compound           integer not null,
     ingredient_unit    smallint not null,
@@ -72,7 +72,7 @@ create table compound_active_ingredients
 );
 
 
-create table compound_bases
+create table pubchem.compound_bases
 (
     id    integer not null,
     keep  bool not null,

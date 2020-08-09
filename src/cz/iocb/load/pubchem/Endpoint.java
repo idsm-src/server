@@ -9,7 +9,8 @@ import cz.iocb.load.common.IntQuaterplet;
 import cz.iocb.load.common.IntTriplet;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
-import cz.iocb.load.pubchem.Ontology.Identifier;
+import cz.iocb.load.ontology.Ontology;
+import cz.iocb.load.ontology.Ontology.Identifier;
 
 
 
@@ -34,7 +35,8 @@ class Endpoint extends Updater
     {
         usedEndpoints = new IntTripletSet(250000000);
         newEndpoints = new IntTripletSet(250000000);
-        oldEndpoints = getIntTripletSet("select substance, bioassay, measuregroup from endpoint_bases", 250000000);
+        oldEndpoints = getIntTripletSet("select substance, bioassay, measuregroup from pubchem.endpoint_bases",
+                250000000);
     }
 
 
@@ -42,10 +44,10 @@ class Endpoint extends Updater
     {
         IntQuaterpletSet newOutcomes = new IntQuaterpletSet(250000000);
         IntQuaterpletSet oldOutcomes = getIntQuaterpletSet(
-                "select substance, bioassay, measuregroup, outcome_id from endpoint_outcomes", 250000000);
+                "select substance, bioassay, measuregroup, outcome_id from pubchem.endpoint_outcomes", 250000000);
 
 
-        processFiles("RDF/endpoint", "pc_endpoint_outcome_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/endpoint", "pc_endpoint_outcome_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -74,9 +76,9 @@ class Endpoint extends Updater
             }
         });
 
-        batch("delete from endpoint_outcomes where substance = ? and bioassay = ? and measuregroup = ? and outcome_id = ?",
+        batch("delete from pubchem.endpoint_outcomes where substance = ? and bioassay = ? and measuregroup = ? and outcome_id = ?",
                 oldOutcomes);
-        batch("insert into endpoint_outcomes(substance, bioassay, measuregroup, outcome_id) values (?,?,?,?)",
+        batch("insert into pubchem.endpoint_outcomes(substance, bioassay, measuregroup, outcome_id) values (?,?,?,?)",
                 newOutcomes);
     }
 
@@ -86,14 +88,14 @@ class Endpoint extends Updater
         IntTripletSet usedMeasurements = new IntTripletSet(10000000);
         IntTripletSet newMeasurements = new IntTripletSet(10000000);
         IntTripletSet oldMeasurements = getIntTripletSet(
-                "select substance, bioassay, measuregroup from endpoint_measurements", 10000000);
+                "select substance, bioassay, measuregroup from pubchem.endpoint_measurements", 10000000);
 
 
         IntTripletIntMap newTypes = new IntTripletIntMap(10000000);
         IntTripletIntMap oldTypes = getIntTripletIntMap(
-                "select substance, bioassay, measuregroup, type_id from endpoint_measurements", 10000000);
+                "select substance, bioassay, measuregroup, type_id from pubchem.endpoint_measurements", 10000000);
 
-        try(InputStream stream = getStream("RDF/endpoint/pc_endpoint_type.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_type.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -118,9 +120,9 @@ class Endpoint extends Updater
 
         IntTripletFloatMap newValues = new IntTripletFloatMap(10000000);
         IntTripletFloatMap oldValues = getIntTripletFloatMap(
-                "select substance, bioassay, measuregroup, value from endpoint_measurements", 10000000);
+                "select substance, bioassay, measuregroup, value from pubchem.endpoint_measurements", 10000000);
 
-        try(InputStream stream = getStream("RDF/endpoint/pc_endpoint_value.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_value.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -146,9 +148,9 @@ class Endpoint extends Updater
 
         IntTripletStringMap newLabels = new IntTripletStringMap(10000000);
         IntTripletStringMap oldLabels = getIntTripletStringMap(
-                "select substance, bioassay, measuregroup, label from endpoint_measurements", 10000000);
+                "select substance, bioassay, measuregroup, label from pubchem.endpoint_measurements", 10000000);
 
-        try(InputStream stream = getStream("RDF/endpoint/pc_endpoint_label.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_label.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -181,10 +183,10 @@ class Endpoint extends Updater
             throw new IOException();
 
 
-        batch("delete from endpoint_measurements where substance = ? and bioassay = ? and measuregroup = ?",
+        batch("delete from pubchem.endpoint_measurements where substance = ? and bioassay = ? and measuregroup = ?",
                 oldMeasurements);
 
-        batch("insert into endpoint_measurements(substance, bioassay, measuregroup, type_id, value, label) values (?,?,?,?,?,?)",
+        batch("insert into pubchem.endpoint_measurements(substance, bioassay, measuregroup, type_id, value, label) values (?,?,?,?,?,?)",
                 newMeasurements, (PreparedStatement statement, IntTriplet endpoint) -> {
                     statement.setInt(1, endpoint.getOne());
                     statement.setInt(2, endpoint.getTwo());
@@ -197,13 +199,13 @@ class Endpoint extends Updater
                 });
 
 
-        batch("update endpoint_measurements set type_id = ? where substance = ? and bioassay = ? and measuregroup = ?",
+        batch("update pubchem.endpoint_measurements set type_id = ? where substance = ? and bioassay = ? and measuregroup = ?",
                 newTypes, Direction.REVERSE);
 
-        batch("update endpoint_measurements set value = ? where substance = ? and bioassay = ? and measuregroup = ?",
+        batch("update pubchem.endpoint_measurements set value = ? where substance = ? and bioassay = ? and measuregroup = ?",
                 newValues, Direction.REVERSE);
 
-        batch("update endpoint_measurements set label = ? where substance = ? and bioassay = ? and measuregroup = ?",
+        batch("update pubchem.endpoint_measurements set label = ? where substance = ? and bioassay = ? and measuregroup = ?",
                 newLabels, Direction.REVERSE);
     }
 
@@ -212,9 +214,9 @@ class Endpoint extends Updater
     {
         IntQuaterpletSet newReferences = new IntQuaterpletSet(20000000);
         IntQuaterpletSet oldReferences = getIntQuaterpletSet(
-                "select substance, bioassay, measuregroup, reference from endpoint_references", 20000000);
+                "select substance, bioassay, measuregroup, reference from pubchem.endpoint_references", 20000000);
 
-        try(InputStream stream = getStream("RDF/endpoint/pc_endpoint2reference.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint2reference.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -236,16 +238,16 @@ class Endpoint extends Updater
             }.load(stream);
         }
 
-        batch("delete from endpoint_references where substance = ? and bioassay = ? and measuregroup = ? and reference = ?",
+        batch("delete from pubchem.endpoint_references where substance = ? and bioassay = ? and measuregroup = ? and reference = ?",
                 oldReferences);
-        batch("insert into endpoint_references(substance, bioassay, measuregroup, reference) values (?,?,?,?)",
+        batch("insert into pubchem.endpoint_references(substance, bioassay, measuregroup, reference) values (?,?,?,?)",
                 newReferences);
     }
 
 
     private static void checkUnits() throws IOException, SQLException
     {
-        try(InputStream stream = getStream("RDF/endpoint/pc_endpoint_unit.ttl.gz"))
+        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_unit.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -276,8 +278,9 @@ class Endpoint extends Updater
 
     static void finish() throws SQLException
     {
-        batch("delete from endpoint_bases where substance = ? and bioassay = ? and measuregroup = ?", oldEndpoints);
-        batch("insert into endpoint_bases(substance, bioassay, measuregroup) values (?,?,?)", newEndpoints);
+        batch("delete from pubchem.endpoint_bases where substance = ? and bioassay = ? and measuregroup = ?",
+                oldEndpoints);
+        batch("insert into pubchem.endpoint_bases(substance, bioassay, measuregroup) values (?,?,?)", newEndpoints);
 
         usedEndpoints = null;
         newEndpoints = null;

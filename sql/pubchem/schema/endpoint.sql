@@ -1,4 +1,4 @@
-create table endpoint_bases
+create table pubchem.endpoint_bases
 (
     substance       integer not null,
     bioassay        integer not null,
@@ -7,7 +7,7 @@ create table endpoint_bases
 );
 
 
-create table endpoint_outcomes
+create table pubchem.endpoint_outcomes
 (
     substance       integer not null,
     bioassay        integer not null,
@@ -17,7 +17,7 @@ create table endpoint_outcomes
 );
 
 
-create table endpoint_measurements
+create table pubchem.endpoint_measurements
 (
     substance       integer not null,
     bioassay        integer not null,
@@ -29,7 +29,7 @@ create table endpoint_measurements
 );
 
 
-create table endpoint_references
+create table pubchem.endpoint_references
 (
     substance       integer not null,
     bioassay        integer not null,

@@ -15,9 +15,10 @@ class SubstanceDescriptor extends Updater
     private static void loadSubstanceVersions() throws IOException, SQLException
     {
         IntIntHashMap newValues = new IntIntHashMap(250000000);
-        IntIntHashMap oldValues = getIntIntMap("select substance, version from descriptor_substance_bases", 250000000);
+        IntIntHashMap oldValues = getIntIntMap("select substance, version from pubchem.descriptor_substance_bases",
+                250000000);
 
-        processFiles("RDF/descriptor/substance", "pc_descr_SubstanceVersion_value_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/descriptor/substance", "pc_descr_SubstanceVersion_value_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
             {
                 new TripleStreamProcessor()
@@ -44,8 +45,8 @@ class SubstanceDescriptor extends Updater
             }
         });
 
-        batch("delete from descriptor_substance_bases where substance = ?", oldValues.keySet());
-        batch("insert into descriptor_substance_bases(substance, version) values (?,?) "
+        batch("delete from pubchem.descriptor_substance_bases where substance = ?", oldValues.keySet());
+        batch("insert into pubchem.descriptor_substance_bases(substance, version) values (?,?) "
                 + "on conflict (substance) do update set version=EXCLUDED.version", newValues);
     }
 

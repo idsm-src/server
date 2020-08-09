@@ -26,8 +26,8 @@ class Source extends Updater
     {
         usedSources = new StringIntMap(1000);
         newSources = new StringIntMap(1000);
-        oldSources = getStringIntMap("select iri, id from source_bases", 1000);
-        nextSourceID = getIntValue("select coalesce(max(id)+1,0) from source_bases");
+        oldSources = getStringIntMap("select iri, id from pubchem.source_bases", 1000);
+        nextSourceID = getIntValue("select coalesce(max(id)+1,0) from pubchem.source_bases");
 
         new QueryResultProcessor(patternQuery("?iri rdf:type dcterms:Dataset"))
         {
@@ -49,7 +49,7 @@ class Source extends Updater
     private static void loadTitles(Model model) throws IOException, SQLException
     {
         newTitles = new IntStringMap(1000);
-        oldTitles = getIntStringMap("select id, title from source_bases where title is not null", 1000);
+        oldTitles = getIntStringMap("select id, title from pubchem.source_bases where title is not null", 1000);
 
         new QueryResultProcessor(patternQuery("?source dcterms:title ?title"))
         {
@@ -69,7 +69,7 @@ class Source extends Updater
     private static void loadSubjects(Model model) throws IOException, SQLException
     {
         IntPairSet newSubjects = new IntPairSet(1000);
-        IntPairSet oldSubjects = getIntPairSet("select source, subject from source_subjects", 1000);
+        IntPairSet oldSubjects = getIntPairSet("select source, subject from pubchem.source_subjects", 1000);
 
         new QueryResultProcessor(patternQuery("?source dcterms:subject ?subject"))
         {
@@ -86,8 +86,8 @@ class Source extends Updater
             }
         }.load(model);
 
-        batch("delete from source_subjects where source = ? and subject = ?", oldSubjects);
-        batch("insert into source_subjects(source, subject) values (?,?)", newSubjects);
+        batch("delete from pubchem.source_subjects where source = ? and subject = ?", oldSubjects);
+        batch("insert into pubchem.source_subjects(source, subject) values (?,?)", newSubjects);
     }
 
 
@@ -95,11 +95,12 @@ class Source extends Updater
     {
         IntStringPairIntMap newAlternatives = new IntStringPairIntMap(1000);
         IntStringPairIntMap oldAlternatives = getIntStringPairIntMap(
-                "select source, alternative, __ from source_alternatives", 1000);
+                "select source, alternative, __ from pubchem.source_alternatives", 1000);
 
         new QueryResultProcessor(patternQuery("?source dcterms:alternative ?alternative"))
         {
-            int nextAlternativeID = Updater.getIntValue("select coalesce(max(__)+1,0) from source_alternatives");
+            int nextAlternativeID = Updater
+                    .getIntValue("select coalesce(max(__)+1,0) from pubchem.source_alternatives");
 
             @Override
             protected void parse() throws IOException
@@ -114,8 +115,8 @@ class Source extends Updater
             }
         }.load(model);
 
-        batch("delete from source_alternatives where __ = ?", oldAlternatives.values());
-        batch("insert into source_alternatives(source, alternative, __) values (?,?,?)", newAlternatives);
+        batch("delete from pubchem.source_alternatives where __ = ?", oldAlternatives.values());
+        batch("insert into pubchem.source_alternatives(source, alternative, __) values (?,?,?)", newAlternatives);
     }
 
 
@@ -165,11 +166,11 @@ class Source extends Updater
 
     static void finish() throws IOException, SQLException
     {
-        batch("delete from source_bases where id = ?", oldSources.values());
-        batch("insert into source_bases(iri, id) values (?,?)", newSources);
+        batch("delete from pubchem.source_bases where id = ?", oldSources.values());
+        batch("insert into pubchem.source_bases(iri, id) values (?,?)", newSources);
 
-        batch("update source_bases set title = null where id = ?", oldTitles.keySet());
-        batch("update source_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
+        batch("update pubchem.source_bases set title = null where id = ?", oldTitles.keySet());
+        batch("update pubchem.source_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
 
         usedSources = null;
         newSources = null;
@@ -184,8 +185,8 @@ class Source extends Updater
     {
         System.out.println("load sources ...");
 
-        Model model = getModel("RDF/source/pc_source.ttl.gz");
-        check(model, "source/check.sparql");
+        Model model = getModel("pubchem/RDF/source/pc_source.ttl.gz");
+        check(model, "pubchem/source/check.sparql");
 
         loadBases(model);
         loadTitles(model);

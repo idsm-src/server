@@ -21,8 +21,8 @@ class Concept extends Updater
     {
         usedConcepts = new StringIntMap(10000);
         newConcepts = new StringIntMap(10000);
-        oldConcepts = getStringIntMap("select iri, id from concept_bases", 10000);
-        nextConceptID = getIntValue("select coalesce(max(id)+1,0) from concept_bases");
+        oldConcepts = getStringIntMap("select iri, id from pubchem.concept_bases", 10000);
+        nextConceptID = getIntValue("select coalesce(max(id)+1,0) from pubchem.concept_bases");
 
         new QueryResultProcessor(patternQuery("?iri rdf:type ?type"))
         {
@@ -39,7 +39,7 @@ class Concept extends Updater
             }
         }.load(model);
 
-        batch("insert into concept_bases(iri, id) values (?,?)", newConcepts);
+        batch("insert into pubchem.concept_bases(iri, id) values (?,?)", newConcepts);
         newConcepts.clear();
     }
 
@@ -47,7 +47,8 @@ class Concept extends Updater
     private static void loadLabels(Model model) throws IOException, SQLException
     {
         IntStringMap newLabels = new IntStringMap(10000);
-        IntStringMap oldLabels = getIntStringMap("select id, label from concept_bases where label is not null", 10000);
+        IntStringMap oldLabels = getIntStringMap("select id, label from pubchem.concept_bases where label is not null",
+                10000);
 
         new QueryResultProcessor(patternQuery("?concept skos:prefLabel ?label"))
         {
@@ -62,15 +63,16 @@ class Concept extends Updater
             }
         }.load(model);
 
-        batch("update concept_bases set label = null where id = ?", oldLabels.keySet());
-        batch("update concept_bases set label = ? where id = ?", newLabels, Direction.REVERSE);
+        batch("update pubchem.concept_bases set label = null where id = ?", oldLabels.keySet());
+        batch("update pubchem.concept_bases set label = ? where id = ?", newLabels, Direction.REVERSE);
     }
 
 
     private static void loadScheme(Model model) throws IOException, SQLException
     {
         IntIntHashMap newSchemes = new IntIntHashMap(10000);
-        IntIntHashMap oldSchemes = getIntIntMap("select id, scheme from concept_bases where scheme is not null", 10000);
+        IntIntHashMap oldSchemes = getIntIntMap("select id, scheme from pubchem.concept_bases where scheme is not null",
+                10000);
 
         new QueryResultProcessor(patternQuery("?concept skos:inScheme ?scheme"))
         {
@@ -85,16 +87,16 @@ class Concept extends Updater
             }
         }.load(model);
 
-        batch("update concept_bases set scheme = null where id = ?", oldSchemes.keySet());
-        batch("update concept_bases set scheme = ? where id = ?", newSchemes, Direction.REVERSE);
+        batch("update pubchem.concept_bases set scheme = null where id = ?", oldSchemes.keySet());
+        batch("update pubchem.concept_bases set scheme = ? where id = ?", newSchemes, Direction.REVERSE);
     }
 
 
     private static void loadBroader(Model model) throws IOException, SQLException
     {
         IntIntHashMap newBroaders = new IntIntHashMap(10000);
-        IntIntHashMap oldBroaders = getIntIntMap("select id, broader from concept_bases where broader is not null",
-                10000);
+        IntIntHashMap oldBroaders = getIntIntMap(
+                "select id, broader from pubchem.concept_bases where broader is not null", 10000);
 
         new QueryResultProcessor(patternQuery("?concept skos:broader ?broader"))
         {
@@ -109,8 +111,8 @@ class Concept extends Updater
             }
         }.load(model);
 
-        batch("update concept_bases set broader = null where id = ?", oldBroaders.keySet());
-        batch("update concept_bases set broader = ? where id = ?", newBroaders, Direction.REVERSE);
+        batch("update pubchem.concept_bases set broader = null where id = ?", oldBroaders.keySet());
+        batch("update pubchem.concept_bases set broader = ? where id = ?", newBroaders, Direction.REVERSE);
     }
 
 
@@ -137,8 +139,8 @@ class Concept extends Updater
 
     static void finish() throws IOException, SQLException
     {
-        batch("delete from concept_bases where id = ?", oldConcepts.values());
-        batch("insert into concept_bases(iri, id) values (?,?)", newConcepts);
+        batch("delete from pubchem.concept_bases where id = ?", oldConcepts.values());
+        batch("insert into pubchem.concept_bases(iri, id) values (?,?)", newConcepts);
 
         usedConcepts = null;
         newConcepts = null;
@@ -150,8 +152,8 @@ class Concept extends Updater
     {
         System.out.println("load concepts ...");
 
-        Model model = getModel("RDF/concept/pc_concept.ttl.gz");
-        check(model, "concept/check.sparql");
+        Model model = getModel("pubchem/RDF/concept/pc_concept.ttl.gz");
+        check(model, "pubchem/concept/check.sparql");
 
         loadBases(model);
         loadLabels(model);

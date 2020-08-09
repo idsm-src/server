@@ -37,6 +37,7 @@ import org.apache.jena.util.FileManager;
 import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
+import org.eclipse.collections.api.tuple.primitive.ObjectIntPair;
 import org.eclipse.collections.impl.map.mutable.primitive.IntFloatHashMap;
 import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
 import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap;
@@ -127,6 +128,16 @@ public class Updater
     }
 
 
+    @SuppressWarnings("serial")
+    protected static class StringPairSet extends HashSet<StringPair>
+    {
+        public StringPairSet(int capacity)
+        {
+            super(capacity);
+        }
+    }
+
+
     protected static class IntPairIntMap extends ObjectIntHashMap<IntIntPair>
     {
         public IntPairIntMap(int capacity)
@@ -194,8 +205,27 @@ public class Updater
 
     protected static class StringIntMap extends ObjectIntHashMap<String>
     {
-
         public StringIntMap(int capacity)
+        {
+            super(capacity);
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    protected static class StringStringMap extends HashMap<String, String>
+    {
+        public StringStringMap(int capacity)
+        {
+            super(capacity);
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    protected static class StringStringIntPairMap extends HashMap<String, ObjectIntPair<String>>
+    {
+        public StringStringIntPairMap(int capacity)
         {
             super(capacity);
         }
@@ -213,7 +243,7 @@ public class Updater
 
     protected static final int NO_VALUE = Integer.MIN_VALUE;
     protected static final int batchSize = 100000;
-    protected static String pubchemDirectory = null;
+    protected static String baseDirectory = null;
     protected static Connection connection;
     static String prefixes = null;
     private static int count;
@@ -229,11 +259,11 @@ public class Updater
         String url = properties.getProperty("url");
         properties.remove("url");
 
-        pubchemDirectory = properties.getProperty("pubchem");
-        properties.remove("pubchem");
+        baseDirectory = properties.getProperty("base");
+        properties.remove("base");
 
-        if(!pubchemDirectory.endsWith("/"))
-            pubchemDirectory += "/";
+        if(!baseDirectory.endsWith("/"))
+            baseDirectory += "/";
 
         connection = DriverManager.getConnection(url, properties);
         connection.setAutoCommit(false);
@@ -244,7 +274,7 @@ public class Updater
     {
         System.out.println("  load " + file);
 
-        InputStream fis = new FileInputStream(pubchemDirectory + file);
+        InputStream fis = new FileInputStream(baseDirectory + file);
 
         if(gzipped)
             fis = new GZIPInputStream(fis, 65536);
@@ -263,7 +293,7 @@ public class Updater
     {
         System.out.println("  load " + file);
 
-        FileInputStream fis = new FileInputStream(pubchemDirectory + file);
+        FileInputStream fis = new FileInputStream(baseDirectory + file);
         GZIPInputStream gis = new GZIPInputStream(fis, 65536);
         InputStreamReader isr = new InputStreamReader(gis, Charset.forName("UTF-8"));
         return new BufferedReader(isr);
@@ -275,7 +305,7 @@ public class Updater
         System.out.println("  load " + file);
 
         Model model = ModelFactory.createDefaultModel();
-        InputStream in = FileManager.get().open(pubchemDirectory + file);
+        InputStream in = FileManager.get().open(baseDirectory + file);
         return model.read(in, null, lang);
     }
 
@@ -436,6 +466,30 @@ public class Updater
             {
                 while(result.next())
                     values.add(PrimitiveTuples.pair(result.getInt(1), result.getString(2)));
+            }
+        }
+
+        System.out.println(
+                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
+        return values;
+    }
+
+
+    protected static StringPairSet getStringPairSet(String query, int capacity) throws SQLException
+    {
+        long time = System.currentTimeMillis();
+        System.out.print("  " + query);
+
+        StringPairSet values = new StringPairSet(capacity);
+
+        try(PreparedStatement statement = connection.prepareStatement(query))
+        {
+            statement.setFetchSize(1000000);
+
+            try(java.sql.ResultSet result = statement.executeQuery())
+            {
+                while(result.next())
+                    values.add(new StringPair(result.getString(1), result.getString(2)));
             }
         }
 
@@ -684,6 +738,54 @@ public class Updater
     }
 
 
+    protected static StringStringMap getStringStringMap(String query, int capacity) throws SQLException
+    {
+        long time = System.currentTimeMillis();
+        System.out.print("  " + query);
+
+        StringStringMap map = new StringStringMap(capacity);
+
+        try(PreparedStatement statement = connection.prepareStatement(query))
+        {
+            statement.setFetchSize(1000000);
+
+            try(java.sql.ResultSet result = statement.executeQuery())
+            {
+                while(result.next())
+                    map.put(result.getString(1), result.getString(2));
+            }
+        }
+
+        System.out.println(
+                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
+        return map;
+    }
+
+
+    protected static StringStringIntPairMap getStringStringIntPairMap(String query, int capacity) throws SQLException
+    {
+        long time = System.currentTimeMillis();
+        System.out.print("  " + query);
+
+        StringStringIntPairMap map = new StringStringIntPairMap(capacity);
+
+        try(PreparedStatement statement = connection.prepareStatement(query))
+        {
+            statement.setFetchSize(1000000);
+
+            try(java.sql.ResultSet result = statement.executeQuery())
+            {
+                while(result.next())
+                    map.put(result.getString(1), PrimitiveTuples.pair(result.getString(2), result.getInt(3)));
+            }
+        }
+
+        System.out.println(
+                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
+        return map;
+    }
+
+
     protected static MD5IntMap getMD5IntMap(String query, int capacity) throws SQLException
     {
         long time = System.currentTimeMillis();
@@ -893,6 +995,44 @@ public class Updater
                     try
                     {
                         statement.setInt(1, value.getOne());
+                        statement.setString(2, value.getTwo());
+                        statement.addBatch();
+
+                        if(++count % batchSize == 0)
+                            statement.executeBatch();
+                    }
+                    catch(SQLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            catch(RuntimeException e)
+            {
+                if(e.getCause() instanceof SQLException)
+                    throw(SQLException) e.getCause();
+            }
+
+            if(count % batchSize != 0)
+                statement.executeBatch();
+        }
+    }
+
+
+    protected static void batch(String command, StringPairSet set) throws SQLException
+    {
+        System.out.println("  " + command + " -> count: " + set.size());
+
+        try(PreparedStatement statement = connection.prepareStatement(command))
+        {
+            count = 0;
+
+            try
+            {
+                set.forEach(value -> {
+                    try
+                    {
+                        statement.setString(1, value.getOne());
                         statement.setString(2, value.getTwo());
                         statement.addBatch();
 
@@ -1341,6 +1481,44 @@ public class Updater
     }
 
 
+    protected static void batch(String command, StringStringMap map, Direction direction) throws SQLException
+    {
+        System.out.println("  " + command + " -> count: " + map.size());
+
+        try(PreparedStatement statement = connection.prepareStatement(command))
+        {
+            count = 0;
+
+            try
+            {
+                map.forEach((key, value) -> {
+                    try
+                    {
+                        statement.setString(direction == Direction.REVERSE ? 2 : 1, key);
+                        statement.setString(direction == Direction.REVERSE ? 1 : 2, value);
+                        statement.addBatch();
+
+                        if(++count % batchSize == 0)
+                            statement.executeBatch();
+                    }
+                    catch(SQLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            catch(RuntimeException e)
+            {
+                if(e.getCause() instanceof SQLException)
+                    throw(SQLException) e.getCause();
+            }
+
+            if(count % batchSize != 0)
+                statement.executeBatch();
+        }
+    }
+
+
     protected static void batch(String command, IntStringPairIntMap map) throws SQLException
     {
         System.out.println("  " + command + " -> count: " + map.size());
@@ -1357,6 +1535,45 @@ public class Updater
                         statement.setInt(1, key.getOne());
                         statement.setString(2, key.getTwo());
                         statement.setInt(3, value);
+                        statement.addBatch();
+
+                        if(++count % batchSize == 0)
+                            statement.executeBatch();
+                    }
+                    catch(SQLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            catch(RuntimeException e)
+            {
+                if(e.getCause() instanceof SQLException)
+                    throw(SQLException) e.getCause();
+            }
+
+            if(count % batchSize != 0)
+                statement.executeBatch();
+        }
+    }
+
+
+    protected static void batch(String command, StringStringIntPairMap map) throws SQLException
+    {
+        System.out.println("  " + command + " -> count: " + map.size());
+
+        try(PreparedStatement statement = connection.prepareStatement(command))
+        {
+            count = 0;
+
+            try
+            {
+                map.forEach((key, value) -> {
+                    try
+                    {
+                        statement.setString(1, key);
+                        statement.setString(2, value.getOne());
+                        statement.setInt(3, value.getTwo());
                         statement.addBatch();
 
                         if(++count % batchSize == 0)
@@ -1453,10 +1670,16 @@ public class Updater
     }
 
 
+    protected static void batch(String command, StringStringMap map) throws SQLException
+    {
+        batch(command, map, Direction.DIRECT);
+    }
+
+
     protected static void processFiles(String path, String name, FileNameSqlFunction func)
             throws IOException, SQLException
     {
-        String[] files = new File(pubchemDirectory + path).list((dir, file) -> file.matches(name));
+        String[] files = new File(baseDirectory + path).list((dir, file) -> file.matches(name));
 
         try
         {
@@ -1486,7 +1709,7 @@ public class Updater
     protected static void processXmlFiles(String path, String name, FileNameXmlFunction func)
             throws IOException, XPathException, ParserConfigurationException, SAXException, SQLException
     {
-        String[] files = new File(pubchemDirectory + path).list((dir, file) -> file.matches(name));
+        String[] files = new File(baseDirectory + path).list((dir, file) -> file.matches(name));
 
         try
         {

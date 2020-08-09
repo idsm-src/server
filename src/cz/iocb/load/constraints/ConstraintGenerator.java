@@ -1,4 +1,4 @@
-package cz.iocb.load.pubchem;
+package cz.iocb.load.constraints;
 
 import java.io.IOException;
 import java.sql.PreparedStatement;
@@ -282,7 +282,7 @@ public class ConstraintGenerator extends Updater
 
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into schema_foreign_keys(__, parent_table, parent_columns, foreign_table, foreign_columns) values (?,?,?,?,?)"))
+                "insert into constraints.foreign_keys(__, parent_schema, parent_table, parent_columns, foreign_schema, foreign_table, foreign_columns) values (?,?,?,?,?,?,?)"))
         {
             AtomicInteger id = new AtomicInteger(0);
 
@@ -305,10 +305,12 @@ public class ConstraintGenerator extends Updater
                         synchronized(ConstraintGenerator.class)
                         {
                             statement.setInt(1, id.getAndIncrement());
-                            statement.setString(2, mappingPair.left.table.getName());
-                            statement.setArray(3, connection.createArrayOf("varchar", parentColumns));
-                            statement.setString(4, mappingPair.right.table.getName());
-                            statement.setArray(5, connection.createArrayOf("varchar", foreignColumns));
+                            statement.setString(2, mappingPair.left.table.getSchema());
+                            statement.setString(3, mappingPair.left.table.getName());
+                            statement.setArray(4, connection.createArrayOf("varchar", parentColumns));
+                            statement.setString(5, mappingPair.right.table.getSchema());
+                            statement.setString(6, mappingPair.right.table.getName());
+                            statement.setArray(7, connection.createArrayOf("varchar", foreignColumns));
                             statement.addBatch();
                         }
                     }
@@ -336,7 +338,7 @@ public class ConstraintGenerator extends Updater
 
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into schema_unjoinable_columns(__, left_table, left_columns, right_table, right_columns) values (?,?,?,?,?)"))
+                "insert into constraints.unjoinable_columns(__, left_schema, left_table, left_columns, right_schema, right_table, right_columns) values (?,?,?,?,?,?,?)"))
         {
             AtomicInteger id = new AtomicInteger(0);
 
@@ -359,10 +361,12 @@ public class ConstraintGenerator extends Updater
                         synchronized(ConstraintGenerator.class)
                         {
                             statement.setInt(1, id.getAndIncrement());
-                            statement.setString(2, mappingPair.left.table.getName());
-                            statement.setArray(3, connection.createArrayOf("varchar", leftColumns));
-                            statement.setString(4, mappingPair.right.table.getName());
-                            statement.setArray(5, connection.createArrayOf("varchar", rightColumns));
+                            statement.setString(2, mappingPair.left.table.getSchema());
+                            statement.setString(3, mappingPair.left.table.getName());
+                            statement.setArray(4, connection.createArrayOf("varchar", leftColumns));
+                            statement.setString(5, mappingPair.right.table.getSchema());
+                            statement.setString(6, mappingPair.right.table.getName());
+                            statement.setArray(7, connection.createArrayOf("varchar", rightColumns));
                             statement.addBatch();
                         }
                     }
@@ -393,5 +397,6 @@ public class ConstraintGenerator extends Updater
     {
         init();
         load();
+        commit();
     }
 }

@@ -17,7 +17,7 @@ class Gene extends Updater
     private static void loadBases(Model model) throws IOException, SQLException
     {
         IntHashSet newGenes = new IntHashSet(100000);
-        IntHashSet oldGenes = getIntSet("select id from gene_bases", 100000);
+        IntHashSet oldGenes = getIntSet("select id from pubchem.gene_bases", 100000);
 
         new QueryResultProcessor("select distinct ?gene { ?gene ?p ?o }")
         {
@@ -31,15 +31,15 @@ class Gene extends Updater
             }
         }.load(model);
 
-        batch("delete from gene_bases where id = ?", oldGenes);
-        batch("insert into gene_bases(id) values (?)", newGenes);
+        batch("delete from pubchem.gene_bases where id = ?", oldGenes);
+        batch("insert into pubchem.gene_bases(id) values (?)", newGenes);
     }
 
 
     private static void loadTitles(Model model) throws IOException, SQLException
     {
         IntStringMap newTitles = new IntStringMap(100000);
-        IntStringMap oldTitles = getIntStringMap("select id, title from gene_bases", 100000);
+        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.gene_bases", 100000);
 
         new QueryResultProcessor(patternQuery("?gene dcterms:title ?title"))
         {
@@ -54,15 +54,15 @@ class Gene extends Updater
             }
         }.load(model);
 
-        batch("update gene_bases set title = null where id = ?", oldTitles.keySet());
-        batch("update gene_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
+        batch("update pubchem.gene_bases set title = null where id = ?", oldTitles.keySet());
+        batch("update pubchem.gene_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
     }
 
 
     private static void loadDescriptions(Model model) throws IOException, SQLException
     {
         IntStringMap newDescriptions = new IntStringMap(100000);
-        IntStringMap oldDescriptions = getIntStringMap("select id, description from gene_bases", 100000);
+        IntStringMap oldDescriptions = getIntStringMap("select id, description from pubchem.gene_bases", 100000);
 
         new QueryResultProcessor(patternQuery("?gene dcterms:description ?description"))
         {
@@ -77,15 +77,15 @@ class Gene extends Updater
             }
         }.load(model);
 
-        batch("update gene_bases set description = null where id = ?", oldDescriptions.keySet());
-        batch("update gene_bases set description = ? where id = ?", newDescriptions, Direction.REVERSE);
+        batch("update pubchem.gene_bases set description = null where id = ?", oldDescriptions.keySet());
+        batch("update pubchem.gene_bases set description = ? where id = ?", newDescriptions, Direction.REVERSE);
     }
 
 
     private static void loadBiosystems(Model model) throws IOException, SQLException
     {
         IntPairSet newBiosystems = new IntPairSet(1000000);
-        IntPairSet oldBiosystems = getIntPairSet("select gene, biosystem from gene_biosystems", 1000000);
+        IntPairSet oldBiosystems = getIntPairSet("select gene, biosystem from pubchem.gene_biosystems", 1000000);
 
         new QueryResultProcessor(patternQuery("?gene obo:BFO_0000056 ?biosystem"))
         {
@@ -102,8 +102,8 @@ class Gene extends Updater
             }
         }.load(model);
 
-        batch("delete from gene_biosystems where gene = ? and biosystem = ?", oldBiosystems);
-        batch("insert into gene_biosystems(gene, biosystem) values (?,?)", newBiosystems);
+        batch("delete from pubchem.gene_biosystems where gene = ? and biosystem = ?", oldBiosystems);
+        batch("insert into pubchem.gene_biosystems(gene, biosystem) values (?,?)", newBiosystems);
     }
 
 
@@ -111,11 +111,11 @@ class Gene extends Updater
     {
         IntStringPairIntMap newAlternatives = new IntStringPairIntMap(1000000);
         IntStringPairIntMap oldAlternatives = getIntStringPairIntMap(
-                "select gene, alternative, __ from gene_alternatives", 1000000);
+                "select gene, alternative, __ from pubchem.gene_alternatives", 1000000);
 
         new QueryResultProcessor(patternQuery("?gene dcterms:alternative ?alternative"))
         {
-            int nextAlternativeID = Updater.getIntValue("select coalesce(max(__)+1,0) from gene_alternatives");
+            int nextAlternativeID = Updater.getIntValue("select coalesce(max(__)+1,0) from pubchem.gene_alternatives");
 
             @Override
             protected void parse() throws IOException
@@ -130,15 +130,15 @@ class Gene extends Updater
             }
         }.load(model);
 
-        batch("delete from gene_alternatives where __ = ?", oldAlternatives.values());
-        batch("insert into gene_alternatives(gene, alternative, __) values (?,?,?)", newAlternatives);
+        batch("delete from pubchem.gene_alternatives where __ = ?", oldAlternatives.values());
+        batch("insert into pubchem.gene_alternatives(gene, alternative, __) values (?,?,?)", newAlternatives);
     }
 
 
     private static void loadReferences(Model model) throws IOException, SQLException
     {
         IntPairSet newReferences = new IntPairSet(10000000);
-        IntPairSet oldReferences = getIntPairSet("select gene, reference from gene_references", 10000000);
+        IntPairSet oldReferences = getIntPairSet("select gene, reference from pubchem.gene_references", 10000000);
 
         new QueryResultProcessor(patternQuery("?gene cito:isDiscussedBy ?reference"))
         {
@@ -155,19 +155,20 @@ class Gene extends Updater
             }
         }.load(model);
 
-        batch("delete from gene_references where gene = ? and reference = ?", oldReferences);
-        batch("insert into gene_references(gene, reference) values (?,?)", newReferences);
+        batch("delete from pubchem.gene_references where gene = ? and reference = ?", oldReferences);
+        batch("insert into pubchem.gene_references(gene, reference) values (?,?)", newReferences);
     }
 
 
     private static void loadCloseMatches(Model model) throws IOException, SQLException
     {
         IntStringPairIntMap newMatches = new IntStringPairIntMap(1000000);
-        IntStringPairIntMap oldMatches = getIntStringPairIntMap("select gene, match, __ from gene_matches", 1000000);
+        IntStringPairIntMap oldMatches = getIntStringPairIntMap("select gene, match, __ from pubchem.gene_matches",
+                1000000);
 
         new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match"))
         {
-            int nextMatcheID = Updater.getIntValue("select coalesce(max(__)+1,0) from gene_matches");
+            int nextMatcheID = Updater.getIntValue("select coalesce(max(__)+1,0) from pubchem.gene_matches");
 
             @Override
             protected void parse() throws IOException
@@ -182,8 +183,8 @@ class Gene extends Updater
             }
         }.load(model);
 
-        batch("delete from gene_matches where __ = ?", oldMatches.values());
-        batch("insert into gene_matches(gene, match, __) values (?,?,?)", newMatches);
+        batch("delete from pubchem.gene_matches where __ = ?", oldMatches.values());
+        batch("insert into pubchem.gene_matches(gene, match, __) values (?,?,?)", newMatches);
     }
 
 
@@ -191,8 +192,8 @@ class Gene extends Updater
     {
         System.out.println("load genes ...");
 
-        Model model = getModel("RDF/gene/pc_gene.ttl.gz");
-        check(model, "gene/check.sparql");
+        Model model = getModel("pubchem/RDF/gene/pc_gene.ttl.gz");
+        check(model, "pubchem/gene/check.sparql");
 
         loadBases(model);
         loadTitles(model);

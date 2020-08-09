@@ -1,4 +1,4 @@
-create function substance_chembl(id in integer) returns varchar language sql as
+create function pubchem.substance_chembl(id in integer) returns varchar language sql as
 $$
   select case
     when id >= 0 then 'http://linkedchemistry.info/chembl/chemblid/CHEMBL' || id
@@ -8,7 +8,7 @@ $$
 immutable parallel safe;
 
 
-create function substance_chembl_inverse(iri in varchar) returns integer language sql as
+create function pubchem.substance_chembl_inverse(iri in varchar) returns integer language sql as
 $$
   select case
     when iri like 'http://linkedchemistry.info/chembl/chemblid/SCHEMBL%' then -1 * substring(iri, 52)::integer
@@ -19,7 +19,7 @@ immutable parallel safe;
 
 --------------------------------------------------------------------------------
 
-create function substance_ebi_chembl(id in integer) returns varchar language sql as
+create function pubchem.substance_ebi_chembl(id in integer) returns varchar language sql as
 $$
   select case
     when id >= 0 then 'http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL' || id
@@ -29,7 +29,7 @@ $$
 immutable parallel safe;
 
 
-create function substance_ebi_chembl_inverse(iri in varchar) returns integer language sql as
+create function pubchem.substance_ebi_chembl_inverse(iri in varchar) returns integer language sql as
 $$
   select case
     when iri like 'http://rdf.ebi.ac.uk/resource/chembl/molecule/SCHEMBL%' then -1 * substring(iri, 54)::integer

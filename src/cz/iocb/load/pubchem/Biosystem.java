@@ -18,7 +18,7 @@ class Biosystem extends Updater
     private static void loadBases(Model model) throws IOException, SQLException
     {
         IntHashSet newBiosystems = new IntHashSet(1000000);
-        IntHashSet oldBiosystems = getIntSet("select id from biosystem_bases", 1000000);
+        IntHashSet oldBiosystems = getIntSet("select id from pubchem.biosystem_bases", 1000000);
 
         new QueryResultProcessor(patternQuery("?biosystem rdf:type bp:Pathway"))
         {
@@ -32,11 +32,11 @@ class Biosystem extends Updater
             }
         }.load(model);
 
-        batch("delete from biosystem_bases where id = ?", oldBiosystems);
+        batch("delete from pubchem.biosystem_bases where id = ?", oldBiosystems);
 
 
         IntStringMap newTitles = new IntStringMap(1000000);
-        IntStringMap oldTitles = getIntStringMap("select id, title from biosystem_bases", 1000000);
+        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.biosystem_bases", 1000000);
 
         new QueryResultProcessor(patternQuery("?biosystem dcterms:title ?title"))
         {
@@ -58,7 +58,7 @@ class Biosystem extends Updater
 
 
         IntIntHashMap newSources = new IntIntHashMap(1000000);
-        IntIntHashMap oldSources = getIntIntMap("select id, source from biosystem_bases", 1000000);
+        IntIntHashMap oldSources = getIntIntMap("select id, source from pubchem.biosystem_bases", 1000000);
 
         new QueryResultProcessor(patternQuery("?biosystem dcterms:source ?source"))
         {
@@ -79,7 +79,7 @@ class Biosystem extends Updater
             throw new IOException();
 
 
-        batch("insert into biosystem_bases(id, source, title) values (?,?,?)", newBiosystems,
+        batch("insert into pubchem.biosystem_bases(id, source, title) values (?,?,?)", newBiosystems,
                 (PreparedStatement statement, int biosystem) -> {
                     statement.setInt(1, biosystem);
                     statement.setInt(2, newSources.getOrThrow(biosystem));
@@ -87,8 +87,8 @@ class Biosystem extends Updater
                     newSources.remove(biosystem);
                 });
 
-        batch("update biosystem_bases set source = ? where id = ?", newSources, Direction.REVERSE);
-        batch("update biosystem_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
+        batch("update pubchem.biosystem_bases set source = ? where id = ?", newSources, Direction.REVERSE);
+        batch("update pubchem.biosystem_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
     }
 
 
@@ -96,7 +96,7 @@ class Biosystem extends Updater
     {
         IntIntHashMap newOrganisms = new IntIntHashMap(1000000);
         IntIntHashMap oldOrganisms = getIntIntMap(
-                "select id, organism_id from biosystem_bases where organism_id is not null", 1000000);
+                "select id, organism_id from pubchem.biosystem_bases where organism_id is not null", 1000000);
 
         new QueryResultProcessor(patternQuery("?biosystem bp:organism ?organism"))
         {
@@ -111,15 +111,16 @@ class Biosystem extends Updater
             }
         }.load(model);
 
-        batch("update biosystem_bases set organism_id = null where id = ?", oldOrganisms.keySet());
-        batch("update biosystem_bases set organism_id = ? where id = ?", newOrganisms, Direction.REVERSE);
+        batch("update pubchem.biosystem_bases set organism_id = null where id = ?", oldOrganisms.keySet());
+        batch("update pubchem.biosystem_bases set organism_id = ? where id = ?", newOrganisms, Direction.REVERSE);
     }
 
 
     private static void loadComponents(Model model) throws IOException, SQLException
     {
         IntPairSet newComponents = new IntPairSet(1000000);
-        IntPairSet oldComponents = getIntPairSet("select biosystem, component from biosystem_components", 1000000);
+        IntPairSet oldComponents = getIntPairSet("select biosystem, component from pubchem.biosystem_components",
+                1000000);
 
         new QueryResultProcessor(patternQuery("?biosystem bp:pathwayComponent ?component"))
         {
@@ -136,15 +137,16 @@ class Biosystem extends Updater
             }
         }.load(model);
 
-        batch("delete from biosystem_components where biosystem = ? and component = ?", oldComponents);
-        batch("insert into biosystem_components(biosystem, component) values (?,?)", newComponents);
+        batch("delete from pubchem.biosystem_components where biosystem = ? and component = ?", oldComponents);
+        batch("insert into pubchem.biosystem_components(biosystem, component) values (?,?)", newComponents);
     }
 
 
     private static void loadReferences(Model model) throws IOException, SQLException
     {
         IntPairSet newReferences = new IntPairSet(1000000);
-        IntPairSet oldReferences = getIntPairSet("select biosystem, reference from biosystem_references", 1000000);
+        IntPairSet oldReferences = getIntPairSet("select biosystem, reference from pubchem.biosystem_references",
+                1000000);
 
         new QueryResultProcessor(patternQuery("?biosystem cito:isDiscussedBy ?reference"))
         {
@@ -161,15 +163,16 @@ class Biosystem extends Updater
             }
         }.load(model);
 
-        batch("delete from biosystem_references where biosystem = ? and reference = ?", oldReferences);
-        batch("insert into biosystem_references(biosystem, reference) values (?,?)", newReferences);
+        batch("delete from pubchem.biosystem_references where biosystem = ? and reference = ?", oldReferences);
+        batch("insert into pubchem.biosystem_references(biosystem, reference) values (?,?)", newReferences);
     }
 
 
     private static void loadMatches(Model model) throws IOException, SQLException
     {
         IntIntHashMap newMatches = new IntIntHashMap(1000000);
-        IntIntHashMap oldMatches = getIntIntMap("select biosystem, wikipathway from biosystem_matches", 1000000);
+        IntIntHashMap oldMatches = getIntIntMap("select biosystem, wikipathway from pubchem.biosystem_matches",
+                1000000);
 
         new QueryResultProcessor(patternQuery("?biosystem skos:exactMatch ?wikipathway"))
         {
@@ -184,8 +187,8 @@ class Biosystem extends Updater
             }
         }.load(model);
 
-        batch("delete from biosystem_matches where biosystem = ?", oldMatches.keySet());
-        batch("insert into biosystem_matches(biosystem, wikipathway) values (?,?) "
+        batch("delete from pubchem.biosystem_matches where biosystem = ?", oldMatches.keySet());
+        batch("insert into pubchem.biosystem_matches(biosystem, wikipathway) values (?,?) "
                 + "on conflict (biosystem) do update set wikipathway=EXCLUDED.wikipathway", newMatches);
     }
 
@@ -194,8 +197,8 @@ class Biosystem extends Updater
     {
         System.out.println("load biosystems ...");
 
-        Model model = getModel("RDF/biosystem/pc_biosystem.ttl.gz");
-        check(model, "biosystem/check.sparql");
+        Model model = getModel("pubchem/RDF/biosystem/pc_biosystem.ttl.gz");
+        check(model, "pubchem/biosystem/check.sparql");
 
         loadBases(model);
         loadOrganisms(model);

@@ -1,4 +1,4 @@
-package cz.iocb.load.pubchem;
+package cz.iocb.load.ontology;
 
 import java.io.IOException;
 import java.sql.PreparedStatement;
@@ -28,10 +28,10 @@ public class Ontology extends Updater
     }
 
 
-    protected static class Identifier
+    public static class Identifier
     {
-        short unit;
-        int id;
+        public short unit;
+        public int id;
 
         Identifier(short unit, int id)
         {
@@ -101,12 +101,12 @@ public class Ontology extends Updater
 
 
 
-    public static void init() throws SQLException
+    public static void loadCategories() throws SQLException
     {
         try(Statement statement = connection.createStatement())
         {
             try(ResultSet result = statement.executeQuery(
-                    "select unit_id, value_offset - 1, pattern from ontology_resource_categories__reftable"))
+                    "select unit_id, value_offset - 1, pattern from ontology.resource_categories__reftable"))
             {
                 while(result.next())
                 {
@@ -131,6 +131,21 @@ public class Ontology extends Updater
         uncategorizedResources.put("http://purl.org/spar/fabio/ReviewArticle", 8);
         uncategorizedResources.put("http://purl.org/spar/fabio/JournalArticle", 9);
         uncategorizedResources.put("http://www.biopax.org/release/biopax-level3.owl#SmallMolecule", 10);
+
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#AllowedDescriptorQualifierPair", 11);
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#Concept", 12);
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#DisallowedDescriptorQualifierPair", 13);
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#GeographicalDescriptor", 14);
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#CheckTag", 15);
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#PublicationType", 16);
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#Qualifier", 17);
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Disease", 18);
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Chemical", 19);
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Organism", 20);
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Protocol", 21);
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#Term", 22);
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#TopicalDescriptor", 23);
+        uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#TreeNumber", 24);
     }
 
 
@@ -231,10 +246,10 @@ public class Ontology extends Updater
 
     private static void loadClasses(Model model) throws IOException, SQLException
     {
-        connection.createStatement().execute("delete from ontology_resource_classes");
+        connection.createStatement().execute("delete from ontology.classes");
 
         try(PreparedStatement statement = connection
-                .prepareStatement("insert into ontology_resource_classes(class_unit, class_id) values (?,?)"))
+                .prepareStatement("insert into ontology.classes(class_unit, class_id) values (?,?)"))
         {
             new OntologyQueryResultProcessor(loadQuery("ontology/classes.sparql"), statement)
             {
@@ -251,10 +266,10 @@ public class Ontology extends Updater
 
     private static void loadProperties(Model model) throws IOException, SQLException
     {
-        connection.createStatement().execute("delete from ontology_resource_properties");
+        connection.createStatement().execute("delete from ontology.properties");
 
         try(PreparedStatement statement = connection
-                .prepareStatement("insert into ontology_resource_properties(property_unit, property_id) values (?,?)"))
+                .prepareStatement("insert into ontology.properties(property_unit, property_id) values (?,?)"))
         {
             new OntologyQueryResultProcessor(loadQuery("ontology/properties.sparql"), statement)
             {
@@ -271,10 +286,10 @@ public class Ontology extends Updater
 
     private static void loadIndividuals(Model model) throws IOException, SQLException
     {
-        connection.createStatement().execute("delete from ontology_resource_individuals");
+        connection.createStatement().execute("delete from ontology.individuals");
 
-        try(PreparedStatement statement = connection.prepareStatement(
-                "insert into ontology_resource_individuals(individual_unit, individual_id) values (?,?)"))
+        try(PreparedStatement statement = connection
+                .prepareStatement("insert into ontology.individuals(individual_unit, individual_id) values (?,?)"))
         {
             new OntologyQueryResultProcessor(patternQuery("?iri rdf:type owl:NamedIndividual"), statement)
             {
@@ -291,10 +306,10 @@ public class Ontology extends Updater
 
     private static void loadResourceLabels(Model model) throws IOException, SQLException
     {
-        connection.createStatement().execute("delete from ontology_resource_labels");
+        connection.createStatement().execute("delete from ontology.resource_labels");
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into ontology_resource_labels(resource_unit, resource_id, label) values (?,?,?)"))
+                "insert into ontology.resource_labels(resource_unit, resource_id, label) values (?,?,?)"))
         {
             new OntologyQueryResultProcessor(loadQuery("ontology/labels.sparql"), statement)
             {
@@ -312,10 +327,10 @@ public class Ontology extends Updater
 
     private static void loadSuperClasses(Model model) throws IOException, SQLException
     {
-        connection.createStatement().execute("delete from ontology_resource_superclasses");
+        connection.createStatement().execute("delete from ontology.superclasses");
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into ontology_resource_superclasses(class_unit, class_id, superclass_unit, superclass_id) values (?,?,?,?)"))
+                "insert into ontology.superclasses(class_unit, class_id, superclass_unit, superclass_id) values (?,?,?,?)"))
         {
             new OntologyQueryResultProcessor(patternQuery("?class rdfs:subClassOf ?superclass"), statement)
             {
@@ -346,10 +361,10 @@ public class Ontology extends Updater
 
     private static void loadSuperProperties(Model model) throws IOException, SQLException
     {
-        connection.createStatement().execute("delete from ontology_resource_superproperties");
+        connection.createStatement().execute("delete from ontology.superproperties");
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into ontology_resource_superproperties(property_unit, property_id, superproperty_unit, superproperty_id) values (?,?,?,?)"))
+                "insert into ontology.superproperties(property_unit, property_id, superproperty_unit, superproperty_id) values (?,?,?,?)"))
         {
             new OntologyQueryResultProcessor(patternQuery("?property rdfs:subPropertyOf ?superproperty"), statement)
             {
@@ -367,10 +382,10 @@ public class Ontology extends Updater
 
     private static void loadDomains(Model model) throws SQLException, IOException
     {
-        connection.createStatement().execute("delete from ontology_resource_domains");
+        connection.createStatement().execute("delete from ontology.property_domains");
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into ontology_resource_domains(property_unit, property_id, domain_unit, domain_id) values (?,?,?,?)"))
+                "insert into ontology.property_domains(property_unit, property_id, domain_unit, domain_id) values (?,?,?,?)"))
         {
             new OntologyQueryResultProcessor(patternQuery("?property rdfs:domain ?domain"), statement)
             {
@@ -388,10 +403,10 @@ public class Ontology extends Updater
 
     private static void loadRanges(Model model) throws SQLException, IOException
     {
-        connection.createStatement().execute("delete from ontology_resource_ranges");
+        connection.createStatement().execute("delete from ontology.property_ranges");
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into ontology_resource_ranges(property_unit, property_id, range_unit, range_id) values (?,?,?,?)"))
+                "insert into ontology.property_ranges(property_unit, property_id, range_unit, range_id) values (?,?,?,?)"))
         {
             new OntologyQueryResultProcessor(patternQuery("?property rdfs:range ?range"), statement)
             {
@@ -409,10 +424,10 @@ public class Ontology extends Updater
 
     private static void loadSomeValuesFromRestriction(Model model) throws SQLException, IOException
     {
-        connection.createStatement().execute("delete from ontology_resource_somevaluesfrom_restrictions");
+        connection.createStatement().execute("delete from ontology.somevaluesfrom_restrictions");
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into ontology_resource_somevaluesfrom_restrictions(restriction_id, property_unit, property_id, class_unit, class_id) values (?,?,?,?,?)"))
+                "insert into ontology.somevaluesfrom_restrictions(restriction_id, property_unit, property_id, class_unit, class_id) values (?,?,?,?,?)"))
         {
             new OntologyQueryResultProcessor(patternQuery(
                     "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:someValuesFrom ?class"),
@@ -438,10 +453,10 @@ public class Ontology extends Updater
 
     private static void loadAllValuesFromRestriction(Model model) throws SQLException, IOException
     {
-        connection.createStatement().execute("delete from ontology_resource_allvaluesfrom_restrictions");
+        connection.createStatement().execute("delete from ontology.allvaluesfrom_restrictions");
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into ontology_resource_allvaluesfrom_restrictions(restriction_id, property_unit, property_id, class_unit, class_id) values (?,?,?,?,?)"))
+                "insert into ontology.allvaluesfrom_restrictions(restriction_id, property_unit, property_id, class_unit, class_id) values (?,?,?,?,?)"))
         {
             new OntologyQueryResultProcessor(patternQuery(
                     "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:allValuesFrom ?class"),
@@ -467,10 +482,10 @@ public class Ontology extends Updater
 
     private static void loadCardinalityRestriction(Model model) throws SQLException, IOException
     {
-        connection.createStatement().execute("delete from ontology_resource_cardinality_restrictions");
+        connection.createStatement().execute("delete from ontology.cardinality_restrictions");
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into ontology_resource_cardinality_restrictions(restriction_id, property_unit, property_id, cardinality) values (?,?,?,?)"))
+                "insert into ontology.cardinality_restrictions(restriction_id, property_unit, property_id, cardinality) values (?,?,?,?)"))
         {
             new OntologyQueryResultProcessor(patternQuery(
                     "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:cardinality ?cardinality"),
@@ -496,10 +511,10 @@ public class Ontology extends Updater
 
     private static void loadMinCardinalityRestriction(Model model) throws SQLException, IOException
     {
-        connection.createStatement().execute("delete from ontology_resource_mincardinality_restrictions");
+        connection.createStatement().execute("delete from ontology.mincardinality_restrictions");
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into ontology_resource_mincardinality_restrictions(restriction_id, property_unit, property_id, cardinality) values (?,?,?,?)"))
+                "insert into ontology.mincardinality_restrictions(restriction_id, property_unit, property_id, cardinality) values (?,?,?,?)"))
         {
             new OntologyQueryResultProcessor(patternQuery(
                     "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:minCardinality ?cardinality"),
@@ -525,10 +540,10 @@ public class Ontology extends Updater
 
     private static void loadMaxCardinalityRestriction(Model model) throws SQLException, IOException
     {
-        connection.createStatement().execute("delete from ontology_resource_maxcardinality_restrictions");
+        connection.createStatement().execute("delete from ontology.maxcardinality_restrictions");
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into ontology_resource_maxcardinality_restrictions(restriction_id, property_unit, property_id, cardinality) values (?,?,?,?)"))
+                "insert into ontology.maxcardinality_restrictions(restriction_id, property_unit, property_id, cardinality) values (?,?,?,?)"))
         {
             new OntologyQueryResultProcessor(patternQuery(
                     "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:maxCardinality ?cardinality"),
@@ -554,10 +569,10 @@ public class Ontology extends Updater
 
     static void storeUncategorizedResources() throws SQLException, IOException
     {
-        connection.createStatement().execute("delete from ontology_resources__reftable");
+        connection.createStatement().execute("delete from ontology.resources__reftable");
 
         try(PreparedStatement insertStatement = connection
-                .prepareStatement("insert into ontology_resources__reftable(resource_id, iri) values (?,?)"))
+                .prepareStatement("insert into ontology.resources__reftable(resource_id, iri) values (?,?)"))
         {
             for(Entry<String, Integer> entry : uncategorizedResources.entrySet())
             {
@@ -591,7 +606,7 @@ public class Ontology extends Updater
         }
 
 
-        init();
+        loadCategories();
 
         loadClasses(ontologyModel);
         loadProperties(ontologyModel);
@@ -613,5 +628,21 @@ public class Ontology extends Updater
         storeUncategorizedResources();
 
         ontologyModel.close();
+    }
+
+
+    public static void main(String[] args) throws SQLException, IOException
+    {
+        try
+        {
+            init();
+            load();
+            commit();
+        }
+        catch(Throwable e)
+        {
+            e.printStackTrace();
+            rollback();
+        }
     }
 }

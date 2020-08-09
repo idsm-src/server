@@ -95,30 +95,30 @@ class BioassayXML extends Updater
             throws SQLException, IOException, XPathException, ParserConfigurationException, SAXException
     {
         IntHashSet newBioassays = new IntHashSet(1000000);
-        IntHashSet oldBioassays = getIntSet("select id from bioassay_bases", 1000000);
+        IntHashSet oldBioassays = getIntSet("select id from pubchem.bioassay_bases", 1000000);
 
         IntIntHashMap newSources = new IntIntHashMap(2000000);
-        IntIntHashMap oldSources = getIntIntMap("select id, source from bioassay_bases", 2000000);
+        IntIntHashMap oldSources = getIntIntMap("select id, source from pubchem.bioassay_bases", 2000000);
 
         IntStringMap newTitles = new IntStringMap(2000000);
-        IntStringMap oldTitles = getIntStringMap("select id, title from bioassay_bases", 2000000);
+        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.bioassay_bases", 2000000);
 
         IntStringPairIntMap newDescriptions = new IntStringPairIntMap(2000000);
         IntStringPairIntMap oldDescriptions = getIntStringPairIntMap(
-                "select bioassay, value, __ from bioassay_data where type_id = '136'::smallint", 2000000);
+                "select bioassay, value, __ from pubchem.bioassay_data where type_id = '136'::smallint", 2000000);
 
         IntStringPairIntMap newProtocols = new IntStringPairIntMap(2000000);
         IntStringPairIntMap oldProtocols = getIntStringPairIntMap(
-                "select bioassay, value, __ from bioassay_data where type_id = '1041'::smallint", 2000000);
+                "select bioassay, value, __ from pubchem.bioassay_data where type_id = '1041'::smallint", 2000000);
 
         IntStringPairIntMap newComments = new IntStringPairIntMap(2000000);
         IntStringPairIntMap oldComments = getIntStringPairIntMap(
-                "select bioassay, value, __ from bioassay_data where type_id = '1167'::smallint", 2000000);
+                "select bioassay, value, __ from pubchem.bioassay_data where type_id = '1167'::smallint", 2000000);
 
-        nextDataID = getIntValue("select coalesce(max(__)+1,0) from bioassay_data");
+        nextDataID = getIntValue("select coalesce(max(__)+1,0) from pubchem.bioassay_data");
 
 
-        processXmlFiles("Bioassay/XML", "[0-9]+_[0-9]+\\.zip", file -> {
+        processXmlFiles("pubchem/Bioassay/XML", "[0-9]+_[0-9]+\\.zip", file -> {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             XPath xPath = XPathFactory.newInstance().newXPath();
 
@@ -231,8 +231,8 @@ class BioassayXML extends Updater
         });
 
 
-        batch("delete from bioassay_bases where id = ?", oldBioassays);
-        batch("insert into bioassay_bases(id, source, title) values (?,?,?)", newBioassays,
+        batch("delete from pubchem.bioassay_bases where id = ?", oldBioassays);
+        batch("insert into pubchem.bioassay_bases(id, source, title) values (?,?,?)", newBioassays,
                 (PreparedStatement statement, int bioassay) -> {
                     statement.setInt(1, bioassay);
                     statement.setInt(2, newSources.getOrThrow(bioassay));
@@ -240,17 +240,17 @@ class BioassayXML extends Updater
                     newSources.remove(bioassay);
                 });
 
-        batch("update bioassay_bases set source = ? where id = ?", newSources, Direction.REVERSE);
-        batch("update bioassay_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
+        batch("update pubchem.bioassay_bases set source = ? where id = ?", newSources, Direction.REVERSE);
+        batch("update pubchem.bioassay_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
 
-        batch("delete from bioassay_data where __ = ?", oldDescriptions.values());
-        batch("insert into bioassay_data(type_id, bioassay, value, __) values (136,?,?,?)", newDescriptions);
+        batch("delete from pubchem.bioassay_data where __ = ?", oldDescriptions.values());
+        batch("insert into pubchem.bioassay_data(type_id, bioassay, value, __) values (136,?,?,?)", newDescriptions);
 
-        batch("delete from bioassay_data where __ = ?", oldProtocols.values());
-        batch("insert into bioassay_data(type_id, bioassay, value, __) values (1041,?,?,?)", newProtocols);
+        batch("delete from pubchem.bioassay_data where __ = ?", oldProtocols.values());
+        batch("insert into pubchem.bioassay_data(type_id, bioassay, value, __) values (1041,?,?,?)", newProtocols);
 
-        batch("delete from bioassay_data where __ = ?", oldComments.values());
-        batch("insert into bioassay_data(type_id, bioassay, value, __) values (1167,?,?,?)", newComments);
+        batch("delete from pubchem.bioassay_data where __ = ?", oldComments.values());
+        batch("insert into pubchem.bioassay_data(type_id, bioassay, value, __) values (1167,?,?,?)", newComments);
     }
 
 
