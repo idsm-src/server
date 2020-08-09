@@ -39,7 +39,8 @@ class Gene extends Updater
     private static void loadTitles(Model model) throws IOException, SQLException
     {
         IntStringMap newTitles = new IntStringMap(100000);
-        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.gene_bases", 100000);
+        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.gene_bases where title is not null",
+                100000);
 
         new QueryResultProcessor(patternQuery("?gene dcterms:title ?title"))
         {
@@ -62,7 +63,8 @@ class Gene extends Updater
     private static void loadDescriptions(Model model) throws IOException, SQLException
     {
         IntStringMap newDescriptions = new IntStringMap(100000);
-        IntStringMap oldDescriptions = getIntStringMap("select id, description from pubchem.gene_bases", 100000);
+        IntStringMap oldDescriptions = getIntStringMap(
+                "select id, description from pubchem.gene_bases where description is not null", 100000);
 
         new QueryResultProcessor(patternQuery("?gene dcterms:description ?description"))
         {
