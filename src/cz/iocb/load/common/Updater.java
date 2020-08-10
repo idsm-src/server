@@ -37,6 +37,7 @@ import org.apache.jena.util.FileManager;
 import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
+import org.eclipse.collections.api.tuple.primitive.ObjectFloatPair;
 import org.eclipse.collections.api.tuple.primitive.ObjectIntPair;
 import org.eclipse.collections.impl.map.mutable.primitive.IntFloatHashMap;
 import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
@@ -112,6 +113,16 @@ public class Updater
     protected static class IntQuaterpletSet extends HashSet<IntQuaterplet>
     {
         public IntQuaterpletSet(int capacity)
+        {
+            super(capacity);
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    protected static class IntTripletFloatSet extends HashSet<ObjectFloatPair<IntTriplet>>
+    {
+        public IntTripletFloatSet(int capacity)
         {
             super(capacity);
         }
@@ -442,6 +453,31 @@ public class Updater
                 while(result.next())
                     values.add(
                             new IntQuaterplet(result.getInt(1), result.getInt(2), result.getInt(3), result.getInt(4)));
+            }
+        }
+
+        System.out.println(
+                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
+        return values;
+    }
+
+
+    protected static IntTripletFloatSet getIntTripletFloatSet(String query, int capacity) throws SQLException
+    {
+        long time = System.currentTimeMillis();
+        System.out.print("  " + query);
+
+        IntTripletFloatSet values = new IntTripletFloatSet(capacity);
+
+        try(PreparedStatement statement = connection.prepareStatement(query))
+        {
+            statement.setFetchSize(1000000);
+
+            try(java.sql.ResultSet result = statement.executeQuery())
+            {
+                while(result.next())
+                    values.add(PrimitiveTuples.pair(
+                            new IntTriplet(result.getInt(1), result.getInt(2), result.getInt(3)), result.getFloat(4)));
             }
         }
 
@@ -958,6 +994,46 @@ public class Updater
                         statement.setInt(2, value.getTwo());
                         statement.setInt(3, value.getThree());
                         statement.setInt(4, value.getFour());
+                        statement.addBatch();
+
+                        if(++count % batchSize == 0)
+                            statement.executeBatch();
+                    }
+                    catch(SQLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            catch(RuntimeException e)
+            {
+                if(e.getCause() instanceof SQLException)
+                    throw(SQLException) e.getCause();
+            }
+
+            if(count % batchSize != 0)
+                statement.executeBatch();
+        }
+    }
+
+
+    protected static void batch(String command, IntTripletFloatSet set) throws SQLException
+    {
+        System.out.println("  " + command + " -> count: " + set.size());
+
+        try(PreparedStatement statement = connection.prepareStatement(command))
+        {
+            count = 0;
+
+            try
+            {
+                set.forEach(value -> {
+                    try
+                    {
+                        statement.setInt(1, value.getOne().getOne());
+                        statement.setInt(2, value.getOne().getTwo());
+                        statement.setInt(3, value.getOne().getThree());
+                        statement.setFloat(4, value.getTwo());
                         statement.addBatch();
 
                         if(++count % batchSize == 0)

@@ -22,6 +22,15 @@ grant select on pubchem.endpoint_measurements to sparql;
 
 --------------------------------------------------------------------------------
 
+create index endpoint_measurement_values__substance on pubchem.endpoint_measurement_values(substance);
+create index endpoint_measurement_values__bioassay on pubchem.endpoint_measurement_values(bioassay);
+create index endpoint_measurement_values__bioassay_measuregroup on pubchem.endpoint_measurement_values(bioassay, measuregroup);
+create index endpoint_measurement_values__substance_bioassay_measuregroup on pubchem.endpoint_measurement_values(substance, bioassay, measuregroup);
+create index endpoint_measurement_values__value on pubchem.endpoint_measurement_values(value);
+grant select on pubchem.endpoint_measurement_values to sparql;
+
+--------------------------------------------------------------------------------
+
 create index endpoint_references__substance on pubchem.endpoint_references(substance);
 create index endpoint_references__bioassay on pubchem.endpoint_references(bioassay);
 create index endpoint_references__bioassay_measuregroup on pubchem.endpoint_references(bioassay, measuregroup);

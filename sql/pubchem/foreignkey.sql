@@ -43,6 +43,7 @@ alter table pubchem.conserveddomain_references add foreign key (reference) refer
 
 -- endpoint
 alter table pubchem.endpoint_measurements add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
+alter table pubchem.endpoint_measurement_values add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
 alter table pubchem.endpoint_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 alter table pubchem.endpoint_references add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
 alter table pubchem.endpoint_outcomes add foreign key (substance) references pubchem.substance_bases(id) initially deferred;

@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
+import org.eclipse.collections.api.tuple.primitive.ObjectFloatPair;
+import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import cz.iocb.load.common.IntQuaterplet;
 import cz.iocb.load.common.IntTriplet;
 import cz.iocb.load.common.TripleStreamProcessor;
@@ -118,34 +120,6 @@ class Endpoint extends Updater
         }
 
 
-        IntTripletFloatMap newValues = new IntTripletFloatMap(10000000);
-        IntTripletFloatMap oldValues = getIntTripletFloatMap(
-                "select substance, bioassay, measuregroup, value from pubchem.endpoint_measurements", 10000000);
-
-        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_value.ttl.gz"))
-        {
-            new TripleStreamProcessor()
-            {
-
-                @Override
-                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
-                {
-                    if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
-                        throw new IOException();
-
-                    IntTriplet triplet = parseEndpoint(subject);
-                    float value = getFloat(object);
-
-                    if(usedMeasurements.add(triplet) && !oldMeasurements.remove(triplet))
-                        newMeasurements.add(triplet);
-
-                    if(value != oldValues.removeKeyIfAbsent(triplet, Float.NaN) || value == Float.NaN)
-                        newValues.put(triplet, value);
-                }
-            }.load(stream);
-        }
-
-
         IntTripletStringMap newLabels = new IntTripletStringMap(10000000);
         IntTripletStringMap oldLabels = getIntTripletStringMap(
                 "select substance, bioassay, measuregroup, label from pubchem.endpoint_measurements", 10000000);
@@ -175,38 +149,68 @@ class Endpoint extends Updater
 
         oldMeasurements.forEach(key -> {
             oldTypes.remove(key);
-            oldValues.remove(key);
             oldLabels.remove(key);
         });
 
-        if(!oldTypes.isEmpty() || !oldValues.isEmpty() || !oldLabels.isEmpty())
+        if(!oldTypes.isEmpty() || !oldLabels.isEmpty())
             throw new IOException();
 
 
         batch("delete from pubchem.endpoint_measurements where substance = ? and bioassay = ? and measuregroup = ?",
                 oldMeasurements);
 
-        batch("insert into pubchem.endpoint_measurements(substance, bioassay, measuregroup, type_id, value, label) values (?,?,?,?,?,?)",
+        batch("insert into pubchem.endpoint_measurements(substance, bioassay, measuregroup, type_id, label) values (?,?,?,?,?)",
                 newMeasurements, (PreparedStatement statement, IntTriplet endpoint) -> {
                     statement.setInt(1, endpoint.getOne());
                     statement.setInt(2, endpoint.getTwo());
                     statement.setInt(3, endpoint.getThree());
                     statement.setInt(4, newTypes.getOrThrow(endpoint));
-                    statement.setFloat(5, newValues.getOrThrow(endpoint));
-                    statement.setString(6, newLabels.remove(endpoint));
+                    statement.setString(5, newLabels.remove(endpoint));
                     newTypes.remove(endpoint);
-                    newValues.remove(endpoint);
                 });
 
 
         batch("update pubchem.endpoint_measurements set type_id = ? where substance = ? and bioassay = ? and measuregroup = ?",
                 newTypes, Direction.REVERSE);
 
-        batch("update pubchem.endpoint_measurements set value = ? where substance = ? and bioassay = ? and measuregroup = ?",
-                newValues, Direction.REVERSE);
-
         batch("update pubchem.endpoint_measurements set label = ? where substance = ? and bioassay = ? and measuregroup = ?",
                 newLabels, Direction.REVERSE);
+    }
+
+
+    private static void loadMeasurementValues() throws IOException, SQLException
+    {
+        IntTripletFloatSet newValues = new IntTripletFloatSet(20000000);
+        IntTripletFloatSet oldValues = getIntTripletFloatSet(
+                "select substance, bioassay, measuregroup, value from pubchem.endpoint_measurement_values", 20000000);
+
+        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_value.ttl.gz"))
+        {
+            new TripleStreamProcessor()
+            {
+                @Override
+                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                {
+                    if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
+                        throw new IOException();
+
+                    IntTriplet triplet = parseEndpoint(subject);
+                    float value = getFloat(object);
+                    ObjectFloatPair<IntTriplet> pair = PrimitiveTuples.pair(triplet, value);
+
+                    //if(usedMeasurements.add(triplet) && !oldMeasurements.remove(triplet))
+                    //    newMeasurements.add(triplet);
+
+                    if(!oldValues.remove(pair))
+                        newValues.add(pair);
+                }
+            }.load(stream);
+        }
+
+        batch("delete from pubchem.endpoint_measurement_values where substance = ? and bioassay = ? and measuregroup = ? and value = ?",
+                oldValues);
+        batch("insert into pubchem.endpoint_measurement_values (substance, bioassay, measuregroup, value) values (?,?,?,?)",
+                newValues);
     }
 
 
@@ -269,6 +273,7 @@ class Endpoint extends Updater
         loadBases();
         loadOutcomes();
         loadMeasurements();
+        loadMeasurementValues();
         loadReferences();
         checkUnits();
 

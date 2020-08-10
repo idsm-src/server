@@ -23,9 +23,18 @@ create table pubchem.endpoint_measurements
     bioassay        integer not null,
     measuregroup    integer not null,
     type_id         integer not null,
-    value           real not null,
     label           varchar not null,
     primary key(substance, bioassay, measuregroup)
+);
+
+
+create table pubchem.endpoint_measurement_values
+(
+    substance       integer not null,
+    bioassay        integer not null,
+    measuregroup    integer not null,
+    value           real not null,
+    primary key(substance, bioassay, measuregroup, value)
 );
 
 
