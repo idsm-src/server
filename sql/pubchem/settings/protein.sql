@@ -1,5 +1,6 @@
 create index protein_bases__organism on pubchem.protein_bases(organism_id);
 create index protein_bases__title on pubchem.protein_bases(title);
+create index protein_bases__title__gin on pubchem.protein_bases using gin (to_tsvector('english', title));
 grant select on pubchem.protein_bases to sparql;
 
 --------------------------------------------------------------------------------

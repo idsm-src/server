@@ -1,5 +1,7 @@
 create index gene_bases__title on pubchem.gene_bases(title);
+create index gene_bases__title__gin on pubchem.gene_bases using gin (to_tsvector('english', title));
 create index gene_bases__description on pubchem.gene_bases(description);
+create index gene_bases__description__gin on pubchem.gene_bases using gin (to_tsvector('english', description));
 grant select on pubchem.gene_bases to sparql;
 
 --------------------------------------------------------------------------------
