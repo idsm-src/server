@@ -98,6 +98,7 @@ public class Ontology extends Updater
     public static final short unitPR2 = 33;
     public static final short unitAT = 34;
     public static final short unitZDBGENE = 35;
+    public static final short unitStar = 95;
 
 
 
@@ -146,11 +147,56 @@ public class Ontology extends Updater
         uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#Term", 22);
         uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#TopicalDescriptor", 23);
         uncategorizedResources.put("http://id.nlm.nih.gov/mesh/vocab#TreeNumber", 24);
+
+        uncategorizedResources.put("http://qudt.org/vocab/unit#Centimeter", 25);
+        uncategorizedResources.put("http://qudt.org/vocab/unit#Day", 26);
+        uncategorizedResources.put("http://qudt.org/vocab/unit#DegreeCelsius", 27);
+        uncategorizedResources.put("http://qudt.org/vocab/unit#Gram", 28);
+        uncategorizedResources.put("http://qudt.org/vocab/unit#Hour", 29);
+        uncategorizedResources.put("http://qudt.org/vocab/unit#InternationalUnitPerLiter", 30);
+        uncategorizedResources.put("http://qudt.org/vocab/unit#Kilogram", 31);
+        uncategorizedResources.put("http://qudt.org/vocab/unit#Liter", 32);
+        uncategorizedResources.put("http://qudt.org/vocab/unit#Micrometer", 33);
+        uncategorizedResources.put("http://qudt.org/vocab/unit#Millimeter", 34);
+        uncategorizedResources.put("http://qudt.org/vocab/unit#MilliSecond", 35);
+        uncategorizedResources.put("http://qudt.org/vocab/unit#MinuteTime", 36);
+        uncategorizedResources.put("http://qudt.org/vocab/unit#Percent", 37);
+        uncategorizedResources.put("http://qudt.org/vocab/unit#SecondTime", 38);
+
+        uncategorizedResources.put("http://www.openphacts.org/units/GramPerLiter", 39);
+        uncategorizedResources.put("http://www.openphacts.org/units/MicrogramPerMilliliter", 40);
+        uncategorizedResources.put("http://www.openphacts.org/units/Micromolar", 41);
+        uncategorizedResources.put("http://www.openphacts.org/units/MilligramPerDeciliter", 42);
+        uncategorizedResources.put("http://www.openphacts.org/units/MilligramPerMilliliter", 43);
+        uncategorizedResources.put("http://www.openphacts.org/units/Millimolar", 44);
+        uncategorizedResources.put("http://www.openphacts.org/units/Molar", 45);
+        uncategorizedResources.put("http://www.openphacts.org/units/NanogramPerMilliliter", 46);
+        uncategorizedResources.put("http://www.openphacts.org/units/Nanomolar", 47);
+        uncategorizedResources.put("http://www.openphacts.org/units/PicogramPerMilliliter", 48);
+        uncategorizedResources.put("http://www.openphacts.org/units/Picomolar", 49);
+
+        uncategorizedResources.put("http://purl.obolibrary.org/obo/chebi#has_functional_parent", 50);
+        uncategorizedResources.put("http://purl.obolibrary.org/obo/chebi#is_conjugate_base_of", 51);
+        uncategorizedResources.put("http://purl.obolibrary.org/obo/chebi#is_conjugate_acid_of", 52);
+        uncategorizedResources.put("http://purl.obolibrary.org/obo/chebi#is_enantiomer_of", 53);
+        uncategorizedResources.put("http://purl.obolibrary.org/obo/chebi#is_tautomer_of", 54);
+        uncategorizedResources.put("http://purl.obolibrary.org/obo/chebi#has_parent_hydride", 55);
+        uncategorizedResources.put("http://purl.obolibrary.org/obo/chebi#is_substituent_group_from", 56);
+        uncategorizedResources.put("http://purl.obolibrary.org/obo/chebi#BRAND_NAME", 57);
+        uncategorizedResources.put("http://purl.obolibrary.org/obo/chebi#IUPAC_NAME", 58);
+        uncategorizedResources.put("http://purl.obolibrary.org/obo/chebi#INN", 59);
+
+        uncategorizedResources.put("http://www.geneontology.org/formats/oboInOwl#hasDbXref", 60);
+        uncategorizedResources.put("http://www.geneontology.org/formats/oboInOwl#hasExactSynonym", 61);
+        uncategorizedResources.put("http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym", 62);
     }
 
 
     public static Identifier getId(String iri)
     {
+        if(iri == null)
+            return null;
+
         for(Unit unit : units)
         {
             if(iri.matches(unit.pattern))
@@ -181,6 +227,10 @@ public class Ontology extends Updater
                     // [0-9]{6}-([1-3])?[0-9]{1,3}$
                     id = Integer.parseInt(tail.substring(0, 6));
                     id = id * 4000 + Integer.parseInt(tail.substring(7));
+                }
+                else if(unit.id == unitStar)
+                {
+                    id = tail.charAt(0) - '0';
                 }
                 else
                 {

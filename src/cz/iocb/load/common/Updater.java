@@ -846,6 +846,31 @@ public class Updater
     }
 
 
+    protected static <T> ObjectIntHashMap<T> getObjectIntMap(String query, SQLFunction<java.sql.ResultSet, T> function,
+            int capacity) throws SQLException
+    {
+        long time = System.currentTimeMillis();
+        System.out.print("  " + query);
+
+        ObjectIntHashMap<T> map = new ObjectIntHashMap<T>(capacity);
+
+        try(PreparedStatement statement = connection.prepareStatement(query))
+        {
+            statement.setFetchSize(1000000);
+
+            try(java.sql.ResultSet result = statement.executeQuery())
+            {
+                while(result.next())
+                    map.put(function.apply(result), result.getInt(1));
+            }
+        }
+
+        System.out.println(
+                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
+        return map;
+    }
+
+
     protected static int getIntValue(String query) throws SQLException
     {
         System.out.print("  " + query);
