@@ -204,16 +204,10 @@ class Substance extends Updater
                         if(!value.startsWith("http://linkedchemistry.info/chembl/chemblid/"))
                         {
                             int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
-                            int matchID;
-
-                            addSubstanceID(substanceID);
-
-                            if(value.length() > 46 && value.charAt(46) == 'C')
-                                matchID = getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL");
-                            else
-                                matchID = -getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/molecule/SCHEMBL");
+                            int matchID = getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL");
 
                             IntIntPair pair = PrimitiveTuples.pair(substanceID, matchID);
+                            addSubstanceID(substanceID);
 
                             synchronized(newMatches)
                             {
