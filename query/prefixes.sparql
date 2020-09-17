@@ -47,3 +47,6 @@ prefix mesh:            <http://id.nlm.nih.gov/mesh/>
 
 prefix chebi:           <http://purl.obolibrary.org/obo/chebi/>
 prefix oboInOwl:        <http://www.geneontology.org/formats/oboInOwl#>
+
+prefix cco:             <http://rdf.ebi.ac.uk/terms/chembl#>
+prefix bibo:            <http://purl.org/ontology/bibo/>
