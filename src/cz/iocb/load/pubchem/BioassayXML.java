@@ -1,9 +1,12 @@
 package cz.iocb.load.pubchem;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 import javax.xml.parsers.DocumentBuilder;
@@ -94,6 +97,20 @@ class BioassayXML extends Updater
     static void loadBioassays()
             throws SQLException, IOException, XPathException, ParserConfigurationException, SAXException
     {
+        HashMap<Integer, Integer> assayMapping = new HashMap<Integer, Integer>();
+
+        try(BufferedReader reader = new BufferedReader(new FileReader(baseDirectory + "chembl/assay-mapping.txt")))
+        {
+            for(String line = reader.readLine(); line != null; line = reader.readLine())
+            {
+                int id = Integer.parseInt(line.replaceFirst("\t.*", ""));
+                int chembl = Integer.parseInt(line.replaceFirst(".*\tCHEMBL", ""));
+
+                assayMapping.put(id, chembl);
+            }
+        }
+
+
         IntHashSet newBioassays = new IntHashSet(1000000);
         IntHashSet oldBioassays = getIntSet("select id from pubchem.bioassay_bases", 1000000);
 
@@ -114,6 +131,14 @@ class BioassayXML extends Updater
         IntStringPairIntMap newComments = new IntStringPairIntMap(2000000);
         IntStringPairIntMap oldComments = getIntStringPairIntMap(
                 "select bioassay, value, __ from pubchem.bioassay_data where type_id = '1167'::smallint", 2000000);
+
+        IntIntHashMap newAssays = new IntIntHashMap(2000000);
+        IntIntHashMap oldAssays = getIntIntMap("select bioassay, chembl_assay from pubchem.bioassay_chembl_assays",
+                2000000);
+
+        IntIntHashMap newMechanisms = new IntIntHashMap(1000);
+        IntIntHashMap oldMechanisms = getIntIntMap(
+                "select bioassay, chembl_mechanism from pubchem.bioassay_chembl_mechanisms", 1000);
 
         nextDataID = getIntValue("select coalesce(max(__)+1,0) from pubchem.bioassay_data");
 
@@ -137,6 +162,9 @@ class BioassayXML extends Updater
                     .compile("./PC-AssayDescription_protocol/PC-AssayDescription_protocol_E");
             XPathExpression commentPath = xPath.compile("./PC-AssayDescription_comment/PC-AssayDescription_comment_E");
 
+            XPathExpression trackingSourcePath = xPath.compile(
+                    "./PC-AssayDescription_aid-source/PC-Source/PC-Source_db/PC-DBTracking/PC-DBTracking_source-id/Object-id/Object-id_str");
+
 
             InputStream fileStream = getStream(file, false);
             MyZipInputStream zipStream = new MyZipInputStream(fileStream);
@@ -151,7 +179,7 @@ class BioassayXML extends Updater
                     Node baseNode = (Node) basePath.evaluate(document.getDocumentElement(), XPathConstants.NODE);
 
                     if(baseNode == null)
-                        new IOException("base node not found");
+                        throw new IOException("base node not found");
 
 
                     int bioassayID = Integer.parseInt(getSingleNodeValue(idPath, baseNode));
@@ -222,6 +250,35 @@ class BioassayXML extends Updater
                                 newComments.put(pair, nextDataID++);
                         }
                     }
+
+
+                    if(sourceName.equals("ChEMBL"))
+                    {
+                        String chemblSource = getSingleNodeValue(trackingSourcePath, baseNode);
+
+                        if(chemblSource.startsWith("drug_mech_"))
+                        {
+                            int chemblID = Integer.parseInt(chemblSource.replaceFirst("^drug_mech_", ""));
+
+                            synchronized(newMechanisms)
+                            {
+                                if(oldMechanisms.removeKeyIfAbsent(bioassayID, NO_VALUE) != chemblID)
+                                    newMechanisms.put(bioassayID, chemblID);
+                            }
+                        }
+                        else
+                        {
+                            Integer chemblID = assayMapping.get(Integer.parseInt(chemblSource));
+
+                            synchronized(newAssays)
+                            {
+                                if(chemblID == null)
+                                    System.err.println("lost assay mapping for " + chemblSource + " in " + bioassayID);
+                                else if(oldAssays.removeKeyIfAbsent(bioassayID, NO_VALUE) != chemblID)
+                                    newAssays.put(bioassayID, chemblID);
+                            }
+                        }
+                    }
                 }
 
                 zipStream.closeEntry();
@@ -251,6 +308,12 @@ class BioassayXML extends Updater
 
         batch("delete from pubchem.bioassay_data where __ = ?", oldComments.values());
         batch("insert into pubchem.bioassay_data(type_id, bioassay, value, __) values (1167,?,?,?)", newComments);
+
+        batch("delete from pubchem.bioassay_chembl_assays where bioassay = ?", oldAssays.keySet());
+        batch("insert into pubchem.bioassay_chembl_assays(bioassay, chembl_assay) values (?,?)", newAssays);
+
+        batch("delete from pubchem.bioassay_chembl_mechanisms where bioassay = ?", oldMechanisms.keySet());
+        batch("insert into pubchem.bioassay_chembl_mechanisms(bioassay, chembl_mechanism) values (?,?)", newMechanisms);
     }
 
 

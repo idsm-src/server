@@ -15,3 +15,19 @@ create table pubchem.bioassay_data
     value       varchar not null,
     primary key(__)
 );
+
+
+create table pubchem.bioassay_chembl_assays
+(
+    bioassay            integer not null,
+    chembl_assay        integer not null,
+    primary key(bioassay)
+);
+
+
+create table pubchem.bioassay_chembl_mechanisms
+(
+    bioassay            integer not null,
+    chembl_mechanism    integer not null,
+    primary key(bioassay)
+);

@@ -1,6 +1,8 @@
 -- bioassay
 alter table pubchem.bioassay_bases add foreign key (source) references pubchem.source_bases(id) initially deferred;
 alter table pubchem.bioassay_data add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
+alter table pubchem.bioassay_chembl_assays add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
+alter table pubchem.bioassay_chembl_mechanisms add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
 
 
 -- biosystem
