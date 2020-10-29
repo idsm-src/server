@@ -6,7 +6,6 @@ create type chembl.molecule_reference_type as enum
     'EMOLECULES',
     'FDA SRS',
     'HMDB',
-    'CHEBI',
     'IBM PATENT STRUCTURE',
     'IUPHAR',
     'KEGG LIGAND',
@@ -56,4 +55,12 @@ create table chembl.molecule_pubchem_dotf_references
     molecule_id     integer not null,
     substance_id    integer not null,
     primary key(molecule_id, substance_id)
+);
+
+
+create table chembl.molecule_chebi_references
+(
+    molecule_id     integer not null,
+    chebi_id        integer not null,
+    primary key(molecule_id, chebi_id)
 );

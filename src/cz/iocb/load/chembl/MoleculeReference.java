@@ -50,8 +50,6 @@ public class MoleculeReference extends Updater
                 "http://jglobal\\.jst\\.go\\.jp/en/redirect\\?Nikkaji_No=[A-Z0-9.]+"));
         descriptions.put("ActorRef", new Description("ACTOR", "http://actor.epa.gov/actor/chemical.xhtml?casrn=",
                 "http://actor\\.epa\\.gov/actor/chemical\\.xhtml\\?casrn=[1-9][0-9]*-[0-9]{2}-[0-9]"));
-        descriptions.put("ChebiRef", new Description("CHEBI", "http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI%3A",
-                "http://www\\.ebi\\.ac\\.uk/chebi/searchId\\.do\\?chebiId=CHEBI%3A[1-9][0-9]*"));
         descriptions.put("PdbeRef",
                 new Description("PDBE", "http://www.ebi.ac.uk/pdbe-srv/pdbechem/chemicalCompound/show/",
                         "http://www\\.ebi\\.ac\\.uk/pdbe-srv/pdbechem/chemicalCompound/show/[A-Z0-9]{1,3}"));
@@ -93,7 +91,8 @@ public class MoleculeReference extends Updater
                         + "values (?,?,?::chembl.molecule_reference_type,?)"))
         {
             new QueryResultProcessor(patternQuery("?molecule cco:moleculeXref ?reference. ?reference rdf:type ?type "
-                    + "filter(?type != cco:PubchemRef && ?type != cco:PubchemThomPharmRef && ?type != cco:PubchemDotfRef)"))
+                    + "filter(?type != cco:PubchemRef && ?type != cco:PubchemThomPharmRef "
+                    + "&& ?type != cco:PubchemDotfRef && ?type != cco:cco:ChebiRef)"))
             {
                 @Override
                 public void parse() throws SQLException, IOException
@@ -170,6 +169,23 @@ public class MoleculeReference extends Updater
                 {
                     statement.setInt(1, getIntID("molecule", "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL"));
                     statement.setInt(2, getIntID("substance", "http://pubchem.ncbi.nlm.nih.gov/substance/"));
+                    statement.addBatch();
+                }
+            }.load(model);
+
+            statement.executeBatch();
+        }
+
+        try(PreparedStatement statement = connection
+                .prepareStatement("insert into chembl.molecule_chebi_references(molecule_id, chebi_id) values (?,?)"))
+        {
+            new QueryResultProcessor(patternQuery("?molecule cco:moleculeXref ?chebi. ?chebi rdf:type cco:ChebiRef"))
+            {
+                @Override
+                public void parse() throws SQLException, IOException
+                {
+                    statement.setInt(1, getIntID("molecule", "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL"));
+                    statement.setInt(2, getIntID("chebi", "http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI%3A"));
                     statement.addBatch();
                 }
             }.load(model);

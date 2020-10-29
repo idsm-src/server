@@ -23,6 +23,12 @@ grant select on chembl.molecule_pubchem_dotf_references to sparql;
 
 --------------------------------------------------------------------------------
 
+create index molecule_chebi_references__molecule_id on chembl.molecule_chebi_references(molecule_id);
+create index molecule_chebi_references__chebi_id on chembl.molecule_chebi_references(chebi_id);
+grant select on chembl.molecule_chebi_references to sparql;
+
+--------------------------------------------------------------------------------
+
 create view chembl.molecule_reference_types as
     select distinct reference_type, reference from chembl.molecule_references;
 

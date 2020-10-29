@@ -30,6 +30,7 @@ alter table chembl.molecule_references add foreign key (molecule_id) references 
 alter table chembl.molecule_pubchem_references add foreign key (molecule_id) references chembl.molecule_dictionary(id) initially deferred;
 alter table chembl.molecule_pubchem_thom_pharm_references add foreign key (molecule_id) references chembl.molecule_dictionary(id) initially deferred;
 alter table chembl.molecule_pubchem_dotf_references add foreign key (molecule_id) references chembl.molecule_dictionary(id) initially deferred;
+alter table chembl.molecule_chebi_references add foreign key (molecule_id) references chembl.molecule_dictionary(id) initially deferred;
 
 -- molecule
 alter table chembl.molecule_synonyms add foreign key (molecule_id) references chembl.molecule_dictionary(id) initially deferred;
