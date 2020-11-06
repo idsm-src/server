@@ -8,8 +8,11 @@ import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
 import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
+import cz.iocb.load.common.IntTriplet;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
+import cz.iocb.load.ontology.Ontology;
+import cz.iocb.load.ontology.Ontology.Identifier;
 
 
 
@@ -18,8 +21,6 @@ class Protein extends Updater
     private static StringIntMap usedProteins;
     private static StringIntMap newProteins;
     private static StringIntMap oldProteins;
-    private static IntHashSet newComplexes;
-    private static IntHashSet oldComplexes;
     private static int nextProteinID;
 
 
@@ -29,9 +30,6 @@ class Protein extends Updater
         newProteins = new StringIntMap(1000000);
         oldProteins = getStringIntMap("select name, id from pubchem.protein_bases", 1000000);
         nextProteinID = getIntValue("select coalesce(max(id)+1,0) from pubchem.protein_bases");
-
-        newComplexes = new IntHashSet(200000);
-        oldComplexes = getIntSet("select protein from pubchem.protein_complexes", 200000);
 
         new QueryResultProcessor(
                 "select distinct ?protein {{?protein ?P ?O} union {?S vocab:hasSimilarProtein ?protein}}")
@@ -44,9 +42,6 @@ class Protein extends Updater
 
                 if((proteinID = oldProteins.removeKeyIfAbsent(name, NO_VALUE)) == NO_VALUE)
                     newProteins.put(name, proteinID = nextProteinID++);
-
-                if(name.matches("GI.*GI.*") && !oldComplexes.remove(proteinID))
-                    newComplexes.add(proteinID);
 
                 usedProteins.put(name, proteinID);
             }
@@ -68,6 +63,10 @@ class Protein extends Updater
             @Override
             protected void parse() throws IOException
             {
+                // workaround
+                if(getIRI("organism").equals("http://identifiers.org/taxonomy/"))
+                    return;
+
                 int proteinID = usedProteins
                         .getOrThrow(getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
                 int organismID = getIntID("organism", "http://identifiers.org/taxonomy/");
@@ -190,10 +189,10 @@ class Protein extends Updater
 
     private static void loadGenes(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newGenes = new IntIntHashMap(10000);
-        IntIntHashMap oldGenes = getIntIntMap("select protein, gene from pubchem.protein_genes", 10000);
+        IntPairSet newGenes = new IntPairSet(10000);
+        IntPairSet oldGenes = getIntPairSet("select protein, gene from pubchem.protein_genes", 10000);
 
-        new QueryResultProcessor(patternQuery("?protein vocab:encodedBy ?gene"))
+        new QueryResultProcessor(patternQuery("?protein up:encodedBy ?gene"))
         {
             @Override
             protected void parse() throws IOException
@@ -202,26 +201,29 @@ class Protein extends Updater
                         .getOrThrow(getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
                 int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
 
-                if(geneID != oldGenes.removeKeyIfAbsent(proteinID, NO_VALUE))
-                    newGenes.put(proteinID, geneID);
+                IntIntPair pair = PrimitiveTuples.pair(proteinID, geneID);
+
+                if(!oldGenes.remove(pair))
+                    newGenes.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.protein_genes where protein = ?", oldGenes.keySet());
-        batch("insert into pubchem.protein_genes(protein, gene) values (?,?) "
-                + "on conflict (protein) do update set gene=EXCLUDED.gene", newGenes);
+        batch("delete from pubchem.protein_genes where protein = ? and gene = ?", oldGenes);
+        batch("insert into pubchem.protein_genes(protein, gene) values (?,?)", newGenes);
     }
 
 
-    private static void loadCloseMatches(Model model) throws IOException, SQLException
+    private static void loadUniprotCloseMatches(Model model) throws IOException, SQLException
     {
         IntStringPairIntMap newMatches = new IntStringPairIntMap(100000);
         IntStringPairIntMap oldMatches = getIntStringPairIntMap(
-                "select protein, match, __ from pubchem.protein_closematches", 100000);
+                "select protein, match, __ from pubchem.protein_uniprot_closematches", 100000);
 
-        new QueryResultProcessor(patternQuery("?protein skos:closeMatch ?match"))
+        new QueryResultProcessor(patternQuery("?protein skos:closeMatch ?match "
+                + "filter(strstarts(str(?match), 'http://purl.uniprot.org/uniprot/'))"))
         {
-            int nextMatcheID = Updater.getIntValue("select coalesce(max(__)+1,0) from pubchem.protein_closematches");
+            int nextMatcheID = Updater
+                    .getIntValue("select coalesce(max(__)+1,0) from pubchem.protein_uniprot_closematches");
 
             @Override
             protected void parse() throws IOException
@@ -237,6 +239,36 @@ class Protein extends Updater
             }
         }.load(model);
 
+        batch("delete from pubchem.protein_uniprot_closematches where __ = ?", oldMatches.values());
+        batch("insert into pubchem.protein_uniprot_closematches(protein, match, __) values (?,?,?)", newMatches);
+    }
+
+
+    private static void loadNcbiCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringPairIntMap newMatches = new IntStringPairIntMap(100000);
+        IntStringPairIntMap oldMatches = getIntStringPairIntMap(
+                "select protein, match, __ from pubchem.protein_closematches", 100000);
+
+        new QueryResultProcessor(patternQuery("?protein skos:closeMatch ?match "
+                + "filter(strstarts(str(?match), 'https://www.ncbi.nlm.nih.gov/protein/'))"))
+        {
+            int nextMatcheID = Updater.getIntValue("select coalesce(max(__)+1,0) from pubchem.protein_closematches");
+
+            @Override
+            protected void parse() throws IOException
+            {
+                int proteinID = usedProteins
+                        .getOrThrow(getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
+                String match = getStringID("match", "https://www.ncbi.nlm.nih.gov/protein/");
+
+                IntObjectPair<String> pair = PrimitiveTuples.pair(proteinID, match);
+
+                if(oldMatches.removeKeyIfAbsent(pair, NO_VALUE) == NO_VALUE)
+                    newMatches.put(pair, nextMatcheID++);
+            }
+        }.load(model);
+
         batch("delete from pubchem.protein_closematches where __ = ?", oldMatches.values());
         batch("insert into pubchem.protein_closematches(protein, match, __) values (?,?,?)", newMatches);
     }
@@ -244,10 +276,11 @@ class Protein extends Updater
 
     private static void loadConservedDomains(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newDomains = new IntIntHashMap(100000);
-        IntIntHashMap oldDomains = getIntIntMap("select protein, domain from pubchem.protein_conserveddomains", 100000);
+        IntPairSet newDomains = new IntPairSet(100000);
+        IntPairSet oldDomains = getIntPairSet("select protein, domain from pubchem.protein_conserveddomains", 100000);
 
-        new QueryResultProcessor(patternQuery("?protein obo:BFO_0000110 ?domain"))
+        new QueryResultProcessor(patternQuery("?protein obo:RO_0002180 ?domain "
+                + "filter(strstarts(str(?domain), 'http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -256,14 +289,15 @@ class Protein extends Updater
                         .getOrThrow(getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
                 int domainID = getIntID("domain", "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID");
 
-                if(domainID != oldDomains.removeKeyIfAbsent(proteinID, NO_VALUE))
-                    newDomains.put(proteinID, domainID);
+                IntIntPair pair = PrimitiveTuples.pair(proteinID, domainID);
+
+                if(!oldDomains.remove(pair))
+                    newDomains.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.protein_conserveddomains where protein = ?", oldDomains.keySet());
-        batch("insert into pubchem.protein_conserveddomains(protein, domain) values (?,?) "
-                + "on conflict (protein) do update set domain=EXCLUDED.domain", newDomains);
+        batch("delete from pubchem.protein_conserveddomains where protein = ? and domain = ?", oldDomains);
+        batch("insert into pubchem.protein_conserveddomains(protein, domain) values (?,?)", newDomains);
     }
 
 
@@ -272,7 +306,8 @@ class Protein extends Updater
         IntPairSet newContinuantParts = new IntPairSet(100);
         IntPairSet oldContinuantParts = getIntPairSet("select protein, part from pubchem.protein_continuantparts", 100);
 
-        new QueryResultProcessor(patternQuery("?protein obo:BFO_0000178 ?part"))
+        new QueryResultProcessor(patternQuery("?protein obo:RO_0002180 ?part "
+                + "filter(strstarts(str(?part), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -294,136 +329,54 @@ class Protein extends Updater
     }
 
 
-    private static void loadProcesses(Model model) throws IOException, SQLException
-    {
-        IntPairSet newProcesses = new IntPairSet(10000000);
-        IntPairSet oldProcesses = getIntPairSet("select protein, process_id from pubchem.protein_processes", 10000000);
-
-        new QueryResultProcessor(patternQuery("?protein obo:BFO_0000056 ?process "
-                + "filter(strstarts(str(?process), 'http://purl.obolibrary.org/obo/GO_'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                int proteinID = usedProteins
-                        .getOrThrow(getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
-                int processID = getIntID("process", "http://purl.obolibrary.org/obo/GO_");
-
-                IntIntPair pair = PrimitiveTuples.pair(proteinID, processID);
-
-                if(!oldProcesses.remove(pair))
-                    newProcesses.add(pair);
-            }
-        }.load(model);
-
-        batch("delete from pubchem.protein_processes where protein = ? and process_id = ?", oldProcesses);
-        batch("insert into pubchem.protein_processes(protein, process_id) values (?,?)", newProcesses);
-    }
-
-
-    private static void loadBiosystems(Model model) throws IOException, SQLException
-    {
-        IntPairSet newBiosystems = new IntPairSet(1000000);
-        IntPairSet oldBiosystems = getIntPairSet("select protein, biosystem from pubchem.protein_biosystems", 1000000);
-
-        new QueryResultProcessor(patternQuery("?protein obo:BFO_0000056 ?biosystem "
-                + "filter(strstarts(str(?biosystem), 'http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                int proteinID = usedProteins
-                        .getOrThrow(getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
-                int biosystemID = getIntID("biosystem", "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID");
-
-                IntIntPair pair = PrimitiveTuples.pair(proteinID, biosystemID);
-
-                if(!oldBiosystems.remove(pair))
-                    newBiosystems.add(pair);
-            }
-        }.load(model);
-
-        batch("delete from pubchem.protein_biosystems where protein = ? and biosystem = ?", oldBiosystems);
-        batch("insert into pubchem.protein_biosystems(protein, biosystem) values (?,?)", newBiosystems);
-    }
-
-
-    private static void loadFunctions(Model model) throws IOException, SQLException
-    {
-        IntPairSet newFunctions = new IntPairSet(10000000);
-        IntPairSet oldFunctions = getIntPairSet("select protein, function_id from pubchem.protein_functions", 10000000);
-
-        new QueryResultProcessor(patternQuery("?protein obo:BFO_0000160 ?function"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                int proteinID = usedProteins
-                        .getOrThrow(getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
-                int functionID = getIntID("function", "http://purl.obolibrary.org/obo/GO_");
-
-                IntIntPair pair = PrimitiveTuples.pair(proteinID, functionID);
-
-                if(!oldFunctions.remove(pair))
-                    newFunctions.add(pair);
-            }
-        }.load(model);
-
-        batch("delete from pubchem.protein_functions where protein = ? and function_id = ?", oldFunctions);
-        batch("insert into pubchem.protein_functions(protein, function_id) values (?,?)", newFunctions);
-    }
-
-
-    private static void loadLocations(Model model) throws IOException, SQLException
-    {
-        IntPairSet newLocations = new IntPairSet(1000000);
-        IntPairSet oldLocations = getIntPairSet("select protein, location_id from pubchem.protein_locations", 1000000);
-
-        new QueryResultProcessor(patternQuery("?protein obo:BFO_0000171 ?location"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                int proteinID = usedProteins
-                        .getOrThrow(getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
-                int locationID = getIntID("location", "http://purl.obolibrary.org/obo/GO_");
-
-                IntIntPair pair = PrimitiveTuples.pair(proteinID, locationID);
-
-                if(!oldLocations.remove(pair))
-                    newLocations.add(pair);
-            }
-        }.load(model);
-
-        batch("delete from pubchem.protein_locations where protein = ? and location_id = ?", oldLocations);
-        batch("insert into pubchem.protein_locations(protein, location_id) values (?,?)", newLocations);
-    }
-
-
     private static void loadTypes(Model model) throws IOException, SQLException
     {
-        IntPairSet newTypes = new IntPairSet(100000);
-        IntPairSet oldTypes = getIntPairSet("select protein, type_id from pubchem.protein_types", 100000);
+        IntTripletSet newTypes = new IntTripletSet(100000);
+        IntTripletSet oldTypes = getIntTripletSet("select protein, type_unit, type_id from pubchem.protein_types",
+                100000);
 
-        new QueryResultProcessor(patternQuery(
-                "?protein rdf:type ?type " + "filter(strstarts(str(?type), 'http://purl.obolibrary.org/obo/PR_'))"))
+        new QueryResultProcessor(
+                patternQuery("?protein rdf:type ?type " + "filter(?type != bp:Protein && ?type != obo:GO_0043234)"))
         {
             @Override
             protected void parse() throws IOException
             {
                 int proteinID = usedProteins
                         .getOrThrow(getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
-                int typeID = getIntID("type", "http://purl.obolibrary.org/obo/PR_");
+                Identifier type = Ontology.getId(getIRI("type"));
 
-                IntIntPair pair = PrimitiveTuples.pair(proteinID, typeID);
+                IntTriplet triplet = new IntTriplet(proteinID, type.unit, type.id);
 
-                if(!oldTypes.remove(pair))
-                    newTypes.add(pair);
+                if(!oldTypes.remove(triplet))
+                    newTypes.add(triplet);
             }
         }.load(model);
 
-        batch("delete from pubchem.protein_types where protein = ? and type_id = ?", oldTypes);
-        batch("insert into pubchem.protein_types(protein, type_id) values (?,?)", newTypes);
+        batch("delete from pubchem.protein_types where protein = ? and type_unit = ? and type_id = ?", oldTypes);
+        batch("insert into pubchem.protein_types(protein, type_unit, type_id) values (?,?,?)", newTypes);
+    }
+
+
+    private static void loadComplexes(Model model) throws IOException, SQLException
+    {
+        IntHashSet newComplexes = new IntHashSet(1000);
+        IntHashSet oldComplexes = getIntSet("select protein from pubchem.protein_complexes", 1000);
+
+        new QueryResultProcessor(patternQuery("?protein rdf:type obo:GO_0043234"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int proteinID = usedProteins
+                        .getOrThrow(getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
+
+                if(!oldComplexes.remove(proteinID))
+                    newComplexes.add(proteinID);
+            }
+        }.load(model);
+
+        batch("delete from pubchem.protein_complexes where protein = ?", oldComplexes);
+        batch("insert into pubchem.protein_complexes(protein) values (?)", newComplexes);
     }
 
 
@@ -438,9 +391,6 @@ class Protein extends Updater
                 if((proteinID = oldProteins.removeKeyIfAbsent(name, NO_VALUE)) == NO_VALUE)
                     newProteins.put(name, proteinID = nextProteinID++);
 
-                if(name.matches("GI.*GI.*") && !oldComplexes.remove(proteinID))
-                    newComplexes.add(proteinID);
-
                 usedProteins.put(name, proteinID);
             }
 
@@ -454,15 +404,9 @@ class Protein extends Updater
         batch("delete from pubchem.protein_bases where id = ?", oldProteins.values());
         batch("insert into pubchem.protein_bases(name, id) values (?,?)", newProteins);
 
-        batch("delete from pubchem.protein_complexes where protein = ?", oldComplexes);
-        batch("insert into pubchem.protein_complexes(protein) values (?)", newComplexes);
-
         usedProteins = null;
         newProteins = null;
         oldProteins = null;
-
-        newComplexes = null;
-        oldComplexes = null;
     }
 
 
@@ -480,14 +424,12 @@ class Protein extends Updater
         loadPdbLinks(model);
         loadSimilarProteins(model);
         loadGenes(model);
-        loadCloseMatches(model);
+        loadUniprotCloseMatches(model);
+        loadNcbiCloseMatches(model);
         loadConservedDomains(model);
         loadContinuantParts(model);
-        loadProcesses(model);
-        loadBiosystems(model);
-        loadFunctions(model);
-        loadLocations(model);
         loadTypes(model);
+        loadComplexes(model);
 
         model.close();
         System.out.println();

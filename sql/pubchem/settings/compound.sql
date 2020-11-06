@@ -31,12 +31,6 @@ grant select on pubchem.compound_roles to sparql;
 
 --------------------------------------------------------------------------------
 
-create index compound_biosystems__compound on pubchem.compound_biosystems(compound);
-create index compound_biosystems__biosystem on pubchem.compound_biosystems(biosystem);
-grant select on pubchem.compound_biosystems to sparql;
-
---------------------------------------------------------------------------------
-
 create index compound_types__compound on pubchem.compound_types(compound);
 create index compound_types__type on pubchem.compound_types(type_id);
 grant select on pubchem.compound_types to sparql;

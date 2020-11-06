@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import cz.iocb.chemweb.server.sparql.config.SparqlDatabaseConfiguration;
-import cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration;
+import cz.iocb.chemweb.server.sparql.config.idsm.IdsmConfiguration;
 import cz.iocb.chemweb.server.sparql.database.Column;
 import cz.iocb.chemweb.server.sparql.database.ConstantColumn;
 import cz.iocb.chemweb.server.sparql.database.Table;
@@ -384,7 +384,7 @@ public class ConstraintGenerator extends Updater
 
     public static void load() throws SQLException, IOException
     {
-        SparqlDatabaseConfiguration configuration = new PubChemConfiguration(new DummyDataSource(connection));
+        SparqlDatabaseConfiguration configuration = new IdsmConfiguration(new DummyDataSource(connection));
 
         LinkedHashMap<ResourceClass, ArrayList<QuadNodeMapping>> resourceMappings = getResourceMappings(configuration);
 

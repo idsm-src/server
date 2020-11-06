@@ -94,12 +94,12 @@ public class Ontology extends Updater
     public static final short unitGO = 5;
     public static final short unitPR = 6;
     public static final short unitTaxonomy = 11;
+    public static final short unitPR0 = 31;
     public static final short unitPR1 = 32;
     public static final short unitPR2 = 33;
     public static final short unitAT = 34;
     public static final short unitZDBGENE = 35;
     public static final short unitStar = 95;
-
 
 
     public static void loadCategories() throws SQLException
@@ -204,7 +204,18 @@ public class Ontology extends Updater
                 String tail = iri.substring(unit.valueOffset);
                 int id = 0;
 
-                if(unit.id == unitPR1 || unit.id == unitPR2)
+                if(unit.id == unitPR0)
+                {
+                    // [0-9][A-Z0-9][0-9][A-Z0-9]{3}[0-9]
+                    id = tail.charAt(0) - '0';
+                    id = id * 36 + code(tail.charAt(1));
+                    id = id * 10 + tail.charAt(2) - '0';
+                    id = id * 36 + code(tail.charAt(3));
+                    id = id * 36 + code(tail.charAt(4));
+                    id = id * 36 + code(tail.charAt(5));
+                    id = id * 10 + tail.charAt(6) - '0';
+                }
+                else if(unit.id == unitPR1 || unit.id == unitPR2)
                 {
                     // [A-Z][0-9][A-Z0-9]{3}[0-9](-([12])?[0-9])?
                     id = tail.charAt(0) - 'A';

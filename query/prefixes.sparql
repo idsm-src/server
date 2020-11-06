@@ -50,3 +50,5 @@ prefix oboInOwl:        <http://www.geneontology.org/formats/oboInOwl#>
 
 prefix cco:             <http://rdf.ebi.ac.uk/terms/chembl#>
 prefix bibo:            <http://purl.org/ontology/bibo/>
+
+prefix up:              <https://www.uniprot.org/core/>

@@ -43,6 +43,9 @@ class Source extends Updater
                 usedSources.put(iri, sourceID);
             }
         }.load(model);
+
+        batch("insert into pubchem.source_bases(iri, id) values (?,?)", newSources);
+        newSources.clear();
     }
 
 
@@ -63,6 +66,78 @@ class Source extends Updater
                     newTitles.put(sourceID, title);
             }
         }.load(model);
+    }
+
+
+    private static void loadHomepages(Model model) throws IOException, SQLException
+    {
+        IntStringMap newHomepages = new IntStringMap(1000);
+        IntStringMap oldHomepages = getIntStringMap(
+                "select id, homepage from pubchem.source_bases where homepage is not null", 1000);
+
+        new QueryResultProcessor(patternQuery("?source foaf:homepage ?homepage"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int sourceID = usedSources.getOrThrow(getIRI("source"));
+                String homepage = getIRI("homepage");
+
+                if(!homepage.equals(oldHomepages.remove(sourceID)))
+                    newHomepages.put(sourceID, homepage);
+            }
+        }.load(model);
+
+        batch("update pubchem.source_bases set homepage = null where id = ?", oldHomepages.keySet());
+        batch("update pubchem.source_bases set homepage = ? where id = ?", newHomepages, Direction.REVERSE);
+    }
+
+
+    private static void loadLicenses(Model model) throws IOException, SQLException
+    {
+        IntStringMap newLicenses = new IntStringMap(1000);
+        IntStringMap oldLicenses = getIntStringMap(
+                "select id, license from pubchem.source_bases where license is not null", 1000);
+
+        new QueryResultProcessor(patternQuery("?source dcterms:license ?license"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int sourceID = usedSources.getOrThrow(getIRI("source"));
+                String license = getIRI("license");
+
+                if(!license.equals(oldLicenses.remove(sourceID)))
+                    newLicenses.put(sourceID, license);
+            }
+        }.load(model);
+
+        batch("update pubchem.source_bases set license = null where id = ?", oldLicenses.keySet());
+        batch("update pubchem.source_bases set license = ? where id = ?", newLicenses, Direction.REVERSE);
+    }
+
+
+    private static void loadRights(Model model) throws IOException, SQLException
+    {
+        IntStringMap newRights = new IntStringMap(1000);
+        IntStringMap oldRights = getIntStringMap("select id, rights from pubchem.source_bases where rights is not null",
+                1000);
+
+        new QueryResultProcessor(patternQuery("?source dcterms:rights ?rights"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int sourceID = usedSources.getOrThrow(getIRI("source"));
+                String rights = getString("rights");
+
+                if(!rights.equals(oldRights.remove(sourceID)))
+                    newRights.put(sourceID, rights);
+            }
+        }.load(model);
+
+        batch("update pubchem.source_bases set rights = null where id = ?", oldRights.keySet());
+        batch("update pubchem.source_bases set rights = ? where id = ?", newRights, Direction.REVERSE);
     }
 
 
@@ -190,6 +265,9 @@ class Source extends Updater
 
         loadBases(model);
         loadTitles(model);
+        loadHomepages(model);
+        loadLicenses(model);
+        loadRights(model);
         loadSubjects(model);
         loadAlternatives(model);
 

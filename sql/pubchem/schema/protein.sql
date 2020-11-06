@@ -36,11 +36,20 @@ create table pubchem.protein_genes
 (
     protein    integer not null,
     gene       integer not null,
-    primary key(protein)
+    primary key(protein, gene)
 );
 
 
 create table pubchem.protein_closematches
+(
+    __         integer,
+    protein    integer not null,
+    match      integer not null,
+    primary key(__)
+);
+
+
+create table pubchem.protein_uniprot_closematches
 (
     __         integer,
     protein    integer not null,
@@ -53,7 +62,7 @@ create table pubchem.protein_conserveddomains
 (
     protein    integer not null,
     domain     integer not null,
-    primary key(protein)
+    primary key(protein, domain)
 );
 
 
@@ -65,43 +74,12 @@ create table pubchem.protein_continuantparts
 );
 
 
-create table pubchem.protein_processes
-(
-    protein       integer not null,
-    process_id    integer not null,
-    primary key(protein, process_id)
-);
-
-
-create table pubchem.protein_biosystems
-(
-    protein      integer not null,
-    biosystem    integer not null,
-    primary key(protein, biosystem)
-);
-
-
-create table pubchem.protein_functions
-(
-    protein        integer not null,
-    function_id    integer not null,
-    primary key(protein, function_id)
-);
-
-
-create table pubchem.protein_locations
-(
-    protein        integer not null,
-    location_id    integer not null,
-    primary key(protein, location_id)
-);
-
-
 create table pubchem.protein_types
 (
     protein       integer not null,
+    type_unit     smallint not null,
     type_id       integer not null,
-    primary key(protein, type_id)
+    primary key(protein, type_unit, type_id)
 );
 
 

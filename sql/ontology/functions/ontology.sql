@@ -11,7 +11,38 @@ $$
 	  
     select prefix, value_length into rec from ontology.resource_categories__reftable where unit_id = unit;
     
-	if unit = 32 or unit = 33 then
+    if unit = 31 then
+      -- [0-9][A-Z0-9][0-9][A-Z0-9]{3}[0-9]
+      res := chr((id % 10) + ascii('0'));
+      id := id / 10;
+
+      for i in 1..3 loop
+        val := (id % 36);
+        id := id / 36;
+        
+        if val >= 10 then
+          res := chr(val - 10 + ascii('A')) || res;
+        else
+          res := chr(val + ascii('0')) || res;
+        end if;
+      end loop;
+    
+      res := chr((id % 10) + ascii('0')) || res;
+      id := id / 10;
+
+      val := (id % 36);
+      id := id / 36;
+        
+      if val >= 10 then
+        res := chr(val - 10 + ascii('A')) || res;
+      else
+        res := chr(val + ascii('0')) || res;
+      end if;
+
+      res := chr((id % 10) + ascii('0')) || res;
+      
+      return rec.prefix || res;
+	elsif unit = 32 or unit = 33 then
       -- [A-Z][0-9][A-Z0-9]{3}[0-9](-([12])?[0-9])?
 	  if unit = 32 then
         res := '-' || ((id::bigint & x'FFFFFFFF'::bigint) % 30);
@@ -100,11 +131,25 @@ $$
   
     if rec.unit_id = 95 then
       return substring(tail, 1, 1)::integer;
-    elsif rec.unit_id < 32 or rec.unit_id > 35 then
+    elsif rec.unit_id < 31 or rec.unit_id > 35 then
       return tail::integer;
     end if;
   
-    if rec.unit_id = 33 or rec.unit_id = 32 then
+    if rec.unit_id = 31 then
+      big := ascii(substring(tail, 1, 1)) - ascii('0');
+      
+      val := substring(tail, 2, 1);
+      big := big * 36 + (case when ascii(val) > ascii('9') then 10 + ascii(val) - ascii('A') else ascii(val) - ascii('0') end);
+
+      big := big * 10 + ascii(substring(tail, 3, 1)) - ascii('0');
+
+      for i in 4..6 loop
+        val := substring(tail, i, 1);
+        big := big * 36 + (case when ascii(val) > ascii('9') then 10 + ascii(val) - ascii('A') else ascii(val) - ascii('0') end);
+      end loop;
+      
+      big := big * 10 + ascii(substring(tail, 7, 1)) - ascii('0');
+    elsif rec.unit_id = 33 or rec.unit_id = 32 then
       big := ascii(substring(tail, 1, 1)) - ascii('A');
       big := big * 10 + ascii(substring(tail, 2, 1)) - ascii('0');
       

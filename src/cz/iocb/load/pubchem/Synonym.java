@@ -224,6 +224,12 @@ class Synonym extends Updater
     }
 
 
+    static void finish() throws IOException, SQLException
+    {
+        usedHashes = null;
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load synonyms ...");

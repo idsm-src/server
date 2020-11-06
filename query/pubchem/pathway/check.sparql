@@ -8,11 +8,20 @@ select distinct ?iri where
         filter(?iri != bp:pathwayComponent)
         filter(?iri != cito:isDiscussedBy)
         filter(?iri != skos:exactMatch)
+        filter(?iri != skos:related)
+        filter(?iri != obo:RO_0000057)
         filter(?iri != rdf:type)
     }
     union
     {
         ?S rdf:type ?iri .
         filter(?iri != bp:Pathway)
+    }
+    union
+    {
+        ?S obo:RO_0000057 ?iri .
+        filter(!strstarts(str(?iri), 'http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID'))
+        filter(!strstarts(str(?iri), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/'))
+        filter(!strstarts(str(?iri), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/'))
     }
 }

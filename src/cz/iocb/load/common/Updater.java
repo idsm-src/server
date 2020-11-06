@@ -35,6 +35,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.util.FileManager;
 import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
+import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
 import org.eclipse.collections.api.tuple.primitive.ObjectFloatPair;
@@ -45,6 +46,7 @@ import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectFloatHashMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
+import org.eclipse.collections.impl.tuple.Tuples;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import org.xml.sax.SAXException;
 
@@ -149,6 +151,15 @@ public class Updater
     }
 
 
+    protected static class IntIntPairMap extends IntObjectHashMap<IntIntPair>
+    {
+        public IntIntPairMap(int capacity)
+        {
+            super(capacity);
+        }
+    }
+
+
     protected static class IntPairIntMap extends ObjectIntHashMap<IntIntPair>
     {
         public IntPairIntMap(int capacity)
@@ -208,6 +219,15 @@ public class Updater
     protected static class IntStringMap extends IntObjectHashMap<String>
     {
         public IntStringMap(int capacity)
+        {
+            super(capacity);
+        }
+    }
+
+
+    protected static class IntStringPairMap extends IntObjectHashMap<Pair<String, String>>
+    {
+        public IntStringPairMap(int capacity)
         {
             super(capacity);
         }
@@ -583,6 +603,30 @@ public class Updater
     }
 
 
+    protected static IntIntPairMap getIntIntPairMap(String query, int capacity) throws SQLException
+    {
+        long time = System.currentTimeMillis();
+        System.out.print("  " + query);
+
+        IntIntPairMap values = new IntIntPairMap(capacity);
+
+        try(PreparedStatement statement = connection.prepareStatement(query))
+        {
+            statement.setFetchSize(1000000);
+
+            try(java.sql.ResultSet result = statement.executeQuery())
+            {
+                while(result.next())
+                    values.put(result.getInt(1), PrimitiveTuples.pair(result.getInt(2), result.getInt(3)));
+            }
+        }
+
+        System.out.println(
+                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
+        return values;
+    }
+
+
     protected static IntPairIntMap getIntPairIntMap(String query, int capacity) throws SQLException
     {
         long time = System.currentTimeMillis();
@@ -726,6 +770,7 @@ public class Updater
         return values;
     }
 
+
     protected static IntStringMap getIntStringMap(String query, int capacity) throws SQLException
     {
         long time = System.currentTimeMillis();
@@ -741,6 +786,30 @@ public class Updater
             {
                 while(result.next())
                     map.put(result.getInt(1), result.getString(2));
+            }
+        }
+
+        System.out.println(
+                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
+        return map;
+    }
+
+
+    protected static IntStringPairMap getIntStringPairMap(String query, int capacity) throws SQLException
+    {
+        long time = System.currentTimeMillis();
+        System.out.print("  " + query);
+
+        IntStringPairMap map = new IntStringPairMap(capacity);
+
+        try(PreparedStatement statement = connection.prepareStatement(query))
+        {
+            statement.setFetchSize(1000000);
+
+            try(java.sql.ResultSet result = statement.executeQuery())
+            {
+                while(result.next())
+                    map.put(result.getInt(1), Tuples.pair(result.getString(2), result.getString(3)));
             }
         }
 
@@ -1308,6 +1377,45 @@ public class Updater
     }
 
 
+    protected static void batch(String command, IntIntPairMap map, Direction direction) throws SQLException
+    {
+        System.out.println("  " + command + " -> count: " + map.size());
+
+        try(PreparedStatement statement = connection.prepareStatement(command))
+        {
+            count = 0;
+
+            try
+            {
+                map.forEachKeyValue((key, value) -> {
+                    try
+                    {
+                        statement.setInt(direction == Direction.REVERSE ? 3 : 1, key);
+                        statement.setInt(direction == Direction.REVERSE ? 1 : 2, value.getOne());
+                        statement.setInt(direction == Direction.REVERSE ? 2 : 3, value.getTwo());
+                        statement.addBatch();
+
+                        if(++count % batchSize == 0)
+                            statement.executeBatch();
+                    }
+                    catch(SQLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            catch(RuntimeException e)
+            {
+                if(e.getCause() instanceof SQLException)
+                    throw(SQLException) e.getCause();
+            }
+
+            if(count % batchSize != 0)
+                statement.executeBatch();
+        }
+    }
+
+
     protected static void batch(String command, IntPairIntMap map, Direction direction) throws SQLException
     {
         System.out.println("  " + command + " -> count: " + map.size());
@@ -1544,6 +1652,45 @@ public class Updater
     }
 
 
+    protected static void batch(String command, IntStringPairMap map, Direction direction) throws SQLException
+    {
+        System.out.println("  " + command + " -> count: " + map.size());
+
+        try(PreparedStatement statement = connection.prepareStatement(command))
+        {
+            count = 0;
+
+            try
+            {
+                map.forEachKeyValue((key, value) -> {
+                    try
+                    {
+                        statement.setInt(direction == Direction.REVERSE ? 3 : 1, key);
+                        statement.setString(direction == Direction.REVERSE ? 1 : 2, value.getOne());
+                        statement.setString(direction == Direction.REVERSE ? 2 : 3, value.getTwo());
+                        statement.addBatch();
+
+                        if(++count % batchSize == 0)
+                            statement.executeBatch();
+                    }
+                    catch(SQLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            catch(RuntimeException e)
+            {
+                if(e.getCause() instanceof SQLException)
+                    throw(SQLException) e.getCause();
+            }
+
+            if(count % batchSize != 0)
+                statement.executeBatch();
+        }
+    }
+
+
     protected static void batch(String command, StringIntMap map, Direction direction) throws SQLException
     {
         System.out.println("  " + command + " -> count: " + map.size());
@@ -1749,6 +1896,12 @@ public class Updater
 
 
     protected static void batch(String command, IntStringMap map) throws SQLException
+    {
+        batch(command, map, Direction.DIRECT);
+    }
+
+
+    protected static void batch(String command, IntIntPairMap map) throws SQLException
     {
         batch(command, map, Direction.DIRECT);
     }

@@ -17,6 +17,38 @@ create table pubchem.bioassay_data
 );
 
 
+create table pubchem.bioassay_stages
+(
+    bioassay    integer not null,
+    stage       integer not null,
+    primary key(bioassay)
+);
+
+
+create table pubchem.bioassay_confirmatory_assays
+(
+    bioassay            integer not null,
+    confirmatory_assay  integer not null,
+    primary key(bioassay, confirmatory_assay)
+);
+
+
+create table pubchem.bioassay_primary_assays
+(
+    bioassay        integer not null,
+    primary_assay   integer not null,
+    primary key(bioassay, primary_assay)
+);
+
+
+create table pubchem.bioassay_summary_assays
+(
+    bioassay        integer not null,
+    summary_assay   integer not null,
+    primary key(bioassay, summary_assay)
+);
+
+
 create table pubchem.bioassay_chembl_assays
 (
     bioassay            integer not null,

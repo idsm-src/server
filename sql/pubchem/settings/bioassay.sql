@@ -12,6 +12,29 @@ grant select on pubchem.bioassay_data to sparql;
 
 --------------------------------------------------------------------------------
 
+create index bioassay_stages__stage on pubchem.bioassay_stages(stage);
+grant select on pubchem.bioassay_stages to sparql;
+
+--------------------------------------------------------------------------------
+
+create index bioassay_confirmatory_assays__bioassay on pubchem.bioassay_confirmatory_assays(bioassay);
+create index bioassay_confirmatory_assays__confirmatory_assay on pubchem.bioassay_confirmatory_assays(confirmatory_assay);
+grant select on pubchem.bioassay_confirmatory_assays to sparql;
+
+--------------------------------------------------------------------------------
+
+create index bioassay_primary_assays__bioassay on pubchem.bioassay_primary_assays(bioassay);
+create index bioassay_primary_assays__primary_assay on pubchem.bioassay_primary_assays(primary_assay);
+grant select on pubchem.bioassay_primary_assays to sparql;
+
+--------------------------------------------------------------------------------
+
+create index bioassay_summary_assays__bioassay on pubchem.bioassay_summary_assays(bioassay);
+create index bioassay_summary_assays__summary_assay on pubchem.bioassay_summary_assays(summary_assay);
+grant select on pubchem.bioassay_summary_assays to sparql;
+
+--------------------------------------------------------------------------------
+
 create index bioassay_chembl_assays__chembl_assay on pubchem.bioassay_chembl_assays(chembl_assay);
 grant select on pubchem.bioassay_chembl_assays to sparql;
 

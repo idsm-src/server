@@ -2,14 +2,10 @@ select distinct ?iri where
 {
     {
         ?S ?iri ?iri .
-        filter(?iri != obo:BFO_0000056)
-        filter(?iri != obo:BFO_0000110)
-        filter(?iri != obo:BFO_0000160)
-        filter(?iri != obo:BFO_0000171)
-        filter(?iri != obo:BFO_0000178)
+        filter(?iri != obo:RO_0002180)
         filter(?iri != dcterms:title)
         filter(?iri != cito:isDiscussedBy)
-        filter(?iri != vocab:encodedBy)
+        filter(?iri != up:encodedBy)
         filter(?iri != vocab:hasSimilarProtein)
         filter(?iri != pdbo:link_to_pdb)
         filter(?iri != bp:organism)
@@ -25,8 +21,14 @@ select distinct ?iri where
     }
     union
     {
-        ?S obo:BFO_0000056 ?iri .
-        filter(! strstarts(str(?iri), "http://purl.obolibrary.org/obo/GO_"))
-        filter(! strstarts(str(?iri), "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID"))
+        ?S obo:RO_0002180 ?iri .
+        filter(! strstarts(str(?iri), "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID"))
+        filter(! strstarts(str(?iri), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"))
+    }
+    union
+    {
+        ?S skos:closeMatch ?iri .
+        filter(! strstarts(str(?iri), "http://purl.uniprot.org/uniprot/"))
+        filter(! strstarts(str(?iri), "https://www.ncbi.nlm.nih.gov/protein/"))
     }
 }

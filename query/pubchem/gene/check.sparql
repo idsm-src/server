@@ -3,12 +3,15 @@ select distinct ?iri where
 	{
 	    ?S ?iri ?O .
 	    filter(?iri != dcterms:alternative)
-	    filter(?iri != dcterms:description)
 	    filter(?iri != dcterms:title)
-	    filter(?iri != obo:BFO_0000056)
 	    filter(?iri != cito:isDiscussedBy)
 	    filter(?iri != skos:closeMatch)
 	    filter(?iri != rdf:type)
+        filter(?iri != obo:RO_0000056)
+        filter(?iri != obo:RO_0000085)
+        filter(?iri != obo:RO_0001025)
+        filter(?iri != sio:gene-symbol)
+        filter(?iri != bp:organism)
 	}
     union
 	{

@@ -1,0 +1,19 @@
+select distinct ?iri where
+{
+    {
+        ?S ?iri ?O .
+        filter(?iri != dcterms:title)
+        filter(?iri != dcterms:source)
+        filter(?iri != bao:BAO_0000209)
+        filter(?iri != bao:BAO_0000540)
+        filter(?iri != bao:BAO_0000210)
+        filter(?iri != bao:BAO_0001067)
+        filter(?iri != bao:BAO_0001094)
+        filter(?iri != rdf:type)
+    }
+    union
+    {
+        ?S rdf:type ?iri .
+        filter(?iri != bao:BAO_0000015)
+    }
+}

@@ -30,44 +30,6 @@ class Compound extends Updater
     }
 
 
-    private static void loadBiosystems() throws IOException, SQLException
-    {
-        IntPairSet newBiosystems = new IntPairSet(50000000);
-        IntPairSet oldBiosystems = getIntPairSet("select compound, biosystem from pubchem.compound_biosystems",
-                50000000);
-
-        processFiles("pubchem/RDF/compound/general", "pc_compound2biosystem_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
-            {
-                new TripleStreamProcessor()
-                {
-                    @Override
-                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
-                    {
-                        if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/BFO_0000056"))
-                            throw new IOException();
-
-                        int compoundID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
-                        int biosystemID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID");
-
-                        IntIntPair pair = PrimitiveTuples.pair(compoundID, biosystemID);
-                        addCompoundID(compoundID);
-
-                        synchronized(newBiosystems)
-                        {
-                            if(!oldBiosystems.remove(pair))
-                                newBiosystems.add(pair);
-                        }
-                    }
-                }.load(stream);
-            }
-        });
-
-        batch("delete from pubchem.compound_biosystems where compound = ? and biosystem = ?", oldBiosystems);
-        batch("insert into pubchem.compound_biosystems(compound, biosystem) values (?,?)", newBiosystems);
-    }
-
-
     private static void loadComponents() throws IOException, SQLException
     {
         IntPairSet newComponents = new IntPairSet(10000000);
@@ -292,6 +254,10 @@ class Compound extends Updater
                     if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/has-role"))
                         throw new IOException();
 
+                    // workaround
+                    if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CIDNULL"))
+                        return;
+
                     int compoundID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
 
                     Identifier role = Ontology.getId(object.getURI());
@@ -351,7 +317,6 @@ class Compound extends Updater
         System.out.println("load compounds ...");
 
         loadBases();
-        loadBiosystems();
         loadComponents();
         loadDrugproducts();
         loadIsotopologues();

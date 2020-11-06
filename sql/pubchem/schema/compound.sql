@@ -46,14 +46,6 @@ create table pubchem.compound_roles
 );
 
 
-create table pubchem.compound_biosystems
-(
-    compound     integer not null,
-    biosystem    integer not null,
-    primary key(compound, biosystem)
-);
-
-
 create table pubchem.compound_types
 (
     compound     integer not null,

@@ -150,10 +150,10 @@ class Measuregroup extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/BFO_0000057"))
+                    if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/RO_0000057"))
                         throw new IOException();
 
-                    if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/protein/GI"))
+                    if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"))
                     {
                         String proteinName = getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/");
                         int proteinID = Protein.getProteinID(proteinName);

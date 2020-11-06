@@ -1,14 +1,18 @@
 package cz.iocb.load.pubchem;
 
 import java.io.IOException;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
+import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
+import cz.iocb.load.ontology.Ontology;
+import cz.iocb.load.ontology.Ontology.Identifier;
 
 
 
@@ -16,10 +20,10 @@ class Gene extends Updater
 {
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        IntHashSet newGenes = new IntHashSet(100000);
-        IntHashSet oldGenes = getIntSet("select id from pubchem.gene_bases", 100000);
+        IntHashSet newGenes = new IntHashSet(200000);
+        IntHashSet oldGenes = getIntSet("select id from pubchem.gene_bases", 200000);
 
-        new QueryResultProcessor("select distinct ?gene { ?gene ?p ?o }")
+        new QueryResultProcessor(patternQuery("?gene rdf:type bp:Gene"))
         {
             @Override
             protected void parse() throws IOException
@@ -32,15 +36,32 @@ class Gene extends Updater
         }.load(model);
 
         batch("delete from pubchem.gene_bases where id = ?", oldGenes);
-        batch("insert into pubchem.gene_bases(id) values (?)", newGenes);
-    }
 
 
-    private static void loadTitles(Model model) throws IOException, SQLException
-    {
-        IntStringMap newTitles = new IntStringMap(100000);
-        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.gene_bases where title is not null",
-                100000);
+        IntStringMap newSymbols = new IntStringMap(200000);
+        IntStringMap oldSymbols = getIntStringMap("select id, symbol from pubchem.gene_bases", 200000);
+
+        new QueryResultProcessor(patternQuery("?gene sio:gene-symbol ?symbol"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                String symbol = getString("symbol");
+
+                if(!symbol.equals(oldSymbols.remove(geneID)))
+                    newSymbols.put(geneID, symbol);
+            }
+        }.load(model);
+
+        oldGenes.forEach(key -> oldSymbols.remove(key));
+
+        if(!oldSymbols.isEmpty())
+            throw new IOException();
+
+
+        IntStringMap newTitles = new IntStringMap(200000);
+        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.gene_bases", 200000);
 
         new QueryResultProcessor(patternQuery("?gene dcterms:title ?title"))
         {
@@ -55,57 +76,46 @@ class Gene extends Updater
             }
         }.load(model);
 
-        batch("update pubchem.gene_bases set title = null where id = ?", oldTitles.keySet());
+        oldGenes.forEach(key -> oldTitles.remove(key));
+
+        if(!oldTitles.isEmpty())
+            throw new IOException();
+
+
+        IntIntHashMap newOrganisms = new IntIntHashMap(200000);
+        IntIntHashMap oldOrganisms = getIntIntMap("select id, organism_id from pubchem.gene_bases", 200000);
+
+        new QueryResultProcessor(patternQuery("?gene bp:organism ?organism"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                int organismID = getIntID("organism", "http://identifiers.org/taxonomy/");
+
+                if(organismID != oldOrganisms.removeKeyIfAbsent(geneID, NO_VALUE))
+                    newOrganisms.put(geneID, organismID);
+            }
+        }.load(model);
+
+        oldGenes.forEach(key -> oldOrganisms.remove(key));
+
+        if(!oldOrganisms.isEmpty())
+            throw new IOException();
+
+
+        batch("insert into pubchem.gene_bases(id, symbol, title, organism_id) values (?,?,?,?)", newGenes,
+                (PreparedStatement statement, int gene) -> {
+                    statement.setInt(1, gene);
+                    statement.setString(2, newSymbols.remove(gene));
+                    statement.setString(3, newTitles.remove(gene));
+                    statement.setInt(4, newOrganisms.getOrThrow(gene));
+                    newOrganisms.remove(gene);
+                });
+
+        batch("update pubchem.gene_bases set symbol = ? where id = ?", newSymbols, Direction.REVERSE);
         batch("update pubchem.gene_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
-    }
-
-
-    private static void loadDescriptions(Model model) throws IOException, SQLException
-    {
-        IntStringMap newDescriptions = new IntStringMap(100000);
-        IntStringMap oldDescriptions = getIntStringMap(
-                "select id, description from pubchem.gene_bases where description is not null", 100000);
-
-        new QueryResultProcessor(patternQuery("?gene dcterms:description ?description"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                String description = getString("description");
-
-                if(!description.equals(oldDescriptions.remove(geneID)))
-                    newDescriptions.put(geneID, description);
-            }
-        }.load(model);
-
-        batch("update pubchem.gene_bases set description = null where id = ?", oldDescriptions.keySet());
-        batch("update pubchem.gene_bases set description = ? where id = ?", newDescriptions, Direction.REVERSE);
-    }
-
-
-    private static void loadBiosystems(Model model) throws IOException, SQLException
-    {
-        IntPairSet newBiosystems = new IntPairSet(1000000);
-        IntPairSet oldBiosystems = getIntPairSet("select gene, biosystem from pubchem.gene_biosystems", 1000000);
-
-        new QueryResultProcessor(patternQuery("?gene obo:BFO_0000056 ?biosystem"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                int biosystemID = getIntID("biosystem", "http://rdf.ncbi.nlm.nih.gov/pubchem/biosystem/BSID");
-
-                IntIntPair pair = PrimitiveTuples.pair(geneID, biosystemID);
-
-                if(!oldBiosystems.remove(pair))
-                    newBiosystems.add(pair);
-            }
-        }.load(model);
-
-        batch("delete from pubchem.gene_biosystems where gene = ? and biosystem = ?", oldBiosystems);
-        batch("insert into pubchem.gene_biosystems(gene, biosystem) values (?,?)", newBiosystems);
+        batch("update pubchem.gene_bases set organism_id = ? where id = ?", newOrganisms, Direction.REVERSE);
     }
 
 
@@ -190,6 +200,91 @@ class Gene extends Updater
     }
 
 
+    private static void loadProcesses(Model model) throws IOException, SQLException
+    {
+        IntPairSet newProcesses = new IntPairSet(10000000);
+        IntPairSet oldProcesses = getIntPairSet("select gene, process_id from pubchem.gene_processes", 10000000);
+
+        new QueryResultProcessor(patternQuery("?gene obo:RO_0000056 ?process "
+                + "filter(strstarts(str(?process), 'http://purl.obolibrary.org/obo/GO_'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Identifier process = Ontology.getId(getIRI("process"));
+
+                if(process.unit != Ontology.unitGO)
+                    throw new IOException();
+
+                IntIntPair pair = PrimitiveTuples.pair(geneID, process.id);
+
+                if(!oldProcesses.remove(pair))
+                    newProcesses.add(pair);
+            }
+        }.load(model);
+
+        batch("delete from pubchem.gene_processes where gene = ? and process_id = ?", oldProcesses);
+        batch("insert into pubchem.gene_processes(gene, process_id) values (?,?)", newProcesses);
+    }
+
+
+    private static void loadFunctions(Model model) throws IOException, SQLException
+    {
+        IntPairSet newFunctions = new IntPairSet(10000000);
+        IntPairSet oldFunctions = getIntPairSet("select gene, function_id from pubchem.gene_functions", 10000000);
+
+        new QueryResultProcessor(patternQuery("?gene obo:RO_0000085 ?function"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Identifier function = Ontology.getId(getIRI("function"));
+
+                if(function.unit != Ontology.unitGO)
+                    throw new IOException();
+
+                IntIntPair pair = PrimitiveTuples.pair(geneID, function.id);
+
+                if(!oldFunctions.remove(pair))
+                    newFunctions.add(pair);
+            }
+        }.load(model);
+
+        batch("delete from pubchem.gene_functions where gene = ? and function_id = ?", oldFunctions);
+        batch("insert into pubchem.gene_functions(gene, function_id) values (?,?)", newFunctions);
+    }
+
+
+    private static void loadLocations(Model model) throws IOException, SQLException
+    {
+        IntPairSet newLocations = new IntPairSet(1000000);
+        IntPairSet oldLocations = getIntPairSet("select gene, location_id from pubchem.gene_locations", 1000000);
+
+        new QueryResultProcessor(patternQuery("?gene obo:RO_0001025 ?location"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Identifier location = Ontology.getId(getIRI("location"));
+
+                if(location.unit != Ontology.unitGO)
+                    throw new IOException();
+
+                IntIntPair pair = PrimitiveTuples.pair(geneID, location.id);
+
+                if(!oldLocations.remove(pair))
+                    newLocations.add(pair);
+            }
+        }.load(model);
+
+        batch("delete from pubchem.gene_locations where gene = ? and location_id = ?", oldLocations);
+        batch("insert into pubchem.gene_locations(gene, location_id) values (?,?)", newLocations);
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load genes ...");
@@ -198,9 +293,9 @@ class Gene extends Updater
         check(model, "pubchem/gene/check.sparql");
 
         loadBases(model);
-        loadTitles(model);
-        loadDescriptions(model);
-        loadBiosystems(model);
+        loadProcesses(model);
+        loadFunctions(model);
+        loadLocations(model);
         loadAlternatives(model);
         loadReferences(model);
         loadCloseMatches(model);

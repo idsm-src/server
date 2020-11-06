@@ -20,15 +20,17 @@ public class PubChemRDF extends Updater
 
             Concept.load();
             Source.load(); // depends on Concept
-            Biosystem.load(); // depends on Source
             ConservedDomain.load();
 
             Gene.load();
-            Protein.load();
+            Protein.load(); // depends on Ontology
 
+            Bioassay.load(); // depends on Ontology
             Compound.load(); // depends on Ontology
+            Pathway.load(); // depends on Source, Compound, Protein, Gene, Ontology
+
             InchiKey.load(); // depends on Compound
-            Measuregroup.load(); // depends on Source and Protein
+            Measuregroup.load(); // depends on Protein
             Protein.finish();
             Reference.load(); // depends on Ontology
 
@@ -36,6 +38,7 @@ public class PubChemRDF extends Updater
             Concept.finish();
 
             Substance.load(); // depends on Synonym and Compound
+            Synonym.finish();
 
             Endpoint.load(); // depends on Ontology, Substance and Measuregroup
             Measuregroup.finish();
