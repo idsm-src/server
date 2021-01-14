@@ -92,7 +92,7 @@ public class MoleculeReference extends Updater
         {
             new QueryResultProcessor(patternQuery("?molecule cco:moleculeXref ?reference. ?reference rdf:type ?type "
                     + "filter(?type != cco:PubchemRef && ?type != cco:PubchemThomPharmRef "
-                    + "&& ?type != cco:PubchemDotfRef && ?type != cco:cco:ChebiRef)"))
+                    + "&& ?type != cco:PubchemDotfRef && ?type != cco:ChebiRef)"))
             {
                 @Override
                 public void parse() throws SQLException, IOException

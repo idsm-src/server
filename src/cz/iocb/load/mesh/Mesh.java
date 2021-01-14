@@ -233,7 +233,7 @@ public class Mesh extends Updater
 
     static void load() throws IOException, SQLException
     {
-        System.out.println("load concepts ...");
+        System.out.println("load MeSH ...");
 
         Model model = getModel("mesh/mesh.nt");
 
