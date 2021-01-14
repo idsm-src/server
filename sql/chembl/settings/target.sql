@@ -24,7 +24,6 @@ grant select on chembl.target_relations to sparql;
 --------------------------------------------------------------------------------
 
 alter table chembl.target_components drop column tid;
-alter table chembl.target_components drop column targcomp_id;
 alter table chembl.target_components drop column homologue;
 
 alter table chembl.target_components add primary key (targcomp_id);
