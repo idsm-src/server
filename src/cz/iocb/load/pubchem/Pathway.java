@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import org.apache.jena.rdf.model.Model;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
+import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
 import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -39,8 +40,9 @@ class Pathway extends Updater
     static
     {
         descriptions.add(new Description("PATHBANK", "http://pathbank.org/view/", "SMP[0-9]{5,7}"));
-        descriptions.add(new Description("BIOCYC", "https://biocyc.org/", "[^/]*/NEW-IMAGE\\?object=.*"));
+        descriptions.add(new Description("BIOCYC_IMAGE", "https://biocyc.org/", "[^/]*/NEW-IMAGE\\?object=.*"));
         descriptions.add(new Description("REACTOME", "http://identifiers.org/reactome/", "R-[A-Z]{3}-[1-9][0-9]*"));
+        descriptions.add(new Description("BIOCYC", "http://identifiers.org/biocyc/", "[^:]*:[^:]*"));
         descriptions.add(new Description("WIKIPATHWAY", "http://identifiers.org/wikipathways/WP", "[1-9][0-9]*"));
         descriptions.add(new Description("PLANTCYC", "https://pmn.plantcyc.org/", "[^/]*/new-image\\?object=.*"));
         descriptions
@@ -289,7 +291,8 @@ class Pathway extends Updater
         IntPairSet newComponents = new IntPairSet(1000000);
         IntPairSet oldComponents = getIntPairSet("select pathway, component from pubchem.pathway_components", 1000000);
 
-        new QueryResultProcessor(patternQuery("?pathway bp:pathwayComponent ?component"))
+        new QueryResultProcessor(patternQuery("?pathway bp:pathwayComponent ?component "
+                + "filter(strstarts(str(?component), 'http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -306,6 +309,33 @@ class Pathway extends Updater
 
         batch("delete from pubchem.pathway_components where pathway = ? and component = ?", oldComponents);
         batch("insert into pubchem.pathway_components(pathway, component) values (?,?)", newComponents);
+    }
+
+
+    private static void loadReactions(Model model) throws IOException, SQLException
+    {
+        IntStringPairSet newReactions = new IntStringPairSet(1000000);
+        IntStringPairSet oldReactions = getIntStringPairSet("select pathway, reaction from pubchem.pathway_reactions",
+                1000000);
+
+        new QueryResultProcessor(patternQuery("?pathway bp:pathwayComponent ?reaction "
+                + "filter(strstarts(str(?reaction), 'http://rdf.ncbi.nlm.nih.gov/pubchem/reaction/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int pathwayID = getIntID("pathway", "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID");
+                String reactionID = getStringID("reaction", "http://rdf.ncbi.nlm.nih.gov/pubchem/reaction/");
+
+                IntObjectPair<String> pair = PrimitiveTuples.pair(pathwayID, reactionID);
+
+                if(!oldReactions.remove(pair))
+                    newReactions.add(pair);
+            }
+        }.load(model);
+
+        batch("delete from pubchem.pathway_reactions where pathway = ? and reaction = ?", oldReactions);
+        batch("insert into pubchem.pathway_reactions(pathway, reaction) values (?,?)", newReactions);
     }
 
 
@@ -372,6 +402,7 @@ class Pathway extends Updater
         loadProteins(model);
         loadGenes(model);
         loadComponents(model);
+        loadReactions(model);
         loadReferences(model);
         loadRelatedPathways(model);
 

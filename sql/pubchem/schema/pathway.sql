@@ -1,9 +1,10 @@
 create type pubchem.pathway_reference_type as enum
 (
     'PATHBANK',
-    'BIOCYC',
+    'BIOCYC_IMAGE',
     'REACTOME',
     'WIKIPATHWAY',
+    'BIOCYC',
     'PLANTCYC',
     'PID',
     'INOH',
@@ -55,6 +56,14 @@ create table pubchem.pathway_components
     pathway     integer not null,
     component   integer not null,
     primary key(pathway, component)
+);
+
+
+create table pubchem.pathway_reactions
+(
+    pathway     integer not null,
+    reaction    varchar not null,
+    primary key(pathway, reaction)
 );
 
 

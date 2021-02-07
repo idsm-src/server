@@ -31,6 +31,12 @@ grant select on pubchem.pathway_components to sparql;
 
 --------------------------------------------------------------------------------
 
+create index pathway_reactions__pathway on pubchem.pathway_reactions(pathway);
+create index pathway_reactions__reaction on pubchem.pathway_reactions(reaction);
+grant select on pubchem.pathway_reactions to sparql;
+
+--------------------------------------------------------------------------------
+
 create index pathway_related_pathways__pathway on pubchem.pathway_related_pathways(pathway);
 create index pathway_related_pathways__related on pubchem.pathway_related_pathways(related);
 grant select on pubchem.pathway_related_pathways to sparql;

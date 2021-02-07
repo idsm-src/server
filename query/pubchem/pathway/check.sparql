@@ -24,4 +24,10 @@ select distinct ?iri where
         filter(!strstarts(str(?iri), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/'))
         filter(!strstarts(str(?iri), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/'))
     }
+    union
+    {
+        ?S bp:pathwayComponent ?iri .
+        filter(!strstarts(str(?iri), 'http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/'))
+        filter(!strstarts(str(?iri), 'http://rdf.ncbi.nlm.nih.gov/pubchem/reaction/'))
+    }
 }
