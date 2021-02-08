@@ -83,7 +83,7 @@ alter table pubchem.pathway_compounds add foreign key (compound) references pubc
 alter table pubchem.pathway_proteins add foreign key (pathway) references pubchem.pathway_bases(id) initially deferred;
 alter table pubchem.pathway_proteins add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.pathway_genes add foreign key (pathway) references pubchem.pathway_bases(id) initially deferred;
-alter table pubchem.pathway_genes add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+---- alter table pubchem.pathway_genes add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 ---- alter table pubchem.pathway_components add foreign key (pathway) references pubchem.pathway_bases(id) initially deferred;
 ---- alter table pubchem.pathway_components add foreign key (component) references pubchem.pathway_bases(id) initially deferred;
 alter table pubchem.pathway_related_pathways add foreign key (pathway) references pubchem.pathway_bases(id) initially deferred;
@@ -111,9 +111,9 @@ alter table pubchem.protein_complexes add foreign key (protein) references pubch
 
 
 -- reference
----- alter table pubchem.reference_discusses add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
----- alter table pubchem.reference_subjects add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
----- alter table pubchem.reference_primary_subjects add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
+alter table pubchem.reference_discusses add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
+alter table pubchem.reference_subjects add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
+alter table pubchem.reference_primary_subjects add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 
 
 -- source

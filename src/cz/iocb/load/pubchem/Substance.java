@@ -203,8 +203,15 @@ class Substance extends Updater
 
                         if(!value.startsWith("http://linkedchemistry.info/chembl/chemblid/"))
                         {
+                            // workaround
+                            if(value.matches("http://rdf\\.ebi\\.ac\\.uk/resource/chembl/molecule/[Cc]hembl[0-9]+"))
+                            {
+                                System.out.println("    fix wrong ChEMBL iri: " + value);
+                                value = value.replaceFirst("molecule/[Cc]hembl", "molecule/CHEMBL");
+                            }
+
                             int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
-                            int matchID = getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL");
+                            int matchID = getIntID(value, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL");
 
                             IntIntPair pair = PrimitiveTuples.pair(substanceID, matchID);
                             addSubstanceID(substanceID);

@@ -51,10 +51,10 @@ public abstract class TripleStreamProcessor
         String value = node.getURI();
 
         if(!value.startsWith(prefix))
-            throw new IOException();
+            throw new IOException("unexpected IRI: " + value);
 
         if(!value.endsWith(suffix))
-            throw new IOException();
+            throw new IOException("unexpected IRI: " + value);
 
         return Integer.parseInt(value.substring(prefix.length(), value.length() - suffix.length()));
     }
@@ -65,7 +65,16 @@ public abstract class TripleStreamProcessor
         String value = node.getURI();
 
         if(!value.startsWith(prefix))
-            throw new IOException();
+            throw new IOException("unexpected IRI: " + value);
+
+        return Integer.parseInt(value.substring(prefix.length()));
+    }
+
+
+    public static int getIntID(String value, String prefix) throws IOException
+    {
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
 
         return Integer.parseInt(value.substring(prefix.length()));
     }
@@ -76,7 +85,7 @@ public abstract class TripleStreamProcessor
         String value = node.getURI();
 
         if(!value.startsWith(prefix))
-            throw new IOException();
+            throw new IOException("unexpected IRI: " + value);
 
         return value.substring(prefix.length());
     }
@@ -93,7 +102,7 @@ public abstract class TripleStreamProcessor
         Node_Literal literal = (Node_Literal) node;
 
         if(!literal.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#int"))
-            throw new IOException();
+            throw new IOException("unexpected literal datatype");
 
         return Integer.parseInt(literal.getLiteralLexicalForm());
     }
@@ -104,7 +113,7 @@ public abstract class TripleStreamProcessor
         Node_Literal literal = (Node_Literal) node;
 
         if(!literal.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#float"))
-            throw new IOException();
+            throw new IOException("unexpected literal datatype");
 
         return Float.parseFloat(literal.getLiteralLexicalForm());
     }
@@ -115,7 +124,7 @@ public abstract class TripleStreamProcessor
         String value = node.getURI();
 
         if(!value.startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"))
-            throw new IOException();
+            throw new IOException("unexpected IRI: " + value);
 
         return new MD5(value, 48);
     }

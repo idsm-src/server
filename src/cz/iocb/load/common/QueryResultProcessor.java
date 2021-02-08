@@ -66,7 +66,7 @@ public abstract class QueryResultProcessor
         String value = resource.getURI();
 
         if(!value.startsWith(prefix))
-            throw new IOException();
+            throw new IOException("unexpected IRI: " + value);
 
         return Integer.parseInt(value.substring(prefix.length()));
     }
@@ -82,7 +82,7 @@ public abstract class QueryResultProcessor
         String value = resource.getURI();
 
         if(!value.startsWith(prefix))
-            throw new IOException();
+            throw new IOException("unexpected IRI: " + value);
 
         return value.substring(prefix.length());
     }
