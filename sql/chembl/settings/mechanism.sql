@@ -7,6 +7,7 @@ alter table chembl.drug_mechanism drop column disease_efficacy;
 alter table chembl.drug_mechanism drop column mechanism_comment;
 alter table chembl.drug_mechanism drop column selectivity_comment;
 alter table chembl.drug_mechanism drop column binding_site_comment;
+alter table chembl.drug_mechanism drop column variant_id;
 
 alter table chembl.drug_mechanism add primary key (id);
 create index drug_mechanism__mechanism_of_action on chembl.drug_mechanism(mechanism_of_action);

@@ -36,6 +36,6 @@ public class Target extends Updater
 
     public static void load() throws IOException, SQLException
     {
-        load("chembl/rdf/chembl_27.0_target.ttl.gz");
+        load("chembl/rdf/chembl_28.0_target.ttl.gz");
     }
 }

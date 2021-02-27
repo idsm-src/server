@@ -197,7 +197,7 @@ public class MoleculeReference extends Updater
 
     public static void load() throws IOException, SQLException
     {
-        load("chembl/rdf/chembl_27.0_molecule.ttl.gz");
-        load("chembl/rdf/chembl_27.0_unichem.ttl.gz");
+        load("chembl/rdf/chembl_28.0_molecule.ttl.gz");
+        load("chembl/rdf/chembl_28.0_unichem.ttl.gz");
     }
 }

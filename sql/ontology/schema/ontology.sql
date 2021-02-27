@@ -194,3 +194,7 @@ insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (93, 'http://www.orpha.net/consor/cgi-bin/OC_Exp.php?Expert=' , 55,  0, '^http://www\.orpha\.net/consor/cgi-bin/OC_Exp\.php\?Expert=[1-9][0-9]*$');
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (94, 'http://www.ebi.ac.uk/ontology-lookup/browse.do?ontName=MP&termId=MP:' , 69,  7, '^http://www\.ebi\.ac\.uk/ontology-lookup/browse\.do\?ontName=MP&termId=MP:[0-9]{7}$');
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (95, 'http://purl.obolibrary.org/obo/chebi#' , 38,  0, '^http://purl\.obolibrary\.org/obo/chebi#[1-3]_STAR$');
+
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (96, 'http://www.ebi.ac.uk/efo/GO:' , 29,  7, '^http://www\.ebi\.ac\.uk/efo/GO:[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (97, 'http://www.ebi.ac.uk/efo/DOID:' , 31,  0, '^http://www\.ebi\.ac\.uk/efo/DOID:[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (98, 'http://www.ebi.ac.uk/efo/MONDO:' , 32,  7, '^http://www\.ebi\.ac\.uk/efo/MONDO:[0-9]{7}$');
