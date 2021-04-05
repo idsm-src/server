@@ -3,6 +3,7 @@ grant select on pubchem.synonym_bases to sparql;
 --------------------------------------------------------------------------------
 
 create index synonym_values__synonym on pubchem.synonym_values(synonym);
+create index synonym_values__value on pubchem.synonym_values using hash (value);
 create index synonym_values__value__gin on pubchem.synonym_values using gin (to_tsvector('english', value));
 grant select on pubchem.synonym_values to sparql;
 

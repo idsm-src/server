@@ -5,7 +5,7 @@ alter table chembl.component_sequences drop column db_version;
 alter table chembl.component_sequences add primary key (id);
 create index component_sequences__component_type on chembl.component_sequences(component_type);
 create index component_sequences__accession on chembl.component_sequences(accession);
-create index component_sequences__sequence on chembl.component_sequences(sequence);
+create index component_sequences__sequence on chembl.component_sequences using hash (sequence);
 create index component_sequences__description on chembl.component_sequences(description);
 create index component_sequences__tax_id on chembl.component_sequences(tax_id);
 create index component_sequences__organism on chembl.component_sequences(organism);

@@ -26,21 +26,21 @@ grant select on pubchem.descriptor_compound_molecular_formulas to sparql;
 
 --------------------------------------------------------------------------------
 
-create index descriptor_compound_isomeric_smileses__isomeric_smiles on pubchem.descriptor_compound_isomeric_smileses(isomeric_smiles);
+create index descriptor_compound_isomeric_smileses__isomeric_smiles on pubchem.descriptor_compound_isomeric_smileses using hash (isomeric_smiles);
 grant select on pubchem.descriptor_compound_isomeric_smileses to sparql;
 
 --------------------------------------------------------------------------------
 
-create index descriptor_compound_canonical_smileses__canonical_smiles on pubchem.descriptor_compound_canonical_smileses(canonical_smiles);
+create index descriptor_compound_canonical_smileses__canonical_smiles on pubchem.descriptor_compound_canonical_smileses using hash (canonical_smiles);
 grant select on pubchem.descriptor_compound_canonical_smileses to sparql;
 
 --------------------------------------------------------------------------------
 
--- create index descriptor_compound_iupac_inchis__iupac_inchi on pubchem.descriptor_compound_iupac_inchis(iupac_inchi); -- Values larger than 1/3 of a buffer page cannot be indexed.
+create index descriptor_compound_iupac_inchis__iupac_inchi on pubchem.descriptor_compound_iupac_inchis using hash (iupac_inchi);
 grant select on pubchem.descriptor_compound_iupac_inchis to sparql;
 
 --------------------------------------------------------------------------------
 
-create index descriptor_compound_preferred_iupac_names__iupac_name on pubchem.descriptor_compound_preferred_iupac_names(preferred_iupac_name);
+create index descriptor_compound_preferred_iupac_names__iupac_name on pubchem.descriptor_compound_preferred_iupac_names using hash (preferred_iupac_name);
 create index descriptor_compound_preferred_iupac_names__iupac_name__gin on pubchem.descriptor_compound_preferred_iupac_names using gin (to_tsvector('english', preferred_iupac_name));
 grant select on pubchem.descriptor_compound_preferred_iupac_names to sparql;

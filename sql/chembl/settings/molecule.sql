@@ -193,7 +193,7 @@ alter table chembl.compound_structures drop column molregno;
 alter table chembl.compound_structures drop column molfile;
 
 alter table chembl.compound_structures add primary key (molecule_id);
---create index compound_structures__standard_inchi on chembl.compound_structures(standard_inchi);
+create index compound_structures__standard_inchi on chembl.compound_structures using hash (standard_inchi);
 create index compound_structures__standard_inchi_key on chembl.compound_structures(standard_inchi_key);
 create index compound_structures__canonical_smiles on chembl.compound_structures(canonical_smiles);
 grant select on chembl.compound_structures to sparql;

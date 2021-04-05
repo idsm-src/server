@@ -1,5 +1,7 @@
 create index reference_bases__type on pubchem.reference_bases(type_id);
 create index reference_bases__dcdate on pubchem.reference_bases(dcdate);
+create index reference_bases__title on pubchem.reference_bases using hash (title);
+create index reference_bases__citation on pubchem.reference_bases using hash (citation);
 grant select on pubchem.reference_bases to sparql;
 
 --------------------------------------------------------------------------------

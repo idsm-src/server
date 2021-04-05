@@ -18,6 +18,7 @@ create index endpoint_measurements__substance on pubchem.endpoint_measurements(s
 create index endpoint_measurements__bioassay on pubchem.endpoint_measurements(bioassay);
 create index endpoint_measurements__bioassay_measuregroup on pubchem.endpoint_measurements(bioassay, measuregroup);
 create index endpoint_measurements__type on pubchem.endpoint_measurements(type_id);
+create index endpoint_measurements__label on pubchem.endpoint_measurements(label);
 grant select on pubchem.endpoint_measurements to sparql;
 
 --------------------------------------------------------------------------------
