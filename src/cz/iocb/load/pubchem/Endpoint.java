@@ -35,18 +35,18 @@ class Endpoint extends Updater
 
     private static void loadBases() throws IOException, SQLException
     {
-        usedEndpoints = new IntTripletSet(250000000);
-        newEndpoints = new IntTripletSet(250000000);
+        usedEndpoints = new IntTripletSet(400000000);
+        newEndpoints = new IntTripletSet(400000000);
         oldEndpoints = getIntTripletSet("select substance, bioassay, measuregroup from pubchem.endpoint_bases",
-                250000000);
+                400000000);
     }
 
 
     private static void loadOutcomes() throws IOException, SQLException
     {
-        IntQuaterpletSet newOutcomes = new IntQuaterpletSet(250000000);
+        IntQuaterpletSet newOutcomes = new IntQuaterpletSet(400000000);
         IntQuaterpletSet oldOutcomes = getIntQuaterpletSet(
-                "select substance, bioassay, measuregroup, outcome_id from pubchem.endpoint_outcomes", 250000000);
+                "select substance, bioassay, measuregroup, outcome_id from pubchem.endpoint_outcomes", 400000000);
 
 
         processFiles("pubchem/RDF/endpoint", "pc_endpoint_outcome_[0-9]+\\.ttl\\.gz", file -> {

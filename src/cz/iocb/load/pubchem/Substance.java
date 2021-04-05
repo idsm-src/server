@@ -24,17 +24,17 @@ class Substance extends Updater
 
     private static void loadBases() throws IOException, SQLException
     {
-        usedSubstances = new IntHashSet(256000000);
-        newSubstances = new IntHashSet(256000000);
-        oldSubstances = getIntSet("select id from pubchem.substance_bases", 256000000);
+        usedSubstances = new IntHashSet(400000000);
+        newSubstances = new IntHashSet(400000000);
+        oldSubstances = getIntSet("select id from pubchem.substance_bases", 400000000);
     }
 
 
     private static void loadCompounds() throws IOException, SQLException
     {
-        IntIntHashMap newCompounds = new IntIntHashMap(256000000);
+        IntIntHashMap newCompounds = new IntIntHashMap(400000000);
         IntIntHashMap oldCompounds = getIntIntMap(
-                "select id, compound from pubchem.substance_bases where compound is not null", 256000000);
+                "select id, compound from pubchem.substance_bases where compound is not null", 400000000);
 
         processFiles("pubchem/RDF/substance", "pc_substance2compound_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
@@ -71,9 +71,9 @@ class Substance extends Updater
 
     private static void loadAvailabilities() throws IOException, SQLException
     {
-        IntStringMap newAvailabilities = new IntStringMap(256000000);
+        IntStringMap newAvailabilities = new IntStringMap(400000000);
         IntStringMap oldAvailabilities = getIntStringMap(
-                "select id, available::varchar from pubchem.substance_bases where available is not null", 256000000);
+                "select id, available::varchar from pubchem.substance_bases where available is not null", 400000000);
 
         processFiles("pubchem/RDF/substance", "pc_substance_available_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
@@ -109,9 +109,9 @@ class Substance extends Updater
 
     private static void loadModifiedDates() throws IOException, SQLException
     {
-        IntStringMap newModifiedDates = new IntStringMap(256000000);
+        IntStringMap newModifiedDates = new IntStringMap(400000000);
         IntStringMap oldModifiedDates = getIntStringMap(
-                "select id, modified::varchar from pubchem.substance_bases where modified is not null", 256000000);
+                "select id, modified::varchar from pubchem.substance_bases where modified is not null", 400000000);
 
         processFiles("pubchem/RDF/substance", "pc_substance_modified_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
@@ -147,9 +147,9 @@ class Substance extends Updater
 
     private static void loadSources() throws IOException, SQLException
     {
-        IntIntHashMap newSources = new IntIntHashMap(256000000);
+        IntIntHashMap newSources = new IntIntHashMap(400000000);
         IntIntHashMap oldSources = getIntIntMap(
-                "select id, source from pubchem.substance_bases where source is not null", 256000000);
+                "select id, source from pubchem.substance_bases where source is not null", 400000000);
 
         processFiles("pubchem/RDF/substance", "pc_substance_source_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
@@ -335,8 +335,8 @@ class Substance extends Updater
 
     private static void loadSynonyms() throws IOException, SQLException
     {
-        IntPairSet newSynonyms = new IntPairSet(256000000);
-        IntPairSet oldSynonyms = getIntPairSet("select substance, synonym from pubchem.substance_synonyms", 256000000);
+        IntPairSet newSynonyms = new IntPairSet(400000000);
+        IntPairSet oldSynonyms = getIntPairSet("select substance, synonym from pubchem.substance_synonyms", 400000000);
 
         processFiles("pubchem/RDF/substance", "pc_substance2descriptor_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))

@@ -14,9 +14,9 @@ class SubstanceDescriptor extends Updater
 {
     private static void loadSubstanceVersions() throws IOException, SQLException
     {
-        IntIntHashMap newValues = new IntIntHashMap(250000000);
+        IntIntHashMap newValues = new IntIntHashMap(400000000);
         IntIntHashMap oldValues = getIntIntMap("select substance, version from pubchem.descriptor_substance_bases",
-                250000000);
+                400000000);
 
         processFiles("pubchem/RDF/descriptor/substance", "pc_descr_SubstanceVersion_value_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
