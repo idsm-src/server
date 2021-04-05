@@ -266,6 +266,16 @@ class BioassayXML extends Updater
                                     newMechanisms.put(bioassayID, chemblID);
                             }
                         }
+                        else if(chemblSource.startsWith("CHEMBL"))
+                        {
+                            int chemblID = Integer.parseInt(chemblSource.replaceFirst("^CHEMBL", ""));
+
+                            synchronized(newAssays)
+                            {
+                                if(oldAssays.removeKeyIfAbsent(bioassayID, NO_VALUE) != chemblID)
+                                    newAssays.put(bioassayID, chemblID);
+                            }
+                        }
                         else
                         {
                             Integer chemblID = assayMapping.get(Integer.parseInt(chemblSource));

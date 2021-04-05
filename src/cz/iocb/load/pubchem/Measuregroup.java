@@ -253,13 +253,18 @@ class Measuregroup extends Updater
                     throw new IOException();
             }
         }
-        else if(grp != -1)
+        else if(grp != -1 && grp != iri.length() - 1)
         {
             bioassay = Integer.parseInt(iri.substring(measuregroupPrefixLength, grp));
             measuregroup = Integer.parseInt(iri.substring(grp + 1));
 
-            if(measuregroup == 2147483647)
+            if(measuregroup > 2147483645)
                 throw new IOException();
+        }
+        else if(grp != -1)
+        {
+            bioassay = Integer.parseInt(iri.substring(measuregroupPrefixLength, grp));
+            measuregroup = 2147483646; // magic number
         }
         else
         {
