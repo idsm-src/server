@@ -1,0 +1,22 @@
+<project name="chemweb" basedir="." default="default">
+
+  <target name="default" depends="compile"></target>
+
+  <target name="compile">
+    <path id="class.path">
+      <fileset dir="lib"><include name="**/*.jar" /></fileset>
+    </path>
+    <mkdir dir="bin"/>
+    <javac includeantruntime="false" srcdir="src" destdir="bin">
+      <classpath>
+        <pathelement location="../chemweb/war/WEB-INF/classes" />
+      <path refid="class.path" />
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="clean">
+    <delete dir="bin" />
+  </target>
+
+</project>
