@@ -150,7 +150,7 @@ public class ConstraintGenerator extends Updater
     }
 
 
-    private static boolean isAditionalForeignKey(QuadNodeMapping left, QuadNodeMapping right)
+    private static boolean isAdditionalForeignKey(QuadNodeMapping left, QuadNodeMapping right)
             throws SQLException, IOException
     {
         ResourceClass resourceClass = left.nodeMapping.getResourceClass();
@@ -301,7 +301,7 @@ public class ConstraintGenerator extends Updater
 
                 try
                 {
-                    if(isAditionalForeignKey(mappingPair.left, mappingPair.right))
+                    if(isAdditionalForeignKey(mappingPair.left, mappingPair.right))
                     {
                         String[] parentColumns = new String[resourceClass.getPatternPartsCount()];
                         String[] foreignColumns = new String[resourceClass.getPatternPartsCount()];

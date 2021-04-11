@@ -55,7 +55,7 @@ public class ConstraintChecker extends Updater
     }
 
 
-    public static void checkAditionalForeignKeys() throws SQLException, IOException
+    public static void checkAdditionalForeignKeys() throws SQLException, IOException
     {
         try(Statement statement = connection.createStatement())
         {
@@ -201,7 +201,7 @@ public class ConstraintChecker extends Updater
     public static void check() throws SQLException, IOException
     {
         checkUnjoinableColumns();
-        checkAditionalForeignKeys();
+        checkAdditionalForeignKeys();
     }
 
 
