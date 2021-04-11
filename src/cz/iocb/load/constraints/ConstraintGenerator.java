@@ -165,6 +165,14 @@ public class ConstraintGenerator extends Updater
         if(!containsConstant)
             return false;
 
+        for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
+        {
+            Column leftCol = left.nodeMapping.getSqlColumn(c);
+            Column rightCol = right.nodeMapping.getSqlColumn(c);
+
+            if(leftCol instanceof ConstantColumn && rightCol instanceof ConstantColumn && !leftCol.equals(rightCol))
+                return false;
+        }
 
         StringBuilder builder = new StringBuilder();
 
