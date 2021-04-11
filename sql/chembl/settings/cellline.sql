@@ -13,6 +13,5 @@ create index cell_dictionary__cellosaurus_id on chembl.cell_dictionary(cellosaur
 create index cell_dictionary__cl_lincs_id on chembl.cell_dictionary(cl_lincs_id);
 create index cell_dictionary__chembl_id on chembl.cell_dictionary(chembl_id);
 create index cell_dictionary__clo_resource_id on chembl.cell_dictionary(clo_resource_id);
-create index cell_dictionary__cl_resource_id on chembl.cell_dictionary(cl_resource_id);
 create index cell_dictionary__efo_resource_id on chembl.cell_dictionary(efo_resource_id);
 grant select on chembl.cell_dictionary to sparql;
