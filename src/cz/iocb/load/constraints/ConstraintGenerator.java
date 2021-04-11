@@ -8,10 +8,12 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.SparqlDatabaseConfiguration;
 import cz.iocb.chemweb.server.sparql.config.idsm.IdsmConfiguration;
 import cz.iocb.chemweb.server.sparql.database.Column;
 import cz.iocb.chemweb.server.sparql.database.ConstantColumn;
+import cz.iocb.chemweb.server.sparql.database.DatabaseSchema;
 import cz.iocb.chemweb.server.sparql.database.Table;
 import cz.iocb.chemweb.server.sparql.database.TableColumn;
 import cz.iocb.chemweb.server.sparql.mapping.JoinTableQuadMapping;
@@ -85,7 +87,7 @@ public class ConstraintGenerator extends Updater
     {
         LinkedHashMap<ResourceClass, ArrayList<QuadNodeMapping>> resourceMappings = new LinkedHashMap<>();
 
-        for(QuadMapping quadMapping : configuration.getMappings())
+        for(QuadMapping quadMapping : configuration.getMappings(null))
         {
             for(NodeMapping nodeMapping : new NodeMapping[] { quadMapping.getGraph(), quadMapping.getSubject(),
                     quadMapping.getPredicate(), quadMapping.getObject() })
@@ -384,8 +386,8 @@ public class ConstraintGenerator extends Updater
 
     public static void load() throws SQLException, IOException
     {
-        SparqlDatabaseConfiguration configuration = new IdsmConfiguration(new DummyDataSource(connection));
-
+        DataSource pool = new DummyDataSource(connection);
+        SparqlDatabaseConfiguration configuration = new IdsmConfiguration(null, pool, new DatabaseSchema(pool));
         LinkedHashMap<ResourceClass, ArrayList<QuadNodeMapping>> resourceMappings = getResourceMappings(configuration);
 
         storeUnjoinableColumns(configuration, resourceMappings);
