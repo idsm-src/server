@@ -44,7 +44,7 @@ create table pubchem.protein_closematches
 (
     __         integer,
     protein    integer not null,
-    match      integer not null,
+    match      varchar not null,
     primary key(__)
 );
 
