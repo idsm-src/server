@@ -41,6 +41,6 @@ public class Document extends Updater
 
     public static void load() throws IOException, SQLException
     {
-        load("chembl/rdf/chembl_28.0_document.ttl.gz");
+        load("chembl/rdf/chembl_29.0_document.ttl.gz");
     }
 }
