@@ -113,9 +113,10 @@ public class ConstraintGenerator extends Updater
                     if(quadMapping instanceof SingleTableQuadMapping)
                         table = ((SingleTableQuadMapping) quadMapping).getTable();
                     else if(nodeMapping == quadMapping.getSubject())
-                        table = ((JoinTableQuadMapping) quadMapping).getSubjectTable();
+                        table = ((JoinTableQuadMapping) quadMapping).getTables().get(0);
                     else if(nodeMapping == quadMapping.getObject())
-                        table = ((JoinTableQuadMapping) quadMapping).getObjectTable();
+                        table = ((JoinTableQuadMapping) quadMapping).getTables()
+                                .get(((JoinTableQuadMapping) quadMapping).getTables().size() - 1);
 
                     QuadNodeMapping map = new QuadNodeMapping(table, (ParametrisedMapping) nodeMapping);
 
