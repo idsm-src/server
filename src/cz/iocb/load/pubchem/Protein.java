@@ -64,12 +64,12 @@ class Protein extends Updater
             protected void parse() throws IOException
             {
                 // workaround
-                if(getIRI("organism").equals("http://identifiers.org/taxonomy/"))
+                if(getIRI("organism").equals("http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"))
                     return;
 
                 int proteinID = usedProteins
                         .getOrThrow(getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"));
-                int organismID = getIntID("organism", "http://identifiers.org/taxonomy/");
+                int organismID = getIntID("organism", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID");
 
                 if(organismID != oldOrganisms.removeKeyIfAbsent(proteinID, NO_VALUE))
                     newOrganisms.put(proteinID, organismID);

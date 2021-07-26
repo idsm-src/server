@@ -128,7 +128,8 @@ alter table pubchem.substance_bases add foreign key (source) references pubchem.
 alter table pubchem.substance_synonyms add foreign key (synonym) references pubchem.synonym_bases(id) initially deferred;
 alter table pubchem.substance_bases add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.substance_types add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
-alter table pubchem.substance_matches add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
+alter table pubchem.substance_chembl_matches add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
+alter table pubchem.substance_glytoucan_matches add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
 alter table pubchem.substance_references add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
 alter table pubchem.substance_pdblinks add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
 alter table pubchem.substance_synonyms add foreign key (substance) references pubchem.substance_bases(id) initially deferred;

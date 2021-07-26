@@ -12,9 +12,14 @@ grant select on pubchem.substance_types to sparql;
 
 --------------------------------------------------------------------------------
 
-create index substance_matches__substance on pubchem.substance_matches(substance);
-create index substance_matches__match on pubchem.substance_matches(match);
-grant select on pubchem.substance_matches to sparql;
+create index substance_chembl_matches__substance on pubchem.substance_chembl_matches(substance);
+create index substance_chembl_matches__chembl on pubchem.substance_chembl_matches(chembl);
+grant select on pubchem.substance_chembl_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index substance_glytoucan_matches__glytoucan on pubchem.substance_glytoucan_matches(glytoucan);
+grant select on pubchem.substance_glytoucan_matches to sparql;
 
 --------------------------------------------------------------------------------
 

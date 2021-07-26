@@ -278,6 +278,8 @@ class BioassayXML extends Updater
                         }
                         else
                         {
+                            System.err.println("warning: old style link used");
+
                             Integer chemblID = assayMapping.get(Integer.parseInt(chemblSource));
 
                             synchronized(newAssays)

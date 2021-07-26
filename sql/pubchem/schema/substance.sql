@@ -17,11 +17,19 @@ create table pubchem.substance_types
 );
 
 
-create table pubchem.substance_matches
+create table pubchem.substance_chembl_matches
 (
     substance    integer not null,
-    match        integer not null,
-    primary key(substance, match)
+    chembl       integer not null,
+    primary key(substance, chembl)
+);
+
+
+create table pubchem.substance_glytoucan_matches
+(
+    substance    integer not null,
+    glytoucan    varchar not null,
+    primary key(substance)
 );
 
 

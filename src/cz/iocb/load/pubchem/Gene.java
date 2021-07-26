@@ -91,7 +91,7 @@ class Gene extends Updater
             protected void parse() throws IOException
             {
                 int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                int organismID = getIntID("organism", "http://identifiers.org/taxonomy/");
+                int organismID = getIntID("organism", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID");
 
                 if(organismID != oldOrganisms.removeKeyIfAbsent(geneID, NO_VALUE))
                     newOrganisms.put(geneID, organismID);

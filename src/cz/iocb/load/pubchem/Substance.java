@@ -185,8 +185,13 @@ class Substance extends Updater
 
     private static void loadMatches() throws IOException, SQLException
     {
-        IntPairSet newMatches = new IntPairSet(10000000);
-        IntPairSet oldMatches = getIntPairSet("select substance, match from pubchem.substance_matches", 10000000);
+        IntPairSet newChemblMatches = new IntPairSet(10000000);
+        IntPairSet oldChemblMatches = getIntPairSet("select substance, chembl from pubchem.substance_chembl_matches",
+                10000000);
+
+        IntStringMap newGlytoucanMatches = new IntStringMap(50000);
+        IntStringMap oldGlytoucanMatches = getIntStringMap(
+                "select substance, glytoucan from pubchem.substance_glytoucan_matches", 50000);
 
         processFiles("pubchem/RDF/substance", "pc_substance_match\\.ttl[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getStream(file))
@@ -201,7 +206,7 @@ class Substance extends Updater
 
                         String value = object.getURI();
 
-                        if(!value.startsWith("http://linkedchemistry.info/chembl/chemblid/"))
+                        if(value.startsWith("http://rdf.ebi.ac.uk/resource/chembl/molecule/"))
                         {
                             // workaround
                             if(value.matches("http://rdf\\.ebi\\.ac\\.uk/resource/chembl/molecule/[Cc]hembl[0-9]+"))
@@ -211,24 +216,46 @@ class Substance extends Updater
                             }
 
                             int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
-                            int matchID = getIntID(value, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL");
+                            int chemblID = getIntID(value, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL");
 
-                            IntIntPair pair = PrimitiveTuples.pair(substanceID, matchID);
+                            IntIntPair pair = PrimitiveTuples.pair(substanceID, chemblID);
                             addSubstanceID(substanceID);
 
-                            synchronized(newMatches)
+                            synchronized(newChemblMatches)
                             {
-                                if(!oldMatches.remove(pair))
-                                    newMatches.add(pair);
+                                if(!oldChemblMatches.remove(pair))
+                                    newChemblMatches.add(pair);
                             }
+                        }
+                        else if(value.startsWith("http://identifiers.org/glytoucan/"))
+                        {
+                            int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
+                            String matchID = getStringID(object, "http://identifiers.org/glytoucan/");
+
+                            addSubstanceID(substanceID);
+
+                            synchronized(newGlytoucanMatches)
+                            {
+                                if(!value.equals(oldGlytoucanMatches.remove(substanceID)))
+                                    newGlytoucanMatches.put(substanceID, matchID);
+                            }
+
+                        }
+                        else if(!value.startsWith("http://linkedchemistry.info/chembl/chemblid/"))
+                        {
+                            throw new IOException();
                         }
                     }
                 }.load(stream);
             }
         });
 
-        batch("delete from pubchem.substance_matches where substance = ? and match = ?", oldMatches);
-        batch("insert into pubchem.substance_matches(substance, match) values (?,?)", newMatches);
+        batch("delete from pubchem.substance_chembl_matches where substance = ? and chembl = ?", oldChemblMatches);
+        batch("insert into pubchem.substance_chembl_matches(substance, chembl) values (?,?)", newChemblMatches);
+
+        batch("delete from pubchem.substance_glytoucan_matches where substance = ?", oldGlytoucanMatches.keySet());
+        batch("insert into pubchem.substance_glytoucan_matches(substance, glytoucan) values (?,?) "
+                + "on conflict (substance) do update set glytoucan=EXCLUDED.glytoucan", newGlytoucanMatches);
     }
 
 

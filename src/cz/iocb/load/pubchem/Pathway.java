@@ -188,11 +188,11 @@ class Pathway extends Updater
             @Override
             protected void parse() throws IOException
             {
-                if(getIRI("organism").equals("http://identifiers.org/taxonomy/"))
+                if(getIRI("organism").equals("http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"))
                     return;
 
                 int pathwayID = getIntID("pathway", "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID");
-                int organismID = getIntID("organism", "http://identifiers.org/taxonomy/");
+                int organismID = getIntID("organism", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID");
 
                 if(organismID != oldOrganisms.removeKeyIfAbsent(pathwayID, NO_VALUE))
                     newOrganisms.put(pathwayID, organismID);
