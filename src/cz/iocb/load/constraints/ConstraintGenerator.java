@@ -65,10 +65,10 @@ public class ConstraintGenerator extends Updater
             if(mapping.nodeMapping.getResourceClass() != nodeMapping.getResourceClass())
                 return false;
 
-            int count = mapping.nodeMapping.getResourceClass().getPatternPartsCount();
+            int count = mapping.nodeMapping.getResourceClass().getColumnCount();
 
             for(int i = 0; i < count; i++)
-                if(!mapping.nodeMapping.getSqlColumn(i).equals(nodeMapping.getSqlColumn(i)))
+                if(!mapping.nodeMapping.getColumns().get(i).equals(nodeMapping.getColumns().get(i)))
                     return false;
 
             return true;
@@ -135,15 +135,15 @@ public class ConstraintGenerator extends Updater
         StringBuilder builder = new StringBuilder();
 
         builder.append("select * from ");
-        builder.append(mapping.table.getCode());
+        builder.append(mapping.table);
         builder.append(" where ");
 
-        for(int c = 0; c < mapping.nodeMapping.getResourceClass().getPatternPartsCount(); c++)
+        for(int c = 0; c < mapping.nodeMapping.getResourceClass().getColumnCount(); c++)
         {
             if(c > 0)
                 builder.append(" and ");
 
-            builder.append(mapping.nodeMapping.getSqlColumn(c).getCode());
+            builder.append(mapping.nodeMapping.getColumns().get(c));
             builder.append(" is not null");
         }
 
@@ -158,18 +158,18 @@ public class ConstraintGenerator extends Updater
 
         boolean containsConstant = false;
 
-        for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
-            if(left.nodeMapping.getSqlColumn(c) instanceof ConstantColumn
-                    || right.nodeMapping.getSqlColumn(c) instanceof ConstantColumn)
+        for(int c = 0; c < resourceClass.getColumnCount(); c++)
+            if(left.nodeMapping.getColumns().get(c) instanceof ConstantColumn
+                    || right.nodeMapping.getColumns().get(c) instanceof ConstantColumn)
                 containsConstant = true;
 
         if(!containsConstant)
             return false;
 
-        for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
+        for(int c = 0; c < resourceClass.getColumnCount(); c++)
         {
-            Column leftCol = left.nodeMapping.getSqlColumn(c);
-            Column rightCol = right.nodeMapping.getSqlColumn(c);
+            Column leftCol = left.nodeMapping.getColumns().get(c);
+            Column rightCol = right.nodeMapping.getColumns().get(c);
 
             if(leftCol instanceof ConstantColumn && rightCol instanceof ConstantColumn && !leftCol.equals(rightCol))
                 return false;
@@ -183,40 +183,40 @@ public class ConstraintGenerator extends Updater
         builder.append(buildTableAccess(right));
         builder.append(") t2 on (");
 
-        for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
+        for(int c = 0; c < resourceClass.getColumnCount(); c++)
         {
             if(c > 0)
                 builder.append(" and ");
 
-            Column c1 = left.nodeMapping.getSqlColumn(c);
-            Column c2 = right.nodeMapping.getSqlColumn(c);
+            Column c1 = left.nodeMapping.getColumns().get(c);
+            Column c2 = right.nodeMapping.getColumns().get(c);
 
             if(c1 instanceof TableColumn)
                 builder.append("t1.");
 
-            builder.append(c1.getCode());
+            builder.append(c1);
 
             builder.append(" = ");
 
             if(c2 instanceof TableColumn)
                 builder.append("t2.");
 
-            builder.append(c2.getCode());
+            builder.append(c2);
         }
 
         builder.append(") where ");
 
-        for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
+        for(int c = 0; c < resourceClass.getColumnCount(); c++)
         {
             if(c > 0)
                 builder.append(" or ");
 
-            Column c1 = left.nodeMapping.getSqlColumn(c);
+            Column c1 = left.nodeMapping.getColumns().get(c);
 
             if(c1 instanceof TableColumn)
                 builder.append("t1.");
 
-            builder.append(c1.getCode());
+            builder.append(c1);
 
             builder.append(" is null");
         }
@@ -246,25 +246,25 @@ public class ConstraintGenerator extends Updater
         builder.append(buildTableAccess(right));
         builder.append(") t2 on (");
 
-        for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
+        for(int c = 0; c < resourceClass.getColumnCount(); c++)
         {
             if(c > 0)
                 builder.append(" and ");
 
-            Column c1 = left.nodeMapping.getSqlColumn(c);
-            Column c2 = right.nodeMapping.getSqlColumn(c);
+            Column c1 = left.nodeMapping.getColumns().get(c);
+            Column c2 = right.nodeMapping.getColumns().get(c);
 
             if(c1 instanceof TableColumn)
                 builder.append("t1.");
 
-            builder.append(c1.getCode());
+            builder.append(c1);
 
             builder.append(" = ");
 
             if(c2 instanceof TableColumn)
                 builder.append("t2.");
 
-            builder.append(c2.getCode());
+            builder.append(c2);
         }
 
         builder.append(") limit 1");
@@ -304,13 +304,13 @@ public class ConstraintGenerator extends Updater
                 {
                     if(isAdditionalForeignKey(mappingPair.left, mappingPair.right))
                     {
-                        String[] parentColumns = new String[resourceClass.getPatternPartsCount()];
-                        String[] foreignColumns = new String[resourceClass.getPatternPartsCount()];
+                        String[] parentColumns = new String[resourceClass.getColumnCount()];
+                        String[] foreignColumns = new String[resourceClass.getColumnCount()];
 
-                        for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
+                        for(int c = 0; c < resourceClass.getColumnCount(); c++)
                         {
-                            parentColumns[c] = mappingPair.left.nodeMapping.getSqlColumn(c).getName();
-                            foreignColumns[c] = mappingPair.right.nodeMapping.getSqlColumn(c).getName();
+                            parentColumns[c] = mappingPair.left.nodeMapping.getColumns().get(c).getName();
+                            foreignColumns[c] = mappingPair.right.nodeMapping.getColumns().get(c).getName();
                         }
 
                         synchronized(ConstraintGenerator.class)
@@ -360,13 +360,13 @@ public class ConstraintGenerator extends Updater
                 {
                     if(isUnjoinable(mappingPair.left, mappingPair.right))
                     {
-                        String[] leftColumns = new String[resourceClass.getPatternPartsCount()];
-                        String[] rightColumns = new String[resourceClass.getPatternPartsCount()];
+                        String[] leftColumns = new String[resourceClass.getColumnCount()];
+                        String[] rightColumns = new String[resourceClass.getColumnCount()];
 
-                        for(int c = 0; c < resourceClass.getPatternPartsCount(); c++)
+                        for(int c = 0; c < resourceClass.getColumnCount(); c++)
                         {
-                            leftColumns[c] = mappingPair.left.nodeMapping.getSqlColumn(c).getName();
-                            rightColumns[c] = mappingPair.right.nodeMapping.getSqlColumn(c).getName();
+                            leftColumns[c] = mappingPair.left.nodeMapping.getColumns().get(c).getName();
+                            rightColumns[c] = mappingPair.right.nodeMapping.getColumns().get(c).getName();
                         }
 
                         synchronized(ConstraintGenerator.class)

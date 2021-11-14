@@ -16,7 +16,7 @@ public class ConstraintChecker extends Updater
         StringBuilder builder = new StringBuilder();
 
         builder.append("select * from ");
-        builder.append(table.getCode());
+        builder.append(table);
         builder.append(" where ");
 
         for(int c = 0; c < columns.length; c++)
