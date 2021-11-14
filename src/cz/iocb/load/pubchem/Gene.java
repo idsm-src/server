@@ -178,7 +178,8 @@ class Gene extends Updater
         IntStringPairIntMap oldMatches = getIntStringPairIntMap("select gene, match, __ from pubchem.gene_matches",
                 1000000);
 
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match"))
+        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+                + "filter(! strstarts(str(?match), 'http://purl.obolibrary.org/obo/NCIT_C'))"))
         {
             int nextMatcheID = Updater.getIntValue("select coalesce(max(__)+1,0) from pubchem.gene_matches");
 
@@ -197,6 +198,36 @@ class Gene extends Updater
 
         batch("delete from pubchem.gene_matches where __ = ?", oldMatches.values());
         batch("insert into pubchem.gene_matches(gene, match, __) values (?,?,?)", newMatches);
+    }
+
+
+    private static void loadCloseNcitMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet(10000);
+        IntPairSet oldMatches = getIntPairSet("select gene, match from pubchem.gene_ncit_matches", 10000);
+
+        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+                + "filter(strstarts(str(?match), 'http://purl.obolibrary.org/obo/NCIT_C'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+
+                Identifier match = Ontology.getId(getIRI("match"));
+
+                if(match.unit != Ontology.unitNCIT)
+                    throw new IOException();
+
+                IntIntPair pair = PrimitiveTuples.pair(geneID, match.id);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        batch("delete from pubchem.gene_ncit_matches where gene = ? and match = ?", oldMatches);
+        batch("insert into pubchem.gene_ncit_matches(gene, match) values (?,?)", newMatches);
     }
 
 
@@ -299,6 +330,7 @@ class Gene extends Updater
         loadAlternatives(model);
         loadReferences(model);
         loadCloseMatches(model);
+        loadCloseNcitMatches(model);
 
         model.close();
         System.out.println();

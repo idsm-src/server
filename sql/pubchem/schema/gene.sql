@@ -34,6 +34,14 @@ create table pubchem.gene_matches
 );
 
 
+create table pubchem.gene_ncit_matches
+(
+    gene     integer not null,
+    match    integer not null,
+    primary key(gene, match)
+);
+
+
 create table pubchem.gene_processes
 (
     gene            integer not null,

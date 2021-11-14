@@ -100,6 +100,7 @@ public class Ontology extends Updater
     public static final short unitAT = 34;
     public static final short unitZDBGENE = 35;
     public static final short unitStar = 95;
+    public static final short unitNCIT = 100;
 
 
     public static void loadCategories() throws SQLException

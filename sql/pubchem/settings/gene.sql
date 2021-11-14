@@ -24,6 +24,12 @@ grant select on pubchem.gene_matches to sparql;
 
 --------------------------------------------------------------------------------
 
+create index gene_ncit_matches__gene on pubchem.gene_ncit_matches(gene);
+create index gene_ncit_matches__match on pubchem.gene_ncit_matches(match);
+grant select on pubchem.gene_ncit_matches to sparql;
+
+--------------------------------------------------------------------------------
+
 create index gene_processes__gene on pubchem.gene_processes(gene);
 create index gene_processes__process on pubchem.gene_processes(process_id);
 grant select on pubchem.gene_processes to sparql;
