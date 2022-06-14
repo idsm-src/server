@@ -1,5 +1,6 @@
 package cz.iocb.load.pubchem;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -312,6 +313,31 @@ class Compound extends Updater
     }
 
 
+    static void loadTitle() throws IOException, SQLException
+    {
+        IntStringMap newTitles = new IntStringMap(200000000);
+        IntStringMap oldTitles = getIntStringMap("select compound, title from pubchem.compound_titles", 200000000);
+
+        try(BufferedReader reader = getReader("pubchem/Compound/Extras/CID-Title.gz"))
+        {
+            for(String line = reader.readLine(); line != null; line = reader.readLine())
+            {
+                int compoundID = Integer.parseInt(line.replaceFirst("\t.*$", ""));
+                String title = line.replaceFirst("^[^\t]+\t", "");
+
+                addCompoundID(compoundID);
+
+                if(!title.equals(oldTitles.remove(compoundID)))
+                    newTitles.put(compoundID, title);
+            }
+        }
+
+        batch("delete from pubchem.compound_titles where compound = ?", oldTitles.keySet());
+        batch("insert into pubchem.compound_titles(compound, title) values (?,?)"
+                + "on conflict (compound) do update set title=EXCLUDED.title", newTitles);
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load compounds ...");
@@ -325,6 +351,7 @@ class Compound extends Updater
         loadStereoisomers();
         loadRoles();
         loadTypes();
+        loadTitle();
 
         System.out.println();
     }

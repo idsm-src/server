@@ -64,6 +64,14 @@ create table pubchem.compound_active_ingredients
 );
 
 
+create table pubchem.compound_titles
+(
+    compound           integer not null,
+    title              varchar not null,
+    primary key(compound)
+);
+
+
 create table pubchem.compound_bases
 (
     id    integer not null,
