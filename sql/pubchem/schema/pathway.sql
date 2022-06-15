@@ -11,7 +11,8 @@ create type pubchem.pathway_reference_type as enum
     'PLANTREACTOME',
     'PHARMGKB',
     'FAIRDOMHUB',
-    'LIPIDMAPS'
+    'LIPIDMAPS',
+    'PANTHERDB'
 );
 
 

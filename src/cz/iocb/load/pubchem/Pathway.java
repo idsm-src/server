@@ -55,6 +55,8 @@ class Pathway extends Updater
         descriptions.add(new Description("LIPIDMAPS",
                 "http://www.lipidmaps.org/data/IntegratedPathwaysData/SetupIntegratedPathways.pl?imgsize=730&Mode=BMDMATPS11&DataType=",
                 ".*"));
+        descriptions.add(new Description("PANTHERDB", "http://www.pantherdb.org/pathway/pathDetail.do?clsAccession=",
+                "P[0-9]{5}"));
     }
 
 
