@@ -44,7 +44,8 @@ grant select on pubchem.compound_active_ingredients to sparql;
 --------------------------------------------------------------------------------
 
 create index compound_titles__title on pubchem.compound_titles(title);
-create index compound_titles__title__gin on pubchem.compound_titles using gin (to_tsvector('english', title));
+create index compound_titles__title__english on pubchem.compound_titles using gin (to_tsvector('english', title));
+create index compound_titles__title__simple on pubchem.compound_titles using gin (to_tsvector('simple', title));
 grant select on pubchem.compound_titles to sparql;
 
 --------------------------------------------------------------------------------

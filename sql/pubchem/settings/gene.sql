@@ -1,6 +1,6 @@
 create index gene_bases__symbol on pubchem.gene_bases(symbol);
 create index gene_bases__title on pubchem.gene_bases(title);
-create index gene_bases__title__gin on pubchem.gene_bases using gin (to_tsvector('english', title));
+create index gene_bases__title__english on pubchem.gene_bases using gin (to_tsvector('english', title));
 create index gene_bases__organism on pubchem.gene_bases(organism_id);
 grant select on pubchem.gene_bases to sparql;
 

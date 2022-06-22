@@ -1,6 +1,6 @@
 create index bioassay_bases__source on pubchem.bioassay_bases(source);
 create index bioassay_bases__title on pubchem.bioassay_bases(title);
-create index bioassay_bases__title__gin on pubchem.bioassay_bases using gin (to_tsvector('english', title));
+create index bioassay_bases__title__english on pubchem.bioassay_bases using gin (to_tsvector('english', title));
 grant select on pubchem.bioassay_bases to sparql;
 
 --------------------------------------------------------------------------------
@@ -9,7 +9,7 @@ create index bioassay_data__bioassay_type on pubchem.bioassay_data(bioassay, typ
 create index bioassay_data__bioassay on pubchem.bioassay_data(bioassay);
 create index bioassay_data__type on pubchem.bioassay_data(type_id);
 create index bioassay_data__value on pubchem.bioassay_data using hash (value);
-create index bioassay_data__value__gin on pubchem.bioassay_data using gin (to_tsvector('english', value));
+create index bioassay_data__value__english on pubchem.bioassay_data using gin (to_tsvector('english', value));
 grant select on pubchem.bioassay_data to sparql;
 
 --------------------------------------------------------------------------------
