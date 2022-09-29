@@ -43,9 +43,6 @@ public class MoleculeReference extends Updater
                 "https://www\\.emolecules\\.com/cgi-bin/more\\?vid=[1-9][0-9]*"));
         descriptions.put("MculeRef",
                 new Description("MCULE", "https://mcule.com/", "https://mcule\\.com/MCULE-[1-9][0-9]*"));
-        descriptions.put("IbmPatentStructureRef",
-                new Description("IBM PATENT STRUCTURE", "http://www-935.ibm.com/services/us/gbs/bao/siip/nih/?sid=",
-                        "http://www-935\\.ibm\\.com/services/us/gbs/bao/siip/nih/\\?sid=[A-F0-9]+"));
         descriptions.put("NikkajiRef", new Description("NIKKAJI", "http://jglobal.jst.go.jp/en/redirect?Nikkaji_No=",
                 "http://jglobal\\.jst\\.go\\.jp/en/redirect\\?Nikkaji_No=[A-Z0-9.]+"));
         descriptions.put("ActorRef", new Description("ACTOR", "http://actor.epa.gov/actor/chemical.xhtml?casrn=",
@@ -77,8 +74,8 @@ public class MoleculeReference extends Updater
         descriptions.put("LincsRef", new Description("LINCS", "http://identifiers.org/lincs.smallmolecule/",
                 "http://identifiers\\.org/lincs\\.smallmolecule/LSM-[1-9][0-9]*"));
         descriptions.put("FdaSrsRef", new Description("FDA SRS",
-                "http://fdasis.nlm.nih.gov/srs/ProxyServlet?mergeData=true&objectHandle=DBMaint&APPLICATION_NAME=fdasrs&actionHandle=default&nextPage=jsp/srs/ResultScreen.jsp&TXTSUPERLISTID=",
-                "http://fdasis\\.nlm\\.nih\\.gov/srs/ProxyServlet\\?mergeData=true&objectHandle=DBMaint&APPLICATION_NAME=fdasrs&actionHandle=default&nextPage=jsp/srs/ResultScreen\\.jsp&TXTSUPERLISTID=[A-Z0-9]{10}"));
+                "https://fdasis.nlm.nih.gov/srs/ProxyServlet?mergeData=true&objectHandle=DBMaint&APPLICATION_NAME=fdasrs&actionHandle=default&nextPage=jsp/srs/ResultScreen.jsp&TXTSUPERLISTID=",
+                "https://fdasis\\.nlm\\.nih\\.gov/srs/ProxyServlet\\?mergeData=true&objectHandle=DBMaint&APPLICATION_NAME=fdasrs&actionHandle=default&nextPage=jsp/srs/ResultScreen\\.jsp&TXTSUPERLISTID=[A-Z0-9]{10}"));
     }
 
 
@@ -197,7 +194,7 @@ public class MoleculeReference extends Updater
 
     public static void load() throws IOException, SQLException
     {
-        load("chembl/rdf/chembl_29.0_molecule.ttl.gz");
-        load("chembl/rdf/chembl_29.0_unichem.ttl.gz");
+        load("chembl/rdf/chembl_31.0_molecule.ttl.gz");
+        load("chembl/rdf/chembl_31.0_unichem.ttl.gz");
     }
 }

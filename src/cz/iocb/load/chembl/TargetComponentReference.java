@@ -51,8 +51,6 @@ public class TargetComponentReference extends Updater
                 "http://identifiers\\.org/ec-code/((-|[1-9][0-9]*)\\.){3}(-|n?[1-9][0-9]*)"));
         descriptions.put("IntactRef", new Description("INTACT", "http://identifiers.org/intact/",
                 "http://identifiers\\.org/intact/[A-Z0-9]*"));
-        descriptions.put("EnsemblGeneRef", new Description("ENSEMBL GENE", "http://identifiers.org/ensembl/",
-                "http://identifiers\\.org/ensembl/ENSG[0-9]{11}"));
         descriptions.put("UniprotRef", new Description("UNIPROT", "http://purl.uniprot.org/uniprot/",
                 "http://purl\\.uniprot\\.org/uniprot/[A-Z0-9]+"));
         descriptions.put("PharmgkbRef", new Description("PHARMGKB", "http://www.pharmgkb.org/gene/",
@@ -100,6 +98,6 @@ public class TargetComponentReference extends Updater
 
     public static void load() throws IOException, SQLException
     {
-        load("chembl/rdf/chembl_29.0_targetcmpt.ttl.gz");
+        load("chembl/rdf/chembl_31.0_targetcmpt.ttl.gz");
     }
 }

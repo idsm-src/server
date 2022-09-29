@@ -1,7 +1,6 @@
 create type chembl.component_reference_type as enum
 (
     'CGD',
-    'ENSEMBL GENE',
     'ENZYME CLASS',
     'GO COMPONENT',
     'GO FUNCTION',

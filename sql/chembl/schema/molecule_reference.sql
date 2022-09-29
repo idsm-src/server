@@ -6,7 +6,6 @@ create type chembl.molecule_reference_type as enum
     'EMOLECULES',
     'FDA SRS',
     'HMDB',
-    'IBM PATENT STRUCTURE',
     'IUPHAR',
     'KEGG LIGAND',
     'LINCS',
