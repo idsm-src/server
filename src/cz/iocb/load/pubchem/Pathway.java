@@ -128,7 +128,7 @@ class Pathway extends Updater
         IntStringPairMap oldReferences = getIntStringPairMap(
                 "select id, reference_type::varchar, reference from pubchem.pathway_bases", 200000);
 
-        new QueryResultProcessor(patternQuery("?pathway skos:exactMatch ?match"))
+        new QueryResultProcessor(patternQuery("?pathway owl:sameAs ?match"))
         {
             @Override
             protected void parse() throws IOException
@@ -185,7 +185,7 @@ class Pathway extends Updater
         IntIntHashMap oldOrganisms = getIntIntMap(
                 "select id, organism_id from pubchem.pathway_bases where organism_id is not null", 1000000);
 
-        new QueryResultProcessor(patternQuery("?pathway bp:organism ?organism"))
+        new QueryResultProcessor(patternQuery("?pathway up:organism ?organism"))
         {
             @Override
             protected void parse() throws IOException
@@ -240,14 +240,14 @@ class Pathway extends Updater
         IntPairSet oldProteins = getIntPairSet("select pathway, protein from pubchem.pathway_proteins", 1000000);
 
         new QueryResultProcessor(patternQuery("?pathway obo:RO_0000057 ?protein "
-                + "filter(strstarts(str(?protein), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/'))"))
+                + "filter(strstarts(str(?protein), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 int pathwayID = getIntID("pathway", "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID");
-                String proteinName = getIRI("protein")
-                        .replaceFirst("^http://rdf\\.ncbi\\.nlm\\.nih\\.gov/pubchem/protein/", "");
+
+                String proteinName = getStringID("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC");
                 int proteinID = Protein.getProteinID(proteinName);
 
                 IntIntPair pair = PrimitiveTuples.pair(pathwayID, proteinID);

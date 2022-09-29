@@ -26,7 +26,7 @@ class SubstanceDescriptor extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
                             throw new IOException();
 
                         int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/SID",

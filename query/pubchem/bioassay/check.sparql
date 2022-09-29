@@ -10,6 +10,7 @@ select distinct ?iri where
         filter(?iri != bao:BAO_0001067)
         filter(?iri != bao:BAO_0001094)
         filter(?iri != rdf:type)
+        filter(?iri != cito:isDiscussedBy)
     }
     union
     {

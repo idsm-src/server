@@ -132,6 +132,16 @@ public class Updater
 
 
     @SuppressWarnings("serial")
+    protected static class IntTripletStringSet extends HashSet<IntTripletString>
+    {
+        public IntTripletStringSet(int capacity)
+        {
+            super(capacity);
+        }
+    }
+
+
+    @SuppressWarnings("serial")
     protected static class IntStringPairSet extends HashSet<IntObjectPair<String>>
     {
         public IntStringPairSet(int capacity)
@@ -498,6 +508,31 @@ public class Updater
                 while(result.next())
                     values.add(PrimitiveTuples.pair(
                             new IntTriplet(result.getInt(1), result.getInt(2), result.getInt(3)), result.getFloat(4)));
+            }
+        }
+
+        System.out.println(
+                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
+        return values;
+    }
+
+
+    protected static IntTripletStringSet getIntTripletStringSet(String query, int capacity) throws SQLException
+    {
+        long time = System.currentTimeMillis();
+        System.out.print("  " + query);
+
+        IntTripletStringSet values = new IntTripletStringSet(capacity);
+
+        try(PreparedStatement statement = connection.prepareStatement(query))
+        {
+            statement.setFetchSize(1000000);
+
+            try(java.sql.ResultSet result = statement.executeQuery())
+            {
+                while(result.next())
+                    values.add(new IntTripletString(result.getInt(1), result.getInt(2), result.getInt(3),
+                            result.getString(4)));
             }
         }
 
@@ -1128,6 +1163,46 @@ public class Updater
                         statement.setInt(2, value.getOne().getTwo());
                         statement.setInt(3, value.getOne().getThree());
                         statement.setFloat(4, value.getTwo());
+                        statement.addBatch();
+
+                        if(++count % batchSize == 0)
+                            statement.executeBatch();
+                    }
+                    catch(SQLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            catch(RuntimeException e)
+            {
+                if(e.getCause() instanceof SQLException)
+                    throw(SQLException) e.getCause();
+            }
+
+            if(count % batchSize != 0)
+                statement.executeBatch();
+        }
+    }
+
+
+    protected static void batch(String command, IntTripletStringSet set) throws SQLException
+    {
+        System.out.println("  " + command + " -> count: " + set.size());
+
+        try(PreparedStatement statement = connection.prepareStatement(command))
+        {
+            count = 0;
+
+            try
+            {
+                set.forEach(value -> {
+                    try
+                    {
+                        statement.setInt(1, value.getOne());
+                        statement.setInt(2, value.getTwo());
+                        statement.setInt(3, value.getThree());
+                        statement.setString(4, value.getString());
                         statement.addBatch();
 
                         if(++count % batchSize == 0)

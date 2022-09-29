@@ -24,3 +24,21 @@ create table pubchem.measuregroup_genes
     gene            integer not null,
     primary key(bioassay, measuregroup, gene)
 );
+
+
+create table pubchem.measuregroup_taxonomies
+(
+    bioassay        integer not null,
+    measuregroup    integer not null,
+    taxonomy        integer not null,
+    primary key(bioassay, measuregroup, taxonomy)
+);
+
+
+create table pubchem.measuregroup_cells
+(
+    bioassay        integer not null,
+    measuregroup    integer not null,
+    cell            integer not null,
+    primary key(bioassay, measuregroup, cell)
+);

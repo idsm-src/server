@@ -21,8 +21,7 @@ create table pubchem.source_subjects
 
 create table pubchem.source_alternatives
 (
-    __             smallint,
     source         smallint not null,
     alternative    varchar not null,
-    primary key(__)
+    primary key(source, alternative)
 );

@@ -41,7 +41,7 @@ class Synonym extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
                             throw new IOException();
 
                         String value = getString(object);
@@ -133,7 +133,7 @@ class Synonym extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/is-attribute-of"))
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000011"))
                             throw new IOException();
 
                         MD5 md5 = getSynonymMD5(subject);
@@ -154,7 +154,7 @@ class Synonym extends Updater
                         }
                         else
                         {
-                            System.out.println("    ignore md5 synonym " + md5 + " for sio:is-attribute-of");
+                            System.out.println("    ignore md5 synonym " + md5 + " for sio:SIO_000011");
                         }
                     }
                 }.load(stream);

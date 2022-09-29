@@ -3,6 +3,7 @@ package cz.iocb.load.pubchem;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.sql.Statement;
 import org.apache.jena.graph.Node;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
@@ -236,7 +237,7 @@ class Substance extends Updater
 
                             synchronized(newGlytoucanMatches)
                             {
-                                if(!value.equals(oldGlytoucanMatches.remove(substanceID)))
+                                if(!matchID.equals(oldGlytoucanMatches.remove(substanceID)))
                                     newGlytoucanMatches.put(substanceID, matchID);
                             }
 
@@ -373,7 +374,7 @@ class Substance extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/has-attribute"))
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000008"))
                             throw new IOException();
 
                         if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/SID"))
@@ -402,7 +403,7 @@ class Substance extends Updater
                         }
                         else
                         {
-                            System.out.println("    ignore md5 synonym " + md5 + " for sio:has-attribute");
+                            System.out.println("    ignore md5 synonym " + md5 + " for sio:SIO_000008");
                         }
                     }
                 }.load(stream);
@@ -438,6 +439,13 @@ class Substance extends Updater
     {
         batch("delete from pubchem.substance_bases where id = ?", oldSubstances);
         batch("insert into pubchem.substance_bases(id) values(?) on conflict do nothing", newSubstances);
+
+        try(Statement statement = connection.createStatement())
+        {
+            statement.execute("insert into pubchem.substance_types select distinct tab3.id, tab1.chebi "
+                    + "from pubchem.substance_types tab1, pubchem.substance_bases tab2, pubchem.substance_bases tab3 "
+                    + "where tab1.substance = tab2.id and tab2.compound = tab3.compound on conflict do nothing");
+        }
 
         usedSubstances = null;
         newSubstances = null;

@@ -17,9 +17,25 @@ grant select on pubchem.endpoint_outcomes to sparql;
 create index endpoint_measurements__substance on pubchem.endpoint_measurements(substance);
 create index endpoint_measurements__bioassay on pubchem.endpoint_measurements(bioassay);
 create index endpoint_measurements__bioassay_measuregroup on pubchem.endpoint_measurements(bioassay, measuregroup);
-create index endpoint_measurements__type on pubchem.endpoint_measurements(type_id);
-create index endpoint_measurements__label on pubchem.endpoint_measurements(label);
 grant select on pubchem.endpoint_measurements to sparql;
+
+--------------------------------------------------------------------------------
+
+create index endpoint_measurement_types__substance on pubchem.endpoint_measurement_types(substance);
+create index endpoint_measurement_types__bioassay on pubchem.endpoint_measurement_types(bioassay);
+create index endpoint_measurement_types__bioassay_measuregroup on pubchem.endpoint_measurement_types(bioassay, measuregroup);
+create index endpoint_measurement_types__substance_bioassay_measuregroup on pubchem.endpoint_outcomes(substance, bioassay, measuregroup);
+create index endpoint_measurement_types__type on pubchem.endpoint_measurement_types(type_id);
+grant select on pubchem.endpoint_measurement_types to sparql;
+
+--------------------------------------------------------------------------------
+
+create index endpoint_measurement_labels__substance on pubchem.endpoint_measurement_labels(substance);
+create index endpoint_measurement_labels__bioassay on pubchem.endpoint_measurement_labels(bioassay);
+create index endpoint_measurement_labels__bioassay_measuregroup on pubchem.endpoint_measurement_labels(bioassay, measuregroup);
+create index endpoint_measurement_labels__substance_bioassay_measuregroup on pubchem.endpoint_outcomes(substance, bioassay, measuregroup);
+create index endpoint_measurement_labels__label on pubchem.endpoint_measurement_labels(label);
+grant select on pubchem.endpoint_measurement_labels to sparql;
 
 --------------------------------------------------------------------------------
 

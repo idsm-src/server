@@ -10,6 +10,7 @@ alter table pubchem.bioassay_summary_assays add foreign key (bioassay) reference
 alter table pubchem.bioassay_summary_assays add foreign key (summary_assay) references pubchem.bioassay_bases(id) initially deferred;
 alter table pubchem.bioassay_chembl_assays add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
 alter table pubchem.bioassay_chembl_mechanisms add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
+alter table pubchem.bioassay_patents add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
 
 
 -- compound
@@ -36,13 +37,18 @@ alter table pubchem.concept_bases add foreign key (broader) references pubchem.c
 
 -- conserveddomain
 alter table pubchem.conserveddomain_references add foreign key (domain) references pubchem.conserveddomain_bases(id) initially deferred;
----- alter table pubchem.conserveddomain_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
+alter table pubchem.conserveddomain_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 
 
 -- endpoint
 alter table pubchem.endpoint_measurements add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
+alter table pubchem.endpoint_measurement_types add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
+alter table pubchem.endpoint_measurement_types add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_measurements(substance, bioassay, measuregroup) initially deferred;
+alter table pubchem.endpoint_measurement_labels add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
+alter table pubchem.endpoint_measurement_labels add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_measurements(substance, bioassay, measuregroup) initially deferred;
 alter table pubchem.endpoint_measurement_values add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
----- alter table pubchem.endpoint_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
+alter table pubchem.endpoint_measurement_values add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_measurements(substance, bioassay, measuregroup) initially deferred;
+alter table pubchem.endpoint_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 alter table pubchem.endpoint_references add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
 alter table pubchem.endpoint_outcomes add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
 alter table pubchem.endpoint_outcomes add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
@@ -54,12 +60,22 @@ alter table pubchem.endpoint_bases add foreign key (bioassay, measuregroup) refe
 -- gene
 alter table pubchem.gene_alternatives add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_references add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
----- alter table pubchem.gene_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
-alter table pubchem.gene_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
-alter table pubchem.gene_ncit_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
+alter table pubchem.gene_ensembl_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_mesh_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_thesaurus_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_ctdbase_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_expasy_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_medlineplus_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_omim_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_alliancegenome_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_genenames_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_kegg_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_processes add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_functions add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_locations add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_orthologs add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_orthologs add foreign key (ortholog) references pubchem.gene_bases(id) initially deferred;
 
 
 -- inchikey
@@ -75,6 +91,8 @@ alter table pubchem.measuregroup_proteins add foreign key (bioassay, measuregrou
 alter table pubchem.measuregroup_proteins add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.measuregroup_genes add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
 alter table pubchem.measuregroup_genes add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.measuregroup_taxonomies add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
+alter table pubchem.measuregroup_cells add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
 
 
 -- pathway
@@ -84,29 +102,41 @@ alter table pubchem.pathway_compounds add foreign key (compound) references pubc
 alter table pubchem.pathway_proteins add foreign key (pathway) references pubchem.pathway_bases(id) initially deferred;
 alter table pubchem.pathway_proteins add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.pathway_genes add foreign key (pathway) references pubchem.pathway_bases(id) initially deferred;
----- alter table pubchem.pathway_genes add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
----- alter table pubchem.pathway_components add foreign key (pathway) references pubchem.pathway_bases(id) initially deferred;
----- alter table pubchem.pathway_components add foreign key (component) references pubchem.pathway_bases(id) initially deferred;
+alter table pubchem.pathway_genes add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.pathway_components add foreign key (pathway) references pubchem.pathway_bases(id) initially deferred;
+alter table pubchem.pathway_components add foreign key (component) references pubchem.pathway_bases(id) initially deferred;
 alter table pubchem.pathway_related_pathways add foreign key (pathway) references pubchem.pathway_bases(id) initially deferred;
----- alter table pubchem.pathway_related_pathways add foreign key (related) references pubchem.pathway_bases(id) initially deferred;
+alter table pubchem.pathway_related_pathways add foreign key (related) references pubchem.pathway_bases(id) initially deferred;
 alter table pubchem.pathway_references add foreign key (pathway) references pubchem.pathway_bases(id) initially deferred;
----- alter table pubchem.pathway_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
+alter table pubchem.pathway_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 
 
 -- protein
+alter table pubchem.protein_alternatives add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_references add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
----- alter table pubchem.protein_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
+alter table pubchem.protein_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 alter table pubchem.protein_pdblinks add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_similarproteins add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_similarproteins add foreign key (simprotein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_genes add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
----- alter table pubchem.protein_genes add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
-alter table pubchem.protein_closematches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
-alter table pubchem.protein_uniprot_closematches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_genes add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.protein_enzymes add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_ncbi_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_uniprot_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_mesh_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_thesaurus_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_expasy_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_guidetopharmacology_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_drugbank_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_chembl_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_glygen_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_glycosmos_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_alphafold_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_conserveddomains add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_conserveddomains add foreign key (domain) references pubchem.conserveddomain_bases(id) initially deferred;
 alter table pubchem.protein_continuantparts add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_continuantparts add foreign key (part) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_families add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_types add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_complexes add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 
@@ -125,7 +155,7 @@ alter table pubchem.source_alternatives add foreign key (source) references pubc
 
 -- substance
 alter table pubchem.substance_bases add foreign key (source) references pubchem.source_bases(id) initially deferred;
----- alter table pubchem.substance_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
+alter table pubchem.substance_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 alter table pubchem.substance_synonyms add foreign key (synonym) references pubchem.synonym_bases(id) initially deferred;
 alter table pubchem.substance_bases add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.substance_types add foreign key (substance) references pubchem.substance_bases(id) initially deferred;

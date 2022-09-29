@@ -44,3 +44,9 @@ grant select on pubchem.bioassay_chembl_assays to sparql;
 
 create index bioassay_chembl_mechanisms__chembl_mechanism on pubchem.bioassay_chembl_mechanisms(chembl_mechanism);
 grant select on pubchem.bioassay_chembl_mechanisms to sparql;
+
+--------------------------------------------------------------------------------
+
+create index bioassay_patents__bioassay on pubchem.bioassay_patents(bioassay);
+create index bioassay_patents__patent on pubchem.bioassay_patents(patent);
+grant select on pubchem.bioassay_patents to sparql;

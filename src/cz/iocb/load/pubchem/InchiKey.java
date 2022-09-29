@@ -31,7 +31,7 @@ class InchiKey extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
                             throw new IOException();
 
                         String inchikey = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/");
@@ -72,7 +72,7 @@ class InchiKey extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/is-attribute-of"))
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000011"))
                             throw new IOException();
 
                         String inchikey = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/");
@@ -91,7 +91,7 @@ class InchiKey extends Updater
                         }
                         else
                         {
-                            System.out.println("    missing inchikey " + inchikey + " for sio:is-attribute-of");
+                            System.out.println("    missing inchikey " + inchikey + " for sio:SIO_000011");
                         }
                     }
                 }.load(stream);
@@ -126,11 +126,8 @@ class InchiKey extends Updater
                     {
                         String subjectID = getStringID(object, "http://id.nlm.nih.gov/mesh/");
 
-                        synchronized(newSubjects)
-                        {
-                            if(!subjectID.equals(oldSubjects.remove(inchikeyID)))
-                                newSubjects.put(inchikeyID, subjectID);
-                        }
+                        if(!subjectID.equals(oldSubjects.remove(inchikeyID)))
+                            newSubjects.put(inchikeyID, subjectID);
                     }
                     else
                     {

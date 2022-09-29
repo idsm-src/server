@@ -168,15 +168,12 @@ class Source extends Updater
 
     private static void loadAlternatives(Model model) throws IOException, SQLException
     {
-        IntStringPairIntMap newAlternatives = new IntStringPairIntMap(1000);
-        IntStringPairIntMap oldAlternatives = getIntStringPairIntMap(
-                "select source, alternative, __ from pubchem.source_alternatives", 1000);
+        IntStringPairSet newAlternatives = new IntStringPairSet(1000);
+        IntStringPairSet oldAlternatives = getIntStringPairSet(
+                "select source, alternative from pubchem.source_alternatives", 1000);
 
         new QueryResultProcessor(patternQuery("?source dcterms:alternative ?alternative"))
         {
-            int nextAlternativeID = Updater
-                    .getIntValue("select coalesce(max(__)+1,0) from pubchem.source_alternatives");
-
             @Override
             protected void parse() throws IOException
             {
@@ -185,13 +182,13 @@ class Source extends Updater
 
                 IntObjectPair<String> pair = PrimitiveTuples.pair(sourceID, alternative);
 
-                if(oldAlternatives.removeKeyIfAbsent(pair, NO_VALUE) == NO_VALUE)
-                    newAlternatives.put(pair, nextAlternativeID++);
+                if(!oldAlternatives.remove(pair))
+                    newAlternatives.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.source_alternatives where __ = ?", oldAlternatives.values());
-        batch("insert into pubchem.source_alternatives(source, alternative, __) values (?,?,?)", newAlternatives);
+        batch("delete from pubchem.source_alternatives where source = ? and alternative = ?", oldAlternatives);
+        batch("insert into pubchem.source_alternatives(source, alternative) values (?,?)", newAlternatives);
     }
 
 

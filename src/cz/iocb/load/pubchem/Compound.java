@@ -252,11 +252,12 @@ class Compound extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/has-role"))
+                    if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/RO_0000087"))
                         throw new IOException();
 
                     // workaround
-                    if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CIDNULL"))
+                    if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CIDNULL")
+                            || subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID1112968-42-9"))
                         return;
 
                     int compoundID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");

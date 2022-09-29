@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
+import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
 import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import cz.iocb.load.common.QueryResultProcessor;
@@ -123,6 +124,32 @@ class Bioassay extends Updater
     }
 
 
+    private static void loadPatents(Model model) throws IOException, SQLException
+    {
+        IntStringPairSet newPatents = new IntStringPairSet(20000);
+        IntStringPairSet oldPatents = getIntStringPairSet("select bioassay, patent from pubchem.bioassay_patents",
+                20000);
+
+        new QueryResultProcessor(patternQuery("?bioassay cito:isDiscussedBy ?patent"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                int bioassayID = getIntID("bioassay", "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID");
+                String patentID = getStringID("patent", "http://rdf.ncbi.nlm.nih.gov/pubchem/patent/");
+
+                IntObjectPair<String> pair = PrimitiveTuples.pair(bioassayID, patentID);
+
+                if(!oldPatents.remove(pair))
+                    newPatents.add(pair);
+            }
+        }.load(model);
+
+        batch("delete from pubchem.bioassay_patents where bioassay = ? and patent = ?", oldPatents);
+        batch("insert into pubchem.bioassay_patents(bioassay, patent) values (?,?)", newPatents);
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load bioassay ...");
@@ -134,6 +161,7 @@ class Bioassay extends Updater
         loadConfirmatoryAssays(model);
         loadPrimaryAssays(model);
         loadSummaryAssays(model);
+        loadPatents(model);
 
         model.close();
         System.out.println();

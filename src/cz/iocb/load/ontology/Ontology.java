@@ -93,6 +93,7 @@ public class Ontology extends Updater
     public static final short unitBAO = 4;
     public static final short unitGO = 5;
     public static final short unitPR = 6;
+    public static final short unitThesaurus = 10;
     public static final short unitTaxonomy = 11;
     public static final short unitPR0 = 31;
     public static final short unitPR1 = 32;

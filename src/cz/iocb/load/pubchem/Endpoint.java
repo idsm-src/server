@@ -2,13 +2,13 @@ package cz.iocb.load.pubchem;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
 import org.eclipse.collections.api.tuple.primitive.ObjectFloatPair;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import cz.iocb.load.common.IntQuaterplet;
 import cz.iocb.load.common.IntTriplet;
+import cz.iocb.load.common.IntTripletString;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
@@ -85,17 +85,44 @@ class Endpoint extends Updater
     }
 
 
-    private static void loadMeasurements() throws IOException, SQLException
+    private static void loadMeasurementUnits() throws IOException, SQLException
     {
-        IntTripletSet usedMeasurements = new IntTripletSet(10000000);
-        IntTripletSet newMeasurements = new IntTripletSet(10000000);
-        IntTripletSet oldMeasurements = getIntTripletSet(
-                "select substance, bioassay, measuregroup from pubchem.endpoint_measurements", 10000000);
+        IntTripletSet newUnits = new IntTripletSet(20000000);
+        IntTripletSet oldUnits = getIntTripletSet(
+                "select substance, bioassay, measuregroup from pubchem.endpoint_measurements", 20000000);
+
+        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_unit.ttl.gz"))
+        {
+            new TripleStreamProcessor()
+            {
+                @Override
+                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                {
+                    if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000221"))
+                        throw new IOException();
+
+                    if(!object.getURI().equals("http://purl.obolibrary.org/obo/UO_0000064"))
+                        throw new IOException();
+
+                    IntTriplet quaterplet = parseEndpoint(subject);
+
+                    if(!oldUnits.remove(quaterplet))
+                        newUnits.add(quaterplet);
+                }
+            }.load(stream);
+        }
+
+        batch("delete from pubchem.endpoint_measurements where substance = ? and bioassay = ? and measuregroup = ?",
+                oldUnits);
+        batch("insert into pubchem.endpoint_measurements (substance, bioassay, measuregroup) values (?,?,?)", newUnits);
+    }
 
 
-        IntTripletIntMap newTypes = new IntTripletIntMap(10000000);
-        IntTripletIntMap oldTypes = getIntTripletIntMap(
-                "select substance, bioassay, measuregroup, type_id from pubchem.endpoint_measurements", 10000000);
+    private static void loadMeasurementTypes() throws IOException, SQLException
+    {
+        IntQuaterpletSet newTypes = new IntQuaterpletSet(20000000);
+        IntQuaterpletSet oldTypes = getIntQuaterpletSet(
+                "select substance, bioassay, measuregroup, type_id from pubchem.endpoint_measurement_types", 20000000);
 
         try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_type.ttl.gz"))
         {
@@ -107,22 +134,31 @@ class Endpoint extends Updater
                     if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                         throw new IOException();
 
-                    IntTriplet triplet = parseEndpoint(subject);
-                    int typeID = getIntID(object, "http://www.bioassayontology.org/bao#BAO_");
+                    Identifier type = Ontology.getId(object.getURI());
 
-                    if(usedMeasurements.add(triplet) && !oldMeasurements.remove(triplet))
-                        newMeasurements.add(triplet);
+                    if(type.unit != Ontology.unitBAO)
+                        throw new IOException();
 
-                    if(typeID != oldTypes.removeKeyIfAbsent(triplet, NO_VALUE))
-                        newTypes.put(triplet, typeID);
+                    IntQuaterplet quaterplet = parseEndpoint(subject, type.id);
+
+                    if(!oldTypes.remove(quaterplet))
+                        newTypes.add(quaterplet);
                 }
             }.load(stream);
         }
 
+        batch("delete from pubchem.endpoint_measurement_types where substance = ? and bioassay = ? and measuregroup = ? and type_id = ?",
+                oldTypes);
+        batch("insert into pubchem.endpoint_measurement_types (substance, bioassay, measuregroup, type_id) values (?,?,?,?)",
+                newTypes);
+    }
 
-        IntTripletStringMap newLabels = new IntTripletStringMap(10000000);
-        IntTripletStringMap oldLabels = getIntTripletStringMap(
-                "select substance, bioassay, measuregroup, label from pubchem.endpoint_measurements", 10000000);
+
+    private static void loadMeasurementLabels() throws IOException, SQLException
+    {
+        IntTripletStringSet newValues = new IntTripletStringSet(20000000);
+        IntTripletStringSet oldValues = getIntTripletStringSet(
+                "select substance, bioassay, measuregroup, label from pubchem.endpoint_measurement_labels", 20000000);
 
         try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_label.ttl.gz"))
         {
@@ -134,47 +170,20 @@ class Endpoint extends Updater
                     if(!predicate.getURI().equals("http://www.w3.org/2000/01/rdf-schema#label"))
                         throw new IOException();
 
-                    IntTriplet triplet = parseEndpoint(subject);
                     String label = getString(object);
 
-                    if(usedMeasurements.add(triplet) && !oldMeasurements.remove(triplet))
-                        newMeasurements.add(triplet);
+                    IntTripletString item = parseEndpoint(subject, label);
 
-                    if(!label.equals(oldLabels.remove(triplet)))
-                        newLabels.put(triplet, label);
+                    if(!oldValues.remove(item))
+                        newValues.add(item);
                 }
             }.load(stream);
         }
 
-
-        oldMeasurements.forEach(key -> {
-            oldTypes.remove(key);
-            oldLabels.remove(key);
-        });
-
-        if(!oldTypes.isEmpty() || !oldLabels.isEmpty())
-            throw new IOException();
-
-
-        batch("delete from pubchem.endpoint_measurements where substance = ? and bioassay = ? and measuregroup = ?",
-                oldMeasurements);
-
-        batch("insert into pubchem.endpoint_measurements(substance, bioassay, measuregroup, type_id, label) values (?,?,?,?,?)",
-                newMeasurements, (PreparedStatement statement, IntTriplet endpoint) -> {
-                    statement.setInt(1, endpoint.getOne());
-                    statement.setInt(2, endpoint.getTwo());
-                    statement.setInt(3, endpoint.getThree());
-                    statement.setInt(4, newTypes.getOrThrow(endpoint));
-                    statement.setString(5, newLabels.remove(endpoint));
-                    newTypes.remove(endpoint);
-                });
-
-
-        batch("update pubchem.endpoint_measurements set type_id = ? where substance = ? and bioassay = ? and measuregroup = ?",
-                newTypes, Direction.REVERSE);
-
-        batch("update pubchem.endpoint_measurements set label = ? where substance = ? and bioassay = ? and measuregroup = ?",
-                newLabels, Direction.REVERSE);
+        batch("delete from pubchem.endpoint_measurement_labels where substance = ? and bioassay = ? and measuregroup = ? and label = ?",
+                oldValues);
+        batch("insert into pubchem.endpoint_measurement_labels (substance, bioassay, measuregroup, label) values (?,?,?,?)",
+                newValues);
     }
 
 
@@ -191,15 +200,12 @@ class Endpoint extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://semanticscience.org/resource/has-value"))
+                    if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
                         throw new IOException();
 
                     IntTriplet triplet = parseEndpoint(subject);
                     float value = getFloat(object);
                     ObjectFloatPair<IntTriplet> pair = PrimitiveTuples.pair(triplet, value);
-
-                    //if(usedMeasurements.add(triplet) && !oldMeasurements.remove(triplet))
-                    //    newMeasurements.add(triplet);
 
                     if(!oldValues.remove(pair))
                         newValues.add(pair);
@@ -233,11 +239,8 @@ class Endpoint extends Updater
                     int referenceID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID");
                     IntQuaterplet quaterplet = parseEndpoint(subject, referenceID);
 
-                    synchronized(newReferences)
-                    {
-                        if(!oldReferences.remove(quaterplet))
-                            newReferences.add(quaterplet);
-                    }
+                    if(!oldReferences.remove(quaterplet))
+                        newReferences.add(quaterplet);
                 }
             }.load(stream);
         }
@@ -249,33 +252,17 @@ class Endpoint extends Updater
     }
 
 
-    private static void checkUnits() throws IOException, SQLException
-    {
-        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_unit.ttl.gz"))
-        {
-            new TripleStreamProcessor()
-            {
-                @Override
-                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
-                {
-                    if(!object.getURI().equals("http://purl.obolibrary.org/obo/UO_0000064"))
-                        throw new RuntimeException(new IOException());
-                }
-            }.load(stream);
-        }
-    }
-
-
     static void load() throws IOException, SQLException
     {
         System.out.println("load endpoints ...");
 
         loadBases();
         loadOutcomes();
-        loadMeasurements();
+        loadMeasurementUnits();
+        loadMeasurementTypes();
+        loadMeasurementLabels();
         loadMeasurementValues();
         loadReferences();
-        checkUnits();
 
         System.out.println();
     }
@@ -375,5 +362,12 @@ class Endpoint extends Updater
     {
         return parseEndpoint(node,
                 (substance, bioassay, measuregroup) -> new IntTriplet(substance, bioassay, measuregroup));
+    }
+
+
+    private static IntTripletString parseEndpoint(Node node, String string) throws IOException
+    {
+        return parseEndpoint(node,
+                (substance, bioassay, measuregroup) -> new IntTripletString(substance, bioassay, measuregroup, string));
     }
 }

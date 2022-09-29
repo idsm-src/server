@@ -143,6 +143,14 @@ class Measuregroup extends Updater
         IntTripletSet oldGenes = getIntTripletSet("select bioassay, measuregroup, gene from pubchem.measuregroup_genes",
                 1000000);
 
+        IntTripletSet newTaxonomies = new IntTripletSet(1000000);
+        IntTripletSet oldTaxonomies = getIntTripletSet(
+                "select bioassay, measuregroup, taxonomy from pubchem.measuregroup_taxonomies", 1000000);
+
+        IntTripletSet newCells = new IntTripletSet(1000000);
+        IntTripletSet oldCells = getIntTripletSet("select bioassay, measuregroup, cell from pubchem.measuregroup_cells",
+                1000000);
+
         try(InputStream stream = getStream("pubchem/RDF/measuregroup/pc_measuregroup2protein.ttl.gz"))
         {
             new TripleStreamProcessor()
@@ -153,9 +161,9 @@ class Measuregroup extends Updater
                     if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/RO_0000057"))
                         throw new IOException();
 
-                    if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"))
+                    if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC"))
                     {
-                        String proteinName = getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/");
+                        String proteinName = getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC");
                         int proteinID = Protein.getProteinID(proteinName);
 
                         IntTriplet triple = parseMeasuregroup(subject, proteinID);
@@ -163,7 +171,7 @@ class Measuregroup extends Updater
                         if(!oldProteins.remove(triple))
                             newProteins.add(triple);
                     }
-                    else
+                    else if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"))
                     {
                         int geneID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
 
@@ -171,6 +179,28 @@ class Measuregroup extends Updater
 
                         if(!oldGenes.remove(triple))
                             newGenes.add(triple);
+                    }
+                    else if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"))
+                    {
+                        int taxonomyID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID");
+
+                        IntTriplet triple = parseMeasuregroup(subject, taxonomyID);
+
+                        if(!oldTaxonomies.remove(triple))
+                            newTaxonomies.add(triple);
+                    }
+                    else if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID"))
+                    {
+                        int cellID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID");
+
+                        IntTriplet triple = parseMeasuregroup(subject, cellID);
+
+                        if(!oldCells.remove(triple))
+                            newCells.add(triple);
+                    }
+                    else
+                    {
+                        throw new IOException();
                     }
                 }
             }.load(stream);
@@ -183,6 +213,15 @@ class Measuregroup extends Updater
             batch("delete from pubchem.measuregroup_genes where bioassay = ? and measuregroup = ? and gene = ?",
                     oldGenes);
             batch("insert into pubchem.measuregroup_genes(bioassay, measuregroup, gene) values (?,?,?)", newGenes);
+
+            batch("delete from pubchem.measuregroup_taxonomies where bioassay = ? and measuregroup = ? and taxonomy = ?",
+                    oldTaxonomies);
+            batch("insert into pubchem.measuregroup_taxonomies(bioassay, measuregroup, taxonomy) values (?,?,?)",
+                    newTaxonomies);
+
+            batch("delete from pubchem.measuregroup_cells where bioassay = ? and measuregroup = ? and cell = ?",
+                    oldCells);
+            batch("insert into pubchem.measuregroup_cells(bioassay, measuregroup, cell) values (?,?,?)", newCells);
         }
     }
 

@@ -16,3 +16,17 @@ create index measuregroup_genes__bioassay on pubchem.measuregroup_genes(bioassay
 create index measuregroup_genes__bioassay_measuregroup on pubchem.measuregroup_genes(bioassay, measuregroup);
 create index measuregroup_genes__gene on pubchem.measuregroup_genes(gene);
 grant select on pubchem.measuregroup_genes to sparql;
+
+--------------------------------------------------------------------------------
+
+create index measuregroup_taxonomies__bioassay on pubchem.measuregroup_taxonomies(bioassay);
+create index measuregroup_taxonomies__bioassay_measuregroup on pubchem.measuregroup_taxonomies(bioassay, measuregroup);
+create index measuregroup_taxonomies__taxonomy on pubchem.measuregroup_taxonomies(taxonomy);
+grant select on pubchem.measuregroup_taxonomies to sparql;
+
+--------------------------------------------------------------------------------
+
+create index measuregroup_cells__bioassay on pubchem.measuregroup_cells(bioassay);
+create index measuregroup_cells__bioassay_measuregroup on pubchem.measuregroup_cells(bioassay, measuregroup);
+create index measuregroup_cells__cell on pubchem.measuregroup_cells(cell);
+grant select on pubchem.measuregroup_cells to sparql;

@@ -2,20 +2,41 @@ select distinct ?iri where
 {
 	{
 	    ?S ?iri ?O .
-	    filter(?iri != dcterms:alternative)
-	    filter(?iri != dcterms:title)
+	    filter(?iri != skos:altLabel)
+	    filter(?iri != skos:prefLabel)
 	    filter(?iri != cito:isDiscussedBy)
 	    filter(?iri != skos:closeMatch)
 	    filter(?iri != rdf:type)
         filter(?iri != obo:RO_0000056)
         filter(?iri != obo:RO_0000085)
         filter(?iri != obo:RO_0001025)
-        filter(?iri != sio:gene-symbol)
-        filter(?iri != bp:organism)
+        filter(?iri != bao:BAO_0002870)
+        filter(?iri != up:organism)
+        filter(?iri != sio:SIO_000558)
+        filter(?iri != owl:sameAs)
 	}
     union
-	{
-	    ?S rdf:type ?iri .
-	    filter(?iri != bp:Gene)
-	}
+    {
+        ?S rdf:type ?iri .
+        filter(?iri != sio:SIO_010035)
+    }
+    union
+    {
+        ?S owl:sameAs ?iri .
+        filter(replace(str(?S), "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID", "") != replace(str(?iri), "https://www.ncbi.nlm.nih.gov/gene/", ""))
+    }
+    union
+    {
+        ?S skos:closeMatch ?iri .
+        filter(! strstarts(str(?iri), "http://rdf.ebi.ac.uk/resource/ensembl/"))
+        filter(! strstarts(str(?iri), "http://id.nlm.nih.gov/mesh/"))
+        filter(! strstarts(str(?iri), "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C"))
+        filter(! strstarts(str(?iri), "https://ctdbase.org/detail.go?type=gene&acc="))
+        filter(! strstarts(str(?iri), "https://enzyme.expasy.org/EC/"))
+        filter(! strstarts(str(?iri), "https://medlineplus.gov/genetics/gene/"))
+        filter(! strstarts(str(?iri), "https://omim.org/entry/"))
+        filter(! strstarts(str(?iri), "https://www.alliancegenome.org/gene/"))
+        filter(! strstarts(str(?iri), "https://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:"))
+        filter(! strstarts(str(?iri), "https://www.kegg.jp/entry/"))
+    }
 }

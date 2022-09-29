@@ -1,12 +1,9 @@
 package cz.iocb.load.pubchem;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 import javax.xml.parsers.DocumentBuilder;
@@ -97,20 +94,6 @@ class BioassayXML extends Updater
     static void loadBioassays()
             throws SQLException, IOException, XPathException, ParserConfigurationException, SAXException
     {
-        HashMap<Integer, Integer> assayMapping = new HashMap<Integer, Integer>();
-
-        try(BufferedReader reader = new BufferedReader(new FileReader(baseDirectory + "chembl/assay-mapping.txt")))
-        {
-            for(String line = reader.readLine(); line != null; line = reader.readLine())
-            {
-                int id = Integer.parseInt(line.replaceFirst("\t.*", ""));
-                int chembl = Integer.parseInt(line.replaceFirst(".*\tCHEMBL", ""));
-
-                assayMapping.put(id, chembl);
-            }
-        }
-
-
         IntHashSet newBioassays = new IntHashSet(1000000);
         IntHashSet oldBioassays = getIntSet("select id from pubchem.bioassay_bases", 1000000);
 
@@ -278,17 +261,7 @@ class BioassayXML extends Updater
                         }
                         else
                         {
-                            System.err.println("warning: old style link used");
-
-                            Integer chemblID = assayMapping.get(Integer.parseInt(chemblSource));
-
-                            synchronized(newAssays)
-                            {
-                                if(chemblID == null)
-                                    System.err.println("lost assay mapping for " + chemblSource + " in " + bioassayID);
-                                else if(oldAssays.removeKeyIfAbsent(bioassayID, NO_VALUE) != chemblID)
-                                    newAssays.put(bioassayID, chemblID);
-                            }
+                            throw new IOException();
                         }
                     }
                 }

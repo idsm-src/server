@@ -11,24 +11,33 @@ select distinct ?iri where
         filter(?iri != bp:organism)
         filter(?iri != skos:closeMatch)
         filter(?iri != rdf:type)
+        filter(?iri != owl:sameAs)
     }
     union
     {
-        ?S rdf:type ?iri .
-        filter(?iri != bp:Protein)
-        filter(?iri != obo:GO_0043234)
-        filter(! strstarts(str(?iri), "http://purl.obolibrary.org/obo/PR_"))
+        ?S owl:sameAs ?iri .
+        filter(replace(str(?S), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC", "") != replace(str(?iri), "https://www.ncbi.nlm.nih.gov/protein/", ""))
     }
     union
     {
         ?S obo:RO_0002180 ?iri .
         filter(! strstarts(str(?iri), "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID"))
         filter(! strstarts(str(?iri), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"))
+        filter(! strstarts(str(?iri), "https://pfam.xfam.org/family/PF"))
     }
     union
     {
         ?S skos:closeMatch ?iri .
         filter(! strstarts(str(?iri), "http://purl.uniprot.org/uniprot/"))
         filter(! strstarts(str(?iri), "https://www.ncbi.nlm.nih.gov/protein/"))
+        filter(! strstarts(str(?iri), "http://id.nlm.nih.gov/mesh/"))
+        filter(! strstarts(str(?iri), "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C"))
+        filter(! strstarts(str(?iri), "https://enzyme.expasy.org/EC/"))
+        filter(! strstarts(str(?iri), "https://guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId="))
+        filter(! strstarts(str(?iri), "https://www.drugbank.ca/bio_entities/BE"))
+        filter(! strstarts(str(?iri), "https://www.ebi.ac.uk/chembl/target_report_card/CHEMBL"))
+        filter(! strstarts(str(?iri), "https://glygen.org/protein/"))
+        filter(! strstarts(str(?iri), "https://glycosmos.org/glycoproteins/show/uniprot/"))
+        filter(! strstarts(str(?iri), "https://alphafold.ebi.ac.uk/entry/"))
     }
 }
