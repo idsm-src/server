@@ -7,7 +7,6 @@ alter table chembl.molecule_dictionary drop column oral;
 alter table chembl.molecule_dictionary drop column parenteral;
 alter table chembl.molecule_dictionary drop column topical;
 alter table chembl.molecule_dictionary drop column black_box_warning;
-alter table chembl.molecule_dictionary drop column natural_product;
 alter table chembl.molecule_dictionary drop column first_in_class;
 alter table chembl.molecule_dictionary drop column chirality;
 alter table chembl.molecule_dictionary drop column prodrug;
@@ -20,10 +19,6 @@ alter table chembl.molecule_dictionary drop column usan_substem;
 alter table chembl.molecule_dictionary drop column usan_stem_definition;
 alter table chembl.molecule_dictionary drop column indication_class;
 alter table chembl.molecule_dictionary drop column withdrawn_flag;
-alter table chembl.molecule_dictionary drop column withdrawn_year;
-alter table chembl.molecule_dictionary drop column withdrawn_country;
-alter table chembl.molecule_dictionary drop column withdrawn_reason;
-alter table chembl.molecule_dictionary drop column withdrawn_class;
 
 alter table chembl.molecule_dictionary add primary key (id);
 create index molecule_dictionary__pref_name on chembl.molecule_dictionary(pref_name);
@@ -164,6 +159,7 @@ alter table chembl.compound_properties drop column molregno;
 alter table chembl.compound_properties drop column hba_lipinski;
 alter table chembl.compound_properties drop column hbd_lipinski;
 alter table chembl.compound_properties drop column num_lipinski_ro5_violations;
+alter table chembl.compound_properties drop column np_likeness_score;
 
 alter table chembl.compound_properties add primary key (molecule_id);
 create index compound_properties__mw_freebase on chembl.compound_properties(mw_freebase);

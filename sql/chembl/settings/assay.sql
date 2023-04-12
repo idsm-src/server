@@ -47,3 +47,10 @@ grant select on chembl.assay_type to sparql;
 alter table chembl.relationship_type add primary key (relationship_type);
 create index relationship_type__relationship_desc on chembl.relationship_type(relationship_desc);
 grant select on chembl.relationship_type to sparql;
+
+--------------------------------------------------------------------------------
+
+create view chembl.pubchem_assays as
+    select distinct pubchem_assay_id from chembl.assays;
+
+grant select on chembl.pubchem_assays to sparql;

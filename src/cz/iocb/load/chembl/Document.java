@@ -16,7 +16,7 @@ public class Document extends Updater
         Model model = getModel(file);
 
         try(PreparedStatement statement = connection
-                .prepareStatement("update chembl.docs set journal_id = ? where chembl_id = ?"))
+                .prepareStatement("update chembl_32.docs set journal_id = ? where chembl_id = ?"))
         {
             new QueryResultProcessor(patternQuery("?document cco:hasJournal ?journal"))
             {
@@ -41,6 +41,6 @@ public class Document extends Updater
 
     public static void load() throws IOException, SQLException
     {
-        load("chembl/rdf/chembl_31.0_document.ttl.gz");
+        load("chembl/rdf/chembl_32.0_document.ttl.gz");
     }
 }

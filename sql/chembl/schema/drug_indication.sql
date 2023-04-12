@@ -13,6 +13,6 @@ update chembl.drug_indication set efo_resource_id = case when efo_id ~ '^((GO|HP
 
 alter table chembl.drug_indication add column chembl_id varchar not null generated always as ('CHEMBL_IND_' || id::varchar) stored;
 
-alter table chembl.drug_indication alter column max_phase_for_ind type integer;
+alter table chembl.drug_indication alter column max_phase_for_ind type float4;
 
 alter table chembl.drug_indication alter column max_phase_for_ind set not null;

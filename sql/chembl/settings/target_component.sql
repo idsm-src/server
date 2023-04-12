@@ -17,6 +17,8 @@ grant select on chembl.component_sequences to sparql;
 delete from chembl.component_synonyms where syn_type = 'EC_NUMBER';
 alter table chembl.component_synonyms drop column syn_type;
 
+delete from chembl.component_synonyms where compsyn_id not in (select min(compsyn_id) from chembl.component_synonyms group by component_id, component_synonym);
+
 alter table chembl.component_synonyms add primary key (compsyn_id);
 create index component_synonyms__component_id on chembl.component_synonyms(component_id);
 create index component_synonyms__component_synonym on chembl.component_synonyms(component_synonym);

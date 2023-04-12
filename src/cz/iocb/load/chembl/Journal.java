@@ -16,7 +16,7 @@ public class Journal extends Updater
         Model model = getModel(file);
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into chembl.journal_dictionary(id, label, title, short_title, issn, eissn) values (?,?,?,?,?,?)"))
+                "insert into chembl_32.journal_dictionary(id, label, title, short_title, issn, eissn) values (?,?,?,?,?,?)"))
         {
             // @formatter:off
             new QueryResultProcessor(patternQuery("?journal rdf:type cco:Journal. "
@@ -50,6 +50,6 @@ public class Journal extends Updater
 
     public static void load() throws IOException, SQLException
     {
-        load("chembl/rdf/chembl_31.0_journal.ttl.gz");
+        load("chembl/rdf/chembl_32.0_journal.ttl.gz");
     }
 }

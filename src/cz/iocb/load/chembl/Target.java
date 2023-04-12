@@ -16,7 +16,7 @@ public class Target extends Updater
         Model model = getModel(file);
 
         try(PreparedStatement statement = connection
-                .prepareStatement("update chembl.target_dictionary set cell_line_id = ? where id = ?"))
+                .prepareStatement("update chembl_32.target_dictionary set cell_line_id = ? where id = ?"))
         {
             new QueryResultProcessor(patternQuery("?target cco:isTargetForCellLine ?line"))
             {
@@ -36,6 +36,6 @@ public class Target extends Updater
 
     public static void load() throws IOException, SQLException
     {
-        load("chembl/rdf/chembl_31.0_target.ttl.gz");
+        load("chembl/rdf/chembl_32.0_target.ttl.gz");
     }
 }

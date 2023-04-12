@@ -67,8 +67,8 @@ public class TargetComponentReference extends Updater
         Model model = getModel(file);
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into chembl.component_references(refcomp_id, component_id, reference_type, reference) "
-                        + "values (?,?,?::chembl.component_reference_type,?)"))
+                "insert into chembl_32.component_references(refcomp_id, component_id, reference_type, reference) "
+                        + "values (?,?,?::chembl_32.component_reference_type,?)"))
         {
             new QueryResultProcessor(
                     patternQuery("?component cco:targetCmptXref ?reference. ?reference rdf:type ?type"))
@@ -98,6 +98,6 @@ public class TargetComponentReference extends Updater
 
     public static void load() throws IOException, SQLException
     {
-        load("chembl/rdf/chembl_31.0_targetcmpt.ttl.gz");
+        load("chembl/rdf/chembl_32.0_targetcmpt.ttl.gz");
     }
 }

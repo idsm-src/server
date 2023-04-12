@@ -16,13 +16,13 @@ public class TargetComponent extends Updater
     {
         Model model = getModel(file);
 
-        IntStringPairIntMap newSynonyms = new IntStringPairIntMap(100000);
+        IntStringPairIntMap newSynonyms = new IntStringPairIntMap();
         IntStringPairIntMap oldSynonyms = getIntStringPairIntMap(
-                "select component_id, component_synonym, compsyn_id from chembl.component_synonyms", 100000);
+                "select component_id, component_synonym, compsyn_id from chembl_32.component_synonyms");
 
         new QueryResultProcessor(patternQuery("?component skos:altLabel ?synonym"))
         {
-            int nextSynonymID = getIntValue("select coalesce(max(compsyn_id)+1,0) from chembl.component_synonyms");
+            int nextSynonymID = getIntValue("select coalesce(max(compsyn_id)+1,0) from chembl_32.component_synonyms");
 
             @Override
             public void parse() throws SQLException, IOException
@@ -37,14 +37,14 @@ public class TargetComponent extends Updater
             }
         }.load(model);
 
-        batch("delete from chembl.component_synonyms where compsyn_id = ?", oldSynonyms.values());
-        batch("insert into chembl.component_synonyms(component_id, component_synonym, compsyn_id) values (?,?,?)",
+        batch("delete from chembl_32.component_synonyms where compsyn_id = ?", oldSynonyms.values());
+        batch("insert into chembl_32.component_synonyms(component_id, component_synonym, compsyn_id) values (?,?,?)",
                 newSynonyms);
     }
 
 
     public static void load() throws IOException, SQLException
     {
-        load("chembl/rdf/chembl_31.0_targetcmpt.ttl.gz");
+        load("chembl/rdf/chembl_32.0_targetcmpt.ttl.gz");
     }
 }

@@ -84,8 +84,8 @@ public class MoleculeReference extends Updater
         Model model = getModel(file);
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into chembl.molecule_references(refmol_id, molecule_id, reference_type, reference) "
-                        + "values (?,?,?::chembl.molecule_reference_type,?)"))
+                "insert into chembl_32.molecule_references(refmol_id, molecule_id, reference_type, reference) "
+                        + "values (?,?,?::chembl_32.molecule_reference_type,?)"))
         {
             new QueryResultProcessor(patternQuery("?molecule cco:moleculeXref ?reference. ?reference rdf:type ?type "
                     + "filter(?type != cco:PubchemRef && ?type != cco:PubchemThomPharmRef "
@@ -118,7 +118,7 @@ public class MoleculeReference extends Updater
 
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into chembl.molecule_pubchem_references(molecule_id, compound_id) values (?,?)"))
+                "insert into chembl_32.molecule_pubchem_references(molecule_id, compound_id) values (?,?)"))
         {
             new QueryResultProcessor(
                     patternQuery("?molecule cco:moleculeXref ?compound. ?compound rdf:type cco:PubchemRef"))
@@ -137,7 +137,7 @@ public class MoleculeReference extends Updater
 
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into chembl.molecule_pubchem_thom_pharm_references(molecule_id, substance_id) values (?,?)"))
+                "insert into chembl_32.molecule_pubchem_thom_pharm_references(molecule_id, substance_id) values (?,?)"))
         {
             new QueryResultProcessor(
                     patternQuery("?molecule cco:moleculeXref ?substance. ?substance rdf:type cco:PubchemThomPharmRef"))
@@ -156,7 +156,7 @@ public class MoleculeReference extends Updater
 
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into chembl.molecule_pubchem_dotf_references(molecule_id, substance_id) values (?,?)"))
+                "insert into chembl_32.molecule_pubchem_dotf_references(molecule_id, substance_id) values (?,?)"))
         {
             new QueryResultProcessor(
                     patternQuery("?molecule cco:moleculeXref ?substance. ?substance rdf:type cco:PubchemDotfRef"))
@@ -173,8 +173,8 @@ public class MoleculeReference extends Updater
             statement.executeBatch();
         }
 
-        try(PreparedStatement statement = connection
-                .prepareStatement("insert into chembl.molecule_chebi_references(molecule_id, chebi_id) values (?,?)"))
+        try(PreparedStatement statement = connection.prepareStatement(
+                "insert into chembl_32.molecule_chebi_references(molecule_id, chebi_id) values (?,?)"))
         {
             new QueryResultProcessor(patternQuery("?molecule cco:moleculeXref ?chebi. ?chebi rdf:type cco:ChebiRef"))
             {
@@ -194,7 +194,7 @@ public class MoleculeReference extends Updater
 
     public static void load() throws IOException, SQLException
     {
-        load("chembl/rdf/chembl_31.0_molecule.ttl.gz");
-        load("chembl/rdf/chembl_31.0_unichem.ttl.gz");
+        load("chembl/rdf/chembl_32.0_molecule.ttl.gz");
+        load("chembl/rdf/chembl_32.0_unichem.ttl.gz");
     }
 }

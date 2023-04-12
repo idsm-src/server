@@ -3,7 +3,7 @@ update chembl.molecule_dictionary set id = replace(chembl_id, 'CHEMBL', '')::int
 alter table chembl.molecule_dictionary alter column id drop default;
 
 alter table chembl.molecule_dictionary alter column chebi_par_id type integer;
-alter table chembl.molecule_dictionary alter column max_phase type integer;
+alter table chembl.molecule_dictionary alter column max_phase type float4;
 
 update chembl.molecule_dictionary set molecule_type = 'Unknown' where molecule_type is null;
 alter table chembl.molecule_dictionary alter column molecule_type set not null;
