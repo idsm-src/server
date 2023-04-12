@@ -50,6 +50,18 @@ grant select on pubchem.compound_titles to sparql;
 
 --------------------------------------------------------------------------------
 
+create index compound_thesaurus_matches__compound on pubchem.compound_thesaurus_matches(compound);
+create index compound_thesaurus_matches__match on pubchem.compound_thesaurus_matches(match);
+grant select on pubchem.compound_thesaurus_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index compound_wikidata_matches__compound on pubchem.compound_wikidata_matches(compound);
+create index compound_wikidata_matches__match on pubchem.compound_wikidata_matches(match);
+grant select on pubchem.compound_wikidata_matches to sparql;
+
+--------------------------------------------------------------------------------
+
 insert into pubchem.compound_bases(id, keep)
 select distinct id, false from molecules.pubchem where not exists (select id from pubchem.compound_bases where id = molecules.pubchem.id);
 

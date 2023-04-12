@@ -1,0 +1,16 @@
+select distinct ?iri where
+{
+	{
+	    ?S ?iri ?O .
+        filter(?iri != rdf:type)
+        filter(?iri != vcard:country-name)
+        filter(?iri != vcard:fn)
+        filter(?iri != skos:closeMatch)
+	}
+    union
+	{
+	    ?S rdf:type ?iri .
+        filter(?iri != frapo:FundingAgency)
+        filter(?iri != vcard:Organization)
+	}
+}

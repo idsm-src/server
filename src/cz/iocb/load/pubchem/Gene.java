@@ -1,7 +1,6 @@
 package cz.iocb.load.pubchem;
 
 import java.io.IOException;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
@@ -18,10 +17,48 @@ import cz.iocb.load.ontology.Ontology.Identifier;
 
 class Gene extends Updater
 {
-    private static void loadBases(Model model) throws IOException, SQLException
+    private static IntHashSet usedGenes;
+    private static IntHashSet newGenes;
+    private static IntHashSet oldGenes;
+
+    private static StringIntMap usedGeneSymbols;
+    private static StringIntMap newGeneSymbols;
+    private static StringIntMap oldGeneSymbols;
+    private static int nextGeneSymbolID;
+
+
+    private static void loadGeneSymbolBases(Model model) throws IOException, SQLException
     {
-        IntHashSet newGenes = new IntHashSet(200000);
-        IntHashSet oldGenes = getIntSet("select id from pubchem.gene_bases", 200000);
+        usedGeneSymbols = new StringIntMap();
+        newGeneSymbols = new StringIntMap();
+        oldGeneSymbols = getStringIntMap("select iri, id from pubchem.gene_symbol_bases");
+        nextGeneSymbolID = getIntValue("select coalesce(max(id)+1,0) from pubchem.gene_symbol_bases");
+
+        new QueryResultProcessor(patternQuery("?gene_symbol rdf:type sio:SIO_001383"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                String geneSymbol = getStringID("gene_symbol", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/");
+                int geneSymbolID = oldGeneSymbols.removeKeyIfAbsent(geneSymbol, NO_VALUE);
+
+                if(geneSymbolID == NO_VALUE)
+                    newGeneSymbols.put(geneSymbol, geneSymbolID = nextGeneSymbolID++);
+
+                usedGeneSymbols.put(geneSymbol, geneSymbolID);
+            }
+        }.load(model);
+
+        batch("insert into pubchem.gene_symbol_bases(iri, id) values (?,?)", newGeneSymbols);
+        newGeneSymbols.clear();
+    }
+
+
+    private static void loadGeneBases(Model model) throws IOException, SQLException
+    {
+        usedGenes = new IntHashSet();
+        newGenes = new IntHashSet();
+        oldGenes = getIntSet("select id from pubchem.gene_bases");
 
         new QueryResultProcessor(patternQuery("?gene rdf:type sio:SIO_010035"))
         {
@@ -29,17 +66,25 @@ class Gene extends Updater
             protected void parse() throws IOException
             {
                 int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                checkGeneID(geneID);
 
                 if(!oldGenes.remove(geneID))
                     newGenes.add(geneID);
+
+                usedGenes.add(geneID);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_bases where id = ?", oldGenes);
+        batch("insert into pubchem.gene_bases(id) values (?)", newGenes);
+        newGenes.clear();
+    }
 
 
-        IntStringMap newSymbols = new IntStringMap(200000);
-        IntStringMap oldSymbols = getIntStringMap("select id, symbol from pubchem.gene_bases", 200000);
+    private static void loadSymbols(Model model) throws IOException, SQLException
+    {
+        IntIntHashMap newSymbols = new IntIntHashMap();
+        IntIntHashMap oldSymbols = getIntIntMap(
+                "select id, gene_symbol from pubchem.gene_bases where gene_symbol is not null");
 
         new QueryResultProcessor(patternQuery("?gene bao:BAO_0002870 ?symbol"))
         {
@@ -47,21 +92,25 @@ class Gene extends Updater
             protected void parse() throws IOException
             {
                 int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                String symbol = getString("symbol");
+                int symbolID = getGeneSymbolID(getStringID("symbol", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"));
 
-                if(!symbol.equals(oldSymbols.remove(geneID)))
-                    newSymbols.put(geneID, symbol);
+                addGeneID(geneID);
+
+                if(symbolID != oldSymbols.removeKeyIfAbsent(geneID, NO_VALUE))
+                    newSymbols.put(geneID, symbolID);
             }
         }.load(model);
 
-        oldGenes.forEach(key -> oldSymbols.remove(key));
+        batch("update pubchem.gene_bases set gene_symbol = null where id = ?", oldSymbols.keySet());
+        batch("insert into pubchem.gene_bases(id, gene_symbol) values (?,?) "
+                + "on conflict (id) do update set gene_symbol=EXCLUDED.gene_symbol", newSymbols);
+    }
 
-        if(!oldSymbols.isEmpty())
-            throw new IOException();
 
-
-        IntStringMap newTitles = new IntStringMap(200000);
-        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.gene_bases", 200000);
+    private static void loadTitles(Model model) throws IOException, SQLException
+    {
+        IntStringMap newTitles = new IntStringMap();
+        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.gene_bases where title is not null");
 
         new QueryResultProcessor(patternQuery("?gene skos:prefLabel ?title"))
         {
@@ -71,19 +120,24 @@ class Gene extends Updater
                 int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
                 String title = getString("title");
 
+                addGeneID(geneID);
+
                 if(!title.equals(oldTitles.remove(geneID)))
                     newTitles.put(geneID, title);
             }
         }.load(model);
 
-        oldGenes.forEach(key -> oldTitles.remove(key));
+        batch("update pubchem.gene_bases set title = null where id = ?", oldTitles.keySet());
+        batch("insert into pubchem.gene_bases(id, title) values (?,?) "
+                + "on conflict (id) do update set title=EXCLUDED.title", newTitles);
+    }
 
-        if(!oldTitles.isEmpty())
-            throw new IOException();
 
-
-        IntIntHashMap newOrganisms = new IntIntHashMap(200000);
-        IntIntHashMap oldOrganisms = getIntIntMap("select id, organism_id from pubchem.gene_bases", 200000);
+    private static void loadOrganisms(Model model) throws IOException, SQLException
+    {
+        IntIntHashMap newOrganisms = new IntIntHashMap();
+        IntIntHashMap oldOrganisms = getIntIntMap(
+                "select id, organism from pubchem.gene_bases where organism is not null");
 
         new QueryResultProcessor(patternQuery("?gene up:organism ?organism"))
         {
@@ -91,39 +145,27 @@ class Gene extends Updater
             protected void parse() throws IOException
             {
                 int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                int organismID = getIntID("organism", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID");
+                int organismID = Taxonomy
+                        .getTaxonomyID(getIntID("organism", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"));
+
+                addGeneID(geneID);
 
                 if(organismID != oldOrganisms.removeKeyIfAbsent(geneID, NO_VALUE))
                     newOrganisms.put(geneID, organismID);
             }
         }.load(model);
 
-        oldGenes.forEach(key -> oldOrganisms.remove(key));
-
-        if(!oldOrganisms.isEmpty())
-            throw new IOException();
-
-
-        batch("insert into pubchem.gene_bases(id, symbol, title, organism_id) values (?,?,?,?)", newGenes,
-                (PreparedStatement statement, int gene) -> {
-                    statement.setInt(1, gene);
-                    statement.setString(2, newSymbols.remove(gene));
-                    statement.setString(3, newTitles.remove(gene));
-                    statement.setInt(4, newOrganisms.getOrThrow(gene));
-                    newOrganisms.remove(gene);
-                });
-
-        batch("update pubchem.gene_bases set symbol = ? where id = ?", newSymbols, Direction.REVERSE);
-        batch("update pubchem.gene_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
-        batch("update pubchem.gene_bases set organism_id = ? where id = ?", newOrganisms, Direction.REVERSE);
+        batch("update pubchem.gene_bases set organism = null where id = ?", oldOrganisms.keySet());
+        batch("insert into pubchem.gene_bases(id, organism) values (?,?) "
+                + "on conflict (id) do update set organism=EXCLUDED.organism", newOrganisms);
     }
 
 
     private static void loadAlternatives(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newAlternatives = new IntStringPairSet(1000000);
+        IntStringPairSet newAlternatives = new IntStringPairSet();
         IntStringPairSet oldAlternatives = getIntStringPairSet(
-                "select gene, alternative from pubchem.gene_alternatives", 1000000);
+                "select gene, alternative from pubchem.gene_alternatives");
 
         new QueryResultProcessor(patternQuery("?gene skos:altLabel ?alternative"))
         {
@@ -134,6 +176,7 @@ class Gene extends Updater
                 String alternative = getString("alternative");
 
                 IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, alternative);
+                addGeneID(geneID);
 
                 if(!oldAlternatives.remove(pair))
                     newAlternatives.add(pair);
@@ -147,8 +190,8 @@ class Gene extends Updater
 
     private static void loadReferences(Model model) throws IOException, SQLException
     {
-        IntPairSet newReferences = new IntPairSet(10000000);
-        IntPairSet oldReferences = getIntPairSet("select gene, reference from pubchem.gene_references", 10000000);
+        IntPairSet newReferences = new IntPairSet();
+        IntPairSet oldReferences = getIntPairSet("select gene, reference from pubchem.gene_references");
 
         new QueryResultProcessor(patternQuery("?gene cito:isDiscussedBy ?reference"))
         {
@@ -156,9 +199,11 @@ class Gene extends Updater
             protected void parse() throws IOException
             {
                 int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                int referenceID = getIntID("reference", "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID");
+                int referenceID = Reference
+                        .getReferenceID(getIntID("reference", "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"));
 
                 IntIntPair pair = PrimitiveTuples.pair(geneID, referenceID);
+                addGeneID(geneID);
 
                 if(!oldReferences.remove(pair))
                     newReferences.add(pair);
@@ -172,9 +217,8 @@ class Gene extends Updater
 
     private static void loadEnsemblCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet(1000000);
-        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_ensembl_matches",
-                1000000);
+        IntStringPairSet newMatches = new IntStringPairSet();
+        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_ensembl_matches");
 
         new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/ensembl/'))"))
@@ -186,6 +230,7 @@ class Gene extends Updater
                 String match = getStringID("match", "http://rdf.ebi.ac.uk/resource/ensembl/");
 
                 IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, match);
+                addGeneID(geneID);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
@@ -199,8 +244,8 @@ class Gene extends Updater
 
     private static void loadMeshCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet(20000);
-        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_mesh_matches", 20000);
+        IntStringPairSet newMatches = new IntStringPairSet();
+        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_mesh_matches");
 
         new QueryResultProcessor(patternQuery(
                 "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
@@ -212,6 +257,7 @@ class Gene extends Updater
                 String match = getStringID("match", "http://id.nlm.nih.gov/mesh/");
 
                 IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, match);
+                addGeneID(geneID);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
@@ -225,8 +271,8 @@ class Gene extends Updater
 
     private static void loadThesaurusCloseMatches(Model model) throws IOException, SQLException
     {
-        IntPairSet newMatches = new IntPairSet(10000);
-        IntPairSet oldMatches = getIntPairSet("select gene, match from pubchem.gene_thesaurus_matches", 10000);
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = getIntPairSet("select gene, match from pubchem.gene_thesaurus_matches");
 
         new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C'))"))
@@ -242,6 +288,7 @@ class Gene extends Updater
                     throw new IOException();
 
                 IntIntPair pair = PrimitiveTuples.pair(geneID, match.id);
+                addGeneID(geneID);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
@@ -255,8 +302,8 @@ class Gene extends Updater
 
     private static void loadCtdbaseCloseMatches(Model model) throws IOException, SQLException
     {
-        IntPairSet newMatches = new IntPairSet(10000);
-        IntPairSet oldMatches = getIntPairSet("select gene, match from pubchem.gene_ctdbase_matches", 10000);
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = getIntPairSet("select gene, match from pubchem.gene_ctdbase_matches");
 
         new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'https://ctdbase.org/detail.go?type=gene&acc='))"))
@@ -268,6 +315,7 @@ class Gene extends Updater
                 int match = getIntID("match", "https://ctdbase.org/detail.go?type=gene&acc=");
 
                 IntIntPair pair = PrimitiveTuples.pair(geneID, match);
+                addGeneID(geneID);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
@@ -281,8 +329,8 @@ class Gene extends Updater
 
     private static void loadExpasyCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet(10000);
-        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_expasy_matches", 10000);
+        IntStringPairSet newMatches = new IntStringPairSet();
+        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_expasy_matches");
 
         new QueryResultProcessor(patternQuery(
                 "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://enzyme.expasy.org/EC/'))"))
@@ -294,6 +342,7 @@ class Gene extends Updater
                 String match = getStringID("match", "https://enzyme.expasy.org/EC/");
 
                 IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, match);
+                addGeneID(geneID);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
@@ -307,9 +356,8 @@ class Gene extends Updater
 
     private static void loadMedlineplusCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet(10000);
-        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_medlineplus_matches",
-                10000);
+        IntStringPairSet newMatches = new IntStringPairSet();
+        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_medlineplus_matches");
 
         new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'https://medlineplus.gov/genetics/gene/'))"))
@@ -321,6 +369,7 @@ class Gene extends Updater
                 String match = getStringID("match", "https://medlineplus.gov/genetics/gene/");
 
                 IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, match);
+                addGeneID(geneID);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
@@ -334,8 +383,8 @@ class Gene extends Updater
 
     private static void loadOmimCloseMatches(Model model) throws IOException, SQLException
     {
-        IntPairSet newMatches = new IntPairSet(10000);
-        IntPairSet oldMatches = getIntPairSet("select gene, match from pubchem.gene_omim_matches", 10000);
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = getIntPairSet("select gene, match from pubchem.gene_omim_matches");
 
         new QueryResultProcessor(patternQuery(
                 "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://omim.org/entry/'))"))
@@ -347,6 +396,7 @@ class Gene extends Updater
                 int match = getIntID("match", "https://omim.org/entry/");
 
                 IntIntPair pair = PrimitiveTuples.pair(geneID, match);
+                addGeneID(geneID);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
@@ -360,9 +410,9 @@ class Gene extends Updater
 
     private static void loadAlliancegenomeCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet(10000);
-        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_alliancegenome_matches",
-                10000);
+        IntStringPairSet newMatches = new IntStringPairSet();
+        IntStringPairSet oldMatches = getIntStringPairSet(
+                "select gene, match from pubchem.gene_alliancegenome_matches");
 
         new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'https://www.alliancegenome.org/gene/'))"))
@@ -374,6 +424,7 @@ class Gene extends Updater
                 String match = getStringID("match", "https://www.alliancegenome.org/gene/");
 
                 IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, match);
+                addGeneID(geneID);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
@@ -387,8 +438,8 @@ class Gene extends Updater
 
     private static void loadGenenamesCloseMatches(Model model) throws IOException, SQLException
     {
-        IntPairSet newMatches = new IntPairSet(10000);
-        IntPairSet oldMatches = getIntPairSet("select gene, match from pubchem.gene_genenames_matches", 10000);
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = getIntPairSet("select gene, match from pubchem.gene_genenames_matches");
 
         new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'https://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:'))"))
@@ -400,6 +451,7 @@ class Gene extends Updater
                 int match = getIntID("match", "https://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:");
 
                 IntIntPair pair = PrimitiveTuples.pair(geneID, match);
+                addGeneID(geneID);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
@@ -413,8 +465,8 @@ class Gene extends Updater
 
     private static void loadKeggCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet(10000);
-        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_kegg_matches", 10000);
+        IntStringPairSet newMatches = new IntStringPairSet();
+        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_kegg_matches");
 
         new QueryResultProcessor(patternQuery(
                 "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://www.kegg.jp/entry/'))"))
@@ -426,6 +478,7 @@ class Gene extends Updater
                 String match = getStringID("match", "https://www.kegg.jp/entry/");
 
                 IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, match);
+                addGeneID(geneID);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
@@ -439,8 +492,8 @@ class Gene extends Updater
 
     private static void loadProcesses(Model model) throws IOException, SQLException
     {
-        IntPairSet newProcesses = new IntPairSet(10000000);
-        IntPairSet oldProcesses = getIntPairSet("select gene, process_id from pubchem.gene_processes", 10000000);
+        IntPairSet newProcesses = new IntPairSet();
+        IntPairSet oldProcesses = getIntPairSet("select gene, process_id from pubchem.gene_processes");
 
         new QueryResultProcessor(patternQuery("?gene obo:RO_0000056 ?process "
                 + "filter(strstarts(str(?process), 'http://purl.obolibrary.org/obo/GO_'))"))
@@ -455,6 +508,7 @@ class Gene extends Updater
                     throw new IOException();
 
                 IntIntPair pair = PrimitiveTuples.pair(geneID, process.id);
+                addGeneID(geneID);
 
                 if(!oldProcesses.remove(pair))
                     newProcesses.add(pair);
@@ -468,8 +522,8 @@ class Gene extends Updater
 
     private static void loadFunctions(Model model) throws IOException, SQLException
     {
-        IntPairSet newFunctions = new IntPairSet(10000000);
-        IntPairSet oldFunctions = getIntPairSet("select gene, function_id from pubchem.gene_functions", 10000000);
+        IntPairSet newFunctions = new IntPairSet();
+        IntPairSet oldFunctions = getIntPairSet("select gene, function_id from pubchem.gene_functions");
 
         new QueryResultProcessor(patternQuery("?gene obo:RO_0000085 ?function"))
         {
@@ -483,6 +537,7 @@ class Gene extends Updater
                     throw new IOException();
 
                 IntIntPair pair = PrimitiveTuples.pair(geneID, function.id);
+                addGeneID(geneID);
 
                 if(!oldFunctions.remove(pair))
                     newFunctions.add(pair);
@@ -496,8 +551,8 @@ class Gene extends Updater
 
     private static void loadLocations(Model model) throws IOException, SQLException
     {
-        IntPairSet newLocations = new IntPairSet(1000000);
-        IntPairSet oldLocations = getIntPairSet("select gene, location_id from pubchem.gene_locations", 1000000);
+        IntPairSet newLocations = new IntPairSet();
+        IntPairSet oldLocations = getIntPairSet("select gene, location_id from pubchem.gene_locations");
 
         new QueryResultProcessor(patternQuery("?gene obo:RO_0001025 ?location"))
         {
@@ -511,6 +566,7 @@ class Gene extends Updater
                     throw new IOException();
 
                 IntIntPair pair = PrimitiveTuples.pair(geneID, location.id);
+                addGeneID(geneID);
 
                 if(!oldLocations.remove(pair))
                     newLocations.add(pair);
@@ -524,8 +580,8 @@ class Gene extends Updater
 
     private static void loadOrthologs(Model model) throws IOException, SQLException
     {
-        IntPairSet newOrthologs = new IntPairSet(100000);
-        IntPairSet oldOrthologs = getIntPairSet("select gene, ortholog from pubchem.gene_orthologs", 100000);
+        IntPairSet newOrthologs = new IntPairSet();
+        IntPairSet oldOrthologs = getIntPairSet("select gene, ortholog from pubchem.gene_orthologs");
 
         new QueryResultProcessor(patternQuery("?gene sio:SIO_000558 ?ortholog"))
         {
@@ -536,6 +592,8 @@ class Gene extends Updater
                 int orthologID = getIntID("ortholog", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
 
                 IntIntPair pair = PrimitiveTuples.pair(geneID, orthologID);
+                addGeneID(geneID);
+                addGeneID(orthologID);
 
                 if(!oldOrthologs.remove(pair))
                     newOrthologs.add(pair);
@@ -554,7 +612,12 @@ class Gene extends Updater
         Model model = getModel("pubchem/RDF/gene/pc_gene.ttl.gz");
         check(model, "pubchem/gene/check.sparql");
 
-        loadBases(model);
+        loadGeneSymbolBases(model);
+
+        loadGeneBases(model);
+        loadSymbols(model);
+        loadTitles(model);
+        loadOrganisms(model);
         loadProcesses(model);
         loadFunctions(model);
         loadLocations(model);
@@ -574,5 +637,77 @@ class Gene extends Updater
 
         model.close();
         System.out.println();
+    }
+
+
+    static void finish() throws IOException, SQLException
+    {
+        System.out.println("finish genes ...");
+
+        batch("delete from pubchem.gene_symbol_bases where id = ?", oldGeneSymbols.values());
+        batch("insert into pubchem.gene_symbol_bases(iri, id) values (?,?)" + " on conflict do nothing",
+                newGeneSymbols);
+
+        usedGeneSymbols = null;
+        newGeneSymbols = null;
+        oldGeneSymbols = null;
+
+
+        batch("delete from pubchem.gene_bases where id = ?", oldGenes);
+        batch("insert into pubchem.gene_bases(id) values (?)" + " on conflict do nothing", newGenes);
+
+        usedGenes = null;
+        newGenes = null;
+        oldGenes = null;
+
+        System.out.println();
+    }
+
+
+    static int getGeneSymbolID(String symbol) throws IOException
+    {
+        if(symbol.matches("GID([123569]|[1-9][0-9]+)"))
+            throw new IOException();
+
+        synchronized(newGeneSymbols)
+        {
+            int geneSymbolID = usedGeneSymbols.getIfAbsent(symbol, NO_VALUE);
+
+            if(geneSymbolID == NO_VALUE)
+            {
+                System.out.println("    add missing gene symbol " + symbol);
+
+                if((geneSymbolID = oldGeneSymbols.removeKeyIfAbsent(symbol, NO_VALUE)) == NO_VALUE)
+                    newGeneSymbols.put(symbol, geneSymbolID = nextGeneSymbolID++);
+
+                usedGeneSymbols.put(symbol, geneSymbolID);
+            }
+
+            return geneSymbolID;
+        }
+    }
+
+
+    static void addGeneID(int geneID) throws IOException
+    {
+        checkGeneID(geneID);
+
+        synchronized(newGenes)
+        {
+            if(usedGenes.add(geneID))
+            {
+                System.out.println("    add missing gene GID" + geneID);
+
+                if(!oldGenes.remove(geneID))
+                    newGenes.add(geneID);
+            }
+        }
+    }
+
+
+    private static void checkGeneID(int geneID) throws IOException
+    {
+        if(geneID == 4 || geneID == 7 || geneID == 8)
+            throw new IOException();
     }
 }

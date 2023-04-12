@@ -1,13 +1,11 @@
 package cz.iocb.load.pubchem;
 
 import java.io.IOException;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import org.apache.jena.rdf.model.Model;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
-import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
 import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -60,10 +58,16 @@ class Pathway extends Updater
     }
 
 
+    private static IntHashSet usedPathways;
+    private static IntHashSet newPathways;
+    private static IntHashSet oldPathways;
+
+
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        IntHashSet newPathways = new IntHashSet(200000);
-        IntHashSet oldPathways = getIntSet("select id from pubchem.pathway_bases", 200000);
+        usedPathways = new IntHashSet();
+        newPathways = new IntHashSet();
+        oldPathways = getIntSet("select id from pubchem.pathway_bases");
 
         new QueryResultProcessor(patternQuery("?pathway rdf:type bp:Pathway"))
         {
@@ -74,14 +78,20 @@ class Pathway extends Updater
 
                 if(!oldPathways.remove(pathwayID))
                     newPathways.add(pathwayID);
+
+                usedPathways.add(pathwayID);
             }
         }.load(model);
 
-        batch("delete from pubchem.pathway_bases where id = ?", oldPathways);
+        batch("insert into pubchem.pathway_bases(id) values (?)", newPathways);
+        newPathways.clear();
+    }
 
 
-        IntStringMap newTitles = new IntStringMap(200000);
-        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.pathway_bases", 200000);
+    private static void loadTitles(Model model) throws IOException, SQLException
+    {
+        IntStringMap newTitles = new IntStringMap();
+        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.pathway_bases where title is not null");
 
         new QueryResultProcessor(patternQuery("?pathway dcterms:title ?title"))
         {
@@ -91,19 +101,24 @@ class Pathway extends Updater
                 int pathwayID = getIntID("pathway", "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID");
                 String title = getString("title");
 
+                addPathwayID(pathwayID);
+
                 if(!title.equals(oldTitles.remove(pathwayID)))
                     newTitles.put(pathwayID, title);
             }
         }.load(model);
 
-        oldPathways.forEach(key -> oldTitles.remove(key));
+        batch("update pubchem.pathway_bases set title = null where id = ?", oldTitles.keySet());
+        batch("insert into pubchem.pathway_bases(id, title) values (?,?) "
+                + "on conflict (id) do update set title=EXCLUDED.title", newTitles);
+    }
 
-        if(!oldTitles.isEmpty())
-            throw new IOException();
 
-
-        IntIntHashMap newSources = new IntIntHashMap(200000);
-        IntIntHashMap oldSources = getIntIntMap("select id, source from pubchem.pathway_bases", 200000);
+    private static void loadSources(Model model) throws IOException, SQLException
+    {
+        IntIntHashMap newSources = new IntIntHashMap();
+        IntIntHashMap oldSources = getIntIntMap(
+                "select id, source from pubchem.pathway_bases where source is not null");
 
         new QueryResultProcessor(patternQuery("?pathway dcterms:source ?source"))
         {
@@ -111,22 +126,26 @@ class Pathway extends Updater
             protected void parse() throws IOException
             {
                 int pathwayID = getIntID("pathway", "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID");
-                int sourceID = Source.getSourceID(getIRI("source"));
+                int sourceID = Source.getSourceID(getStringID("source", "http://rdf.ncbi.nlm.nih.gov/pubchem/source/"));
+
+                addPathwayID(pathwayID);
 
                 if(oldSources.removeKeyIfAbsent(pathwayID, NO_VALUE) != sourceID)
                     newSources.put(pathwayID, sourceID);
             }
         }.load(model);
 
-        oldPathways.forEach(key -> oldSources.remove(key));
+        batch("update pubchem.pathway_bases set source = null where id = ?", oldSources.keySet());
+        batch("insert into pubchem.pathway_bases(id, source) values (?,?) "
+                + "on conflict (id) do update set source=EXCLUDED.source", newSources);
+    }
 
-        if(!oldSources.isEmpty())
-            throw new IOException();
 
-
-        IntStringPairMap newReferences = new IntStringPairMap(200000);
+    private static void loadSameAsReferences(Model model) throws IOException, SQLException
+    {
+        IntStringPairMap newReferences = new IntStringPairMap();
         IntStringPairMap oldReferences = getIntStringPairMap(
-                "select id, reference_type::varchar, reference from pubchem.pathway_bases", 200000);
+                "select id, reference_type::varchar, reference from pubchem.pathway_bases where reference is not null");
 
         new QueryResultProcessor(patternQuery("?pathway owl:sameAs ?match"))
         {
@@ -148,42 +167,26 @@ class Pathway extends Updater
                     throw new IOException(iri);
 
                 Pair<String, String> pair = Tuples.pair(description.name, getStringID("match", description.prefix));
+                addPathwayID(pathwayID);
 
                 if(!pair.equals(oldReferences.remove(pathwayID)))
                     newReferences.put(pathwayID, pair);
             }
         }.load(model);
 
-        oldPathways.forEach(key -> oldReferences.remove(key));
-
-        if(!oldReferences.isEmpty())
-            throw new IOException();
-
-
-        batch("insert into pubchem.pathway_bases(id, source, title, reference_type, reference) values (?,?,?,?::pubchem.pathway_reference_type,?)",
-                newPathways, (PreparedStatement statement, int pathway) -> {
-                    Pair<String, String> reference = newReferences.remove(pathway);
-
-                    statement.setInt(1, pathway);
-                    statement.setInt(2, newSources.getOrThrow(pathway));
-                    statement.setString(3, newTitles.remove(pathway));
-                    statement.setString(4, reference.getOne());
-                    statement.setString(5, reference.getTwo());
-                    newSources.remove(pathway);
-                });
-
-        batch("update pubchem.pathway_bases set source = ? where id = ?", newSources, Direction.REVERSE);
-        batch("update pubchem.pathway_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
-        batch("update pubchem.pathway_bases set reference_type = ?::pubchem.pathway_reference_type, reference = ? where id = ?",
-                newReferences, Direction.REVERSE);
+        batch("update pubchem.pathway_bases set reference_type = null, reference = null where id = ?",
+                oldReferences.keySet());
+        batch("insert into pubchem.pathway_bases(id, reference_type, reference) values (?,?::pubchem.pathway_reference_type,?) "
+                + "on conflict (id) do update set reference_type=EXCLUDED.reference_type, reference=EXCLUDED.reference",
+                newReferences);
     }
 
 
     private static void loadOrganisms(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newOrganisms = new IntIntHashMap(200000);
+        IntIntHashMap newOrganisms = new IntIntHashMap();
         IntIntHashMap oldOrganisms = getIntIntMap(
-                "select id, organism_id from pubchem.pathway_bases where organism_id is not null", 1000000);
+                "select id, organism from pubchem.pathway_bases where organism is not null");
 
         new QueryResultProcessor(patternQuery("?pathway up:organism ?organism"))
         {
@@ -194,22 +197,26 @@ class Pathway extends Updater
                     return;
 
                 int pathwayID = getIntID("pathway", "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID");
-                int organismID = getIntID("organism", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID");
+                int organismID = Taxonomy
+                        .getTaxonomyID(getIntID("organism", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"));
+
+                addPathwayID(pathwayID);
 
                 if(organismID != oldOrganisms.removeKeyIfAbsent(pathwayID, NO_VALUE))
                     newOrganisms.put(pathwayID, organismID);
             }
         }.load(model);
 
-        batch("update pubchem.pathway_bases set organism_id = null where id = ?", oldOrganisms.keySet());
-        batch("update pubchem.pathway_bases set organism_id = ? where id = ?", newOrganisms, Direction.REVERSE);
+        batch("update pubchem.pathway_bases set organism = null where id = ?", oldOrganisms.keySet());
+        batch("insert into pubchem.pathway_bases(id, organism) values (?,?) "
+                + "on conflict (id) do update set organism=EXCLUDED.organism", newOrganisms);
     }
 
 
     private static void loadCompounds(Model model) throws IOException, SQLException
     {
-        IntPairSet newCompounds = new IntPairSet(2000000);
-        IntPairSet oldCompounds = getIntPairSet("select pathway, compound from pubchem.pathway_compounds", 2000000);
+        IntPairSet newCompounds = new IntPairSet();
+        IntPairSet oldCompounds = getIntPairSet("select pathway, compound from pubchem.pathway_compounds");
 
         new QueryResultProcessor(patternQuery("?pathway obo:RO_0000057 ?compound "
                 + "filter(strstarts(str(?compound), 'http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID'))"))
@@ -220,9 +227,9 @@ class Pathway extends Updater
                 int pathwayID = getIntID("pathway", "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID");
                 int compoundID = getIntID("compound", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
 
-                Compound.addCompoundID(compoundID);
-
                 IntIntPair pair = PrimitiveTuples.pair(pathwayID, compoundID);
+                Compound.addCompoundID(compoundID);
+                addPathwayID(pathwayID);
 
                 if(!oldCompounds.remove(pair))
                     newCompounds.add(pair);
@@ -236,11 +243,11 @@ class Pathway extends Updater
 
     private static void loadProteins(Model model) throws IOException, SQLException
     {
-        IntPairSet newProteins = new IntPairSet(1000000);
-        IntPairSet oldProteins = getIntPairSet("select pathway, protein from pubchem.pathway_proteins", 1000000);
+        IntPairSet newProteins = new IntPairSet();
+        IntPairSet oldProteins = getIntPairSet("select pathway, protein from pubchem.pathway_proteins");
 
         new QueryResultProcessor(patternQuery("?pathway obo:RO_0000057 ?protein "
-                + "filter(strstarts(str(?protein), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC'))"))
+                + "filter(strstarts(str(?protein), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -251,6 +258,7 @@ class Pathway extends Updater
                 int proteinID = Protein.getProteinID(proteinName);
 
                 IntIntPair pair = PrimitiveTuples.pair(pathwayID, proteinID);
+                addPathwayID(pathwayID);
 
                 if(!oldProteins.remove(pair))
                     newProteins.add(pair);
@@ -264,8 +272,8 @@ class Pathway extends Updater
 
     private static void loadGenes(Model model) throws IOException, SQLException
     {
-        IntPairSet newGenes = new IntPairSet(1000000);
-        IntPairSet oldGenes = getIntPairSet("select pathway, gene from pubchem.pathway_genes", 1000000);
+        IntPairSet newGenes = new IntPairSet();
+        IntPairSet oldGenes = getIntPairSet("select pathway, gene from pubchem.pathway_genes");
 
         new QueryResultProcessor(patternQuery("?pathway obo:RO_0000057 ?gene "
                 + "filter(strstarts(str(?gene), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/'))"))
@@ -277,6 +285,8 @@ class Pathway extends Updater
                 int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
 
                 IntIntPair pair = PrimitiveTuples.pair(pathwayID, geneID);
+                addPathwayID(pathwayID);
+                Gene.addGeneID(geneID);
 
                 if(!oldGenes.remove(pair))
                     newGenes.add(pair);
@@ -290,11 +300,10 @@ class Pathway extends Updater
 
     private static void loadComponents(Model model) throws IOException, SQLException
     {
-        IntPairSet newComponents = new IntPairSet(1000000);
-        IntPairSet oldComponents = getIntPairSet("select pathway, component from pubchem.pathway_components", 1000000);
+        IntPairSet newComponents = new IntPairSet();
+        IntPairSet oldComponents = getIntPairSet("select pathway, component from pubchem.pathway_components");
 
-        new QueryResultProcessor(patternQuery("?pathway bp:pathwayComponent ?component "
-                + "filter(strstarts(str(?component), 'http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/'))"))
+        new QueryResultProcessor(patternQuery("?pathway bp:pathwayComponent ?component"))
         {
             @Override
             protected void parse() throws IOException
@@ -303,6 +312,8 @@ class Pathway extends Updater
                 int componentID = getIntID("component", "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID");
 
                 IntIntPair pair = PrimitiveTuples.pair(pathwayID, componentID);
+                addPathwayID(pathwayID);
+                addPathwayID(componentID);
 
                 if(!oldComponents.remove(pair))
                     newComponents.add(pair);
@@ -314,37 +325,10 @@ class Pathway extends Updater
     }
 
 
-    private static void loadReactions(Model model) throws IOException, SQLException
-    {
-        IntStringPairSet newReactions = new IntStringPairSet(1000000);
-        IntStringPairSet oldReactions = getIntStringPairSet("select pathway, reaction from pubchem.pathway_reactions",
-                1000000);
-
-        new QueryResultProcessor(patternQuery("?pathway bp:pathwayComponent ?reaction "
-                + "filter(strstarts(str(?reaction), 'http://rdf.ncbi.nlm.nih.gov/pubchem/reaction/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                int pathwayID = getIntID("pathway", "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID");
-                String reactionID = getStringID("reaction", "http://rdf.ncbi.nlm.nih.gov/pubchem/reaction/");
-
-                IntObjectPair<String> pair = PrimitiveTuples.pair(pathwayID, reactionID);
-
-                if(!oldReactions.remove(pair))
-                    newReactions.add(pair);
-            }
-        }.load(model);
-
-        batch("delete from pubchem.pathway_reactions where pathway = ? and reaction = ?", oldReactions);
-        batch("insert into pubchem.pathway_reactions(pathway, reaction) values (?,?)", newReactions);
-    }
-
-
     private static void loadReferences(Model model) throws IOException, SQLException
     {
-        IntPairSet newReferences = new IntPairSet(1000000);
-        IntPairSet oldReferences = getIntPairSet("select pathway, reference from pubchem.pathway_references", 1000000);
+        IntPairSet newReferences = new IntPairSet();
+        IntPairSet oldReferences = getIntPairSet("select pathway, reference from pubchem.pathway_references");
 
         new QueryResultProcessor(patternQuery("?pathway cito:isDiscussedBy ?reference"))
         {
@@ -352,9 +336,11 @@ class Pathway extends Updater
             protected void parse() throws IOException
             {
                 int pathwayID = getIntID("pathway", "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID");
-                int referenceID = getIntID("reference", "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID");
+                int referenceID = Reference
+                        .getReferenceID(getIntID("reference", "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"));
 
                 IntIntPair pair = PrimitiveTuples.pair(pathwayID, referenceID);
+                addPathwayID(pathwayID);
 
                 if(!oldReferences.remove(pair))
                     newReferences.add(pair);
@@ -368,8 +354,8 @@ class Pathway extends Updater
 
     private static void loadRelatedPathways(Model model) throws IOException, SQLException
     {
-        IntPairSet newRelations = new IntPairSet(2000);
-        IntPairSet oldRelations = getIntPairSet("select pathway, related from pubchem.pathway_related_pathways", 2000);
+        IntPairSet newRelations = new IntPairSet();
+        IntPairSet oldRelations = getIntPairSet("select pathway, related from pubchem.pathway_related_pathways");
 
         new QueryResultProcessor(patternQuery("?pathway skos:related ?related"))
         {
@@ -380,6 +366,8 @@ class Pathway extends Updater
                 int relatedID = getIntID("related", "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID");
 
                 IntIntPair pair = PrimitiveTuples.pair(pathwayID, relatedID);
+                addPathwayID(pathwayID);
+                addPathwayID(relatedID);
 
                 if(!oldRelations.remove(pair))
                     newRelations.add(pair);
@@ -399,16 +387,48 @@ class Pathway extends Updater
         check(model, "pubchem/pathway/check.sparql");
 
         loadBases(model);
+        loadTitles(model);
+        loadSources(model);
+        loadSameAsReferences(model);
         loadOrganisms(model);
         loadCompounds(model);
         loadProteins(model);
         loadGenes(model);
         loadComponents(model);
-        loadReactions(model);
         loadReferences(model);
         loadRelatedPathways(model);
 
         model.close();
         System.out.println();
+    }
+
+
+    static void finish() throws IOException, SQLException
+    {
+        System.out.println("finish pathways ...");
+
+        batch("delete from pubchem.pathway_bases where id = ?", oldPathways);
+        batch("insert into pubchem.pathway_bases(id) values (?)" + " on conflict do nothing", newPathways);
+
+        usedPathways = null;
+        newPathways = null;
+        oldPathways = null;
+
+        System.out.println();
+    }
+
+
+    static void addPathwayID(int patwwayID)
+    {
+        synchronized(newPathways)
+        {
+            if(usedPathways.add(patwwayID))
+            {
+                System.out.println("    add missing patwway PWID" + patwwayID);
+
+                if(!oldPathways.remove(patwwayID))
+                    newPathways.add(patwwayID);
+            }
+        }
     }
 }

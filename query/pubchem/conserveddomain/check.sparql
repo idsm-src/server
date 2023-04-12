@@ -2,7 +2,6 @@ select distinct ?iri where
 {
     {
         ?S ?iri ?O .
-        filter(?iri != cito:isDiscussedBy)
         filter(?iri != dcterms:abstract)
         filter(?iri != dcterms:title)
         filter(?iri != rdf:type)

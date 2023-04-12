@@ -1,4 +1,17 @@
-create index protein_bases__organism on pubchem.protein_bases(organism_id);
+create index enzyme_bases__parent on pubchem.enzyme_bases(parent);
+create index enzyme_bases__title on pubchem.enzyme_bases(title);
+create index enzyme_bases__title__english on pubchem.enzyme_bases using gin (to_tsvector('english', title));
+grant select on pubchem.enzyme_bases to sparql;
+
+--------------------------------------------------------------------------------
+
+create index enzyme_alternatives__enzyme on pubchem.enzyme_alternatives(enzyme);
+create index enzyme_alternatives__alternative on pubchem.enzyme_alternatives(alternative);
+grant select on pubchem.enzyme_alternatives to sparql;
+
+--------------------------------------------------------------------------------
+
+create index protein_bases__organism on pubchem.protein_bases(organism);
 create index protein_bases__title on pubchem.protein_bases(title);
 create index protein_bases__title__english on pubchem.protein_bases using gin (to_tsvector('english', title));
 grant select on pubchem.protein_bases to sparql;
@@ -8,12 +21,6 @@ grant select on pubchem.protein_bases to sparql;
 create index protein_alternatives__protein on pubchem.protein_alternatives(protein);
 create index protein_alternatives__alternative on pubchem.protein_alternatives(alternative);
 grant select on pubchem.protein_alternatives to sparql;
-
---------------------------------------------------------------------------------
-
-create index protein_references__protein on pubchem.protein_references(protein);
-create index protein_references__reference on pubchem.protein_references(reference);
-grant select on pubchem.protein_references to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -41,6 +48,12 @@ grant select on pubchem.protein_enzymes to sparql;
 
 --------------------------------------------------------------------------------
 
+create index protein_uniprot_enzymes__protein on pubchem.protein_uniprot_enzymes(protein);
+create index protein_uniprot_enzymes__enzyme on pubchem.protein_uniprot_enzymes(enzyme);
+grant select on pubchem.protein_uniprot_enzymes to sparql;
+
+--------------------------------------------------------------------------------
+
 create index protein_ncbi_matches__protein on pubchem.protein_ncbi_matches(protein);
 create index protein_ncbi_matches__match on pubchem.protein_ncbi_matches(match);
 grant select on pubchem.protein_ncbi_matches to sparql;
@@ -62,12 +75,6 @@ grant select on pubchem.protein_mesh_matches to sparql;
 create index protein_thesaurus_matches__protein on pubchem.protein_thesaurus_matches(protein);
 create index protein_thesaurus_matches__match on pubchem.protein_thesaurus_matches(match);
 grant select on pubchem.protein_thesaurus_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index protein_expasy_matches__protein on pubchem.protein_expasy_matches(protein);
-create index protein_expasy_matches__match on pubchem.protein_expasy_matches(match);
-grant select on pubchem.protein_expasy_matches to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -128,7 +135,3 @@ grant select on pubchem.protein_families to sparql;
 create index protein_types__protein on pubchem.protein_types(protein);
 create index protein_types__type on pubchem.protein_types(type_unit, type_id);
 grant select on pubchem.protein_types to sparql;
-
---------------------------------------------------------------------------------
-
-grant select on pubchem.protein_complexes to sparql;

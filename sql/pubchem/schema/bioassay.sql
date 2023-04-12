@@ -1,19 +1,18 @@
 create table pubchem.bioassay_bases
 (
     id        integer not null,
-    source    smallint not null,
-    title     varchar not null,
+    source    smallint,
+    title     varchar,
     primary key(id)
 );
 
 
 create table pubchem.bioassay_data
 (
-    __          integer,
     bioassay    integer not null,
     type_id     smallint not null,
     value       varchar not null,
-    primary key(__)
+    primary key(bioassay, type_id)
 );
 
 
@@ -65,9 +64,9 @@ create table pubchem.bioassay_chembl_mechanisms
 );
 
 
-create table pubchem.bioassay_patents
+create table pubchem.bioassay_patent_references
 (
     bioassay            integer not null,
-    patent              varchar not null,
+    patent              integer not null,
     primary key(bioassay, patent)
 );

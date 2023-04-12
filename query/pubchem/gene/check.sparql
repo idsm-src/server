@@ -13,17 +13,24 @@ select distinct ?iri where
         filter(?iri != bao:BAO_0002870)
         filter(?iri != up:organism)
         filter(?iri != sio:SIO_000558)
+        filter(?iri != sio:SIO_000300)
         filter(?iri != owl:sameAs)
 	}
     union
     {
         ?S rdf:type ?iri .
         filter(?iri != sio:SIO_010035)
+        filter(?iri != sio:SIO_001383)
     }
     union
     {
         ?S owl:sameAs ?iri .
         filter(replace(str(?S), "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID", "") != replace(str(?iri), "https://www.ncbi.nlm.nih.gov/gene/", ""))
+    }
+    union
+    {
+        ?iri sio:SIO_000300 ?O .
+        filter(replace(str(?iri), "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/", "") != encode_for_uri(?O))
     }
     union
     {

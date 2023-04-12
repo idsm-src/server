@@ -19,11 +19,11 @@ create type pubchem.pathway_reference_type as enum
 create table pubchem.pathway_bases
 (
     id              integer not null,
-    source          smallint not null,
-    title           varchar not null,
-    reference_type  pubchem.pathway_reference_type not null,
-    reference       varchar not null,
-    organism_id     integer,
+    source          smallint,
+    title           varchar,
+    reference_type  pubchem.pathway_reference_type,
+    reference       varchar,
+    organism        integer,
     primary key(id)
 );
 
@@ -57,14 +57,6 @@ create table pubchem.pathway_components
     pathway     integer not null,
     component   integer not null,
     primary key(pathway, component)
-);
-
-
-create table pubchem.pathway_reactions
-(
-    pathway     integer not null,
-    reaction    varchar not null,
-    primary key(pathway, reaction)
 );
 
 

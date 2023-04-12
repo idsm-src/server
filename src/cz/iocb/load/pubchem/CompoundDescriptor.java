@@ -19,13 +19,12 @@ class CompoundDescriptor extends Updater
 
     private static void loadIntegerField(String name, String suffix, String field) throws IOException, SQLException
     {
-        IntIntHashMap newValues = new IntIntHashMap(200000000);
-        IntIntHashMap oldValues = getIntIntMap(
-                "select compound, " + field + " from pubchem.descriptor_compound_bases where " + field + " is not null",
-                200000000);
+        IntIntHashMap newValues = new IntIntHashMap();
+        IntIntHashMap oldValues = getIntIntMap("select compound, " + field
+                + " from pubchem.descriptor_compound_bases where " + field + " is not null");
 
-        processFiles("pubchem/RDF/descriptor/compound", name, file -> {
-            try(InputStream stream = getStream(file))
+        processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -61,13 +60,12 @@ class CompoundDescriptor extends Updater
 
     private static void loadFloatField(String name, String suffix, String field) throws IOException, SQLException
     {
-        IntFloatHashMap newValues = new IntFloatHashMap(200000000);
-        IntFloatHashMap oldValues = getIntFloatMap(
-                "select compound, " + field + " from pubchem.descriptor_compound_bases where " + field + " is not null",
-                200000000);
+        IntFloatHashMap newValues = new IntFloatHashMap();
+        IntFloatHashMap oldValues = getIntFloatMap("select compound, " + field
+                + " from pubchem.descriptor_compound_bases where " + field + " is not null");
 
-        processFiles("pubchem/RDF/descriptor/compound", name, file -> {
-            try(InputStream stream = getStream(file))
+        processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -103,17 +101,16 @@ class CompoundDescriptor extends Updater
 
     private static void loadXLogP3Field(String name) throws IOException, SQLException
     {
-        IntFloatHashMap newAAValues = new IntFloatHashMap(200000000);
+        IntFloatHashMap newAAValues = new IntFloatHashMap();
         IntFloatHashMap oldAAValues = getIntFloatMap(
-                "select compound, xlogp3_aa from pubchem.descriptor_compound_bases where xlogp3_aa is not null",
-                200000000);
+                "select compound, xlogp3_aa from pubchem.descriptor_compound_bases where xlogp3_aa is not null");
 
-        IntFloatHashMap newValues = new IntFloatHashMap(4000000);
+        IntFloatHashMap newValues = new IntFloatHashMap();
         IntFloatHashMap oldValues = getIntFloatMap(
-                "select compound, xlogp3 from pubchem.descriptor_compound_bases where xlogp3 is not null", 4000000);
+                "select compound, xlogp3 from pubchem.descriptor_compound_bases where xlogp3 is not null");
 
-        processFiles("pubchem/RDF/descriptor/compound", name, file -> {
-            try(InputStream stream = getStream(file))
+        processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -172,12 +169,12 @@ class CompoundDescriptor extends Updater
     private static void loadStringField(String name, String suffix, String table, String field)
             throws IOException, SQLException
     {
-        IntStringMap newValues = new IntStringMap(200000000);
+        IntStringMap newValues = new IntStringMap();
         IntStringMap oldValues = getIntStringMap(
-                "select compound, " + field + " from pubchem." + table + " where " + field + " is not null", 200000000);
+                "select compound, " + field + " from pubchem.descriptor_compound_" + table);
 
-        processFiles("pubchem/RDF/descriptor/compound", name, file -> {
-            try(InputStream stream = getStream(file))
+        processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -202,23 +199,85 @@ class CompoundDescriptor extends Updater
             }
         });
 
-        batch("delete from pubchem." + table + " where compound = ?", oldValues.keySet());
-        batch("insert into pubchem." + table + " (compound, " + field + ") values (?,?) "
+        batch("delete from pubchem.descriptor_compound_" + table + " where compound = ?", oldValues.keySet());
+        batch("insert into pubchem.descriptor_compound_" + table + " (compound, " + field + ") values (?,?) "
                 + "on conflict (compound) do update set " + field + "=EXCLUDED." + field, newValues);
     }
 
 
-    private static void loadUnitField(String name, String suffix, String unit) throws IOException, SQLException
+    private static void checkUnit(String name, String suffix, String unitName) throws IOException, SQLException
     {
-        processFiles("pubchem/RDF/descriptor/compound", name, file -> {
-            try(InputStream stream = getStream(file))
+        final String unit = "http://purl.obolibrary.org/obo/" + unitName;
+
+        processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_unit_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
+                        getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
+
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000221"))
+                            throw new IOException();
+
                         if(!object.getURI().equals(unit))
+                            throw new IOException();
+                    }
+                }.load(stream);
+            }
+        });
+    }
+
+
+    private static void checkType(String name, String suffix, String typeName) throws IOException, SQLException
+    {
+        final String type = "http://semanticscience.org/resource/" + typeName;
+
+        processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_type_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
+
+                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            throw new IOException();
+
+                        if(!object.getURI().equals(type))
+                            throw new IOException();
+                    }
+                }.load(stream);
+            }
+        });
+    }
+
+
+    private static void checkXLogP3Type(String name, String typeName) throws IOException, SQLException
+    {
+        final String type = "http://semanticscience.org/resource/" + typeName;
+
+        processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_type_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(subject.getURI().endsWith("-AA"))
+                            getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", "_XLogP3-AA");
+                        else
+                            getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", "_XLogP3");
+
+                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            throw new IOException();
+
+                        if(!object.getURI().equals(type))
                             throw new IOException();
                     }
                 }.load(stream);
@@ -231,62 +290,66 @@ class CompoundDescriptor extends Updater
     {
         System.out.println("load compound descriptors ...");
 
-        oldDescriptors = getIntSet("select compound from pubchem.descriptor_compound_bases", 200000000);
+        oldDescriptors = getIntSet("select compound from pubchem.descriptor_compound_bases");
 
-        loadIntegerField("pc_descr_CovalentUnitCount_value_[0-9]+\\.ttl\\.gz", "_Covalent_Unit_Count",
-                "covalent_unit_count");
-        loadIntegerField("pc_descr_DefinedAtomStereoCount_value_[0-9]+\\.ttl\\.gz", "_Defined_Atom_Stereo_Count",
-                "defined_atom_stereo_count");
-        loadIntegerField("pc_descr_DefinedBondStereoCount_value_[0-9]+\\.ttl\\.gz", "_Defined_Bond_Stereo_Count",
-                "defined_bond_stereo_count");
-        loadIntegerField("pc_descr_FormalCharge_value_[0-9]+\\.ttl\\.gz", "_Total_Formal_Charge",
-                "total_formal_charge");
-        loadIntegerField("pc_descr_HBondAcceptor_value_[0-9]+\\.ttl\\.gz", "_Hydrogen_Bond_Acceptor_Count",
-                "hydrogen_bond_acceptor_count");
-        loadIntegerField("pc_descr_HBondDonor_value_[0-9]+\\.ttl\\.gz", "_Hydrogen_Bond_Donor_Count",
-                "hydrogen_bond_donor_count");
-        loadIntegerField("pc_descr_HeavyAtomCount_value_[0-9]+\\.ttl\\.gz", "_Non-hydrogen_Atom_Count",
-                "non_hydrogen_atom_count");
-        loadIntegerField("pc_descr_IsotopeAtomCount_value_[0-9]+\\.ttl\\.gz", "_Isotope_Atom_Count",
-                "isotope_atom_count");
-        loadIntegerField("pc_descr_RotatableBond_value_[0-9]+\\.ttl\\.gz", "_Rotatable_Bond_Count",
-                "rotatable_bond_count");
-        loadIntegerField("pc_descr_TautomerCount_value_[0-9]+\\.ttl\\.gz", "_Tautomer_Count", "tautomer_count");
-        loadIntegerField("pc_descr_UndefinedAtomStereoCount_value_[0-9]+\\.ttl\\.gz", "_Undefined_Atom_Stereo_Count",
-                "undefined_atom_stereo_count");
-        loadIntegerField("pc_descr_UndefinedBondStereoCount_value_[0-9]+\\.ttl\\.gz", "_Undefined_Bond_Stereo_Count",
-                "undefined_bond_stereo_count");
+        loadIntegerField("CovalentUnitCount", "_Covalent_Unit_Count", "covalent_unit_count");
+        loadIntegerField("DefinedAtomStereoCount", "_Defined_Atom_Stereo_Count", "defined_atom_stereo_count");
+        loadIntegerField("DefinedBondStereoCount", "_Defined_Bond_Stereo_Count", "defined_bond_stereo_count");
+        loadIntegerField("FormalCharge", "_Total_Formal_Charge", "total_formal_charge");
+        loadIntegerField("HBondAcceptor", "_Hydrogen_Bond_Acceptor_Count", "hydrogen_bond_acceptor_count");
+        loadIntegerField("HBondDonor", "_Hydrogen_Bond_Donor_Count", "hydrogen_bond_donor_count");
+        loadIntegerField("HeavyAtomCount", "_Non-hydrogen_Atom_Count", "non_hydrogen_atom_count");
+        loadIntegerField("IsotopeAtomCount", "_Isotope_Atom_Count", "isotope_atom_count");
+        loadIntegerField("RotatableBond", "_Rotatable_Bond_Count", "rotatable_bond_count");
+        loadIntegerField("TautomerCount", "_Tautomer_Count", "tautomer_count");
+        loadIntegerField("UndefinedAtomStereoCount", "_Undefined_Atom_Stereo_Count", "undefined_atom_stereo_count");
+        loadIntegerField("UndefinedBondStereoCount", "_Undefined_Bond_Stereo_Count", "undefined_bond_stereo_count");
 
-        loadFloatField("pc_descr_Complexity_value_[0-9]+\\.ttl\\.gz", "_Structure_Complexity", "structure_complexity");
-        loadFloatField("pc_descr_ExactMass_value_[0-9]+\\.ttl\\.gz", "_Exact_Mass", "exact_mass");
-        loadFloatField("pc_descr_MolecularWeight_value_[0-9]+\\.ttl\\.gz", "_Molecular_Weight", "molecular_weight");
-        loadFloatField("pc_descr_MonoIsotopicWeight_value_[0-9]+\\.ttl\\.gz", "_Mono_Isotopic_Weight",
-                "mono_isotopic_weight");
-        loadFloatField("pc_descr_TPSA_value_[0-9]+\\.ttl\\.gz", "_TPSA", "tpsa");
+        loadFloatField("Complexity", "_Structure_Complexity", "structure_complexity");
+        loadFloatField("ExactMass", "_Exact_Mass", "exact_mass");
+        loadFloatField("MolecularWeight", "_Molecular_Weight", "molecular_weight");
+        loadFloatField("MonoIsotopicWeight", "_Mono_Isotopic_Weight", "mono_isotopic_weight");
+        loadFloatField("TPSA", "_TPSA", "tpsa");
 
-        loadXLogP3Field("pc_descr_XLogP3_value_[0-9]+\\.ttl\\.gz");
+        loadXLogP3Field("XLogP3");
 
         batch("delete from pubchem.descriptor_compound_bases where compound = ?", oldDescriptors);
         oldDescriptors = null;
 
-        loadStringField("pc_descr_MolecularFormula_value_[0-9]+\\.ttl\\.gz", "_Molecular_Formula",
-                "descriptor_compound_molecular_formulas", "molecular_formula");
-        loadStringField("pc_descr_isoSMILES_value_[0-9]+\\.ttl\\.gz", "_Isomeric_SMILES",
-                "descriptor_compound_isomeric_smileses", "isomeric_smiles");
-        loadStringField("pc_descr_canSMILES_value_[0-9]+\\.ttl\\.gz", "_Canonical_SMILES",
-                "descriptor_compound_canonical_smileses", "canonical_smiles");
-        loadStringField("pc_descr_InChI_value_[0-9]+\\.ttl\\.gz", "_IUPAC_InChI", "descriptor_compound_iupac_inchis",
-                "iupac_inchi");
-        loadStringField("pc_descr_IUPACName_value_[0-9]+\\.ttl\\.gz", "_Preferred_IUPAC_Name",
-                "descriptor_compound_preferred_iupac_names", "preferred_iupac_name");
+        loadStringField("MolecularFormula", "_Molecular_Formula", "molecular_formulas", "molecular_formula");
+        loadStringField("isoSMILES", "_Isomeric_SMILES", "isomeric_smileses", "isomeric_smiles");
+        loadStringField("canSMILES", "_Canonical_SMILES", "canonical_smileses", "canonical_smiles");
+        loadStringField("InChI", "_IUPAC_InChI", "iupac_inchis", "iupac_inchi");
+        loadStringField("IUPACName", "_Preferred_IUPAC_Name", "preferred_iupac_names", "preferred_iupac_name");
 
-        loadUnitField("pc_descr_ExactMass_unit_[0-9]+\\.ttl\\.gz", "_Exact_Mass",
-                "http://purl.obolibrary.org/obo/UO_0000055");
-        loadUnitField("pc_descr_MolecularWeight_unit_[0-9]+\\.ttl\\.gz", "_Molecular_Weight",
-                "http://purl.obolibrary.org/obo/UO_0000055");
-        loadUnitField("pc_descr_MonoIsotopicWeight_unit_[0-9]+\\.ttl\\.gz", "_Mono_Isotopic_Weight",
-                "http://purl.obolibrary.org/obo/UO_0000055");
-        loadUnitField("pc_descr_TPSA_unit_[0-9]+\\.ttl\\.gz", "_TPSA", "http://purl.obolibrary.org/obo/UO_0000324");
+        checkUnit("ExactMass", "_Exact_Mass", "UO_0000055");
+        checkUnit("MolecularWeight", "_Molecular_Weight", "UO_0000055");
+        checkUnit("MonoIsotopicWeight", "_Mono_Isotopic_Weight", "UO_0000055");
+        checkUnit("TPSA", "_TPSA", "UO_0000324");
+
+        checkType("Complexity", "_Structure_Complexity", "CHEMINF_000390");
+        checkType("CovalentUnitCount", "_Covalent_Unit_Count", "CHEMINF_000369");
+        checkType("DefinedAtomStereoCount", "_Defined_Atom_Stereo_Count", "CHEMINF_000370");
+        checkType("DefinedBondStereoCount", "_Defined_Bond_Stereo_Count", "CHEMINF_000371");
+        checkType("ExactMass", "_Exact_Mass", "CHEMINF_000338");
+        checkType("FormalCharge", "_Total_Formal_Charge", "CHEMINF_000336");
+        checkType("HBondAcceptor", "_Hydrogen_Bond_Acceptor_Count", "CHEMINF_000388");
+        checkType("HBondDonor", "_Hydrogen_Bond_Donor_Count", "CHEMINF_000387");
+        checkType("HeavyAtomCount", "_Non-hydrogen_Atom_Count", "CHEMINF_000373");
+        checkType("IsotopeAtomCount", "_Isotope_Atom_Count", "CHEMINF_000372");
+        checkType("MolecularFormula", "_Molecular_Formula", "CHEMINF_000335");
+        checkType("MolecularWeight", "_Molecular_Weight", "CHEMINF_000334");
+        checkType("MonoIsotopicWeight", "_Mono_Isotopic_Weight", "CHEMINF_000337");
+        checkType("RotatableBond", "_Rotatable_Bond_Count", "CHEMINF_000389");
+        checkType("TPSA", "_TPSA", "CHEMINF_000392");
+        checkType("TautomerCount", "_Tautomer_Count", "CHEMINF_000391");
+        checkType("UndefinedAtomStereoCount", "_Undefined_Atom_Stereo_Count", "CHEMINF_000374");
+        checkType("UndefinedBondStereoCount", "_Undefined_Bond_Stereo_Count", "CHEMINF_000375");
+        checkXLogP3Type("XLogP3", "CHEMINF_000395");
+        checkType("canSMILES", "_Canonical_SMILES", "CHEMINF_000376");
+        checkType("isoSMILES", "_Isomeric_SMILES", "CHEMINF_000379");
+        checkType("InChI", "_IUPAC_InChI", "CHEMINF_000396");
+        checkType("IUPACName", "_Preferred_IUPAC_Name", "CHEMINF_000382");
 
         System.out.println();
     }

@@ -1,4 +1,4 @@
-create function pubchem."compound_fulltext"(query in varchar) returns table (compound int, score float4, name varchar) language sql as
+create function pubchem.compound_fulltext(query in varchar) returns table (compound int, score float4, name varchar) language sql as
 $$
   select distinct on (compound) compound, score, name from (
     select compound, similarity(title, query) as score, title as name

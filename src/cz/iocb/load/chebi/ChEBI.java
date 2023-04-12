@@ -134,8 +134,8 @@ public class ChEBI extends Updater
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        IntHashSet newValues = new IntHashSet(1000000);
-        IntHashSet oldValues = getIntSet("select id from chebi.classes", 1000000);
+        IntHashSet newValues = new IntHashSet();
+        IntHashSet oldValues = getIntSet("select id from chebi.classes");
 
         new QueryResultProcessor(patternQuery("?chebi rdf:type owl:Class. "
                 + "filter(strstarts(str(?chebi), 'http://purl.obolibrary.org/obo/CHEBI_'))"))
@@ -157,8 +157,8 @@ public class ChEBI extends Updater
 
     private static void loadParents(Model model) throws IOException, SQLException
     {
-        IntPairSet newValues = new IntPairSet(1000000);
-        IntPairSet oldValues = getIntPairSet("select chebi, parent from chebi.parents", 1000000);
+        IntPairSet newValues = new IntPairSet();
+        IntPairSet oldValues = getIntPairSet("select chebi, parent from chebi.parents");
 
         new QueryResultProcessor(patternQuery("?chebi rdfs:subClassOf ?parent."
                 + "filter(strstarts(str(?chebi), 'http://purl.obolibrary.org/obo/CHEBI_'))"
@@ -184,8 +184,8 @@ public class ChEBI extends Updater
 
     private static void loadStars(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newValues = new IntIntHashMap(1000000);
-        IntIntHashMap oldValues = getIntIntMap("select chebi, star from chebi.stars", 1000000);
+        IntIntHashMap newValues = new IntIntHashMap();
+        IntIntHashMap oldValues = getIntIntMap("select chebi, star from chebi.stars");
 
         new QueryResultProcessor(patternQuery("?chebi oboInOwl:inSubset ?star"))
         {
@@ -209,8 +209,8 @@ public class ChEBI extends Updater
 
     private static void loadReplacements(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newValues = new IntIntHashMap(1000000);
-        IntIntHashMap oldValues = getIntIntMap("select chebi, replacement from chebi.replacements", 1000000);
+        IntIntHashMap newValues = new IntIntHashMap();
+        IntIntHashMap oldValues = getIntIntMap("select chebi, replacement from chebi.replacements");
 
         new QueryResultProcessor(patternQuery("?chebi obo:IAO_0100001 ?replacement"))
         {
@@ -233,8 +233,8 @@ public class ChEBI extends Updater
 
     private static void loadObsolescenceReasons(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newValues = new IntIntHashMap(1000000);
-        IntIntHashMap oldValues = getIntIntMap("select chebi, reason from chebi.obsolescence_reasons", 1000000);
+        IntIntHashMap newValues = new IntIntHashMap();
+        IntIntHashMap oldValues = getIntIntMap("select chebi, reason from chebi.obsolescence_reasons");
 
         new QueryResultProcessor(patternQuery("?chebi obo:IAO_0000231 ?reason"))
         {
@@ -259,10 +259,10 @@ public class ChEBI extends Updater
     {
         nextRestrictionID = getIntValue("select coalesce(max(id)+1,0) from chebi.restrictions");
 
-        HashSet<Restriction> newValues = new HashSet<Restriction>(1000000);
+        HashSet<Restriction> newValues = new HashSet<Restriction>();
         ObjectIntHashMap<Restriction> oldValues = getObjectIntMap(
                 "select id, chebi, value_restriction, property_unit, property_id from chebi.restrictions",
-                r -> new Restriction(r.getInt(2), r.getInt(3), r.getShort(4), r.getInt(5)), 1000000);
+                r -> new Restriction(r.getInt(2), r.getInt(3), r.getShort(4), r.getInt(5)));
 
         new QueryResultProcessor(patternQuery("?chebi rdfs:subClassOf [ rdf:type owl:Restriction; "
                 + "owl:onProperty ?property; owl:someValuesFrom ?values ]"))
@@ -297,12 +297,11 @@ public class ChEBI extends Updater
     {
         nextAxiomID = getIntValue("select coalesce(max(id)+1,0) from chebi.axioms");
 
-        HashSet<Axiom> newValues = new HashSet<Axiom>(1000000);
+        HashSet<Axiom> newValues = new HashSet<Axiom>();
         ObjectIntHashMap<Axiom> oldValues = getObjectIntMap(
                 "select id, chebi, property_unit, property_id, target, type_id, reference, source from chebi.axioms",
                 r -> new Axiom(r.getInt(2), r.getShort(3), r.getInt(4), r.getString(5), (Integer) r.getObject(6),
-                        r.getString(7), r.getString(8)),
-                1000000);
+                        r.getString(7), r.getString(8)));
 
         new QueryResultProcessor(patternQuery("?axiom rdf:type owl:Axiom; owl:annotatedProperty ?property;"
                 + "owl:annotatedSource ?chebi; owl:annotatedTarget ?target."
@@ -348,8 +347,8 @@ public class ChEBI extends Updater
     private static void loadMultiStringValues(Model model, String property, String table, String column)
             throws IOException, SQLException
     {
-        IntStringPairSet newValues = new IntStringPairSet(1000000);
-        IntStringPairSet oldValues = getIntStringPairSet("select chebi, " + column + " from chebi." + table, 1000000);
+        IntStringPairSet newValues = new IntStringPairSet();
+        IntStringPairSet oldValues = getIntStringPairSet("select chebi, " + column + " from chebi." + table);
 
         new QueryResultProcessor(patternQuery("?chebi " + property + " ?value."
                 + "filter(strstarts(str(?chebi), 'http://purl.obolibrary.org/obo/CHEBI_'))"))
@@ -374,8 +373,8 @@ public class ChEBI extends Updater
     private static void loadStringValues(Model model, String property, String table, String column)
             throws IOException, SQLException
     {
-        IntStringMap newValues = new IntStringMap(1000000);
-        IntStringMap oldValues = getIntStringMap("select chebi, " + column + " from chebi." + table, 1000000);
+        IntStringMap newValues = new IntStringMap();
+        IntStringMap oldValues = getIntStringMap("select chebi, " + column + " from chebi." + table);
 
         new QueryResultProcessor(patternQuery("?chebi " + property + " ?value."
                 + "filter(strstarts(str(?chebi), 'http://purl.obolibrary.org/obo/CHEBI_'))"))
@@ -400,8 +399,8 @@ public class ChEBI extends Updater
     private static void loadBooleanValues(Model model, String property, String table, String column)
             throws IOException, SQLException
     {
-        IntIntHashMap newValues = new IntIntHashMap(1000000);
-        IntIntHashMap oldValues = getIntIntMap("select chebi, " + column + "::integer from chebi." + table, 1000000);
+        IntIntHashMap newValues = new IntIntHashMap();
+        IntIntHashMap oldValues = getIntIntMap("select chebi, " + column + "::integer from chebi." + table);
 
         new QueryResultProcessor(patternQuery("?chebi " + property + " ?value."
                 + "filter(strstarts(str(?chebi), 'http://purl.obolibrary.org/obo/CHEBI_'))"))

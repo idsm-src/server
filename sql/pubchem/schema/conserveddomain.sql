@@ -5,11 +5,3 @@ create table pubchem.conserveddomain_bases
     abstract    varchar,
     primary key(id)
 );
-
-
-create table pubchem.conserveddomain_references
-(
-    domain       integer not null,
-    reference    integer not null,
-    primary key(domain, reference)
-);

@@ -1,9 +1,17 @@
+create table pubchem.gene_symbol_bases
+(
+    id             integer not null,
+    iri            varchar unique not null,
+    primary key(id)
+);
+
+
 create table pubchem.gene_bases
 (
-    id           integer not null,
-    title        varchar not null,
-    symbol       varchar not null,
-    organism_id  integer not null,
+    id             integer not null,
+    title          varchar,
+    gene_symbol    integer,
+    organism       integer,
     primary key(id)
 );
 

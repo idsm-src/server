@@ -126,8 +126,7 @@ create table ontology.maxcardinality_restrictions
 create table ontology.resources__reftable
 (
     resource_id      integer not null,
-    iri              varchar not null,
-    unique(iri),
+    iri              varchar unique not null,
     primary key(resource_id)
 );
 
@@ -229,3 +228,58 @@ insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (125, 'http://purl.obolibrary.org/obo/DDPHENO_', 40, 7, '^http://purl\.obolibrary\.org/obo/DDPHENO_[0-9]{7}$');
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (126, 'http://purl.obolibrary.org/obo/PHIPO_', 38, 7, '^http://purl\.obolibrary\.org/obo/PHIPO_[0-9]{7}$');
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (127, 'http://purl.obolibrary.org/obo/CDNO_', 37, 7, '^http://purl\.obolibrary\.org/obo/CDNO_[0-9]{7}$');
+
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (128, 'http://purl.obolibrary.org/obo/BTO_' , 36,  7, '^http://purl\.obolibrary\.org/obo/BTO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (129, 'http://purl.obolibrary.org/obo/' , 32,  7, '^http://purl\.obolibrary\.org/obo/[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (130, 'http://purl.obolibrary.org/obo/APO_' , 36,  7, '^http://purl\.obolibrary\.org/obo/APO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (131, 'http://purl.obolibrary.org/obo/BS_' , 35,  5, '^http://purl\.obolibrary\.org/obo/BS_[0-9]{5}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (132, 'http://purl.obolibrary.org/obo/BSPO_' , 37,  7, '^http://purl\.obolibrary\.org/obo/BSPO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (133, 'http://purl.obolibrary.org/obo/BTO_' , 36,  7, '^http://purl\.obolibrary\.org/obo/BTO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (134, 'http://purl.obolibrary.org/obo/CARO_' , 37,  7, '^http://purl\.obolibrary\.org/obo/CARO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (135, 'http://purl.obolibrary.org/obo/DDANAT_' , 39,  7, '^http://purl\.obolibrary\.org/obo/DDANAT_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (136, 'http://purl.obolibrary.org/obo/ENVO_' , 37,  7, '^http://purl\.obolibrary\.org/obo/ENVO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (137, 'http://purl.obolibrary.org/obo/FAO_' , 36,  7, '^http://purl\.obolibrary\.org/obo/FAO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (138, 'http://purl.obolibrary.org/obo/FBbt_' , 37,  8, '^http://purl\.obolibrary\.org/obo/FBbt_[0-9]{8}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (139, 'http://purl.obolibrary.org/obo/FBcv_' , 37,  7, '^http://purl\.obolibrary\.org/obo/FBcv_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (140, 'http://purl.obolibrary.org/obo/FBdv_' , 37,  8, '^http://purl\.obolibrary\.org/obo/FBdv_[0-9]{8}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (141, 'http://purl.obolibrary.org/obo/GAZ_' , 36,  8, '^http://purl\.obolibrary\.org/obo/GAZ_[0-9]{8}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (142, 'http://purl.obolibrary.org/obo/GENO_' , 37,  7, '^http://purl\.obolibrary\.org/obo/GENO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (143, 'http://purl.obolibrary.org/obo/HANCESTRO_' , 42,  4, '^http://purl\.obolibrary\.org/obo/HANCESTRO_[0-9]{4}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (144, 'http://purl.obolibrary.org/obo/MAXO_' , 37,  7, '^http://purl\.obolibrary\.org/obo/MAXO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (145, 'http://purl.obolibrary.org/obo/MGPO_' , 37,  7, '^http://purl\.obolibrary\.org/obo/MGPO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (146, 'http://purl.obolibrary.org/obo/NBO_' , 36,  7, '^http://purl\.obolibrary\.org/obo/NBO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (147, 'http://purl.obolibrary.org/obo/OGMS_' , 37,  7, '^http://purl\.obolibrary\.org/obo/OGMS_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (148, 'http://purl.obolibrary.org/obo/PLANA_' , 38,  7, '^http://purl\.obolibrary\.org/obo/PLANA_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (149, 'http://purl.obolibrary.org/obo/PLANP_' , 38,  7, '^http://purl\.obolibrary\.org/obo/PLANP_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (150, 'http://purl.obolibrary.org/obo/PO_' , 35,  7, '^http://purl\.obolibrary\.org/obo/PO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (151, 'http://purl.obolibrary.org/obo/RO_HOM' , 38,  7, '^http://purl\.obolibrary\.org/obo/RO_HOM[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (152, 'http://purl.obolibrary.org/obo/WBbt_' , 37,  7, '^http://purl\.obolibrary\.org/obo/WBbt_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (153, 'http://purl.obolibrary.org/obo/WBls_' , 37,  7, '^http://purl\.obolibrary\.org/obo/WBls_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (154, 'http://purl.obolibrary.org/obo/YPO_' , 36,  7, '^http://purl\.obolibrary\.org/obo/YPO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (155, 'http://purl.obolibrary.org/obo/MPATH_' , 38,  0, '^http://purl\.obolibrary\.org/obo/MPATH_[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (156, 'http://purl.obolibrary.org/obo/NCIT_P' , 38,  0, '^http://purl\.obolibrary\.org/obo/NCIT_P[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (157, 'http://purl.obolibrary.org/obo/NCIT_R' , 38,  0, '^http://purl\.obolibrary\.org/obo/NCIT_R[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (158, 'http://purl.obolibrary.org/obo/ONS_' , 36,  0, '^http://purl\.obolibrary\.org/obo/ONS_[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (159, 'http://www.ebi.ac.uk/efo/swo/SWO_' , 34,  7, '^http://www\.ebi\.ac\.uk/efo/swo/SWO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (160, 'https://omim.org/entry/' , 24,  6, '^https://omim\.org/entry/[0-9]{6}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (161, 'https://uts.nlm.nih.gov/uts/umls/concept/CN' , 44,  6, '^https://uts\.nlm\.nih\.gov/uts/umls/concept/CN[0-9]{6}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (162, 'https://uts.nlm.nih.gov/uts/umls/concept/C' , 43,  7, '^https://uts\.nlm\.nih\.gov/uts/umls/concept/C[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (163, 'https://www.ebi.ac.uk/efo/EFO_' , 31,  7, '^https://www\.ebi\.ac\.uk/efo/EFO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (164, 'https://www.ncbi.nlm.nih.gov/medgen/CN' , 39,  6, '^https://www\.ncbi\.nlm\.nih\.gov/medgen/CN[0-9]{6}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (165, 'https://www.ncbi.nlm.nih.gov/medgen/C' , 38,  7, '^https://www\.ncbi\.nlm\.nih\.gov/medgen/C[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (166, 'http://www.ensembl.org/id/b' , 28,  0, '^http://www\.ensembl\.org/id/b[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (167, 'http://zfin.org/action/marker/view/ZDB-GENE-030131-' , 52,  0, '^http://zfin\.org/action/marker/view/ZDB-GENE-030131-[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (168, 'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#R' , 53,  0, '^http://ncicb\.nci\.nih\.gov/xml/owl/EVS/Thesaurus\.owl#R[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (169, 'http://www.ebi.ac.uk/swo/data/SWO_' , 35,  0, '^http://www\.ebi\.ac\.uk/swo/data/SWO_[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (170, 'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#P' , 53,  0, '^http://ncicb\.nci\.nih\.gov/xml/owl/EVS/Thesaurus\.owl#P[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (171, 'http://www.ensemblgenomes.org/id/BMEI' , 38,  0, '^http://www\.ensemblgenomes\.org/id/BMEI[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (172, 'http://lincsportal.ccs.miami.edu/cells/#/view/ES-' , 50,  0, '^http://lincsportal\.ccs\.miami\.edu/cells/#/view/ES-[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (173, 'http://lincsportal.ccs.miami.edu/cells/#/view/LCL-' , 51,  0, '^http://lincsportal\.ccs\.miami\.edu/cells/#/view/LCL-[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (174, 'http://lincsportal.ccs.miami.edu/cells/#/view/LPC-' , 51,  0, '^http://lincsportal\.ccs\.miami\.edu/cells/#/view/LPC-[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (175, 'http://lincsportal.ccs.miami.edu/cells/#/view/LSC-' , 51,  0, '^http://lincsportal\.ccs\.miami\.edu/cells/#/view/LSC-[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (176, 'https://lincs.hms.harvard.edu/db/cells/' , 40,  0, '^https://lincs\.hms\.harvard\.edu/db/cells/[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (177, 'https://www.ebi.ac.uk/chembl/cell_line_report_card/CHEMBL' , 58,  0, '^https://www\.ebi\.ac\.uk/chembl/cell_line_report_card/CHEMBL[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (178, 'https://www.guidetopharmacology.org/GRAC/DiseaseDisplayForward?diseaseId=' , 74,  0, '^https://www\.guidetopharmacology\.org/GRAC/DiseaseDisplayForward\?diseaseId=[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (179, 'https://www.orpha.net/consor/cgi-bin/OC_Exp.php?Expert=' , 56,  0, '^https://www\.orpha\.net/consor/cgi-bin/OC_Exp\.php\?Expert=[1-9][0-9]*$');
+
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (180, 'https://rarediseases.info.nih.gov/diseases/' , 44,  0, '^https://rarediseases\.info\.nih\.gov/diseases/[1-9][0-9]*/index$');

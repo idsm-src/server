@@ -35,22 +35,21 @@ class Endpoint extends Updater
 
     private static void loadBases() throws IOException, SQLException
     {
-        usedEndpoints = new IntTripletSet(400000000);
-        newEndpoints = new IntTripletSet(400000000);
-        oldEndpoints = getIntTripletSet("select substance, bioassay, measuregroup from pubchem.endpoint_bases",
-                400000000);
+        usedEndpoints = new IntTripletSet();
+        newEndpoints = new IntTripletSet();
+        oldEndpoints = getIntTripletSet("select substance, bioassay, measuregroup from pubchem.endpoint_bases");
     }
 
 
     private static void loadOutcomes() throws IOException, SQLException
     {
-        IntQuaterpletSet newOutcomes = new IntQuaterpletSet(400000000);
+        IntQuaterpletSet newOutcomes = new IntQuaterpletSet();
         IntQuaterpletSet oldOutcomes = getIntQuaterpletSet(
-                "select substance, bioassay, measuregroup, outcome_id from pubchem.endpoint_outcomes", 400000000);
+                "select substance, bioassay, measuregroup, outcome_id from pubchem.endpoint_outcomes");
 
 
         processFiles("pubchem/RDF/endpoint", "pc_endpoint_outcome_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -87,11 +86,11 @@ class Endpoint extends Updater
 
     private static void loadMeasurementUnits() throws IOException, SQLException
     {
-        IntTripletSet newUnits = new IntTripletSet(20000000);
+        IntTripletSet newUnits = new IntTripletSet();
         IntTripletSet oldUnits = getIntTripletSet(
-                "select substance, bioassay, measuregroup from pubchem.endpoint_measurements", 20000000);
+                "select substance, bioassay, measuregroup from pubchem.endpoint_measurements");
 
-        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_unit.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint_unit.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -120,11 +119,11 @@ class Endpoint extends Updater
 
     private static void loadMeasurementTypes() throws IOException, SQLException
     {
-        IntQuaterpletSet newTypes = new IntQuaterpletSet(20000000);
+        IntQuaterpletSet newTypes = new IntQuaterpletSet();
         IntQuaterpletSet oldTypes = getIntQuaterpletSet(
-                "select substance, bioassay, measuregroup, type_id from pubchem.endpoint_measurement_types", 20000000);
+                "select substance, bioassay, measuregroup, type_id from pubchem.endpoint_measurement_types");
 
-        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_type.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint_type.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -156,11 +155,11 @@ class Endpoint extends Updater
 
     private static void loadMeasurementLabels() throws IOException, SQLException
     {
-        IntTripletStringSet newValues = new IntTripletStringSet(20000000);
+        IntTripletStringSet newValues = new IntTripletStringSet();
         IntTripletStringSet oldValues = getIntTripletStringSet(
-                "select substance, bioassay, measuregroup, label from pubchem.endpoint_measurement_labels", 20000000);
+                "select substance, bioassay, measuregroup, label from pubchem.endpoint_measurement_labels");
 
-        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_label.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint_label.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -171,7 +170,6 @@ class Endpoint extends Updater
                         throw new IOException();
 
                     String label = getString(object);
-
                     IntTripletString item = parseEndpoint(subject, label);
 
                     if(!oldValues.remove(item))
@@ -189,11 +187,11 @@ class Endpoint extends Updater
 
     private static void loadMeasurementValues() throws IOException, SQLException
     {
-        IntTripletFloatSet newValues = new IntTripletFloatSet(20000000);
+        IntTripletFloatSet newValues = new IntTripletFloatSet();
         IntTripletFloatSet oldValues = getIntTripletFloatSet(
-                "select substance, bioassay, measuregroup, value from pubchem.endpoint_measurement_values", 20000000);
+                "select substance, bioassay, measuregroup, value from pubchem.endpoint_measurement_values");
 
-        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint_value.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint_value.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -222,11 +220,11 @@ class Endpoint extends Updater
 
     private static void loadReferences() throws IOException, SQLException
     {
-        IntQuaterpletSet newReferences = new IntQuaterpletSet(20000000);
+        IntQuaterpletSet newReferences = new IntQuaterpletSet();
         IntQuaterpletSet oldReferences = getIntQuaterpletSet(
-                "select substance, bioassay, measuregroup, reference from pubchem.endpoint_references", 20000000);
+                "select substance, bioassay, measuregroup, reference from pubchem.endpoint_references");
 
-        try(InputStream stream = getStream("pubchem/RDF/endpoint/pc_endpoint2reference.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint2reference.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -236,7 +234,8 @@ class Endpoint extends Updater
                     if(!predicate.getURI().equals("http://purl.org/spar/cito/citesAsDataSource"))
                         throw new IOException();
 
-                    int referenceID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID");
+                    int referenceID = Reference
+                            .getReferenceID(getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"));
                     IntQuaterplet quaterplet = parseEndpoint(subject, referenceID);
 
                     if(!oldReferences.remove(quaterplet))
@@ -252,6 +251,29 @@ class Endpoint extends Updater
     }
 
 
+    private static void checkSubstances() throws IOException, SQLException
+    {
+        processFiles("pubchem/RDF/endpoint", "pc_endpoint2substance_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID");
+
+                        if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/IAO_0000136"))
+                            throw new IOException();
+
+                        getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
+                    }
+                }.load(stream);
+            }
+        });
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load endpoints ...");
@@ -263,6 +285,7 @@ class Endpoint extends Updater
         loadMeasurementLabels();
         loadMeasurementValues();
         loadReferences();
+        checkSubstances();
 
         System.out.println();
     }
@@ -270,13 +293,18 @@ class Endpoint extends Updater
 
     static void finish() throws SQLException
     {
+        System.out.println("finish endpoints ...");
+
         batch("delete from pubchem.endpoint_bases where substance = ? and bioassay = ? and measuregroup = ?",
                 oldEndpoints);
-        batch("insert into pubchem.endpoint_bases(substance, bioassay, measuregroup) values (?,?,?)", newEndpoints);
+        batch("insert into pubchem.endpoint_bases(substance, bioassay, measuregroup) values (?,?,?)"
+                + " on conflict do nothing", newEndpoints);
 
         usedEndpoints = null;
         newEndpoints = null;
         oldEndpoints = null;
+
+        System.out.println();
     }
 
 
@@ -344,8 +372,9 @@ class Endpoint extends Updater
         }
 
         Substance.addSubstanceID(substance);
-        Measuregroup.addMeasuregroupID(bioassay, measuregroup);
         addEndpointID(substance, bioassay, measuregroup);
+        Measuregroup.addMeasuregroupID(bioassay, measuregroup);
+        Bioassay.addBioassayID(bioassay);
 
         return function.set(substance, bioassay, measuregroup);
     }

@@ -4,14 +4,14 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import cz.iocb.chemweb.server.sparql.database.Table;
+import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import cz.iocb.load.common.Updater;
 
 
 
 public class ConstraintChecker extends Updater
 {
-    private static Object buildTableAccess(Table table, String[] columns)
+    private static Object buildTableAccess(String table, String[] columns)
     {
         StringBuilder builder = new StringBuilder();
 
@@ -32,13 +32,11 @@ public class ConstraintChecker extends Updater
     }
 
 
-    private static String buildLabel(Table table, String[] columns)
+    private static String buildLabel(String table, String[] columns)
     {
         StringBuilder builder = new StringBuilder();
 
-        builder.append(table.getSchema());
-        builder.append(".");
-        builder.append(table.getName());
+        builder.append(table);
         builder.append("(");
 
         for(int c = 0; c < columns.length; c++)
@@ -57,17 +55,20 @@ public class ConstraintChecker extends Updater
 
     public static void checkAdditionalForeignKeys() throws SQLException, IOException
     {
+        IntHashSet delete = new IntHashSet();
+
         try(Statement statement = connection.createStatement())
         {
-            try(ResultSet results = statement.executeQuery(
-                    "select parent_schema, parent_table, parent_columns, foreign_schema, foreign_table, foreign_columns, __ from constraints.foreign_keys"))
+            try(ResultSet results = statement
+                    .executeQuery("select parent_schema, parent_table, parent_columns, foreign_schema, foreign_table, "
+                            + "foreign_columns, __ from constraints.foreign_keys"))
             {
                 while(results.next())
                 {
-                    Table leftTable = new Table(results.getString(1), results.getString(2));
+                    String leftTable = results.getString(1) + "." + results.getString(2);
                     String[] leftColumns = (String[]) results.getArray(3).getArray();
 
-                    Table rightTable = new Table(results.getString(4), results.getString(5));
+                    String rightTable = results.getString(4) + "." + results.getString(5);
                     String[] rightColumns = (String[]) results.getArray(6).getArray();
 
                     if(leftColumns.length != rightColumns.length)
@@ -122,31 +123,37 @@ public class ConstraintChecker extends Updater
                         try(ResultSet r = s.executeQuery(builder.toString()))
                         {
                             if(r.next())
-                                System.out.println(
-                                        "warning: [" + results.getInt(5) + "] " + buildLabel(rightTable, rightColumns)
-                                                + " not reference " + buildLabel(leftTable, leftColumns));
+                            {
+                                delete.add(results.getInt(7));
+
+                                System.out.println("warning: " + buildLabel(rightTable, rightColumns)
+                                        + " not reference " + buildLabel(leftTable, leftColumns));
+                            }
                         }
                     }
                 }
             }
-
         }
+
+        batch("delete from constraints.foreign_keys where __ = ?", delete);
     }
 
 
     public static void checkUnjoinableColumns() throws SQLException, IOException
     {
+        IntHashSet delete = new IntHashSet();
+
         try(Statement statement = connection.createStatement())
         {
-            try(ResultSet results = statement.executeQuery(
-                    "select left_schema, left_table, left_columns, right_schema, right_table, right_columns, __ from constraints.unjoinable_columns"))
+            try(ResultSet results = statement.executeQuery("select left_schema, left_table, left_columns, "
+                    + "right_schema, right_table, right_columns, __ from constraints.unjoinable_columns"))
             {
                 while(results.next())
                 {
-                    Table leftTable = new Table(results.getString(1), results.getString(2));
+                    String leftTable = results.getString(1) + "." + results.getString(2);
                     String[] leftColumns = (String[]) results.getArray(3).getArray();
 
-                    Table rightTable = new Table(results.getString(4), results.getString(5));
+                    String rightTable = results.getString(4) + "." + results.getString(5);
                     String[] rightColumns = (String[]) results.getArray(6).getArray();
 
                     if(leftColumns.length != rightColumns.length)
@@ -186,15 +193,19 @@ public class ConstraintChecker extends Updater
                         try(ResultSet r = s.executeQuery(builder.toString()))
                         {
                             if(r.next())
-                                System.out.println(
-                                        "warning: [" + results.getInt(5) + "] " + buildLabel(leftTable, leftColumns)
-                                                + " is joinable with " + buildLabel(rightTable, rightColumns));
+                            {
+                                delete.add(results.getInt(7));
+
+                                System.out.println("warning: " + buildLabel(leftTable, leftColumns)
+                                        + " is joinable with " + buildLabel(rightTable, rightColumns));
+                            }
                         }
                     }
                 }
             }
-
         }
+
+        batch("delete from constraints.unjoinable_columns where __ = ?", delete);
     }
 
 
@@ -209,5 +220,6 @@ public class ConstraintChecker extends Updater
     {
         init();
         check();
+        commit();
     }
 }

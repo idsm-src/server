@@ -25,19 +25,18 @@ class Compound extends Updater
 
     private static void loadBases() throws IOException, SQLException
     {
-        usedCompounds = new IntHashSet(200000000);
-        newCompounds = new IntHashSet(200000000);
-        oldCompounds = getIntSet("select id from pubchem.compound_bases where keep", 200000000);
+        usedCompounds = new IntHashSet();
+        newCompounds = new IntHashSet();
+        oldCompounds = getIntSet("select id from pubchem.compound_bases where keep");
     }
 
 
     private static void loadComponents() throws IOException, SQLException
     {
-        IntPairSet newComponents = new IntPairSet(10000000);
-        IntPairSet oldComponents = getIntPairSet("select compound, component from pubchem.compound_components",
-                10000000);
+        IntPairSet newComponents = new IntPairSet();
+        IntPairSet oldComponents = getIntPairSet("select compound, component from pubchem.compound_components");
 
-        try(InputStream stream = getStream("pubchem/RDF/compound/general/pc_compound2component.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/compound/general/pc_compound2component.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -51,8 +50,8 @@ class Compound extends Updater
                     int componentID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
 
                     IntIntPair pair = PrimitiveTuples.pair(compoundID, componentID);
-                    addCompoundID(compoundID);
-                    addCompoundID(componentID);
+                    addCompoundID(compoundID, false);
+                    addCompoundID(componentID, false);
 
                     if(!oldComponents.remove(pair))
                         newComponents.add(pair);
@@ -67,11 +66,11 @@ class Compound extends Updater
 
     private static void loadDrugproducts() throws IOException, SQLException
     {
-        IntTripletSet newIngredients = new IntTripletSet(20000);
+        IntTripletSet newIngredients = new IntTripletSet();
         IntTripletSet oldIngredients = getIntTripletSet(
-                "select compound, ingredient_unit, ingredient_id from pubchem.compound_active_ingredients", 20000);
+                "select compound, ingredient_unit, ingredient_id from pubchem.compound_active_ingredients");
 
-        try(InputStream stream = getStream("pubchem/RDF/compound/general/pc_compound2drugproduct.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/compound/general/pc_compound2drugproduct.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -86,7 +85,7 @@ class Compound extends Updater
                     Identifier ingredient = Ontology.getId(object.getURI());
 
                     IntTriplet triplet = new IntTriplet(compoundID, ingredient.unit, ingredient.id);
-                    addCompoundID(compoundID);
+                    addCompoundID(compoundID, false);
 
                     if(!oldIngredients.remove(triplet))
                         newIngredients.add(triplet);
@@ -103,11 +102,11 @@ class Compound extends Updater
 
     private static void loadIsotopologues() throws IOException, SQLException
     {
-        IntPairSet newIsotopologues = new IntPairSet(5000000);
-        IntPairSet oldIsotopologues = getIntPairSet("select compound, isotopologue from pubchem.compound_isotopologues",
-                5000000);
+        IntPairSet newIsotopologues = new IntPairSet();
+        IntPairSet oldIsotopologues = getIntPairSet(
+                "select compound, isotopologue from pubchem.compound_isotopologues");
 
-        try(InputStream stream = getStream("pubchem/RDF/compound/general/pc_compound2isotopologue.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/compound/general/pc_compound2isotopologue.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -121,8 +120,8 @@ class Compound extends Updater
                     int isotopologueID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
 
                     IntIntPair pair = PrimitiveTuples.pair(compoundID, isotopologueID);
-                    addCompoundID(compoundID);
-                    addCompoundID(isotopologueID);
+                    addCompoundID(compoundID, false);
+                    addCompoundID(isotopologueID, false);
 
                     if(!oldIsotopologues.remove(pair))
                         newIsotopologues.add(pair);
@@ -137,10 +136,10 @@ class Compound extends Updater
 
     private static void loadParents() throws IOException, SQLException
     {
-        IntPairSet newParents = new IntPairSet(10000000);
-        IntPairSet oldParents = getIntPairSet("select compound, parent from pubchem.compound_parents", 10000000);
+        IntPairSet newParents = new IntPairSet();
+        IntPairSet oldParents = getIntPairSet("select compound, parent from pubchem.compound_parents");
 
-        try(InputStream stream = getStream("pubchem/RDF/compound/general/pc_compound2parent.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/compound/general/pc_compound2parent.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -154,8 +153,8 @@ class Compound extends Updater
                     int parentID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
 
                     IntIntPair pair = PrimitiveTuples.pair(compoundID, parentID);
-                    addCompoundID(compoundID);
-                    addCompoundID(parentID);
+                    addCompoundID(compoundID, false);
+                    addCompoundID(parentID, false);
 
                     if(!oldParents.remove(pair))
                         newParents.add(pair);
@@ -170,11 +169,10 @@ class Compound extends Updater
 
     private static void loadSameConnectivities() throws IOException, SQLException
     {
-        IntPairSet newIsomers = new IntPairSet(5000000);
-        IntPairSet oldIsomers = getIntPairSet("select compound, isomer from pubchem.compound_same_connectivities",
-                5000000);
+        IntPairSet newIsomers = new IntPairSet();
+        IntPairSet oldIsomers = getIntPairSet("select compound, isomer from pubchem.compound_same_connectivities");
 
-        try(InputStream stream = getStream("pubchem/RDF/compound/general/pc_compound2sameconnectivity.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/compound/general/pc_compound2sameconnectivity.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -188,8 +186,8 @@ class Compound extends Updater
                     int isomerID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
 
                     IntIntPair pair = PrimitiveTuples.pair(compoundID, isomerID);
-                    addCompoundID(compoundID);
-                    addCompoundID(isomerID);
+                    addCompoundID(compoundID, false);
+                    addCompoundID(isomerID, false);
 
                     if(!oldIsomers.remove(pair))
                         newIsomers.add(pair);
@@ -204,11 +202,11 @@ class Compound extends Updater
 
     private static void loadStereoisomers() throws IOException, SQLException
     {
-        IntPairSet newIsomers = new IntPairSet(100000000);
-        IntPairSet oldIsomers = getIntPairSet("select compound, isomer from pubchem.compound_stereoisomers", 100000000);
+        IntPairSet newIsomers = new IntPairSet();
+        IntPairSet oldIsomers = getIntPairSet("select compound, isomer from pubchem.compound_stereoisomers");
 
         processFiles("pubchem/RDF/compound/general", "pc_compound2stereoisomer_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -222,8 +220,8 @@ class Compound extends Updater
                         int isomerID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
 
                         IntIntPair pair = PrimitiveTuples.pair(compoundID, isomerID);
-                        addCompoundID(compoundID);
-                        addCompoundID(isomerID);
+                        addCompoundID(compoundID, false);
+                        addCompoundID(isomerID, false);
 
                         synchronized(newIsomers)
                         {
@@ -242,10 +240,10 @@ class Compound extends Updater
 
     private static void loadRoles() throws IOException, SQLException
     {
-        IntPairSet newRoles = new IntPairSet(20000);
-        IntPairSet oldRoles = getIntPairSet("select compound, role_id from pubchem.compound_roles", 20000);
+        IntPairSet newRoles = new IntPairSet();
+        IntPairSet oldRoles = getIntPairSet("select compound, role_id from pubchem.compound_roles");
 
-        try(InputStream stream = getStream("pubchem/RDF/compound/general/pc_compound_role.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/compound/general/pc_compound_role.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -256,8 +254,7 @@ class Compound extends Updater
                         throw new IOException();
 
                     // workaround
-                    if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CIDNULL")
-                            || subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID1112968-42-9"))
+                    if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CIDNULL"))
                         return;
 
                     int compoundID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
@@ -268,7 +265,7 @@ class Compound extends Updater
                         throw new IOException();
 
                     IntIntPair pair = PrimitiveTuples.pair(compoundID, role.id);
-                    addCompoundID(compoundID);
+                    addCompoundID(compoundID, false);
 
                     if(!oldRoles.remove(pair))
                         newRoles.add(pair);
@@ -283,11 +280,10 @@ class Compound extends Updater
 
     private static void loadTypes() throws IOException, SQLException
     {
-        IntTripletSet newTypes = new IntTripletSet(200000);
-        IntTripletSet oldTypes = getIntTripletSet("select compound, type_unit, type_id from pubchem.compound_types",
-                200000);
+        IntTripletSet newTypes = new IntTripletSet();
+        IntTripletSet oldTypes = getIntTripletSet("select compound, type_unit, type_id from pubchem.compound_types");
 
-        try(InputStream stream = getStream("pubchem/RDF/compound/general/pc_compound_type.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/compound/general/pc_compound_type.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -301,7 +297,7 @@ class Compound extends Updater
                     Identifier type = Ontology.getId(object.getURI());
 
                     IntTriplet triplet = new IntTriplet(compoundID, type.unit, type.id);
-                    addCompoundID(compoundID);
+                    addCompoundID(compoundID, false);
 
                     if(!oldTypes.remove(triplet))
                         newTypes.add(triplet);
@@ -314,10 +310,10 @@ class Compound extends Updater
     }
 
 
-    static void loadTitle() throws IOException, SQLException
+    private static void loadTitle() throws IOException, SQLException
     {
-        IntStringMap newTitles = new IntStringMap(200000000);
-        IntStringMap oldTitles = getIntStringMap("select compound, title from pubchem.compound_titles", 200000000);
+        IntStringMap newTitles = new IntStringMap();
+        IntStringMap oldTitles = getIntStringMap("select compound, title from pubchem.compound_titles");
 
         try(BufferedReader reader = getReader("pubchem/Compound/Extras/CID-Title.gz"))
         {
@@ -326,7 +322,7 @@ class Compound extends Updater
                 int compoundID = Integer.parseInt(line.replaceFirst("\t.*$", ""));
                 String title = line.replaceFirst("^[^\t]+\t", "");
 
-                addCompoundID(compoundID);
+                addCompoundID(compoundID, false);
 
                 if(!title.equals(oldTitles.remove(compoundID)))
                     newTitles.put(compoundID, title);
@@ -336,6 +332,87 @@ class Compound extends Updater
         batch("delete from pubchem.compound_titles where compound = ?", oldTitles.keySet());
         batch("insert into pubchem.compound_titles(compound, title) values (?,?)"
                 + "on conflict (compound) do update set title=EXCLUDED.title", newTitles);
+    }
+
+
+    private static void loadCloseMatches() throws IOException, SQLException
+    {
+        IntPairSet newThesaurusMatches = new IntPairSet();
+        IntPairSet oldThesaurusMatches = getIntPairSet(
+                "select compound, match from pubchem.compound_thesaurus_matches");
+
+        IntPairSet newWikidataMatches = new IntPairSet();
+        IntPairSet oldWikidataMatches = getIntPairSet("select compound, match from pubchem.compound_wikidata_matches");
+
+        processFiles("pubchem/RDF/compound/general", "pc_compound_closematch.ttl[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(!predicate.getURI().equals("http://www.w3.org/2004/02/skos/core#closeMatch"))
+                            throw new IOException();
+
+                        int compoundID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
+                        addCompoundID(compoundID, false);
+
+                        if(object.getURI().startsWith("http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C"))
+                        {
+                            int match = getIntID(object, "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C");
+                            IntIntPair pair = PrimitiveTuples.pair(compoundID, match);
+
+                            synchronized(newThesaurusMatches)
+                            {
+                                if(!oldThesaurusMatches.remove(pair))
+                                    newThesaurusMatches.add(pair);
+                            }
+                        }
+                        else
+                        {
+                            int match = getIntID(object, "https://www.wikidata.org/wiki/Q");
+                            IntIntPair pair = PrimitiveTuples.pair(compoundID, match);
+
+                            synchronized(newWikidataMatches)
+                            {
+                                if(!oldWikidataMatches.remove(pair))
+                                    newWikidataMatches.add(pair);
+                            }
+                        }
+                    }
+                }.load(stream);
+            }
+        });
+
+        batch("delete from pubchem.compound_thesaurus_matches where compound = ? and match = ?", oldThesaurusMatches);
+        batch("insert into pubchem.compound_thesaurus_matches(compound, match) values (?,?)", newThesaurusMatches);
+
+        batch("delete from pubchem.compound_wikidata_matches where compound = ? and match = ?", oldWikidataMatches);
+        batch("insert into pubchem.compound_wikidata_matches(compound, match) values (?,?)", newWikidataMatches);
+    }
+
+
+    private static void checkDescriptors() throws IOException, SQLException
+    {
+        processFiles("pubchem/RDF/compound/general", "pc_compound2descriptor_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
+
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000008"))
+                            throw new IOException();
+
+                        getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID");
+                    }
+                }.load(stream);
+            }
+        });
     }
 
 
@@ -353,6 +430,8 @@ class Compound extends Updater
         loadRoles();
         loadTypes();
         loadTitle();
+        loadCloseMatches();
+        checkDescriptors();
 
         System.out.println();
     }
@@ -360,6 +439,8 @@ class Compound extends Updater
 
     static void finish() throws SQLException
     {
+        System.out.println("finish compounds ...");
+
         batch("delete from pubchem.compound_bases where id = ? and "
                 + "not exists (select id from molecules.pubchem where compound_bases.id = molecules.pubchem.id)",
                 oldCompounds);
@@ -368,21 +449,35 @@ class Compound extends Updater
                 + "exists (select id from molecules.pubchem where compound_bases.id = molecules.pubchem.id)",
                 oldCompounds);
 
-        batch("insert into pubchem.compound_bases(id,keep) values(?,true) on conflict (id) do update set keep=EXCLUDED.keep",
-                newCompounds);
+        batch("insert into pubchem.compound_bases(id,keep) values(?,true)"
+                + " on conflict (id) do update set keep=EXCLUDED.keep", newCompounds);
 
         usedCompounds = null;
         newCompounds = null;
         oldCompounds = null;
+
+        System.out.println();
     }
 
 
     static void addCompoundID(int compoundID)
     {
+        addCompoundID(compoundID, true);
+    }
+
+
+    private static void addCompoundID(int compoundID, boolean verbose)
+    {
         synchronized(newCompounds)
         {
-            if(usedCompounds.add(compoundID) && !oldCompounds.remove(compoundID))
-                newCompounds.add(compoundID);
+            if(usedCompounds.add(compoundID))
+            {
+                if(verbose)
+                    System.out.println("    add missing compound CID" + compoundID);
+
+                if(!oldCompounds.remove(compoundID))
+                    newCompounds.add(compoundID);
+            }
         }
     }
 }

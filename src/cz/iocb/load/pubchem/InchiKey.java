@@ -18,13 +18,13 @@ class InchiKey extends Updater
 
     private static void loadBases() throws IOException, SQLException
     {
-        usedKeys = new StringIntMap(200000000);
-        StringIntMap newKeys = new StringIntMap(200000000);
-        StringIntMap oldKeys = getStringIntMap("select inchikey, id from pubchem.inchikey_bases", 200000000);
+        usedKeys = new StringIntMap();
+        StringIntMap newKeys = new StringIntMap();
+        StringIntMap oldKeys = getStringIntMap("select inchikey, id from pubchem.inchikey_bases");
         nextkeyID = getIntValue("select coalesce(max(id)+1,0) from pubchem.inchikey_bases");
 
         processFiles("pubchem/RDF/inchikey", "pc_inchikey_value_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -60,12 +60,11 @@ class InchiKey extends Updater
 
     private static void loadCompounds() throws IOException, SQLException
     {
-        IntIntHashMap newCompounds = new IntIntHashMap(200000000);
-        IntIntHashMap oldCompounds = getIntIntMap("select compound, inchikey from pubchem.inchikey_compounds",
-                200000000);
+        IntIntHashMap newCompounds = new IntIntHashMap();
+        IntIntHashMap oldCompounds = getIntIntMap("select compound, inchikey from pubchem.inchikey_compounds");
 
         processFiles("pubchem/RDF/inchikey", "pc_inchikey2compound_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -106,10 +105,10 @@ class InchiKey extends Updater
 
     private static void loadSubjects() throws IOException, SQLException
     {
-        IntStringMap newSubjects = new IntStringMap(20000);
-        IntStringMap oldSubjects = getIntStringMap("select inchikey, subject from pubchem.inchikey_subjects", 20000);
+        IntStringMap newSubjects = new IntStringMap();
+        IntStringMap oldSubjects = getIntStringMap("select inchikey, subject from pubchem.inchikey_subjects");
 
-        try(InputStream stream = getStream("pubchem/RDF/inchikey/pc_inchikey_topic.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/inchikey/pc_inchikey_topic.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -119,7 +118,8 @@ class InchiKey extends Updater
                     if(!predicate.getURI().equals("http://purl.org/dc/terms/subject"))
                         throw new IOException();
 
-                    String inchikey = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/");
+                    // workaround
+                    String inchikey = getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inichikey/");
                     int inchikeyID = usedKeys.getIfAbsent(inchikey, NO_VALUE);
 
                     if(inchikeyID != NO_VALUE)
@@ -143,6 +143,30 @@ class InchiKey extends Updater
     }
 
 
+    private static void checkTypes() throws IOException, SQLException
+    {
+        processFiles("pubchem/RDF/inchikey", "pc_inchikey_type_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/");
+
+                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            throw new IOException();
+
+                        if(!object.getURI().equals("http://semanticscience.org/resource/CHEMINF_000399"))
+                            throw new IOException();
+                    }
+                }.load(stream);
+            }
+        });
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load inchikeys ...");
@@ -150,6 +174,7 @@ class InchiKey extends Updater
         loadBases();
         loadCompounds();
         loadSubjects();
+        checkTypes();
 
         usedKeys = null;
 

@@ -1,6 +1,6 @@
 create table pubchem.synonym_bases
 (
-    id       integer,
+    id       integer not null,
     md5      char(32) unique not null,
     primary key(id)
 );

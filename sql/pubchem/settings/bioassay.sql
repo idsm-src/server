@@ -5,7 +5,6 @@ grant select on pubchem.bioassay_bases to sparql;
 
 --------------------------------------------------------------------------------
 
-create index bioassay_data__bioassay_type on pubchem.bioassay_data(bioassay, type_id);
 create index bioassay_data__bioassay on pubchem.bioassay_data(bioassay);
 create index bioassay_data__type on pubchem.bioassay_data(type_id);
 create index bioassay_data__value on pubchem.bioassay_data using hash (value);
@@ -47,6 +46,6 @@ grant select on pubchem.bioassay_chembl_mechanisms to sparql;
 
 --------------------------------------------------------------------------------
 
-create index bioassay_patents__bioassay on pubchem.bioassay_patents(bioassay);
-create index bioassay_patents__patent on pubchem.bioassay_patents(patent);
-grant select on pubchem.bioassay_patents to sparql;
+create index bioassay_patent_references__bioassay on pubchem.bioassay_patent_references(bioassay);
+create index bioassay_patent_references__patent on pubchem.bioassay_patent_references(patent);
+grant select on pubchem.bioassay_patent_references to sparql;

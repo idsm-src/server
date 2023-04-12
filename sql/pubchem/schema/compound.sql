@@ -1,3 +1,11 @@
+create table pubchem.compound_bases
+(
+    id          integer not null,
+    keep        bool not null,
+    primary key(id)
+);
+
+
 create table pubchem.compound_components
 (
     compound     integer not null,
@@ -72,9 +80,17 @@ create table pubchem.compound_titles
 );
 
 
-create table pubchem.compound_bases
+create table pubchem.compound_thesaurus_matches
 (
-    id    integer not null,
-    keep  bool not null,
-    primary key(id)
+    compound           integer not null,
+    match              integer not null,
+    primary key(compound, match)
+);
+
+
+create table pubchem.compound_wikidata_matches
+(
+    compound           integer not null,
+    match              integer not null,
+    primary key(compound, match)
 );

@@ -87,7 +87,7 @@ public class ConstraintGenerator extends Updater
     {
         LinkedHashMap<ResourceClass, ArrayList<QuadNodeMapping>> resourceMappings = new LinkedHashMap<>();
 
-        for(QuadMapping quadMapping : configuration.getMappings(null))
+        for(QuadMapping quadMapping : configuration.getMappings(configuration.getServiceIri()))
         {
             for(NodeMapping nodeMapping : new NodeMapping[] { quadMapping.getGraph(), quadMapping.getSubject(),
                     quadMapping.getPredicate(), quadMapping.getObject() })

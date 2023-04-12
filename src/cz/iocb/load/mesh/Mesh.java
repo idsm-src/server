@@ -28,8 +28,8 @@ public class Mesh extends Updater
 
     private static void loadTypes(Model model) throws IOException, SQLException
     {
-        StringIntMap newValues = new StringIntMap(2500000);
-        StringIntMap oldValues = getStringIntMap("select id, type_id from mesh.mesh_bases", 2500000);
+        StringIntMap newValues = new StringIntMap();
+        StringIntMap oldValues = getStringIntMap("select id, type_id from mesh.mesh_bases");
 
         new QueryResultProcessor(patternQuery("?mesh rdf:type ?type"))
         {
@@ -56,8 +56,8 @@ public class Mesh extends Updater
     private static void loadMultiStringValues(Model model, String property, String table, String column, String lang)
             throws IOException, SQLException
     {
-        StringPairSet newValues = new StringPairSet(2500000);
-        StringPairSet oldValues = getStringPairSet("select mesh, " + column + " from mesh." + table, 2500000);
+        StringPairSet newValues = new StringPairSet();
+        StringPairSet oldValues = getStringPairSet("select mesh, " + column + " from mesh." + table);
 
         new QueryResultProcessor(patternQuery("?mesh " + property + " ?value. filter(lang(?value) = \"" + lang + "\")"))
         {
@@ -81,8 +81,8 @@ public class Mesh extends Updater
     private static void loadStringValues(Model model, String property, String table, String column, String lang)
             throws IOException, SQLException
     {
-        StringStringMap newValues = new StringStringMap(2500000);
-        StringStringMap oldValues = getStringStringMap("select mesh, " + column + " from mesh." + table, 2500000);
+        StringStringMap newValues = new StringStringMap();
+        StringStringMap oldValues = getStringStringMap("select mesh, " + column + " from mesh." + table);
 
         new QueryResultProcessor(patternQuery("?mesh " + property + " ?value. filter(lang(?value) = \"" + lang + "\")"))
         {
@@ -106,8 +106,8 @@ public class Mesh extends Updater
     private static void loadBooleanValues(Model model, String property, String table, String column)
             throws IOException, SQLException
     {
-        StringIntMap newValues = new StringIntMap(2500000);
-        StringIntMap oldValues = getStringIntMap("select mesh, " + column + "::integer from mesh." + table, 2500000);
+        StringIntMap newValues = new StringIntMap();
+        StringIntMap oldValues = getStringIntMap("select mesh, " + column + "::integer from mesh." + table);
 
         new QueryResultProcessor(patternQuery("?mesh " + property + " ?value"))
         {
@@ -131,8 +131,8 @@ public class Mesh extends Updater
     private static void loadIntegerValues(Model model, String property, String table, String column)
             throws IOException, SQLException
     {
-        StringIntMap newValues = new StringIntMap(2500000);
-        StringIntMap oldValues = getStringIntMap("select mesh, " + column + " from mesh." + table, 2500000);
+        StringIntMap newValues = new StringIntMap();
+        StringIntMap oldValues = getStringIntMap("select mesh, " + column + " from mesh." + table);
 
         new QueryResultProcessor(patternQuery("?mesh " + property + " ?value"))
         {
@@ -155,9 +155,9 @@ public class Mesh extends Updater
 
     private static void loadDateValues(Model model, String property, String table) throws IOException, SQLException
     {
-        StringStringIntPairMap newValues = new StringStringIntPairMap(2500000);
+        StringStringIntPairMap newValues = new StringStringIntPairMap();
         StringStringIntPairMap oldValues = getStringStringIntPairMap(
-                "select mesh, date::varchar, timezone from mesh." + table, 2500000);
+                "select mesh, date::varchar, timezone from mesh." + table);
 
         new QueryResultProcessor(
                 "select ?mesh (str(?date) as ?value) (tz(?date) as ?zone) where { ?mesh " + property + " ?date }")
@@ -184,8 +184,8 @@ public class Mesh extends Updater
     private static void loadMultiMeshValues(Model model, String property, String table, String column)
             throws IOException, SQLException
     {
-        StringPairSet newValues = new StringPairSet(2500000);
-        StringPairSet oldValues = getStringPairSet("select mesh, " + column + " from mesh." + table, 2500000);
+        StringPairSet newValues = new StringPairSet();
+        StringPairSet oldValues = getStringPairSet("select mesh, " + column + " from mesh." + table);
 
         new QueryResultProcessor(patternQuery("?mesh " + property + " ?value"))
         {
@@ -209,8 +209,8 @@ public class Mesh extends Updater
     private static void loadMeshValues(Model model, String property, String table, String column)
             throws IOException, SQLException
     {
-        StringStringMap newValues = new StringStringMap(2500000);
-        StringStringMap oldValues = getStringStringMap("select mesh, " + column + " from mesh." + table, 2500000);
+        StringStringMap newValues = new StringStringMap();
+        StringStringMap oldValues = getStringStringMap("select mesh, " + column + " from mesh." + table);
 
         new QueryResultProcessor(patternQuery("?mesh " + property + " ?value"))
         {

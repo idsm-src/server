@@ -25,20 +25,20 @@ class Substance extends Updater
 
     private static void loadBases() throws IOException, SQLException
     {
-        usedSubstances = new IntHashSet(400000000);
-        newSubstances = new IntHashSet(400000000);
-        oldSubstances = getIntSet("select id from pubchem.substance_bases", 400000000);
+        usedSubstances = new IntHashSet();
+        newSubstances = new IntHashSet();
+        oldSubstances = getIntSet("select id from pubchem.substance_bases");
     }
 
 
     private static void loadCompounds() throws IOException, SQLException
     {
-        IntIntHashMap newCompounds = new IntIntHashMap(400000000);
+        IntIntHashMap newCompounds = new IntIntHashMap();
         IntIntHashMap oldCompounds = getIntIntMap(
-                "select id, compound from pubchem.substance_bases where compound is not null", 400000000);
+                "select id, compound from pubchem.substance_bases where compound is not null");
 
         processFiles("pubchem/RDF/substance", "pc_substance2compound_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -51,7 +51,7 @@ class Substance extends Updater
                         int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
                         int compoundID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
 
-                        addSubstanceID(substanceID);
+                        addSubstanceID(substanceID, false);
                         Compound.addCompoundID(compoundID);
 
                         synchronized(newCompounds)
@@ -72,12 +72,12 @@ class Substance extends Updater
 
     private static void loadAvailabilities() throws IOException, SQLException
     {
-        IntStringMap newAvailabilities = new IntStringMap(400000000);
+        IntStringMap newAvailabilities = new IntStringMap();
         IntStringMap oldAvailabilities = getIntStringMap(
-                "select id, available::varchar from pubchem.substance_bases where available is not null", 400000000);
+                "select id, available::varchar from pubchem.substance_bases where available is not null");
 
         processFiles("pubchem/RDF/substance", "pc_substance_available_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -90,7 +90,7 @@ class Substance extends Updater
                         int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
                         String date = getString(object).replaceFirst("-0[45]:00$", "");
 
-                        addSubstanceID(substanceID);
+                        addSubstanceID(substanceID, false);
 
                         synchronized(newAvailabilities)
                         {
@@ -103,19 +103,19 @@ class Substance extends Updater
         });
 
         batch("update pubchem.substance_bases set available = null where id = ?", oldAvailabilities.keySet());
-        batch("insert into pubchem.substance_bases(id, available) values (?,cast(? as date)) "
+        batch("insert into pubchem.substance_bases(id, available) values (?,?::date) "
                 + "on conflict (id) do update set available=EXCLUDED.available", newAvailabilities);
     }
 
 
     private static void loadModifiedDates() throws IOException, SQLException
     {
-        IntStringMap newModifiedDates = new IntStringMap(400000000);
+        IntStringMap newModifiedDates = new IntStringMap();
         IntStringMap oldModifiedDates = getIntStringMap(
-                "select id, modified::varchar from pubchem.substance_bases where modified is not null", 400000000);
+                "select id, modified::varchar from pubchem.substance_bases where modified is not null");
 
         processFiles("pubchem/RDF/substance", "pc_substance_modified_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -128,7 +128,7 @@ class Substance extends Updater
                         int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
                         String date = getString(object).replaceFirst("-0[45]:00$", "");
 
-                        addSubstanceID(substanceID);
+                        addSubstanceID(substanceID, false);
 
                         synchronized(newModifiedDates)
                         {
@@ -141,19 +141,19 @@ class Substance extends Updater
         });
 
         batch("update pubchem.substance_bases set modified = null where id = ?", oldModifiedDates.keySet());
-        batch("insert into pubchem.substance_bases(id, modified) values (?,cast(? as date)) "
+        batch("insert into pubchem.substance_bases(id, modified) values (?,?::date) "
                 + "on conflict (id) do update set modified=EXCLUDED.modified", newModifiedDates);
     }
 
 
     private static void loadSources() throws IOException, SQLException
     {
-        IntIntHashMap newSources = new IntIntHashMap(400000000);
+        IntIntHashMap newSources = new IntIntHashMap();
         IntIntHashMap oldSources = getIntIntMap(
-                "select id, source from pubchem.substance_bases where source is not null", 400000000);
+                "select id, source from pubchem.substance_bases where source is not null");
 
         processFiles("pubchem/RDF/substance", "pc_substance_source_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -164,9 +164,10 @@ class Substance extends Updater
                             throw new IOException();
 
                         int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
-                        int sourceID = Source.getSourceID(object.getURI());
+                        int sourceID = Source
+                                .getSourceID(getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/source/"));
 
-                        addSubstanceID(substanceID);
+                        addSubstanceID(substanceID, false);
 
                         synchronized(newSources)
                         {
@@ -186,16 +187,15 @@ class Substance extends Updater
 
     private static void loadMatches() throws IOException, SQLException
     {
-        IntPairSet newChemblMatches = new IntPairSet(10000000);
-        IntPairSet oldChemblMatches = getIntPairSet("select substance, chembl from pubchem.substance_chembl_matches",
-                10000000);
+        IntPairSet newChemblMatches = new IntPairSet();
+        IntPairSet oldChemblMatches = getIntPairSet("select substance, chembl from pubchem.substance_chembl_matches");
 
-        IntStringMap newGlytoucanMatches = new IntStringMap(50000);
+        IntStringMap newGlytoucanMatches = new IntStringMap();
         IntStringMap oldGlytoucanMatches = getIntStringMap(
-                "select substance, glytoucan from pubchem.substance_glytoucan_matches", 50000);
+                "select substance, glytoucan from pubchem.substance_glytoucan_matches");
 
         processFiles("pubchem/RDF/substance", "pc_substance_match\\.ttl[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -220,7 +220,7 @@ class Substance extends Updater
                             int chemblID = getIntID(value, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL");
 
                             IntIntPair pair = PrimitiveTuples.pair(substanceID, chemblID);
-                            addSubstanceID(substanceID);
+                            addSubstanceID(substanceID, false);
 
                             synchronized(newChemblMatches)
                             {
@@ -233,7 +233,7 @@ class Substance extends Updater
                             int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
                             String matchID = getStringID(object, "http://identifiers.org/glytoucan/");
 
-                            addSubstanceID(substanceID);
+                            addSubstanceID(substanceID, false);
 
                             synchronized(newGlytoucanMatches)
                             {
@@ -262,10 +262,10 @@ class Substance extends Updater
 
     private static void loadTypes() throws IOException, SQLException
     {
-        IntPairSet newTypes = new IntPairSet(10000000);
-        IntPairSet oldTypes = getIntPairSet("select substance, chebi from pubchem.substance_types", 10000000);
+        IntPairSet newTypes = new IntPairSet();
+        IntPairSet oldTypes = getIntPairSet("select substance, chebi from pubchem.substance_types");
 
-        try(InputStream stream = getStream("pubchem/RDF/substance/pc_substance_type.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/substance/pc_substance_type.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -279,7 +279,7 @@ class Substance extends Updater
                     int chebiID = getIntID(object, "http://purl.obolibrary.org/obo/CHEBI_");
 
                     IntIntPair pair = PrimitiveTuples.pair(substanceID, chebiID);
-                    addSubstanceID(substanceID);
+                    addSubstanceID(substanceID, false);
 
                     if(!oldTypes.remove(pair))
                         newTypes.add(pair);
@@ -294,11 +294,10 @@ class Substance extends Updater
 
     private static void loadPdbLinks() throws IOException, SQLException
     {
-        IntStringPairSet newLinks = new IntStringPairSet(200000);
-        IntStringPairSet oldLinks = getIntStringPairSet("select substance, pdblink from pubchem.substance_pdblinks",
-                200000);
+        IntStringPairSet newLinks = new IntStringPairSet();
+        IntStringPairSet oldLinks = getIntStringPairSet("select substance, pdblink from pubchem.substance_pdblinks");
 
-        try(InputStream stream = getStream("pubchem/RDF/substance/pc_substance2pdb.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/substance/pc_substance2pdb.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -314,7 +313,7 @@ class Substance extends Updater
                     if(!link.isEmpty())
                     {
                         IntObjectPair<String> pair = PrimitiveTuples.pair(substanceID, link);
-                        addSubstanceID(substanceID);
+                        addSubstanceID(substanceID, false);
 
                         if(!oldLinks.remove(pair))
                             newLinks.add(pair);
@@ -330,11 +329,10 @@ class Substance extends Updater
 
     private static void loadReferences() throws IOException, SQLException
     {
-        IntPairSet newReferences = new IntPairSet(10000000);
-        IntPairSet oldReferences = getIntPairSet("select substance, reference from pubchem.substance_references",
-                10000000);
+        IntPairSet newReferences = new IntPairSet();
+        IntPairSet oldReferences = getIntPairSet("select substance, reference from pubchem.substance_references");
 
-        try(InputStream stream = getStream("pubchem/RDF/substance/pc_substance2reference.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/substance/pc_substance2reference.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -345,10 +343,11 @@ class Substance extends Updater
                         throw new IOException();
 
                     int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
-                    int referenceID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/PMID");
+                    int referenceID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/");
 
                     IntIntPair pair = PrimitiveTuples.pair(substanceID, referenceID);
-                    addSubstanceID(substanceID);
+                    addSubstanceID(substanceID, false);
+                    Reference.getReferenceID(referenceID);
 
                     if(!oldReferences.remove(pair))
                         newReferences.add(pair);
@@ -363,11 +362,11 @@ class Substance extends Updater
 
     private static void loadSynonyms() throws IOException, SQLException
     {
-        IntPairSet newSynonyms = new IntPairSet(400000000);
-        IntPairSet oldSynonyms = getIntPairSet("select substance, synonym from pubchem.substance_synonyms", 400000000);
+        IntPairSet newSynonyms = new IntPairSet();
+        IntPairSet oldSynonyms = getIntPairSet("select substance, synonym from pubchem.substance_synonyms");
 
         processFiles("pubchem/RDF/substance", "pc_substance2descriptor_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -393,7 +392,7 @@ class Substance extends Updater
                         if(md5ID != NO_VALUE)
                         {
                             IntIntPair pair = PrimitiveTuples.pair(substanceID, md5ID);
-                            addSubstanceID(substanceID);
+                            addSubstanceID(substanceID, false);
 
                             synchronized(newSynonyms)
                             {
@@ -415,6 +414,29 @@ class Substance extends Updater
     }
 
 
+    private static void checkMeasuregroups() throws IOException, SQLException
+    {
+        processFiles("pubchem/RDF/substance", "pc_substance2measuregroup_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
+
+                        if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/RO_0000056"))
+                            throw new IOException();
+
+                        getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID");
+                    }
+                }.load(stream);
+            }
+        });
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load substances ...");
@@ -424,12 +446,12 @@ class Substance extends Updater
         loadAvailabilities();
         loadModifiedDates();
         loadSources();
-
         loadMatches();
         loadTypes();
         loadPdbLinks();
         loadReferences();
         loadSynonyms();
+        checkMeasuregroups();
 
         System.out.println();
     }
@@ -437,8 +459,10 @@ class Substance extends Updater
 
     static void finish() throws SQLException
     {
+        System.out.println("finish substances ...");
+
         batch("delete from pubchem.substance_bases where id = ?", oldSubstances);
-        batch("insert into pubchem.substance_bases(id) values(?) on conflict do nothing", newSubstances);
+        batch("insert into pubchem.substance_bases(id) values(?)" + " on conflict do nothing", newSubstances);
 
         try(Statement statement = connection.createStatement())
         {
@@ -450,15 +474,29 @@ class Substance extends Updater
         usedSubstances = null;
         newSubstances = null;
         oldSubstances = null;
+
+        System.out.println();
     }
 
 
     static void addSubstanceID(int substanceID)
     {
+        addSubstanceID(substanceID, true);
+    }
+
+
+    private static void addSubstanceID(int substanceID, boolean verbose)
+    {
         synchronized(newSubstances)
         {
-            if(usedSubstances.add(substanceID) && !oldSubstances.remove(substanceID))
-                newSubstances.add(substanceID);
+            if(usedSubstances.add(substanceID))
+            {
+                if(verbose)
+                    System.out.println("    add missing substance SID" + substanceID);
+
+                if(!oldSubstances.remove(substanceID))
+                    newSubstances.add(substanceID);
+            }
         }
     }
 }

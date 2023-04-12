@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
+import org.eclipse.collections.impl.tuple.Tuples;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -18,29 +19,29 @@ class Source extends Updater
     private static StringIntMap oldSources;
     private static int nextSourceID;
 
-    private static IntStringMap newTitles;
+    private static IntStringPairMap newTitles;
     private static IntStringMap oldTitles;
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        usedSources = new StringIntMap(1000);
-        newSources = new StringIntMap(1000);
-        oldSources = getStringIntMap("select iri, id from pubchem.source_bases", 1000);
+        usedSources = new StringIntMap();
+        newSources = new StringIntMap();
+        oldSources = getStringIntMap("select iri, id from pubchem.source_bases");
         nextSourceID = getIntValue("select coalesce(max(id)+1,0) from pubchem.source_bases");
 
-        new QueryResultProcessor(patternQuery("?iri rdf:type dcterms:Dataset"))
+        new QueryResultProcessor(patternQuery("?source rdf:type dcterms:Dataset"))
         {
             @Override
             protected void parse() throws IOException
             {
-                String iri = getIRI("iri");
-                int sourceID;
+                String source = getStringID("source", "http://rdf.ncbi.nlm.nih.gov/pubchem/source/");
+                int sourceID = oldSources.removeKeyIfAbsent(source, NO_VALUE);
 
-                if((sourceID = oldSources.removeKeyIfAbsent(iri, NO_VALUE)) == NO_VALUE)
-                    newSources.put(iri, sourceID = nextSourceID++);
+                if(sourceID == NO_VALUE)
+                    newSources.put(source, sourceID = nextSourceID++);
 
-                usedSources.put(iri, sourceID);
+                usedSources.put(source, sourceID);
             }
         }.load(model);
 
@@ -51,19 +52,21 @@ class Source extends Updater
 
     private static void loadTitles(Model model) throws IOException, SQLException
     {
-        newTitles = new IntStringMap(1000);
-        oldTitles = getIntStringMap("select id, title from pubchem.source_bases where title is not null", 1000);
+        newTitles = new IntStringPairMap();
+        oldTitles = getIntStringMap("select id, title from pubchem.source_bases where title is not null");
 
         new QueryResultProcessor(patternQuery("?source dcterms:title ?title"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int sourceID = usedSources.getOrThrow(getIRI("source"));
+                String source = getStringID("source", "http://rdf.ncbi.nlm.nih.gov/pubchem/source/");
+                int sourceID = getSourceID(source);
+
                 String title = getString("title");
 
                 if(!title.equals(oldTitles.remove(sourceID)))
-                    newTitles.put(sourceID, title);
+                    newTitles.put(sourceID, Tuples.pair(source, title));
             }
         }.load(model);
     }
@@ -71,88 +74,95 @@ class Source extends Updater
 
     private static void loadHomepages(Model model) throws IOException, SQLException
     {
-        IntStringMap newHomepages = new IntStringMap(1000);
+        IntStringPairMap newHomepages = new IntStringPairMap();
         IntStringMap oldHomepages = getIntStringMap(
-                "select id, homepage from pubchem.source_bases where homepage is not null", 1000);
+                "select id, homepage from pubchem.source_bases where homepage is not null");
 
         new QueryResultProcessor(patternQuery("?source foaf:homepage ?homepage"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int sourceID = usedSources.getOrThrow(getIRI("source"));
+                String source = getStringID("source", "http://rdf.ncbi.nlm.nih.gov/pubchem/source/");
+                int sourceID = getSourceID(source);
                 String homepage = getIRI("homepage");
 
                 if(!homepage.equals(oldHomepages.remove(sourceID)))
-                    newHomepages.put(sourceID, homepage);
+                    newHomepages.put(sourceID, Tuples.pair(source, homepage));
             }
         }.load(model);
 
         batch("update pubchem.source_bases set homepage = null where id = ?", oldHomepages.keySet());
-        batch("update pubchem.source_bases set homepage = ? where id = ?", newHomepages, Direction.REVERSE);
+        batch("insert into pubchem.source_bases(id, iri, homepage) values (?,?,?) "
+                + "on conflict (id) do update set homepage=EXCLUDED.homepage", newHomepages);
     }
 
 
     private static void loadLicenses(Model model) throws IOException, SQLException
     {
-        IntStringMap newLicenses = new IntStringMap(1000);
+        IntStringPairMap newLicenses = new IntStringPairMap();
         IntStringMap oldLicenses = getIntStringMap(
-                "select id, license from pubchem.source_bases where license is not null", 1000);
+                "select id, license from pubchem.source_bases where license is not null");
 
         new QueryResultProcessor(patternQuery("?source dcterms:license ?license"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int sourceID = usedSources.getOrThrow(getIRI("source"));
+                String source = getStringID("source", "http://rdf.ncbi.nlm.nih.gov/pubchem/source/");
+                int sourceID = getSourceID(source);
                 String license = getIRI("license");
 
                 if(!license.equals(oldLicenses.remove(sourceID)))
-                    newLicenses.put(sourceID, license);
+                    newLicenses.put(sourceID, Tuples.pair(source, license));
             }
         }.load(model);
 
         batch("update pubchem.source_bases set license = null where id = ?", oldLicenses.keySet());
-        batch("update pubchem.source_bases set license = ? where id = ?", newLicenses, Direction.REVERSE);
+        batch("insert into pubchem.source_bases(id, iri, license) values (?,?,?) "
+                + "on conflict (id) do update set license=EXCLUDED.license", newLicenses);
     }
 
 
     private static void loadRights(Model model) throws IOException, SQLException
     {
-        IntStringMap newRights = new IntStringMap(1000);
-        IntStringMap oldRights = getIntStringMap("select id, rights from pubchem.source_bases where rights is not null",
-                1000);
+        IntStringPairMap newRights = new IntStringPairMap();
+        IntStringMap oldRights = getIntStringMap(
+                "select id, rights from pubchem.source_bases where rights is not null");
 
         new QueryResultProcessor(patternQuery("?source dcterms:rights ?rights"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int sourceID = usedSources.getOrThrow(getIRI("source"));
+                String source = getStringID("source", "http://rdf.ncbi.nlm.nih.gov/pubchem/source/");
+                int sourceID = getSourceID(source);
                 String rights = getString("rights");
 
                 if(!rights.equals(oldRights.remove(sourceID)))
-                    newRights.put(sourceID, rights);
+                    newRights.put(sourceID, Tuples.pair(source, rights));
             }
         }.load(model);
 
         batch("update pubchem.source_bases set rights = null where id = ?", oldRights.keySet());
-        batch("update pubchem.source_bases set rights = ? where id = ?", newRights, Direction.REVERSE);
+        batch("insert into pubchem.source_bases(id, iri, rights) values (?,?,?) "
+                + "on conflict (id) do update set rights=EXCLUDED.rights", newRights);
     }
 
 
     private static void loadSubjects(Model model) throws IOException, SQLException
     {
-        IntPairSet newSubjects = new IntPairSet(1000);
-        IntPairSet oldSubjects = getIntPairSet("select source, subject from pubchem.source_subjects", 1000);
+        IntPairSet newSubjects = new IntPairSet();
+        IntPairSet oldSubjects = getIntPairSet("select source, subject from pubchem.source_subjects");
 
         new QueryResultProcessor(patternQuery("?source dcterms:subject ?subject"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int sourceID = usedSources.getOrThrow(getIRI("source"));
-                int conceptID = Concept.getConceptID(getIRI("subject"));
+                int sourceID = getSourceID(getStringID("source", "http://rdf.ncbi.nlm.nih.gov/pubchem/source/"));
+                int conceptID = Concept
+                        .getConceptID(getStringID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/concept/"));
 
                 IntIntPair pair = PrimitiveTuples.pair(sourceID, conceptID);
 
@@ -168,16 +178,16 @@ class Source extends Updater
 
     private static void loadAlternatives(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newAlternatives = new IntStringPairSet(1000);
+        IntStringPairSet newAlternatives = new IntStringPairSet();
         IntStringPairSet oldAlternatives = getIntStringPairSet(
-                "select source, alternative from pubchem.source_alternatives", 1000);
+                "select source, alternative from pubchem.source_alternatives");
 
         new QueryResultProcessor(patternQuery("?source dcterms:alternative ?alternative"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int sourceID = usedSources.getOrThrow(getIRI("source"));
+                int sourceID = getSourceID(getStringID("source", "http://rdf.ncbi.nlm.nih.gov/pubchem/source/"));
                 String alternative = getString("alternative");
 
                 IntObjectPair<String> pair = PrimitiveTuples.pair(sourceID, alternative);
@@ -189,67 +199,6 @@ class Source extends Updater
 
         batch("delete from pubchem.source_alternatives where source = ? and alternative = ?", oldAlternatives);
         batch("insert into pubchem.source_alternatives(source, alternative) values (?,?)", newAlternatives);
-    }
-
-
-    private static String generateSourceTitle(String iri)
-    {
-        String base = iri.replaceFirst("^http://rdf.ncbi.nlm.nih.gov/pubchem/source/", "");
-
-        if(base.startsWith("ID"))
-            return base.substring(2);
-        else
-            return base.replace('_', ' ');
-    }
-
-
-    static int getSourceID(String iri, String title)
-    {
-        synchronized(newSources)
-        {
-            int sourceID = usedSources.getIfAbsent(iri, NO_VALUE);
-
-            if(sourceID == NO_VALUE)
-            {
-                System.out.println("    add missing source <" + iri + ">");
-
-                if((sourceID = oldSources.removeKeyIfAbsent(iri, NO_VALUE)) == NO_VALUE)
-                    newSources.put(iri, sourceID = nextSourceID++);
-
-                if(title == null)
-                    title = generateSourceTitle(iri);
-
-                if(!title.equals(oldTitles.remove(sourceID)))
-                    newTitles.put(sourceID, title);
-
-                usedSources.put(iri, sourceID);
-            }
-
-            return sourceID;
-        }
-    }
-
-
-    static int getSourceID(String iri)
-    {
-        return getSourceID(iri, null);
-    }
-
-
-    static void finish() throws IOException, SQLException
-    {
-        batch("delete from pubchem.source_bases where id = ?", oldSources.values());
-        batch("insert into pubchem.source_bases(iri, id) values (?,?)", newSources);
-
-        batch("update pubchem.source_bases set title = null where id = ?", oldTitles.keySet());
-        batch("update pubchem.source_bases set title = ? where id = ?", newTitles, Direction.REVERSE);
-
-        usedSources = null;
-        newSources = null;
-        oldSources = null;
-
-        newTitles = null;
-        oldTitles = null;
     }
 
 
@@ -270,5 +219,69 @@ class Source extends Updater
 
         model.close();
         System.out.println();
+    }
+
+
+    static void finish() throws IOException, SQLException
+    {
+        System.out.println("finish sources ...");
+
+        batch("delete from pubchem.source_bases where id = ?", oldSources.values());
+        batch("insert into pubchem.source_bases(iri, id) values (?,?)" + " on conflict do nothing", newSources);
+
+        batch("update pubchem.source_bases set title = null where id = ?", oldTitles.keySet());
+        batch("insert into pubchem.source_bases(id, iri, title) values (?,?,?) "
+                + "on conflict (id) do update set title=EXCLUDED.title", newTitles);
+
+        usedSources = null;
+        newSources = null;
+        oldSources = null;
+
+        newTitles = null;
+        oldTitles = null;
+
+        System.out.println();
+    }
+
+
+    static int getSourceID(String source, String title)
+    {
+        synchronized(newSources)
+        {
+            int sourceID = usedSources.getIfAbsent(source, NO_VALUE);
+
+            if(sourceID == NO_VALUE)
+            {
+                System.out.println("    add missing source " + source);
+
+                if((sourceID = oldSources.removeKeyIfAbsent(source, NO_VALUE)) == NO_VALUE)
+                    newSources.put(source, sourceID = nextSourceID++);
+
+                if(title == null)
+                    title = generateSourceTitle(source);
+                System.err.println("T: " + title);
+                if(!title.equals(oldTitles.remove(sourceID)))
+                    newTitles.put(sourceID, Tuples.pair(source, title));
+
+                usedSources.put(source, sourceID);
+            }
+
+            return sourceID;
+        }
+    }
+
+
+    static int getSourceID(String source)
+    {
+        return getSourceID(source, null);
+    }
+
+
+    private static String generateSourceTitle(String source)
+    {
+        if(source.startsWith("ID"))
+            return source.substring(2);
+        else
+            return source.replace('_', ' ');
     }
 }

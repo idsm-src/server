@@ -1,13 +1,12 @@
 create table pubchem.source_bases
 (
-    id          smallint,
-    iri         varchar not null,
+    id          smallint not null,
+    iri         varchar unique not null,
     title       varchar,
     homepage    varchar,
     license     varchar,
     rights      varchar,
-    primary key(id),
-    unique(iri)
+    primary key(id)
 );
 
 

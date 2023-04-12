@@ -20,21 +20,20 @@ class Synonym extends Updater
     private static int nextValueID;
 
 
-    static void loadBases() throws IOException, SQLException
+    private static void loadBases() throws IOException, SQLException
     {
-        usedHashes = new MD5IntMap(200000000);
+        usedHashes = new MD5IntMap();
 
-        MD5IntMap newHashes = new MD5IntMap(200000000);
-        MD5IntMap oldHashes = getMD5IntMap("select md5, id from pubchem.synonym_bases", 200000000);
+        MD5IntMap newHashes = new MD5IntMap();
+        MD5IntMap oldHashes = getMD5IntMap("select md5, id from pubchem.synonym_bases");
         nextMd5ID = getIntValue("select coalesce(max(id)+1,0) from pubchem.synonym_bases");
 
-        IntStringPairIntMap newValues = new IntStringPairIntMap(200000000);
-        IntStringPairIntMap oldValues = getIntStringPairIntMap("select synonym, value, __ from pubchem.synonym_values",
-                200000000);
+        IntStringPairIntMap newValues = new IntStringPairIntMap();
+        IntStringPairIntMap oldValues = getIntStringPairIntMap("select synonym, value, __ from pubchem.synonym_values");
         nextValueID = getIntValue("select coalesce(max(__)+1,0) from pubchem.synonym_values");
 
         processFiles("pubchem/RDF/synonym", "pc_synonym_value_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -78,11 +77,11 @@ class Synonym extends Updater
 
     private static void loadTypes() throws IOException, SQLException
     {
-        IntPairSet newTypes = new IntPairSet(200000000);
-        IntPairSet oldTypes = getIntPairSet("select synonym, type_id from pubchem.synonym_types", 200000000);
+        IntPairSet newTypes = new IntPairSet();
+        IntPairSet oldTypes = getIntPairSet("select synonym, type_id from pubchem.synonym_types");
 
         processFiles("pubchem/RDF/synonym", "pc_synonym_type_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -122,11 +121,11 @@ class Synonym extends Updater
 
     private static void loadCompounds() throws IOException, SQLException
     {
-        IntPairSet newCompounds = new IntPairSet(200000000);
-        IntPairSet oldCompounds = getIntPairSet("select synonym, compound from pubchem.synonym_compounds", 200000000);
+        IntPairSet newCompounds = new IntPairSet();
+        IntPairSet oldCompounds = getIntPairSet("select synonym, compound from pubchem.synonym_compounds");
 
         processFiles("pubchem/RDF/synonym", "pc_synonym2compound_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getStream(file))
+            try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
                 {
@@ -168,15 +167,14 @@ class Synonym extends Updater
 
     private static void loadTopics() throws IOException, SQLException
     {
-        IntPairSet newConceptSubjects = new IntPairSet(50000);
-        IntPairSet oldConceptSubjects = getIntPairSet("select synonym, concept from pubchem.synonym_concept_subjects",
-                50000);
+        IntPairSet newConceptSubjects = new IntPairSet();
+        IntPairSet oldConceptSubjects = getIntPairSet("select synonym, concept from pubchem.synonym_concept_subjects");
 
-        IntStringPairSet newMeshSubjects = new IntStringPairSet(1000000);
+        IntStringPairSet newMeshSubjects = new IntStringPairSet();
         IntStringPairSet oldMeshSubjects = getIntStringPairSet(
-                "select synonym, subject from pubchem.synonym_mesh_subjects", 1000000);
+                "select synonym, subject from pubchem.synonym_mesh_subjects");
 
-        try(InputStream stream = getStream("pubchem/RDF/synonym/pc_synonym_topic.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/synonym/pc_synonym_topic.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -197,7 +195,8 @@ class Synonym extends Updater
                     }
                     else if(value.startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/concept/"))
                     {
-                        int conceptID = Concept.getConceptID(value);
+                        int conceptID = Concept
+                                .getConceptID(getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/concept/"));
 
                         IntIntPair pair = PrimitiveTuples.pair(md5ID, conceptID);
 
@@ -224,12 +223,6 @@ class Synonym extends Updater
     }
 
 
-    static void finish() throws IOException, SQLException
-    {
-        usedHashes = null;
-    }
-
-
     static void load() throws IOException, SQLException
     {
         System.out.println("load synonyms ...");
@@ -243,7 +236,17 @@ class Synonym extends Updater
     }
 
 
-    public static int getSynonymID(MD5 md5)
+    static void finish() throws IOException, SQLException
+    {
+        System.out.println("finish synonyms ...");
+
+        usedHashes = null;
+
+        System.out.println();
+    }
+
+
+    static int getSynonymID(MD5 md5)
     {
         return usedHashes.getIfAbsent(md5, Integer.MIN_VALUE);
     }

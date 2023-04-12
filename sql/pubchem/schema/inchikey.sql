@@ -1,6 +1,6 @@
 create table pubchem.inchikey_bases
 (
-    id          integer,
+    id          integer not null,
     inchikey    char(27) unique not null,
     primary key(id)
 );

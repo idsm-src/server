@@ -2,7 +2,7 @@ create index pathway_bases__source on pubchem.pathway_bases(source);
 create index pathway_bases__title on pubchem.pathway_bases(title);
 create index pathway_bases__reference_type on pubchem.pathway_bases(reference_type);
 create index pathway_bases__reference on pubchem.pathway_bases(reference);
-create index pathway_bases__organism on pubchem.pathway_bases(organism_id);
+create index pathway_bases__organism on pubchem.pathway_bases(organism);
 grant select on pubchem.pathway_bases to sparql;
 
 --------------------------------------------------------------------------------
@@ -28,12 +28,6 @@ grant select on pubchem.pathway_genes to sparql;
 create index pathway_components__pathway on pubchem.pathway_components(pathway);
 create index pathway_components__component on pubchem.pathway_components(component);
 grant select on pubchem.pathway_components to sparql;
-
---------------------------------------------------------------------------------
-
-create index pathway_reactions__pathway on pubchem.pathway_reactions(pathway);
-create index pathway_reactions__reaction on pubchem.pathway_reactions(reaction);
-grant select on pubchem.pathway_reactions to sparql;
 
 --------------------------------------------------------------------------------
 

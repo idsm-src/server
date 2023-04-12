@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -102,6 +101,7 @@ public class Ontology extends Updater
     public static final short unitZDBGENE = 35;
     public static final short unitStar = 95;
     public static final short unitNCIT = 100;
+    public static final short unitRareDiseases = 180;
 
 
     public static void loadCategories() throws SQLException
@@ -244,6 +244,10 @@ public class Ontology extends Updater
                 else if(unit.id == unitStar)
                 {
                     id = tail.charAt(0) - '0';
+                }
+                else if(unit.id == unitRareDiseases)
+                {
+                    id = Integer.parseInt(tail.substring(0, tail.length() - 6));
                 }
                 else
                 {
@@ -651,46 +655,43 @@ public class Ontology extends Updater
 
     public static void load() throws IOException, SQLException
     {
-        List<Model> models = Collections.synchronizedList(new ArrayList<Model>(200));
+        Model model = ModelFactory.createDefaultModel();
 
         processFiles("ontology", ".*", file -> {
             String lang = file.endsWith(".ttl") ? "TTL" : null;
-            Model model = getModel(file, lang);
-            models.add(model);
+            Model submodel = getModel(file, lang);
+
+            synchronized(model)
+            {
+                model.add(submodel);
+            }
+
+            submodel.close();
         });
-
-
-        Model ontologyModel = ModelFactory.createDefaultModel();
-
-        for(Model model : models)
-        {
-            ontologyModel = ontologyModel.union(model);
-            model.close();
-        }
 
 
         loadCategories();
 
-        loadClasses(ontologyModel);
-        loadProperties(ontologyModel);
-        loadIndividuals(ontologyModel);
-        loadResourceLabels(ontologyModel);
+        loadClasses(model);
+        loadProperties(model);
+        loadIndividuals(model);
+        loadResourceLabels(model);
 
-        loadSuperClasses(ontologyModel);
+        loadSuperClasses(model);
 
-        loadSuperProperties(ontologyModel);
-        loadDomains(ontologyModel);
-        loadRanges(ontologyModel);
+        loadSuperProperties(model);
+        loadDomains(model);
+        loadRanges(model);
 
-        loadSomeValuesFromRestriction(ontologyModel);
-        loadAllValuesFromRestriction(ontologyModel);
-        loadCardinalityRestriction(ontologyModel);
-        loadMinCardinalityRestriction(ontologyModel);
-        loadMaxCardinalityRestriction(ontologyModel);
+        loadSomeValuesFromRestriction(model);
+        loadAllValuesFromRestriction(model);
+        loadCardinalityRestriction(model);
+        loadMinCardinalityRestriction(model);
+        loadMaxCardinalityRestriction(model);
 
         storeUncategorizedResources();
 
-        ontologyModel.close();
+        model.close();
     }
 
 

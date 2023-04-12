@@ -1,22 +1,27 @@
 select distinct ?iri where
 {
     {
-        ?S ?iri ?iri .
+        ?S ?iri ?O .
         filter(?iri != obo:RO_0002180)
-        filter(?iri != dcterms:title)
-        filter(?iri != cito:isDiscussedBy)
         filter(?iri != up:encodedBy)
+        filter(?iri != up:organism)
+        filter(?iri != up:enzyme)        
         filter(?iri != vocab:hasSimilarProtein)
-        filter(?iri != pdbo:link_to_pdb)
+        filter(?iri != pdbo40:link_to_pdb)
         filter(?iri != bp:organism)
         filter(?iri != skos:closeMatch)
         filter(?iri != rdf:type)
         filter(?iri != owl:sameAs)
+        filter(?iri != skos:prefLabel)
+        filter(?iri != skos:altLabel)
+        filter(?iri != bao:BAO_0002817)
+        filter(?iri != rdfs:subClassOf)
     }
     union
     {
         ?S owl:sameAs ?iri .
-        filter(replace(str(?S), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC", "") != replace(str(?iri), "https://www.ncbi.nlm.nih.gov/protein/", ""))
+        filter(strstarts(str(?S), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC") && replace(str(?S), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC", "") != replace(str(?iri), "https://www.ncbi.nlm.nih.gov/protein/", ""))        
+        filter(strstarts(str(?S), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_") && replace(str(?S), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_", "") != replace(str(?iri), "http://purl.uniprot.org/enzyme/", ""))        
     }
     union
     {
@@ -32,7 +37,6 @@ select distinct ?iri where
         filter(! strstarts(str(?iri), "https://www.ncbi.nlm.nih.gov/protein/"))
         filter(! strstarts(str(?iri), "http://id.nlm.nih.gov/mesh/"))
         filter(! strstarts(str(?iri), "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C"))
-        filter(! strstarts(str(?iri), "https://enzyme.expasy.org/EC/"))
         filter(! strstarts(str(?iri), "https://guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId="))
         filter(! strstarts(str(?iri), "https://www.drugbank.ca/bio_entities/BE"))
         filter(! strstarts(str(?iri), "https://www.ebi.ac.uk/chembl/target_report_card/CHEMBL"))

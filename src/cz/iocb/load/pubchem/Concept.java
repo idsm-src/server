@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
 import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
+import org.eclipse.collections.impl.tuple.Tuples;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -19,23 +20,23 @@ class Concept extends Updater
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        usedConcepts = new StringIntMap(10000);
-        newConcepts = new StringIntMap(10000);
-        oldConcepts = getStringIntMap("select iri, id from pubchem.concept_bases", 10000);
+        usedConcepts = new StringIntMap();
+        newConcepts = new StringIntMap();
+        oldConcepts = getStringIntMap("select iri, id from pubchem.concept_bases");
         nextConceptID = getIntValue("select coalesce(max(id)+1,0) from pubchem.concept_bases");
 
-        new QueryResultProcessor(patternQuery("?iri rdf:type ?type"))
+        new QueryResultProcessor(patternQuery("?concept rdf:type ?type"))
         {
             @Override
             protected void parse() throws IOException
             {
-                String iri = getIRI("iri");
-                int conceptID;
+                String concept = getStringID("concept", "http://rdf.ncbi.nlm.nih.gov/pubchem/concept/");
+                int conceptID = oldConcepts.removeKeyIfAbsent(concept, NO_VALUE);
 
-                if((conceptID = oldConcepts.removeKeyIfAbsent(iri, NO_VALUE)) == NO_VALUE)
-                    newConcepts.put(iri, conceptID = nextConceptID++);
+                if(conceptID == NO_VALUE)
+                    newConcepts.put(concept, conceptID = nextConceptID++);
 
-                usedConcepts.put(iri, conceptID);
+                usedConcepts.put(concept, conceptID);
             }
         }.load(model);
 
@@ -46,105 +47,78 @@ class Concept extends Updater
 
     private static void loadLabels(Model model) throws IOException, SQLException
     {
-        IntStringMap newLabels = new IntStringMap(10000);
-        IntStringMap oldLabels = getIntStringMap("select id, label from pubchem.concept_bases where label is not null",
-                10000);
+        IntStringPairMap newLabels = new IntStringPairMap();
+        IntStringMap oldLabels = getIntStringMap("select id, label from pubchem.concept_bases where label is not null");
 
         new QueryResultProcessor(patternQuery("?concept skos:prefLabel ?label"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int conceptID = usedConcepts.getOrThrow(getIRI("concept"));
+                String concept = getStringID("concept", "http://rdf.ncbi.nlm.nih.gov/pubchem/concept/");
+                int conceptID = getConceptID(concept);
                 String label = getString("label");
 
                 if(!label.equals(oldLabels.remove(conceptID)))
-                    newLabels.put(conceptID, label);
+                    newLabels.put(conceptID, Tuples.pair(concept, label));
             }
         }.load(model);
 
         batch("update pubchem.concept_bases set label = null where id = ?", oldLabels.keySet());
-        batch("update pubchem.concept_bases set label = ? where id = ?", newLabels, Direction.REVERSE);
+        batch("insert into pubchem.concept_bases(id, iri, label) values (?,?,?) "
+                + "on conflict (id) do update set label=EXCLUDED.label", newLabels);
     }
 
 
     private static void loadScheme(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newSchemes = new IntIntHashMap(10000);
-        IntIntHashMap oldSchemes = getIntIntMap("select id, scheme from pubchem.concept_bases where scheme is not null",
-                10000);
+        IntStringIntPairMap newSchemes = new IntStringIntPairMap();
+        IntIntHashMap oldSchemes = getIntIntMap(
+                "select id, scheme from pubchem.concept_bases where scheme is not null");
 
         new QueryResultProcessor(patternQuery("?concept skos:inScheme ?scheme"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int conceptID = usedConcepts.getOrThrow(getIRI("concept"));
-                int schemeID = usedConcepts.getOrThrow(getIRI("scheme"));
+                String concept = getStringID("concept", "http://rdf.ncbi.nlm.nih.gov/pubchem/concept/");
+                int conceptID = getConceptID(concept);
+                int schemeID = getConceptID(getStringID("scheme", "http://rdf.ncbi.nlm.nih.gov/pubchem/concept/"));
 
                 if(schemeID != oldSchemes.removeKeyIfAbsent(conceptID, NO_VALUE))
-                    newSchemes.put(conceptID, schemeID);
+                    newSchemes.put(conceptID, Tuples.pair(concept, schemeID));
             }
         }.load(model);
 
         batch("update pubchem.concept_bases set scheme = null where id = ?", oldSchemes.keySet());
-        batch("update pubchem.concept_bases set scheme = ? where id = ?", newSchemes, Direction.REVERSE);
+        batch("insert into pubchem.concept_bases(id, iri, scheme) values (?,?,?) "
+                + "on conflict (id) do update set scheme=EXCLUDED.scheme", newSchemes);
     }
 
 
     private static void loadBroader(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newBroaders = new IntIntHashMap(10000);
+        IntStringIntPairMap newBroaders = new IntStringIntPairMap();
         IntIntHashMap oldBroaders = getIntIntMap(
-                "select id, broader from pubchem.concept_bases where broader is not null", 10000);
+                "select id, broader from pubchem.concept_bases where broader is not null");
 
         new QueryResultProcessor(patternQuery("?concept skos:broader ?broader"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int conceptID = usedConcepts.getOrThrow(getIRI("concept"));
-                int broaderID = usedConcepts.getOrThrow(getIRI("broader"));
+                String concept = getStringID("concept", "http://rdf.ncbi.nlm.nih.gov/pubchem/concept/");
+                int conceptID = getConceptID(concept);
+                int broaderID = getConceptID(getStringID("broader", "http://rdf.ncbi.nlm.nih.gov/pubchem/concept/"));
 
                 if(conceptID != broaderID && broaderID != oldBroaders.removeKeyIfAbsent(conceptID, NO_VALUE))
-                    newBroaders.put(conceptID, broaderID);
+                    newBroaders.put(conceptID, Tuples.pair(concept, broaderID));
             }
         }.load(model);
 
         batch("update pubchem.concept_bases set broader = null where id = ?", oldBroaders.keySet());
-        batch("update pubchem.concept_bases set broader = ? where id = ?", newBroaders, Direction.REVERSE);
-    }
-
-
-    static int getConceptID(String iri)
-    {
-        synchronized(newConcepts)
-        {
-            int conceptID = usedConcepts.getIfAbsent(iri, NO_VALUE);
-
-            if(conceptID == NO_VALUE)
-            {
-                System.out.println("    add missing concept <" + iri + ">");
-
-                if((conceptID = oldConcepts.removeKeyIfAbsent(iri, NO_VALUE)) == NO_VALUE)
-                    newConcepts.put(iri, conceptID = nextConceptID++);
-
-                usedConcepts.put(iri, conceptID);
-            }
-
-            return conceptID;
-        }
-    }
-
-
-    static void finish() throws IOException, SQLException
-    {
-        batch("delete from pubchem.concept_bases where id = ?", oldConcepts.values());
-        batch("insert into pubchem.concept_bases(iri, id) values (?,?)", newConcepts);
-
-        usedConcepts = null;
-        newConcepts = null;
-        oldConcepts = null;
+        batch("insert into pubchem.concept_bases(id, iri, broader) values (?,?,?) "
+                + "on conflict (id) do update set broader=EXCLUDED.broader", newBroaders);
     }
 
 
@@ -162,5 +136,41 @@ class Concept extends Updater
 
         model.close();
         System.out.println();
+    }
+
+
+    static void finish() throws IOException, SQLException
+    {
+        System.out.println("finish concepts ...");
+
+        batch("delete from pubchem.concept_bases where id = ?", oldConcepts.values());
+        batch("insert into pubchem.concept_bases(iri, id) values (?,?)" + " on conflict do nothing", newConcepts);
+
+        usedConcepts = null;
+        newConcepts = null;
+        oldConcepts = null;
+
+        System.out.println();
+    }
+
+
+    static int getConceptID(String concept)
+    {
+        synchronized(newConcepts)
+        {
+            int conceptID = usedConcepts.getIfAbsent(concept, NO_VALUE);
+
+            if(conceptID == NO_VALUE)
+            {
+                System.out.println("    add missing concept " + concept);
+
+                if((conceptID = oldConcepts.removeKeyIfAbsent(concept, NO_VALUE)) == NO_VALUE)
+                    newConcepts.put(concept, conceptID = nextConceptID++);
+
+                usedConcepts.put(concept, conceptID);
+            }
+
+            return conceptID;
+        }
     }
 }
