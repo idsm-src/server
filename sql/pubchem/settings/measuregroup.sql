@@ -5,6 +5,13 @@ grant select on pubchem.measuregroup_bases to sparql;
 
 --------------------------------------------------------------------------------
 
+create index measuregroup_substances__bioassay on pubchem.measuregroup_substances(bioassay);
+create index measuregroup_substances__bioassay_measuregroup on pubchem.measuregroup_substances(bioassay, measuregroup);
+create index measuregroup_substances__substance on pubchem.measuregroup_substances(substance);
+grant select on pubchem.measuregroup_substances to sparql;
+
+--------------------------------------------------------------------------------
+
 create index measuregroup_proteins__bioassay on pubchem.measuregroup_proteins(bioassay);
 create index measuregroup_proteins__bioassay_measuregroup on pubchem.measuregroup_proteins(bioassay, measuregroup);
 create index measuregroup_proteins__protein on pubchem.measuregroup_proteins(protein);

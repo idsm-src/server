@@ -1,7 +1,3 @@
-grant usage on schema mesh to sparql;
-
---------------------------------------------------------------------------------
-
 create index mesh_bases__type_id on mesh.mesh_bases(type_id);
 grant select on mesh.mesh_bases to sparql;
 

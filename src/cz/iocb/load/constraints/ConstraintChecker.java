@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import cz.iocb.load.common.Updater;
 
 
@@ -55,7 +54,7 @@ public class ConstraintChecker extends Updater
 
     public static void checkAdditionalForeignKeys() throws SQLException, IOException
     {
-        IntHashSet delete = new IntHashSet();
+        IntSet delete = new IntSet();
 
         try(Statement statement = connection.createStatement())
         {
@@ -135,13 +134,13 @@ public class ConstraintChecker extends Updater
             }
         }
 
-        batch("delete from constraints.foreign_keys where __ = ?", delete);
+        store("delete from constraints.foreign_keys where __=?", delete);
     }
 
 
     public static void checkUnjoinableColumns() throws SQLException, IOException
     {
-        IntHashSet delete = new IntHashSet();
+        IntSet delete = new IntSet();
 
         try(Statement statement = connection.createStatement())
         {
@@ -205,7 +204,7 @@ public class ConstraintChecker extends Updater
             }
         }
 
-        batch("delete from constraints.unjoinable_columns where __ = ?", delete);
+        store("delete from constraints.unjoinable_columns where __=?", delete);
     }
 
 
@@ -219,7 +218,8 @@ public class ConstraintChecker extends Updater
     public static void main(String[] args) throws SQLException, IOException
     {
         init();
-        check();
+        checkUnjoinableColumns();
+        checkAdditionalForeignKeys();
         commit();
     }
 }

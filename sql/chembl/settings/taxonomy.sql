@@ -1,4 +1,4 @@
-create view chembl.taxonomies as
-  select tax_id, organism from chembl.component_sequences union select tax_id, organism from chembl.bio_component_sequences;
+create view chembl_tmp.taxonomies as
+  select tax_id, organism from chembl_tmp.component_sequences union select tax_id, organism from chembl_tmp.bio_component_sequences;
 
-grant select on chembl.taxonomies to sparql;
+grant select on chembl_tmp.taxonomies to sparql;

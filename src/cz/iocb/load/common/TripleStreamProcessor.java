@@ -117,15 +117,4 @@ public abstract class TripleStreamProcessor
 
         return Float.parseFloat(literal.getLiteralLexicalForm());
     }
-
-
-    public static MD5 getSynonymMD5(Node node) throws IOException
-    {
-        String value = node.getURI();
-
-        if(!value.startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"))
-            throw new IOException("unexpected IRI: " + value);
-
-        return new MD5(value, 48);
-    }
 }

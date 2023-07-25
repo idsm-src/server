@@ -2,8 +2,8 @@ package cz.iocb.load.common;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import org.apache.jena.ext.com.google.common.base.Charsets;
-import org.eclipse.collections.impl.list.mutable.primitive.ByteArrayList;
 
 
 
@@ -19,7 +19,7 @@ public class InputStreamFixer extends InputStream
     private final InputStream in;
     private State state = State.OUTSIDE;
     private boolean backslash = false;
-    private ByteArrayList iri = new ByteArrayList();
+    private ArrayList<Byte> iri = new ArrayList<Byte>();
     private boolean hasSharp = false;
     private boolean bug = false;
 
@@ -63,7 +63,14 @@ public class InputStreamFixer extends InputStream
             if(c == '>')
             {
                 if(bug)
-                    System.err.println("    bad iri: " + new String(iri.toArray(), Charsets.UTF_8));
+                {
+                    byte[] value = new byte[iri.size()];
+
+                    for(int i = 0; i < value.length; i++)
+                        value[i] = iri.get(i);
+
+                    System.err.println("    bad iri: " + new String(value, Charsets.UTF_8));
+                }
 
                 bug = false;
                 state = State.OUTSIDE;

@@ -15,18 +15,14 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import org.apache.jena.rdf.model.Model;
-import org.eclipse.collections.api.tuple.primitive.IntIntPair;
-import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
-import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
-import cz.iocb.load.ontology.Ontology.Identifier;
 
 
 
@@ -52,9 +48,12 @@ class Bioassay extends Updater
     }
 
 
-    private static IntHashSet usedBioassays;
-    private static IntHashSet newBioassays;
-    private static IntHashSet oldBioassays;
+    static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID";
+    static final int prefixLength = prefix.length();
+
+    private static final IntSet keepBioassays = new IntSet();
+    private static final IntSet newBioassays = new IntSet();
+    private static final IntSet oldBioassays = new IntSet();
 
 
     private static String getMultiNodeValue(XPathExpression path, Node node) throws XPathExpressionException
@@ -99,35 +98,35 @@ class Bioassay extends Updater
     private static void loadBioassays()
             throws SQLException, IOException, XPathException, ParserConfigurationException, SAXException
     {
-        usedBioassays = new IntHashSet();
-        newBioassays = new IntHashSet();
-        oldBioassays = getIntSet("select id from pubchem.bioassay_bases");
-
-        IntIntHashMap newSources = new IntIntHashMap();
-        IntIntHashMap oldSources = getIntIntMap("select id, source from pubchem.bioassay_bases");
+        IntIntMap newSources = new IntIntMap();
+        IntIntMap oldSources = new IntIntMap();
 
         IntStringMap newTitles = new IntStringMap();
-        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.bioassay_bases");
+        IntStringMap oldTitles = new IntStringMap();
 
         IntStringMap newDescriptions = new IntStringMap();
-        IntStringMap oldDescriptions = getIntStringMap(
-                "select bioassay, value from pubchem.bioassay_data where type_id = '136'::smallint");
+        IntStringMap oldDescriptions = new IntStringMap();
 
         IntStringMap newProtocols = new IntStringMap();
-        IntStringMap oldProtocols = getIntStringMap(
-                "select bioassay, value from pubchem.bioassay_data where type_id = '1041'::smallint");
+        IntStringMap oldProtocols = new IntStringMap();
 
         IntStringMap newComments = new IntStringMap();
-        IntStringMap oldComments = getIntStringMap(
-                "select bioassay, value from pubchem.bioassay_data where type_id = '1167'::smallint");
+        IntStringMap oldComments = new IntStringMap();
 
-        IntIntHashMap newAssays = new IntIntHashMap();
-        IntIntHashMap oldAssays = getIntIntMap("select bioassay, chembl_assay from pubchem.bioassay_chembl_assays");
+        IntIntMap newAssays = new IntIntMap();
+        IntIntMap oldAssays = new IntIntMap();
 
-        IntIntHashMap newMechanisms = new IntIntHashMap();
-        IntIntHashMap oldMechanisms = getIntIntMap(
-                "select bioassay, chembl_mechanism from pubchem.bioassay_chembl_mechanisms");
+        IntIntMap newMechanisms = new IntIntMap();
+        IntIntMap oldMechanisms = new IntIntMap();
 
+        load("select id from pubchem.bioassay_bases", oldBioassays);
+        load("select id,source from pubchem.bioassay_bases where source is not null", oldSources);
+        load("select id,title from pubchem.bioassay_bases where title is not null", oldTitles);
+        load("select bioassay,value from pubchem.bioassay_data where type_id = '136'::smallint", oldDescriptions);
+        load("select bioassay,value from pubchem.bioassay_data where type_id = '1041'::smallint", oldProtocols);
+        load("select bioassay,value from pubchem.bioassay_data where type_id = '1167'::smallint", oldComments);
+        load("select bioassay,chembl_assay from pubchem.bioassay_chembl_assays", oldAssays);
+        load("select bioassay,chembl_mechanism from pubchem.bioassay_chembl_mechanisms", oldMechanisms);
 
         processXmlFiles("pubchem/Bioassay/XML", "[0-9]+_[0-9]+\\.zip", file -> {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -148,8 +147,8 @@ class Bioassay extends Updater
                     .compile("./PC-AssayDescription_protocol/PC-AssayDescription_protocol_E");
             XPathExpression commentPath = xPath.compile("./PC-AssayDescription_comment/PC-AssayDescription_comment_E");
 
-            XPathExpression trackingSourcePath = xPath.compile(
-                    "./PC-AssayDescription_aid-source/PC-Source/PC-Source_db/PC-DBTracking/PC-DBTracking_source-id/Object-id/Object-id_str");
+            XPathExpression trackingSourcePath = xPath.compile("./PC-AssayDescription_aid-source/PC-Source/"
+                    + "PC-Source_db/PC-DBTracking/PC-DBTracking_source-id/Object-id/Object-id_str");
 
 
             InputStream fileStream = getZipStream(file);
@@ -168,23 +167,21 @@ class Bioassay extends Updater
                         throw new IOException("base node not found");
 
 
-                    int bioassayID = Integer.parseInt(getSingleNodeValue(idPath, baseNode));
+                    Integer bioassayID = Integer.parseInt(getSingleNodeValue(idPath, baseNode));
 
                     synchronized(newBioassays)
                     {
-                        usedBioassays.add(bioassayID);
-
-                        if(!oldBioassays.remove(bioassayID))
-                            newBioassays.add(bioassayID);
+                        oldBioassays.remove(bioassayID);
+                        keepBioassays.add(bioassayID);
                     }
 
 
                     String sourceName = getSingleNodeValue(sourceNamePath, baseNode);
-                    int sourceID = Source.getSourceID(createSourceID(sourceName), sourceName);
+                    Integer sourceID = Source.registerSourceID(createSourceID(sourceName), sourceName);
 
                     synchronized(newSources)
                     {
-                        if(oldSources.removeKeyIfAbsent(bioassayID, NO_VALUE) != sourceID)
+                        if(!sourceID.equals(oldSources.remove(bioassayID)))
                             newSources.put(bioassayID, sourceID);
                     }
 
@@ -240,21 +237,21 @@ class Bioassay extends Updater
 
                         if(chemblSource.startsWith("drug_mech_"))
                         {
-                            int chemblID = Integer.parseInt(chemblSource.replaceFirst("^drug_mech_", ""));
+                            Integer chemblID = Integer.parseInt(chemblSource.replaceFirst("^drug_mech_", ""));
 
                             synchronized(newMechanisms)
                             {
-                                if(oldMechanisms.removeKeyIfAbsent(bioassayID, NO_VALUE) != chemblID)
+                                if(!chemblID.equals(oldMechanisms.remove(bioassayID)))
                                     newMechanisms.put(bioassayID, chemblID);
                             }
                         }
                         else if(chemblSource.startsWith("CHEMBL"))
                         {
-                            int chemblID = Integer.parseInt(chemblSource.replaceFirst("^CHEMBL", ""));
+                            Integer chemblID = Integer.parseInt(chemblSource.replaceFirst("^CHEMBL", ""));
 
                             synchronized(newAssays)
                             {
-                                if(oldAssays.removeKeyIfAbsent(bioassayID, NO_VALUE) != chemblID)
+                                if(!chemblID.equals(oldAssays.remove(bioassayID)))
                                     newAssays.put(bioassayID, chemblID);
                             }
                         }
@@ -272,178 +269,204 @@ class Bioassay extends Updater
         });
 
 
-        batch("insert into pubchem.bioassay_bases(id) values (?)", newBioassays);
-        newBioassays.clear();
+        store("update pubchem.bioassay_bases set source=null where id=? and source=?", oldSources);
+        store("insert into pubchem.bioassay_bases(id,source) values(?,?) "
+                + "on conflict(id) do update set source=EXCLUDED.source", newSources);
 
-        batch("update pubchem.bioassay_bases set source = null where id = ?", oldSources.keySet());
-        batch("insert into pubchem.bioassay_bases(id, source) values (?,?) "
-                + "on conflict (id) do update set source=EXCLUDED.source", newSources);
+        store("update pubchem.bioassay_bases set title=null where id=? and title=?", oldTitles);
+        store("insert into pubchem.bioassay_bases(id,title) values(?,?) "
+                + "on conflict(id) do update set title=EXCLUDED.title", newTitles);
 
-        batch("update pubchem.bioassay_bases set title = null where id = ?", oldTitles.keySet());
-        batch("insert into pubchem.bioassay_bases(id, title) values (?,?) "
-                + "on conflict (id) do update set title=EXCLUDED.title", newTitles);
+        store("delete from pubchem.bioassay_data where type_id = '136'::smallint and bioassay=? and value=?",
+                oldDescriptions);
+        store("insert into pubchem.bioassay_data(type_id,bioassay,value) values(136,?,?)"
+                + "on conflict(type_id,bioassay) do update set value=EXCLUDED.value", newDescriptions);
 
-        batch("delete from pubchem.bioassay_data where bioassay = ? and type_id = '136'::smallint",
-                oldDescriptions.keySet());
-        batch("insert into pubchem.bioassay_data(type_id, bioassay, value) values (136,?,?)"
-                + "on conflict (type_id, bioassay) do update set value=EXCLUDED.value", newDescriptions);
+        store("delete from pubchem.bioassay_data where type_id = '1041'::smallint and bioassay=? and value=?",
+                oldProtocols);
+        store("insert into pubchem.bioassay_data(type_id,bioassay,value) values(1041,?,?)"
+                + "on conflict(type_id,bioassay) do update set value=EXCLUDED.value", newProtocols);
 
-        batch("delete from pubchem.bioassay_data where bioassay = ? and type_id = '1041'::smallint",
-                oldProtocols.keySet());
-        batch("insert into pubchem.bioassay_data(type_id, bioassay, value) values (1041,?,?)"
-                + "on conflict (type_id, bioassay) do update set value=EXCLUDED.value", newProtocols);
+        store("delete from pubchem.bioassay_data where type_id = '1167'::smallint and bioassay=? and value=?",
+                oldComments);
+        store("insert into pubchem.bioassay_data(type_id,bioassay,value) values(1167,?,?)"
+                + "on conflict(type_id,bioassay) do update set value=EXCLUDED.value", newComments);
 
-        batch("delete from pubchem.bioassay_data where bioassay = ? and type_id = '1167'::smallint",
-                oldComments.keySet());
-        batch("insert into pubchem.bioassay_data(type_id, bioassay, value) values (1167,?,?)"
-                + "on conflict (type_id, bioassay) do update set value=EXCLUDED.value", newComments);
+        store("delete from pubchem.bioassay_chembl_assays where bioassay=? and chembl_assay=?", oldAssays);
+        store("insert into pubchem.bioassay_chembl_assays(bioassay,chembl_assay) values(?,?)"
+                + "on conflict(bioassay) do update set chembl_assay=EXCLUDED.chembl_assay", newAssays);
 
-        batch("delete from pubchem.bioassay_chembl_assays where bioassay = ?", oldAssays.keySet());
-        batch("insert into pubchem.bioassay_chembl_assays(bioassay, chembl_assay) values (?,?)"
-                + "on conflict (bioassay) do update set chembl_assay=EXCLUDED.chembl_assay", newAssays);
-
-        batch("delete from pubchem.bioassay_chembl_mechanisms where bioassay = ?", oldMechanisms.keySet());
-        batch("insert into pubchem.bioassay_chembl_mechanisms(bioassay, chembl_mechanism) values (?,?)"
-                + "on conflict (bioassay) do update set chembl_mechanism=EXCLUDED.chembl_mechanism", newMechanisms);
+        store("delete from pubchem.bioassay_chembl_mechanisms where bioassay=? and chembl_mechanism=?", oldMechanisms);
+        store("insert into pubchem.bioassay_chembl_mechanisms(bioassay,chembl_mechanism) values(?,?)"
+                + "on conflict(bioassay) do update set chembl_mechanism=EXCLUDED.chembl_mechanism", newMechanisms);
     }
 
 
     private static void loadStages(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newStages = new IntIntHashMap();
-        IntIntHashMap oldStages = getIntIntMap("select bioassay, stage from pubchem.bioassay_stages");
+        IntIntMap keepStages = new IntIntMap();
+        IntIntMap newStages = new IntIntMap();
+        IntIntMap oldStages = new IntIntMap();
+
+        load("select bioassay,stage from pubchem.bioassay_stages", oldStages);
 
         new QueryResultProcessor(patternQuery("?bioassay bao:BAO_0000210 ?stage"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int bioassayID = getIntID("bioassay", "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID");
-                Identifier stage = Ontology.getId(getIRI("stage"));
+                Integer bioassayID = getBioassayID(getIRI("bioassay"));
+                Pair<Integer, Integer> stage = Ontology.getId(getIRI("stage"));
 
-                if(stage.unit != Ontology.unitBAO)
+                if(stage.getOne() != Ontology.unitBAO)
                     throw new IOException();
 
-                Bioassay.addBioassayID(bioassayID);
+                if(stage.getTwo().equals(oldStages.remove(bioassayID)))
+                {
+                    keepStages.put(bioassayID, stage.getTwo());
+                }
+                else
+                {
+                    Integer keep = keepStages.get(bioassayID);
 
-                if(stage.id != oldStages.removeKeyIfAbsent(bioassayID, NO_VALUE))
-                    newStages.put(bioassayID, stage.id);
+                    if(stage.getTwo().equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newStages.put(bioassayID, stage.getTwo());
+
+                    if(put != null && !stage.getTwo().equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("delete from pubchem.bioassay_stages where bioassay = ?", oldStages.keySet());
-        batch("insert into pubchem.bioassay_stages(bioassay, stage) values (?,?) "
-                + "on conflict (bioassay) do update set stage=EXCLUDED.stage", newStages);
+        store("delete from pubchem.bioassay_stages where bioassay=? and stage=?", oldStages);
+        store("insert into pubchem.bioassay_stages(bioassay,stage) values(?,?) "
+                + "on conflict(bioassay) do update set stage=EXCLUDED.stage", newStages);
     }
 
 
     private static void loadConfirmatoryAssays(Model model) throws IOException, SQLException
     {
+        IntPairSet keepRelations = new IntPairSet();
         IntPairSet newRelations = new IntPairSet();
-        IntPairSet oldRelations = getIntPairSet(
-                "select bioassay, confirmatory_assay from pubchem.bioassay_confirmatory_assays");
+        IntPairSet oldRelations = new IntPairSet();
+
+        load("select bioassay,confirmatory_assay from pubchem.bioassay_confirmatory_assays", oldRelations);
 
         new QueryResultProcessor(patternQuery("?confirmatory bao:BAO_0000540 ?bioassay"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int bioassayID = getIntID("bioassay", "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID");
-                int confirmatoryID = getIntID("confirmatory", "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID");
+                Integer bioassayID = getBioassayID(getIRI("bioassay"));
+                Integer confirmatoryID = getBioassayID(getIRI("confirmatory"));
 
-                IntIntPair pair = PrimitiveTuples.pair(bioassayID, confirmatoryID);
-                Bioassay.addBioassayID(bioassayID);
-                Bioassay.addBioassayID(confirmatoryID);
+                Pair<Integer, Integer> pair = Pair.getPair(bioassayID, confirmatoryID);
 
-                if(!oldRelations.remove(pair))
+                if(oldRelations.remove(pair))
+                    keepRelations.add(pair);
+                else if(!keepRelations.contains(pair))
                     newRelations.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.bioassay_confirmatory_assays where bioassay = ? and confirmatory_assay = ?",
+        store("delete from pubchem.bioassay_confirmatory_assays where bioassay=? and confirmatory_assay=?",
                 oldRelations);
-        batch("insert into pubchem.bioassay_confirmatory_assays(bioassay, confirmatory_assay) values (?,?)",
+        store("insert into pubchem.bioassay_confirmatory_assays(bioassay,confirmatory_assay) values(?,?)",
                 newRelations);
     }
 
 
     private static void loadPrimaryAssays(Model model) throws IOException, SQLException
     {
+        IntPairSet keepRelations = new IntPairSet();
         IntPairSet newRelations = new IntPairSet();
-        IntPairSet oldRelations = getIntPairSet("select bioassay, primary_assay from pubchem.bioassay_primary_assays");
+        IntPairSet oldRelations = new IntPairSet();
+
+        load("select bioassay,primary_assay from pubchem.bioassay_primary_assays", oldRelations);
 
         new QueryResultProcessor(patternQuery("?primary bao:BAO_0001067 ?bioassay"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int bioassayID = getIntID("bioassay", "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID");
-                int primaryID = getIntID("primary", "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID");
+                Integer bioassayID = getBioassayID(getIRI("bioassay"));
+                Integer primaryID = getBioassayID(getIRI("primary"));
 
-                IntIntPair pair = PrimitiveTuples.pair(bioassayID, primaryID);
-                Bioassay.addBioassayID(bioassayID);
-                Bioassay.addBioassayID(primaryID);
+                Pair<Integer, Integer> pair = Pair.getPair(bioassayID, primaryID);
 
-                if(!oldRelations.remove(pair))
+                if(oldRelations.remove(pair))
+                    keepRelations.add(pair);
+                else if(!keepRelations.contains(pair))
                     newRelations.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.bioassay_primary_assays where bioassay = ? and primary_assay = ?", oldRelations);
-        batch("insert into pubchem.bioassay_primary_assays(bioassay, primary_assay) values (?,?)", newRelations);
+        store("delete from pubchem.bioassay_primary_assays where bioassay=? and primary_assay=?", oldRelations);
+        store("insert into pubchem.bioassay_primary_assays(bioassay,primary_assay) values(?,?)", newRelations);
     }
 
 
     private static void loadSummaryAssays(Model model) throws IOException, SQLException
     {
+        IntPairSet keepRelations = new IntPairSet();
         IntPairSet newRelations = new IntPairSet();
-        IntPairSet oldRelations = getIntPairSet("select bioassay, summary_assay from pubchem.bioassay_summary_assays");
+        IntPairSet oldRelations = new IntPairSet();
+
+        load("select bioassay,summary_assay from pubchem.bioassay_summary_assays", oldRelations);
 
         new QueryResultProcessor(patternQuery("?summary bao:BAO_0001094 ?bioassay"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int bioassayID = getIntID("bioassay", "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID");
-                int summaryID = getIntID("summary", "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID");
+                Integer bioassayID = getBioassayID(getIRI("bioassay"));
+                Integer summaryID = getBioassayID(getIRI("summary"));
 
-                IntIntPair pair = PrimitiveTuples.pair(bioassayID, summaryID);
-                Bioassay.addBioassayID(bioassayID);
-                Bioassay.addBioassayID(summaryID);
+                Pair<Integer, Integer> pair = Pair.getPair(bioassayID, summaryID);
 
-                if(!oldRelations.remove(pair))
+                if(oldRelations.remove(pair))
+                    keepRelations.add(pair);
+                else if(!keepRelations.contains(pair))
                     newRelations.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.bioassay_summary_assays where bioassay = ? and summary_assay = ?", oldRelations);
-        batch("insert into pubchem.bioassay_summary_assays(bioassay, summary_assay) values (?,?)", newRelations);
+        store("delete from pubchem.bioassay_summary_assays where bioassay=? and summary_assay=?", oldRelations);
+        store("insert into pubchem.bioassay_summary_assays(bioassay,summary_assay) values(?,?)", newRelations);
     }
 
 
     private static void loadPatents(Model model) throws IOException, SQLException
     {
+        IntPairSet keepPatents = new IntPairSet();
         IntPairSet newPatents = new IntPairSet();
-        IntPairSet oldPatents = getIntPairSet("select bioassay, patent from pubchem.bioassay_patent_references");
+        IntPairSet oldPatents = new IntPairSet();
+
+        load("select bioassay,patent from pubchem.bioassay_patent_references", oldPatents);
 
         new QueryResultProcessor(patternQuery("?bioassay cito:isDiscussedBy ?patent"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int bioassayID = getIntID("bioassay", "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID");
-                int patentID = Patent.getPatentID(getStringID("patent", "http://rdf.ncbi.nlm.nih.gov/pubchem/patent/"));
+                Integer bioassayID = getBioassayID(getIRI("bioassay"));
+                Integer patentID = Patent.getPatentID(getIRI("patent"));
 
-                IntIntPair pair = PrimitiveTuples.pair(bioassayID, patentID);
-                Bioassay.addBioassayID(bioassayID);
+                Pair<Integer, Integer> pair = Pair.getPair(bioassayID, patentID);
 
-                if(!oldPatents.remove(pair))
+                if(oldPatents.remove(pair))
+                    keepPatents.add(pair);
+                else if(!keepPatents.contains(pair))
                     newPatents.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.bioassay_patent_references where bioassay = ? and patent = ?", oldPatents);
-        batch("insert into pubchem.bioassay_patent_references(bioassay, patent) values (?,?)", newPatents);
+        store("delete from pubchem.bioassay_patent_references where bioassay=? and patent=?", oldPatents);
+        store("insert into pubchem.bioassay_patent_references(bioassay,patent) values(?,?)", newPatents);
     }
 
 
@@ -454,6 +477,7 @@ class Bioassay extends Updater
         loadBioassays();
 
         Model model = getModel("pubchem/RDF/bioassay/pc_bioassay.ttl.gz");
+
         check(model, "pubchem/bioassay/check.sparql");
 
         loadStages(model);
@@ -472,28 +496,45 @@ class Bioassay extends Updater
     {
         System.out.println("finish bioassays ...");
 
-        batch("delete from pubchem.bioassay_bases where id = ?", oldBioassays);
-        batch("insert into pubchem.bioassay_bases(id) values (?)" + " on conflict do nothing", newBioassays);
-
-        usedBioassays = null;
-        newBioassays = null;
-        oldBioassays = null;
+        store("delete from pubchem.bioassay_bases where id=?", oldBioassays);
+        store("insert into pubchem.bioassay_bases(id) values(?)", newBioassays);
 
         System.out.println();
     }
 
 
-    static void addBioassayID(int bioassayID)
+    static void addBioassayID(Integer bioassayID)
     {
         synchronized(newBioassays)
         {
-            if(usedBioassays.add(bioassayID))
+            if(!keepBioassays.contains(bioassayID) && !newBioassays.contains(bioassayID))
             {
                 System.out.println("    add missing bioassay AID" + bioassayID);
 
                 if(!oldBioassays.remove(bioassayID))
                     newBioassays.add(bioassayID);
+                else
+                    keepBioassays.add(bioassayID);
             }
         }
+    }
+
+
+    static Integer getBioassayID(String value) throws IOException
+    {
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        Integer bioassayID = Integer.parseInt(value.substring(prefixLength));
+
+        addBioassayID(bioassayID);
+
+        return bioassayID;
+    }
+
+
+    public static int size()
+    {
+        return newBioassays.size() + keepBioassays.size();
     }
 }

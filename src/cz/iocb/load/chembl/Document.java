@@ -16,21 +16,20 @@ public class Document extends Updater
         Model model = getModel(file);
 
         try(PreparedStatement statement = connection
-                .prepareStatement("update chembl_32.docs set journal_id = ? where chembl_id = ?"))
+                .prepareStatement("update chembl_tmp.docs set journal_id=? where chembl_id=?"))
         {
             new QueryResultProcessor(patternQuery("?document cco:hasJournal ?journal"))
             {
                 @Override
                 public void parse() throws SQLException, IOException
                 {
-                    if(!getIRI("journal").equals("http://rdf.ebi.ac.uk/resource/chembl/journal/CHEMBL_JRN_null"))
-                    {
-                        statement.setInt(1,
-                                getIntID("journal", "http://rdf.ebi.ac.uk/resource/chembl/journal/CHEMBL_JRN_"));
-                        statement.setString(2,
-                                getStringID("document", "http://rdf.ebi.ac.uk/resource/chembl/document/"));
-                        statement.addBatch();
-                    }
+                    if(getIRI("journal").equals("http://rdf.ebi.ac.uk/resource/chembl/journal/CHEMBL_JRN_null"))
+                        return;
+
+                    statement.setInt(1,
+                            getIntID("journal", "http://rdf.ebi.ac.uk/resource/chembl/journal/CHEMBL_JRN_"));
+                    statement.setString(2, getStringID("document", "http://rdf.ebi.ac.uk/resource/chembl/document/"));
+                    statement.addBatch();
                 }
             }.load(model);
 
@@ -41,6 +40,6 @@ public class Document extends Updater
 
     public static void load() throws IOException, SQLException
     {
-        load("chembl/rdf/chembl_32.0_document.ttl.gz");
+        load("chembl/rdf/chembl_" + ChEMBL.version + "_document.ttl.gz");
     }
 }

@@ -1,4 +1,4 @@
-create type chembl.molecule_reference_type as enum
+create type chembl_tmp.molecule_reference_type as enum
 (
     'ACTOR',
     'ATLAS',
@@ -23,17 +23,17 @@ create type chembl.molecule_reference_type as enum
 );
 
 
-create table chembl.molecule_references
+create table chembl_tmp.molecule_references
 (
     refmol_id       integer not null,
     molecule_id     integer not null,
-    reference_type  chembl.molecule_reference_type not null,
+    reference_type  chembl_tmp.molecule_reference_type not null,
     reference       varchar not null,
     primary key(refmol_id)
 );
 
 
-create table chembl.molecule_pubchem_references
+create table chembl_tmp.molecule_pubchem_references
 (
     molecule_id     integer not null,
     compound_id     integer not null,
@@ -41,7 +41,7 @@ create table chembl.molecule_pubchem_references
 );
 
 
-create table chembl.molecule_pubchem_thom_pharm_references
+create table chembl_tmp.molecule_pubchem_thom_pharm_references
 (
     molecule_id     integer not null,
     substance_id    integer not null,
@@ -49,7 +49,7 @@ create table chembl.molecule_pubchem_thom_pharm_references
 );
 
 
-create table chembl.molecule_pubchem_dotf_references
+create table chembl_tmp.molecule_pubchem_dotf_references
 (
     molecule_id     integer not null,
     substance_id    integer not null,
@@ -57,7 +57,7 @@ create table chembl.molecule_pubchem_dotf_references
 );
 
 
-create table chembl.molecule_chebi_references
+create table chembl_tmp.molecule_chebi_references
 (
     molecule_id     integer not null,
     chebi_id        integer not null,

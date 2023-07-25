@@ -3,14 +3,13 @@ package cz.iocb.load.pubchem;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
 import org.apache.jena.graph.Node;
-import org.eclipse.collections.api.tuple.primitive.IntIntPair;
-import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
-import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
-import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
-import cz.iocb.load.common.MD5;
+import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -18,24 +17,27 @@ import cz.iocb.load.common.Updater;
 
 class Substance extends Updater
 {
-    private static IntHashSet usedSubstances;
-    private static IntHashSet newSubstances;
-    private static IntHashSet oldSubstances;
+    static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID";
+    static final int prefixLength = prefix.length();
+
+    private static final IntSet keepSubstances = new IntSet();
+    private static final IntSet newSubstances = new IntSet();
+    private static final IntSet oldSubstances = new IntSet();
 
 
     private static void loadBases() throws IOException, SQLException
     {
-        usedSubstances = new IntHashSet();
-        newSubstances = new IntHashSet();
-        oldSubstances = getIntSet("select id from pubchem.substance_bases");
+        load("select id from pubchem.substance_bases", oldSubstances);
     }
 
 
-    private static void loadCompounds() throws IOException, SQLException
+    private static void loadCompoundsAndTypes() throws IOException, SQLException
     {
-        IntIntHashMap newCompounds = new IntIntHashMap();
-        IntIntHashMap oldCompounds = getIntIntMap(
-                "select id, compound from pubchem.substance_bases where compound is not null");
+        IntIntMap keepCompounds = new IntIntMap();
+        IntIntMap newCompounds = new IntIntMap();
+        IntIntMap oldCompounds = new IntIntMap();
+
+        load("select id,compound from pubchem.substance_bases where compound is not null", oldCompounds);
 
         processFiles("pubchem/RDF/substance", "pc_substance2compound_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -48,33 +50,126 @@ class Substance extends Updater
                         if(!predicate.getURI().equals("http://semanticscience.org/resource/CHEMINF_000477"))
                             throw new IOException();
 
-                        int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
-                        int compoundID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
-
-                        addSubstanceID(substanceID, false);
-                        Compound.addCompoundID(compoundID);
+                        Integer substanceID = getSubstanceID(subject.getURI(), false, true);
+                        Integer compoundID = Compound.getCompoundID(object.getURI());
 
                         synchronized(newCompounds)
                         {
-                            if(compoundID != oldCompounds.removeKeyIfAbsent(substanceID, NO_VALUE))
-                                newCompounds.put(substanceID, compoundID);
+                            if(compoundID.equals(oldCompounds.remove(substanceID)))
+                            {
+                                keepCompounds.put(substanceID, compoundID);
+                            }
+                            else
+                            {
+                                Integer keep = keepCompounds.get(substanceID);
+
+                                if(compoundID.equals(keep))
+                                    return;
+                                else if(keep != null)
+                                    throw new IOException();
+
+                                Integer put = newCompounds.put(substanceID, compoundID);
+
+                                if(put != null && !compoundID.equals(put))
+                                    throw new IOException();
+                            }
                         }
                     }
                 }.load(stream);
             }
         });
 
-        batch("update pubchem.substance_bases set compound = null where id = ?", oldCompounds.keySet());
-        batch("insert into pubchem.substance_bases(id, compound) values (?,?) "
-                + "on conflict (id) do update set compound=EXCLUDED.compound", newCompounds);
+        store("update pubchem.substance_bases set compound=null where id=? and compound=?", oldCompounds);
+        store("insert into pubchem.substance_bases(id,compound) values(?,?) "
+                + "on conflict(id) do update set compound=EXCLUDED.compound", newCompounds);
+
+
+        Map<Integer, List<Integer>> classes = new HashMap<Integer, List<Integer>>();
+
+        BiConsumer<Integer, Integer> consumer = (substance, compound) -> {
+            List<Integer> list = classes.get(compound);
+
+            if(list == null)
+            {
+                list = new ArrayList<Integer>();
+                classes.put(compound, list);
+            }
+
+            list.add(substance);
+        };
+
+        keepCompounds.forEach(consumer);
+        newCompounds.forEach(consumer);
+
+
+        IntPairSet keepTypes = new IntPairSet();
+        IntPairSet newTypes = new IntPairSet();
+        IntPairSet oldTypes = new IntPairSet();
+
+        load("select substance,chebi from pubchem.substance_types", oldTypes);
+
+        try(InputStream stream = getTtlStream("pubchem/RDF/substance/pc_substance_type.ttl.gz"))
+        {
+            new TripleStreamProcessor()
+            {
+                @Override
+                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                {
+                    if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                        throw new IOException();
+
+                    Integer substanceID = getSubstanceID(subject.getURI(), false, false);
+                    Integer chebiID = getIntID(object, "http://purl.obolibrary.org/obo/CHEBI_");
+
+                    Pair<Integer, Integer> pair = Pair.getPair(substanceID, chebiID);
+
+                    if(oldTypes.remove(pair))
+                        keepTypes.add(pair);
+                    else if(!keepTypes.contains(pair))
+                        newTypes.add(pair);
+
+
+                    // extension
+
+                    Integer compoundID = keepCompounds.get(substanceID);
+
+                    if(compoundID == null)
+                        compoundID = newCompounds.get(substanceID);
+
+                    if(compoundID != null)
+                    {
+                        List<Integer> substances = classes.get(compoundID);
+
+                        if(substances != null)
+                        {
+                            for(Integer s : substances)
+                            {
+                                Pair<Integer, Integer> p = Pair.getPair(s, chebiID);
+
+                                if(oldTypes.remove(p))
+                                    keepTypes.add(p);
+                                else if(!keepTypes.contains(p))
+                                    newTypes.add(p);
+                            }
+                        }
+                    }
+                }
+            }.load(stream);
+        }
+
+        store("delete from pubchem.substance_types where substance=? and chebi=?", oldTypes);
+        store("insert into pubchem.substance_types(substance,chebi) values(?,?)", newTypes);
     }
 
 
     private static void loadAvailabilities() throws IOException, SQLException
     {
+        IntStringMap keepAvailabilities = new IntStringMap();
         IntStringMap newAvailabilities = new IntStringMap();
-        IntStringMap oldAvailabilities = getIntStringMap(
-                "select id, available::varchar from pubchem.substance_bases where available is not null");
+        IntStringMap oldAvailabilities = new IntStringMap();
+
+        load("select id,available::varchar from pubchem.substance_bases where available is not null",
+                oldAvailabilities);
 
         processFiles("pubchem/RDF/substance", "pc_substance_available_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -87,32 +182,48 @@ class Substance extends Updater
                         if(!predicate.getURI().equals("http://purl.org/dc/terms/available"))
                             throw new IOException();
 
-                        int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
+                        Integer substanceID = getSubstanceID(subject.getURI(), false, true);
                         String date = getString(object).replaceFirst("-0[45]:00$", "");
-
-                        addSubstanceID(substanceID, false);
 
                         synchronized(newAvailabilities)
                         {
-                            if(!date.equals(oldAvailabilities.remove(substanceID)))
-                                newAvailabilities.put(substanceID, date);
+                            if(date.equals(oldAvailabilities.remove(substanceID)))
+                            {
+                                keepAvailabilities.put(substanceID, date);
+                            }
+                            else
+                            {
+                                String keep = keepAvailabilities.get(substanceID);
+
+                                if(date.equals(keep))
+                                    return;
+                                else if(keep != null)
+                                    throw new IOException();
+
+                                String put = newAvailabilities.put(substanceID, date);
+
+                                if(put != null && !date.equals(put))
+                                    throw new IOException();
+                            }
                         }
                     }
                 }.load(stream);
             }
         });
 
-        batch("update pubchem.substance_bases set available = null where id = ?", oldAvailabilities.keySet());
-        batch("insert into pubchem.substance_bases(id, available) values (?,?::date) "
-                + "on conflict (id) do update set available=EXCLUDED.available", newAvailabilities);
+        store("update pubchem.substance_bases set available=null where id=? and available=?::date", oldAvailabilities);
+        store("insert into pubchem.substance_bases(id,available) values(?,?::date) "
+                + "on conflict(id) do update set available=EXCLUDED.available", newAvailabilities);
     }
 
 
     private static void loadModifiedDates() throws IOException, SQLException
     {
+        IntStringMap keepModifiedDates = new IntStringMap();
         IntStringMap newModifiedDates = new IntStringMap();
-        IntStringMap oldModifiedDates = getIntStringMap(
-                "select id, modified::varchar from pubchem.substance_bases where modified is not null");
+        IntStringMap oldModifiedDates = new IntStringMap();
+
+        load("select id,modified::varchar from pubchem.substance_bases where modified is not null", oldModifiedDates);
 
         processFiles("pubchem/RDF/substance", "pc_substance_modified_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -125,32 +236,48 @@ class Substance extends Updater
                         if(!predicate.getURI().equals("http://purl.org/dc/terms/modified"))
                             throw new IOException();
 
-                        int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
+                        Integer substanceID = getSubstanceID(subject.getURI(), false, true);
                         String date = getString(object).replaceFirst("-0[45]:00$", "");
-
-                        addSubstanceID(substanceID, false);
 
                         synchronized(newModifiedDates)
                         {
-                            if(!date.equals(oldModifiedDates.remove(substanceID)))
-                                newModifiedDates.put(substanceID, date);
+                            if(date.equals(oldModifiedDates.remove(substanceID)))
+                            {
+                                keepModifiedDates.put(substanceID, date);
+                            }
+                            else
+                            {
+                                String keep = keepModifiedDates.get(substanceID);
+
+                                if(date.equals(keep))
+                                    return;
+                                else if(keep != null)
+                                    throw new IOException();
+
+                                String put = newModifiedDates.put(substanceID, date);
+
+                                if(put != null && !date.equals(put))
+                                    throw new IOException();
+                            }
                         }
                     }
                 }.load(stream);
             }
         });
 
-        batch("update pubchem.substance_bases set modified = null where id = ?", oldModifiedDates.keySet());
-        batch("insert into pubchem.substance_bases(id, modified) values (?,?::date) "
-                + "on conflict (id) do update set modified=EXCLUDED.modified", newModifiedDates);
+        store("update pubchem.substance_bases set modified=null where id=? and modified=?::date", oldModifiedDates);
+        store("insert into pubchem.substance_bases(id,modified) values(?,?::date) "
+                + "on conflict(id) do update set modified=EXCLUDED.modified", newModifiedDates);
     }
 
 
     private static void loadSources() throws IOException, SQLException
     {
-        IntIntHashMap newSources = new IntIntHashMap();
-        IntIntHashMap oldSources = getIntIntMap(
-                "select id, source from pubchem.substance_bases where source is not null");
+        IntIntMap keepSources = new IntIntMap();
+        IntIntMap newSources = new IntIntMap();
+        IntIntMap oldSources = new IntIntMap();
+
+        load("select id,source from pubchem.substance_bases where source is not null", oldSources);
 
         processFiles("pubchem/RDF/substance", "pc_substance_source_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -163,36 +290,53 @@ class Substance extends Updater
                         if(!predicate.getURI().equals("http://purl.org/dc/terms/source"))
                             throw new IOException();
 
-                        int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
-                        int sourceID = Source
-                                .getSourceID(getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/source/"));
-
-                        addSubstanceID(substanceID, false);
+                        Integer substanceID = getSubstanceID(subject.getURI(), false, true);
+                        Integer sourceID = Source.getSourceID(object.getURI());
 
                         synchronized(newSources)
                         {
-                            if(sourceID != oldSources.removeKeyIfAbsent(substanceID, NO_VALUE))
-                                newSources.put(substanceID, sourceID);
+                            if(sourceID.equals(oldSources.remove(substanceID)))
+                            {
+                                keepSources.put(substanceID, sourceID);
+                            }
+                            else
+                            {
+                                Integer keep = keepSources.get(substanceID);
+
+                                if(sourceID.equals(keep))
+                                    return;
+                                else if(keep != null)
+                                    throw new IOException();
+
+                                Integer put = newSources.put(substanceID, sourceID);
+
+                                if(put != null && !sourceID.equals(put))
+                                    throw new IOException();
+                            }
                         }
                     }
                 }.load(stream);
             }
         });
 
-        batch("update pubchem.substance_bases set source = null where id = ?", oldSources.keySet());
-        batch("insert into pubchem.substance_bases(id, source) values (?,?) "
-                + "on conflict (id) do update set source=EXCLUDED.source", newSources);
+        store("update pubchem.substance_bases set source=null where id=? and source=?", oldSources);
+        store("insert into pubchem.substance_bases(id,source) values(?,?) "
+                + "on conflict(id) do update set source=EXCLUDED.source", newSources);
     }
 
 
     private static void loadMatches() throws IOException, SQLException
     {
+        IntPairSet keepChemblMatches = new IntPairSet();
         IntPairSet newChemblMatches = new IntPairSet();
-        IntPairSet oldChemblMatches = getIntPairSet("select substance, chembl from pubchem.substance_chembl_matches");
+        IntPairSet oldChemblMatches = new IntPairSet();
 
+        IntStringMap keepGlytoucanMatches = new IntStringMap();
         IntStringMap newGlytoucanMatches = new IntStringMap();
-        IntStringMap oldGlytoucanMatches = getIntStringMap(
-                "select substance, glytoucan from pubchem.substance_glytoucan_matches");
+        IntStringMap oldGlytoucanMatches = new IntStringMap();
+
+        load("select substance,chembl from pubchem.substance_chembl_matches", oldChemblMatches);
+        load("select substance,glytoucan from pubchem.substance_glytoucan_matches", oldGlytoucanMatches);
 
         processFiles("pubchem/RDF/substance", "pc_substance_match\\.ttl[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -216,31 +360,45 @@ class Substance extends Updater
                                 value = value.replaceFirst("molecule/[Cc]hembl", "molecule/CHEMBL");
                             }
 
-                            int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
-                            int chemblID = getIntID(value, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL");
+                            Integer substanceID = getSubstanceID(subject.getURI(), false, false);
+                            Integer chemblID = getIntID(value, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL");
 
-                            IntIntPair pair = PrimitiveTuples.pair(substanceID, chemblID);
-                            addSubstanceID(substanceID, false);
+                            Pair<Integer, Integer> pair = Pair.getPair(substanceID, chemblID);
 
                             synchronized(newChemblMatches)
                             {
-                                if(!oldChemblMatches.remove(pair))
+                                if(oldChemblMatches.remove(pair))
+                                    keepChemblMatches.add(pair);
+                                else if(!keepChemblMatches.contains(pair))
                                     newChemblMatches.add(pair);
                             }
                         }
                         else if(value.startsWith("http://identifiers.org/glytoucan/"))
                         {
-                            int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
-                            String matchID = getStringID(object, "http://identifiers.org/glytoucan/");
-
-                            addSubstanceID(substanceID, false);
+                            Integer substanceID = getSubstanceID(subject.getURI(), false, false);
+                            String match = getStringID(object, "http://identifiers.org/glytoucan/");
 
                             synchronized(newGlytoucanMatches)
                             {
-                                if(!matchID.equals(oldGlytoucanMatches.remove(substanceID)))
-                                    newGlytoucanMatches.put(substanceID, matchID);
-                            }
+                                if(match.equals(oldGlytoucanMatches.remove(substanceID)))
+                                {
+                                    keepGlytoucanMatches.put(substanceID, match);
+                                }
+                                else
+                                {
+                                    String keep = keepGlytoucanMatches.get(substanceID);
 
+                                    if(match.equals(keep))
+                                        return;
+                                    else if(keep != null)
+                                        throw new IOException();
+
+                                    String put = newGlytoucanMatches.put(substanceID, match);
+
+                                    if(put != null && !match.equals(put))
+                                        throw new IOException();
+                                }
+                            }
                         }
                         else if(!value.startsWith("http://linkedchemistry.info/chembl/chemblid/"))
                         {
@@ -251,51 +409,22 @@ class Substance extends Updater
             }
         });
 
-        batch("delete from pubchem.substance_chembl_matches where substance = ? and chembl = ?", oldChemblMatches);
-        batch("insert into pubchem.substance_chembl_matches(substance, chembl) values (?,?)", newChemblMatches);
+        store("delete from pubchem.substance_chembl_matches where substance=? and chembl=?", oldChemblMatches);
+        store("insert into pubchem.substance_chembl_matches(substance,chembl) values(?,?)", newChemblMatches);
 
-        batch("delete from pubchem.substance_glytoucan_matches where substance = ?", oldGlytoucanMatches.keySet());
-        batch("insert into pubchem.substance_glytoucan_matches(substance, glytoucan) values (?,?) "
-                + "on conflict (substance) do update set glytoucan=EXCLUDED.glytoucan", newGlytoucanMatches);
-    }
-
-
-    private static void loadTypes() throws IOException, SQLException
-    {
-        IntPairSet newTypes = new IntPairSet();
-        IntPairSet oldTypes = getIntPairSet("select substance, chebi from pubchem.substance_types");
-
-        try(InputStream stream = getTtlStream("pubchem/RDF/substance/pc_substance_type.ttl.gz"))
-        {
-            new TripleStreamProcessor()
-            {
-                @Override
-                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
-                {
-                    if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                        throw new IOException();
-
-                    int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
-                    int chebiID = getIntID(object, "http://purl.obolibrary.org/obo/CHEBI_");
-
-                    IntIntPair pair = PrimitiveTuples.pair(substanceID, chebiID);
-                    addSubstanceID(substanceID, false);
-
-                    if(!oldTypes.remove(pair))
-                        newTypes.add(pair);
-                }
-            }.load(stream);
-        }
-
-        batch("delete from pubchem.substance_types where substance = ? and chebi = ?", oldTypes);
-        batch("insert into pubchem.substance_types(substance, chebi) values (?,?)", newTypes);
+        store("delete from pubchem.substance_glytoucan_matches where substance=? and glytoucan=?", oldGlytoucanMatches);
+        store("insert into pubchem.substance_glytoucan_matches(substance,glytoucan) values(?,?) "
+                + "on conflict(substance) do update set glytoucan=EXCLUDED.glytoucan", newGlytoucanMatches);
     }
 
 
     private static void loadPdbLinks() throws IOException, SQLException
     {
-        IntStringPairSet newLinks = new IntStringPairSet();
-        IntStringPairSet oldLinks = getIntStringPairSet("select substance, pdblink from pubchem.substance_pdblinks");
+        IntStringSet keepLinks = new IntStringSet();
+        IntStringSet newLinks = new IntStringSet();
+        IntStringSet oldLinks = new IntStringSet();
+
+        load("select substance,pdblink from pubchem.substance_pdblinks", oldLinks);
 
         try(InputStream stream = getTtlStream("pubchem/RDF/substance/pc_substance2pdb.ttl.gz"))
         {
@@ -307,30 +436,34 @@ class Substance extends Updater
                     if(!predicate.getURI().equals("http://rdf.wwpdb.org/schema/pdbx-v40.owl#link_to_pdb"))
                         throw new IOException();
 
-                    int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
+                    Integer substanceID = getSubstanceID(subject.getURI(), false, false);
                     String link = getStringID(object, "http://rdf.wwpdb.org/pdb/");
 
                     if(!link.isEmpty())
                     {
-                        IntObjectPair<String> pair = PrimitiveTuples.pair(substanceID, link);
-                        addSubstanceID(substanceID, false);
+                        Pair<Integer, String> pair = Pair.getPair(substanceID, link);
 
-                        if(!oldLinks.remove(pair))
+                        if(oldLinks.remove(pair))
+                            keepLinks.add(pair);
+                        else if(!keepLinks.contains(pair))
                             newLinks.add(pair);
                     }
                 }
             }.load(stream);
         }
 
-        batch("delete from pubchem.substance_pdblinks where substance = ? and pdblink = ?", oldLinks);
-        batch("insert into pubchem.substance_pdblinks(substance, pdblink) values (?,?)", newLinks);
+        store("delete from pubchem.substance_pdblinks where substance=? and pdblink=?", oldLinks);
+        store("insert into pubchem.substance_pdblinks(substance,pdblink) values(?,?)", newLinks);
     }
 
 
     private static void loadReferences() throws IOException, SQLException
     {
+        IntPairSet keepReferences = new IntPairSet();
         IntPairSet newReferences = new IntPairSet();
-        IntPairSet oldReferences = getIntPairSet("select substance, reference from pubchem.substance_references");
+        IntPairSet oldReferences = new IntPairSet();
+
+        load("select substance,reference from pubchem.substance_references", oldReferences);
 
         try(InputStream stream = getTtlStream("pubchem/RDF/substance/pc_substance2reference.ttl.gz"))
         {
@@ -342,28 +475,31 @@ class Substance extends Updater
                     if(!predicate.getURI().equals("http://purl.org/spar/cito/isDiscussedBy"))
                         throw new IOException();
 
-                    int substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
-                    int referenceID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/");
+                    Integer substanceID = getSubstanceID(subject.getURI(), false, false);
+                    Integer referenceID = Reference.getReferenceID(object.getURI());
 
-                    IntIntPair pair = PrimitiveTuples.pair(substanceID, referenceID);
-                    addSubstanceID(substanceID, false);
-                    Reference.getReferenceID(referenceID);
+                    Pair<Integer, Integer> pair = Pair.getPair(substanceID, referenceID);
 
-                    if(!oldReferences.remove(pair))
+                    if(oldReferences.remove(pair))
+                        keepReferences.add(pair);
+                    else if(!keepReferences.contains(pair))
                         newReferences.add(pair);
                 }
             }.load(stream);
         }
 
-        batch("delete from pubchem.substance_references where substance = ? and reference = ?", oldReferences);
-        batch("insert into pubchem.substance_references(substance, reference) values (?,?)", newReferences);
+        store("delete from pubchem.substance_references where substance=? and reference=?", oldReferences);
+        store("insert into pubchem.substance_references(substance,reference) values(?,?)", newReferences);
     }
 
 
     private static void loadSynonyms() throws IOException, SQLException
     {
+        IntPairSet keepSynonyms = new IntPairSet();
         IntPairSet newSynonyms = new IntPairSet();
-        IntPairSet oldSynonyms = getIntPairSet("select substance, synonym from pubchem.substance_synonyms");
+        IntPairSet oldSynonyms = new IntPairSet();
+
+        load("select substance,synonym from pubchem.substance_synonyms", oldSynonyms);
 
         processFiles("pubchem/RDF/substance", "pc_substance2descriptor_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -379,38 +515,32 @@ class Substance extends Updater
                         if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/SID"))
                             return;
 
-                        int substanceID;
+                        Integer substanceID = getSubstanceID(subject.getURI(), false, false);
+                        Integer md5ID = Synonym.getSynonymID(object.getURI());
 
-                        if(subject.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID"))
-                            substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
-                        else
-                            substanceID = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/");
-
-                        MD5 md5 = getSynonymMD5(object);
-                        int md5ID = Synonym.getSynonymID(md5);
-
-                        if(md5ID != NO_VALUE)
+                        if(md5ID != null)
                         {
-                            IntIntPair pair = PrimitiveTuples.pair(substanceID, md5ID);
-                            addSubstanceID(substanceID, false);
+                            Pair<Integer, Integer> pair = Pair.getPair(substanceID, md5ID);
 
                             synchronized(newSynonyms)
                             {
-                                if(!oldSynonyms.remove(pair))
+                                if(oldSynonyms.remove(pair))
+                                    keepSynonyms.add(pair);
+                                else if(!keepSynonyms.contains(pair))
                                     newSynonyms.add(pair);
                             }
                         }
                         else
                         {
-                            System.out.println("    ignore md5 synonym " + md5 + " for sio:SIO_000008");
+                            System.out.println("    ignore synonym " + object.getURI() + " for sio:SIO_000008");
                         }
                     }
                 }.load(stream);
             }
         });
 
-        batch("delete from pubchem.substance_synonyms where substance = ? and synonym = ?", oldSynonyms);
-        batch("insert into pubchem.substance_synonyms(substance, synonym) values (?,?)", newSynonyms);
+        store("delete from pubchem.substance_synonyms where substance=? and synonym=?", oldSynonyms);
+        store("insert into pubchem.substance_synonyms(substance,synonym) values(?,?)", newSynonyms);
     }
 
 
@@ -424,12 +554,12 @@ class Substance extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID");
+                        getIntID(subject, prefix);
 
                         if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/RO_0000056"))
                             throw new IOException();
 
-                        getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID");
+                        getStringID(object, Measuregroup.prefix);
                     }
                 }.load(stream);
             }
@@ -442,12 +572,11 @@ class Substance extends Updater
         System.out.println("load substances ...");
 
         loadBases();
-        loadCompounds();
+        loadCompoundsAndTypes();
         loadAvailabilities();
         loadModifiedDates();
         loadSources();
         loadMatches();
-        loadTypes();
         loadPdbLinks();
         loadReferences();
         loadSynonyms();
@@ -461,42 +590,63 @@ class Substance extends Updater
     {
         System.out.println("finish substances ...");
 
-        batch("delete from pubchem.substance_bases where id = ?", oldSubstances);
-        batch("insert into pubchem.substance_bases(id) values(?)" + " on conflict do nothing", newSubstances);
-
-        try(Statement statement = connection.createStatement())
-        {
-            statement.execute("insert into pubchem.substance_types select distinct tab3.id, tab1.chebi "
-                    + "from pubchem.substance_types tab1, pubchem.substance_bases tab2, pubchem.substance_bases tab3 "
-                    + "where tab1.substance = tab2.id and tab2.compound = tab3.compound on conflict do nothing");
-        }
-
-        usedSubstances = null;
-        newSubstances = null;
-        oldSubstances = null;
+        store("delete from pubchem.substance_bases where id=?", oldSubstances);
+        store("insert into pubchem.substance_bases(id) values(?)", newSubstances);
 
         System.out.println();
     }
 
 
-    static void addSubstanceID(int substanceID)
-    {
-        addSubstanceID(substanceID, true);
-    }
-
-
-    private static void addSubstanceID(int substanceID, boolean verbose)
+    static void addSubstanceID(Integer substanceID) throws IOException
     {
         synchronized(newSubstances)
         {
-            if(usedSubstances.add(substanceID))
+            if(!keepSubstances.contains(substanceID) && !newSubstances.contains(substanceID))
+            {
+                System.out.println("    add missing substance SID" + substanceID);
+
+                if(oldSubstances.remove(substanceID))
+                    keepSubstances.add(substanceID);
+                else
+                    newSubstances.add(substanceID);
+            }
+        }
+    }
+
+
+    static Integer getSubstanceID(String value) throws IOException
+    {
+        return getSubstanceID(value, true, false);
+    }
+
+
+    private static Integer getSubstanceID(String value, boolean verbose, boolean keepForce) throws IOException
+    {
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        Integer substanceID = Integer.parseInt(value.substring(prefixLength));
+
+        synchronized(newSubstances)
+        {
+            if(!keepSubstances.contains(substanceID) && !newSubstances.contains(substanceID))
             {
                 if(verbose)
                     System.out.println("    add missing substance SID" + substanceID);
 
-                if(!oldSubstances.remove(substanceID))
+                if(!oldSubstances.remove(substanceID) && !keepForce)
                     newSubstances.add(substanceID);
+                else
+                    keepSubstances.add(substanceID);
             }
         }
+
+        return substanceID;
+    }
+
+
+    public static int size()
+    {
+        return newSubstances.size() + keepSubstances.size();
     }
 }

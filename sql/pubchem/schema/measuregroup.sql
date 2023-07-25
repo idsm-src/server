@@ -8,6 +8,15 @@ create table pubchem.measuregroup_bases
 );
 
 
+create table pubchem.measuregroup_substances
+(
+    bioassay        integer not null,
+    measuregroup    integer not null,
+    substance       integer not null,
+    primary key(bioassay, measuregroup, substance)
+);
+
+
 create table pubchem.measuregroup_proteins
 (
     bioassay        integer not null,

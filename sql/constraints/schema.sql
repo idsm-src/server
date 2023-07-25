@@ -1,6 +1,3 @@
-create schema constraints;
-
-
 create table constraints.foreign_keys
 (
     __                 integer not null,

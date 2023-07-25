@@ -73,9 +73,8 @@ public class MoleculeReference extends Updater
                 "http://en\\.wikipedia\\.org/wiki/.+"));
         descriptions.put("LincsRef", new Description("LINCS", "http://identifiers.org/lincs.smallmolecule/",
                 "http://identifiers\\.org/lincs\\.smallmolecule/LSM-[1-9][0-9]*"));
-        descriptions.put("FdaSrsRef", new Description("FDA SRS",
-                "https://fdasis.nlm.nih.gov/srs/ProxyServlet?mergeData=true&objectHandle=DBMaint&APPLICATION_NAME=fdasrs&actionHandle=default&nextPage=jsp/srs/ResultScreen.jsp&TXTSUPERLISTID=",
-                "https://fdasis\\.nlm\\.nih\\.gov/srs/ProxyServlet\\?mergeData=true&objectHandle=DBMaint&APPLICATION_NAME=fdasrs&actionHandle=default&nextPage=jsp/srs/ResultScreen\\.jsp&TXTSUPERLISTID=[A-Z0-9]{10}"));
+        descriptions.put("FdaSrsRef", new Description("FDA SRS", "https://precision.fda.gov/uniisearch/srs/unii/",
+                "https://precision\\.fda\\.gov/uniisearch/srs/unii/[A-Z0-9]{10}"));
     }
 
 
@@ -84,8 +83,8 @@ public class MoleculeReference extends Updater
         Model model = getModel(file);
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into chembl_32.molecule_references(refmol_id, molecule_id, reference_type, reference) "
-                        + "values (?,?,?::chembl_32.molecule_reference_type,?)"))
+                "insert into chembl_tmp.molecule_references(refmol_id, molecule_id, reference_type, reference) "
+                        + "values(?,?,?::chembl_tmp.molecule_reference_type,?)"))
         {
             new QueryResultProcessor(patternQuery("?molecule cco:moleculeXref ?reference. ?reference rdf:type ?type "
                     + "filter(?type != cco:PubchemRef && ?type != cco:PubchemThomPharmRef "
@@ -118,7 +117,7 @@ public class MoleculeReference extends Updater
 
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into chembl_32.molecule_pubchem_references(molecule_id, compound_id) values (?,?)"))
+                "insert into chembl_tmp.molecule_pubchem_references(molecule_id, compound_id) values(?,?)"))
         {
             new QueryResultProcessor(
                     patternQuery("?molecule cco:moleculeXref ?compound. ?compound rdf:type cco:PubchemRef"))
@@ -137,7 +136,7 @@ public class MoleculeReference extends Updater
 
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into chembl_32.molecule_pubchem_thom_pharm_references(molecule_id, substance_id) values (?,?)"))
+                "insert into chembl_tmp.molecule_pubchem_thom_pharm_references(molecule_id, substance_id) values(?,?)"))
         {
             new QueryResultProcessor(
                     patternQuery("?molecule cco:moleculeXref ?substance. ?substance rdf:type cco:PubchemThomPharmRef"))
@@ -156,7 +155,7 @@ public class MoleculeReference extends Updater
 
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into chembl_32.molecule_pubchem_dotf_references(molecule_id, substance_id) values (?,?)"))
+                "insert into chembl_tmp.molecule_pubchem_dotf_references(molecule_id, substance_id) values(?,?)"))
         {
             new QueryResultProcessor(
                     patternQuery("?molecule cco:moleculeXref ?substance. ?substance rdf:type cco:PubchemDotfRef"))
@@ -174,7 +173,7 @@ public class MoleculeReference extends Updater
         }
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into chembl_32.molecule_chebi_references(molecule_id, chebi_id) values (?,?)"))
+                "insert into chembl_tmp.molecule_chebi_references(molecule_id, chebi_id) values(?,?)"))
         {
             new QueryResultProcessor(patternQuery("?molecule cco:moleculeXref ?chebi. ?chebi rdf:type cco:ChebiRef"))
             {
@@ -194,7 +193,7 @@ public class MoleculeReference extends Updater
 
     public static void load() throws IOException, SQLException
     {
-        load("chembl/rdf/chembl_32.0_molecule.ttl.gz");
-        load("chembl/rdf/chembl_32.0_unichem.ttl.gz");
+        load("chembl/rdf/chembl_" + ChEMBL.version + "_molecule.ttl.gz");
+        load("chembl/rdf/chembl_" + ChEMBL.version + "_unichem.ttl.gz");
     }
 }

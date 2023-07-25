@@ -125,9 +125,9 @@ create table ontology.maxcardinality_restrictions
 
 create table ontology.resources__reftable
 (
-    resource_id      integer not null,
-    iri              varchar unique not null,
-    primary key(resource_id)
+    resource_id      integer unique not null,
+    iri              varchar not null,
+    primary key(iri)
 );
 
 

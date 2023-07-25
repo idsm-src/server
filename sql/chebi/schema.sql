@@ -1,6 +1,3 @@
-create schema chebi;
-
-
 create table chebi.classes
 (
     id          integer not null,

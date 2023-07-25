@@ -4,8 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
-import org.eclipse.collections.impl.tuple.Tuples;
+import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -13,89 +12,125 @@ import cz.iocb.load.common.Updater;
 
 public class Grant extends Updater
 {
-    private static StringIntMap usedGrants;
-    private static StringIntMap newGrants;
-    private static StringIntMap oldGrants;
+    static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/grant/";
+    static final int prefixLength = prefix.length();
+
+    private static final StringIntMap keepGrants = new StringIntMap();
+    private static final StringIntMap newGrants = new StringIntMap();
+    private static final StringIntMap oldGrants = new StringIntMap();
     private static int nextGrantID;
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        usedGrants = new StringIntMap();
-        newGrants = new StringIntMap();
-        oldGrants = getStringIntMap("select iri, id from pubchem.grant_bases");
-        nextGrantID = getIntValue("select coalesce(max(id)+1,0) from pubchem.grant_bases");
+        load("select iri,id from pubchem.grant_bases", oldGrants);
+
+        nextGrantID = oldGrants.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
         new QueryResultProcessor(patternQuery("?grant rdf:type frapo:Grant"))
         {
             @Override
             protected void parse() throws IOException
             {
-                String grant = getStringID("grant", "http://rdf.ncbi.nlm.nih.gov/pubchem/grant/");
-                int grantID = oldGrants.removeKeyIfAbsent(grant, NO_VALUE);
+                String grant = getStringID("grant", prefix);
+                Integer grantID = oldGrants.remove(grant);
 
-                if(grantID == NO_VALUE)
-                    newGrants.put(grant, grantID = nextGrantID++);
-
-                usedGrants.put(grant, grantID);
+                if(grantID == null)
+                    newGrants.put(grant, nextGrantID++);
+                else
+                    keepGrants.put(grant, grantID);
             }
         }.load(model);
-
-        batch("insert into pubchem.grant_bases(iri, id) values (?,?)", newGrants);
-        newGrants.clear();
     }
 
 
     private static void loadNumbers(Model model) throws IOException, SQLException
     {
+        IntStringMap keepNumbers = new IntStringMap();
         IntStringPairMap newNumbers = new IntStringPairMap();
-        IntStringMap oldNumbers = getIntStringMap(
-                "select id, number from pubchem.grant_bases where number is not null");
+        IntStringMap oldNumbers = new IntStringMap();
+
+        load("select id,number from pubchem.grant_bases where number is not null", oldNumbers);
 
         new QueryResultProcessor(patternQuery("?grant frapo:hasGrantNumber ?number"))
         {
             @Override
             protected void parse() throws IOException
             {
-                String grant = getStringID("grant", "http://rdf.ncbi.nlm.nih.gov/pubchem/grant/");
-                int grantID = getGrantID(grant);
+                Integer grantID = getGrantID(getIRI("grant"), true);
                 String number = getString("number");
 
-                if(!number.equals(oldNumbers.remove(grantID)))
-                    newNumbers.put(grantID, Tuples.pair(grant, number));
+                if(number.equals(oldNumbers.remove(grantID)))
+                {
+                    keepNumbers.put(grantID, number);
+                }
+                else
+                {
+                    String keep = keepNumbers.get(grantID);
+
+                    Pair<String, String> pair = Pair.getPair(getStringID("grant", prefix), number);
+
+                    if(number.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Pair<String, String> put = newNumbers.put(grantID, pair);
+
+                    if(put != null && !number.equals(put.getTwo()))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.grant_bases set number = null where id = ?", oldNumbers.keySet());
-        batch("insert into pubchem.grant_bases(id, iri, number) values (?,?,?) "
-                + "on conflict (id) do update set number=EXCLUDED.number", newNumbers);
+        store("update pubchem.grant_bases set number=null where id=? and number=?", oldNumbers);
+        store("insert into pubchem.grant_bases(id,iri,number) values(?,?,?) "
+                + "on conflict(id) do update set number=EXCLUDED.number", newNumbers);
     }
 
 
     private static void loadOrganizations(Model model) throws IOException, SQLException
     {
+        IntIntMap keepOrganizations = new IntIntMap();
         IntStringIntPairMap newOrganizations = new IntStringIntPairMap();
-        IntIntHashMap oldOrganizations = getIntIntMap(
-                "select id, organization from pubchem.grant_bases where organization is not null");
+        IntIntMap oldOrganizations = new IntIntMap();
+
+        load("select id,organization from pubchem.grant_bases where organization is not null", oldOrganizations);
 
         new QueryResultProcessor(patternQuery("?grant frapo:hasFundingAgency ?organization"))
         {
             @Override
             protected void parse() throws IOException
             {
-                String grant = getStringID("grant", "http://rdf.ncbi.nlm.nih.gov/pubchem/grant/");
-                int grantID = getGrantID(grant);
-                int organizationID = Organization.getOrganizationID(
-                        getStringID("organization", "http://rdf.ncbi.nlm.nih.gov/pubchem/organization/"));
+                Integer grantID = getGrantID(getIRI("grant"), true);
+                Integer organizationID = Organization.getOrganizationID(getIRI("organization"));
 
-                if(organizationID != oldOrganizations.removeKeyIfAbsent(grantID, NO_VALUE))
-                    newOrganizations.put(grantID, Tuples.pair(grant, organizationID));
+                if(organizationID.equals(oldOrganizations.remove(grantID)))
+                {
+                    keepOrganizations.put(grantID, organizationID);
+                }
+                else
+                {
+                    Integer keep = keepOrganizations.get(grantID);
+
+                    Pair<String, Integer> pair = Pair.getPair(getStringID("grant", prefix), organizationID);
+
+                    if(organizationID.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Pair<String, Integer> put = newOrganizations.put(grantID, pair);
+
+                    if(put != null && !organizationID.equals(put.getTwo()))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.grant_bases set organization = null where id = ?", oldOrganizations.keySet());
-        batch("insert into pubchem.grant_bases(id, iri, organization) values (?,?,?) "
-                + "on conflict (id) do update set organization=EXCLUDED.organization", newOrganizations);
+        store("update pubchem.grant_bases set organization=null where id=? and organization=?", oldOrganizations);
+        store("insert into pubchem.grant_bases(id,iri,organization) values(?,?,?) "
+                + "on conflict(id) do update set organization=EXCLUDED.organization", newOrganizations);
     }
 
 
@@ -131,32 +166,54 @@ public class Grant extends Updater
     {
         System.out.println("finish grants ...");
 
-        batch("delete from pubchem.grant_bases where id = ?", oldGrants.values());
-        batch("insert into pubchem.grant_bases(iri, id) values (?,?)" + " on conflict do nothing", newGrants);
-
-        usedGrants = null;
-        newGrants = null;
-        oldGrants = null;
+        store("delete from pubchem.grant_bases where iri=? and id=?", oldGrants);
+        store("insert into pubchem.grant_bases(iri,id) values(?,?)", newGrants);
 
         System.out.println();
     }
 
 
-    static int getGrantID(String grant)
+    static Integer getGrantID(String value) throws IOException
     {
+        return getGrantID(value, false);
+    }
+
+
+    static Integer getGrantID(String value, boolean keepForce) throws IOException
+    {
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        String grant = value.substring(prefixLength);
+
         synchronized(newGrants)
         {
-            int grantID = usedGrants.getIfAbsent(grant, NO_VALUE);
+            Integer grantID = keepGrants.get(grant);
 
-            if(grantID == NO_VALUE)
+            if(grantID != null)
+                return grantID;
+
+            grantID = newGrants.get(grant);
+
+            if(grantID != null)
             {
-                System.out.println("    add missing grant " + grant);
+                if(keepForce)
+                {
+                    newGrants.remove(grant);
+                    keepGrants.put(grant, grantID);
+                }
 
-                if((grantID = oldGrants.removeKeyIfAbsent(grant, NO_VALUE)) == NO_VALUE)
-                    newGrants.put(grant, grantID = nextGrantID++);
-
-                usedGrants.put(grant, grantID);
+                return grantID;
             }
+
+            System.out.println("    add missing grant " + grant);
+
+            if((grantID = oldGrants.remove(grant)) != null)
+                keepGrants.put(grant, grantID);
+            else if(keepForce)
+                keepGrants.put(grant, grantID = nextGrantID++);
+            else
+                newGrants.put(grant, grantID = nextGrantID++);
 
             return grantID;
         }

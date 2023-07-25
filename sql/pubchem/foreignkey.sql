@@ -103,30 +103,16 @@ alter table pubchem.disease_related_matches add foreign key (disease) references
 alter table pubchem.endpoint_bases add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
 alter table pubchem.endpoint_bases add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
 alter table pubchem.endpoint_bases add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
-alter table pubchem.endpoint_outcomes add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
-alter table pubchem.endpoint_outcomes add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
-alter table pubchem.endpoint_outcomes add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
-alter table pubchem.endpoint_outcomes add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
+alter table pubchem.endpoint_bases add foreign key (bioassay, measuregroup, substance) references pubchem.measuregroup_substances(bioassay, measuregroup, substance) initially deferred;
 alter table pubchem.endpoint_measurements add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
 alter table pubchem.endpoint_measurements add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
 alter table pubchem.endpoint_measurements add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
-alter table pubchem.endpoint_measurements add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
-alter table pubchem.endpoint_measurement_types add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
-alter table pubchem.endpoint_measurement_types add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
-alter table pubchem.endpoint_measurement_types add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
-alter table pubchem.endpoint_measurement_types add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
-alter table pubchem.endpoint_measurement_labels add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
-alter table pubchem.endpoint_measurement_labels add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
-alter table pubchem.endpoint_measurement_labels add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
-alter table pubchem.endpoint_measurement_labels add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
-alter table pubchem.endpoint_measurement_values add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
-alter table pubchem.endpoint_measurement_values add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
-alter table pubchem.endpoint_measurement_values add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
-alter table pubchem.endpoint_measurement_values add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
+alter table pubchem.endpoint_measurements add foreign key (bioassay, measuregroup, substance) references pubchem.measuregroup_substances(bioassay, measuregroup, substance) initially deferred;
+alter table pubchem.endpoint_measurements add foreign key (bioassay, measuregroup, substance, value) references pubchem.endpoint_bases(bioassay, measuregroup, substance, value) initially deferred;
 alter table pubchem.endpoint_references add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
 alter table pubchem.endpoint_references add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
 alter table pubchem.endpoint_references add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
-alter table pubchem.endpoint_references add foreign key (substance, bioassay, measuregroup) references pubchem.endpoint_bases(substance, bioassay, measuregroup) initially deferred;
+alter table pubchem.endpoint_references add foreign key (substance, bioassay, measuregroup, value) references pubchem.endpoint_bases(substance, bioassay, measuregroup, value) initially deferred;
 alter table pubchem.endpoint_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 
 
@@ -169,6 +155,9 @@ alter table pubchem.inchikey_subjects add foreign key (inchikey) references pubc
 -- measuregroup
 alter table pubchem.measuregroup_bases add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
 alter table pubchem.measuregroup_bases add foreign key (source) references pubchem.source_bases(id) initially deferred;
+alter table pubchem.measuregroup_substances add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
+alter table pubchem.measuregroup_substances add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
+alter table pubchem.measuregroup_substances add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
 alter table pubchem.measuregroup_proteins add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
 alter table pubchem.measuregroup_proteins add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
 alter table pubchem.measuregroup_proteins add foreign key (protein) references pubchem.protein_bases(id) initially deferred;

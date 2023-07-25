@@ -3,222 +3,264 @@ package cz.iocb.load.pubchem;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
-import org.eclipse.collections.api.tuple.primitive.IntIntPair;
-import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
-import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
-import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
+import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
-import cz.iocb.load.ontology.Ontology.Identifier;
 
 
 
 class Gene extends Updater
 {
-    private static IntHashSet usedGenes;
-    private static IntHashSet newGenes;
-    private static IntHashSet oldGenes;
+    static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID";
+    static final int prefixLength = prefix.length();
 
-    private static StringIntMap usedGeneSymbols;
-    private static StringIntMap newGeneSymbols;
-    private static StringIntMap oldGeneSymbols;
+    static final String symbolPrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/";
+    static final int symbolPrefixLength = symbolPrefix.length();
+
+    private static final IntSet keepGenes = new IntSet();
+    private static final IntSet newGenes = new IntSet();
+    private static final IntSet oldGenes = new IntSet();
+
+    private static final StringIntMap keepGeneSymbols = new StringIntMap();
+    private static final StringIntMap newGeneSymbols = new StringIntMap();
+    private static final StringIntMap oldGeneSymbols = new StringIntMap();
     private static int nextGeneSymbolID;
 
 
     private static void loadGeneSymbolBases(Model model) throws IOException, SQLException
     {
-        usedGeneSymbols = new StringIntMap();
-        newGeneSymbols = new StringIntMap();
-        oldGeneSymbols = getStringIntMap("select iri, id from pubchem.gene_symbol_bases");
-        nextGeneSymbolID = getIntValue("select coalesce(max(id)+1,0) from pubchem.gene_symbol_bases");
+        load("select iri,id from pubchem.gene_symbol_bases", oldGeneSymbols);
+
+        nextGeneSymbolID = oldGeneSymbols.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
         new QueryResultProcessor(patternQuery("?gene_symbol rdf:type sio:SIO_001383"))
         {
             @Override
             protected void parse() throws IOException
             {
-                String geneSymbol = getStringID("gene_symbol", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/");
-                int geneSymbolID = oldGeneSymbols.removeKeyIfAbsent(geneSymbol, NO_VALUE);
+                String geneSymbol = getStringID("gene_symbol", symbolPrefix);
+                Integer geneSymbolID = oldGeneSymbols.remove(geneSymbol);
 
-                if(geneSymbolID == NO_VALUE)
-                    newGeneSymbols.put(geneSymbol, geneSymbolID = nextGeneSymbolID++);
-
-                usedGeneSymbols.put(geneSymbol, geneSymbolID);
+                if(geneSymbolID == null)
+                    newGeneSymbols.put(geneSymbol, nextGeneSymbolID++);
+                else
+                    keepGeneSymbols.put(geneSymbol, geneSymbolID);
             }
         }.load(model);
-
-        batch("insert into pubchem.gene_symbol_bases(iri, id) values (?,?)", newGeneSymbols);
-        newGeneSymbols.clear();
     }
 
 
     private static void loadGeneBases(Model model) throws IOException, SQLException
     {
-        usedGenes = new IntHashSet();
-        newGenes = new IntHashSet();
-        oldGenes = getIntSet("select id from pubchem.gene_bases");
+        load("select id from pubchem.gene_bases", oldGenes);
 
         new QueryResultProcessor(patternQuery("?gene rdf:type sio:SIO_010035"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Integer geneID = getGeneID(getIRI("gene"));
                 checkGeneID(geneID);
 
-                if(!oldGenes.remove(geneID))
+                if(oldGenes.remove(geneID))
+                    keepGenes.add(geneID);
+                else
                     newGenes.add(geneID);
-
-                usedGenes.add(geneID);
             }
         }.load(model);
-
-        batch("insert into pubchem.gene_bases(id) values (?)", newGenes);
-        newGenes.clear();
     }
 
 
     private static void loadSymbols(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newSymbols = new IntIntHashMap();
-        IntIntHashMap oldSymbols = getIntIntMap(
-                "select id, gene_symbol from pubchem.gene_bases where gene_symbol is not null");
+        IntIntMap keepSymbols = new IntIntMap();
+        IntIntMap newSymbols = new IntIntMap();
+        IntIntMap oldSymbols = new IntIntMap();
+
+        load("select id,gene_symbol from pubchem.gene_bases where gene_symbol is not null", oldSymbols);
 
         new QueryResultProcessor(patternQuery("?gene bao:BAO_0002870 ?symbol"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                int symbolID = getGeneSymbolID(getStringID("symbol", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"));
+                Integer geneID = getGeneID(getIRI("gene"), true);
+                Integer symbolID = getGeneSymbolID(getIRI("symbol"));
 
-                addGeneID(geneID);
+                if(symbolID.equals(oldSymbols.remove(geneID)))
+                {
+                    keepSymbols.put(geneID, symbolID);
+                }
+                else
+                {
+                    Integer keep = keepSymbols.get(geneID);
 
-                if(symbolID != oldSymbols.removeKeyIfAbsent(geneID, NO_VALUE))
-                    newSymbols.put(geneID, symbolID);
+                    if(symbolID.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newSymbols.put(geneID, symbolID);
+
+                    if(put != null && !symbolID.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.gene_bases set gene_symbol = null where id = ?", oldSymbols.keySet());
-        batch("insert into pubchem.gene_bases(id, gene_symbol) values (?,?) "
-                + "on conflict (id) do update set gene_symbol=EXCLUDED.gene_symbol", newSymbols);
+        store("update pubchem.gene_bases set gene_symbol=null where id=? and gene_symbol=?", oldSymbols);
+        store("insert into pubchem.gene_bases(id,gene_symbol) values(?,?) "
+                + "on conflict(id) do update set gene_symbol=EXCLUDED.gene_symbol", newSymbols);
     }
 
 
     private static void loadTitles(Model model) throws IOException, SQLException
     {
+        IntStringMap keepTitles = new IntStringMap();
         IntStringMap newTitles = new IntStringMap();
-        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.gene_bases where title is not null");
+        IntStringMap oldTitles = new IntStringMap();
+
+        load("select id,title from pubchem.gene_bases where title is not null", oldTitles);
 
         new QueryResultProcessor(patternQuery("?gene skos:prefLabel ?title"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Integer geneID = getGeneID(getIRI("gene"), true);
                 String title = getString("title");
 
-                addGeneID(geneID);
+                if(title.equals(oldTitles.remove(geneID)))
+                {
+                    keepTitles.put(geneID, title);
+                }
+                else
+                {
+                    String keep = keepTitles.get(geneID);
 
-                if(!title.equals(oldTitles.remove(geneID)))
-                    newTitles.put(geneID, title);
+                    if(title.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    String put = newTitles.put(geneID, title);
+
+                    if(put != null && !title.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.gene_bases set title = null where id = ?", oldTitles.keySet());
-        batch("insert into pubchem.gene_bases(id, title) values (?,?) "
-                + "on conflict (id) do update set title=EXCLUDED.title", newTitles);
+        store("update pubchem.gene_bases set title=null where id=? and title=?", oldTitles);
+        store("insert into pubchem.gene_bases(id,title) values(?,?) on conflict(id) do update set title=EXCLUDED.title",
+                newTitles);
     }
 
 
     private static void loadOrganisms(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newOrganisms = new IntIntHashMap();
-        IntIntHashMap oldOrganisms = getIntIntMap(
-                "select id, organism from pubchem.gene_bases where organism is not null");
+        IntIntMap keepOrganisms = new IntIntMap();
+        IntIntMap newOrganisms = new IntIntMap();
+        IntIntMap oldOrganisms = new IntIntMap();
+
+        load("select id,organism from pubchem.gene_bases where organism is not null", oldOrganisms);
 
         new QueryResultProcessor(patternQuery("?gene up:organism ?organism"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                int organismID = Taxonomy
-                        .getTaxonomyID(getIntID("organism", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"));
+                Integer geneID = getGeneID(getIRI("gene"), true);
+                Integer organismID = Taxonomy.getTaxonomyID(getIRI("organism"));
 
-                addGeneID(geneID);
+                if(organismID.equals(oldOrganisms.remove(geneID)))
+                {
+                    keepOrganisms.put(geneID, organismID);
+                }
+                else
+                {
+                    Integer keep = keepOrganisms.get(geneID);
 
-                if(organismID != oldOrganisms.removeKeyIfAbsent(geneID, NO_VALUE))
-                    newOrganisms.put(geneID, organismID);
+                    if(organismID.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newOrganisms.put(geneID, organismID);
+
+                    if(put != null && !organismID.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.gene_bases set organism = null where id = ?", oldOrganisms.keySet());
-        batch("insert into pubchem.gene_bases(id, organism) values (?,?) "
-                + "on conflict (id) do update set organism=EXCLUDED.organism", newOrganisms);
+        store("update pubchem.gene_bases set organism=null where id=? and organism=?", oldOrganisms);
+        store("insert into pubchem.gene_bases(id,organism) values(?,?) "
+                + "on conflict(id) do update set organism=EXCLUDED.organism", newOrganisms);
     }
 
 
     private static void loadAlternatives(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newAlternatives = new IntStringPairSet();
-        IntStringPairSet oldAlternatives = getIntStringPairSet(
-                "select gene, alternative from pubchem.gene_alternatives");
+        IntStringSet newAlternatives = new IntStringSet();
+        IntStringSet oldAlternatives = new IntStringSet();
+
+        load("select gene,alternative from pubchem.gene_alternatives", oldAlternatives);
 
         new QueryResultProcessor(patternQuery("?gene skos:altLabel ?alternative"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Integer geneID = getGeneID(getIRI("gene"));
                 String alternative = getString("alternative");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, alternative);
-                addGeneID(geneID);
+                Pair<Integer, String> pair = Pair.getPair(geneID, alternative);
 
                 if(!oldAlternatives.remove(pair))
                     newAlternatives.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_alternatives where gene = ? and alternative = ?", oldAlternatives);
-        batch("insert into pubchem.gene_alternatives(gene, alternative) values (?,?)", newAlternatives);
+        store("delete from pubchem.gene_alternatives where gene=? and alternative=?", oldAlternatives);
+        store("insert into pubchem.gene_alternatives(gene,alternative) values(?,?)", newAlternatives);
     }
 
 
     private static void loadReferences(Model model) throws IOException, SQLException
     {
         IntPairSet newReferences = new IntPairSet();
-        IntPairSet oldReferences = getIntPairSet("select gene, reference from pubchem.gene_references");
+        IntPairSet oldReferences = new IntPairSet();
+
+        load("select gene,reference from pubchem.gene_references", oldReferences);
 
         new QueryResultProcessor(patternQuery("?gene cito:isDiscussedBy ?reference"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                int referenceID = Reference
-                        .getReferenceID(getIntID("reference", "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"));
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer referenceID = Reference.getReferenceID(getIRI("reference"));
 
-                IntIntPair pair = PrimitiveTuples.pair(geneID, referenceID);
-                addGeneID(geneID);
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, referenceID);
 
                 if(!oldReferences.remove(pair))
                     newReferences.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_references where gene = ? and reference = ?", oldReferences);
-        batch("insert into pubchem.gene_references(gene, reference) values (?,?)", newReferences);
+        store("delete from pubchem.gene_references where gene=? and reference=?", oldReferences);
+        store("insert into pubchem.gene_references(gene,reference) values(?,?)", newReferences);
     }
 
 
     private static void loadEnsemblCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet();
-        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_ensembl_matches");
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select gene,match from pubchem.gene_ensembl_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/ensembl/'))"))
@@ -226,53 +268,55 @@ class Gene extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Integer geneID = getGeneID(getIRI("gene"));
                 String match = getStringID("match", "http://rdf.ebi.ac.uk/resource/ensembl/");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, match);
-                addGeneID(geneID);
+                Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_ensembl_matches where gene = ? and match = ?", oldMatches);
-        batch("insert into pubchem.gene_ensembl_matches(gene, match) values (?,?)", newMatches);
+        store("delete from pubchem.gene_ensembl_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_ensembl_matches(gene,match) values(?,?)", newMatches);
     }
 
 
     private static void loadMeshCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet();
-        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_mesh_matches");
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select gene,match from pubchem.gene_mesh_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
+                "?gene skos:closeMatch ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Integer geneID = getGeneID(getIRI("gene"));
                 String match = getStringID("match", "http://id.nlm.nih.gov/mesh/");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, match);
-                addGeneID(geneID);
+                Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_mesh_matches where gene = ? and match = ?", oldMatches);
-        batch("insert into pubchem.gene_mesh_matches(gene, match) values (?,?)", newMatches);
+        store("delete from pubchem.gene_mesh_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_mesh_matches(gene,match) values(?,?)", newMatches);
     }
 
 
     private static void loadThesaurusCloseMatches(Model model) throws IOException, SQLException
     {
         IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = getIntPairSet("select gene, match from pubchem.gene_thesaurus_matches");
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select gene,match from pubchem.gene_thesaurus_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C'))"))
@@ -280,30 +324,30 @@ class Gene extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Integer geneID = getGeneID(getIRI("gene"));
+                Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
 
-                Identifier match = Ontology.getId(getIRI("match"));
-
-                if(match.unit != Ontology.unitThesaurus)
+                if(match.getOne() != Ontology.unitThesaurus)
                     throw new IOException();
 
-                IntIntPair pair = PrimitiveTuples.pair(geneID, match.id);
-                addGeneID(geneID);
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, match.getTwo());
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_thesaurus_matches where gene = ? and match = ?", oldMatches);
-        batch("insert into pubchem.gene_thesaurus_matches(gene, match) values (?,?)", newMatches);
+        store("delete from pubchem.gene_thesaurus_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_thesaurus_matches(gene,match) values(?,?)", newMatches);
     }
 
 
     private static void loadCtdbaseCloseMatches(Model model) throws IOException, SQLException
     {
         IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = getIntPairSet("select gene, match from pubchem.gene_ctdbase_matches");
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select gene,match from pubchem.gene_ctdbase_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'https://ctdbase.org/detail.go?type=gene&acc='))"))
@@ -311,53 +355,55 @@ class Gene extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                int match = getIntID("match", "https://ctdbase.org/detail.go?type=gene&acc=");
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer match = getIntID("match", "https://ctdbase.org/detail.go?type=gene&acc=");
 
-                IntIntPair pair = PrimitiveTuples.pair(geneID, match);
-                addGeneID(geneID);
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_ctdbase_matches where gene = ? and match = ?", oldMatches);
-        batch("insert into pubchem.gene_ctdbase_matches(gene, match) values (?,?)", newMatches);
+        store("delete from pubchem.gene_ctdbase_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_ctdbase_matches(gene,match) values(?,?)", newMatches);
     }
 
 
     private static void loadExpasyCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet();
-        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_expasy_matches");
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select gene,match from pubchem.gene_expasy_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://enzyme.expasy.org/EC/'))"))
+                "?gene skos:closeMatch ?match. filter(strstarts(str(?match), 'https://enzyme.expasy.org/EC/'))"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Integer geneID = getGeneID(getIRI("gene"));
                 String match = getStringID("match", "https://enzyme.expasy.org/EC/");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, match);
-                addGeneID(geneID);
+                Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_expasy_matches where gene = ? and match = ?", oldMatches);
-        batch("insert into pubchem.gene_expasy_matches(gene, match) values (?,?)", newMatches);
+        store("delete from pubchem.gene_expasy_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_expasy_matches(gene,match) values(?,?)", newMatches);
     }
 
 
     private static void loadMedlineplusCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet();
-        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_medlineplus_matches");
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select gene,match from pubchem.gene_medlineplus_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'https://medlineplus.gov/genetics/gene/'))"))
@@ -365,54 +411,55 @@ class Gene extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Integer geneID = getGeneID(getIRI("gene"));
                 String match = getStringID("match", "https://medlineplus.gov/genetics/gene/");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, match);
-                addGeneID(geneID);
+                Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_medlineplus_matches where gene = ? and match = ?", oldMatches);
-        batch("insert into pubchem.gene_medlineplus_matches(gene, match) values (?,?)", newMatches);
+        store("delete from pubchem.gene_medlineplus_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_medlineplus_matches(gene,match) values(?,?)", newMatches);
     }
 
 
     private static void loadOmimCloseMatches(Model model) throws IOException, SQLException
     {
         IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = getIntPairSet("select gene, match from pubchem.gene_omim_matches");
+        IntPairSet oldMatches = new IntPairSet();
 
-        new QueryResultProcessor(patternQuery(
-                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://omim.org/entry/'))"))
+        load("select gene,match from pubchem.gene_omim_matches", oldMatches);
+
+        new QueryResultProcessor(
+                patternQuery("?gene skos:closeMatch ?match. filter(strstarts(str(?match), 'https://omim.org/entry/'))"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                int match = getIntID("match", "https://omim.org/entry/");
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer match = getIntID("match", "https://omim.org/entry/");
 
-                IntIntPair pair = PrimitiveTuples.pair(geneID, match);
-                addGeneID(geneID);
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_omim_matches where gene = ? and match = ?", oldMatches);
-        batch("insert into pubchem.gene_omim_matches(gene, match) values (?,?)", newMatches);
+        store("delete from pubchem.gene_omim_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_omim_matches(gene,match) values(?,?)", newMatches);
     }
 
 
     private static void loadAlliancegenomeCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet();
-        IntStringPairSet oldMatches = getIntStringPairSet(
-                "select gene, match from pubchem.gene_alliancegenome_matches");
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select gene,match from pubchem.gene_alliancegenome_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'https://www.alliancegenome.org/gene/'))"))
@@ -420,80 +467,83 @@ class Gene extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Integer geneID = getGeneID(getIRI("gene"));
                 String match = getStringID("match", "https://www.alliancegenome.org/gene/");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, match);
-                addGeneID(geneID);
+                Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_alliancegenome_matches where gene = ? and match = ?", oldMatches);
-        batch("insert into pubchem.gene_alliancegenome_matches(gene, match) values (?,?)", newMatches);
+        store("delete from pubchem.gene_alliancegenome_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_alliancegenome_matches(gene,match) values(?,?)", newMatches);
     }
 
 
     private static void loadGenenamesCloseMatches(Model model) throws IOException, SQLException
     {
         IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = getIntPairSet("select gene, match from pubchem.gene_genenames_matches");
+        IntPairSet oldMatches = new IntPairSet();
 
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:'))"))
+        load("select gene,match from pubchem.gene_genenames_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. filter(strstarts(str(?match), "
+                + "'https://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:'))"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                int match = getIntID("match", "https://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:");
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer match = getIntID("match", "https://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:");
 
-                IntIntPair pair = PrimitiveTuples.pair(geneID, match);
-                addGeneID(geneID);
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_genenames_matches where gene = ? and match = ?", oldMatches);
-        batch("insert into pubchem.gene_genenames_matches(gene, match) values (?,?)", newMatches);
+        store("delete from pubchem.gene_genenames_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_genenames_matches(gene,match) values(?,?)", newMatches);
     }
 
 
     private static void loadKeggCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet();
-        IntStringPairSet oldMatches = getIntStringPairSet("select gene, match from pubchem.gene_kegg_matches");
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select gene,match from pubchem.gene_kegg_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://www.kegg.jp/entry/'))"))
+                "?gene skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.kegg.jp/entry/'))"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Integer geneID = getGeneID(getIRI("gene"));
                 String match = getStringID("match", "https://www.kegg.jp/entry/");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(geneID, match);
-                addGeneID(geneID);
+                Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_kegg_matches where gene = ? and match = ?", oldMatches);
-        batch("insert into pubchem.gene_kegg_matches(gene, match) values (?,?)", newMatches);
+        store("delete from pubchem.gene_kegg_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_kegg_matches(gene,match) values(?,?)", newMatches);
     }
 
 
     private static void loadProcesses(Model model) throws IOException, SQLException
     {
         IntPairSet newProcesses = new IntPairSet();
-        IntPairSet oldProcesses = getIntPairSet("select gene, process_id from pubchem.gene_processes");
+        IntPairSet oldProcesses = new IntPairSet();
+
+        load("select gene,process_id from pubchem.gene_processes", oldProcesses);
 
         new QueryResultProcessor(patternQuery("?gene obo:RO_0000056 ?process "
                 + "filter(strstarts(str(?process), 'http://purl.obolibrary.org/obo/GO_'))"))
@@ -501,107 +551,108 @@ class Gene extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                Identifier process = Ontology.getId(getIRI("process"));
+                Integer geneID = getGeneID(getIRI("gene"));
+                Pair<Integer, Integer> process = Ontology.getId(getIRI("process"));
 
-                if(process.unit != Ontology.unitGO)
+                if(process.getOne() != Ontology.unitGO)
                     throw new IOException();
 
-                IntIntPair pair = PrimitiveTuples.pair(geneID, process.id);
-                addGeneID(geneID);
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, process.getTwo());
 
                 if(!oldProcesses.remove(pair))
                     newProcesses.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_processes where gene = ? and process_id = ?", oldProcesses);
-        batch("insert into pubchem.gene_processes(gene, process_id) values (?,?)", newProcesses);
+        store("delete from pubchem.gene_processes where gene=? and process_id=?", oldProcesses);
+        store("insert into pubchem.gene_processes(gene,process_id) values(?,?)", newProcesses);
     }
 
 
     private static void loadFunctions(Model model) throws IOException, SQLException
     {
         IntPairSet newFunctions = new IntPairSet();
-        IntPairSet oldFunctions = getIntPairSet("select gene, function_id from pubchem.gene_functions");
+        IntPairSet oldFunctions = new IntPairSet();
+
+        load("select gene,function_id from pubchem.gene_functions", oldFunctions);
 
         new QueryResultProcessor(patternQuery("?gene obo:RO_0000085 ?function"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                Identifier function = Ontology.getId(getIRI("function"));
+                Integer geneID = getGeneID(getIRI("gene"));
+                Pair<Integer, Integer> function = Ontology.getId(getIRI("function"));
 
-                if(function.unit != Ontology.unitGO)
+                if(function.getOne() != Ontology.unitGO)
                     throw new IOException();
 
-                IntIntPair pair = PrimitiveTuples.pair(geneID, function.id);
-                addGeneID(geneID);
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, function.getTwo());
 
                 if(!oldFunctions.remove(pair))
                     newFunctions.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_functions where gene = ? and function_id = ?", oldFunctions);
-        batch("insert into pubchem.gene_functions(gene, function_id) values (?,?)", newFunctions);
+        store("delete from pubchem.gene_functions where gene=? and function_id=?", oldFunctions);
+        store("insert into pubchem.gene_functions(gene,function_id) values(?,?)", newFunctions);
     }
 
 
     private static void loadLocations(Model model) throws IOException, SQLException
     {
         IntPairSet newLocations = new IntPairSet();
-        IntPairSet oldLocations = getIntPairSet("select gene, location_id from pubchem.gene_locations");
+        IntPairSet oldLocations = new IntPairSet();
+
+        load("select gene,location_id from pubchem.gene_locations", oldLocations);
 
         new QueryResultProcessor(patternQuery("?gene obo:RO_0001025 ?location"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                Identifier location = Ontology.getId(getIRI("location"));
+                Integer geneID = getGeneID(getIRI("gene"));
+                Pair<Integer, Integer> location = Ontology.getId(getIRI("location"));
 
-                if(location.unit != Ontology.unitGO)
+                if(location.getOne() != Ontology.unitGO)
                     throw new IOException();
 
-                IntIntPair pair = PrimitiveTuples.pair(geneID, location.id);
-                addGeneID(geneID);
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, location.getTwo());
 
                 if(!oldLocations.remove(pair))
                     newLocations.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_locations where gene = ? and location_id = ?", oldLocations);
-        batch("insert into pubchem.gene_locations(gene, location_id) values (?,?)", newLocations);
+        store("delete from pubchem.gene_locations where gene=? and location_id=?", oldLocations);
+        store("insert into pubchem.gene_locations(gene,location_id) values(?,?)", newLocations);
     }
 
 
     private static void loadOrthologs(Model model) throws IOException, SQLException
     {
         IntPairSet newOrthologs = new IntPairSet();
-        IntPairSet oldOrthologs = getIntPairSet("select gene, ortholog from pubchem.gene_orthologs");
+        IntPairSet oldOrthologs = new IntPairSet();
+
+        load("select gene,ortholog from pubchem.gene_orthologs", oldOrthologs);
 
         new QueryResultProcessor(patternQuery("?gene sio:SIO_000558 ?ortholog"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int geneID = getIntID("gene", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
-                int orthologID = getIntID("ortholog", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer orthologID = getGeneID(getIRI("ortholog"));
 
-                IntIntPair pair = PrimitiveTuples.pair(geneID, orthologID);
-                addGeneID(geneID);
-                addGeneID(orthologID);
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, orthologID);
 
                 if(!oldOrthologs.remove(pair))
                     newOrthologs.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_orthologs where gene = ? and ortholog = ?", oldOrthologs);
-        batch("insert into pubchem.gene_orthologs(gene, ortholog) values (?,?)", newOrthologs);
+        store("delete from pubchem.gene_orthologs where gene=? and ortholog=?", oldOrthologs);
+        store("insert into pubchem.gene_orthologs(gene,ortholog) values(?,?)", newOrthologs);
     }
 
 
@@ -644,64 +695,87 @@ class Gene extends Updater
     {
         System.out.println("finish genes ...");
 
-        batch("delete from pubchem.gene_symbol_bases where id = ?", oldGeneSymbols.values());
-        batch("insert into pubchem.gene_symbol_bases(iri, id) values (?,?)" + " on conflict do nothing",
-                newGeneSymbols);
+        store("delete from pubchem.gene_symbol_bases where iri=? and id=?", oldGeneSymbols);
+        store("insert into pubchem.gene_symbol_bases(iri,id) values(?,?)", newGeneSymbols);
 
-        usedGeneSymbols = null;
-        newGeneSymbols = null;
-        oldGeneSymbols = null;
-
-
-        batch("delete from pubchem.gene_bases where id = ?", oldGenes);
-        batch("insert into pubchem.gene_bases(id) values (?)" + " on conflict do nothing", newGenes);
-
-        usedGenes = null;
-        newGenes = null;
-        oldGenes = null;
+        store("delete from pubchem.gene_bases where id=?", oldGenes);
+        store("insert into pubchem.gene_bases(id) values(?)", newGenes);
 
         System.out.println();
     }
 
 
-    static int getGeneSymbolID(String symbol) throws IOException
+    static Integer getGeneSymbolID(String value) throws IOException
     {
+        if(!value.startsWith(symbolPrefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        String symbol = value.substring(symbolPrefixLength);
+
         if(symbol.matches("GID([123569]|[1-9][0-9]+)"))
             throw new IOException();
 
         synchronized(newGeneSymbols)
         {
-            int geneSymbolID = usedGeneSymbols.getIfAbsent(symbol, NO_VALUE);
+            Integer geneSymbolID = keepGeneSymbols.get(symbol);
 
-            if(geneSymbolID == NO_VALUE)
-            {
-                System.out.println("    add missing gene symbol " + symbol);
+            if(geneSymbolID != null)
+                return geneSymbolID;
 
-                if((geneSymbolID = oldGeneSymbols.removeKeyIfAbsent(symbol, NO_VALUE)) == NO_VALUE)
-                    newGeneSymbols.put(symbol, geneSymbolID = nextGeneSymbolID++);
+            geneSymbolID = newGeneSymbols.get(symbol);
 
-                usedGeneSymbols.put(symbol, geneSymbolID);
-            }
+            if(geneSymbolID != null)
+                return geneSymbolID;
+
+            System.out.println("    add missing gene symbol " + symbol);
+
+            if((geneSymbolID = oldGeneSymbols.remove(symbol)) == null)
+                newGeneSymbols.put(symbol, geneSymbolID = nextGeneSymbolID++);
+            else
+                keepGeneSymbols.put(symbol, geneSymbolID);
 
             return geneSymbolID;
         }
     }
 
 
-    static void addGeneID(int geneID) throws IOException
+    static Integer getGeneID(String value) throws IOException
     {
+        return getGeneID(value, false);
+    }
+
+
+    static Integer getGeneID(String value, boolean forceKeep) throws IOException
+    {
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        Integer geneID = Integer.parseInt(value.substring(prefixLength));
+
         checkGeneID(geneID);
 
         synchronized(newGenes)
         {
-            if(usedGenes.add(geneID))
+            if(newGenes.contains(geneID))
+            {
+                if(forceKeep)
+                {
+                    newGenes.remove(geneID);
+                    keepGenes.add(geneID);
+                }
+            }
+            else if(!keepGenes.contains(geneID))
             {
                 System.out.println("    add missing gene GID" + geneID);
 
-                if(!oldGenes.remove(geneID))
+                if(!oldGenes.remove(geneID) && !forceKeep)
                     newGenes.add(geneID);
+                else
+                    keepGenes.add(geneID);
             }
         }
+
+        return geneID;
     }
 
 

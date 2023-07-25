@@ -13,12 +13,12 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
-import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathException;
@@ -28,61 +28,16 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.util.FileManager;
-import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
-import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.api.tuple.primitive.IntIntPair;
-import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
-import org.eclipse.collections.api.tuple.primitive.ObjectFloatPair;
-import org.eclipse.collections.api.tuple.primitive.ObjectIntPair;
-import org.eclipse.collections.impl.map.mutable.primitive.IntFloatHashMap;
-import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
-import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap;
-import org.eclipse.collections.impl.map.mutable.primitive.ObjectFloatHashMap;
-import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
-import org.eclipse.collections.impl.tuple.Tuples;
-import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 import org.xml.sax.SAXException;
 
 
 
 public class Updater
 {
-    protected static enum Direction
-    {
-        DIRECT, REVERSE
-    }
-
-
-    protected static interface SQLFunction<T, R>
-    {
-        R apply(T t) throws SQLException;
-    }
-
-
-    protected static interface SQLProcedure<T>
-    {
-        void apply(PreparedStatement s, T i) throws SQLException;
-    }
-
-
-    protected static interface SQLObjectIntProcedure<T>
-    {
-        void apply(PreparedStatement s, T o, int i) throws SQLException;
-    }
-
-
-    protected static interface SQLIntProcedure
-    {
-        void apply(PreparedStatement s, int i) throws SQLException;
-    }
-
-
     protected static interface FileNameSqlFunction
     {
         void apply(String file) throws IOException, SQLException;
@@ -97,193 +52,498 @@ public class Updater
 
 
     @SuppressWarnings("serial")
-    protected static class IntPairSet extends HashSet<IntIntPair>
+    public static abstract class SqlSet<T> extends HashSet<T>
     {
-        public IntPairSet()
+        public abstract T get(ResultSet result) throws SQLException;
+
+        public abstract void set(PreparedStatement statement, T value) throws SQLException;
+    }
+
+
+    @SuppressWarnings("serial")
+    public static abstract class SqlMap<K, V> extends HashMap<K, V>
+    {
+        public abstract K getKey(ResultSet result) throws SQLException;
+
+        public abstract V getValue(ResultSet result) throws SQLException;
+
+        public abstract void set(PreparedStatement statement, K key, V value) throws SQLException;
+    }
+
+
+    @SuppressWarnings("serial")
+    public static class IntSet extends SqlSet<Integer>
+    {
+        @Override
+        public Integer get(ResultSet result) throws SQLException
         {
+            return result.getInt(1);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Integer value) throws SQLException
+        {
+            statement.setInt(1, value);
         }
     }
 
 
     @SuppressWarnings("serial")
-    protected static class IntTripletSet extends HashSet<IntTriplet>
+    public static class StringSet extends SqlSet<String>
     {
-        public IntTripletSet()
+        @Override
+        public String get(ResultSet result) throws SQLException
         {
+            return result.getString(1);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, String value) throws SQLException
+        {
+            statement.setString(1, value);
         }
     }
 
 
     @SuppressWarnings("serial")
-    protected static class IntQuaterpletSet extends HashSet<IntQuaterplet>
+    public static class IntPairSet extends SqlSet<Pair<Integer, Integer>>
     {
-        public IntQuaterpletSet()
+        @Override
+        public Pair<Integer, Integer> get(ResultSet result) throws SQLException
         {
+            return Pair.getPair(result.getInt(1), result.getInt(2));
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Pair<Integer, Integer> value) throws SQLException
+        {
+            statement.setInt(1, value.getOne());
+            statement.setInt(2, value.getTwo());
         }
     }
 
 
     @SuppressWarnings("serial")
-    protected static class IntTripletFloatSet extends HashSet<ObjectFloatPair<IntTriplet>>
+    public static class IntStringSet extends SqlSet<Pair<Integer, String>>
     {
-        public IntTripletFloatSet()
+        @Override
+        public Pair<Integer, String> get(ResultSet result) throws SQLException
         {
+            return Pair.getPair(result.getInt(1), result.getString(2));
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Pair<Integer, String> value) throws SQLException
+        {
+            statement.setInt(1, value.getOne());
+            statement.setString(2, value.getTwo());
         }
     }
 
 
     @SuppressWarnings("serial")
-    protected static class IntTripletStringSet extends HashSet<IntTripletString>
+    public static class StringPairSet extends SqlSet<Pair<String, String>>
     {
-        public IntTripletStringSet()
+        @Override
+        public Pair<String, String> get(ResultSet result) throws SQLException
         {
+            return Pair.getPair(result.getString(1), result.getString(2));
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Pair<String, String> value) throws SQLException
+        {
+            statement.setString(1, value.getOne());
+            statement.setString(2, value.getTwo());
         }
     }
 
 
     @SuppressWarnings("serial")
-    protected static class IntStringPairSet extends HashSet<IntObjectPair<String>>
+    public static class IntIntPairSet extends SqlSet<Pair<Integer, Pair<Integer, Integer>>>
     {
-        public IntStringPairSet()
+        @Override
+        public Pair<Integer, Pair<Integer, Integer>> get(ResultSet result) throws SQLException
         {
+            return Pair.getPair(result.getInt(1), Pair.getPair(result.getInt(2), result.getInt(3)));
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Pair<Integer, Pair<Integer, Integer>> value) throws SQLException
+        {
+            statement.setInt(1, value.getOne());
+            statement.setInt(2, value.getTwo().getOne());
+            statement.setInt(3, value.getTwo().getTwo());
         }
     }
 
 
     @SuppressWarnings("serial")
-    protected static class StringPairSet extends HashSet<StringPair>
+    public static class IntPairIntSet extends SqlSet<Pair<Pair<Integer, Integer>, Integer>>
     {
-        public StringPairSet()
+        @Override
+        public Pair<Pair<Integer, Integer>, Integer> get(ResultSet result) throws SQLException
         {
+            return Pair.getPair(Pair.getPair(result.getInt(1), result.getInt(2)), result.getInt(3));
         }
-    }
 
-
-    protected static class IntIntPairMap extends IntObjectHashMap<IntIntPair>
-    {
-        public IntIntPairMap()
+        @Override
+        public void set(PreparedStatement statement, Pair<Pair<Integer, Integer>, Integer> value) throws SQLException
         {
-        }
-    }
-
-
-    protected static class IntPairIntMap extends ObjectIntHashMap<IntIntPair>
-    {
-        public IntPairIntMap()
-        {
+            statement.setInt(1, value.getOne().getOne());
+            statement.setInt(2, value.getOne().getTwo());
+            statement.setInt(3, value.getTwo());
         }
     }
 
 
     @SuppressWarnings("serial")
-    protected static class IntPairStringMap extends HashMap<IntIntPair, String>
+    public static class IntPairIntPairSet extends SqlSet<Pair<Pair<Integer, Integer>, Pair<Integer, Integer>>>
     {
-        public IntPairStringMap()
+        @Override
+        public Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> get(ResultSet result) throws SQLException
         {
+            return Pair.getPair(Pair.getPair(result.getInt(1), result.getInt(2)),
+                    Pair.getPair(result.getInt(3), result.getInt(4)));
         }
-    }
 
-
-    protected static class IntTripletIntMap extends ObjectIntHashMap<IntTriplet>
-    {
-        public IntTripletIntMap()
+        @Override
+        public void set(PreparedStatement statement, Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> value)
+                throws SQLException
         {
-        }
-    }
-
-
-    protected static class IntTripletFloatMap extends ObjectFloatHashMap<IntTriplet>
-    {
-        public IntTripletFloatMap()
-        {
-        }
-    }
-
-
-    @SuppressWarnings("serial")
-    protected static class IntTripletStringMap extends HashMap<IntTriplet, String>
-    {
-        public IntTripletStringMap()
-        {
-        }
-    }
-
-
-    protected static class IntStringPairIntMap extends ObjectIntHashMap<IntObjectPair<String>>
-    {
-        public IntStringPairIntMap()
-        {
-        }
-    }
-
-
-    protected static class StringPairIntMap extends ObjectIntHashMap<StringPair>
-    {
-        public StringPairIntMap()
-        {
-        }
-    }
-
-
-    protected static class IntStringMap extends IntObjectHashMap<String>
-    {
-        public IntStringMap()
-        {
-        }
-    }
-
-
-    protected static class IntStringPairMap extends IntObjectHashMap<Pair<String, String>>
-    {
-        public IntStringPairMap()
-        {
-        }
-    }
-
-
-    protected static class IntStringIntPairMap extends IntObjectHashMap<Pair<String, Integer>>
-    {
-        public IntStringIntPairMap()
-        {
-        }
-    }
-
-
-    protected static class StringIntMap extends ObjectIntHashMap<String>
-    {
-        public StringIntMap()
-        {
+            statement.setInt(1, value.getOne().getOne());
+            statement.setInt(2, value.getOne().getTwo());
+            statement.setInt(3, value.getTwo().getOne());
+            statement.setInt(4, value.getTwo().getTwo());
         }
     }
 
 
     @SuppressWarnings("serial")
-    protected static class StringStringMap extends HashMap<String, String>
+    public static class IntIntMap extends SqlMap<Integer, Integer>
     {
-        public StringStringMap()
+        @Override
+        public Integer getKey(ResultSet result) throws SQLException
         {
+            return result.getInt(1);
+        }
+
+        @Override
+        public Integer getValue(ResultSet result) throws SQLException
+        {
+            return result.getInt(2);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Integer key, Integer value) throws SQLException
+        {
+            statement.setInt(1, key);
+            statement.setInt(2, value);
         }
     }
 
 
     @SuppressWarnings("serial")
-    protected static class StringStringIntPairMap extends HashMap<String, ObjectIntPair<String>>
+    public static class IntFloatMap extends SqlMap<Integer, Float>
     {
-        public StringStringIntPairMap()
+        @Override
+        public Integer getKey(ResultSet result) throws SQLException
         {
+            return result.getInt(1);
+        }
+
+        @Override
+        public Float getValue(ResultSet result) throws SQLException
+        {
+            return result.getFloat(2);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Integer key, Float value) throws SQLException
+        {
+            statement.setInt(1, key);
+            statement.setFloat(2, value);
         }
     }
 
 
-    protected static class MD5IntMap extends ObjectIntHashMap<MD5>
+    @SuppressWarnings("serial")
+    public static class IntStringMap extends SqlMap<Integer, String>
     {
-        public MD5IntMap()
+        @Override
+        public Integer getKey(ResultSet result) throws SQLException
         {
+            return result.getInt(1);
+        }
+
+        @Override
+        public String getValue(ResultSet result) throws SQLException
+        {
+            return result.getString(2);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Integer key, String value) throws SQLException
+        {
+            statement.setInt(1, key);
+            statement.setString(2, value);
         }
     }
 
 
-    protected static final int NO_VALUE = Integer.MIN_VALUE;
+    @SuppressWarnings("serial")
+    public static class StringIntMap extends SqlMap<String, Integer>
+    {
+        @Override
+        public String getKey(ResultSet result) throws SQLException
+        {
+            return result.getString(1);
+        }
+
+        @Override
+        public Integer getValue(ResultSet result) throws SQLException
+        {
+            return result.getInt(2);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, String key, Integer value) throws SQLException
+        {
+            statement.setString(1, key);
+            statement.setInt(2, value);
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    public static class StringStringMap extends SqlMap<String, String>
+    {
+        @Override
+        public String getKey(ResultSet result) throws SQLException
+        {
+            return result.getString(1);
+        }
+
+        @Override
+        public String getValue(ResultSet result) throws SQLException
+        {
+            return result.getString(2);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, String key, String value) throws SQLException
+        {
+            statement.setString(1, key);
+            statement.setString(2, value);
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    public static class IntPairIntMap extends SqlMap<Pair<Integer, Integer>, Integer>
+    {
+        @Override
+        public Pair<Integer, Integer> getKey(ResultSet result) throws SQLException
+        {
+            return Pair.getPair(result.getInt(1), result.getInt(2));
+        }
+
+        @Override
+        public Integer getValue(ResultSet result) throws SQLException
+        {
+            return result.getInt(3);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Pair<Integer, Integer> key, Integer value) throws SQLException
+        {
+            statement.setInt(1, key.getOne());
+            statement.setInt(2, key.getTwo());
+            statement.setInt(3, value);
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    public static class StringPairIntMap extends SqlMap<Pair<String, String>, Integer>
+    {
+        @Override
+        public Pair<String, String> getKey(ResultSet result) throws SQLException
+        {
+            return Pair.getPair(result.getString(1), result.getString(2));
+        }
+
+        @Override
+        public Integer getValue(ResultSet result) throws SQLException
+        {
+            return result.getInt(3);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Pair<String, String> key, Integer value) throws SQLException
+        {
+            statement.setString(1, key.getOne());
+            statement.setString(2, key.getTwo());
+            statement.setInt(3, value);
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    public static class IntPairStringMap extends SqlMap<Pair<Integer, Integer>, String>
+    {
+        @Override
+        public Pair<Integer, Integer> getKey(ResultSet result) throws SQLException
+        {
+            return Pair.getPair(result.getInt(1), result.getInt(2));
+        }
+
+        @Override
+        public String getValue(ResultSet result) throws SQLException
+        {
+            return result.getString(3);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Pair<Integer, Integer> key, String value) throws SQLException
+        {
+            statement.setInt(1, key.getOne());
+            statement.setInt(2, key.getTwo());
+            statement.setString(3, value);
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    public static class IntStringIntPairMap extends SqlMap<Integer, Pair<String, Integer>>
+    {
+        @Override
+        public Integer getKey(ResultSet result) throws SQLException
+        {
+            return result.getInt(1);
+        }
+
+        @Override
+        public Pair<String, Integer> getValue(ResultSet result) throws SQLException
+        {
+            return Pair.getPair(result.getString(2), result.getInt(3));
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Integer key, Pair<String, Integer> value) throws SQLException
+        {
+            statement.setInt(1, key);
+            statement.setString(2, value.getOne());
+            statement.setInt(3, value.getTwo());
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    public static class IntStringPairMap extends SqlMap<Integer, Pair<String, String>>
+    {
+        @Override
+        public Integer getKey(ResultSet result) throws SQLException
+        {
+            return result.getInt(1);
+        }
+
+        @Override
+        public Pair<String, String> getValue(ResultSet result) throws SQLException
+        {
+            return Pair.getPair(result.getString(2), result.getString(3));
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Integer key, Pair<String, String> value) throws SQLException
+        {
+            statement.setInt(1, key);
+            statement.setString(2, value.getOne());
+            statement.setString(3, value.getTwo());
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    public static class StringStringIntPairMap extends SqlMap<String, Pair<String, Integer>>
+    {
+        @Override
+        public String getKey(ResultSet result) throws SQLException
+        {
+            return result.getString(1);
+        }
+
+        @Override
+        public Pair<String, Integer> getValue(ResultSet result) throws SQLException
+        {
+            return Pair.getPair(result.getString(2), result.getInt(3));
+        }
+
+        @Override
+        public void set(PreparedStatement statement, String key, Pair<String, Integer> value) throws SQLException
+        {
+            statement.setString(1, key);
+            statement.setString(2, value.getOne());
+            statement.setInt(3, value.getTwo());
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    public static class IntStringPairIntMap extends SqlMap<Pair<Integer, String>, Integer>
+    {
+        @Override
+        public Pair<Integer, String> getKey(ResultSet result) throws SQLException
+        {
+            return Pair.getPair(result.getInt(1), result.getString(2));
+        }
+
+        @Override
+        public Integer getValue(ResultSet result) throws SQLException
+        {
+            return result.getInt(3);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Pair<Integer, String> key, Integer value) throws SQLException
+        {
+            statement.setInt(1, key.getOne());
+            statement.setString(2, key.getTwo());
+            statement.setInt(3, value);
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    public static class IntIntPairIntPairPairMap
+            extends SqlMap<Integer, Pair<Pair<Integer, Integer>, Pair<Integer, Integer>>>
+    {
+        @Override
+        public Integer getKey(ResultSet result) throws SQLException
+        {
+            return result.getInt(1);
+        }
+
+        @Override
+        public Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> getValue(ResultSet result) throws SQLException
+        {
+            return Pair.getPair(Pair.getPair(result.getInt(2), result.getInt(3)),
+                    Pair.getPair(result.getInt(4), result.getInt(5)));
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Integer key,
+                Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> value) throws SQLException
+        {
+            statement.setInt(1, key);
+            statement.setInt(2, value.getOne().getOne());
+            statement.setInt(3, value.getOne().getTwo());
+            statement.setInt(4, value.getTwo().getOne());
+            statement.setInt(5, value.getTwo().getTwo());
+        }
+    }
+
+
     protected static final int batchSize = 100000;
     protected static String baseDirectory = null;
     protected static Connection connection;
@@ -291,15 +551,134 @@ public class Updater
     private static int count;
 
 
+    public static <T> void load(String query, SqlSet<T> set) throws SQLException
+    {
+        long time = System.currentTimeMillis();
+        System.out.print("  " + query);
+
+        try(PreparedStatement statement = connection.prepareStatement(query))
+        {
+            statement.setFetchSize(1000000);
+
+            try(ResultSet result = statement.executeQuery())
+            {
+                while(result.next())
+                    set.add(set.get(result));
+            }
+        }
+
+        System.out.println(
+                " -> count: " + set.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
+    }
+
+
+    public static <K, V> void load(String query, SqlMap<K, V> set) throws SQLException
+    {
+        long time = System.currentTimeMillis();
+        System.out.print("  " + query);
+
+        try(PreparedStatement statement = connection.prepareStatement(query))
+        {
+            statement.setFetchSize(1000000);
+
+            try(ResultSet result = statement.executeQuery())
+            {
+                while(result.next())
+                    set.put(set.getKey(result), set.getValue(result));
+            }
+        }
+
+        System.out.println(
+                " -> count: " + set.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
+    }
+
+
+    protected static <T> void store(String command, SqlSet<T> set) throws SQLException
+    {
+        System.out.println("  " + command + " -> count: " + set.size());
+
+        try(PreparedStatement statement = connection.prepareStatement(command))
+        {
+            count = 0;
+
+            try
+            {
+                set.forEach(value -> {
+                    try
+                    {
+                        set.set(statement, value);
+                        statement.addBatch();
+
+                        if(++count % batchSize == 0)
+                            statement.executeBatch();
+                    }
+                    catch(SQLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            catch(RuntimeException e)
+            {
+                if(e.getCause() instanceof SQLException)
+                    throw(SQLException) e.getCause();
+            }
+
+            if(count % batchSize != 0)
+                statement.executeBatch();
+        }
+    }
+
+
+    protected static <K, V> void store(String command, SqlMap<K, V> set) throws SQLException
+    {
+        System.out.println("  " + command + " -> count: " + set.size());
+
+        try(PreparedStatement statement = connection.prepareStatement(command))
+        {
+            count = 0;
+
+            try
+            {
+                set.forEach((key, value) -> {
+                    try
+                    {
+                        set.set(statement, key, value);
+                        statement.addBatch();
+
+                        if(++count % batchSize == 0)
+                            statement.executeBatch();
+                    }
+                    catch(SQLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            catch(RuntimeException e)
+            {
+                if(e.getCause() instanceof SQLException)
+                    throw(SQLException) e.getCause();
+            }
+
+            if(count % batchSize != 0)
+                statement.executeBatch();
+        }
+    }
+
+
     protected static void init() throws SQLException, IOException
     {
         prefixes = new String(Files.readAllBytes(Paths.get("query/prefixes.sparql")));
 
         Properties properties = new Properties();
-        properties.load(new FileInputStream("datasource.properties"));
+        properties.load(new FileInputStream("config/datasource.properties"));
 
         String url = properties.getProperty("url");
         properties.remove("url");
+
+        boolean autoCommit = Boolean.valueOf(properties.getProperty("autoCommit"));
+        properties.remove("autoCommit");
 
         baseDirectory = properties.getProperty("base");
         properties.remove("base");
@@ -308,7 +687,7 @@ public class Updater
             baseDirectory += "/";
 
         connection = DriverManager.getConnection(url, properties);
-        connection.setAutoCommit(false);
+        connection.setAutoCommit(autoCommit);
     }
 
 
@@ -390,7 +769,7 @@ public class Updater
 
         try(QueryExecution qexec = QueryExecutionFactory.create(query, model))
         {
-            ResultSet results = qexec.execSelect();
+            org.apache.jena.query.ResultSet results = qexec.execSelect();
             while(results.hasNext())
             {
                 QuerySolution solution = results.nextSolution();
@@ -399,1768 +778,6 @@ public class Updater
                 System.out.println("    missing " + iri);
             }
         }
-    }
-
-
-    protected static IntHashSet getIntSet(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntHashSet set = new IntHashSet();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    set.add(result.getInt(1));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + set.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return set;
-    }
-
-
-    protected static IntPairSet getIntPairSet(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntPairSet values = new IntPairSet();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    values.add(PrimitiveTuples.pair(result.getInt(1), result.getInt(2)));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return values;
-    }
-
-
-    protected static IntTripletSet getIntTripletSet(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntTripletSet values = new IntTripletSet();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    values.add(new IntTriplet(result.getInt(1), result.getInt(2), result.getInt(3)));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return values;
-    }
-
-
-    protected static IntQuaterpletSet getIntQuaterpletSet(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntQuaterpletSet values = new IntQuaterpletSet();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    values.add(
-                            new IntQuaterplet(result.getInt(1), result.getInt(2), result.getInt(3), result.getInt(4)));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return values;
-    }
-
-
-    protected static IntTripletFloatSet getIntTripletFloatSet(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntTripletFloatSet values = new IntTripletFloatSet();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    values.add(PrimitiveTuples.pair(
-                            new IntTriplet(result.getInt(1), result.getInt(2), result.getInt(3)), result.getFloat(4)));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return values;
-    }
-
-
-    protected static IntTripletStringSet getIntTripletStringSet(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntTripletStringSet values = new IntTripletStringSet();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    values.add(new IntTripletString(result.getInt(1), result.getInt(2), result.getInt(3),
-                            result.getString(4)));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return values;
-    }
-
-
-    protected static IntStringPairSet getIntStringPairSet(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntStringPairSet values = new IntStringPairSet();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    values.add(PrimitiveTuples.pair(result.getInt(1), result.getString(2)));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return values;
-    }
-
-
-    protected static StringPairSet getStringPairSet(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        StringPairSet values = new StringPairSet();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    values.add(new StringPair(result.getString(1), result.getString(2)));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return values;
-    }
-
-
-    protected static IntIntHashMap getIntIntMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntIntHashMap map = new IntIntHashMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(result.getInt(1), result.getInt(2));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
-    protected static IntFloatHashMap getIntFloatMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntFloatHashMap map = new IntFloatHashMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(result.getInt(1), result.getFloat(2));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
-    protected static IntIntPairMap getIntIntPairMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntIntPairMap values = new IntIntPairMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    values.put(result.getInt(1), PrimitiveTuples.pair(result.getInt(2), result.getInt(3)));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return values;
-    }
-
-
-    protected static IntPairIntMap getIntPairIntMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntPairIntMap values = new IntPairIntMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    values.put(PrimitiveTuples.pair(result.getInt(1), result.getInt(2)), result.getInt(3));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return values;
-    }
-
-
-    protected static IntPairStringMap getIntPairStringMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntPairStringMap map = new IntPairStringMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(PrimitiveTuples.pair(result.getInt(1), result.getInt(2)), result.getString(3));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
-    protected static IntTripletIntMap getIntTripletIntMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntTripletIntMap map = new IntTripletIntMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(new IntTriplet(result.getInt(1), result.getInt(2), result.getInt(3)), result.getInt(4));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
-    protected static IntTripletFloatMap getIntTripletFloatMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntTripletFloatMap map = new IntTripletFloatMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(new IntTriplet(result.getInt(1), result.getInt(2), result.getInt(3)), result.getFloat(4));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
-    protected static IntTripletStringMap getIntTripletStringMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntTripletStringMap map = new IntTripletStringMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(new IntTriplet(result.getInt(1), result.getInt(2), result.getInt(3)), result.getString(4));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
-    protected static IntStringPairIntMap getIntStringPairIntMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntStringPairIntMap values = new IntStringPairIntMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    values.put(PrimitiveTuples.pair(result.getInt(1), result.getString(2)), result.getInt(3));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return values;
-    }
-
-
-    protected static StringPairIntMap getStringPairIntMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        StringPairIntMap values = new StringPairIntMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    values.put(new StringPair(result.getString(1), result.getString(2)), result.getInt(3));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + values.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return values;
-    }
-
-
-    protected static IntStringMap getIntStringMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntStringMap map = new IntStringMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(result.getInt(1), result.getString(2));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
-    protected static IntStringPairMap getIntStringPairMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        IntStringPairMap map = new IntStringPairMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(result.getInt(1), Tuples.pair(result.getString(2), result.getString(3)));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
-    protected static StringIntMap getStringIntMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        StringIntMap map = new StringIntMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(result.getString(1), result.getInt(2));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
-    protected static StringStringMap getStringStringMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        StringStringMap map = new StringStringMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(result.getString(1), result.getString(2));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
-    protected static StringStringIntPairMap getStringStringIntPairMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        StringStringIntPairMap map = new StringStringIntPairMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(result.getString(1), PrimitiveTuples.pair(result.getString(2), result.getInt(3)));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
-    protected static MD5IntMap getMD5IntMap(String query) throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        MD5IntMap map = new MD5IntMap();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(new MD5(result.getString(1)), result.getInt(2));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
-    protected static <T> ObjectIntHashMap<T> getObjectIntMap(String query, SQLFunction<java.sql.ResultSet, T> function)
-            throws SQLException
-    {
-        long time = System.currentTimeMillis();
-        System.out.print("  " + query);
-
-        ObjectIntHashMap<T> map = new ObjectIntHashMap<T>();
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            statement.setFetchSize(1000000);
-
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                while(result.next())
-                    map.put(function.apply(result), result.getInt(1));
-            }
-        }
-
-        System.out.println(
-                " -> count: " + map.size() + " / time: " + ((System.currentTimeMillis() - time) / 6000 / 10.0));
-        return map;
-    }
-
-
-    protected static int getIntValue(String query) throws SQLException
-    {
-        System.out.print("  " + query);
-
-        try(PreparedStatement statement = connection.prepareStatement(query))
-        {
-            try(java.sql.ResultSet result = statement.executeQuery())
-            {
-                result.next();
-                int value = result.getInt(1);
-                System.out.println(" -> value: " + value);
-                return value;
-            }
-        }
-    }
-
-
-    protected static void batch(String command, MutableIntCollection set) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + set.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                set.forEach(value -> {
-                    try
-                    {
-                        statement.setInt(1, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntPairSet set) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + set.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                set.forEach(value -> {
-                    try
-                    {
-                        statement.setInt(1, value.getOne());
-                        statement.setInt(2, value.getTwo());
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntTripletSet set) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + set.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                set.forEach(value -> {
-                    try
-                    {
-                        statement.setInt(1, value.getOne());
-                        statement.setInt(2, value.getTwo());
-                        statement.setInt(3, value.getThree());
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntQuaterpletSet set) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + set.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                set.forEach(value -> {
-                    try
-                    {
-                        statement.setInt(1, value.getOne());
-                        statement.setInt(2, value.getTwo());
-                        statement.setInt(3, value.getThree());
-                        statement.setInt(4, value.getFour());
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntTripletFloatSet set) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + set.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                set.forEach(value -> {
-                    try
-                    {
-                        statement.setInt(1, value.getOne().getOne());
-                        statement.setInt(2, value.getOne().getTwo());
-                        statement.setInt(3, value.getOne().getThree());
-                        statement.setFloat(4, value.getTwo());
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntTripletStringSet set) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + set.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                set.forEach(value -> {
-                    try
-                    {
-                        statement.setInt(1, value.getOne());
-                        statement.setInt(2, value.getTwo());
-                        statement.setInt(3, value.getThree());
-                        statement.setString(4, value.getString());
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntStringPairSet set) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + set.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                set.forEach(value -> {
-                    try
-                    {
-                        statement.setInt(1, value.getOne());
-                        statement.setString(2, value.getTwo());
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, StringPairSet set) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + set.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                set.forEach(value -> {
-                    try
-                    {
-                        statement.setString(1, value.getOne());
-                        statement.setString(2, value.getTwo());
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntHashSet set, SQLIntProcedure procedure) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + set.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                set.forEach(value -> {
-                    try
-                    {
-                        procedure.apply(statement, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static <T> void batch(String command, ObjectIntHashMap<T> set, SQLObjectIntProcedure<T> procedure)
-            throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + set.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                set.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        procedure.apply(statement, key, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static <T> void batch(String command, Set<T> set, SQLProcedure<T> procedure) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + set.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                set.forEach(value -> {
-                    try
-                    {
-                        procedure.apply(statement, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntIntHashMap map, Direction direction) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        statement.setInt(direction == Direction.REVERSE ? 2 : 1, key);
-                        statement.setInt(direction == Direction.REVERSE ? 1 : 2, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntFloatHashMap map, Direction direction) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        statement.setInt(direction == Direction.REVERSE ? 2 : 1, key);
-                        statement.setFloat(direction == Direction.REVERSE ? 1 : 2, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntIntPairMap map, Direction direction) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        statement.setInt(direction == Direction.REVERSE ? 3 : 1, key);
-                        statement.setInt(direction == Direction.REVERSE ? 1 : 2, value.getOne());
-                        statement.setInt(direction == Direction.REVERSE ? 2 : 3, value.getTwo());
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntPairIntMap map, Direction direction) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        statement.setInt(direction == Direction.REVERSE ? 2 : 1, key.getOne());
-                        statement.setInt(direction == Direction.REVERSE ? 3 : 2, key.getTwo());
-                        statement.setInt(direction == Direction.REVERSE ? 1 : 3, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntPairStringMap map, Direction direction) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEach((key, value) -> {
-                    try
-                    {
-                        statement.setInt(direction == Direction.REVERSE ? 2 : 1, key.getOne());
-                        statement.setInt(direction == Direction.REVERSE ? 3 : 2, key.getTwo());
-                        statement.setString(direction == Direction.REVERSE ? 1 : 3, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntTripletIntMap map, Direction direction) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        statement.setInt(direction == Direction.REVERSE ? 2 : 1, key.getOne());
-                        statement.setInt(direction == Direction.REVERSE ? 3 : 2, key.getTwo());
-                        statement.setInt(direction == Direction.REVERSE ? 4 : 3, key.getThree());
-                        statement.setInt(direction == Direction.REVERSE ? 1 : 4, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntTripletFloatMap map, Direction direction) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        statement.setInt(direction == Direction.REVERSE ? 2 : 1, key.getOne());
-                        statement.setInt(direction == Direction.REVERSE ? 3 : 2, key.getTwo());
-                        statement.setInt(direction == Direction.REVERSE ? 4 : 3, key.getThree());
-                        statement.setFloat(direction == Direction.REVERSE ? 1 : 4, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntTripletStringMap map, Direction direction) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEach((key, value) -> {
-                    try
-                    {
-                        statement.setInt(direction == Direction.REVERSE ? 2 : 1, key.getOne());
-                        statement.setInt(direction == Direction.REVERSE ? 3 : 2, key.getTwo());
-                        statement.setInt(direction == Direction.REVERSE ? 4 : 3, key.getThree());
-                        statement.setString(direction == Direction.REVERSE ? 1 : 4, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntStringMap map, Direction direction) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        statement.setInt(direction == Direction.REVERSE ? 2 : 1, key);
-                        statement.setString(direction == Direction.REVERSE ? 1 : 2, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntStringPairMap map, Direction direction) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        statement.setInt(direction == Direction.REVERSE ? 3 : 1, key);
-                        statement.setString(direction == Direction.REVERSE ? 1 : 2, value.getOne());
-                        statement.setString(direction == Direction.REVERSE ? 2 : 3, value.getTwo());
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntStringIntPairMap map, Direction direction) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        statement.setInt(direction == Direction.REVERSE ? 3 : 1, key);
-                        statement.setString(direction == Direction.REVERSE ? 1 : 2, value.getOne());
-                        statement.setInt(direction == Direction.REVERSE ? 2 : 3, value.getTwo());
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, StringIntMap map, Direction direction) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        statement.setString(direction == Direction.REVERSE ? 2 : 1, key);
-                        statement.setInt(direction == Direction.REVERSE ? 1 : 2, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, StringStringMap map, Direction direction) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEach((key, value) -> {
-                    try
-                    {
-                        statement.setString(direction == Direction.REVERSE ? 2 : 1, key);
-                        statement.setString(direction == Direction.REVERSE ? 1 : 2, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntStringPairIntMap map) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        statement.setInt(1, key.getOne());
-                        statement.setString(2, key.getTwo());
-                        statement.setInt(3, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, StringPairIntMap map) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        statement.setString(1, key.getOne());
-                        statement.setString(2, key.getTwo());
-                        statement.setInt(3, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, StringStringIntPairMap map) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEach((key, value) -> {
-                    try
-                    {
-                        statement.setString(1, key);
-                        statement.setString(2, value.getOne());
-                        statement.setInt(3, value.getTwo());
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, MD5IntMap map) throws SQLException
-    {
-        System.out.println("  " + command + " -> count: " + map.size());
-
-        try(PreparedStatement statement = connection.prepareStatement(command))
-        {
-            count = 0;
-
-            try
-            {
-                map.forEachKeyValue((key, value) -> {
-                    try
-                    {
-                        statement.setString(1, key.toString());
-                        statement.setInt(2, value);
-                        statement.addBatch();
-
-                        if(++count % batchSize == 0)
-                            statement.executeBatch();
-                    }
-                    catch(SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-            catch(RuntimeException e)
-            {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
-            }
-
-            if(count % batchSize != 0)
-                statement.executeBatch();
-        }
-    }
-
-
-    protected static void batch(String command, IntIntHashMap map) throws SQLException
-    {
-        batch(command, map, Direction.DIRECT);
-    }
-
-
-    protected static void batch(String command, IntFloatHashMap map) throws SQLException
-    {
-        batch(command, map, Direction.DIRECT);
-    }
-
-
-    protected static void batch(String command, IntStringMap map) throws SQLException
-    {
-        batch(command, map, Direction.DIRECT);
-    }
-
-
-    protected static void batch(String command, IntStringPairMap map) throws SQLException
-    {
-        batch(command, map, Direction.DIRECT);
-    }
-
-
-    protected static void batch(String command, IntStringIntPairMap map) throws SQLException
-    {
-        batch(command, map, Direction.DIRECT);
-    }
-
-
-    protected static void batch(String command, IntIntPairMap map) throws SQLException
-    {
-        batch(command, map, Direction.DIRECT);
-    }
-
-
-    protected static void batch(String command, IntPairIntMap map) throws SQLException
-    {
-        batch(command, map, Direction.DIRECT);
-    }
-
-    protected static void batch(String command, IntPairStringMap map) throws SQLException
-    {
-        batch(command, map, Direction.DIRECT);
-    }
-
-
-    protected static void batch(String command, StringIntMap map) throws SQLException
-    {
-        batch(command, map, Direction.DIRECT);
-    }
-
-
-    protected static void batch(String command, StringStringMap map) throws SQLException
-    {
-        batch(command, map, Direction.DIRECT);
     }
 
 
@@ -2228,15 +845,44 @@ public class Updater
     }
 
 
+    protected static void setCount(String name, int count) throws SQLException
+    {
+        try(PreparedStatement statement = connection
+                .prepareStatement("update info.idsm_counts set count=? where name=?"))
+        {
+            statement.setInt(1, count);
+            statement.setString(2, name);
+
+            if(statement.executeUpdate() != 1)
+                System.err.printf("warning: number of '%s' was not set", name);
+        }
+    }
+
+
+    protected static void setVersion(String name, String version) throws SQLException
+    {
+        try(PreparedStatement statement = connection
+                .prepareStatement("update info.idsm_sources set version=? where name=?"))
+        {
+            statement.setString(1, version);
+            statement.setString(2, name);
+
+            if(statement.executeUpdate() != 1)
+                System.err.printf("warning: version '%s' of source '%s' was not set\n", version, name);
+        }
+    }
+
+
     protected static void commit() throws SQLException
     {
-        connection.commit();
+        if(!connection.getAutoCommit())
+            connection.commit();
     }
 
 
     protected static void rollback() throws SQLException
     {
-        if(connection != null)
+        if(connection != null && !connection.getAutoCommit())
             connection.rollback();
     }
 }

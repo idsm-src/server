@@ -1,12 +1,10 @@
 package cz.iocb.load.pubchem;
 
 import java.io.IOException;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.eclipse.collections.api.tuple.primitive.IntIntPair;
-import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
+import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -16,42 +14,57 @@ public class Cooccurrence extends Updater
 {
     private static void loadChemicalToChemicalValues(Model model) throws IOException, SQLException
     {
+        IntPairIntMap keepValues = new IntPairIntMap();
         IntPairIntMap newValues = new IntPairIntMap();
-        IntPairIntMap oldValues = getIntPairIntMap(
-                "select subject, object, value from pubchem.chemical_chemical_cooccurrences");
+        IntPairIntMap oldValues = new IntPairIntMap();
+
+        load("select subject,object,value from pubchem.chemical_chemical_cooccurrences", oldValues);
 
         new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int subject = getIntID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
-                int object = getIntID("object", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
-                int value = getInt("value");
+                Integer subject = Compound.getCompoundID(getIRI("subject"));
+                Integer object = Compound.getCompoundID(getIRI("object"));
+                Integer value = getInt("value");
 
-                IntIntPair pair = PrimitiveTuples.pair(subject, object);
-                Compound.addCompoundID(subject);
-                Compound.addCompoundID(object);
+                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-                if(value != oldValues.removeKeyIfAbsent(pair, NO_VALUE))
-                    newValues.put(pair, value);
+                if(value.equals(oldValues.remove(pair)))
+                {
+                    keepValues.put(pair, value);
+                }
+                else
+                {
+                    Integer keep = keepValues.get(pair);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newValues.put(pair, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("delete from pubchem.chemical_chemical_cooccurrences where subject = ? and object = ?",
-                oldValues.keySet(), (PreparedStatement statement, IntIntPair pair) -> {
-                    statement.setInt(1, pair.getOne());
-                    statement.setInt(2, pair.getTwo());
-                });
-        batch("insert into pubchem.chemical_chemical_cooccurrences(subject, object, value) values (?,?,?)", newValues);
+        store("delete from pubchem.chemical_chemical_cooccurrences where subject=? and object=? and value=?",
+                oldValues);
+        store("insert into pubchem.chemical_chemical_cooccurrences(subject,object,value) values(?,?,?)", newValues);
     }
 
 
     private static void loadChemicalToDiseaseValues(Model model) throws IOException, SQLException
     {
+        IntPairIntMap keepValues = new IntPairIntMap();
         IntPairIntMap newValues = new IntPairIntMap();
-        IntPairIntMap oldValues = getIntPairIntMap(
-                "select subject, object, value from pubchem.chemical_disease_cooccurrences");
+        IntPairIntMap oldValues = new IntPairIntMap();
+
+        load("select subject,object,value from pubchem.chemical_disease_cooccurrences", oldValues);
 
         new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
         {
@@ -59,36 +72,48 @@ public class Cooccurrence extends Updater
             protected void parse() throws IOException
             {
                 // workaround
-                if(!getIRI("subject").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"))
+                if(!getIRI("subject").startsWith(Compound.prefix))
                     return;
 
-                int subject = getIntID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
-                int object = getIntID("object", "http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID");
-                int value = getInt("value");
+                Integer subject = Compound.getCompoundID(getIRI("subject"));
+                Integer object = Disease.getDiseaseID(getIRI("object"));
+                Integer value = getInt("value");
 
-                IntIntPair pair = PrimitiveTuples.pair(subject, object);
-                Compound.addCompoundID(subject);
-                Disease.getDiseaseID(object);
+                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-                if(value != oldValues.removeKeyIfAbsent(pair, NO_VALUE))
-                    newValues.put(pair, value);
+                if(value.equals(oldValues.remove(pair)))
+                {
+                    keepValues.put(pair, value);
+                }
+                else
+                {
+                    Integer keep = keepValues.get(pair);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newValues.put(pair, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("delete from pubchem.chemical_disease_cooccurrences where subject = ? and object = ?", oldValues.keySet(),
-                (PreparedStatement statement, IntIntPair pair) -> {
-                    statement.setInt(1, pair.getOne());
-                    statement.setInt(2, pair.getTwo());
-                });
-        batch("insert into pubchem.chemical_disease_cooccurrences(subject, object, value) values (?,?,?)", newValues);
+        store("delete from pubchem.chemical_disease_cooccurrences where subject=? and object=? and value=?", oldValues);
+        store("insert into pubchem.chemical_disease_cooccurrences(subject,object,value) values(?,?,?)", newValues);
     }
 
 
     private static void loadDiseaseToChemicalValues(Model model) throws IOException, SQLException
     {
+        IntPairIntMap keepValues = new IntPairIntMap();
         IntPairIntMap newValues = new IntPairIntMap();
-        IntPairIntMap oldValues = getIntPairIntMap(
-                "select subject, object, value from pubchem.disease_chemical_cooccurrences");
+        IntPairIntMap oldValues = new IntPairIntMap();
+
+        load("select subject,object,value from pubchem.disease_chemical_cooccurrences", oldValues);
 
         new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
         {
@@ -96,73 +121,98 @@ public class Cooccurrence extends Updater
             protected void parse() throws IOException
             {
                 // workaround
-                if(!getIRI("subject").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID"))
+                if(!getIRI("subject").startsWith(Disease.prefix))
                     return;
 
-                int subject = getIntID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID");
-                int object = getIntID("object", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
-                int value = getInt("value");
+                Integer subject = Disease.getDiseaseID(getIRI("subject"));
+                Integer object = Compound.getCompoundID(getIRI("object"));
+                Integer value = getInt("value");
 
-                IntIntPair pair = PrimitiveTuples.pair(subject, object);
-                Disease.getDiseaseID(subject);
-                Compound.addCompoundID(object);
+                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-                if(value != oldValues.removeKeyIfAbsent(pair, NO_VALUE))
-                    newValues.put(pair, value);
+                if(value.equals(oldValues.remove(pair)))
+                {
+                    keepValues.put(pair, value);
+                }
+                else
+                {
+                    Integer keep = keepValues.get(pair);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newValues.put(pair, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("delete from pubchem.disease_chemical_cooccurrences where subject = ? and object = ?", oldValues.keySet(),
-                (PreparedStatement statement, IntIntPair pair) -> {
-                    statement.setInt(1, pair.getOne());
-                    statement.setInt(2, pair.getTwo());
-                });
-        batch("insert into pubchem.disease_chemical_cooccurrences(subject, object, value) values (?,?,?)", newValues);
+        store("delete from pubchem.disease_chemical_cooccurrences where subject=? and object=? and value=?", oldValues);
+        store("insert into pubchem.disease_chemical_cooccurrences(subject,object,value) values(?,?,?)", newValues);
     }
 
 
     private static void loadDiseaseToDiseaseValues(Model model) throws IOException, SQLException
     {
+        IntPairIntMap keepValues = new IntPairIntMap();
         IntPairIntMap newValues = new IntPairIntMap();
-        IntPairIntMap oldValues = getIntPairIntMap(
-                "select subject, object, value from pubchem.disease_disease_cooccurrences");
+        IntPairIntMap oldValues = new IntPairIntMap();
+
+        load("select subject,object,value from pubchem.disease_disease_cooccurrences", oldValues);
 
         new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int subject = getIntID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID");
-                int object = getIntID("object", "http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID");
-                int value = getInt("value");
+                Integer subject = Disease.getDiseaseID(getIRI("subject"));
+                Integer object = Disease.getDiseaseID(getIRI("object"));
+                Integer value = getInt("value");
 
-                IntIntPair pair = PrimitiveTuples.pair(subject, object);
-                Disease.getDiseaseID(object);
-                Disease.getDiseaseID(subject);
+                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-                if(value != oldValues.removeKeyIfAbsent(pair, NO_VALUE))
-                    newValues.put(pair, value);
+                if(value.equals(oldValues.remove(pair)))
+                {
+                    keepValues.put(pair, value);
+                }
+                else
+                {
+                    Integer keep = keepValues.get(pair);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newValues.put(pair, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("delete from pubchem.disease_disease_cooccurrences where subject = ? and object = ?", oldValues.keySet(),
-                (PreparedStatement statement, IntIntPair pair) -> {
-                    statement.setInt(1, pair.getOne());
-                    statement.setInt(2, pair.getTwo());
-                });
-        batch("insert into pubchem.disease_disease_cooccurrences(subject, object, value) values (?,?,?)", newValues);
+        store("delete from pubchem.disease_disease_cooccurrences where subject=? and object=? and value=?", oldValues);
+        store("insert into pubchem.disease_disease_cooccurrences(subject,object,value) values(?,?,?)", newValues);
     }
 
 
     private static void loadChemicalToGeneValues(Model model) throws IOException, SQLException
     {
+        IntPairIntMap keepGeneValues = new IntPairIntMap();
         IntPairIntMap newGeneValues = new IntPairIntMap();
-        IntPairIntMap oldGeneValues = getIntPairIntMap(
-                "select subject, object, value from pubchem.chemical_gene_cooccurrences");
+        IntPairIntMap oldGeneValues = new IntPairIntMap();
 
+        IntPairIntMap keepEnzymeValues = new IntPairIntMap();
         IntPairIntMap newEnzymeValues = new IntPairIntMap();
-        IntPairIntMap oldEnzymeValues = getIntPairIntMap(
-                "select subject, object, value from pubchem.chemical_enzyme_cooccurrences");
+        IntPairIntMap oldEnzymeValues = new IntPairIntMap();
+
+        load("select subject,object,value from pubchem.chemical_gene_cooccurrences", oldGeneValues);
+        load("select subject,object,value from pubchem.chemical_enzyme_cooccurrences", oldEnzymeValues);
 
         new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
         {
@@ -170,34 +220,62 @@ public class Cooccurrence extends Updater
             protected void parse() throws IOException
             {
                 // workaround
-                if(!getIRI("subject").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"))
+                if(!getIRI("subject").startsWith(Compound.prefix))
                     return;
 
-                if(getIRI("object").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"))
+                if(getIRI("object").startsWith(Gene.symbolPrefix))
                 {
-                    int subject = getIntID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
-                    int object = Gene
-                            .getGeneSymbolID(getStringID("object", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"));
-                    int value = getInt("value");
+                    Integer subject = Compound.getCompoundID(getIRI("subject"));
+                    Integer object = Gene.getGeneSymbolID(getIRI("object"));
+                    Integer value = getInt("value");
 
-                    IntIntPair pair = PrimitiveTuples.pair(subject, object);
-                    Compound.addCompoundID(subject);
+                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-                    if(value != oldGeneValues.removeKeyIfAbsent(pair, NO_VALUE))
-                        newGeneValues.put(pair, value);
+                    if(value.equals(oldGeneValues.remove(pair)))
+                    {
+                        keepGeneValues.put(pair, value);
+                    }
+                    else
+                    {
+                        Integer keep = keepGeneValues.get(pair);
+
+                        if(value.equals(keep))
+                            return;
+                        else if(keep != null)
+                            throw new IOException();
+
+                        Integer put = newGeneValues.put(pair, value);
+
+                        if(put != null && !value.equals(put))
+                            throw new IOException();
+                    }
                 }
-                else if(getIRI("object").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_"))
+                else if(getIRI("object").startsWith(Protein.enzymePrefix))
                 {
-                    int subject = getIntID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
-                    int object = Protein
-                            .getEnzymeID(getStringID("object", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_"));
-                    int value = getInt("value");
+                    Integer subject = Compound.getCompoundID(getIRI("subject"));
+                    Integer object = Protein.getEnzymeID(getIRI("object"));
+                    Integer value = getInt("value");
 
-                    IntIntPair pair = PrimitiveTuples.pair(subject, object);
-                    Compound.addCompoundID(subject);
+                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-                    if(value != oldEnzymeValues.removeKeyIfAbsent(pair, NO_VALUE))
-                        newEnzymeValues.put(pair, value);
+                    if(value.equals(oldEnzymeValues.remove(pair)))
+                    {
+                        keepEnzymeValues.put(pair, value);
+                    }
+                    else
+                    {
+                        Integer keep = keepEnzymeValues.get(pair);
+
+                        if(value.equals(keep))
+                            return;
+                        else if(keep != null)
+                            throw new IOException();
+
+                        Integer put = newEnzymeValues.put(pair, value);
+
+                        if(put != null && !value.equals(put))
+                            throw new IOException();
+                    }
                 }
                 else
                 {
@@ -206,32 +284,28 @@ public class Cooccurrence extends Updater
             }
         }.load(model);
 
-        batch("delete from pubchem.chemical_gene_cooccurrences where subject = ? and object = ?",
-                oldGeneValues.keySet(), (PreparedStatement statement, IntIntPair pair) -> {
-                    statement.setInt(1, pair.getOne());
-                    statement.setInt(2, pair.getTwo());
-                });
-        batch("insert into pubchem.chemical_gene_cooccurrences(subject, object, value) values (?,?,?)", newGeneValues);
+        store("delete from pubchem.chemical_gene_cooccurrences where subject=? and object=? and value=?",
+                oldGeneValues);
+        store("insert into pubchem.chemical_gene_cooccurrences(subject,object,value) values(?,?,?)", newGeneValues);
 
-        batch("delete from pubchem.chemical_enzyme_cooccurrences where subject = ? and object = ?",
-                oldEnzymeValues.keySet(), (PreparedStatement statement, IntIntPair pair) -> {
-                    statement.setInt(1, pair.getOne());
-                    statement.setInt(2, pair.getTwo());
-                });
-        batch("insert into pubchem.chemical_enzyme_cooccurrences(subject, object, value) values (?,?,?)",
-                newEnzymeValues);
+        store("delete from pubchem.chemical_enzyme_cooccurrences where subject=? and object=? and value=?",
+                oldEnzymeValues);
+        store("insert into pubchem.chemical_enzyme_cooccurrences(subject,object,value) values(?,?,?)", newEnzymeValues);
     }
 
 
     private static void loadDiseaseToGeneValues(Model model) throws IOException, SQLException
     {
+        IntPairIntMap keepGeneValues = new IntPairIntMap();
         IntPairIntMap newGeneValues = new IntPairIntMap();
-        IntPairIntMap oldGeneValues = getIntPairIntMap(
-                "select subject, object, value from pubchem.disease_gene_cooccurrences");
+        IntPairIntMap oldGeneValues = new IntPairIntMap();
 
+        IntPairIntMap keepEnzymeValues = new IntPairIntMap();
         IntPairIntMap newEnzymeValues = new IntPairIntMap();
-        IntPairIntMap oldEnzymeValues = getIntPairIntMap(
-                "select subject, object, value from pubchem.disease_enzyme_cooccurrences");
+        IntPairIntMap oldEnzymeValues = new IntPairIntMap();
+
+        load("select subject,object,value from pubchem.disease_gene_cooccurrences", oldGeneValues);
+        load("select subject,object,value from pubchem.disease_enzyme_cooccurrences", oldEnzymeValues);
 
         new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
         {
@@ -239,34 +313,62 @@ public class Cooccurrence extends Updater
             protected void parse() throws IOException
             {
                 // workaround
-                if(!getIRI("subject").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID"))
+                if(!getIRI("subject").startsWith(Disease.prefix))
                     return;
 
-                if(getIRI("object").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"))
+                if(getIRI("object").startsWith(Gene.symbolPrefix))
                 {
-                    int subject = getIntID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID");
-                    int object = Gene
-                            .getGeneSymbolID(getStringID("object", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"));
-                    int value = getInt("value");
+                    Integer subject = Disease.getDiseaseID(getIRI("subject"));
+                    Integer object = Gene.getGeneSymbolID(getIRI("object"));
+                    Integer value = getInt("value");
 
-                    IntIntPair pair = PrimitiveTuples.pair(subject, object);
-                    Disease.getDiseaseID(subject);
+                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-                    if(value != oldGeneValues.removeKeyIfAbsent(pair, NO_VALUE))
-                        newGeneValues.put(pair, value);
+                    if(value.equals(oldGeneValues.remove(pair)))
+                    {
+                        keepGeneValues.put(pair, value);
+                    }
+                    else
+                    {
+                        Integer keep = keepGeneValues.get(pair);
+
+                        if(value.equals(keep))
+                            return;
+                        else if(keep != null)
+                            throw new IOException();
+
+                        Integer put = newGeneValues.put(pair, value);
+
+                        if(put != null && !value.equals(put))
+                            throw new IOException();
+                    }
                 }
-                else if(getIRI("object").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_"))
+                else if(getIRI("object").startsWith(Protein.enzymePrefix))
                 {
-                    int subject = getIntID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID");
-                    int object = Protein
-                            .getEnzymeID(getStringID("object", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_"));
-                    int value = getInt("value");
+                    Integer subject = Disease.getDiseaseID(getIRI("subject"));
+                    Integer object = Protein.getEnzymeID(getIRI("object"));
+                    Integer value = getInt("value");
 
-                    IntIntPair pair = PrimitiveTuples.pair(subject, object);
-                    Disease.getDiseaseID(subject);
+                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-                    if(value != oldEnzymeValues.removeKeyIfAbsent(pair, NO_VALUE))
-                        newEnzymeValues.put(pair, value);
+                    if(value.equals(oldEnzymeValues.remove(pair)))
+                    {
+                        keepEnzymeValues.put(pair, value);
+                    }
+                    else
+                    {
+                        Integer keep = keepEnzymeValues.get(pair);
+
+                        if(value.equals(keep))
+                            return;
+                        else if(keep != null)
+                            throw new IOException();
+
+                        Integer put = newEnzymeValues.put(pair, value);
+
+                        if(put != null && !value.equals(put))
+                            throw new IOException();
+                    }
                 }
                 else
                 {
@@ -276,32 +378,27 @@ public class Cooccurrence extends Updater
         }.load(model);
 
 
-        batch("delete from pubchem.disease_gene_cooccurrences where subject = ? and object = ?", oldGeneValues.keySet(),
-                (PreparedStatement statement, IntIntPair pair) -> {
-                    statement.setInt(1, pair.getOne());
-                    statement.setInt(2, pair.getTwo());
-                });
-        batch("insert into pubchem.disease_gene_cooccurrences(subject, object, value) values (?,?,?)", newGeneValues);
+        store("delete from pubchem.disease_gene_cooccurrences where subject=? and object=? and value=?", oldGeneValues);
+        store("insert into pubchem.disease_gene_cooccurrences(subject,object,value) values(?,?,?)", newGeneValues);
 
-        batch("delete from pubchem.disease_enzyme_cooccurrences where subject = ? and object = ?",
-                oldEnzymeValues.keySet(), (PreparedStatement statement, IntIntPair pair) -> {
-                    statement.setInt(1, pair.getOne());
-                    statement.setInt(2, pair.getTwo());
-                });
-        batch("insert into pubchem.disease_enzyme_cooccurrences(subject, object, value) values (?,?,?)",
-                newEnzymeValues);
+        store("delete from pubchem.disease_enzyme_cooccurrences where subject=? and object=? and value=?",
+                oldEnzymeValues);
+        store("insert into pubchem.disease_enzyme_cooccurrences(subject,object,value) values(?,?,?)", newEnzymeValues);
     }
 
 
     private static void loadGeneToChemicalValues(Model model) throws IOException, SQLException
     {
+        IntPairIntMap keepGeneValues = new IntPairIntMap();
         IntPairIntMap newGeneValues = new IntPairIntMap();
-        IntPairIntMap oldGeneValues = getIntPairIntMap(
-                "select subject, object, value from pubchem.gene_chemical_cooccurrences");
+        IntPairIntMap oldGeneValues = new IntPairIntMap();
 
+        IntPairIntMap keepEnzymeValues = new IntPairIntMap();
         IntPairIntMap newEnzymeValues = new IntPairIntMap();
-        IntPairIntMap oldEnzymeValues = getIntPairIntMap(
-                "select subject, object, value from pubchem.enzyme_chemical_cooccurrences");
+        IntPairIntMap oldEnzymeValues = new IntPairIntMap();
+
+        load("select subject,object,value from pubchem.gene_chemical_cooccurrences", oldGeneValues);
+        load("select subject,object,value from pubchem.enzyme_chemical_cooccurrences", oldEnzymeValues);
 
         new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
         {
@@ -309,34 +406,62 @@ public class Cooccurrence extends Updater
             protected void parse() throws IOException
             {
                 // workaround
-                if(!getIRI("object").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"))
+                if(!getIRI("object").startsWith(Compound.prefix))
                     return;
 
-                if(getIRI("subject").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"))
+                if(getIRI("subject").startsWith(Gene.symbolPrefix))
                 {
-                    int subject = Gene
-                            .getGeneSymbolID(getStringID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"));
-                    int object = getIntID("object", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
-                    int value = getInt("value");
+                    Integer subject = Gene.getGeneSymbolID(getIRI("subject"));
+                    Integer object = Compound.getCompoundID(getIRI("object"));
+                    Integer value = getInt("value");
 
-                    IntIntPair pair = PrimitiveTuples.pair(subject, object);
-                    Compound.addCompoundID(object);
+                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-                    if(value != oldGeneValues.removeKeyIfAbsent(pair, NO_VALUE))
-                        newGeneValues.put(pair, value);
+                    if(value.equals(oldGeneValues.remove(pair)))
+                    {
+                        keepGeneValues.put(pair, value);
+                    }
+                    else
+                    {
+                        Integer keep = keepGeneValues.get(pair);
+
+                        if(value.equals(keep))
+                            return;
+                        else if(keep != null)
+                            throw new IOException();
+
+                        Integer put = newGeneValues.put(pair, value);
+
+                        if(put != null && !value.equals(put))
+                            throw new IOException();
+                    }
                 }
-                else if(getIRI("subject").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_"))
+                else if(getIRI("subject").startsWith(Protein.enzymePrefix))
                 {
-                    int subject = Protein
-                            .getEnzymeID(getStringID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_"));
-                    int object = getIntID("object", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID");
-                    int value = getInt("value");
+                    Integer subject = Protein.getEnzymeID(getIRI("subject"));
+                    Integer object = Compound.getCompoundID(getIRI("object"));
+                    Integer value = getInt("value");
 
-                    IntIntPair pair = PrimitiveTuples.pair(subject, object);
-                    Compound.addCompoundID(object);
+                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-                    if(value != oldEnzymeValues.removeKeyIfAbsent(pair, NO_VALUE))
-                        newEnzymeValues.put(pair, value);
+                    if(value.equals(oldEnzymeValues.remove(pair)))
+                    {
+                        keepEnzymeValues.put(pair, value);
+                    }
+                    else
+                    {
+                        Integer keep = keepEnzymeValues.get(pair);
+
+                        if(value.equals(keep))
+                            return;
+                        else if(keep != null)
+                            throw new IOException();
+
+                        Integer put = newEnzymeValues.put(pair, value);
+
+                        if(put != null && !value.equals(put))
+                            throw new IOException();
+                    }
                 }
                 else
                 {
@@ -345,32 +470,28 @@ public class Cooccurrence extends Updater
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_chemical_cooccurrences where subject = ? and object = ?",
-                oldGeneValues.keySet(), (PreparedStatement statement, IntIntPair pair) -> {
-                    statement.setInt(1, pair.getOne());
-                    statement.setInt(2, pair.getTwo());
-                });
-        batch("insert into pubchem.gene_chemical_cooccurrences(subject, object, value) values (?,?,?)", newGeneValues);
+        store("delete from pubchem.gene_chemical_cooccurrences where subject=? and object=? and value=?",
+                oldGeneValues);
+        store("insert into pubchem.gene_chemical_cooccurrences(subject,object,value) values(?,?,?)", newGeneValues);
 
-        batch("delete from pubchem.enzyme_chemical_cooccurrences where subject = ? and object = ?",
-                oldEnzymeValues.keySet(), (PreparedStatement statement, IntIntPair pair) -> {
-                    statement.setInt(1, pair.getOne());
-                    statement.setInt(2, pair.getTwo());
-                });
-        batch("insert into pubchem.enzyme_chemical_cooccurrences(subject, object, value) values (?,?,?)",
-                newEnzymeValues);
+        store("delete from pubchem.enzyme_chemical_cooccurrences where subject=? and object=? and value=?",
+                oldEnzymeValues);
+        store("insert into pubchem.enzyme_chemical_cooccurrences(subject,object,value) values(?,?,?)", newEnzymeValues);
     }
 
 
     private static void loadGeneToDiseaseValues(Model model) throws IOException, SQLException
     {
+        IntPairIntMap keepGeneValues = new IntPairIntMap();
         IntPairIntMap newGeneValues = new IntPairIntMap();
-        IntPairIntMap oldGeneValues = getIntPairIntMap(
-                "select subject, object, value from pubchem.gene_disease_cooccurrences");
+        IntPairIntMap oldGeneValues = new IntPairIntMap();
 
+        IntPairIntMap keepEnzymeValues = new IntPairIntMap();
         IntPairIntMap newEnzymeValues = new IntPairIntMap();
-        IntPairIntMap oldEnzymeValues = getIntPairIntMap(
-                "select subject, object, value from pubchem.enzyme_disease_cooccurrences");
+        IntPairIntMap oldEnzymeValues = new IntPairIntMap();
+
+        load("select subject,object,value from pubchem.gene_disease_cooccurrences", oldGeneValues);
+        load("select subject,object,value from pubchem.enzyme_disease_cooccurrences", oldEnzymeValues);
 
         new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
         {
@@ -378,34 +499,62 @@ public class Cooccurrence extends Updater
             protected void parse() throws IOException
             {
                 // workaround
-                if(!getIRI("object").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID"))
+                if(!getIRI("object").startsWith(Disease.prefix))
                     return;
 
-                if(getIRI("subject").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"))
+                if(getIRI("subject").startsWith(Gene.symbolPrefix))
                 {
-                    int subject = Gene
-                            .getGeneSymbolID(getStringID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"));
-                    int object = getIntID("object", "http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID");
-                    int value = getInt("value");
+                    Integer subject = Gene.getGeneSymbolID(getIRI("subject"));
+                    Integer object = Disease.getDiseaseID(getIRI("object"));
+                    Integer value = getInt("value");
 
-                    IntIntPair pair = PrimitiveTuples.pair(subject, object);
-                    Disease.getDiseaseID(object);
+                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-                    if(value != oldGeneValues.removeKeyIfAbsent(pair, NO_VALUE))
-                        newGeneValues.put(pair, value);
+                    if(value.equals(oldGeneValues.remove(pair)))
+                    {
+                        keepGeneValues.put(pair, value);
+                    }
+                    else
+                    {
+                        Integer keep = keepGeneValues.get(pair);
+
+                        if(value.equals(keep))
+                            return;
+                        else if(keep != null)
+                            throw new IOException();
+
+                        Integer put = newGeneValues.put(pair, value);
+
+                        if(put != null && !value.equals(put))
+                            throw new IOException();
+                    }
                 }
-                else if(getIRI("subject").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_"))
+                else if(getIRI("subject").startsWith(Protein.enzymePrefix))
                 {
-                    int subject = Protein
-                            .getEnzymeID(getStringID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_"));
-                    int object = getIntID("object", "http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID");
-                    int value = getInt("value");
+                    Integer subject = Protein.getEnzymeID(getIRI("subject"));
+                    Integer object = Disease.getDiseaseID(getIRI("object"));
+                    Integer value = getInt("value");
 
-                    IntIntPair pair = PrimitiveTuples.pair(subject, object);
-                    Disease.getDiseaseID(object);
+                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-                    if(value != oldEnzymeValues.removeKeyIfAbsent(pair, NO_VALUE))
-                        newEnzymeValues.put(pair, value);
+                    if(value.equals(oldEnzymeValues.remove(pair)))
+                    {
+                        keepEnzymeValues.put(pair, value);
+                    }
+                    else
+                    {
+                        Integer keep = keepEnzymeValues.get(pair);
+
+                        if(value.equals(keep))
+                            return;
+                        else if(keep != null)
+                            throw new IOException();
+
+                        Integer put = newEnzymeValues.put(pair, value);
+
+                        if(put != null && !value.equals(put))
+                            throw new IOException();
+                    }
                 }
                 else
                 {
@@ -414,51 +563,57 @@ public class Cooccurrence extends Updater
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_disease_cooccurrences where subject = ? and object = ?", oldGeneValues.keySet(),
-                (PreparedStatement statement, IntIntPair pair) -> {
-                    statement.setInt(1, pair.getOne());
-                    statement.setInt(2, pair.getTwo());
-                });
-        batch("insert into pubchem.gene_disease_cooccurrences(subject, object, value) values (?,?,?)", newGeneValues);
+        store("delete from pubchem.gene_disease_cooccurrences where subject=? and object=? and value=?", oldGeneValues);
+        store("insert into pubchem.gene_disease_cooccurrences(subject,object,value) values(?,?,?)", newGeneValues);
 
-        batch("delete from pubchem.enzyme_disease_cooccurrences where subject = ? and object = ?",
-                oldEnzymeValues.keySet(), (PreparedStatement statement, IntIntPair pair) -> {
-                    statement.setInt(1, pair.getOne());
-                    statement.setInt(2, pair.getTwo());
-                });
-        batch("insert into pubchem.enzyme_disease_cooccurrences(subject, object, value) values (?,?,?)",
-                newEnzymeValues);
+        store("delete from pubchem.enzyme_disease_cooccurrences where subject=? and object=? and value=?",
+                oldEnzymeValues);
+        store("insert into pubchem.enzyme_disease_cooccurrences(subject,object,value) values(?,?,?)", newEnzymeValues);
     }
 
 
     private static void loadGeneToGeneValues(Model model) throws IOException, SQLException
     {
+        IntPairIntMap keepValues = new IntPairIntMap();
         IntPairIntMap newValues = new IntPairIntMap();
-        IntPairIntMap oldValues = getIntPairIntMap(
-                "select subject, object, value from pubchem.gene_gene_cooccurrences");
+        IntPairIntMap oldValues = new IntPairIntMap();
+
+        load("select subject,object,value from pubchem.gene_gene_cooccurrences", oldValues);
 
         new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int subject = Gene.getGeneSymbolID(getStringID("subject", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"));
-                int object = Gene.getGeneSymbolID(getStringID("object", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"));
-                int value = getInt("value");
+                Integer subject = Gene.getGeneSymbolID(getIRI("subject"));
+                Integer object = Gene.getGeneSymbolID(getIRI("object"));
+                Integer value = getInt("value");
 
-                IntIntPair pair = PrimitiveTuples.pair(subject, object);
+                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-                if(value != oldValues.removeKeyIfAbsent(pair, NO_VALUE))
-                    newValues.put(pair, value);
+                if(value.equals(oldValues.remove(pair)))
+                {
+                    keepValues.put(pair, value);
+                }
+                else
+                {
+                    Integer keep = keepValues.get(pair);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newValues.put(pair, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("delete from pubchem.gene_gene_cooccurrences where subject = ? and object = ?", oldValues.keySet(),
-                (PreparedStatement statement, IntIntPair pair) -> {
-                    statement.setInt(1, pair.getOne());
-                    statement.setInt(2, pair.getTwo());
-                });
-        batch("insert into pubchem.gene_gene_cooccurrences(subject, object, value) values (?,?,?)", newValues);
+        store("delete from pubchem.gene_gene_cooccurrences where subject=? and object=? and value=?", oldValues);
+        store("insert into pubchem.gene_gene_cooccurrences(subject,object,value) values(?,?,?)", newValues);
     }
 
 

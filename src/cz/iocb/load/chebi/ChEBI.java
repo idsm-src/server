@@ -2,19 +2,16 @@ package cz.iocb.load.chebi;
 
 import java.io.IOException;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.Model;
-import org.eclipse.collections.api.tuple.primitive.IntIntPair;
-import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
-import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
-import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
-import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
+import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
-import cz.iocb.load.ontology.Ontology.Identifier;
 
 
 
@@ -24,10 +21,10 @@ public class ChEBI extends Updater
     {
         final int chebiID;
         final int valueRestrictionID;
-        final short propertyUnit;
+        final int propertyUnit;
         final int propertyID;
 
-        public Restriction(int chebiID, int valueRestrictionID, short propertyUnit, int propertyID)
+        public Restriction(int chebiID, int valueRestrictionID, int propertyUnit, int propertyID)
         {
             this.chebiID = chebiID;
             this.valueRestrictionID = valueRestrictionID;
@@ -69,14 +66,14 @@ public class ChEBI extends Updater
     private static final class Axiom
     {
         final int chebiID;
-        final short propertyUnit;
+        final int propertyUnit;
         final int propertyID;
         final String target;
         final Integer typeID;
         final String reference;
         final String source;
 
-        public Axiom(int chebiID, short propertyUnit, int propertyID, String target, Integer typeID, String reference,
+        public Axiom(int chebiID, int propertyUnit, int propertyID, String target, Integer typeID, String reference,
                 String source)
         {
             this.chebiID = chebiID;
@@ -128,14 +125,94 @@ public class ChEBI extends Updater
     }
 
 
-    private static int nextRestrictionID;
-    private static int nextAxiomID;
+    @SuppressWarnings("serial")
+    public static class RestrictionIntMap extends SqlMap<Restriction, Integer>
+    {
+        @Override
+        public Restriction getKey(ResultSet result) throws SQLException
+        {
+            return new Restriction(result.getInt(1), result.getInt(2), result.getShort(3), result.getInt(4));
+        }
+
+        @Override
+        public Integer getValue(ResultSet result) throws SQLException
+        {
+            return result.getInt(5);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Restriction key, Integer value) throws SQLException
+        {
+            statement.setInt(1, key.chebiID);
+            statement.setInt(2, key.valueRestrictionID);
+            statement.setInt(3, key.propertyUnit);
+            statement.setInt(4, key.propertyID);
+            statement.setInt(5, value);
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    public static class AxiomIntMap extends SqlMap<Axiom, Integer>
+    {
+        @Override
+        public Axiom getKey(ResultSet result) throws SQLException
+        {
+            return new Axiom(result.getInt(1), result.getShort(2), result.getInt(3), result.getString(4),
+                    (Integer) result.getObject(5), result.getString(6), result.getString(7));
+        }
+
+        @Override
+        public Integer getValue(ResultSet result) throws SQLException
+        {
+            return result.getInt(8);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Axiom key, Integer value) throws SQLException
+        {
+            statement.setInt(1, key.chebiID);
+            statement.setInt(2, key.propertyUnit);
+            statement.setInt(3, key.propertyID);
+            statement.setString(4, key.target);
+            statement.setObject(5, key.typeID);
+            statement.setString(6, key.reference);
+            statement.setString(7, key.source);
+            statement.setInt(8, value);
+        }
+    }
+
+
+    static final String prefix = "http://purl.obolibrary.org/obo/CHEBI_";
+    static final int prefixLength = prefix.length();
+
+    private static final IntSet keepEntities = new IntSet();
+    private static final IntSet newEntities = new IntSet();
+    private static final IntSet oldEntities = new IntSet();
+
+
+    private static String getVersion(Model model) throws IOException
+    {
+        String query = prefixes + " select * { <http://purl.obolibrary.org/obo/chebi.owl> owl:versionIRI ?iri }";
+
+        try(QueryExecution qexec = QueryExecutionFactory.create(query, model))
+        {
+            org.apache.jena.query.ResultSet results = qexec.execSelect();
+
+            QuerySolution solution = results.nextSolution();
+            String iri = solution.getResource("iri").getURI();
+
+            if(!iri.matches("http://purl\\.obolibrary\\.org/obo/chebi/[^/]+/chebi\\.owl"))
+                throw new IOException();
+
+            return iri.replaceFirst("^http://purl\\.obolibrary\\.org/obo/chebi/([^/]+)/chebi\\.owl$", "$1");
+        }
+    }
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        IntHashSet newValues = new IntHashSet();
-        IntHashSet oldValues = getIntSet("select id from chebi.classes");
+        load("select id from chebi.classes", oldEntities);
 
         new QueryResultProcessor(patternQuery("?chebi rdf:type owl:Class. "
                 + "filter(strstarts(str(?chebi), 'http://purl.obolibrary.org/obo/CHEBI_'))"))
@@ -143,22 +220,23 @@ public class ChEBI extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int chebiID = getIntID("chebi", "http://purl.obolibrary.org/obo/CHEBI_");
+                Integer chebiID = getIntID("chebi", prefix);
 
-                if(!oldValues.remove(chebiID))
-                    newValues.add(chebiID);
+                if(oldEntities.remove(chebiID))
+                    keepEntities.add(chebiID);
+                else
+                    newEntities.add(chebiID);
             }
         }.load(model);
-
-        batch("delete from chebi.classes where id = ?", oldValues);
-        batch("insert into chebi.classes(id) values(?)", newValues);
     }
 
 
     private static void loadParents(Model model) throws IOException, SQLException
     {
-        IntPairSet newValues = new IntPairSet();
-        IntPairSet oldValues = getIntPairSet("select chebi, parent from chebi.parents");
+        IntPairSet newParents = new IntPairSet();
+        IntPairSet oldParents = new IntPairSet();
+
+        load("select chebi,parent from chebi.parents", oldParents);
 
         new QueryResultProcessor(patternQuery("?chebi rdfs:subClassOf ?parent."
                 + "filter(strstarts(str(?chebi), 'http://purl.obolibrary.org/obo/CHEBI_'))"
@@ -167,188 +245,238 @@ public class ChEBI extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int chebiID = getIntID("chebi", "http://purl.obolibrary.org/obo/CHEBI_");
-                int parentID = getIntID("parent", "http://purl.obolibrary.org/obo/CHEBI_");
+                int chebiID = getEntityID(getIRI("chebi"));
+                int parentID = getEntityID(getIRI("parent"));
 
-                IntIntPair pair = PrimitiveTuples.pair(chebiID, parentID);
+                Pair<Integer, Integer> pair = Pair.getPair(chebiID, parentID);
 
-                if(!oldValues.remove(pair))
-                    newValues.add(pair);
+                if(!oldParents.remove(pair))
+                    newParents.add(pair);
             }
         }.load(model);
 
-        batch("delete from chebi.parents where chebi = ? and parent = ?", oldValues);
-        batch("insert into chebi.parents(chebi, parent) values(?,?)", newValues);
+        store("delete from chebi.parents where chebi=? and parent=?", oldParents);
+        store("insert into chebi.parents(chebi,parent) values(?,?)", newParents);
     }
 
 
     private static void loadStars(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newValues = new IntIntHashMap();
-        IntIntHashMap oldValues = getIntIntMap("select chebi, star from chebi.stars");
+        IntIntMap keepStars = new IntIntMap();
+        IntIntMap newStars = new IntIntMap();
+        IntIntMap oldStars = new IntIntMap();
+
+        load("select chebi,star from chebi.stars", oldStars);
 
         new QueryResultProcessor(patternQuery("?chebi oboInOwl:inSubset ?star"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int chebiID = getIntID("chebi", "http://purl.obolibrary.org/obo/CHEBI_");
-                int star = Integer.parseInt(
+                int chebiID = getEntityID(getIRI("chebi"));
+                Integer star = Integer.parseInt(
                         getStringID("star", "http://purl.obolibrary.org/obo/chebi#").replaceFirst("_STAR", ""));
 
-                if(star != oldValues.removeKeyIfAbsent(chebiID, NO_VALUE))
-                    newValues.put(chebiID, star);
+                if(star.equals(oldStars.remove(chebiID)))
+                {
+                    keepStars.put(chebiID, star);
+                }
+                else
+                {
+                    Integer keep = keepStars.get(chebiID);
+
+                    if(star.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newStars.put(chebiID, star);
+
+                    if(put != null && !star.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("delete from chebi.stars where chebi = ?", oldValues.keySet());
-        batch("insert into chebi.stars(chebi, star) values(?,?) "
-                + "on conflict (chebi) do update set star=EXCLUDED.star", newValues);
+        store("delete from chebi.stars where chebi=? and star=?", oldStars);
+        store("insert into chebi.stars(chebi,star) values(?,?) on conflict(chebi) do update set star=EXCLUDED.star",
+                newStars);
     }
 
 
     private static void loadReplacements(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newValues = new IntIntHashMap();
-        IntIntHashMap oldValues = getIntIntMap("select chebi, replacement from chebi.replacements");
+        IntIntMap keepReplacements = new IntIntMap();
+        IntIntMap newReplacements = new IntIntMap();
+        IntIntMap oldReplacements = new IntIntMap();
+
+        load("select chebi,replacement from chebi.replacements", oldReplacements);
 
         new QueryResultProcessor(patternQuery("?chebi obo:IAO_0100001 ?replacement"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int chebiID = getIntID("chebi", "http://purl.obolibrary.org/obo/CHEBI_");
-                int replacementID = getIntID("replacement", "http://purl.obolibrary.org/obo/CHEBI_");
+                int chebiID = getEntityID(getIRI("chebi"));
+                Integer replacementID = getEntityID(getIRI("replacement"));
 
-                if(replacementID != oldValues.removeKeyIfAbsent(chebiID, NO_VALUE))
-                    newValues.put(chebiID, replacementID);
+                if(replacementID.equals(oldReplacements.remove(chebiID)))
+                {
+                    keepReplacements.put(chebiID, replacementID);
+                }
+                else
+                {
+                    Integer keep = keepReplacements.get(chebiID);
+
+                    if(replacementID.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newReplacements.put(chebiID, replacementID);
+
+                    if(put != null && !replacementID.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("delete from chebi.replacements where chebi = ?", oldValues.keySet());
-        batch("insert into chebi.replacements(chebi, replacement) values(?,?) "
-                + "on conflict (chebi) do update set replacement=EXCLUDED.replacement", newValues);
+        store("delete from chebi.replacements where chebi=? and replacement=?", oldReplacements);
+        store("insert into chebi.replacements(chebi,replacement) values(?,?) "
+                + "on conflict(chebi) do update set replacement=EXCLUDED.replacement", newReplacements);
     }
 
 
     private static void loadObsolescenceReasons(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newValues = new IntIntHashMap();
-        IntIntHashMap oldValues = getIntIntMap("select chebi, reason from chebi.obsolescence_reasons");
+        IntIntMap keepReasons = new IntIntMap();
+        IntIntMap newReasons = new IntIntMap();
+        IntIntMap oldReasons = new IntIntMap();
+
+        load("select chebi,reason from chebi.obsolescence_reasons", oldReasons);
 
         new QueryResultProcessor(patternQuery("?chebi obo:IAO_0000231 ?reason"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int chebiID = getIntID("chebi", "http://purl.obolibrary.org/obo/CHEBI_");
-                int reasonID = getIntID("reason", "http://purl.obolibrary.org/obo/IAO_");
+                int chebiID = getEntityID(getIRI("chebi"));
+                Integer reasonID = getIntID("reason", "http://purl.obolibrary.org/obo/IAO_");
 
-                if(reasonID != oldValues.removeKeyIfAbsent(chebiID, NO_VALUE))
-                    newValues.put(chebiID, reasonID);
+                if(reasonID.equals(oldReasons.remove(chebiID)))
+                {
+                    keepReasons.put(chebiID, reasonID);
+                }
+                else
+                {
+                    Integer keep = keepReasons.get(chebiID);
+
+                    if(reasonID.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newReasons.put(chebiID, reasonID);
+
+                    if(put != null && !reasonID.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("delete from chebi.obsolescence_reasons where chebi = ?", oldValues.keySet());
-        batch("insert into chebi.obsolescence_reasons(chebi, reason) values(?,?) "
-                + "on conflict (chebi) do update set reason=EXCLUDED.reason", newValues);
+        store("delete from chebi.obsolescence_reasons where chebi=? and reason=?", oldReasons);
+        store("insert into chebi.obsolescence_reasons(chebi,reason) values(?,?) "
+                + "on conflict(chebi) do update set reason=EXCLUDED.reason", newReasons);
     }
 
 
     private static void loadRestrictions(Model model) throws IOException, SQLException
     {
-        nextRestrictionID = getIntValue("select coalesce(max(id)+1,0) from chebi.restrictions");
+        RestrictionIntMap newRestrictions = new RestrictionIntMap();
+        RestrictionIntMap oldRestrictions = new RestrictionIntMap();
 
-        HashSet<Restriction> newValues = new HashSet<Restriction>();
-        ObjectIntHashMap<Restriction> oldValues = getObjectIntMap(
-                "select id, chebi, value_restriction, property_unit, property_id from chebi.restrictions",
-                r -> new Restriction(r.getInt(2), r.getInt(3), r.getShort(4), r.getInt(5)));
+        load("select chebi,value_restriction,property_unit,property_id,id from chebi.restrictions", oldRestrictions);
 
         new QueryResultProcessor(patternQuery("?chebi rdfs:subClassOf [ rdf:type owl:Restriction; "
                 + "owl:onProperty ?property; owl:someValuesFrom ?values ]"))
         {
+            int nextRestrictionID = oldRestrictions.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+
             @Override
             protected void parse() throws IOException
             {
-                int chebiID = getIntID("chebi", "http://purl.obolibrary.org/obo/CHEBI_");
-                int valueRestrictionID = getIntID("values", "http://purl.obolibrary.org/obo/CHEBI_");
-                Identifier property = Ontology.getId(getIRI("property"));
+                int chebiID = getEntityID(getIRI("chebi"));
+                int valueRestrictionID = getEntityID(getIRI("values"));
 
-                Restriction restriction = new Restriction(chebiID, valueRestrictionID, property.unit, property.id);
+                Pair<Integer, Integer> property = Ontology.getId(getIRI("property"));
 
-                if(oldValues.removeKeyIfAbsent(restriction, NO_VALUE) == NO_VALUE)
-                    newValues.add(restriction);
+                Restriction restriction = new Restriction(chebiID, valueRestrictionID, property.getOne(),
+                        property.getTwo());
+
+                if(oldRestrictions.remove(restriction) == null)
+                    newRestrictions.put(restriction, nextRestrictionID++);
             }
         }.load(model);
 
-        batch("delete from chebi.restrictions where id = ?", oldValues.values());
-        batch("insert into chebi.restrictions(id, chebi, value_restriction, property_unit, property_id) values (?,?,?,?,?)",
-                newValues, (PreparedStatement statement, Restriction restriction) -> {
-                    statement.setInt(1, nextRestrictionID++);
-                    statement.setInt(2, restriction.chebiID);
-                    statement.setInt(3, restriction.valueRestrictionID);
-                    statement.setShort(4, restriction.propertyUnit);
-                    statement.setInt(5, restriction.propertyID);
-                });
+        store("delete from chebi.restrictions "
+                + "where chebi=? and value_restriction=? and property_unit=? and property_id=? and id=?",
+                oldRestrictions);
+        store("insert into chebi.restrictions(chebi,value_restriction,property_unit,property_id,id) values(?,?,?,?,?)",
+                newRestrictions);
     }
 
 
     private static void loadAxioms(Model model) throws IOException, SQLException
     {
-        nextAxiomID = getIntValue("select coalesce(max(id)+1,0) from chebi.axioms");
+        AxiomIntMap newAxioms = new AxiomIntMap();
+        AxiomIntMap oldAxioms = new AxiomIntMap();
 
-        HashSet<Axiom> newValues = new HashSet<Axiom>();
-        ObjectIntHashMap<Axiom> oldValues = getObjectIntMap(
-                "select id, chebi, property_unit, property_id, target, type_id, reference, source from chebi.axioms",
-                r -> new Axiom(r.getInt(2), r.getShort(3), r.getInt(4), r.getString(5), (Integer) r.getObject(6),
-                        r.getString(7), r.getString(8)));
+        load("select chebi,property_unit,property_id,target,type_id,reference,source,id from chebi.axioms", oldAxioms);
 
         new QueryResultProcessor(patternQuery("?axiom rdf:type owl:Axiom; owl:annotatedProperty ?property;"
                 + "owl:annotatedSource ?chebi; owl:annotatedTarget ?target."
                 + "optional { ?axiom oboInOwl:hasSynonymType ?type } optional { ?axiom oboInOwl:hasDbXref ?reference }"
                 + "optional { ?axiom oboInOwl:source ?source }"))
         {
+            int nextAxiomID = oldAxioms.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+
             @Override
             protected void parse() throws IOException
             {
-                int chebiID = getIntID("chebi", "http://purl.obolibrary.org/obo/CHEBI_");
-                Identifier property = Ontology.getId(getIRI("property"));
+                int chebiID = getEntityID(getIRI("chebi"));
+                Pair<Integer, Integer> property = Ontology.getId(getIRI("property"));
                 String target = getString("target");
-                Identifier type = Ontology.getId(getIRI("type"));
+                Pair<Integer, Integer> type = Ontology.getId(getIRI("type"));
                 String reference = getString("reference");
                 String source = getString("source");
 
-                if(getIRI("type") != null && type == null || type != null && type.unit != Ontology.unitUncategorized)
+                if(getIRI("type") != null && type == null
+                        || type != null && type.getOne() != Ontology.unitUncategorized)
                     throw new IOException();
 
-                Axiom axiom = new Axiom(chebiID, property.unit, property.id, target, type == null ? null : type.id,
-                        reference, source);
+                Axiom axiom = new Axiom(chebiID, property.getOne(), property.getTwo(), target,
+                        type == null ? null : type.getTwo(), reference, source);
 
-                if(oldValues.removeKeyIfAbsent(axiom, NO_VALUE) == NO_VALUE)
-                    newValues.add(axiom);
+                if(oldAxioms.remove(axiom) == null)
+                    newAxioms.put(axiom, nextAxiomID++);
             }
         }.load(model);
 
-        batch("delete from chebi.axioms where id = ?", oldValues.values());
-        batch("insert into chebi.axioms(id, chebi, property_unit, property_id, target, type_id, reference, source) values (?,?,?,?,?,?,?,?)",
-                newValues, (PreparedStatement statement, Axiom axiom) -> {
-                    statement.setInt(1, nextAxiomID++);
-                    statement.setInt(2, axiom.chebiID);
-                    statement.setShort(3, axiom.propertyUnit);
-                    statement.setInt(4, axiom.propertyID);
-                    statement.setString(5, axiom.target);
-                    statement.setObject(6, axiom.typeID);
-                    statement.setString(7, axiom.reference);
-                    statement.setString(8, axiom.source);
-                });
+        store("delete from chebi.axioms where chebi=? and property_unit=? and property_id=? and target=? and "
+                + "coalesce(type_id,-1)=coalesce(?,-1) and coalesce(reference,'')=coalesce(?,'') and "
+                + "coalesce(source,'')=coalesce(?,'') and id=?", oldAxioms);
+        store("insert into chebi.axioms(chebi,property_unit,property_id,target,type_id,reference,source,id) "
+                + "values(?,?,?,?,?,?,?,?)", newAxioms);
     }
 
 
     private static void loadMultiStringValues(Model model, String property, String table, String column)
             throws IOException, SQLException
     {
-        IntStringPairSet newValues = new IntStringPairSet();
-        IntStringPairSet oldValues = getIntStringPairSet("select chebi, " + column + " from chebi." + table);
+        IntStringSet newValues = new IntStringSet();
+        IntStringSet oldValues = new IntStringSet();
+
+        load("select chebi," + column + " from chebi." + table, oldValues);
 
         new QueryResultProcessor(patternQuery("?chebi " + property + " ?value."
                 + "filter(strstarts(str(?chebi), 'http://purl.obolibrary.org/obo/CHEBI_'))"))
@@ -356,25 +484,28 @@ public class ChEBI extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int chebiID = getIntID("chebi", "http://purl.obolibrary.org/obo/CHEBI_");
+                Integer chebiID = getEntityID(getIRI("chebi"));
                 String value = getString("value");
-                IntObjectPair<String> pair = PrimitiveTuples.pair(chebiID, value);
+                Pair<Integer, String> pair = Pair.getPair(chebiID, value);
 
                 if(!oldValues.remove(pair))
                     newValues.add(pair);
             }
         }.load(model);
 
-        batch("delete from chebi." + table + " where chebi = ? and " + column + " = ?", oldValues);
-        batch("insert into chebi." + table + "(chebi, " + column + ") values(?,?)", newValues);
+        store("delete from chebi." + table + " where chebi=? and " + column + "=?", oldValues);
+        store("insert into chebi." + table + "(chebi," + column + ") values(?,?)", newValues);
     }
 
 
     private static void loadStringValues(Model model, String property, String table, String column)
             throws IOException, SQLException
     {
+        IntStringMap keepValues = new IntStringMap();
         IntStringMap newValues = new IntStringMap();
-        IntStringMap oldValues = getIntStringMap("select chebi, " + column + " from chebi." + table);
+        IntStringMap oldValues = new IntStringMap();
+
+        load("select chebi," + column + " from chebi." + table, oldValues);
 
         new QueryResultProcessor(patternQuery("?chebi " + property + " ?value."
                 + "filter(strstarts(str(?chebi), 'http://purl.obolibrary.org/obo/CHEBI_'))"))
@@ -382,16 +513,32 @@ public class ChEBI extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int chebiID = getIntID("chebi", "http://purl.obolibrary.org/obo/CHEBI_");
+                int chebiID = getEntityID(getIRI("chebi"));
                 String value = getString("value");
 
-                if(!value.equals(oldValues.remove(chebiID)))
-                    newValues.put(chebiID, value);
+                if(value.equals(oldValues.remove(chebiID)))
+                {
+                    keepValues.put(chebiID, value);
+                }
+                else
+                {
+                    String keep = keepValues.get(chebiID);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    String put = newValues.put(chebiID, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("delete from chebi." + table + " where chebi = ? and " + column + " = ?", oldValues);
-        batch("insert into chebi." + table + "(chebi, " + column + ") values(?,?) on conflict (chebi) do update set "
+        store("delete from chebi." + table + " where chebi=? and " + column + "=?", oldValues);
+        store("insert into chebi." + table + "(chebi," + column + ") values(?,?) on conflict(chebi) do update set "
                 + column + "=EXCLUDED." + column, newValues);
     }
 
@@ -399,8 +546,11 @@ public class ChEBI extends Updater
     private static void loadBooleanValues(Model model, String property, String table, String column)
             throws IOException, SQLException
     {
-        IntIntHashMap newValues = new IntIntHashMap();
-        IntIntHashMap oldValues = getIntIntMap("select chebi, " + column + "::integer from chebi." + table);
+        IntIntMap keepValues = new IntIntMap();
+        IntIntMap newValues = new IntIntMap();
+        IntIntMap oldValues = new IntIntMap();
+
+        load("select chebi," + column + "::integer from chebi." + table, oldValues);
 
         new QueryResultProcessor(patternQuery("?chebi " + property + " ?value."
                 + "filter(strstarts(str(?chebi), 'http://purl.obolibrary.org/obo/CHEBI_'))"))
@@ -408,49 +558,64 @@ public class ChEBI extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int chebiID = getIntID("chebi", "http://purl.obolibrary.org/obo/CHEBI_");
-                int value = getBoolean("value") ? 1 : 0;
+                int chebiID = getEntityID(getIRI("chebi"));
+                Integer value = getBoolean("value") ? 1 : 0;
 
-                if(value != oldValues.removeKeyIfAbsent(chebiID, NO_VALUE))
-                    newValues.put(chebiID, value);
+                if(value.equals(oldValues.remove(chebiID)))
+                {
+                    keepValues.put(chebiID, value);
+                }
+                else
+                {
+                    Integer keep = keepValues.get(chebiID);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newValues.put(chebiID, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("delete from chebi." + table + " where chebi = ?", oldValues.keySet());
-        batch("insert into chebi." + table + "(chebi, " + column + ") values(?,cast(? as boolean)) "
-                + "on conflict (chebi) do update set " + column + "=EXCLUDED." + column, newValues);
+        store("delete from chebi." + table + " where chebi=? and " + column + "=?::boolean", oldValues);
+        store("insert into chebi." + table + "(chebi," + column + ") values(?,?::boolean) "
+                + "on conflict(chebi) do update set " + column + "=EXCLUDED." + column, newValues);
     }
 
 
-    static void load() throws IOException, SQLException
+    private static void finish() throws IOException, SQLException
     {
-        Model model = getModel("chebi/chebi.owl", null);
+        store("delete from chebi.classes where id=?", oldEntities);
+        store("insert into chebi.classes(id) values(?)", newEntities);
+    }
 
-        loadBases(model);
 
-        loadParents(model);
-        loadStars(model);
-        loadReplacements(model);
-        loadObsolescenceReasons(model);
-        loadRestrictions(model);
-        loadAxioms(model);
+    private static Integer getEntityID(String value) throws IOException
+    {
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
 
-        loadMultiStringValues(model, "oboInOwl:hasDbXref", "references", "reference");
-        loadMultiStringValues(model, "oboInOwl:hasRelatedSynonym", "related_synonyms", "synonym");
-        loadMultiStringValues(model, "oboInOwl:hasExactSynonym", "exact_synonyms", "synonym");
-        loadMultiStringValues(model, "chebi:formula", "formulas", "formula");
-        loadMultiStringValues(model, "chebi:mass", "masses", "mass");
-        loadMultiStringValues(model, "chebi:monoisotopicmass", "monoisotopic_masses", "mass");
-        loadMultiStringValues(model, "oboInOwl:hasAlternativeId", "alternative_identifiers", "identifier");
-        loadStringValues(model, "rdfs:label", "labels", "label");
-        loadStringValues(model, "oboInOwl:id", "identifiers", "identifier");
-        loadStringValues(model, "oboInOwl:hasOBONamespace", "namespaces", "namespace");
-        loadStringValues(model, "chebi:charge", "charges", "charge");
-        loadStringValues(model, "chebi:smiles", "smiles_codes", "smiles");
-        loadStringValues(model, "chebi:inchikey", "inchikeys", "inchikey");
-        loadStringValues(model, "chebi:inchi", "inchies", "inchi");
-        loadStringValues(model, "obo:IAO_0000115", "definitions", "definition");
-        loadBooleanValues(model, "owl:deprecated", "deprecated_flags", "flag");
+        Integer entityID = Integer.parseInt(value.substring(prefixLength));
+
+        synchronized(newEntities)
+        {
+            if(!newEntities.contains(entityID) && !keepEntities.contains(entityID))
+            {
+                System.out.println("    add missing entity CHEBI_" + entityID);
+
+                if(!oldEntities.remove(entityID))
+                    newEntities.add(entityID);
+                else
+                    keepEntities.add(entityID);
+            }
+        }
+
+        return entityID;
     }
 
 
@@ -460,7 +625,47 @@ public class ChEBI extends Updater
         {
             init();
             Ontology.loadCategories();
-            load();
+
+            Model model = getModel("chebi/chebi.owl", null);
+
+            String version = getVersion(model);
+            System.out.println("=== load ChEBI version " + version + " ===");
+            System.out.println();
+
+            check(model, "chebi/check.sparql");
+
+            loadBases(model);
+
+            loadParents(model);
+            loadStars(model);
+            loadReplacements(model);
+            loadObsolescenceReasons(model);
+            loadRestrictions(model);
+            loadAxioms(model);
+
+            loadMultiStringValues(model, "oboInOwl:hasDbXref", "references", "reference");
+            loadMultiStringValues(model, "oboInOwl:hasRelatedSynonym", "related_synonyms", "synonym");
+            loadMultiStringValues(model, "oboInOwl:hasExactSynonym", "exact_synonyms", "synonym");
+            loadMultiStringValues(model, "chebi:formula", "formulas", "formula");
+            loadMultiStringValues(model, "chebi:mass", "masses", "mass");
+            loadMultiStringValues(model, "chebi:monoisotopicmass", "monoisotopic_masses", "mass");
+            loadMultiStringValues(model, "oboInOwl:hasAlternativeId", "alternative_identifiers", "identifier");
+            loadStringValues(model, "rdfs:label", "labels", "label");
+            loadStringValues(model, "oboInOwl:id", "identifiers", "identifier");
+            loadStringValues(model, "oboInOwl:hasOBONamespace", "namespaces", "namespace");
+            loadStringValues(model, "chebi:charge", "charges", "charge");
+            loadStringValues(model, "chebi:smiles", "smiles_codes", "smiles");
+            loadStringValues(model, "chebi:inchikey", "inchikeys", "inchikey");
+            loadStringValues(model, "chebi:inchi", "inchies", "inchi");
+            loadStringValues(model, "obo:IAO_0000115", "definitions", "definition");
+            loadBooleanValues(model, "owl:deprecated", "deprecated_flags", "flag");
+
+            finish();
+
+            setVersion("ChEBI Ontology", version);
+            setCount("ChEBI Entities", newEntities.size() + keepEntities.size());
+
+            model.close();
             commit();
         }
         catch(Throwable e)

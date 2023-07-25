@@ -3,7 +3,6 @@ package cz.iocb.load.pubchem;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -11,85 +10,117 @@ import cz.iocb.load.common.Updater;
 
 class ConservedDomain extends Updater
 {
-    private static IntHashSet usedDomains;
-    private static IntHashSet newDomains;
-    private static IntHashSet oldDomains;
+    static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID";
+    static final int prefixLength = prefix.length();
+
+    private static final IntSet keepDomains = new IntSet();
+    private static final IntSet newDomains = new IntSet();
+    private static final IntSet oldDomains = new IntSet();
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        usedDomains = new IntHashSet();
-        newDomains = new IntHashSet();
-        oldDomains = getIntSet("select id from pubchem.conserveddomain_bases");
+        load("select id from pubchem.conserveddomain_bases", oldDomains);
 
         new QueryResultProcessor(patternQuery("?domain rdf:type obo:SO_0000417"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int domainID = getIntID("domain", "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID");
+                Integer domainID = getIntID("domain", prefix);
 
-                if(!oldDomains.remove(domainID))
+                if(oldDomains.remove(domainID))
+                    keepDomains.add(domainID);
+                else
                     newDomains.add(domainID);
-
-                usedDomains.add(domainID);
             }
         }.load(model);
-
-        batch("insert into pubchem.conserveddomain_bases(id) values (?)", newDomains);
-        newDomains.clear();
     }
 
 
     private static void loadTitles(Model model) throws IOException, SQLException
     {
+        IntStringMap keepTitles = new IntStringMap();
         IntStringMap newTitles = new IntStringMap();
-        IntStringMap oldTitles = getIntStringMap(
-                "select id, title from pubchem.conserveddomain_bases where title is not null");
+        IntStringMap oldTitles = new IntStringMap();
+
+        load("select id,title from pubchem.conserveddomain_bases where title is not null", oldTitles);
 
         new QueryResultProcessor(patternQuery("?domain dcterms:title ?title"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int domainID = getDomainID(
-                        getIntID("domain", "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID"));
+                Integer domainID = getDomainID(getIRI("domain"), true);
                 String title = getString("title");
 
-                if(!title.equals(oldTitles.remove(domainID)))
-                    newTitles.put(domainID, title);
+                if(title.equals(oldTitles.remove(domainID)))
+                {
+                    keepTitles.put(domainID, title);
+                }
+                else
+                {
+                    String keep = keepTitles.get(domainID);
+
+                    if(title.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    String put = newTitles.put(domainID, title);
+
+                    if(put != null && !title.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.conserveddomain_bases set title = null where id = ?", oldTitles.keySet());
-        batch("insert into pubchem.conserveddomain_bases(id, title) values (?,?) "
-                + "on conflict (id) do update set title=EXCLUDED.title", newTitles);
+        store("update pubchem.conserveddomain_bases set title=null where id=? and title=?", oldTitles);
+        store("insert into pubchem.conserveddomain_bases(id,title) values(?,?) "
+                + "on conflict(id) do update set title=EXCLUDED.title", newTitles);
     }
 
 
     private static void loadAbstracts(Model model) throws IOException, SQLException
     {
+        IntStringMap keepAbstracts = new IntStringMap();
         IntStringMap newAbstracts = new IntStringMap();
-        IntStringMap oldAbstracts = getIntStringMap(
-                "select id, abstract from pubchem.conserveddomain_bases where abstract is not null");
+        IntStringMap oldAbstracts = new IntStringMap();
+
+        load("select id,abstract from pubchem.conserveddomain_bases where abstract is not null", oldAbstracts);
 
         new QueryResultProcessor(patternQuery("?domain dcterms:abstract ?abstract"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int domainID = getDomainID(
-                        getIntID("domain", "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID"));
+                Integer domainID = getDomainID(getIRI("domain"), true);
                 String value = getString("abstract");
 
-                if(!value.equals(oldAbstracts.remove(domainID)))
-                    newAbstracts.put(domainID, value);
+                if(value.equals(oldAbstracts.remove(domainID)))
+                {
+                    keepAbstracts.put(domainID, value);
+                }
+                else
+                {
+                    String keep = keepAbstracts.get(domainID);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    String put = newAbstracts.put(domainID, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.conserveddomain_bases set abstract = null where id = ?", oldAbstracts.keySet());
-        batch("insert into pubchem.conserveddomain_bases(id, abstract) values (?,?) "
-                + "on conflict (id) do update set abstract=EXCLUDED.abstract", newAbstracts);
+        store("update pubchem.conserveddomain_bases set abstract=null where id=? and abstract=?", oldAbstracts);
+        store("insert into pubchem.conserveddomain_bases(id,abstract) values(?,?) "
+                + "on conflict(id) do update set abstract=EXCLUDED.abstract", newAbstracts);
     }
 
 
@@ -98,6 +129,7 @@ class ConservedDomain extends Updater
         System.out.println("load conserved domains ...");
 
         Model model = getModel("pubchem/RDF/conserveddomain/pc_conserveddomain.ttl.gz");
+
         check(model, "pubchem/conserveddomain/check.sparql");
 
         loadBases(model);
@@ -113,29 +145,44 @@ class ConservedDomain extends Updater
     {
         System.out.println("finish conserved domains ...");
 
-        batch("delete from pubchem.conserveddomain_bases where id = ?", oldDomains);
-        batch("insert into pubchem.conserveddomain_bases(id) values (?)" + " on conflict do nothing", newDomains);
-
-        usedDomains = null;
-        newDomains = null;
-        oldDomains = null;
+        store("delete from pubchem.conserveddomain_bases where id=?", oldDomains);
+        store("insert into pubchem.conserveddomain_bases(id) values(?)", newDomains);
 
         System.out.println();
     }
 
 
-    static int getDomainID(int domainID) throws IOException
+    static Integer getDomainID(String value) throws IOException
     {
+        return getDomainID(value, false);
+    }
+
+
+    static Integer getDomainID(String value, boolean forceKeep) throws IOException
+    {
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        Integer domainID = Integer.parseInt(value.substring(prefixLength));
+
         synchronized(newDomains)
         {
-            if(!usedDomains.contains(domainID))
+            if(newDomains.contains(domainID))
+            {
+                if(forceKeep)
+                {
+                    newDomains.remove(domainID);
+                    keepDomains.add(domainID);
+                }
+            }
+            else if(!keepDomains.contains(domainID))
             {
                 System.out.println("    add missing domain PSSMID" + domainID);
 
-                if(!oldDomains.remove(domainID))
+                if(!oldDomains.remove(domainID) && !forceKeep)
                     newDomains.add(domainID);
-
-                usedDomains.add(domainID);
+                else
+                    keepDomains.add(domainID);
             }
         }
 

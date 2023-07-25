@@ -1,4 +1,4 @@
-create table chembl.journal_dictionary
+create table chembl_tmp.journal_dictionary
 (
     id           integer not null,
     label        varchar,

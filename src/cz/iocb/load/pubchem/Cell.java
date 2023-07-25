@@ -3,192 +3,220 @@ package cz.iocb.load.pubchem;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
-import org.eclipse.collections.api.tuple.primitive.IntIntPair;
-import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
-import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
-import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
-import cz.iocb.load.common.IntTriplet;
+import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
-import cz.iocb.load.ontology.Ontology.Identifier;
 
 
 
 public class Cell extends Updater
 {
-    private static IntHashSet usedCells;
-    private static IntHashSet newCells;
-    private static IntHashSet oldCells;
+    static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID";
+    static final int prefixLength = prefix.length();
+
+    private static final IntSet keepCells = new IntSet();
+    private static final IntSet newCells = new IntSet();
+    private static final IntSet oldCells = new IntSet();
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        usedCells = new IntHashSet();
-        newCells = new IntHashSet();
-        oldCells = getIntSet("select id from pubchem.cell_bases");
+        load("select id from pubchem.cell_bases", oldCells);
 
         new QueryResultProcessor(patternQuery("?cell rdf:type sio:SIO_010054"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int cellID = getIntID("cell", "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID");
+                Integer cellID = getIntID("cell", prefix);
 
-                if(!oldCells.remove(cellID))
+                if(oldCells.remove(cellID))
+                    keepCells.add(cellID);
+                else
                     newCells.add(cellID);
-
-                usedCells.add(cellID);
             }
         }.load(model);
-
-        batch("insert into pubchem.cell_bases(id) values (?)", newCells);
-        newCells.clear();
     }
 
 
     private static void loadLabels(Model model) throws IOException, SQLException
     {
+        IntStringMap keepLabels = new IntStringMap();
         IntStringMap newLabels = new IntStringMap();
-        IntStringMap oldLabels = getIntStringMap("select id, label from pubchem.cell_bases where label is not null");
+        IntStringMap oldLabels = new IntStringMap();
+
+        load("select id,label from pubchem.cell_bases where label is not null", oldLabels);
 
         new QueryResultProcessor(patternQuery("?cell skos:prefLabel ?label"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int cellID = getIntID("cell", "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID");
+                Integer cellID = getCellID(getIRI("cell"), true);
                 String label = getString("label");
 
-                addCellID(cellID);
+                if(label.equals(oldLabels.remove(cellID)))
+                {
+                    keepLabels.put(cellID, label);
+                }
+                else
+                {
+                    String keep = keepLabels.get(cellID);
 
-                if(!label.equals(oldLabels.remove(cellID)))
-                    newLabels.put(cellID, label);
+                    if(label.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    String put = newLabels.put(cellID, label);
+
+                    if(put != null && !label.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.cell_bases set label = null where id = ?", oldLabels.keySet());
-        batch("insert into pubchem.cell_bases(id, label) values (?,?) "
-                + "on conflict (id) do update set label=EXCLUDED.label", newLabels);
+        store("update pubchem.cell_bases set label=null where id=? and label=?", oldLabels);
+        store("insert into pubchem.cell_bases(id,label) values(?,?) on conflict(id) do update set label=EXCLUDED.label",
+                newLabels);
     }
 
 
     private static void loadOrganisms(Model model) throws IOException, SQLException
     {
-        IntIntHashMap newOrganisms = new IntIntHashMap();
-        IntIntHashMap oldOrganisms = getIntIntMap(
-                "select id, organism from pubchem.cell_bases where organism is not null");
+        IntIntMap keepOrganisms = new IntIntMap();
+        IntIntMap newOrganisms = new IntIntMap();
+        IntIntMap oldOrganisms = new IntIntMap();
+
+        load("select id,organism from pubchem.cell_bases where organism is not null", oldOrganisms);
 
         new QueryResultProcessor(patternQuery("?cell up:organism ?organism"))
         {
             @Override
             protected void parse() throws IOException
             {
-                if(getIRI("organism").equals("http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"))
+                // workaround
+                if(getIRI("organism").equals(Taxonomy.prefix))
                     return;
 
-                int cellID = getIntID("cell", "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID");
-                int organismID = Taxonomy
-                        .getTaxonomyID(getIntID("organism", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"));
+                Integer cellID = getCellID(getIRI("cell"), true);
+                Integer organismID = Taxonomy.getTaxonomyID(getIRI("organism"));
 
-                addCellID(cellID);
+                if(organismID.equals(oldOrganisms.remove(cellID)))
+                {
+                    keepOrganisms.put(cellID, organismID);
+                }
+                else
+                {
+                    Integer keep = keepOrganisms.get(cellID);
 
-                if(organismID != oldOrganisms.removeKeyIfAbsent(cellID, NO_VALUE))
-                    newOrganisms.put(cellID, organismID);
+                    if(organismID.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newOrganisms.put(cellID, organismID);
+
+                    if(put != null && !organismID.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.cell_bases set organism = null where id = ?", oldOrganisms.keySet());
-        batch("insert into pubchem.cell_bases(id, organism) values (?,?) "
-                + "on conflict (id) do update set organism=EXCLUDED.organism", newOrganisms);
+        store("update pubchem.cell_bases set organism=null where id=? and organism=?", oldOrganisms);
+        store("insert into pubchem.cell_bases(id,organism) values(?,?) "
+                + "on conflict(id) do update set organism=EXCLUDED.organism", newOrganisms);
     }
 
 
     private static void loadAlternatives(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newAlternatives = new IntStringPairSet();
-        IntStringPairSet oldAlternatives = getIntStringPairSet(
-                "select cell, alternative from pubchem.cell_alternatives");
+        IntStringSet newAlternatives = new IntStringSet();
+        IntStringSet oldAlternatives = new IntStringSet();
+
+        load("select cell,alternative from pubchem.cell_alternatives", oldAlternatives);
 
         new QueryResultProcessor(patternQuery("?cell skos:altLabel ?alternative"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int cellID = getIntID("cell", "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID");
+                Integer cellID = getCellID(getIRI("cell"));
                 String alternative = getString("alternative");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(cellID, alternative);
-                addCellID(cellID);
+                Pair<Integer, String> pair = Pair.getPair(cellID, alternative);
 
                 if(!oldAlternatives.remove(pair))
                     newAlternatives.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.cell_alternatives where cell = ? and alternative = ?", oldAlternatives);
-        batch("insert into pubchem.cell_alternatives(cell, alternative) values (?,?)", newAlternatives);
+        store("delete from pubchem.cell_alternatives where cell=? and alternative=?", oldAlternatives);
+        store("insert into pubchem.cell_alternatives(cell,alternative) values(?,?)", newAlternatives);
     }
 
 
     private static void loadOccurrences(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newOccurrences = new IntStringPairSet();
-        IntStringPairSet oldOccurrences = getIntStringPairSet("select cell, occurrence from pubchem.cell_occurrences");
+        IntStringSet newOccurrences = new IntStringSet();
+        IntStringSet oldOccurrences = new IntStringSet();
+
+        load("select cell,occurrence from pubchem.cell_occurrences", oldOccurrences);
 
         new QueryResultProcessor(patternQuery("?cell obo:BFO_0000050 ?occurrence"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int cellID = getIntID("cell", "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID");
+                Integer cellID = getCellID(getIRI("cell"));
                 String occurrence = getString("occurrence");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(cellID, occurrence);
-                addCellID(cellID);
+                Pair<Integer, String> pair = Pair.getPair(cellID, occurrence);
 
                 if(!oldOccurrences.remove(pair))
                     newOccurrences.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.cell_occurrences where cell = ? and occurrence = ?", oldOccurrences);
-        batch("insert into pubchem.cell_occurrences(cell, occurrence) values (?,?)", newOccurrences);
+        store("delete from pubchem.cell_occurrences where cell=? and occurrence=?", oldOccurrences);
+        store("insert into pubchem.cell_occurrences(cell,occurrence) values(?,?)", newOccurrences);
     }
 
 
     private static void loadReferences(Model model) throws IOException, SQLException
     {
         IntPairSet newReferences = new IntPairSet();
-        IntPairSet oldReferences = getIntPairSet("select cell, reference from pubchem.cell_references");
+        IntPairSet oldReferences = new IntPairSet();
+
+        load("select cell,reference from pubchem.cell_references", oldReferences);
 
         new QueryResultProcessor(patternQuery("?cell cito:isDiscussedBy ?reference"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int cellID = getIntID("cell", "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID");
-                int referenceID = Reference
-                        .getReferenceID(getIntID("reference", "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"));
+                Integer cellID = getCellID(getIRI("cell"));
+                Integer referenceID = Reference.getReferenceID(getIRI("reference"));
 
-                IntIntPair pair = PrimitiveTuples.pair(cellID, referenceID);
-                addCellID(cellID);
+                Pair<Integer, Integer> pair = Pair.getPair(cellID, referenceID);
 
                 if(!oldReferences.remove(pair))
                     newReferences.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.cell_references where cell = ? and reference = ?", oldReferences);
-        batch("insert into pubchem.cell_references(cell, reference) values (?,?)", newReferences);
+        store("delete from pubchem.cell_references where cell=? and reference=?", oldReferences);
+        store("insert into pubchem.cell_references(cell,reference) values(?,?)", newReferences);
     }
 
 
     private static void loadCloseMatches(Model model) throws IOException, SQLException
     {
-        IntTripletSet newMatches = new IntTripletSet();
-        IntTripletSet oldMatches = getIntTripletSet("select cell, match_unit, match_id from pubchem.cell_matches");
+        IntIntPairSet newMatches = new IntIntPairSet();
+        IntIntPairSet oldMatches = new IntIntPairSet();
+
+        load("select cell,match_unit,match_id from pubchem.cell_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery("?cell skos:closeMatch ?match. "
                 + "filter(!strstarts(str(?match), 'https://web.expasy.org/cellosaurus/CVCL_'))"
@@ -197,27 +225,28 @@ public class Cell extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int cellID = getIntID("cell", "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID");
-                Identifier match = Ontology.getId(getIRI("match"));
+                Integer cellID = getCellID(getIRI("cell"));
+                Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
 
-                IntTriplet triplet = new IntTriplet(cellID, match.unit, match.id);
-                addCellID(cellID);
+                Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(cellID, match);
 
-                if(!oldMatches.remove(triplet))
-                    newMatches.add(triplet);
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
 
             }
         }.load(model);
 
-        batch("delete from pubchem.cell_matches where cell = ? and match_unit = ? and match_id = ?", oldMatches);
-        batch("insert into pubchem.cell_matches(cell, match_unit, match_id) values (?,?,?)", newMatches);
+        store("delete from pubchem.cell_matches where cell=? and match_unit=? and match_id=?", oldMatches);
+        store("insert into pubchem.cell_matches(cell,match_unit,match_id) values(?,?,?)", newMatches);
     }
 
 
     private static void loadCellosaurusCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet();
-        IntStringPairSet oldMatches = getIntStringPairSet("select cell, match from pubchem.cell_cellosaurus_matches");
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select cell,match from pubchem.cell_cellosaurus_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery("?cell skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'https://web.expasy.org/cellosaurus/CVCL_'))"))
@@ -225,46 +254,46 @@ public class Cell extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int cellID = getIntID("cell", "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID");
+                Integer cellID = getCellID(getIRI("cell"));
                 String match = getStringID("match", "https://web.expasy.org/cellosaurus/CVCL_");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(cellID, match);
-                addCellID(cellID);
+                Pair<Integer, String> pair = Pair.getPair(cellID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.cell_cellosaurus_matches where cell = ? and match = ?", oldMatches);
-        batch("insert into pubchem.cell_cellosaurus_matches(cell, match) values (?,?)", newMatches);
+        store("delete from pubchem.cell_cellosaurus_matches where cell=? and match=?", oldMatches);
+        store("insert into pubchem.cell_cellosaurus_matches(cell,match) values(?,?)", newMatches);
     }
 
 
     private static void loadMeshCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet();
-        IntStringPairSet oldMatches = getIntStringPairSet("select cell, match from pubchem.cell_mesh_matches");
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select cell,match from pubchem.cell_mesh_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?cell skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
+                "?cell skos:closeMatch ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int cellID = getIntID("cell", "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID");
+                Integer cellID = getCellID(getIRI("cell"));
                 String match = getStringID("match", "http://id.nlm.nih.gov/mesh/");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(cellID, match);
-                addCellID(cellID);
+                Pair<Integer, String> pair = Pair.getPair(cellID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.cell_mesh_matches where cell = ? and match = ?", oldMatches);
-        batch("insert into pubchem.cell_mesh_matches(cell, match) values (?,?)", newMatches);
+        store("delete from pubchem.cell_mesh_matches where cell=? and match=?", oldMatches);
+        store("insert into pubchem.cell_mesh_matches(cell,match) values(?,?)", newMatches);
     }
 
 
@@ -273,6 +302,7 @@ public class Cell extends Updater
         System.out.println("load cells ...");
 
         Model model = getModel("pubchem/RDF/cell/pc_cell.ttl.gz");
+
         check(model, "pubchem/cell/check.sparql");
 
         loadBases(model);
@@ -294,28 +324,47 @@ public class Cell extends Updater
     {
         System.out.println("finish cells ...");
 
-        batch("delete from pubchem.cell_bases where id = ?", oldCells);
-        batch("insert into pubchem.cell_bases(id) values (?)" + " on conflict do nothing", newCells);
-
-        usedCells = null;
-        newCells = null;
-        oldCells = null;
+        store("delete from pubchem.cell_bases where id=?", oldCells);
+        store("insert into pubchem.cell_bases(id) values(?)", newCells);
 
         System.out.println();
     }
 
 
-    static void addCellID(int cellID)
+    static Integer getCellID(String value) throws IOException
     {
+        return getCellID(value, false);
+    }
+
+
+    static Integer getCellID(String value, boolean forceKeep) throws IOException
+    {
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        Integer cellID = Integer.parseInt(value.substring(prefixLength));
+
         synchronized(newCells)
         {
-            if(usedCells.add(cellID))
+            if(newCells.contains(cellID))
+            {
+                if(forceKeep)
+                {
+                    newCells.remove(cellID);
+                    keepCells.add(cellID);
+                }
+            }
+            else if(!keepCells.contains(cellID))
             {
                 System.out.println("    add missing cell CELLID" + cellID);
 
-                if(!oldCells.remove(cellID))
+                if(!oldCells.remove(cellID) && !forceKeep)
                     newCells.add(cellID);
+                else
+                    keepCells.add(cellID);
             }
         }
+
+        return cellID;
     }
 }

@@ -4,8 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
-import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
+import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -13,117 +12,116 @@ import cz.iocb.load.common.Updater;
 
 public class Organization extends Updater
 {
-    private static StringIntMap usedOrganizations;
-    private static StringIntMap newOrganizations;
-    private static StringIntMap oldOrganizations;
+    static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/organization/";
+    static final int prefixLength = prefix.length();
+
+    private static final StringIntMap keepOrganizations = new StringIntMap();
+    private static final StringIntMap newOrganizations = new StringIntMap();
+    private static final StringIntMap oldOrganizations = new StringIntMap();
     private static int nextOrganizationID;
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        usedOrganizations = new StringIntMap();
-        newOrganizations = new StringIntMap();
-        oldOrganizations = getStringIntMap("select iri, id from pubchem.organization_bases");
-        nextOrganizationID = getIntValue("select coalesce(max(id)+1,0) from pubchem.organization_bases");
+        load("select iri,id from pubchem.organization_bases", oldOrganizations);
+
+        nextOrganizationID = oldOrganizations.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
         new QueryResultProcessor(patternQuery("?organization rdf:type vcard:Organization"))
         {
             @Override
             protected void parse() throws IOException
             {
-                String organization = getStringID("organization", "http://rdf.ncbi.nlm.nih.gov/pubchem/organization/");
-                int organizationID;
+                String organization = getStringID("organization", prefix);
+                Integer organizationID;
 
-                if((organizationID = oldOrganizations.removeKeyIfAbsent(organization, NO_VALUE)) == NO_VALUE)
-                    newOrganizations.put(organization, organizationID = nextOrganizationID++);
-
-                usedOrganizations.put(organization, organizationID);
+                if((organizationID = oldOrganizations.remove(organization)) == null)
+                    newOrganizations.put(organization, nextOrganizationID++);
+                else
+                    keepOrganizations.put(organization, organizationID);
             }
         }.load(model);
-
-        batch("insert into pubchem.organization_bases(iri, id) values (?,?)", newOrganizations);
-        newOrganizations.clear();
     }
 
 
     private static void loadCountryNames(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newNames = new IntStringPairSet();
-        IntStringPairSet oldNames = getIntStringPairSet(
-                "select organization, name from pubchem.organization_country_names");
+        IntStringSet newNames = new IntStringSet();
+        IntStringSet oldNames = new IntStringSet();
+
+        load("select organization,name from pubchem.organization_country_names", oldNames);
 
         new QueryResultProcessor(patternQuery("?organization vcard:country-name ?name"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int organizationID = getOrganizationID(
-                        getStringID("organization", "http://rdf.ncbi.nlm.nih.gov/pubchem/organization/"));
+                Integer organizationID = getOrganizationID(getIRI("organization"));
                 String name = getString("name");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(organizationID, name);
+                Pair<Integer, String> pair = Pair.getPair(organizationID, name);
 
                 if(!oldNames.remove(pair))
                     newNames.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.organization_country_names where organization = ? and name = ?", oldNames);
-        batch("insert into pubchem.organization_country_names(organization, name) values (?,?)", newNames);
+        store("delete from pubchem.organization_country_names where organization=? and name=?", oldNames);
+        store("insert into pubchem.organization_country_names(organization,name) values(?,?)", newNames);
     }
 
 
     private static void loadFormattedNames(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newNames = new IntStringPairSet();
-        IntStringPairSet oldNames = getIntStringPairSet(
-                "select organization, name from pubchem.organization_formatted_names");
+        IntStringSet newNames = new IntStringSet();
+        IntStringSet oldNames = new IntStringSet();
+
+        load("select organization,name from pubchem.organization_formatted_names", oldNames);
 
         new QueryResultProcessor(patternQuery("?organization vcard:fn ?name"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int organizationID = getOrganizationID(
-                        getStringID("organization", "http://rdf.ncbi.nlm.nih.gov/pubchem/organization/"));
+                Integer organizationID = getOrganizationID(getIRI("organization"));
                 String name = getString("name");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(organizationID, name);
+                Pair<Integer, String> pair = Pair.getPair(organizationID, name);
 
                 if(!oldNames.remove(pair))
                     newNames.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.organization_formatted_names where organization = ? and name = ?", oldNames);
-        batch("insert into pubchem.organization_formatted_names(organization, name) values (?,?)", newNames);
+        store("delete from pubchem.organization_formatted_names where organization=? and name=?", oldNames);
+        store("insert into pubchem.organization_formatted_names(organization,name) values(?,?)", newNames);
     }
 
 
     private static void loadCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newNames = new IntStringPairSet();
-        IntStringPairSet oldNames = getIntStringPairSet(
-                "select organization, crossref from pubchem.organization_crossref_matches");
+        IntStringSet newNames = new IntStringSet();
+        IntStringSet oldNames = new IntStringSet();
+
+        load("select organization,crossref from pubchem.organization_crossref_matches", oldNames);
 
         new QueryResultProcessor(patternQuery("?organization skos:closeMatch ?crossref"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int organizationID = getOrganizationID(
-                        getStringID("organization", "http://rdf.ncbi.nlm.nih.gov/pubchem/organization/"));
+                Integer organizationID = getOrganizationID(getIRI("organization"));
                 String crossref = getStringID("crossref", "https://data.crossref.org/fundingdata/funder/");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(organizationID, crossref);
+                Pair<Integer, String> pair = Pair.getPair(organizationID, crossref);
 
                 if(!oldNames.remove(pair))
                     newNames.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.organization_crossref_matches where organization = ? and crossref = ?", oldNames);
-        batch("insert into pubchem.organization_crossref_matches(organization, crossref) values (?,?)", newNames);
+        store("delete from pubchem.organization_crossref_matches where organization=? and crossref=?", oldNames);
+        store("insert into pubchem.organization_crossref_matches(organization,crossref) values(?,?)", newNames);
     }
 
 
@@ -160,33 +158,38 @@ public class Organization extends Updater
     {
         System.out.println("finish organizations ...");
 
-        batch("delete from pubchem.organization_bases where id = ?", oldOrganizations.values());
-        batch("insert into pubchem.organization_bases(iri, id) values (?,?)" + " on conflict do nothing",
-                newOrganizations);
-
-        usedOrganizations = null;
-        newOrganizations = null;
-        oldOrganizations = null;
+        store("delete from pubchem.organization_bases where iri=? and id=?", oldOrganizations);
+        store("insert into pubchem.organization_bases(iri,id) values(?,?)", newOrganizations);
 
         System.out.println();
     }
 
 
-    static int getOrganizationID(String organization) throws IOException
+    static Integer getOrganizationID(String value) throws IOException
     {
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        String organization = value.substring(prefixLength);
+
         synchronized(newOrganizations)
         {
-            int organizationID = usedOrganizations.getIfAbsent(organization, NO_VALUE);
+            Integer organizationID = keepOrganizations.get(organization);
 
-            if(organizationID == NO_VALUE)
-            {
-                System.out.println("    add missing organization " + organization);
+            if(organizationID != null)
+                return organizationID;
 
-                if((organizationID = oldOrganizations.removeKeyIfAbsent(organization, NO_VALUE)) == NO_VALUE)
-                    newOrganizations.put(organization, organizationID = nextOrganizationID++);
+            organizationID = newOrganizations.get(organization);
 
-                usedOrganizations.put(organization, organizationID);
-            }
+            if(organizationID != null)
+                return organizationID;
+
+            System.out.println("    add missing organization " + organization);
+
+            if((organizationID = oldOrganizations.remove(organization)) == null)
+                newOrganizations.put(organization, organizationID = nextOrganizationID++);
+            else
+                keepOrganizations.put(organization, organizationID);
 
             return organizationID;
         }

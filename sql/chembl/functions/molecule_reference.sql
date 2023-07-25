@@ -1,4 +1,4 @@
-create function chembl.url_decode(input text) returns text language plpgsql as $$
+create function chembl_tmp.url_decode(input text) returns text language plpgsql as $$
 declare
   bin bytea = '';
   byte text;

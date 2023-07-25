@@ -2,12 +2,9 @@ package cz.iocb.load.pubchem;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
-import org.eclipse.collections.api.tuple.primitive.IntIntPair;
-import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
-import cz.iocb.load.common.IntTriplet;
+import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -15,25 +12,22 @@ import cz.iocb.load.common.Updater;
 
 class Measuregroup extends Updater
 {
-    private interface SetFunction<T>
-    {
-        T set(int bioassay, int measuregroup);
-    }
+    static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID";
+    static final int prefixLength = prefix.length();
 
+    private static final IntPairSet keepMeasuregroups = new IntPairSet();
+    private static final IntPairSet newMeasuregroups = new IntPairSet();
+    private static final IntPairSet oldMeasuregroups = new IntPairSet();
 
-    private static final String measuregroupPrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID";
-    private static final int measuregroupPrefixLength = measuregroupPrefix.length();
-
-    private static IntPairSet usedMeasuregroups;
-    private static IntPairSet newMeasuregroups;
-    private static IntPairSet oldMeasuregroups;
+    private static final IntPairIntSet keepSubstances = new IntPairIntSet();
+    private static final IntPairIntSet newSubstances = new IntPairIntSet();
+    private static final IntPairIntSet oldSubstances = new IntPairIntSet();
 
 
     private static void loadBases() throws IOException, SQLException
     {
-        usedMeasuregroups = new IntPairSet();
-        newMeasuregroups = new IntPairSet();
-        oldMeasuregroups = getIntPairSet("select bioassay, measuregroup from pubchem.measuregroup_bases");
+        load("select bioassay,measuregroup from pubchem.measuregroup_bases", oldMeasuregroups);
+        load("select bioassay,measuregroup,substance from pubchem.measuregroup_substances", oldSubstances);
     }
 
 
@@ -52,7 +46,7 @@ class Measuregroup extends Updater
                     if(!object.getURI().equals("http://www.bioassayontology.org/bao#BAO_0000040"))
                         throw new IOException();
 
-                    parseMeasuregroup(subject);
+                    parseMeasuregroup(subject, false);
                 }
             }.load(stream);
         }
@@ -61,9 +55,12 @@ class Measuregroup extends Updater
 
     private static void loadSources() throws IOException, SQLException
     {
+        IntPairIntMap keepSources = new IntPairIntMap();
         IntPairIntMap newSources = new IntPairIntMap();
-        IntPairIntMap oldSources = getIntPairIntMap(
-                "select bioassay, measuregroup, source from pubchem.measuregroup_bases where source is not null");
+        IntPairIntMap oldSources = new IntPairIntMap();
+
+        load("select bioassay,measuregroup,source from pubchem.measuregroup_bases where source is not null",
+                oldSources);
 
         try(InputStream stream = getTtlStream("pubchem/RDF/measuregroup/pc_measuregroup_source.ttl.gz"))
         {
@@ -75,32 +72,45 @@ class Measuregroup extends Updater
                     if(!predicate.getURI().equals("http://purl.org/dc/terms/source"))
                         throw new IOException();
 
-                    IntIntPair measuregroup = parseMeasuregroup(subject);
-                    int sourceID = Source
-                            .getSourceID(getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/source/"));
+                    Pair<Integer, Integer> measuregroup = parseMeasuregroup(subject, true);
+                    Integer sourceID = Source.getSourceID(object.getURI());
 
-                    if(sourceID != oldSources.removeKeyIfAbsent(measuregroup, NO_VALUE))
-                        newSources.put(measuregroup, sourceID);
+                    if(sourceID.equals(oldSources.remove(measuregroup)))
+                    {
+                        keepSources.put(measuregroup, sourceID);
+                    }
+                    else
+                    {
+                        Integer keep = keepSources.get(measuregroup);
+
+                        if(sourceID.equals(keep))
+                            return;
+                        else if(keep != null)
+                            throw new IOException();
+
+                        Integer put = newSources.put(measuregroup, sourceID);
+
+                        if(put != null && !sourceID.equals(put))
+                            throw new IOException();
+                    }
                 }
             }.load(stream);
         }
 
-        batch("update pubchem.measuregroup_bases set source = null where bioassay = ? and measuregroup = ?",
-                oldSources.keySet(), (PreparedStatement statement, IntIntPair measuregroup) -> {
-                    statement.setInt(1, measuregroup.getOne());
-                    statement.setInt(2, measuregroup.getTwo());
-                });
-
-        batch("insert into pubchem.measuregroup_bases(bioassay, measuregroup, source) values (?,?,?) "
-                + "on conflict (bioassay, measuregroup) do update set source=EXCLUDED.source", newSources);
+        store("update pubchem.measuregroup_bases set source=null where bioassay=? and measuregroup=? and source=?",
+                oldSources);
+        store("insert into pubchem.measuregroup_bases(bioassay,measuregroup,source) values(?,?,?) "
+                + "on conflict(bioassay,measuregroup) do update set source=EXCLUDED.source", newSources);
     }
 
 
     private static void loadTitles() throws IOException, SQLException
     {
+        IntPairStringMap keepTitles = new IntPairStringMap();
         IntPairStringMap newTitles = new IntPairStringMap();
-        IntPairStringMap oldTitles = getIntPairStringMap(
-                "select bioassay, measuregroup, title from pubchem.measuregroup_bases where title is not null");
+        IntPairStringMap oldTitles = new IntPairStringMap();
+
+        load("select bioassay,measuregroup,title from pubchem.measuregroup_bases where title is not null", oldTitles);
 
         try(InputStream stream = getTtlStream("pubchem/RDF/measuregroup/pc_measuregroup_title.ttl.gz"))
         {
@@ -112,43 +122,60 @@ class Measuregroup extends Updater
                     if(!predicate.getURI().equals("http://purl.org/dc/terms/title"))
                         throw new IOException();
 
-                    IntIntPair measuregroup = parseMeasuregroup(subject);
+                    Pair<Integer, Integer> measuregroup = parseMeasuregroup(subject, true);
                     String title = getString(object);
 
-                    if(!title.equals(oldTitles.remove(measuregroup)))
-                        newTitles.put(measuregroup, title);
+                    if(title.equals(oldTitles.remove(measuregroup)))
+                    {
+                        keepTitles.put(measuregroup, title);
+                    }
+                    else
+                    {
+                        String keep = keepTitles.get(measuregroup);
+
+                        if(title.equals(keep))
+                            return;
+                        else if(keep != null)
+                            throw new IOException();
+
+                        String put = newTitles.put(measuregroup, title);
+
+                        if(put != null && !title.equals(put))
+                            throw new IOException();
+                    }
                 }
             }.load(stream);
         }
 
-        batch("update pubchem.measuregroup_bases set title = null where bioassay = ? and measuregroup = ?",
-                oldTitles.keySet(), (PreparedStatement statement, IntIntPair measuregroup) -> {
-                    statement.setInt(1, measuregroup.getOne());
-                    statement.setInt(2, measuregroup.getTwo());
-                });
-
-        batch("insert into pubchem.measuregroup_bases(bioassay, measuregroup, title) values (?,?,?) "
-                + "on conflict (bioassay, measuregroup) do update set title=EXCLUDED.title", newTitles);
+        store("update pubchem.measuregroup_bases set title=null where bioassay=? and measuregroup=? and title=?",
+                oldTitles);
+        store("insert into pubchem.measuregroup_bases(bioassay,measuregroup,title) values(?,?,?) "
+                + "on conflict(bioassay, measuregroup) do update set title=EXCLUDED.title", newTitles);
     }
 
 
     private static void loadProteinsAndGenes() throws IOException, SQLException
     {
-        IntTripletSet newProteins = new IntTripletSet();
-        IntTripletSet oldProteins = getIntTripletSet(
-                "select bioassay, measuregroup, protein from pubchem.measuregroup_proteins");
+        IntPairIntSet keepProteins = new IntPairIntSet();
+        IntPairIntSet newProteins = new IntPairIntSet();
+        IntPairIntSet oldProteins = new IntPairIntSet();
 
-        IntTripletSet newGenes = new IntTripletSet();
-        IntTripletSet oldGenes = getIntTripletSet(
-                "select bioassay, measuregroup, gene from pubchem.measuregroup_genes");
+        IntPairIntSet keepGenes = new IntPairIntSet();
+        IntPairIntSet newGenes = new IntPairIntSet();
+        IntPairIntSet oldGenes = new IntPairIntSet();
 
-        IntTripletSet newTaxonomies = new IntTripletSet();
-        IntTripletSet oldTaxonomies = getIntTripletSet(
-                "select bioassay, measuregroup, taxonomy from pubchem.measuregroup_taxonomies");
+        IntPairIntSet keepTaxonomies = new IntPairIntSet();
+        IntPairIntSet newTaxonomies = new IntPairIntSet();
+        IntPairIntSet oldTaxonomies = new IntPairIntSet();
 
-        IntTripletSet newCells = new IntTripletSet();
-        IntTripletSet oldCells = getIntTripletSet(
-                "select bioassay, measuregroup, cell from pubchem.measuregroup_cells");
+        IntPairIntSet keepCells = new IntPairIntSet();
+        IntPairIntSet newCells = new IntPairIntSet();
+        IntPairIntSet oldCells = new IntPairIntSet();
+
+        load("select bioassay,measuregroup,protein from pubchem.measuregroup_proteins", oldProteins);
+        load("select bioassay,measuregroup,gene from pubchem.measuregroup_genes", oldGenes);
+        load("select bioassay,measuregroup,taxonomy from pubchem.measuregroup_taxonomies", oldTaxonomies);
+        load("select bioassay,measuregroup,cell from pubchem.measuregroup_cells", oldCells);
 
         try(InputStream stream = getTtlStream("pubchem/RDF/measuregroup/pc_measuregroup2protein.ttl.gz"))
         {
@@ -160,45 +187,53 @@ class Measuregroup extends Updater
                     if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/RO_0000057"))
                         throw new IOException();
 
-                    if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC"))
+                    if(object.getURI().startsWith(Protein.prefix))
                     {
-                        String proteinName = getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC");
-                        int proteinID = Protein.getProteinID(proteinName);
+                        Integer proteinID = Protein.getProteinID(object.getURI());
+                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject, false);
 
-                        IntTriplet triple = parseMeasuregroup(subject, proteinID);
+                        Pair<Pair<Integer, Integer>, Integer> pair = Pair.getPair(measuregourp, proteinID);
 
-                        if(!oldProteins.remove(triple))
-                            newProteins.add(triple);
+                        if(oldProteins.remove(pair))
+                            keepProteins.add(pair);
+                        else if(!keepProteins.contains(pair))
+                            newProteins.add(pair);
                     }
-                    else if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"))
+                    else if(object.getURI().startsWith(Gene.prefix))
                     {
-                        int geneID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+                        Integer geneID = Gene.getGeneID(object.getURI());
+                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject, false);
 
-                        IntTriplet triple = parseMeasuregroup(subject, geneID);
-                        Gene.addGeneID(geneID);
+                        Pair<Pair<Integer, Integer>, Integer> pair = Pair.getPair(measuregourp, geneID);
 
-                        if(!oldGenes.remove(triple))
-                            newGenes.add(triple);
+                        if(oldGenes.remove(pair))
+                            keepGenes.add(pair);
+                        else if(!keepGenes.contains(pair))
+                            newGenes.add(pair);
                     }
-                    else if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"))
+                    else if(object.getURI().startsWith(Taxonomy.prefix))
                     {
-                        int taxonomyID = Taxonomy
-                                .getTaxonomyID(getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"));
+                        Integer taxonomyID = Taxonomy.getTaxonomyID(object.getURI());
+                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject, false);
 
-                        IntTriplet triple = parseMeasuregroup(subject, taxonomyID);
+                        Pair<Pair<Integer, Integer>, Integer> pair = Pair.getPair(measuregourp, taxonomyID);
 
-                        if(!oldTaxonomies.remove(triple))
-                            newTaxonomies.add(triple);
+                        if(oldTaxonomies.remove(pair))
+                            keepTaxonomies.add(pair);
+                        else if(!keepTaxonomies.contains(pair))
+                            newTaxonomies.add(pair);
                     }
-                    else if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID"))
+                    else if(object.getURI().startsWith(Cell.prefix))
                     {
-                        int cellID = getIntID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID");
+                        Integer cellID = Cell.getCellID(object.getURI());
+                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject, false);
 
-                        IntTriplet triple = parseMeasuregroup(subject, cellID);
-                        Cell.addCellID(cellID);
+                        Pair<Pair<Integer, Integer>, Integer> pair = Pair.getPair(measuregourp, cellID);
 
-                        if(!oldCells.remove(triple))
-                            newCells.add(triple);
+                        if(oldCells.remove(pair))
+                            keepCells.add(pair);
+                        else if(!keepCells.contains(pair))
+                            newCells.add(pair);
                     }
                     else
                     {
@@ -207,23 +242,21 @@ class Measuregroup extends Updater
                 }
             }.load(stream);
 
-            batch("delete from pubchem.measuregroup_proteins where bioassay = ? and measuregroup = ? and protein = ?",
+            store("delete from pubchem.measuregroup_proteins where bioassay=? and measuregroup=? and protein=?",
                     oldProteins);
-            batch("insert into pubchem.measuregroup_proteins(bioassay, measuregroup, protein) values (?,?,?)",
+            store("insert into pubchem.measuregroup_proteins(bioassay,measuregroup,protein) values(?,?,?)",
                     newProteins);
 
-            batch("delete from pubchem.measuregroup_genes where bioassay = ? and measuregroup = ? and gene = ?",
-                    oldGenes);
-            batch("insert into pubchem.measuregroup_genes(bioassay, measuregroup, gene) values (?,?,?)", newGenes);
+            store("delete from pubchem.measuregroup_genes where bioassay=? and measuregroup=? and gene=?", oldGenes);
+            store("insert into pubchem.measuregroup_genes(bioassay,measuregroup,gene) values(?,?,?)", newGenes);
 
-            batch("delete from pubchem.measuregroup_taxonomies where bioassay = ? and measuregroup = ? and taxonomy = ?",
+            store("delete from pubchem.measuregroup_taxonomies where bioassay=? and measuregroup=? and taxonomy=?",
                     oldTaxonomies);
-            batch("insert into pubchem.measuregroup_taxonomies(bioassay, measuregroup, taxonomy) values (?,?,?)",
+            store("insert into pubchem.measuregroup_taxonomies(bioassay,measuregroup,taxonomy) values(?,?,?)",
                     newTaxonomies);
 
-            batch("delete from pubchem.measuregroup_cells where bioassay = ? and measuregroup = ? and cell = ?",
-                    oldCells);
-            batch("insert into pubchem.measuregroup_cells(bioassay, measuregroup, cell) values (?,?,?)", newCells);
+            store("delete from pubchem.measuregroup_cells where bioassay=? and measuregroup=? and cell=?", oldCells);
+            store("insert into pubchem.measuregroup_cells(bioassay,measuregroup,cell) values(?,?,?)", newCells);
         }
     }
 
@@ -238,12 +271,12 @@ class Measuregroup extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        getStringID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID");
+                        getStringID(subject, prefix);
 
                         if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/OBI_0000299"))
                             throw new IOException();
 
-                        getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID");
+                        getStringID(object, Endpoint.prefix);
                     }
                 }.load(stream);
             }
@@ -270,45 +303,81 @@ class Measuregroup extends Updater
     {
         System.out.println("finish measuregroups ...");
 
-        batch("delete from pubchem.measuregroup_bases where bioassay = ? and measuregroup = ?", oldMeasuregroups);
-        batch("insert into pubchem.measuregroup_bases(bioassay, measuregroup) values (?,?)" + " on conflict do nothing",
-                newMeasuregroups);
+        store("delete from pubchem.measuregroup_bases where bioassay=? and measuregroup=?", oldMeasuregroups);
+        store("insert into pubchem.measuregroup_bases(bioassay,measuregroup) values(?,?)", newMeasuregroups);
 
-        usedMeasuregroups = null;
-        newMeasuregroups = null;
-        oldMeasuregroups = null;
+        store("delete from pubchem.measuregroup_substances where bioassay=? and measuregroup=? and substance=?",
+                oldSubstances);
+        store("insert into pubchem.measuregroup_substances(bioassay,measuregroup,substance) values(?,?,?)",
+                newSubstances);
 
         System.out.println();
     }
 
 
-    static void addMeasuregroupID(int bioassay, int measuregroup)
+    static void addMeasuregroupID(Integer bioassay, Integer measuregroup)
     {
-        IntIntPair pair = PrimitiveTuples.pair(bioassay, measuregroup);
+        addMeasuregroupID(bioassay, measuregroup, false);
+    }
+
+
+    static void addMeasuregroupID(Integer bioassay, Integer measuregroup, boolean forceKeep)
+    {
+        Pair<Integer, Integer> pair = Pair.getPair(bioassay, measuregroup);
 
         synchronized(newMeasuregroups)
         {
-            if(usedMeasuregroups.add(pair) && !oldMeasuregroups.remove(pair))
-                newMeasuregroups.add(pair);
+            if(newMeasuregroups.contains(pair))
+            {
+                if(forceKeep)
+                {
+                    newMeasuregroups.remove(pair);
+                    keepMeasuregroups.add(pair);
+                }
+            }
+            else if(!keepMeasuregroups.contains(pair))
+            {
+                if(!oldMeasuregroups.remove(pair) && !forceKeep)
+                    newMeasuregroups.add(pair);
+                else
+                    keepMeasuregroups.add(pair);
+            }
         }
     }
 
 
-    private static <T> T parseMeasuregroup(Node node, SetFunction<T> function) throws IOException
+    static void addMeasuregroupSubstance(Integer bioassay, Integer measuregroup, Integer substance)
+    {
+        Pair<Pair<Integer, Integer>, Integer> triplet = Pair.getPair(Pair.getPair(bioassay, measuregroup), substance);
+
+        synchronized(newSubstances)
+        {
+            if(!keepSubstances.contains(triplet) && !newSubstances.contains(triplet))
+            {
+                if(oldSubstances.remove(triplet))
+                    keepSubstances.add(triplet);
+                else
+                    newSubstances.add(triplet);
+            }
+        }
+    }
+
+
+    private static Pair<Integer, Integer> parseMeasuregroup(Node node, boolean forceKeep) throws IOException
     {
         String iri = node.getURI();
-        int bioassay;
-        int measuregroup;
+        Integer bioassay;
+        Integer measuregroup;
 
-        if(!iri.startsWith(measuregroupPrefix))
+        if(!iri.startsWith(prefix))
             throw new IOException();
 
-        int grp = iri.indexOf("_", measuregroupPrefixLength + 1);
+        int grp = iri.indexOf("_", prefixLength + 1);
 
         if(grp != -1 && iri.indexOf("_PMID") == grp)
         {
             String part = iri.substring(grp + 5);
-            bioassay = Integer.parseInt(iri.substring(measuregroupPrefixLength, grp));
+            bioassay = Integer.parseInt(iri.substring(prefixLength, grp));
 
             if(part.isEmpty())
             {
@@ -324,7 +393,7 @@ class Measuregroup extends Updater
         }
         else if(grp != -1 && grp != iri.length() - 1)
         {
-            bioassay = Integer.parseInt(iri.substring(measuregroupPrefixLength, grp));
+            bioassay = Integer.parseInt(iri.substring(prefixLength, grp));
             measuregroup = Integer.parseInt(iri.substring(grp + 1));
 
             if(measuregroup > 2147483645)
@@ -332,30 +401,18 @@ class Measuregroup extends Updater
         }
         else if(grp != -1)
         {
-            bioassay = Integer.parseInt(iri.substring(measuregroupPrefixLength, grp));
+            bioassay = Integer.parseInt(iri.substring(prefixLength, grp));
             measuregroup = 2147483646; // magic number
         }
         else
         {
-            bioassay = Integer.parseInt(iri.substring(measuregroupPrefixLength));
+            bioassay = Integer.parseInt(iri.substring(prefixLength));
             measuregroup = 2147483647; // magic number
         }
 
-        addMeasuregroupID(bioassay, measuregroup);
+        addMeasuregroupID(bioassay, measuregroup, forceKeep);
         Bioassay.addBioassayID(bioassay);
 
-        return function.set(bioassay, measuregroup);
-    }
-
-
-    private static IntIntPair parseMeasuregroup(Node node) throws IOException
-    {
-        return parseMeasuregroup(node, (bioassay, measuregroup) -> PrimitiveTuples.pair(bioassay, measuregroup));
-    }
-
-
-    private static IntTriplet parseMeasuregroup(Node node, int last) throws IOException
-    {
-        return parseMeasuregroup(node, (bioassay, measuregroup) -> new IntTriplet(bioassay, measuregroup, last));
+        return Pair.getPair(bioassay, measuregroup);
     }
 }

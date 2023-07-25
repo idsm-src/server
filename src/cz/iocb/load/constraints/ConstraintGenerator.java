@@ -293,7 +293,8 @@ public class ConstraintGenerator extends Updater
 
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into constraints.foreign_keys(__, parent_schema, parent_table, parent_columns, foreign_schema, foreign_table, foreign_columns) values (?,?,?,?,?,?,?)"))
+                "insert into constraints.foreign_keys(__, parent_schema, parent_table, parent_columns, foreign_schema, "
+                        + "foreign_table, foreign_columns) values(?,?,?,?,?,?,?)"))
         {
             AtomicInteger id = new AtomicInteger(0);
 
@@ -349,7 +350,8 @@ public class ConstraintGenerator extends Updater
 
 
         try(PreparedStatement statement = connection.prepareStatement(
-                "insert into constraints.unjoinable_columns(__, left_schema, left_table, left_columns, right_schema, right_table, right_columns) values (?,?,?,?,?,?,?)"))
+                "insert into constraints.unjoinable_columns(__, left_schema, left_table, left_columns, right_schema, "
+                        + "right_table, right_columns) values(?,?,?,?,?,?,?)"))
         {
             AtomicInteger id = new AtomicInteger(0);
 

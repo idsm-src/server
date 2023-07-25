@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
-import org.eclipse.collections.impl.map.mutable.primitive.IntFloatHashMap;
-import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -14,14 +11,26 @@ import cz.iocb.load.common.Updater;
 
 class CompoundDescriptor extends Updater
 {
-    private static IntHashSet oldDescriptors;
+    static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID";
+    static final int prefixLength = prefix.length();
+
+    private static final IntSet oldDescriptors = new IntSet();
+
+
+    private static void loadBases() throws IOException, SQLException
+    {
+        load("select compound from pubchem.descriptor_compound_bases", oldDescriptors);
+    }
 
 
     private static void loadIntegerField(String name, String suffix, String field) throws IOException, SQLException
     {
-        IntIntHashMap newValues = new IntIntHashMap();
-        IntIntHashMap oldValues = getIntIntMap("select compound, " + field
-                + " from pubchem.descriptor_compound_bases where " + field + " is not null");
+        IntIntMap keepValues = new IntIntMap();
+        IntIntMap newValues = new IntIntMap();
+        IntIntMap oldValues = new IntIntMap();
+
+        load("select compound," + field + " from pubchem.descriptor_compound_bases where " + field + " is not null",
+                oldValues);
 
         processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -34,35 +43,52 @@ class CompoundDescriptor extends Updater
                         if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
                             throw new IOException();
 
-                        int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
-                        int value = getInteger(object);
-
-                        Compound.addCompoundID(id);
+                        Integer id = getDescriptorID(subject.getURI(), suffix);
+                        Integer value = getInteger(object);
 
                         synchronized(newValues)
                         {
                             oldDescriptors.remove(id);
 
-                            if(value != oldValues.removeKeyIfAbsent(id, NO_VALUE))
-                                newValues.put(id, value);
+                            if(value.equals(oldValues.remove(id)))
+                            {
+                                keepValues.put(id, value);
+                            }
+                            else
+                            {
+                                Integer keep = keepValues.get(id);
+
+                                if(value.equals(keep))
+                                    return;
+                                else if(keep != null)
+                                    throw new IOException();
+
+                                Integer put = newValues.put(id, value);
+
+                                if(put != null && !value.equals(put))
+                                    throw new IOException();
+                            }
                         }
                     }
                 }.load(stream);
             }
         });
 
-        batch("update pubchem.descriptor_compound_bases set " + field + " = null where compound = ?",
-                oldValues.keySet());
-        batch("insert into pubchem.descriptor_compound_bases (compound, " + field + ") values (?,?) "
-                + "on conflict (compound) do update set " + field + "=EXCLUDED." + field, newValues);
+        store("update pubchem.descriptor_compound_bases set " + field + "=null where compound=? and " + field + "=?",
+                oldValues);
+        store("insert into pubchem.descriptor_compound_bases (compound," + field + ") values(?,?) "
+                + "on conflict(compound) do update set " + field + "=EXCLUDED." + field, newValues);
     }
 
 
     private static void loadFloatField(String name, String suffix, String field) throws IOException, SQLException
     {
-        IntFloatHashMap newValues = new IntFloatHashMap();
-        IntFloatHashMap oldValues = getIntFloatMap("select compound, " + field
-                + " from pubchem.descriptor_compound_bases where " + field + " is not null");
+        IntFloatMap keepValues = new IntFloatMap();
+        IntFloatMap newValues = new IntFloatMap();
+        IntFloatMap oldValues = new IntFloatMap();
+
+        load("select compound," + field + " from pubchem.descriptor_compound_bases where " + field + " is not null",
+                oldValues);
 
         processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -75,39 +101,57 @@ class CompoundDescriptor extends Updater
                         if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
                             throw new IOException();
 
-                        int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
-                        float value = getFloat(object);
-
-                        Compound.addCompoundID(id);
+                        Integer id = getDescriptorID(subject.getURI(), suffix);
+                        Float value = getFloat(object);
 
                         synchronized(newValues)
                         {
                             oldDescriptors.remove(id);
 
-                            if(value != oldValues.removeKeyIfAbsent(id, Float.NaN) || value == Float.NaN)
-                                newValues.put(id, value);
+                            if(value.equals(oldValues.remove(id)))
+                            {
+                                keepValues.put(id, value);
+                            }
+                            else
+                            {
+                                Float keep = keepValues.get(id);
+
+                                if(value.equals(keep))
+                                    return;
+                                else if(keep != null)
+                                    throw new IOException();
+
+                                Float put = newValues.put(id, value);
+
+                                if(put != null && !value.equals(put))
+                                    throw new IOException();
+                            }
                         }
                     }
                 }.load(stream);
             }
         });
 
-        batch("update pubchem.descriptor_compound_bases set " + field + " = null where compound = ?",
-                oldValues.keySet());
-        batch("insert into pubchem.descriptor_compound_bases (compound, " + field + ") values (?,?) "
-                + "on conflict (compound) do update set " + field + "=EXCLUDED." + field, newValues);
+        store("update pubchem.descriptor_compound_bases set " + field + "=null where compound=? and " + field + "=?",
+                oldValues);
+        store("insert into pubchem.descriptor_compound_bases (compound," + field + ") values(?,?) "
+                + "on conflict(compound) do update set " + field + "=EXCLUDED." + field, newValues);
     }
 
 
     private static void loadXLogP3Field(String name) throws IOException, SQLException
     {
-        IntFloatHashMap newAAValues = new IntFloatHashMap();
-        IntFloatHashMap oldAAValues = getIntFloatMap(
-                "select compound, xlogp3_aa from pubchem.descriptor_compound_bases where xlogp3_aa is not null");
+        IntFloatMap keepAAValues = new IntFloatMap();
+        IntFloatMap newAAValues = new IntFloatMap();
+        IntFloatMap oldAAValues = new IntFloatMap();
 
-        IntFloatHashMap newValues = new IntFloatHashMap();
-        IntFloatHashMap oldValues = getIntFloatMap(
-                "select compound, xlogp3 from pubchem.descriptor_compound_bases where xlogp3 is not null");
+        IntFloatMap keepValues = new IntFloatMap();
+        IntFloatMap newValues = new IntFloatMap();
+        IntFloatMap oldValues = new IntFloatMap();
+
+        load("select compound,xlogp3_aa from pubchem.descriptor_compound_bases where xlogp3_aa is not null",
+                oldAAValues);
+        load("select compound,xlogp3 from pubchem.descriptor_compound_bases where xlogp3 is not null", oldValues);
 
         processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -120,35 +164,62 @@ class CompoundDescriptor extends Updater
                         if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
                             throw new IOException();
 
-                        float value = getFloat(object);
+                        Float value = getFloat(object);
 
                         if(subject.getURI().endsWith("-AA"))
                         {
-                            int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID",
-                                    "_XLogP3-AA");
-
-                            Compound.addCompoundID(id);
+                            Integer id = getDescriptorID(subject.getURI(), "_XLogP3-AA");
 
                             synchronized(newAAValues)
                             {
                                 oldDescriptors.remove(id);
 
-                                if(value != oldAAValues.removeKeyIfAbsent(id, Float.NaN) || value == Float.NaN)
-                                    newAAValues.put(id, value);
+                                if(value.equals(oldAAValues.remove(id)))
+                                {
+                                    keepAAValues.put(id, value);
+                                }
+                                else
+                                {
+                                    Float keep = keepAAValues.get(id);
+
+                                    if(value.equals(keep))
+                                        return;
+                                    else if(keep != null)
+                                        throw new IOException();
+
+                                    Float put = newAAValues.put(id, value);
+
+                                    if(put != null && !value.equals(put))
+                                        throw new IOException();
+                                }
                             }
                         }
                         else
                         {
-                            int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", "_XLogP3");
+                            Integer id = getDescriptorID(subject.getURI(), "_XLogP3");
 
-                            Compound.addCompoundID(id);
-
-                            synchronized(newAAValues)
+                            synchronized(newValues)
                             {
                                 oldDescriptors.remove(id);
 
-                                if(value != oldValues.removeKeyIfAbsent(id, Float.NaN) || value == Float.NaN)
-                                    newValues.put(id, value);
+                                if(value.equals(oldValues.remove(id)))
+                                {
+                                    keepValues.put(id, value);
+                                }
+                                else
+                                {
+                                    Float keep = keepValues.get(id);
+
+                                    if(value.equals(keep))
+                                        return;
+                                    else if(keep != null)
+                                        throw new IOException();
+
+                                    Float put = newValues.put(id, value);
+
+                                    if(put != null && !value.equals(put))
+                                        throw new IOException();
+                                }
                             }
                         }
                     }
@@ -156,22 +227,25 @@ class CompoundDescriptor extends Updater
             }
         });
 
-        batch("update pubchem.descriptor_compound_bases set xlogp3_aa = null where compound = ?", oldAAValues.keySet());
-        batch("insert into pubchem.descriptor_compound_bases (compound, xlogp3_aa) values (?,?) "
-                + "on conflict (compound) do update set xlogp3_aa=EXCLUDED.xlogp3_aa", newAAValues);
+        store("update pubchem.descriptor_compound_bases set xlogp3_aa=null where compound=? and xlogp3_aa=?",
+                oldAAValues);
+        store("insert into pubchem.descriptor_compound_bases (compound,xlogp3_aa) values(?,?) "
+                + "on conflict(compound) do update set xlogp3_aa=EXCLUDED.xlogp3_aa", newAAValues);
 
-        batch("update pubchem.descriptor_compound_bases set xlogp3 = null where compound = ?", oldValues.keySet());
-        batch("insert into pubchem.descriptor_compound_bases (compound, xlogp3) values (?,?) "
-                + "on conflict (compound) do update set xlogp3=EXCLUDED.xlogp3", newValues);
+        store("update pubchem.descriptor_compound_bases set xlogp3=null where compound=? and xlogp3=?", oldValues);
+        store("insert into pubchem.descriptor_compound_bases (compound,xlogp3) values(?,?) "
+                + "on conflict(compound) do update set xlogp3=EXCLUDED.xlogp3", newValues);
     }
 
 
     private static void loadStringField(String name, String suffix, String table, String field)
             throws IOException, SQLException
     {
+        IntStringMap keepValues = new IntStringMap();
         IntStringMap newValues = new IntStringMap();
-        IntStringMap oldValues = getIntStringMap(
-                "select compound, " + field + " from pubchem.descriptor_compound_" + table);
+        IntStringMap oldValues = new IntStringMap();
+
+        load("select compound," + field + " from pubchem.descriptor_compound_" + table, oldValues);
 
         processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -184,24 +258,39 @@ class CompoundDescriptor extends Updater
                         if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
                             throw new IOException();
 
-                        int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
+                        Integer id = getDescriptorID(subject.getURI(), suffix);
                         String value = getString(object);
-
-                        Compound.addCompoundID(id);
 
                         synchronized(newValues)
                         {
-                            if(!value.equals(oldValues.remove(id)))
-                                newValues.put(id, value);
+                            if(value.equals(oldValues.remove(id)))
+                            {
+                                keepValues.put(id, value);
+                            }
+                            else
+                            {
+                                String keep = keepValues.get(id);
+
+                                if(value.equals(keep))
+                                    return;
+                                else if(keep != null)
+                                    throw new IOException();
+
+                                String put = newValues.put(id, value);
+
+                                if(put != null && !value.equals(put))
+                                    throw new IOException();
+                            }
                         }
                     }
                 }.load(stream);
             }
         });
 
-        batch("delete from pubchem.descriptor_compound_" + table + " where compound = ?", oldValues.keySet());
-        batch("insert into pubchem.descriptor_compound_" + table + " (compound, " + field + ") values (?,?) "
-                + "on conflict (compound) do update set " + field + "=EXCLUDED." + field, newValues);
+        store("delete from pubchem.descriptor_compound_" + table + " where compound=? and " + field + " =? ",
+                oldValues);
+        store("insert into pubchem.descriptor_compound_" + table + " (compound," + field + ") values(?,?) "
+                + "on conflict(compound) do update set " + field + "=EXCLUDED." + field, newValues);
     }
 
 
@@ -290,7 +379,7 @@ class CompoundDescriptor extends Updater
     {
         System.out.println("load compound descriptors ...");
 
-        oldDescriptors = getIntSet("select compound from pubchem.descriptor_compound_bases");
+        loadBases();
 
         loadIntegerField("CovalentUnitCount", "_Covalent_Unit_Count", "covalent_unit_count");
         loadIntegerField("DefinedAtomStereoCount", "_Defined_Atom_Stereo_Count", "defined_atom_stereo_count");
@@ -312,9 +401,6 @@ class CompoundDescriptor extends Updater
         loadFloatField("TPSA", "_TPSA", "tpsa");
 
         loadXLogP3Field("XLogP3");
-
-        batch("delete from pubchem.descriptor_compound_bases where compound = ?", oldDescriptors);
-        oldDescriptors = null;
 
         loadStringField("MolecularFormula", "_Molecular_Formula", "molecular_formulas", "molecular_formula");
         loadStringField("isoSMILES", "_Isomeric_SMILES", "isomeric_smileses", "isomeric_smiles");
@@ -352,5 +438,27 @@ class CompoundDescriptor extends Updater
         checkType("IUPACName", "_Preferred_IUPAC_Name", "CHEMINF_000382");
 
         System.out.println();
+    }
+
+
+    static void finish() throws SQLException
+    {
+        store("delete from pubchem.descriptor_compound_bases where compound=?", oldDescriptors);
+    }
+
+
+    private static Integer getDescriptorID(String value, String suffix) throws IOException
+    {
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        if(!value.endsWith(suffix))
+            throw new IOException("unexpected IRI: " + value);
+
+        Integer id = Integer.parseInt(value.substring(prefixLength, value.length() - suffix.length()));
+
+        Compound.addCompoundID(id);
+
+        return id;
     }
 }

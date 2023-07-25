@@ -3,133 +3,146 @@ package cz.iocb.load.pubchem;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
-import org.eclipse.collections.api.tuple.primitive.IntIntPair;
-import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
-import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
+import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
-import cz.iocb.load.ontology.Ontology.Identifier;
 
 
 
 public class Taxonomy extends Updater
 {
-    private static IntHashSet usedTaxonomies;
-    private static IntHashSet newTaxonomies;
-    private static IntHashSet oldTaxonomies;
+    static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID";
+    static final int prefixLength = prefix.length();
+
+    private static final IntSet keepTaxonomies = new IntSet();
+    private static final IntSet newTaxonomies = new IntSet();
+    private static final IntSet oldTaxonomies = new IntSet();
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        usedTaxonomies = new IntHashSet();
-        newTaxonomies = new IntHashSet();
-        oldTaxonomies = getIntSet("select id from pubchem.taxonomy_bases");
+        load("select id from pubchem.taxonomy_bases", oldTaxonomies);
 
         new QueryResultProcessor(patternQuery("?taxonomy rdf:type sio:SIO_010000"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int taxonomyID = getIntID("taxonomy", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID");
+                Integer taxonomyID = getIntID("taxonomy", prefix);
 
-                if(!oldTaxonomies.remove(taxonomyID))
+                if(oldTaxonomies.remove(taxonomyID))
+                    keepTaxonomies.add(taxonomyID);
+                else
                     newTaxonomies.add(taxonomyID);
-
-                usedTaxonomies.add(taxonomyID);
             }
         }.load(model);
-
-        batch("insert into pubchem.taxonomy_bases(id) values (?)", newTaxonomies);
-        newTaxonomies.clear();
     }
 
 
     private static void loadLabels(Model model) throws IOException, SQLException
     {
+        IntStringMap keepLabels = new IntStringMap();
         IntStringMap newLabels = new IntStringMap();
-        IntStringMap oldLabels = getIntStringMap(
-                "select id, label from pubchem.taxonomy_bases where label is not null");
+        IntStringMap oldLabels = new IntStringMap();
+
+        load("select id,label from pubchem.taxonomy_bases where label is not null", oldLabels);
 
         new QueryResultProcessor(patternQuery("?taxonomy skos:prefLabel ?label"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int taxonomyID = getTaxonomyID(
-                        getIntID("taxonomy", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"));
+                Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"), true);
                 String label = getString("label");
 
-                if(!label.equals(oldLabels.remove(taxonomyID)))
-                    newLabels.put(taxonomyID, label);
+                if(label.equals(oldLabels.remove(taxonomyID)))
+                {
+                    keepLabels.put(taxonomyID, label);
+                }
+                else
+                {
+                    String keep = keepLabels.get(taxonomyID);
+
+                    if(label.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    String put = newLabels.put(taxonomyID, label);
+
+                    if(put != null && !label.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.taxonomy_bases set label = null where id = ?", oldLabels.keySet());
-        batch("insert into pubchem.taxonomy_bases(id, label) values (?,?) "
-                + "on conflict (id) do update set label=EXCLUDED.label", newLabels);
+        store("update pubchem.taxonomy_bases set label=null where id=? and label=?", oldLabels);
+        store("insert into pubchem.taxonomy_bases(id,label) values(?,?) "
+                + "on conflict(id) do update set label=EXCLUDED.label", newLabels);
     }
 
 
     private static void loadAlternatives(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newAlternatives = new IntStringPairSet();
-        IntStringPairSet oldAlternatives = getIntStringPairSet(
-                "select taxonomy, alternative from pubchem.taxonomy_alternatives");
+        IntStringSet newAlternatives = new IntStringSet();
+        IntStringSet oldAlternatives = new IntStringSet();
+
+        load("select taxonomy,alternative from pubchem.taxonomy_alternatives", oldAlternatives);
 
         new QueryResultProcessor(patternQuery("?taxonomy skos:altLabel ?alternative"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int taxonomyID = getTaxonomyID(
-                        getIntID("taxonomy", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"));
+                Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"));
                 String alternative = getString("alternative");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(taxonomyID, alternative);
+                Pair<Integer, String> pair = Pair.getPair(taxonomyID, alternative);
 
                 if(!oldAlternatives.remove(pair))
                     newAlternatives.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.taxonomy_alternatives where taxonomy = ? and alternative = ?", oldAlternatives);
-        batch("insert into pubchem.taxonomy_alternatives(taxonomy, alternative) values (?,?)", newAlternatives);
+        store("delete from pubchem.taxonomy_alternatives where taxonomy=? and alternative=?", oldAlternatives);
+        store("insert into pubchem.taxonomy_alternatives(taxonomy,alternative) values(?,?)", newAlternatives);
     }
 
 
     private static void loadReferences(Model model) throws IOException, SQLException
     {
         IntPairSet newReferences = new IntPairSet();
-        IntPairSet oldReferences = getIntPairSet("select taxonomy, reference from pubchem.taxonomy_references");
+        IntPairSet oldReferences = new IntPairSet();
+
+        load("select taxonomy,reference from pubchem.taxonomy_references", oldReferences);
 
         new QueryResultProcessor(patternQuery("?taxonomy cito:isDiscussedBy ?reference"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int taxonomyID = getTaxonomyID(
-                        getIntID("taxonomy", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"));
-                int referenceID = Reference
-                        .getReferenceID(getIntID("reference", "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"));
+                Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"));
+                Integer referenceID = Reference.getReferenceID(getIRI("reference"));
 
-                IntIntPair pair = PrimitiveTuples.pair(taxonomyID, referenceID);
+                Pair<Integer, Integer> pair = Pair.getPair(taxonomyID, referenceID);
 
                 if(!oldReferences.remove(pair))
                     newReferences.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.taxonomy_references where taxonomy = ? and reference = ?", oldReferences);
-        batch("insert into pubchem.taxonomy_references(taxonomy, reference) values (?,?)", newReferences);
+        store("delete from pubchem.taxonomy_references where taxonomy=? and reference=?", oldReferences);
+        store("insert into pubchem.taxonomy_references(taxonomy,reference) values(?,?)", newReferences);
     }
 
 
     private static void loadUniprotCloseMatches(Model model) throws IOException, SQLException
     {
-        IntHashSet newMatches = new IntHashSet();
-        IntHashSet oldMatches = getIntSet("select taxonomy from pubchem.taxonomy_uniprot_matches");
+        IntSet newMatches = new IntSet();
+        IntSet oldMatches = new IntSet();
+
+        load("select taxonomy from pubchem.taxonomy_uniprot_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery("?taxonomy skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'http://purl.uniprot.org/taxonomy/'))"))
@@ -137,11 +150,10 @@ public class Taxonomy extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int taxonomyID = getTaxonomyID(
-                        getIntID("taxonomy", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"));
-                int match = getIntID("match", "http://purl.uniprot.org/taxonomy/");
+                Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"));
+                Integer match = getIntID("match", "http://purl.uniprot.org/taxonomy/");
 
-                if(taxonomyID != match)
+                if(!taxonomyID.equals(match))
                     throw new IOException();
 
                 if(!oldMatches.remove(taxonomyID))
@@ -149,43 +161,45 @@ public class Taxonomy extends Updater
             }
         }.load(model);
 
-        batch("delete from pubchem.taxonomy_uniprot_matches where taxonomy = ?", oldMatches);
-        batch("insert into pubchem.taxonomy_uniprot_matches(taxonomy) values (?)", newMatches);
+        store("delete from pubchem.taxonomy_uniprot_matches where taxonomy=?", oldMatches);
+        store("insert into pubchem.taxonomy_uniprot_matches(taxonomy) values(?)", newMatches);
     }
 
 
     private static void loadMeshCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet();
-        IntStringPairSet oldMatches = getIntStringPairSet("select taxonomy, match from pubchem.taxonomy_mesh_matches");
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select taxonomy,match from pubchem.taxonomy_mesh_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?taxonomy skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
+                "?taxonomy skos:closeMatch ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int taxonomyID = getTaxonomyID(
-                        getIntID("taxonomy", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"));
+                Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"));
                 String match = getStringID("match", "http://id.nlm.nih.gov/mesh/");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(taxonomyID, match);
+                Pair<Integer, String> pair = Pair.getPair(taxonomyID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.taxonomy_mesh_matches where taxonomy = ? and match = ?", oldMatches);
-        batch("insert into pubchem.taxonomy_mesh_matches(taxonomy, match) values (?,?)", newMatches);
+        store("delete from pubchem.taxonomy_mesh_matches where taxonomy=? and match=?", oldMatches);
+        store("insert into pubchem.taxonomy_mesh_matches(taxonomy,match) values(?,?)", newMatches);
     }
 
 
     private static void loadCatalogueoflifeCloseMatches(Model model) throws IOException, SQLException
     {
-        IntStringPairSet newMatches = new IntStringPairSet();
-        IntStringPairSet oldMatches = getIntStringPairSet(
-                "select taxonomy, match from pubchem.taxonomy_catalogueoflife_matches");
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select taxonomy,match from pubchem.taxonomy_catalogueoflife_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery("?taxonomy skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'https://www.catalogueoflife.org/data/taxon/'))"))
@@ -193,26 +207,27 @@ public class Taxonomy extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int taxonomyID = getTaxonomyID(
-                        getIntID("taxonomy", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"));
+                Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"));
                 String match = getStringID("match", "https://www.catalogueoflife.org/data/taxon/");
 
-                IntObjectPair<String> pair = PrimitiveTuples.pair(taxonomyID, match);
+                Pair<Integer, String> pair = Pair.getPair(taxonomyID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.taxonomy_catalogueoflife_matches where taxonomy = ? and match = ?", oldMatches);
-        batch("insert into pubchem.taxonomy_catalogueoflife_matches(taxonomy, match) values (?,?)", newMatches);
+        store("delete from pubchem.taxonomy_catalogueoflife_matches where taxonomy=? and match=?", oldMatches);
+        store("insert into pubchem.taxonomy_catalogueoflife_matches(taxonomy,match) values(?,?)", newMatches);
     }
 
 
     private static void loadThesaurusCloseMatches(Model model) throws IOException, SQLException
     {
         IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = getIntPairSet("select taxonomy, match from pubchem.taxonomy_thesaurus_matches");
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select taxonomy,match from pubchem.taxonomy_thesaurus_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery("?taxonomy skos:closeMatch ?match. "
                 + "filter(strstarts(str(?match), 'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C'))"))
@@ -220,50 +235,50 @@ public class Taxonomy extends Updater
             @Override
             protected void parse() throws IOException
             {
-                int taxonomyID = getTaxonomyID(
-                        getIntID("taxonomy", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"));
-                Identifier match = Ontology.getId(getIRI("match"));
+                Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"));
+                Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
 
-                if(match.unit != Ontology.unitThesaurus)
+                if(match.getOne() != Ontology.unitThesaurus)
                     throw new IOException();
 
-                IntIntPair pair = PrimitiveTuples.pair(taxonomyID, match.id);
+                Pair<Integer, Integer> pair = Pair.getPair(taxonomyID, match.getTwo());
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.taxonomy_thesaurus_matches where taxonomy = ? and match = ?", oldMatches);
-        batch("insert into pubchem.taxonomy_thesaurus_matches(taxonomy, match) values (?,?)", newMatches);
+        store("delete from pubchem.taxonomy_thesaurus_matches where taxonomy=? and match=?", oldMatches);
+        store("insert into pubchem.taxonomy_thesaurus_matches(taxonomy,match) values(?,?)", newMatches);
     }
 
 
     private static void loadItisCloseMatches(Model model) throws IOException, SQLException
     {
         IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = getIntPairSet("select taxonomy, match from pubchem.taxonomy_itis_matches");
+        IntPairSet oldMatches = new IntPairSet();
 
-        new QueryResultProcessor(patternQuery("?taxonomy skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value='))"))
+        load("select taxonomy,match from pubchem.taxonomy_itis_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?taxonomy skos:closeMatch ?match. filter(strstarts(str(?match), "
+                + "'https://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value='))"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int taxonomyID = getTaxonomyID(
-                        getIntID("taxonomy", "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID"));
-                int match = getIntID("match",
+                Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"));
+                Integer match = getIntID("match",
                         "https://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value=");
 
-                IntIntPair pair = PrimitiveTuples.pair(taxonomyID, match);
+                Pair<Integer, Integer> pair = Pair.getPair(taxonomyID, match);
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.taxonomy_itis_matches where taxonomy = ? and match = ?", oldMatches);
-        batch("insert into pubchem.taxonomy_itis_matches(taxonomy, match) values (?,?)", newMatches);
+        store("delete from pubchem.taxonomy_itis_matches where taxonomy=? and match=?", oldMatches);
+        store("insert into pubchem.taxonomy_itis_matches(taxonomy,match) values(?,?)", newMatches);
     }
 
 
@@ -272,6 +287,7 @@ public class Taxonomy extends Updater
         System.out.println("load taxonomies ...");
 
         Model model = getModel("pubchem/RDF/taxonomy/pc_taxonomy.ttl.gz");
+
         check(model, "pubchem/taxonomy/check.sparql");
 
         loadBases(model);
@@ -293,29 +309,44 @@ public class Taxonomy extends Updater
     {
         System.out.println("finish taxonomies ...");
 
-        batch("delete from pubchem.taxonomy_bases where id = ?", oldTaxonomies);
-        batch("insert into pubchem.taxonomy_bases(id) values (?)" + " on conflict do nothing", newTaxonomies);
-
-        usedTaxonomies = null;
-        newTaxonomies = null;
-        oldTaxonomies = null;
+        store("delete from pubchem.taxonomy_bases where id=?", oldTaxonomies);
+        store("insert into pubchem.taxonomy_bases(id) values(?)", newTaxonomies);
 
         System.out.println();
     }
 
 
-    static int getTaxonomyID(int taxonomyID) throws IOException
+    static Integer getTaxonomyID(String value) throws IOException
     {
+        return getTaxonomyID(value, false);
+    }
+
+
+    static Integer getTaxonomyID(String value, boolean forceKeep) throws IOException
+    {
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        Integer taxonomyID = Integer.parseInt(value.substring(prefixLength));
+
         synchronized(newTaxonomies)
         {
-            if(!usedTaxonomies.contains(taxonomyID))
+            if(newTaxonomies.contains(taxonomyID))
+            {
+                if(forceKeep)
+                {
+                    newTaxonomies.remove(taxonomyID);
+                    keepTaxonomies.add(taxonomyID);
+                }
+            }
+            else if(!keepTaxonomies.contains(taxonomyID))
             {
                 System.out.println("    add missing taxonomy TAXID" + taxonomyID);
 
-                if(!oldTaxonomies.remove(taxonomyID))
+                if(!oldTaxonomies.remove(taxonomyID) && !forceKeep)
                     newTaxonomies.add(taxonomyID);
-
-                usedTaxonomies.add(taxonomyID);
+                else
+                    keepTaxonomies.add(taxonomyID);
             }
         }
 

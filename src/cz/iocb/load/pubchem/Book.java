@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.eclipse.collections.api.tuple.primitive.IntIntPair;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
-import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
+import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -14,218 +12,316 @@ import cz.iocb.load.common.Updater;
 
 public class Book extends Updater
 {
-    private static IntHashSet usedBooks;
-    private static IntHashSet newBooks;
-    private static IntHashSet oldBooks;
+    static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/book/NBK";
+    static final int prefixLength = prefix.length();
+
+    private static final IntSet keepBooks = new IntSet();
+    private static final IntSet newBooks = new IntSet();
+    private static final IntSet oldBooks = new IntSet();
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        usedBooks = new IntHashSet();
-        newBooks = new IntHashSet();
-        oldBooks = getIntSet("select id from pubchem.book_bases");
+        load("select id from pubchem.book_bases", oldBooks);
 
         new QueryResultProcessor(patternQuery("?book rdf:type fabio:Book"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int bookID = getIntID("book", "http://rdf.ncbi.nlm.nih.gov/pubchem/book/NBK");
+                Integer bookID = getIntID("book", prefix);
 
-                if(!oldBooks.remove(bookID))
+                if(oldBooks.remove(bookID))
+                    keepBooks.add(bookID);
+                else
                     newBooks.add(bookID);
-
-                usedBooks.add(bookID);
             }
         }.load(model);
-
-        batch("insert into pubchem.book_bases(id) values (?)", newBooks);
-        newBooks.clear();
     }
 
 
     private static void loadTitles(Model model) throws IOException, SQLException
     {
+        IntStringMap keepTitles = new IntStringMap();
         IntStringMap newTitles = new IntStringMap();
-        IntStringMap oldTitles = getIntStringMap("select id, title from pubchem.book_bases where title is not null");
+        IntStringMap oldTitles = new IntStringMap();
+
+        load("select id,title from pubchem.book_bases where title is not null", oldTitles);
 
         new QueryResultProcessor(patternQuery("?book dcterms:title ?title"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int bookID = getIntID("book", "http://rdf.ncbi.nlm.nih.gov/pubchem/book/NBK");
+                Integer bookID = getBookID(getIRI("book"), true);
                 String title = getString("title");
 
-                addBookID(bookID);
+                if(title.equals(oldTitles.remove(bookID)))
+                {
+                    keepTitles.put(bookID, title);
+                }
+                else
+                {
+                    String keep = keepTitles.get(bookID);
 
-                if(!title.equals(oldTitles.remove(bookID)))
-                    newTitles.put(bookID, title);
+                    if(title.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    String put = newTitles.put(bookID, title);
+
+                    if(put != null && !title.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.book_bases set title = null where id = ?", oldTitles.keySet());
-        batch("insert into pubchem.book_bases(id, title) values (?,?) "
-                + "on conflict (id) do update set title=EXCLUDED.title", newTitles);
+        store("update pubchem.book_bases set title=null where id=? and title=?", oldTitles);
+        store("insert into pubchem.book_bases(id,title) values(?,?) on conflict(id) do update set title=EXCLUDED.title",
+                newTitles);
     }
 
 
     private static void loadPublishers(Model model) throws IOException, SQLException
     {
+        IntStringMap keepPublishers = new IntStringMap();
         IntStringMap newPublishers = new IntStringMap();
-        IntStringMap oldPublishers = getIntStringMap(
-                "select id, publisher from pubchem.book_bases where publisher is not null");
+        IntStringMap oldPublishers = new IntStringMap();
+
+        load("select id,publisher from pubchem.book_bases where publisher is not null", oldPublishers);
 
         new QueryResultProcessor(patternQuery("?book dcterms:publisher ?publisher"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int bookID = getIntID("book", "http://rdf.ncbi.nlm.nih.gov/pubchem/book/NBK");
+                Integer bookID = getBookID(getIRI("book"), true);
                 String publisher = getString("publisher");
 
-                addBookID(bookID);
+                if(publisher.equals(oldPublishers.remove(bookID)))
+                {
+                    keepPublishers.put(bookID, publisher);
+                }
+                else
+                {
+                    String keep = keepPublishers.get(bookID);
 
-                if(!publisher.equals(oldPublishers.remove(bookID)))
-                    newPublishers.put(bookID, publisher);
+                    if(publisher.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    String put = newPublishers.put(bookID, publisher);
+
+                    if(put != null && !publisher.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.book_bases set publisher = null where id = ?", oldPublishers.keySet());
-        batch("insert into pubchem.book_bases(id, publisher) values (?,?) "
-                + "on conflict (id) do update set publisher=EXCLUDED.publisher", newPublishers);
+        store("update pubchem.book_bases set publisher=null where id=? and publisher=?", oldPublishers);
+        store("insert into pubchem.book_bases(id,publisher) values(?,?) "
+                + "on conflict(id) do update set publisher=EXCLUDED.publisher", newPublishers);
     }
 
 
     private static void loadLocations(Model model) throws IOException, SQLException
     {
+        IntStringMap keepLocations = new IntStringMap();
         IntStringMap newLocations = new IntStringMap();
-        IntStringMap oldLocations = getIntStringMap(
-                "select id, location from pubchem.book_bases where location is not null");
+        IntStringMap oldLocations = new IntStringMap();
+
+        load("select id,location from pubchem.book_bases where location is not null", oldLocations);
 
         new QueryResultProcessor(patternQuery("?book prism:location ?location"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int bookID = getIntID("book", "http://rdf.ncbi.nlm.nih.gov/pubchem/book/NBK");
+                Integer bookID = getBookID(getIRI("book"), true);
                 String location = getString("location");
 
-                addBookID(bookID);
+                if(location.equals(oldLocations.remove(bookID)))
+                {
+                    keepLocations.put(bookID, location);
+                }
+                else
+                {
+                    String keep = keepLocations.get(bookID);
 
-                if(!location.equals(oldLocations.remove(bookID)))
-                    newLocations.put(bookID, location);
+                    if(location.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    String put = newLocations.put(bookID, location);
+
+                    if(put != null && !location.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.book_bases set location = null where id = ?", oldLocations.keySet());
-        batch("insert into pubchem.book_bases(id, location) values (?,?) "
-                + "on conflict (id) do update set location=EXCLUDED.location", newLocations);
+        store("update pubchem.book_bases set location=null where id=? and location=?", oldLocations);
+        store("insert into pubchem.book_bases(id,location) values(?,?) "
+                + "on conflict(id) do update set location=EXCLUDED.location", newLocations);
     }
 
 
     private static void loadSubtitles(Model model) throws IOException, SQLException
     {
+        IntStringMap keepSubtitles = new IntStringMap();
         IntStringMap newSubtitles = new IntStringMap();
-        IntStringMap oldSubtitles = getIntStringMap(
-                "select id, subtitle from pubchem.book_bases where subtitle is not null");
+        IntStringMap oldSubtitles = new IntStringMap();
+
+        load("select id,subtitle from pubchem.book_bases where subtitle is not null", oldSubtitles);
 
         new QueryResultProcessor(patternQuery("?book dcterms:publisher ?subtitle"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int bookID = getIntID("book", "http://rdf.ncbi.nlm.nih.gov/pubchem/book/NBK");
+                Integer bookID = getBookID(getIRI("book"), true);
                 String subtitle = getString("subtitle");
 
-                addBookID(bookID);
+                if(subtitle.equals(oldSubtitles.remove(bookID)))
+                {
+                    keepSubtitles.put(bookID, subtitle);
+                }
+                else
+                {
+                    String keep = keepSubtitles.get(bookID);
 
-                if(!subtitle.equals(oldSubtitles.remove(bookID)))
-                    newSubtitles.put(bookID, subtitle);
+                    if(subtitle.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    String put = newSubtitles.put(bookID, subtitle);
+
+                    if(put != null && !subtitle.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.book_bases set subtitle = null where id = ?", oldSubtitles.keySet());
-        batch("insert into pubchem.book_bases(id, subtitle) values (?,?) "
-                + "on conflict (id) do update set subtitle=EXCLUDED.subtitle", newSubtitles);
+        store("update pubchem.book_bases set subtitle=null where id=? and subtitle=?", oldSubtitles);
+        store("insert into pubchem.book_bases(id,subtitle) values(?,?) "
+                + "on conflict(id) do update set subtitle=EXCLUDED.subtitle", newSubtitles);
     }
 
 
     private static void loadDates(Model model) throws IOException, SQLException
     {
+        IntStringMap keepDates = new IntStringMap();
         IntStringMap newDates = new IntStringMap();
-        IntStringMap oldDates = getIntStringMap("select id, date from pubchem.book_bases where date is not null");
+        IntStringMap oldDates = new IntStringMap();
+
+        load("select id,date from pubchem.book_bases where date is not null", oldDates);
 
         new QueryResultProcessor(patternQuery("?book dcterms:date ?date"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int bookID = getIntID("book", "http://rdf.ncbi.nlm.nih.gov/pubchem/book/NBK");
+                Integer bookID = getBookID(getIRI("book"), true);
                 String date = getString("date");
 
-                addBookID(bookID);
+                if(date.equals(oldDates.remove(bookID)))
+                {
+                    keepDates.put(bookID, date);
+                }
+                else
+                {
+                    String keep = keepDates.get(bookID);
 
-                if(!date.equals(oldDates.remove(bookID)))
-                    newDates.put(bookID, date);
+                    if(date.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    String put = newDates.put(bookID, date);
+
+                    if(put != null && !date.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.book_bases set date = null where id = ?", oldDates.keySet());
-        batch("insert into pubchem.book_bases(id, date) values (?,?) "
-                + "on conflict (id) do update set date=EXCLUDED.date", newDates);
+        store("update pubchem.book_bases set date=null where id=? and date=?", oldDates);
+        store("insert into pubchem.book_bases(id,date) values(?,?) on conflict(id) do update set date=EXCLUDED.date",
+                newDates);
     }
 
 
     private static void loadIsbns(Model model) throws IOException, SQLException
     {
+        IntStringMap keepIsbns = new IntStringMap();
         IntStringMap newIsbns = new IntStringMap();
-        IntStringMap oldIsbns = getIntStringMap("select id, isbn from pubchem.book_bases where isbn is not null");
+        IntStringMap oldIsbns = new IntStringMap();
+
+        load("select id,isbn from pubchem.book_bases where isbn is not null", oldIsbns);
 
         new QueryResultProcessor(patternQuery("?book prism:isbn ?isbn"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int bookID = getIntID("book", "http://rdf.ncbi.nlm.nih.gov/pubchem/book/NBK");
+                Integer bookID = getBookID(getIRI("book"), true);
                 String isbn = getString("isbn");
 
-                addBookID(bookID);
+                if(isbn.equals(oldIsbns.remove(bookID)))
+                {
+                    keepIsbns.put(bookID, isbn);
+                }
+                else
+                {
+                    String keep = keepIsbns.get(bookID);
 
-                if(!isbn.equals(oldIsbns.remove(bookID)))
-                    newIsbns.put(bookID, isbn);
+                    if(isbn.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    String put = newIsbns.put(bookID, isbn);
+
+                    if(put != null && !isbn.equals(put))
+                        throw new IOException();
+                }
             }
         }.load(model);
 
-        batch("update pubchem.book_bases set isbn = null where id = ?", oldIsbns.keySet());
-        batch("insert into pubchem.book_bases(id, isbn) values (?,?) "
-                + "on conflict (id) do update set isbn=EXCLUDED.isbn", newIsbns);
+        store("update pubchem.book_bases set isbn=null where id=? and isbn=?", oldIsbns);
+        store("insert into pubchem.book_bases(id,isbn) values(?,?) on conflict(id) do update set isbn=EXCLUDED.isbn",
+                newIsbns);
     }
 
 
     private static void loadAuthors(Model model) throws IOException, SQLException
     {
         IntPairSet newAuthors = new IntPairSet();
-        IntPairSet oldAuthors = getIntPairSet("select book, author from pubchem.book_authors");
+        IntPairSet oldAuthors = new IntPairSet();
+
+        load("select book,author from pubchem.book_authors", oldAuthors);
 
         new QueryResultProcessor(patternQuery("?book dcterms:creator ?author"))
         {
             @Override
             protected void parse() throws IOException
             {
-                int bookID = getIntID("book", "http://rdf.ncbi.nlm.nih.gov/pubchem/book/NBK");
-                int authorID = Author.getAuthorID(getStringID("author", "http://rdf.ncbi.nlm.nih.gov/pubchem/author/"));
-                IntIntPair pair = PrimitiveTuples.pair(bookID, authorID);
+                Integer bookID = getBookID(getIRI("book"));
+                Integer authorID = Author.getAuthorID(getIRI("author"));
 
-                addBookID(bookID);
+                Pair<Integer, Integer> pair = Pair.getPair(bookID, authorID);
 
                 if(!oldAuthors.remove(pair))
                     newAuthors.add(pair);
             }
         }.load(model);
 
-        batch("delete from pubchem.book_authors where book = ? and author = ?", oldAuthors);
-        batch("insert into pubchem.book_authors(book, author) values (?,?)", newAuthors);
+        store("delete from pubchem.book_authors where book=? and author=?", oldAuthors);
+        store("insert into pubchem.book_authors(book,author) values(?,?)", newAuthors);
     }
 
 
@@ -266,28 +362,47 @@ public class Book extends Updater
     {
         System.out.println("finish books ...");
 
-        batch("delete from pubchem.book_bases where id = ?", oldBooks);
-        batch("insert into pubchem.book_bases(id) values (?)" + " on conflict do nothing", newBooks);
-
-        usedBooks = null;
-        newBooks = null;
-        oldBooks = null;
+        store("delete from pubchem.book_bases where id=?", oldBooks);
+        store("insert into pubchem.book_bases(id) values(?)", newBooks);
 
         System.out.println();
     }
 
 
-    static void addBookID(int bookID)
+    static Integer getBookID(String value) throws IOException
     {
+        return getBookID(value, false);
+    }
+
+
+    static Integer getBookID(String value, boolean forceKeep) throws IOException
+    {
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        Integer bookID = Integer.parseInt(value.substring(prefixLength));
+
         synchronized(newBooks)
         {
-            if(usedBooks.add(bookID))
+            if(newBooks.contains(bookID))
+            {
+                if(forceKeep)
+                {
+                    newBooks.remove(bookID);
+                    keepBooks.add(bookID);
+                }
+            }
+            else if(!keepBooks.contains(bookID))
             {
                 System.out.println("    add missing book NBK" + bookID);
 
-                if(!oldBooks.remove(bookID))
+                if(!oldBooks.remove(bookID) && !forceKeep)
                     newBooks.add(bookID);
+                else
+                    keepBooks.add(bookID);
             }
         }
+
+        return bookID;
     }
 }

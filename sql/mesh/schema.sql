@@ -1,10 +1,7 @@
-create schema mesh;
-
-
 create table mesh.mesh_bases
 (
     id          varchar not null,
-    type_id     integer not null,
+    type_id     integer,
     primary key(id)
 );
 

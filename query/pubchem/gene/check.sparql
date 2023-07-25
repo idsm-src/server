@@ -30,7 +30,7 @@ select distinct ?iri where
     union
     {
         ?iri sio:SIO_000300 ?O .
-        filter(replace(str(?iri), "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/", "") != encode_for_uri(?O))
+        filter(replace(str(?iri), "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/", "") != ?O)
     }
     union
     {
