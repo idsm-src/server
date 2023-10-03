@@ -129,7 +129,7 @@ class Endpoint extends Updater
 
 
     @SuppressWarnings("serial")
-    private static class IntQuaterpletFloatMap extends SqlMap<EndpointID, Float>
+    private static class IntQuaterpletIntFloatPairMap extends SqlMap<EndpointID, Pair<Integer, Float>>
     {
         @Override
         public EndpointID getKey(ResultSet result) throws SQLException
@@ -138,19 +138,20 @@ class Endpoint extends Updater
         }
 
         @Override
-        public Float getValue(ResultSet result) throws SQLException
+        public Pair<Integer, Float> getValue(ResultSet result) throws SQLException
         {
-            return result.getFloat(5);
+            return Pair.getPair(result.getInt(5), result.getFloat(6));
         }
 
         @Override
-        public void set(PreparedStatement statement, EndpointID key, Float value) throws SQLException
+        public void set(PreparedStatement statement, EndpointID key, Pair<Integer, Float> value) throws SQLException
         {
             statement.setInt(1, key.substance);
             statement.setInt(2, key.bioassay);
             statement.setInt(3, key.measuregroup);
             statement.setInt(4, key.value);
-            statement.setFloat(5, value);
+            statement.setInt(5, value.getOne());
+            statement.setFloat(6, value.getTwo());
         }
     }
 
@@ -511,8 +512,8 @@ class Endpoint extends Updater
         IntQuaterpletIntMap newTypes = new IntQuaterpletIntMap();
         IntQuaterpletIntMap oldTypes = new IntQuaterpletIntMap();
 
-        load("select substance,bioassay,measuregroup,value,type_id from pubchem.endpoint_measurements "
-                + "where type_id is not null", oldTypes);
+        load("select substance,bioassay,measuregroup,value,endpoint_type_id from pubchem.endpoint_measurements "
+                + "where endpoint_type_id is not null", oldTypes);
 
         try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint_type.ttl.gz"))
         {
@@ -557,11 +558,11 @@ class Endpoint extends Updater
             }.load(stream);
         }
 
-        store("update pubchem.endpoint_measurements set type_id=null "
-                + "where substance=? and bioassay=? and measuregroup=? and value=? and type_id=?", oldTypes);
-        store("insert into pubchem.endpoint_measurements(substance,bioassay,measuregroup,value,type_id) "
+        store("update pubchem.endpoint_measurements set endpoint_type_id=null "
+                + "where substance=? and bioassay=? and measuregroup=? and value=? and endpoint_type_id=?", oldTypes);
+        store("insert into pubchem.endpoint_measurements(substance,bioassay,measuregroup,value,endpoint_type_id) "
                 + "values(?,?,?,?,?) "
-                + "on conflict(substance,bioassay,measuregroup,value) do update set type_id=EXCLUDED.type_id",
+                + "on conflict(substance,bioassay,measuregroup,value) do update set endpoint_type_id=EXCLUDED.endpoint_type_id",
                 newTypes);
     }
 
@@ -870,12 +871,12 @@ class Endpoint extends Updater
 
     private static void loadMeasuredValues() throws IOException, SQLException
     {
-        IntQuaterpletFloatMap keepMeasuredValues = new IntQuaterpletFloatMap();
-        IntQuaterpletFloatMap newMeasuredValues = new IntQuaterpletFloatMap();
-        IntQuaterpletFloatMap oldMeasuredValues = new IntQuaterpletFloatMap();
+        IntQuaterpletIntFloatPairMap keepMeasuredValues = new IntQuaterpletIntFloatPairMap();
+        IntQuaterpletIntFloatPairMap newMeasuredValues = new IntQuaterpletIntFloatPairMap();
+        IntQuaterpletIntFloatPairMap oldMeasuredValues = new IntQuaterpletIntFloatPairMap();
 
-        load("select substance,bioassay,measuregroup,value,measurement from pubchem.endpoint_measurements "
-                + "where measurement is not null", oldMeasuredValues);
+        load("select substance,bioassay,measuregroup,value,measurement_type_id,measurement from pubchem.endpoint_measurements "
+                + "where measurement_type_id is not null and measurement is not null", oldMeasuredValues);
 
         try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint_value.ttl.gz"))
         {
@@ -884,30 +885,32 @@ class Endpoint extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
-                        throw new IOException();
-
                     EndpointID endpoint = parseEndpoint(subject, true);
+                    Integer type = getIntID(predicate, "http://semanticscience.org/resource/SIO_");
                     Float measurement = getFloat(object);
+                    Pair<Integer, Float> pair = Pair.getPair(type, measurement);
+
+                    if(type != 300 && type != 738 && type != 734 && type != 735 && type != 733 && type != 699)
+                        throw new IOException();
 
                     oldMeasurements.remove(endpoint);
 
-                    if(measurement.equals(oldMeasuredValues.remove(endpoint)))
+                    if(pair.equals(oldMeasuredValues.remove(endpoint)))
                     {
-                        keepMeasuredValues.put(endpoint, measurement);
+                        keepMeasuredValues.put(endpoint, pair);
                     }
                     else
                     {
-                        Float keep = keepMeasuredValues.get(endpoint);
+                        Pair<Integer, Float> keep = keepMeasuredValues.get(endpoint);
 
-                        if(measurement.equals(keep))
+                        if(pair.equals(keep))
                             return;
                         else if(keep != null)
                             throw new IOException();
 
-                        Float put = newMeasuredValues.put(endpoint, measurement);
+                        Pair<Integer, Float> put = newMeasuredValues.put(endpoint, pair);
 
-                        if(put != null && !measurement.equals(put))
+                        if(put != null && !pair.equals(put))
                             throw new IOException();
                     }
                 }
@@ -915,12 +918,12 @@ class Endpoint extends Updater
         }
 
         store("update pubchem.endpoint_measurements set label=null "
-                + "where substance=? and bioassay=? and measuregroup=? and value=? and measurement=?",
+                + "where substance=? and bioassay=? and measuregroup=? and value=? and measurement_type_id=? and measurement=?",
                 oldMeasuredValues);
-        store("insert into pubchem.endpoint_measurements(substance,bioassay,measuregroup,value,measurement) "
-                + "values(?,?,?,?,?) "
-                + "on conflict(substance,bioassay,measuregroup,value) do update set measurement=EXCLUDED.measurement",
-                newMeasuredValues);
+        store("insert into pubchem.endpoint_measurements(substance,bioassay,measuregroup,value,measurement_type_id,measurement) "
+                + "values(?,?,?,?,?,?) "
+                + "on conflict(substance,bioassay,measuregroup,value) do update set measurement_type_id=EXCLUDED.measurement_type_id, "
+                + "measurement=EXCLUDED.measurement", newMeasuredValues);
     }
 
 

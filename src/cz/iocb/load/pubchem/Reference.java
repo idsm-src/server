@@ -503,6 +503,12 @@ class Reference extends Updater
                         Integer referenceID = Reference.getReferenceID(subject.getURI(), true);
                         String date = getString(object).replaceFirst("-0[45]:00$", "");
 
+                        // workaround
+                        if(date.length() == 4)
+                            date = date + "-01-01";
+                        else if(date.length() == 6)
+                            date = date.substring(0, 4) + "-" + date.substring(4) + "-01";
+
                         synchronized(newDates)
                         {
                             if(date.equals(oldDates.remove(referenceID)))
