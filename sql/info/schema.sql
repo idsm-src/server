@@ -16,6 +16,21 @@ create table info.idsm_counts
     primary key(id)
 );
 
+create table info.sachem_sources (
+    index       varchar not null,
+    name        varchar not null,
+    size        bigint not null,
+    timestamp   timestamptz,
+    primary key(index, name)
+);
+
+create table info.sachem_stats (
+    index       varchar not null,
+    version     varchar,
+    checkdate   timestamptz not null,
+    primary key(index)
+);
+
 --============================================================================--
 
 insert into info.idsm_sources values (0, 'PubChemRDF', 'https://pubchemdocs.ncbi.nlm.nih.gov/rdf', '');
