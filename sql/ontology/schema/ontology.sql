@@ -154,6 +154,7 @@ insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (9, 'http://purl.bioontology.org/ontology/NDFRT/N' , 45,  8, '^http://purl\.bioontology\.org/ontology/NDFRT/N[0-9]{10}$');
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (10, 'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C' , 53,  0, '^http://ncicb\.nci\.nih\.gov/xml/owl/EVS/Thesaurus\.owl#C[1-9][0-9]*$');
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (11, 'http://identifiers.org/taxonomy/' , 33,  0, '^http://identifiers\.org/taxonomy/([1-9][0-9]*|0)$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (12, 'http://purl.obolibrary.org/obo/CHEMONTID_' , 42,  7, '^http://purl\.obolibrary\.org/obo/CHEMONTID_[0-9]{7}$');
 
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (31, 'http://purl.obolibrary.org/obo/PR_A0A' , 38, -1, '^http://purl\.obolibrary\.org/obo/PR_A0A[0-9][A-Z0-9][0-9][A-Z0-9]{3}[0-9]$');
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (32, 'http://purl.obolibrary.org/obo/PR_' , 35, -1, '^http://purl\.obolibrary\.org/obo/PR_[A-Z][0-9][A-Z0-9]{3}[0-9]-(([1-2][0-9])|[1-9])$');

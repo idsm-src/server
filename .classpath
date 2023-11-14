@@ -22,5 +22,6 @@
 	<classpathentry kind="lib" path="lib/jackson-core-2.7.4.jar"/>
 	<classpathentry kind="lib" path="lib/jsonld-java-0.8.3.jar"/>
 	<classpathentry kind="lib" path="lib/commons-net-3.9.0.jar"/>
+	<classpathentry kind="lib" path="lib/gson-2.10.1.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

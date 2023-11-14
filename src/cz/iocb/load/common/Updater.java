@@ -142,6 +142,24 @@ public class Updater
 
 
     @SuppressWarnings("serial")
+    public static class IntFloatSet extends SqlSet<Pair<Integer, Float>>
+    {
+        @Override
+        public Pair<Integer, Float> get(ResultSet result) throws SQLException
+        {
+            return Pair.getPair(result.getInt(1), result.getFloat(2));
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Pair<Integer, Float> value) throws SQLException
+        {
+            statement.setInt(1, value.getOne());
+            statement.setFloat(2, value.getTwo());
+        }
+    }
+
+
+    @SuppressWarnings("serial")
     public static class StringPairSet extends SqlSet<Pair<String, String>>
     {
         @Override
@@ -174,6 +192,47 @@ public class Updater
             statement.setInt(1, value.getOne());
             statement.setInt(2, value.getTwo().getOne());
             statement.setInt(3, value.getTwo().getTwo());
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    public static class IntFloatIntPairSet extends SqlSet<Pair<Integer, Pair<Float, Integer>>>
+    {
+        @Override
+        public Pair<Integer, Pair<Float, Integer>> get(ResultSet result) throws SQLException
+        {
+            return Pair.getPair(result.getInt(1), Pair.getPair(result.getFloat(2), result.getInt(3)));
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Pair<Integer, Pair<Float, Integer>> value) throws SQLException
+        {
+            statement.setInt(1, value.getOne());
+            statement.setFloat(2, value.getTwo().getOne());
+            statement.setInt(3, value.getTwo().getTwo());
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+    public static class IntFloatPairIntPairSet extends SqlSet<Pair<Integer, Pair<Pair<Float, Float>, Integer>>>
+    {
+        @Override
+        public Pair<Integer, Pair<Pair<Float, Float>, Integer>> get(ResultSet result) throws SQLException
+        {
+            return Pair.getPair(result.getInt(1),
+                    Pair.getPair(Pair.getPair(result.getFloat(2), result.getFloat(3)), result.getInt(4)));
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Pair<Integer, Pair<Pair<Float, Float>, Integer>> value)
+                throws SQLException
+        {
+            statement.setInt(1, value.getOne());
+            statement.setFloat(2, value.getTwo().getOne().getOne());
+            statement.setFloat(3, value.getTwo().getOne().getTwo());
+            statement.setInt(4, value.getTwo().getTwo());
         }
     }
 
