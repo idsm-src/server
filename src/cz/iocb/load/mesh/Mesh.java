@@ -484,6 +484,7 @@ public class Mesh extends Updater
             setVersion("Medical Subject Headings (MESH)", version);
 
             model.close();
+            updateVersion();
             commit();
         }
         catch(Throwable e)

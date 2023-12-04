@@ -15,6 +15,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -929,6 +930,23 @@ public class Updater
             if(statement.executeUpdate() != 1)
                 System.err.printf("warning: version '%s' of source '%s' was not set\n", version, name);
         }
+    }
+
+
+    public static void updateVersion(Connection connection) throws SQLException
+    {
+        try(Statement statement = connection.createStatement())
+        {
+            if(statement.executeUpdate(
+                    "update info.idsm_version set date = greatest(date, date_trunc('second', now()))") != 1)
+                System.err.printf("warning: version was not set\n");
+        }
+    }
+
+
+    public static void updateVersion() throws SQLException
+    {
+        updateVersion(connection);
     }
 
 

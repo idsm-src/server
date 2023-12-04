@@ -666,6 +666,7 @@ public class ChEBI extends Updater
             setCount("ChEBI Entities", newEntities.size() + keepEntities.size());
 
             model.close();
+            updateVersion();
             commit();
         }
         catch(Throwable e)

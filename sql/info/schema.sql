@@ -16,6 +16,11 @@ create table info.idsm_counts
     primary key(id)
 );
 
+create table info.idsm_version
+(
+    date        timestamptz not null
+);
+
 create table info.sachem_sources (
     index       varchar not null,
     name        varchar not null,
@@ -32,6 +37,8 @@ create table info.sachem_stats (
 );
 
 --============================================================================--
+
+insert into info.idsm_version(date) values (now());
 
 insert into info.idsm_sources values (0, 'PubChemRDF', 'https://pubchemdocs.ncbi.nlm.nih.gov/rdf', '');
 insert into info.idsm_sources values (1, 'ChEMBL', 'https://www.ebi.ac.uk/chembl/', '');

@@ -161,6 +161,7 @@ public class WikidataCompoundUpdater extends Updater
                 statement.executeUpdate();
             }
 
+            updateVersion();
             commit();
         }
         catch(Throwable e)

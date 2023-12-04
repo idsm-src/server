@@ -1200,6 +1200,7 @@ public class Ontology extends Updater
                 setVersion(source.getName(), source.getVersion(model));
 
             model.close();
+            updateVersion();
             commit();
         }
         catch(Throwable e)

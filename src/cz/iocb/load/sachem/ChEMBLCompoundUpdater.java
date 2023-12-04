@@ -13,6 +13,7 @@ import java.util.LinkedList;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
+import cz.iocb.load.common.Updater;
 
 
 
@@ -184,6 +185,7 @@ public class ChEMBLCompoundUpdater
                     statement.executeUpdate();
                 }
 
+                Updater.updateVersion(connection);
                 connection.commit();
             }
             catch(Throwable e)

@@ -123,6 +123,7 @@ public class PubChemRDF extends Updater
 
             setVersion("PubChemRDF", version);
 
+            updateVersion();
             commit();
         }
         catch(Throwable e)

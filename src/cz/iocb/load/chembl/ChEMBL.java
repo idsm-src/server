@@ -47,6 +47,7 @@ public class ChEMBL extends Updater
 
             connection.createStatement().execute("alter schema chembl_tmp rename to chembl");
 
+            updateVersion();
             commit();
         }
         catch(Throwable e)

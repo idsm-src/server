@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import cz.iocb.load.common.Updater;
 
 
 
@@ -182,6 +183,7 @@ public class DrugbankCompoundUpdater
                     statement.executeUpdate();
                 }
 
+                Updater.updateVersion(connection);
                 connection.commit();
             }
             catch(Throwable e)
