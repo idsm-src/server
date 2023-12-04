@@ -408,6 +408,8 @@ public class Ontology extends Updater
         sources.add(new StaticSource("SemWeb Vocab Status Ontology", "2011-12-12"));
         sources.add(new StaticSource("Vocabulary of Interlinked Datasets (VoID)", "2011-03-06"));
         sources.add(new StaticSource("Situation Ontology", "1.1"));
+        sources.add(new OwlSource("Mass Spectrometry Ontology (MS)", "http://purl.obolibrary.org/obo/ms.owl"));
+        sources.add(new OwlSource("ClassyFire Ontology", "http://purl.obolibrary.org/obo/ChemOnt.owl"));
         sources.add(new StaticSource("OWL 2 Schema (OWL 2)", "2009-10-16"));
         sources.add(new StaticSource("RDF Schema (RDFS)", "1.1"));
         sources.add(new StaticSource("RDF Vocabulary Terms", "1.1"));

@@ -223,6 +223,9 @@ http://vocab.deri.ie/void.ttl
 # Situation Ontology
 http://www.ontologydesignpatterns.org/cp/owl/situation.owl
 
+# Mass Spectrometry Ontology (MS)
+https://purl.obolibrary.org/obo/ms.owl
+
 # OWL 2 Schema (OWL 2)
 http://www.w3.org/2002/07/owl.ttl
 
@@ -421,6 +424,7 @@ cp "$base/data/ontology/ero.owl" "$output"
 cp "$base/data/ontology/base.owl" "$output"
 cp "$base/data/ontology/pubchem-missing.ttl" "$output"
 cp "$base/data/ontology/xsd.owl" "$output"
+cp "$base/data/ontology/ChemOnt_2_1.owl" "$output"
 
 
 declare -A downloaded
