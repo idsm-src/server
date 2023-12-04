@@ -37,6 +37,7 @@ public class WikidataCompoundUpdater extends Updater
 
             String isomeric = "SELECT?entity?smiles WHERE{?entity<http://www.wikidata.org/prop/direct/P2017>?smiles}";
             String canonical = "SELECT?entity?smiles WHERE{?entity<http://www.wikidata.org/prop/direct/P233>?smiles}";
+            String inchi = "SELECT?entity?inchi WHERE{?entity<http://www.wikidata.org/prop/direct/P234>?inchi}";
 
             Path isomericPath = Path.of(path, "/isomeric.smiles");
             URL isomericDownloadUrl = new URL(httpServer + URLEncoder.encode(isomeric, Charset.defaultCharset()));
@@ -49,6 +50,12 @@ public class WikidataCompoundUpdater extends Updater
             HttpURLConnection canonicalDownloadConnection = (HttpURLConnection) canonicalDownloadUrl.openConnection();
             canonicalDownloadConnection.addRequestProperty("Accept", "text/tab-separated-values");
             Files.copy(canonicalDownloadConnection.getInputStream(), canonicalPath);
+
+            Path inchiPath = Path.of(path, "/inchies");
+            URL inchiDownloadUrl = new URL(httpServer + URLEncoder.encode(inchi, Charset.defaultCharset()));
+            HttpURLConnection inchiDownloadConnection = (HttpURLConnection) inchiDownloadUrl.openConnection();
+            inchiDownloadConnection.addRequestProperty("Accept", "text/tab-separated-values");
+            Files.copy(inchiDownloadConnection.getInputStream(), inchiPath);
 
 
             IntStringSet oldIsomericSmiles = new IntStringSet();
@@ -101,6 +108,32 @@ public class WikidataCompoundUpdater extends Updater
 
             store("delete from wikidata.canonical_smiles where compound=? and smiles=?", oldCanonicalSmiles);
             store("insert into wikidata.canonical_smiles(compound,smiles) values(?,?)", newCanonicalSmiles);
+
+
+            IntStringSet oldInchies = new IntStringSet();
+            IntStringSet newInchies = new IntStringSet();
+
+            load("select compound, inchi from wikidata.inchies", oldInchies);
+
+            try(BufferedReader reader = new BufferedReader(new FileReader(inchiPath.toFile())))
+            {
+                String line = reader.readLine();
+
+                while((line = reader.readLine()) != null)
+                {
+                    String[] items = line.split("\t", 2);
+                    Integer id = Integer
+                            .valueOf(items[0].replaceFirst("^<http://www\\.wikidata\\.org/entity/Q([0-9]+)>$", "$1"));
+                    String value = items[1].replaceFirst("^\"(.*)\"$", "$1");
+                    Pair<Integer, String> pair = Pair.getPair(id, value);
+
+                    if(!oldInchies.remove(pair))
+                        newInchies.add(pair);
+                }
+            }
+
+            store("delete from wikidata.inchies where compound=? and inchi=?", oldInchies);
+            store("insert into wikidata.inchies(compound,inchi) values(?,?)", newInchies);
 
 
             try(Statement statement = connection.createStatement())
