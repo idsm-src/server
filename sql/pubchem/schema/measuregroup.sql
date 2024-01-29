@@ -51,3 +51,12 @@ create table pubchem.measuregroup_cells
     cell            integer not null,
     primary key(bioassay, measuregroup, cell)
 );
+
+
+create table pubchem.measuregroup_anatomies
+(
+    bioassay        integer not null,
+    measuregroup    integer not null,
+    anatomy         integer not null,
+    primary key(bioassay, measuregroup, anatomy)
+);

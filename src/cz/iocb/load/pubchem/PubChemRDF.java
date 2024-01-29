@@ -66,7 +66,6 @@ public class PubChemRDF extends Updater
             Journal.load();
             Organization.load();
             Grant.load(); // require Organization
-            Patent.load(); // require Substance
 
             Disease.load();
             Taxonomy.load();
@@ -77,10 +76,11 @@ public class PubChemRDF extends Updater
             Pathway.load(); // require Compound, Gene, Protein, Source, Taxonomy
 
             Cooccurrence.load(); // require Compound, Disease, Gene, Protein
+            Patent.load(); // require Anatomy, Compound, Gene, Protein, Substance, Taxonomy
             Reference.load(); // require Author, Book, Compound, Disease, Journal, Gene, Grant, Organization, Protein
 
             Bioassay.load(); // require Patent, Source
-            Measuregroup.load(); // require Bioassay, Cell, Gene, Protein, Source, Taxonomy
+            Measuregroup.load(); // require Anatomy, Bioassay, Cell, Gene, Protein, Source, Taxonomy
             Endpoint.load(); // require Bioassay, Measuregroup, Substance
 
             CompoundDescriptor.load(); // require Compound

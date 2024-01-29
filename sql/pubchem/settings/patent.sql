@@ -45,6 +45,36 @@ grant select on pubchem.patent_substances to sparql;
 
 --------------------------------------------------------------------------------
 
+create index patent_compounds__patent on pubchem.patent_compounds(patent);
+create index patent_compounds__compound on pubchem.patent_compounds(compound);
+grant select on pubchem.patent_compounds to sparql;
+
+--------------------------------------------------------------------------------
+
+create index patent_genes__patent on pubchem.patent_genes(patent);
+create index patent_genes__gene on pubchem.patent_genes(gene);
+grant select on pubchem.patent_genes to sparql;
+
+--------------------------------------------------------------------------------
+
+create index patent_proteins__patent on pubchem.patent_proteins(patent);
+create index patent_proteins__protein on pubchem.patent_proteins(protein);
+grant select on pubchem.patent_proteins to sparql;
+
+--------------------------------------------------------------------------------
+
+create index patent_taxonomies__patent on pubchem.patent_taxonomies(patent);
+create index patent_taxonomies__taxonomy on pubchem.patent_taxonomies(taxonomy);
+grant select on pubchem.patent_taxonomies to sparql;
+
+--------------------------------------------------------------------------------
+
+create index patent_anatomies__patent on pubchem.patent_anatomies(patent);
+create index patent_anatomies__anatomy on pubchem.patent_anatomies(anatomy);
+grant select on pubchem.patent_anatomies to sparql;
+
+--------------------------------------------------------------------------------
+
 create index patent_inventors__patent on pubchem.patent_inventors(patent);
 create index patent_inventors__inventor on pubchem.patent_inventors(inventor);
 grant select on pubchem.patent_inventors to sparql;

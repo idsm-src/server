@@ -37,3 +37,10 @@ create index measuregroup_cells__bioassay on pubchem.measuregroup_cells(bioassay
 create index measuregroup_cells__bioassay_measuregroup on pubchem.measuregroup_cells(bioassay, measuregroup);
 create index measuregroup_cells__cell on pubchem.measuregroup_cells(cell);
 grant select on pubchem.measuregroup_cells to sparql;
+
+--------------------------------------------------------------------------------
+
+create index measuregroup_anatomies__bioassay on pubchem.measuregroup_anatomies(bioassay);
+create index measuregroup_anatomies__bioassay_measuregroup on pubchem.measuregroup_anatomies(bioassay, measuregroup);
+create index measuregroup_anatomies__anatomy on pubchem.measuregroup_anatomies(anatomy);
+grant select on pubchem.measuregroup_anatomies to sparql;

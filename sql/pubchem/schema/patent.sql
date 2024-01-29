@@ -61,6 +61,46 @@ create table pubchem.patent_substances
 );
 
 
+create table pubchem.patent_compounds
+(
+    patent              integer not null,
+    compound            integer not null,
+    primary key(patent, compound)
+);
+
+
+create table pubchem.patent_genes
+(
+    patent              integer not null,
+    gene                integer not null,
+    primary key(patent, gene)
+);
+
+
+create table pubchem.patent_proteins
+(
+    patent              integer not null,
+    protein             integer not null,
+    primary key(patent, protein)
+);
+
+
+create table pubchem.patent_taxonomies
+(
+    patent              integer not null,
+    taxonomy            integer not null,
+    primary key(patent, taxonomy)
+);
+
+
+create table pubchem.patent_anatomies
+(
+    patent              integer not null,
+    anatomy             integer not null,
+    primary key(patent, anatomy)
+);
+
+
 create table pubchem.patent_inventors
 (
     patent              integer not null,

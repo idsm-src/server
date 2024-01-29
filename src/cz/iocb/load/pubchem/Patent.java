@@ -682,13 +682,38 @@ class Patent extends Updater
     }
 
 
-    private static void loadSubstances() throws IOException, SQLException
+    private static void loadReferences() throws IOException, SQLException
     {
         IntPairSet keepSubstances = new IntPairSet();
         IntPairSet newSubstances = new IntPairSet();
         IntPairSet oldSubstances = new IntPairSet();
 
+        IntPairSet keepCompounds = new IntPairSet();
+        IntPairSet newCompounds = new IntPairSet();
+        IntPairSet oldCompounds = new IntPairSet();
+
+        IntPairSet keepGenes = new IntPairSet();
+        IntPairSet newGenes = new IntPairSet();
+        IntPairSet oldGenes = new IntPairSet();
+
+        IntPairSet keepProteins = new IntPairSet();
+        IntPairSet newProteins = new IntPairSet();
+        IntPairSet oldProteins = new IntPairSet();
+
+        IntPairSet keepTaxonomies = new IntPairSet();
+        IntPairSet newTaxonomies = new IntPairSet();
+        IntPairSet oldTaxonomies = new IntPairSet();
+
+        IntPairSet keepAnatomies = new IntPairSet();
+        IntPairSet newAnatomies = new IntPairSet();
+        IntPairSet oldAnatomies = new IntPairSet();
+
         load("select patent,substance from pubchem.patent_substances", oldSubstances);
+        load("select patent,compound from pubchem.patent_compounds", oldCompounds);
+        load("select patent,gene from pubchem.patent_genes", oldGenes);
+        load("select patent,protein from pubchem.patent_proteins", oldProteins);
+        load("select patent,taxonomy from pubchem.patent_taxonomies", oldTaxonomies);
+        load("select patent,anatomy from pubchem.patent_anatomies", oldAnatomies);
 
         processFiles("pubchem/RDF/patent", "pc_patent2isdiscussedby_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -701,17 +726,99 @@ class Patent extends Updater
                         if(!predicate.getURI().equals("http://purl.org/spar/cito/isDiscussedBy"))
                             throw new IOException();
 
-                        Integer patentID = getPatentID(object.getURI());
-                        Integer substanceID = Substance.getSubstanceID(subject.getURI());
-
-                        Pair<Integer, Integer> pair = Pair.getPair(patentID, substanceID);
-
-                        synchronized(newSubstances)
+                        if(subject.getURI().startsWith(Substance.prefix))
                         {
-                            if(oldSubstances.remove(pair))
-                                keepSubstances.add(pair);
-                            else if(!keepSubstances.contains(pair))
-                                newSubstances.add(pair);
+                            Integer patentID = getPatentID(object.getURI());
+                            Integer substanceID = Substance.getSubstanceID(subject.getURI());
+
+                            Pair<Integer, Integer> pair = Pair.getPair(patentID, substanceID);
+
+                            synchronized(newSubstances)
+                            {
+                                if(oldSubstances.remove(pair))
+                                    keepSubstances.add(pair);
+                                else if(!keepSubstances.contains(pair))
+                                    newSubstances.add(pair);
+                            }
+                        }
+                        else if(subject.getURI().startsWith(Compound.prefix))
+                        {
+                            Integer patentID = getPatentID(object.getURI());
+                            Integer compoundID = Compound.getCompoundID(subject.getURI());
+
+                            Pair<Integer, Integer> pair = Pair.getPair(patentID, compoundID);
+
+                            synchronized(newCompounds)
+                            {
+                                if(oldCompounds.remove(pair))
+                                    keepCompounds.add(pair);
+                                else if(!keepCompounds.contains(pair))
+                                    newCompounds.add(pair);
+                            }
+                        }
+                        else if(subject.getURI().startsWith(Gene.prefix))
+                        {
+                            Integer patentID = getPatentID(object.getURI());
+                            Integer geneID = Gene.getGeneID(subject.getURI());
+
+                            Pair<Integer, Integer> pair = Pair.getPair(patentID, geneID);
+
+                            synchronized(newGenes)
+                            {
+                                if(oldGenes.remove(pair))
+                                    keepGenes.add(pair);
+                                else if(!keepGenes.contains(pair))
+                                    newGenes.add(pair);
+                            }
+                        }
+                        else if(subject.getURI().startsWith(Protein.prefix))
+                        {
+                            Integer patentID = getPatentID(object.getURI());
+                            Integer proteinID = Protein.getProteinID(subject.getURI());
+
+                            Pair<Integer, Integer> pair = Pair.getPair(patentID, proteinID);
+
+                            synchronized(newProteins)
+                            {
+                                if(oldProteins.remove(pair))
+                                    keepProteins.add(pair);
+                                else if(!keepProteins.contains(pair))
+                                    newProteins.add(pair);
+                            }
+                        }
+                        else if(subject.getURI().startsWith(Taxonomy.prefix))
+                        {
+                            Integer patentID = getPatentID(object.getURI());
+                            Integer taxonomyID = Taxonomy.getTaxonomyID(subject.getURI());
+
+                            Pair<Integer, Integer> pair = Pair.getPair(patentID, taxonomyID);
+
+                            synchronized(newTaxonomies)
+                            {
+                                if(oldTaxonomies.remove(pair))
+                                    keepTaxonomies.add(pair);
+                                else if(!keepTaxonomies.contains(pair))
+                                    newTaxonomies.add(pair);
+                            }
+                        }
+                        else if(subject.getURI().startsWith(Anatomy.prefix))
+                        {
+                            Integer patentID = getPatentID(object.getURI());
+                            Integer anatomyID = Anatomy.getAnatomyID(subject.getURI());
+
+                            Pair<Integer, Integer> pair = Pair.getPair(patentID, anatomyID);
+
+                            synchronized(newAnatomies)
+                            {
+                                if(oldAnatomies.remove(pair))
+                                    keepAnatomies.add(pair);
+                                else if(!keepAnatomies.contains(pair))
+                                    newAnatomies.add(pair);
+                            }
+                        }
+                        else
+                        {
+                            throw new IOException();
                         }
                     }
                 }.load(stream);
@@ -720,6 +827,21 @@ class Patent extends Updater
 
         store("delete from pubchem.patent_substances where patent=? and substance=?", oldSubstances);
         store("insert into pubchem.patent_substances(patent,substance) values(?,?)", newSubstances);
+
+        store("delete from pubchem.patent_compounds where patent=? and compound=?", oldCompounds);
+        store("insert into pubchem.patent_compounds(patent,compound) values(?,?)", newCompounds);
+
+        store("delete from pubchem.patent_genes where patent=? and gene=?", oldGenes);
+        store("insert into pubchem.patent_genes(patent,gene) values(?,?)", newGenes);
+
+        store("delete from pubchem.patent_proteins where patent=? and protein=?", oldProteins);
+        store("insert into pubchem.patent_proteins(patent,protein) values(?,?)", newProteins);
+
+        store("delete from pubchem.patent_taxonomies where patent=? and taxonomy=?", oldTaxonomies);
+        store("insert into pubchem.patent_taxonomies(patent,taxonomy) values(?,?)", newTaxonomies);
+
+        store("delete from pubchem.patent_anatomies where patent=? and anatomy=?", oldAnatomies);
+        store("insert into pubchem.patent_anatomies(patent,anatomy) values(?,?)", newAnatomies);
     }
 
 
@@ -893,7 +1015,7 @@ class Patent extends Updater
         loadCpcInventiveClassifications();
         loadIpcAdditionalClassifications();
         loadIpcInventiveClassifications();
-        loadSubstances();
+        loadReferences();
         loadInventors();
         loadApplicants();
         loadFormattedNames();

@@ -172,10 +172,15 @@ class Measuregroup extends Updater
         IntPairIntSet newCells = new IntPairIntSet();
         IntPairIntSet oldCells = new IntPairIntSet();
 
+        IntPairIntSet keepAnatomies = new IntPairIntSet();
+        IntPairIntSet newAnatomies = new IntPairIntSet();
+        IntPairIntSet oldAnatomies = new IntPairIntSet();
+
         load("select bioassay,measuregroup,protein from pubchem.measuregroup_proteins", oldProteins);
         load("select bioassay,measuregroup,gene from pubchem.measuregroup_genes", oldGenes);
         load("select bioassay,measuregroup,taxonomy from pubchem.measuregroup_taxonomies", oldTaxonomies);
         load("select bioassay,measuregroup,cell from pubchem.measuregroup_cells", oldCells);
+        load("select bioassay,measuregroup,anatomy from pubchem.measuregroup_anatomies", oldAnatomies);
 
         try(InputStream stream = getTtlStream("pubchem/RDF/measuregroup/pc_measuregroup2protein.ttl.gz"))
         {
@@ -235,6 +240,18 @@ class Measuregroup extends Updater
                         else if(!keepCells.contains(pair))
                             newCells.add(pair);
                     }
+                    else if(object.getURI().startsWith(Anatomy.prefix))
+                    {
+                        Integer anatomyID = Anatomy.getAnatomyID(object.getURI());
+                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject, false);
+
+                        Pair<Pair<Integer, Integer>, Integer> pair = Pair.getPair(measuregourp, anatomyID);
+
+                        if(oldAnatomies.remove(pair))
+                            keepAnatomies.add(pair);
+                        else if(!keepAnatomies.contains(pair))
+                            newAnatomies.add(pair);
+                    }
                     else
                     {
                         throw new IOException();
@@ -257,6 +274,11 @@ class Measuregroup extends Updater
 
             store("delete from pubchem.measuregroup_cells where bioassay=? and measuregroup=? and cell=?", oldCells);
             store("insert into pubchem.measuregroup_cells(bioassay,measuregroup,cell) values(?,?,?)", newCells);
+
+            store("delete from pubchem.measuregroup_anatomies where bioassay=? and measuregroup=? and anatomy=?",
+                    oldAnatomies);
+            store("insert into pubchem.measuregroup_anatomies(bioassay,measuregroup,anatomy) values(?,?,?)",
+                    newAnatomies);
         }
     }
 
