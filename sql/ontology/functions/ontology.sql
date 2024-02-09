@@ -100,18 +100,9 @@ $$
 immutable parallel safe;
 
 
-create function ontology.ontology_resource_inv1(iri in varchar) returns smallint language plpgsql as
+create function ontology.ontology_resource_inv1(iri in varchar) returns smallint language sql as
 $$
-  declare unit smallint;
-  begin
-    select unit_id into unit from ontology.resource_categories__reftable where iri ~ pattern;
-
-    if not found then
-      return 0;
-    end if;
-
-    return unit;
-  end;
+  select coalesce((select unit_id from ontology.resource_categories__reftable where starts_with(iri, prefix) and iri ~ pattern limit 1), 0::smallint);
 $$
 immutable parallel safe;
 
@@ -123,7 +114,7 @@ $$
   declare val char;
   declare big bigint;
   begin
-    select unit_id, value_offset into rec from ontology.resource_categories__reftable where iri ~ pattern;
+    select unit_id, value_offset into rec from ontology.resource_categories__reftable where starts_with(iri, prefix) and iri ~ pattern limit 1;
 
     if not found then
       return (select resource_id from ontology.resources__reftable tab where tab.iri = ontology_resource_inv2.iri);

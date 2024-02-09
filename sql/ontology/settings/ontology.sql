@@ -69,6 +69,7 @@ grant select on ontology.maxcardinality_restrictions to sparql;
 
 --------------------------------------------------------------------------------
 
+create index resources__reftable__iri on ontology.resources__reftable using hash (iri);
 grant select on ontology.resources__reftable to sparql;
 
 --------------------------------------------------------------------------------
