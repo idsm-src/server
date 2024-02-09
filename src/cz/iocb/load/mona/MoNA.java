@@ -321,8 +321,8 @@ public class MoNA extends Updater
 
             load("select accession,id from mona.compound_bases", oldCompounds);
             load("select id,created::varchar from mona.compound_bases where created is not null", oldCreatedDates);
-            load("select id,curated::varchar from mona.compound_bases where created is not null", oldCuratedDates);
-            load("select id,updated::varchar from mona.compound_bases where created is not null", oldUpdatedDates);
+            load("select id,curated::varchar from mona.compound_bases where curated is not null", oldCuratedDates);
+            load("select id,updated::varchar from mona.compound_bases where updated is not null", oldUpdatedDates);
             load("select id,spectrum::varchar from mona.compound_bases where spectrum is not null", oldSpectra);
             load("select id,splash from mona.compound_bases where splash is not null", oldSplashes);
             load("select id,ionization_mode from mona.compound_bases where ionization_mode is not null",
