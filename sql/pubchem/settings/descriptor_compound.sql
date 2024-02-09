@@ -42,6 +42,7 @@ grant select on pubchem.descriptor_compound_iupac_inchis to sparql;
 --------------------------------------------------------------------------------
 
 create index descriptor_compound_preferred_iupac_names__iupac_name on pubchem.descriptor_compound_preferred_iupac_names using hash (preferred_iupac_name);
+create index descriptor_compound_preferred_iupac_names__iupac_name__lower on pubchem.descriptor_compound_preferred_iupac_names using hash (lower(preferred_iupac_name));
 create index descriptor_compound_preferred_iupac_names__iupac_name__english on pubchem.descriptor_compound_preferred_iupac_names using gin (to_tsvector('english', preferred_iupac_name));
 create index descriptor_compound_preferred_iupac_names__iupac_name__simple on pubchem.descriptor_compound_preferred_iupac_names using gin (to_tsvector('simple', preferred_iupac_name));
 grant select on pubchem.descriptor_compound_preferred_iupac_names to sparql;
