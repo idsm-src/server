@@ -1,4 +1,6 @@
 grant select on pubchem.source_bases to sparql;
+create index source_bases__homepage on pubchem.source_bases using hash (homepage);
+create index source_bases__license on pubchem.source_bases using hash (license);
 
 --------------------------------------------------------------------------------
 

@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
+import org.apache.jena.rdf.model.Model;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -824,6 +826,30 @@ class Patent extends Updater
                 }.load(stream);
             }
         });
+
+
+        // additional references
+        Model model = getModel("pubchem/RDF/anatomy/pc_anatomy.ttl.gz");
+
+        new QueryResultProcessor(patternQuery("?anatomy cito:isDiscussedBy ?patent"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer anatomyID = Anatomy.getAnatomyID(getIRI("anatomy"));
+                Integer patentID = getPatentID(getIRI("patent"));
+
+                Pair<Integer, Integer> pair = Pair.getPair(patentID, anatomyID);
+
+                if(oldAnatomies.remove(pair))
+                    keepAnatomies.add(pair);
+                else if(!keepAnatomies.contains(pair))
+                    newAnatomies.add(pair);
+            }
+        }.load(model);
+
+        model.close();
+
 
         store("delete from pubchem.patent_substances where patent=? and substance=?", oldSubstances);
         store("insert into pubchem.patent_substances(patent,substance) values(?,?)", newSubstances);

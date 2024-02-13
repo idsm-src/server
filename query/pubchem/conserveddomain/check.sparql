@@ -5,6 +5,7 @@ select distinct ?iri where
         filter(?iri != dcterms:abstract)
         filter(?iri != dcterms:title)
         filter(?iri != rdf:type)
+        filter(?iri != cito:isDiscussedBy)
     }
     union
     {

@@ -722,6 +722,34 @@ class Protein extends Updater
     }
 
 
+    private static void loadGlycanMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select protein,match from pubchem.protein_glycan_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'http://glygen.org/glycan/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                String match = getStringID("match", "http://glygen.org/glycan/");
+
+                Pair<Integer, String> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_glycan_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_glycan_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
     private static void loadGlycosmosCloseMatches(Model model) throws IOException, SQLException
     {
         IntStringSet newMatches = new IntStringSet();
@@ -890,6 +918,33 @@ class Protein extends Updater
     }
 
 
+    private static void loadReferences(Model model) throws IOException, SQLException
+    {
+        IntPairSet newReferences = new IntPairSet();
+        IntPairSet oldReferences = new IntPairSet();
+
+        load("select protein,reference from pubchem.protein_references", oldReferences);
+
+        new QueryResultProcessor(patternQuery("?protein cito:isDiscussedBy ?reference"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                Integer referenceID = Reference.getReferenceID(getIRI("reference"));
+
+                Pair<Integer, Integer> pair = Pair.getPair(proteinID, referenceID);
+
+                if(!oldReferences.remove(pair))
+                    newReferences.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_references where protein=? and reference=?", oldReferences);
+        store("insert into pubchem.protein_references(protein,reference) values(?,?)", newReferences);
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load proteins ...");
@@ -920,12 +975,14 @@ class Protein extends Updater
         loadDrugbankCloseMatches(model);
         loadChemblCloseMatches(model);
         loadGlygenCloseMatches(model);
+        loadGlycanMatches(model);
         loadGlycosmosCloseMatches(model);
         loadAlphafoldCloseMatches(model);
         loadConservedDomains(model);
         loadContinuantParts(model);
         loadFamilies(model);
         loadTypes(model);
+        loadReferences(model);
 
         model.close();
         System.out.println();

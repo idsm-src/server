@@ -9,6 +9,7 @@ select distinct ?iri where
         filter(?iri != cito:isDiscussedBy)
         filter(?iri != up:organism)
         filter(?iri != obo:BFO_0000050)
+        filter(?iri != obo:RO_0001000)
 	}
     union
     {

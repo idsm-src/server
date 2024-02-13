@@ -297,6 +297,33 @@ public class Cell extends Updater
     }
 
 
+    private static void loadAnatomies(Model model) throws IOException, SQLException
+    {
+        IntPairSet newAnatomies = new IntPairSet();
+        IntPairSet oldAnatomies = new IntPairSet();
+
+        load("select cell,anatomy from pubchem.cell_anatomies", oldAnatomies);
+
+        new QueryResultProcessor(patternQuery("?cell obo:RO_0001000 ?anatomy"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer cellID = getCellID(getIRI("cell"));
+                Integer anatomyID = Anatomy.getAnatomyID(getIRI("anatomy"));
+
+                Pair<Integer, Integer> pair = Pair.getPair(cellID, anatomyID);
+
+                if(!oldAnatomies.remove(pair))
+                    newAnatomies.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.cell_anatomies where cell=? and anatomy=?", oldAnatomies);
+        store("insert into pubchem.cell_anatomies(cell,anatomy) values(?,?)", newAnatomies);
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load cells ...");
@@ -314,6 +341,7 @@ public class Cell extends Updater
         loadCloseMatches(model);
         loadCellosaurusCloseMatches(model);
         loadMeshCloseMatches(model);
+        loadAnatomies(model);
 
         model.close();
         System.out.println();

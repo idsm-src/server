@@ -3,6 +3,7 @@ package cz.iocb.load.pubchem;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -124,6 +125,33 @@ class ConservedDomain extends Updater
     }
 
 
+    private static void loadReferences(Model model) throws IOException, SQLException
+    {
+        IntPairSet newReferences = new IntPairSet();
+        IntPairSet oldReferences = new IntPairSet();
+
+        load("select domain,reference from pubchem.conserveddomain_references", oldReferences);
+
+        new QueryResultProcessor(patternQuery("?domain cito:isDiscussedBy ?reference"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer domainID = getDomainID(getIRI("domain"));
+                Integer referenceID = Reference.getReferenceID(getIRI("reference"));
+
+                Pair<Integer, Integer> pair = Pair.getPair(domainID, referenceID);
+
+                if(!oldReferences.remove(pair))
+                    newReferences.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.conserveddomain_references where domain=? and reference=?", oldReferences);
+        store("insert into pubchem.conserveddomain_references(domain,reference) values(?,?)", newReferences);
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load conserved domains ...");
@@ -135,6 +163,7 @@ class ConservedDomain extends Updater
         loadBases(model);
         loadTitles(model);
         loadAbstracts(model);
+        loadReferences(model);
 
         model.close();
         System.out.println();

@@ -37,3 +37,9 @@ grant select on pubchem.cell_cellosaurus_matches to sparql;
 create index cell_mesh_matches__cell on pubchem.cell_mesh_matches(cell);
 create index cell_mesh_matches__match on pubchem.cell_mesh_matches(match);
 grant select on pubchem.cell_mesh_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index cell_anatomies__cell on pubchem.cell_anatomies(cell);
+create index cell_anatomies__anatomy on pubchem.cell_anatomies(anatomy);
+grant select on pubchem.cell_anatomies to sparql;

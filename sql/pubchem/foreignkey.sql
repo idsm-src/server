@@ -1,3 +1,11 @@
+-- anatomy
+alter table pubchem.anatomy_alternatives add foreign key (anatomy) references pubchem.anatomy_bases(id) initially deferred;
+alter table pubchem.anatomy_matches add foreign key (anatomy) references pubchem.anatomy_bases(id) initially deferred;
+alter table pubchem.anatomy_chembl_matches add foreign key (anatomy) references pubchem.anatomy_bases(id) initially deferred;
+alter table pubchem.anatomy_nextprot_matches add foreign key (anatomy) references pubchem.anatomy_bases(id) initially deferred;
+alter table pubchem.anatomy_mesh_matches add foreign key (anatomy) references pubchem.anatomy_bases(id) initially deferred;
+
+
 -- author
 alter table pubchem.author_given_names add foreign key (author) references pubchem.author_bases(id) initially deferred;
 alter table pubchem.author_family_names add foreign key (author) references pubchem.author_bases(id) initially deferred;
@@ -36,6 +44,8 @@ alter table pubchem.cell_references add foreign key (reference) references pubch
 alter table pubchem.cell_matches add foreign key (cell) references pubchem.cell_bases(id) initially deferred;
 alter table pubchem.cell_cellosaurus_matches add foreign key (cell) references pubchem.cell_bases(id) initially deferred;
 alter table pubchem.cell_mesh_matches add foreign key (cell) references pubchem.cell_bases(id) initially deferred;
+alter table pubchem.cell_anatomies add foreign key (cell) references pubchem.cell_bases(id) initially deferred;
+alter table pubchem.cell_anatomies add foreign key (anatomy) references pubchem.anatomy_bases(id) initially deferred;
 
 
 -- compound
@@ -64,6 +74,11 @@ alter table pubchem.concept_bases add foreign key (broader) references pubchem.c
 
 
 -- conserveddomain
+alter table pubchem.conserveddomain_references add foreign key (domain) references pubchem.conserveddomain_bases(id) initially deferred;
+alter table pubchem.conserveddomain_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
+
+
+-- cooccurrences
 alter table pubchem.chemical_chemical_cooccurrences add foreign key (subject) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.chemical_chemical_cooccurrences add foreign key (object) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.chemical_disease_cooccurrences add foreign key (subject) references pubchem.compound_bases(id) initially deferred;
@@ -239,6 +254,7 @@ alter table pubchem.protein_guidetopharmacology_matches add foreign key (protein
 alter table pubchem.protein_drugbank_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_chembl_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_glygen_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_glycan_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_glycosmos_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_alphafold_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_conserveddomains add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
@@ -247,6 +263,8 @@ alter table pubchem.protein_continuantparts add foreign key (protein) references
 alter table pubchem.protein_continuantparts add foreign key (part) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_families add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_types add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_references add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 
 
 -- reference

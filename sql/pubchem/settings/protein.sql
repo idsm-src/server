@@ -102,6 +102,12 @@ grant select on pubchem.protein_glygen_matches to sparql;
 
 --------------------------------------------------------------------------------
 
+create index protein_glycan_matches__protein on pubchem.protein_glycan_matches(protein);
+create index protein_glycan_matches__match on pubchem.protein_glycan_matches(match);
+grant select on pubchem.protein_glycan_matches to sparql;
+
+--------------------------------------------------------------------------------
+
 create index protein_glycosmos_matches__protein on pubchem.protein_glycosmos_matches(protein);
 create index protein_glycosmos_matches__match on pubchem.protein_glycosmos_matches(match);
 grant select on pubchem.protein_glycosmos_matches to sparql;
@@ -135,3 +141,9 @@ grant select on pubchem.protein_families to sparql;
 create index protein_types__protein on pubchem.protein_types(protein);
 create index protein_types__type on pubchem.protein_types(type_unit, type_id);
 grant select on pubchem.protein_types to sparql;
+
+--------------------------------------------------------------------------------
+
+create index protein_references__protein on pubchem.protein_references(protein);
+create index protein_references__reference on pubchem.protein_references(reference);
+grant select on pubchem.protein_references to sparql;

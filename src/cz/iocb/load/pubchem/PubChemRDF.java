@@ -52,7 +52,7 @@ public class PubChemRDF extends Updater
 
             Ontology.loadCategories();
 
-            Reference.preload(); // required by Cell, Endpoint, Gene, Pathway, Substance, Taxonomy
+            Reference.preload(); // required by Cell, ConservedDomain, Endpoint, Gene, Pathway, Protein, Substance, Taxonomy
 
             Concept.load();
             Source.load(); // require Concept
@@ -70,7 +70,8 @@ public class PubChemRDF extends Updater
             Disease.load();
             Taxonomy.load();
             ConservedDomain.load();
-            Cell.load(); // require Taxonomy
+            Anatomy.load();
+            Cell.load(); // require Anatomy, Taxonomy
             Gene.load(); // require Taxonomy
             Protein.load(); // require ConservedDomain, Gene, Taxonomy
             Pathway.load(); // require Compound, Gene, Protein, Source, Taxonomy
@@ -97,16 +98,17 @@ public class PubChemRDF extends Updater
             Journal.finish();
             Organization.finish();
             Grant.finish();
-            Patent.finish();
 
             Disease.finish();
             Taxonomy.finish();
             ConservedDomain.finish();
+            Anatomy.finish();
             Cell.finish();
             Gene.finish();
             Protein.finish();
             Pathway.finish();
 
+            Patent.finish();
             Reference.finish();
 
             Bioassay.finish();
@@ -114,8 +116,6 @@ public class PubChemRDF extends Updater
             Endpoint.finish();
 
             CompoundDescriptor.finish();
-
-            //ConstraintChecker.check();
 
             setCount("PubChem Substances", Substance.size());
             setCount("PubChem Compounds", Compound.size());

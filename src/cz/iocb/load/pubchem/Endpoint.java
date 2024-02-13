@@ -525,7 +525,7 @@ class Endpoint extends Updater
                     if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                         throw new IOException();
 
-                    EndpointID endpoint = parseEndpoint(subject, true);
+                    EndpointID endpoint = parseEndpoint(subject, false);
                     Pair<Integer, Integer> type = Ontology.getId(object.getURI());
 
                     if(type.getOne() != Ontology.unitBAO)
@@ -832,7 +832,7 @@ class Endpoint extends Updater
                         throw new IOException();
 
                     String label = getString(object);
-                    EndpointID endpoint = parseEndpoint(subject, true);
+                    EndpointID endpoint = parseEndpoint(subject, false);
 
                     if(wrongLabels.contains(Pair.getPair(endpoint, label)))
                         return;
@@ -885,7 +885,7 @@ class Endpoint extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    EndpointID endpoint = parseEndpoint(subject, true);
+                    EndpointID endpoint = parseEndpoint(subject, false);
                     Integer type = getIntID(predicate, "http://semanticscience.org/resource/SIO_");
                     Float measurement = getFloat(object);
                     Pair<Integer, Float> pair = Pair.getPair(type, measurement);

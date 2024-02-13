@@ -54,3 +54,11 @@ create table pubchem.cell_mesh_matches
     match         varchar not null,
     primary key(cell, match)
 );
+
+
+create table pubchem.cell_anatomies
+(
+    cell          integer not null,
+    anatomy       integer not null,
+    primary key(cell, anatomy)
+);

@@ -16,6 +16,7 @@ select distinct ?iri where
         filter(?iri != skos:altLabel)
         filter(?iri != bao:BAO_0002817)
         filter(?iri != rdfs:subClassOf)
+        filter(?iri != cito:isDiscussedBy)
     }
     union
     {
@@ -41,6 +42,7 @@ select distinct ?iri where
         filter(! strstarts(str(?iri), "https://www.drugbank.ca/bio_entities/BE"))
         filter(! strstarts(str(?iri), "https://www.ebi.ac.uk/chembl/target_report_card/CHEMBL"))
         filter(! strstarts(str(?iri), "https://glygen.org/protein/"))
+        filter(! strstarts(str(?iri), "http://glygen.org/glycan/"))
         filter(! strstarts(str(?iri), "https://glycosmos.org/glycoproteins/show/uniprot/"))
         filter(! strstarts(str(?iri), "https://alphafold.ebi.ac.uk/entry/"))
     }

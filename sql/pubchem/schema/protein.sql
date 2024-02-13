@@ -139,6 +139,14 @@ create table pubchem.protein_glygen_matches
 );
 
 
+create table pubchem.protein_glycan_matches
+(
+    protein  integer not null,
+    match    varchar not null,
+    primary key(protein, match)
+);
+
+
 create table pubchem.protein_glycosmos_matches
 (
     protein  integer not null,
@@ -185,4 +193,12 @@ create table pubchem.protein_types
     type_unit     smallint not null,
     type_id       integer not null,
     primary key(protein, type_unit, type_id)
+);
+
+
+create table pubchem.protein_references
+(
+    protein       integer not null,
+    reference     integer not null,
+    primary key(protein, reference)
 );
