@@ -11,6 +11,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -907,39 +908,63 @@ public class Updater
 
     protected static void setCount(String name, int count) throws SQLException
     {
-        try(PreparedStatement statement = connection
-                .prepareStatement("update info.idsm_counts set count=? where name=?"))
-        {
-            statement.setInt(1, count);
-            statement.setString(2, name);
+        DatabaseMetaData databaseMetaData = connection.getMetaData();
 
-            if(statement.executeUpdate() != 1)
-                System.err.printf("warning: number of '%s' was not set", name);
+        try(ResultSet info = databaseMetaData.getTables(null, "info", "idsm_counts", new String[] { "TABLE" }))
+        {
+            if(info.next())
+            {
+                try(PreparedStatement statement = connection
+                        .prepareStatement("update info.idsm_counts set count=? where name=?"))
+                {
+                    statement.setInt(1, count);
+                    statement.setString(2, name);
+
+                    if(statement.executeUpdate() != 1)
+                        System.err.printf("warning: number of '%s' was not set", name);
+                }
+            }
         }
     }
 
 
     protected static void setVersion(String name, String version) throws SQLException
     {
-        try(PreparedStatement statement = connection
-                .prepareStatement("update info.idsm_sources set version=? where name=?"))
-        {
-            statement.setString(1, version);
-            statement.setString(2, name);
+        DatabaseMetaData databaseMetaData = connection.getMetaData();
 
-            if(statement.executeUpdate() != 1)
-                System.err.printf("warning: version '%s' of source '%s' was not set\n", version, name);
+        try(ResultSet info = databaseMetaData.getTables(null, "info", "idsm_sources", new String[] { "TABLE" }))
+        {
+            if(info.next())
+            {
+                try(PreparedStatement statement = connection
+                        .prepareStatement("update info.idsm_sources set version=? where name=?"))
+                {
+                    statement.setString(1, version);
+                    statement.setString(2, name);
+
+                    if(statement.executeUpdate() != 1)
+                        System.err.printf("warning: version '%s' of source '%s' was not set\n", version, name);
+                }
+            }
         }
     }
 
 
     public static void updateVersion(Connection connection) throws SQLException
     {
-        try(Statement statement = connection.createStatement())
+        DatabaseMetaData databaseMetaData = connection.getMetaData();
+
+        try(ResultSet info = databaseMetaData.getTables(null, "info", "idsm_version", new String[] { "TABLE" }))
         {
-            if(statement.executeUpdate(
-                    "update info.idsm_version set date = greatest(date, date_trunc('second', now()))") != 1)
-                System.err.printf("warning: version was not set\n");
+            if(info.next())
+            {
+                try(Statement statement = connection.createStatement())
+                {
+                    if(statement.executeUpdate(
+                            "update info.idsm_version set date = greatest(date, date_trunc('second', now()))") != 1)
+                        System.err.printf("warning: version was not set\n");
+                }
+            }
         }
     }
 
