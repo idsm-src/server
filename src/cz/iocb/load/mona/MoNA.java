@@ -48,10 +48,10 @@ public class MoNA extends Updater
         @Override
         public void set(PreparedStatement statement, Submitter key, Integer value) throws SQLException
         {
-            statement.setString(1, key.emailAddress.isEmpty() ? null : key.emailAddress);
-            statement.setString(2, key.firstName.isEmpty() ? null : key.firstName);
-            statement.setString(3, key.lastName.isEmpty() ? null : key.lastName);
-            statement.setString(4, key.institution.isEmpty() ? null : key.institution);
+            statement.setString(1, "".equals(key.emailAddress) ? null : key.emailAddress);
+            statement.setString(2, "".equals(key.firstName) ? null : key.firstName);
+            statement.setString(3, "".equals(key.lastName) ? null : key.lastName);
+            statement.setString(4, "".equals(key.institution) ? null : key.institution);
             statement.setInt(5, value);
         }
     }
