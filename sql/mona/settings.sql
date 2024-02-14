@@ -215,9 +215,3 @@ create index submitter_bases__first_name on mona.submitter_bases(first_name);
 create index submitter_bases__last_name on mona.submitter_bases(last_name);
 create index submitter_bases__institution on mona.submitter_bases(institution);
 grant select on mona.submitter_bases to sparql;
-
---------------------------------------------------------------------------------
-
-create index compound_pubchem_compounds__compound on mona.compound_pubchem_compounds(compound);
-create index compound_pubchem_compounds__cid on mona.compound_pubchem_compounds(cid);
-grant select on mona.compound_pubchem_compounds to sparql;
