@@ -1,12 +1,15 @@
 package cz.iocb.load.mona;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -16,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
+import java.util.zip.ZipInputStream;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import cz.iocb.load.common.Pair;
@@ -96,11 +100,11 @@ public class MoNA extends Updater
     }
 
 
-    private static Map<String, ClassyFire> loadClassyFires(String path) throws FileNotFoundException, IOException
+    private static Map<String, ClassyFire> loadClassyFires(InputStream stream) throws FileNotFoundException, IOException
     {
         Map<String, ClassyFire> classyFires = new HashMap<String, ClassyFire>();
 
-        try(BufferedReader reader = new BufferedReader(new FileReader(path)))
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(stream)))
         {
             ClassyFire classyFire = null;
             String line = null;
@@ -315,71 +319,81 @@ public class MoNA extends Updater
         SubmitterIntMap oldSubmitters = new SubmitterIntMap();
 
 
-        try
+        init();
+
+
+        ZipInputStream classyFiresStream = new ZipInputStream(getZipStream("mona/ChemOnt_2_1.obo.zip"));
+        classyFiresStream.getNextEntry();
+
+        Map<String, ClassyFire> classyFires = loadClassyFires(classyFiresStream);
+
+
+        load("select accession,id from mona.compound_bases", oldCompounds);
+        load("select id,created::varchar from mona.compound_bases where created is not null", oldCreatedDates);
+        load("select id,curated::varchar from mona.compound_bases where curated is not null", oldCuratedDates);
+        load("select id,updated::varchar from mona.compound_bases where updated is not null", oldUpdatedDates);
+        load("select id,spectrum::varchar from mona.compound_bases where spectrum is not null", oldSpectra);
+        load("select id,splash from mona.compound_bases where splash is not null", oldSplashes);
+        load("select id,ionization_mode from mona.compound_bases where ionization_mode is not null",
+                oldIonizationModes);
+        load("select id,ionization_type from mona.compound_bases where ionization_type is not null",
+                oldIonizationTypes);
+        load("select id,level from mona.compound_bases where level is not null", oldLevels);
+        load("select id,library from mona.compound_bases where library is not null", oldCompoundLibraries);
+        load("select id,submitter from mona.compound_bases where submitter is not null", oldCompoundSubmitters);
+        load("select id,link from mona.compound_bases where link is not null", oldLibraryLinks);
+        load("select compound,structure from mona.compound_structures", oldStructures);
+        load("select compound,name from mona.compound_names", oldNames);
+        load("select compound,class from mona.compound_classyfires", oldClassyFires);
+        load("select compound,chebi from mona.compound_chebi_classes", oldChebiClasses);
+        load("select compound,mesh from mona.compound_mesh_classes", oldMeshClasses);
+        load("select compound,inchi,id from mona.compound_inchis", oldInchis);
+        load("select compound,inchikey from mona.compound_inchikeys", oldInchiKeys);
+        load("select compound,formula from mona.compound_formulas", oldFormulas);
+        load("select compound,smiles from mona.compound_smileses", oldSmiles);
+        load("select compound,mass from mona.compound_exact_masses", oldExactMasses);
+        load("select compound,mass from mona.compound_monoisotopic_masses", oldMonoisotopicMasses);
+        load("select compound,cas from mona.compound_cas_numbers", oldCasNumbers);
+        load("select compound,hmdb from mona.compound_hmdb_ids", oldHmdbIdentifiers);
+        load("select compound,chebi from mona.compound_chebi_ids", oldChebiIdentifiers);
+        load("select compound,chemspider from mona.compound_chemspider_ids", oldChemspiderIdentifiers);
+        load("select compound,kegg from mona.compound_kegg_ids", oldKeggIdentifiers);
+        load("select compound,knapsack from mona.compound_knapsack_ids", oldKnapsackIdentifiers);
+        load("select compound,lipidbank from mona.compound_lipidbank_ids", oldLipidBankIdentifiers);
+        load("select compound,lipidmaps from mona.compound_lipidmaps_ids", oldLipidMapsIdentifiers);
+        load("select compound,cid from mona.compound_pubchem_compound_ids", oldPubchemCompoundIdentifiers);
+        load("select compound,sid from mona.compound_pubchem_substance_ids", oldPubchemSubstanceIdentifiers);
+        load("select compound,peak,value,id from mona.spectrum_annotations", oldAnnotations);
+        load("select compound,tag from mona.spectrum_tags", oldTags);
+        load("select compound,entropy from mona.spectrum_normalized_entropies", oldNormalizedEntropies);
+        load("select compound,entropy from mona.spectrum_spectral_entropies", oldSpectralEntropies);
+        load("select compound,time,unit from mona.spectrum_retention_times", oldRetentionTimes);
+        load("select compound,energy,unit from mona.spectrum_collision_energies", oldCollisionEnergies);
+        load("select compound,ramp_start,ramp_end,unit from mona.spectrum_collision_energy_ramps",
+                oldCollisionEnergyRamps);
+        load("select compound,type from mona.spectrum_instrument_types", oldInstrumentTypes);
+        load("select compound,instrument from mona.spectrum_instruments", oldInstruments);
+        load("select compound,type from mona.spectrum_precursor_types", oldPrecursorTypes);
+        load("select compound,mz from mona.spectrum_precursor_mzs", oldPrecursorMZs);
+        load("select name,id from mona.library_bases", oldLibraries);
+        load("select id,description from mona.library_bases where description is not null", oldLibraryDescriptions);
+        load("select email,first_name,last_name,institution,id from mona.submitter_bases", oldSubmitters);
+
+        int nextCompoundID = oldCompounds.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+        int nextLibraryID = oldLibraries.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+        int nextSubmitterID = oldSubmitters.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+        int nextInchiID = oldInchis.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+        int nextAnnotationID = oldAnnotations.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+
+
+        String[] files = new File(baseDirectory + "mona").list((dir, file) -> file.matches(".*-json\\.zip"));
+
+        for(String file : files)
         {
-            init();
+            ZipInputStream zipStream = new ZipInputStream(getZipStream("mona/" + file));
+            zipStream.getNextEntry();
 
-            load("select accession,id from mona.compound_bases", oldCompounds);
-            load("select id,created::varchar from mona.compound_bases where created is not null", oldCreatedDates);
-            load("select id,curated::varchar from mona.compound_bases where curated is not null", oldCuratedDates);
-            load("select id,updated::varchar from mona.compound_bases where updated is not null", oldUpdatedDates);
-            load("select id,spectrum::varchar from mona.compound_bases where spectrum is not null", oldSpectra);
-            load("select id,splash from mona.compound_bases where splash is not null", oldSplashes);
-            load("select id,ionization_mode from mona.compound_bases where ionization_mode is not null",
-                    oldIonizationModes);
-            load("select id,ionization_type from mona.compound_bases where ionization_type is not null",
-                    oldIonizationTypes);
-            load("select id,level from mona.compound_bases where level is not null", oldLevels);
-            load("select id,library from mona.compound_bases where library is not null", oldCompoundLibraries);
-            load("select id,submitter from mona.compound_bases where submitter is not null", oldCompoundSubmitters);
-            load("select id,link from mona.compound_bases where link is not null", oldLibraryLinks);
-            load("select compound,structure from mona.compound_structures", oldStructures);
-            load("select compound,name from mona.compound_names", oldNames);
-            load("select compound,class from mona.compound_classyfires", oldClassyFires);
-            load("select compound,chebi from mona.compound_chebi_classes", oldChebiClasses);
-            load("select compound,mesh from mona.compound_mesh_classes", oldMeshClasses);
-            load("select compound,inchi,id from mona.compound_inchis", oldInchis);
-            load("select compound,inchikey from mona.compound_inchikeys", oldInchiKeys);
-            load("select compound,formula from mona.compound_formulas", oldFormulas);
-            load("select compound,smiles from mona.compound_smileses", oldSmiles);
-            load("select compound,mass from mona.compound_exact_masses", oldExactMasses);
-            load("select compound,mass from mona.compound_monoisotopic_masses", oldMonoisotopicMasses);
-            load("select compound,cas from mona.compound_cas_numbers", oldCasNumbers);
-            load("select compound,hmdb from mona.compound_hmdb_ids", oldHmdbIdentifiers);
-            load("select compound,chebi from mona.compound_chebi_ids", oldChebiIdentifiers);
-            load("select compound,chemspider from mona.compound_chemspider_ids", oldChemspiderIdentifiers);
-            load("select compound,kegg from mona.compound_kegg_ids", oldKeggIdentifiers);
-            load("select compound,knapsack from mona.compound_knapsack_ids", oldKnapsackIdentifiers);
-            load("select compound,lipidbank from mona.compound_lipidbank_ids", oldLipidBankIdentifiers);
-            load("select compound,lipidmaps from mona.compound_lipidmaps_ids", oldLipidMapsIdentifiers);
-            load("select compound,cid from mona.compound_pubchem_compound_ids", oldPubchemCompoundIdentifiers);
-            load("select compound,sid from mona.compound_pubchem_substance_ids", oldPubchemSubstanceIdentifiers);
-            load("select compound,peak,value,id from mona.spectrum_annotations", oldAnnotations);
-            load("select compound,tag from mona.spectrum_tags", oldTags);
-            load("select compound,entropy from mona.spectrum_normalized_entropies", oldNormalizedEntropies);
-            load("select compound,entropy from mona.spectrum_spectral_entropies", oldSpectralEntropies);
-            load("select compound,time,unit from mona.spectrum_retention_times", oldRetentionTimes);
-            load("select compound,energy,unit from mona.spectrum_collision_energies", oldCollisionEnergies);
-            load("select compound,ramp_start,ramp_end,unit from mona.spectrum_collision_energy_ramps",
-                    oldCollisionEnergyRamps);
-            load("select compound,type from mona.spectrum_instrument_types", oldInstrumentTypes);
-            load("select compound,instrument from mona.spectrum_instruments", oldInstruments);
-            load("select compound,type from mona.spectrum_precursor_types", oldPrecursorTypes);
-            load("select compound,mz from mona.spectrum_precursor_mzs", oldPrecursorMZs);
-            load("select name,id from mona.library_bases", oldLibraries);
-            load("select id,description from mona.library_bases where description is not null", oldLibraryDescriptions);
-            load("select email,first_name,last_name,institution,id from mona.submitter_bases", oldSubmitters);
-
-            int nextCompoundID = oldCompounds.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
-            int nextLibraryID = oldLibraries.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
-            int nextSubmitterID = oldSubmitters.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
-            int nextInchiID = oldInchis.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
-            int nextAnnotationID = oldAnnotations.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
-
-
-            Map<String, ClassyFire> classyFires = loadClassyFires(baseDirectory + "mona/ChemOnt_2_1.obo");
-
-            BufferedReader in = new BufferedReader(new FileReader(baseDirectory + "mona/MoNA-export-All_Spectra.json"));
+            BufferedReader in = new BufferedReader(new InputStreamReader(zipStream));
             JsonReader reader = new JsonReader(in);
 
             reader.beginArray();
@@ -1401,189 +1415,185 @@ public class MoNA extends Updater
             }
 
             reader.endArray();
-
-
-            store("delete from mona.compound_bases where accession=? and id=?", oldCompounds);
-            store("insert into mona.compound_bases(accession,id) values(?,?)", newCompounds);
-
-            store("update mona.compound_bases set created=null where id=? and created=?::date", oldCreatedDates);
-            store("insert into mona.compound_bases(id,accession,created) values(?,?,?::date) "
-                    + "on conflict(id) do update set created=EXCLUDED.created", newCreatedDates);
-
-            store("update mona.compound_bases set curated=null where id=? and curated=?::date", oldCuratedDates);
-            store("insert into mona.compound_bases(id,accession,curated) values(?,?,?::date) "
-                    + "on conflict(id) do update set curated=EXCLUDED.curated", newCuratedDates);
-
-            store("update mona.compound_bases set updated=null where id=? and updated=?::date", oldUpdatedDates);
-            store("insert into mona.compound_bases(id,accession,updated) values(?,?,?::date) "
-                    + "on conflict(id) do update set updated=EXCLUDED.updated", newUpdatedDates);
-
-            store("update mona.compound_bases set spectrum=null where id=? and spectrum=?::pgms.spectrum", oldSpectra);
-            store("insert into mona.compound_bases(id,accession,spectrum) values(?,?,?::pgms.spectrum) "
-                    + "on conflict(id) do update set spectrum=EXCLUDED.spectrum", newSpectra);
-
-            store("update mona.compound_bases set splash=null where id=? and splash=?", oldSplashes);
-            store("insert into mona.compound_bases(id,accession,splash) values(?,?,?) "
-                    + "on conflict(id) do update set splash=EXCLUDED.splash", newSplashes);
-
-            store("update mona.compound_bases set ionization_mode=null where id=? and ionization_mode=?",
-                    oldIonizationModes);
-            store("insert into mona.compound_bases(id,accession,ionization_mode) values(?,?,?) "
-                    + "on conflict(id) do update set ionization_mode=EXCLUDED.ionization_mode", newIonizationModes);
-
-            store("update mona.compound_bases set ionization_type=null where id=? and ionization_type=?",
-                    oldIonizationTypes);
-            store("insert into mona.compound_bases(id,accession,ionization_type) values(?,?,?) "
-                    + "on conflict(id) do update set ionization_type=EXCLUDED.ionization_type", newIonizationTypes);
-
-            store("update mona.compound_bases set level=null where id=? and level=?", oldLevels);
-            store("insert into mona.compound_bases(id,accession,level) values(?,?,?) "
-                    + "on conflict(id) do update set level=EXCLUDED.level", newLevels);
-
-            store("update mona.compound_bases set library=null where id=? and library=?", oldCompoundLibraries);
-            store("insert into mona.compound_bases(id,accession,library) values(?,?,?) "
-                    + "on conflict(id) do update set library=EXCLUDED.library", newCompoundLibraries);
-
-            store("update mona.compound_bases set submitter=null where id=? and submitter=?", oldCompoundSubmitters);
-            store("insert into mona.compound_bases(id,accession,submitter) values(?,?,?) "
-                    + "on conflict(id) do update set submitter=EXCLUDED.submitter", newCompoundSubmitters);
-
-            store("update mona.compound_bases set link=null where id=? and link=?", oldLibraryLinks);
-            store("insert into mona.compound_bases(id,accession,link) values(?,?,?) "
-                    + "on conflict(id) do update set link=EXCLUDED.link", newLibraryLinks);
-
-            store("delete from mona.compound_structures where compound=? and structure=?", oldStructures);
-            store("insert into mona.compound_structures(compound,structure) values(?,?) "
-                    + "on conflict(compound) do update set structure=EXCLUDED.structure", newStructures);
-
-            store("delete from mona.compound_names where compound=? and name=?", oldNames);
-            store("insert into mona.compound_names(compound,name) values(?,?)", newNames);
-
-            store("delete from mona.compound_classyfires where compound=? and class=?", oldClassyFires);
-            store("insert into mona.compound_classyfires(compound,class) values(?,?)", newClassyFires);
-
-            store("delete from mona.compound_chebi_classes where compound=? and chebi=?", oldChebiClasses);
-            store("insert into mona.compound_chebi_classes(compound,chebi) values(?,?)", newChebiClasses);
-
-            store("delete from mona.compound_mesh_classes where compound=? and mesh=?", oldMeshClasses);
-            store("insert into mona.compound_mesh_classes(compound,mesh) values(?,?)", newMeshClasses);
-
-            store("delete from mona.compound_inchis where compound=? and inchi=? and id=?", oldInchis);
-            store("insert into mona.compound_inchis(compound,inchi,id) values(?,?,?)", newInchis);
-
-            store("delete from mona.compound_inchikeys where compound=? and inchikey=?", oldInchiKeys);
-            store("insert into mona.compound_inchikeys(compound,inchikey) values(?,?)", newInchiKeys);
-
-            store("delete from mona.compound_formulas where compound=? and formula=?", oldFormulas);
-            store("insert into mona.compound_formulas(compound,formula) values(?,?)", newFormulas);
-
-            store("delete from mona.compound_smileses where compound=? and smiles=?", oldSmiles);
-            store("insert into mona.compound_smileses(compound,smiles) values(?,?)", newSmiles);
-
-            store("delete from mona.compound_exact_masses where compound=? and mass=?", oldExactMasses);
-            store("insert into mona.compound_exact_masses(compound,mass) values(?,?)", newExactMasses);
-
-            store("delete from mona.compound_monoisotopic_masses where compound=? and mass=?", oldMonoisotopicMasses);
-            store("insert into mona.compound_monoisotopic_masses(compound,mass) values(?,?)", newMonoisotopicMasses);
-
-            store("delete from mona.compound_cas_numbers where compound=? and cas=?", oldCasNumbers);
-            store("insert into mona.compound_cas_numbers(compound,cas) values(?,?)", newCasNumbers);
-
-            store("delete from mona.compound_hmdb_ids where compound=? and hmdb=?", oldHmdbIdentifiers);
-            store("insert into mona.compound_hmdb_ids(compound,hmdb) values(?,?)", newHmdbIdentifiers);
-
-            store("delete from mona.compound_chebi_ids where compound=? and chebi=?", oldChebiIdentifiers);
-            store("insert into mona.compound_chebi_ids(compound,chebi) values(?,?)", newChebiIdentifiers);
-
-            store("delete from mona.compound_chemspider_ids where compound=? and chemspider=?",
-                    oldChemspiderIdentifiers);
-            store("insert into mona.compound_chemspider_ids(compound,chemspider) values(?,?)",
-                    newChemspiderIdentifiers);
-
-            store("delete from mona.compound_kegg_ids where compound=? and kegg=?", oldKeggIdentifiers);
-            store("insert into mona.compound_kegg_ids(compound,kegg) values(?,?)", newKeggIdentifiers);
-
-            store("delete from mona.compound_knapsack_ids where compound=? and knapsack=?", oldKnapsackIdentifiers);
-            store("insert into mona.compound_knapsack_ids(compound,knapsack) values(?,?)", newKnapsackIdentifiers);
-
-            store("delete from mona.compound_lipidbank_ids where compound=? and lipidbank=?", oldLipidBankIdentifiers);
-            store("insert into mona.compound_lipidbank_ids(compound,lipidbank) values(?,?)", newLipidBankIdentifiers);
-
-            store("delete from mona.compound_lipidmaps_ids where compound=? and lipidmaps=?", oldLipidMapsIdentifiers);
-            store("insert into mona.compound_lipidmaps_ids(compound,lipidmaps) values(?,?)", newLipidMapsIdentifiers);
-
-            store("delete from mona.compound_pubchem_compound_ids where compound=? and cid=?",
-                    oldPubchemCompoundIdentifiers);
-            store("insert into mona.compound_pubchem_compound_ids(compound,cid) values(?,?)",
-                    newPubchemCompoundIdentifiers);
-
-            store("delete from mona.compound_pubchem_substance_ids where compound=? and sid=?",
-                    oldPubchemSubstanceIdentifiers);
-            store("insert into mona.compound_pubchem_substance_ids(compound,sid) values(?,?)",
-                    newPubchemSubstanceIdentifiers);
-
-            store("delete from mona.spectrum_annotations where compound=? and peak=? and value=? and id=?",
-                    oldAnnotations);
-            store("insert into mona.spectrum_annotations(compound,peak,value,id) values(?,?,?,?)", newAnnotations);
-
-            store("delete from mona.spectrum_tags where compound=? and tag=?", oldTags);
-            store("insert into mona.spectrum_tags(compound,tag) values(?,?)", newTags);
-
-
-            store("delete from mona.spectrum_normalized_entropies where compound=? and entropy=?",
-                    oldNormalizedEntropies);
-            store("insert into mona.spectrum_normalized_entropies(compound,entropy) values(?,?)",
-                    newNormalizedEntropies);
-
-            store("delete from mona.spectrum_spectral_entropies where compound=? and entropy=?", oldSpectralEntropies);
-            store("insert into mona.spectrum_spectral_entropies(compound,entropy) values(?,?)", newSpectralEntropies);
-
-            store("delete from mona.spectrum_retention_times where compound=? and time=? and unit=?",
-                    oldRetentionTimes);
-            store("insert into mona.spectrum_retention_times(compound,time,unit) values(?,?,?)", newRetentionTimes);
-
-            store("delete from mona.spectrum_collision_energies where compound=? and energy=? and unit=?",
-                    oldCollisionEnergies);
-            store("insert into mona.spectrum_collision_energies(compound,energy,unit) values(?,?,?)",
-                    newCollisionEnergies);
-
-            store("delete from mona.spectrum_collision_energy_ramps where compound=? and ramp_start=? and ramp_end=? and unit=?",
-                    oldCollisionEnergyRamps);
-            store("insert into mona.spectrum_collision_energy_ramps(compound,ramp_start,ramp_end,unit) values(?,?,?,?)",
-                    newCollisionEnergyRamps);
-
-            store("delete from mona.spectrum_instrument_types where compound=? and type=?", oldInstrumentTypes);
-            store("insert into mona.spectrum_instrument_types(compound,type) values(?,?)", newInstrumentTypes);
-
-            store("delete from mona.spectrum_instruments where compound=? and instrument=?", oldInstruments);
-            store("insert into mona.spectrum_instruments(compound,instrument) values(?,?)", newInstruments);
-
-            store("delete from mona.spectrum_precursor_types where compound=? and type=?", oldPrecursorTypes);
-            store("insert into mona.spectrum_precursor_types(compound,type) values(?,?)", newPrecursorTypes);
-
-            store("delete from mona.spectrum_precursor_mzs where compound=? and mz=?", oldPrecursorMZs);
-            store("insert into mona.spectrum_precursor_mzs(compound,mz) values(?,?)", newPrecursorMZs);
-
-            store("delete from mona.library_bases where name=? and id=?", oldLibraries);
-            store("insert into mona.library_bases(name,id) values(?,?)", newLibraries);
-
-            store("update mona.library_bases set description=null where id=? and description=?",
-                    oldLibraryDescriptions);
-            store("insert into mona.library_bases(id,name,description) values(?,?,?) "
-                    + "on conflict(id) do update set description=EXCLUDED.description", newLibraryDescriptions);
-
-            store("delete from mona.submitter_bases where email=? and first_name=? and last_name=? and institution=? and id=?",
-                    oldSubmitters);
-            store("insert into mona.submitter_bases(email,first_name,last_name,institution,id) values(?,?,?,?,?)",
-                    newSubmitters);
-
-            updateVersion();
-            commit();
         }
-        catch(Throwable e)
+
+
+        store("delete from mona.compound_bases where accession=? and id=?", oldCompounds);
+        store("insert into mona.compound_bases(accession,id) values(?,?)", newCompounds);
+
+        store("update mona.compound_bases set created=null where id=? and created=?::date", oldCreatedDates);
+        store("insert into mona.compound_bases(id,accession,created) values(?,?,?::date) "
+                + "on conflict(id) do update set created=EXCLUDED.created", newCreatedDates);
+
+        store("update mona.compound_bases set curated=null where id=? and curated=?::date", oldCuratedDates);
+        store("insert into mona.compound_bases(id,accession,curated) values(?,?,?::date) "
+                + "on conflict(id) do update set curated=EXCLUDED.curated", newCuratedDates);
+
+        store("update mona.compound_bases set updated=null where id=? and updated=?::date", oldUpdatedDates);
+        store("insert into mona.compound_bases(id,accession,updated) values(?,?,?::date) "
+                + "on conflict(id) do update set updated=EXCLUDED.updated", newUpdatedDates);
+
+        store("update mona.compound_bases set spectrum=null where id=? and spectrum=?::pgms.spectrum", oldSpectra);
+        store("insert into mona.compound_bases(id,accession,spectrum) values(?,?,?::pgms.spectrum) "
+                + "on conflict(id) do update set spectrum=EXCLUDED.spectrum", newSpectra);
+
+        store("update mona.compound_bases set splash=null where id=? and splash=?", oldSplashes);
+        store("insert into mona.compound_bases(id,accession,splash) values(?,?,?) "
+                + "on conflict(id) do update set splash=EXCLUDED.splash", newSplashes);
+
+        store("update mona.compound_bases set ionization_mode=null where id=? and ionization_mode=?",
+                oldIonizationModes);
+        store("insert into mona.compound_bases(id,accession,ionization_mode) values(?,?,?) "
+                + "on conflict(id) do update set ionization_mode=EXCLUDED.ionization_mode", newIonizationModes);
+
+        store("update mona.compound_bases set ionization_type=null where id=? and ionization_type=?",
+                oldIonizationTypes);
+        store("insert into mona.compound_bases(id,accession,ionization_type) values(?,?,?) "
+                + "on conflict(id) do update set ionization_type=EXCLUDED.ionization_type", newIonizationTypes);
+
+        store("update mona.compound_bases set level=null where id=? and level=?", oldLevels);
+        store("insert into mona.compound_bases(id,accession,level) values(?,?,?) "
+                + "on conflict(id) do update set level=EXCLUDED.level", newLevels);
+
+        store("update mona.compound_bases set library=null where id=? and library=?", oldCompoundLibraries);
+        store("insert into mona.compound_bases(id,accession,library) values(?,?,?) "
+                + "on conflict(id) do update set library=EXCLUDED.library", newCompoundLibraries);
+
+        store("update mona.compound_bases set submitter=null where id=? and submitter=?", oldCompoundSubmitters);
+        store("insert into mona.compound_bases(id,accession,submitter) values(?,?,?) "
+                + "on conflict(id) do update set submitter=EXCLUDED.submitter", newCompoundSubmitters);
+
+        store("update mona.compound_bases set link=null where id=? and link=?", oldLibraryLinks);
+        store("insert into mona.compound_bases(id,accession,link) values(?,?,?) "
+                + "on conflict(id) do update set link=EXCLUDED.link", newLibraryLinks);
+
+        store("delete from mona.compound_structures where compound=? and structure=?", oldStructures);
+        store("insert into mona.compound_structures(compound,structure) values(?,?) "
+                + "on conflict(compound) do update set structure=EXCLUDED.structure", newStructures);
+
+        store("delete from mona.compound_names where compound=? and name=?", oldNames);
+        store("insert into mona.compound_names(compound,name) values(?,?)", newNames);
+
+        store("delete from mona.compound_classyfires where compound=? and class=?", oldClassyFires);
+        store("insert into mona.compound_classyfires(compound,class) values(?,?)", newClassyFires);
+
+        store("delete from mona.compound_chebi_classes where compound=? and chebi=?", oldChebiClasses);
+        store("insert into mona.compound_chebi_classes(compound,chebi) values(?,?)", newChebiClasses);
+
+        store("delete from mona.compound_mesh_classes where compound=? and mesh=?", oldMeshClasses);
+        store("insert into mona.compound_mesh_classes(compound,mesh) values(?,?)", newMeshClasses);
+
+        store("delete from mona.compound_inchis where compound=? and inchi=? and id=?", oldInchis);
+        store("insert into mona.compound_inchis(compound,inchi,id) values(?,?,?)", newInchis);
+
+        store("delete from mona.compound_inchikeys where compound=? and inchikey=?", oldInchiKeys);
+        store("insert into mona.compound_inchikeys(compound,inchikey) values(?,?)", newInchiKeys);
+
+        store("delete from mona.compound_formulas where compound=? and formula=?", oldFormulas);
+        store("insert into mona.compound_formulas(compound,formula) values(?,?)", newFormulas);
+
+        store("delete from mona.compound_smileses where compound=? and smiles=?", oldSmiles);
+        store("insert into mona.compound_smileses(compound,smiles) values(?,?)", newSmiles);
+
+        store("delete from mona.compound_exact_masses where compound=? and mass=?", oldExactMasses);
+        store("insert into mona.compound_exact_masses(compound,mass) values(?,?)", newExactMasses);
+
+        store("delete from mona.compound_monoisotopic_masses where compound=? and mass=?", oldMonoisotopicMasses);
+        store("insert into mona.compound_monoisotopic_masses(compound,mass) values(?,?)", newMonoisotopicMasses);
+
+        store("delete from mona.compound_cas_numbers where compound=? and cas=?", oldCasNumbers);
+        store("insert into mona.compound_cas_numbers(compound,cas) values(?,?)", newCasNumbers);
+
+        store("delete from mona.compound_hmdb_ids where compound=? and hmdb=?", oldHmdbIdentifiers);
+        store("insert into mona.compound_hmdb_ids(compound,hmdb) values(?,?)", newHmdbIdentifiers);
+
+        store("delete from mona.compound_chebi_ids where compound=? and chebi=?", oldChebiIdentifiers);
+        store("insert into mona.compound_chebi_ids(compound,chebi) values(?,?)", newChebiIdentifiers);
+
+        store("delete from mona.compound_chemspider_ids where compound=? and chemspider=?", oldChemspiderIdentifiers);
+        store("insert into mona.compound_chemspider_ids(compound,chemspider) values(?,?)", newChemspiderIdentifiers);
+
+        store("delete from mona.compound_kegg_ids where compound=? and kegg=?", oldKeggIdentifiers);
+        store("insert into mona.compound_kegg_ids(compound,kegg) values(?,?)", newKeggIdentifiers);
+
+        store("delete from mona.compound_knapsack_ids where compound=? and knapsack=?", oldKnapsackIdentifiers);
+        store("insert into mona.compound_knapsack_ids(compound,knapsack) values(?,?)", newKnapsackIdentifiers);
+
+        store("delete from mona.compound_lipidbank_ids where compound=? and lipidbank=?", oldLipidBankIdentifiers);
+        store("insert into mona.compound_lipidbank_ids(compound,lipidbank) values(?,?)", newLipidBankIdentifiers);
+
+        store("delete from mona.compound_lipidmaps_ids where compound=? and lipidmaps=?", oldLipidMapsIdentifiers);
+        store("insert into mona.compound_lipidmaps_ids(compound,lipidmaps) values(?,?)", newLipidMapsIdentifiers);
+
+        store("delete from mona.compound_pubchem_compound_ids where compound=? and cid=?",
+                oldPubchemCompoundIdentifiers);
+        store("insert into mona.compound_pubchem_compound_ids(compound,cid) values(?,?)",
+                newPubchemCompoundIdentifiers);
+
+        store("delete from mona.compound_pubchem_substance_ids where compound=? and sid=?",
+                oldPubchemSubstanceIdentifiers);
+        store("insert into mona.compound_pubchem_substance_ids(compound,sid) values(?,?)",
+                newPubchemSubstanceIdentifiers);
+
+        store("delete from mona.spectrum_annotations where compound=? and peak=? and value=? and id=?", oldAnnotations);
+        store("insert into mona.spectrum_annotations(compound,peak,value,id) values(?,?,?,?)", newAnnotations);
+
+        store("delete from mona.spectrum_tags where compound=? and tag=?", oldTags);
+        store("insert into mona.spectrum_tags(compound,tag) values(?,?)", newTags);
+
+
+        store("delete from mona.spectrum_normalized_entropies where compound=? and entropy=?", oldNormalizedEntropies);
+        store("insert into mona.spectrum_normalized_entropies(compound,entropy) values(?,?)", newNormalizedEntropies);
+
+        store("delete from mona.spectrum_spectral_entropies where compound=? and entropy=?", oldSpectralEntropies);
+        store("insert into mona.spectrum_spectral_entropies(compound,entropy) values(?,?)", newSpectralEntropies);
+
+        store("delete from mona.spectrum_retention_times where compound=? and time=? and unit=?", oldRetentionTimes);
+        store("insert into mona.spectrum_retention_times(compound,time,unit) values(?,?,?)", newRetentionTimes);
+
+        store("delete from mona.spectrum_collision_energies where compound=? and energy=? and unit=?",
+                oldCollisionEnergies);
+        store("insert into mona.spectrum_collision_energies(compound,energy,unit) values(?,?,?)", newCollisionEnergies);
+
+        store("delete from mona.spectrum_collision_energy_ramps where compound=? and ramp_start=? and ramp_end=? and unit=?",
+                oldCollisionEnergyRamps);
+        store("insert into mona.spectrum_collision_energy_ramps(compound,ramp_start,ramp_end,unit) values(?,?,?,?)",
+                newCollisionEnergyRamps);
+
+        store("delete from mona.spectrum_instrument_types where compound=? and type=?", oldInstrumentTypes);
+        store("insert into mona.spectrum_instrument_types(compound,type) values(?,?)", newInstrumentTypes);
+
+        store("delete from mona.spectrum_instruments where compound=? and instrument=?", oldInstruments);
+        store("insert into mona.spectrum_instruments(compound,instrument) values(?,?)", newInstruments);
+
+        store("delete from mona.spectrum_precursor_types where compound=? and type=?", oldPrecursorTypes);
+        store("insert into mona.spectrum_precursor_types(compound,type) values(?,?)", newPrecursorTypes);
+
+        store("delete from mona.spectrum_precursor_mzs where compound=? and mz=?", oldPrecursorMZs);
+        store("insert into mona.spectrum_precursor_mzs(compound,mz) values(?,?)", newPrecursorMZs);
+
+        store("delete from mona.library_bases where name=? and id=?", oldLibraries);
+        store("insert into mona.library_bases(name,id) values(?,?)", newLibraries);
+
+        store("update mona.library_bases set description=null where id=? and description=?", oldLibraryDescriptions);
+        store("insert into mona.library_bases(id,name,description) values(?,?,?) "
+                + "on conflict(id) do update set description=EXCLUDED.description", newLibraryDescriptions);
+
+        store("delete from mona.submitter_bases where email=? and first_name=? and last_name=? and institution=? and id=?",
+                oldSubmitters);
+        store("insert into mona.submitter_bases(email,first_name,last_name,institution,id) values(?,?,?,?,?)",
+                newSubmitters);
+
+
+        try(Statement statement = connection.createStatement())
         {
-            throw e;
+            statement.execute("select sachem.cleanup('mona')");
+            statement.execute("select sachem.sync_data('mona', false, true)");
         }
+
+
+        updateVersion();
+        commit();
     }
 
 
