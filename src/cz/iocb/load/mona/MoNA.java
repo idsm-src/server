@@ -91,8 +91,12 @@ public class MoNA extends Updater
     }
 
 
-    private static TimeZone tz = TimeZone.getTimeZone("UTC");
-    private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+    private static final TimeZone tz = TimeZone.getTimeZone("UTC");
+    private static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+
+    private static final String decimalPattern = "(([0-9]*\\.)?[0-9]+([eE][+-]?[0-9]+)?)";
+    private static final String peakPattern = decimalPattern + ":" + decimalPattern;
+
 
     static
     {
@@ -504,24 +508,31 @@ public class MoNA extends Updater
 
                 String spectrum = item.spectrum.replaceFirst("^Scan:#[0-9]+ m/z:Intensity ", "").trim();
 
-                if(spectrumCompare(spectrum, oldSpectra.remove(id)))
+                if(Arrays.stream(spectrum.split(" ")).allMatch(p -> p.matches(peakPattern)))
                 {
-                    keepSpectra.put(id, spectrum);
+                    if(spectrumCompare(spectrum, oldSpectra.remove(id)))
+                    {
+                        keepSpectra.put(id, spectrum);
+                    }
+                    else
+                    {
+                        String keep = keepSpectra.get(id);
+
+                        if(!spectrumCompare(spectrum, keep))
+                        {
+                            if(keep != null)
+                                throw new IOException();
+
+                            Pair<String, String> put = newSpectra.put(id, Pair.getPair(item.id, spectrum));
+
+                            if(put != null && !spectrum.equals(put.getTwo()))
+                                throw new IOException();
+                        }
+                    }
                 }
                 else
                 {
-                    String keep = keepSpectra.get(id);
-
-                    if(!spectrumCompare(spectrum, keep))
-                    {
-                        if(keep != null)
-                            throw new IOException();
-
-                        Pair<String, String> put = newSpectra.put(id, Pair.getPair(item.id, spectrum));
-
-                        if(put != null && !spectrum.equals(put.getTwo()))
-                            throw new IOException();
-                    }
+                    System.err.println(item.id + ": skip malformed spectrum literal");
                 }
 
 
