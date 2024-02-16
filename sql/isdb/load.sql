@@ -1,7 +1,7 @@
 begin;
 
-truncate isdb.compound_bases;
-truncate isdb.spectrum_bases;
+delete from isdb.spectrum_bases;
+delete from isdb.compound_bases;
 
 
 create temporary table isdb_neg
