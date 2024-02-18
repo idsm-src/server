@@ -12,10 +12,11 @@ $$
 immutable parallel safe strict;
 
 
-create function sachem.similarity_stub(varchar, varchar, numeric = 1, sachem.aromaticity_mode = 'AUTO') returns float8 as
+create function sachem.similarity_stub(varchar, varchar, numeric = 1, sachem.aromaticity_mode = 'AUTO') returns float8 language sql as
 $$
   select sachem.similarity($1, $2, $3::int, $4);
-$$ language sql immutable strict;
+$$
+immutable parallel safe strict;
 
 
 create function sachem.substructure_search_multi(varchar[], varchar, sachem.search_mode = 'SUBSTRUCTURE', sachem.charge_mode = 'DEFAULT_AS_ANY', sachem.isotope_mode = 'IGNORE', sachem.radical_mode = 'DEFAULT_AS_ANY', sachem.stereo_mode = 'IGNORE', sachem.aromaticity_mode = 'AUTO', sachem.tautomer_mode = 'IGNORE', varchar = 'UNSPECifIED', numeric = -1, boolean = false, numeric = 0) returns setof record language plpgsql as
