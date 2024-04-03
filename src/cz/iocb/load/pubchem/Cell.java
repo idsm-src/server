@@ -220,7 +220,12 @@ public class Cell extends Updater
 
         new QueryResultProcessor(patternQuery("?cell skos:closeMatch ?match. "
                 + "filter(!strstarts(str(?match), 'https://web.expasy.org/cellosaurus/CVCL_'))"
-                + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
+                + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
+                + "filter(!strstarts(str(?match), 'https://www.wikidata.org/wiki/Q'))"
+                + "filter(!strstarts(str(?match), 'https://www.cancerrxgene.org/translation/CellLine/'))"
+                + "filter(!strstarts(str(?match), 'https://depmap.org/portal/cell_line/ACH-'))"
+                + "filter(!strstarts(str(?match), 'https://cellmodelpassports.sanger.ac.uk/passports/SIDM'))"
+                + "filter(!strstarts(str(?match), 'https://cancer.sanger.ac.uk/cell_lines/sample/overview?id='))"))
         {
             @Override
             protected void parse() throws IOException
@@ -238,34 +243,6 @@ public class Cell extends Updater
 
         store("delete from pubchem.cell_matches where cell=? and match_unit=? and match_id=?", oldMatches);
         store("insert into pubchem.cell_matches(cell,match_unit,match_id) values(?,?,?)", newMatches);
-    }
-
-
-    private static void loadCellosaurusCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntStringSet newMatches = new IntStringSet();
-        IntStringSet oldMatches = new IntStringSet();
-
-        load("select cell,match from pubchem.cell_cellosaurus_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?cell skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://web.expasy.org/cellosaurus/CVCL_'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer cellID = getCellID(getIRI("cell"));
-                String match = getStringID("match", "https://web.expasy.org/cellosaurus/CVCL_");
-
-                Pair<Integer, String> pair = Pair.getPair(cellID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.cell_cellosaurus_matches where cell=? and match=?", oldMatches);
-        store("insert into pubchem.cell_cellosaurus_matches(cell,match) values(?,?)", newMatches);
     }
 
 
@@ -294,6 +271,202 @@ public class Cell extends Updater
 
         store("delete from pubchem.cell_mesh_matches where cell=? and match=?", oldMatches);
         store("insert into pubchem.cell_mesh_matches(cell,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadWikidataCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select cell,match from pubchem.cell_wikidata_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?cell skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.wikidata.org/wiki/Q'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer cellID = getCellID(getIRI("cell"));
+                Integer match = getIntID("match", "https://www.wikidata.org/wiki/Q");
+
+                Pair<Integer, Integer> pair = Pair.getPair(cellID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.cell_wikidata_matches where cell=? and match=?", oldMatches);
+        store("insert into pubchem.cell_wikidata_matches(cell,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadCancerrxgeneCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select cell,match from pubchem.cell_cancerrxgene_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?cell skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.cancerrxgene.org/translation/CellLine/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer cellID = getCellID(getIRI("cell"));
+                Integer match = getIntID("match", "https://www.cancerrxgene.org/translation/CellLine/");
+
+                Pair<Integer, Integer> pair = Pair.getPair(cellID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.cell_cancerrxgene_matches where cell=? and match=?", oldMatches);
+        store("insert into pubchem.cell_cancerrxgene_matches(cell,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadDepmapCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select cell,match from pubchem.cell_depmap_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?cell skos:closeMatch ?match. filter(strstarts(str(?match), 'https://depmap.org/portal/cell_line/ACH-'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer cellID = getCellID(getIRI("cell"));
+                Integer match = getIntID("match", "https://depmap.org/portal/cell_line/ACH-");
+
+                Pair<Integer, Integer> pair = Pair.getPair(cellID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.cell_depmap_matches where cell=? and match=?", oldMatches);
+        store("insert into pubchem.cell_depmap_matches(cell,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadSangerPassportCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select cell,match from pubchem.cell_sanger_passport_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?cell skos:closeMatch ?match. filter(strstarts(str(?match), 'https://cellmodelpassports.sanger.ac.uk/passports/SIDM'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer cellID = getCellID(getIRI("cell"));
+                Integer match = getIntID("match", "https://cellmodelpassports.sanger.ac.uk/passports/SIDM");
+
+                Pair<Integer, Integer> pair = Pair.getPair(cellID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.cell_sanger_passport_matches where cell=? and match=?", oldMatches);
+        store("insert into pubchem.cell_sanger_passport_matches(cell,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadSangerLineCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select cell,match from pubchem.cell_sanger_line_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?cell skos:closeMatch ?match. filter(strstarts(str(?match), 'https://cancer.sanger.ac.uk/cell_lines/sample/overview?id='))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer cellID = getCellID(getIRI("cell"));
+                Integer match = getIntID("match", "https://cancer.sanger.ac.uk/cell_lines/sample/overview?id=");
+
+                Pair<Integer, Integer> pair = Pair.getPair(cellID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.cell_sanger_line_matches where cell=? and match=?", oldMatches);
+        store("insert into pubchem.cell_sanger_line_matches(cell,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadCellosaurusMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select cell,match from pubchem.cell_cellosaurus_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?cell skos:sameAs ?match. "
+                + "filter(strstarts(str(?match), 'https://web.expasy.org/cellosaurus/CVCL_'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer cellID = getCellID(getIRI("cell"));
+                String match = getStringID("match", "https://web.expasy.org/cellosaurus/CVCL_");
+
+                Pair<Integer, String> pair = Pair.getPair(cellID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.cell_cellosaurus_matches where cell=? and match=?", oldMatches);
+        store("insert into pubchem.cell_cellosaurus_matches(cell,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadChemblCardCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select cell,match from pubchem.cell_chembl_card_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?cell skos:sameAs ?match. filter(strstarts(str(?match), 'https://www.ebi.ac.uk/chembl/cell_line_report_card/CHEMBL'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer cellID = getCellID(getIRI("cell"));
+                Integer match = getIntID("match", "https://www.ebi.ac.uk/chembl/cell_line_report_card/CHEMBL");
+
+                Pair<Integer, Integer> pair = Pair.getPair(cellID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.cell_chembl_card_matches where cell=? and match=?", oldMatches);
+        store("insert into pubchem.cell_chembl_card_matches(cell,match) values(?,?)", newMatches);
     }
 
 
@@ -339,8 +512,14 @@ public class Cell extends Updater
         loadOccurrences(model);
         loadReferences(model);
         loadCloseMatches(model);
-        loadCellosaurusCloseMatches(model);
         loadMeshCloseMatches(model);
+        loadWikidataCloseMatches(model);
+        loadCancerrxgeneCloseMatches(model);
+        loadDepmapCloseMatches(model);
+        loadSangerPassportCloseMatches(model);
+        loadSangerLineCloseMatches(model);
+        loadCellosaurusMatches(model);
+        loadChemblCardCloseMatches(model);
         loadAnatomies(model);
 
         model.close();

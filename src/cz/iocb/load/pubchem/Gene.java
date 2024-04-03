@@ -15,7 +15,7 @@ class Gene extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID";
     static final int prefixLength = prefix.length();
 
-    static final String symbolPrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/";
+    static final String symbolPrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/MD5_";
     static final int symbolPrefixLength = symbolPrefix.length();
 
     private static final IntSet keepGenes = new IntSet();
@@ -48,6 +48,51 @@ class Gene extends Updater
                     keepGeneSymbols.put(geneSymbol, geneSymbolID);
             }
         }.load(model);
+    }
+
+
+    private static void loadGeneSymbolLiterals(Model model) throws IOException, SQLException
+    {
+        IntStringMap keepSymbolLiterals = new IntStringMap();
+        IntStringPairMap newSymbolLiterals = new IntStringPairMap();
+        IntStringMap oldSymbolLiterals = new IntStringMap();
+
+        load("select id,symbol from pubchem.gene_symbol_bases where symbol is not null", oldSymbolLiterals);
+
+        new QueryResultProcessor(patternQuery("?gene_symbol sio:SIO_000300 ?symbol"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneSymbolID = getGeneSymbolID(getIRI("gene_symbol"), true);
+                String symbol = getString("symbol");
+
+                if(symbol.equals(oldSymbolLiterals.remove(geneSymbolID)))
+                {
+                    keepSymbolLiterals.put(geneSymbolID, symbol);
+                }
+                else
+                {
+                    String keep = keepSymbolLiterals.get(geneSymbolID);
+
+                    Pair<String, String> pair = Pair.getPair(getStringID("gene_symbol", symbolPrefix), symbol);
+
+                    if(symbol.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Pair<String, String> put = newSymbolLiterals.put(geneSymbolID, pair);
+
+                    if(put != null && !symbol.equals(put.getTwo()))
+                        throw new IOException();
+                }
+            }
+        }.load(model);
+
+        store("update pubchem.gene_symbol_bases set symbol=null where id=? and symbol=?", oldSymbolLiterals);
+        store("insert into pubchem.gene_symbol_bases(id,iri,symbol) values(?,?,?) "
+                + "on conflict(id) do update set symbol=EXCLUDED.symbol", newSymbolLiterals);
     }
 
 
@@ -489,14 +534,14 @@ class Gene extends Updater
 
         load("select gene,match from pubchem.gene_genenames_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. filter(strstarts(str(?match), "
-                + "'https://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:'))"))
+        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+                + "filter(strstarts(str(?match), 'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer geneID = getGeneID(getIRI("gene"));
-                Integer match = getIntID("match", "https://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:");
+                Integer match = getIntID("match", "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:");
 
                 Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
 
@@ -535,6 +580,371 @@ class Gene extends Updater
 
         store("delete from pubchem.gene_kegg_matches where gene=? and match=?", oldMatches);
         store("insert into pubchem.gene_kegg_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadFlybaseCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select gene,match from pubchem.gene_flybase_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'http://flybase.org/reports/FBgn'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer match = getIntID("match", "http://flybase.org/reports/FBgn");
+
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_flybase_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_flybase_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadInformaticsCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select gene,match from pubchem.gene_informatics_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+                + "filter(strstarts(str(?match), 'http://www.informatics.jax.org/marker/MGI:'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer match = getIntID("match", "http://www.informatics.jax.org/marker/MGI:");
+
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_informatics_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_informatics_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadWormbaseCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select gene,match from pubchem.gene_wormbase_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+                + "filter(strstarts(str(?match), 'http://www.wormbase.org/db/gene/gene?name=WBGene'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer match = getIntID("match", "http://www.wormbase.org/db/gene/gene?name=WBGene", ";class=Gene");
+
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_wormbase_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_wormbase_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadOpentargetsCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select gene,match from pubchem.gene_opentargets_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+                + "filter(strstarts(str(?match), 'https://platform.opentargets.org/target/ENSG'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer match = getIntID("match", "https://platform.opentargets.org/target/ENSG");
+
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_opentargets_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_opentargets_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadRgdwebCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select gene,match from pubchem.gene_rgdweb_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+                + "filter(strstarts(str(?match), 'https://rgd.mcw.edu/rgdweb/report/gene/main.html?id='))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer match = getIntID("match", "https://rgd.mcw.edu/rgdweb/report/gene/main.html?id=");
+
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_rgdweb_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_rgdweb_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadThegenccCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select gene,match from pubchem.gene_thegencc_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+                + "filter(strstarts(str(?match), 'https://search.thegencc.org/genes/HGNC:'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer match = getIntID("match", "https://search.thegencc.org/genes/HGNC:");
+
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_thegencc_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_thegencc_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadXenbaseCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select gene,match from pubchem.gene_xenbase_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+                + "filter(strstarts(str(?match), 'https://www.xenbase.org/gene/showgene.do?method=display&geneId=XB-GENE-'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer match = getIntID("match", "https://www.xenbase.org/gene/showgene.do?method=display&geneId=XB-"
+                        + (getIRI("match").contains("GENEPAGE") ? "GENEPAGE-" : "GENE-"));
+
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_xenbase_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_xenbase_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadYeastgenomeCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select gene,match from pubchem.gene_yeastgenome_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+                + "filter(strstarts(str(?match), 'https://www.yeastgenome.org/locus/S'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer match = getIntID("match", "https://www.yeastgenome.org/locus/S");
+
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_yeastgenome_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_yeastgenome_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadPharosCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select gene,match from pubchem.gene_pharos_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                String match = getStringID("match", "https://pharos.nih.gov/targets/");
+
+                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_pharos_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_pharos_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadBgeeCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select gene,match from pubchem.gene_bgee_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://www.bgee.org/gene/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                String match = getStringID("match", "https://www.bgee.org/gene/");
+
+                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_bgee_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_bgee_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadPombaseCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select gene,match from pubchem.gene_pombase_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://www.pombase.org/gene/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                String match = getStringID("match", "https://www.pombase.org/gene/");
+
+                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_pombase_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_pombase_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadVeupathdbCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select gene,match from pubchem.gene_veupathdb_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://www.veupathdb.org/gene/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                String match = getStringID("match", "https://www.veupathdb.org/gene/");
+
+                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_veupathdb_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_veupathdb_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadZfinCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select gene,match from pubchem.gene_zfin_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://zfin.org/ZDB-'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                String match = getStringID("match", "https://zfin.org/ZDB-");
+
+                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_zfin_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_zfin_matches(gene,match) values(?,?)", newMatches);
     }
 
 
@@ -664,6 +1074,7 @@ class Gene extends Updater
         check(model, "pubchem/gene/check.sparql");
 
         loadGeneSymbolBases(model);
+        loadGeneSymbolLiterals(model);
 
         loadGeneBases(model);
         loadSymbols(model);
@@ -684,6 +1095,19 @@ class Gene extends Updater
         loadAlliancegenomeCloseMatches(model);
         loadGenenamesCloseMatches(model);
         loadKeggCloseMatches(model);
+        loadFlybaseCloseMatches(model);
+        loadInformaticsCloseMatches(model);
+        loadWormbaseCloseMatches(model);
+        loadOpentargetsCloseMatches(model);
+        loadRgdwebCloseMatches(model);
+        loadThegenccCloseMatches(model);
+        loadXenbaseCloseMatches(model);
+        loadYeastgenomeCloseMatches(model);
+        loadPharosCloseMatches(model);
+        loadBgeeCloseMatches(model);
+        loadPombaseCloseMatches(model);
+        loadVeupathdbCloseMatches(model);
+        loadZfinCloseMatches(model);
         loadOrthologs(model);
 
         model.close();
@@ -707,13 +1131,16 @@ class Gene extends Updater
 
     static Integer getGeneSymbolID(String value) throws IOException
     {
+        return getGeneSymbolID(value, false);
+    }
+
+
+    static Integer getGeneSymbolID(String value, boolean keepForce) throws IOException
+    {
         if(!value.startsWith(symbolPrefix))
             throw new IOException("unexpected IRI: " + value);
 
         String symbol = value.substring(symbolPrefixLength);
-
-        if(symbol.matches("GID([123569]|[1-9][0-9]+)"))
-            throw new IOException();
 
         synchronized(newGeneSymbols)
         {
@@ -725,14 +1152,24 @@ class Gene extends Updater
             geneSymbolID = newGeneSymbols.get(symbol);
 
             if(geneSymbolID != null)
+            {
+                if(keepForce)
+                {
+                    newGeneSymbols.remove(symbol);
+                    keepGeneSymbols.put(symbol, geneSymbolID);
+                }
+
                 return geneSymbolID;
+            }
 
             System.out.println("    add missing gene symbol " + symbol);
 
-            if((geneSymbolID = oldGeneSymbols.remove(symbol)) == null)
-                newGeneSymbols.put(symbol, geneSymbolID = nextGeneSymbolID++);
-            else
+            if((geneSymbolID = oldGeneSymbols.remove(symbol)) != null)
                 keepGeneSymbols.put(symbol, geneSymbolID);
+            else if(keepForce)
+                keepGeneSymbols.put(symbol, geneSymbolID = nextGeneSymbolID++);
+            else
+                newGeneSymbols.put(symbol, geneSymbolID = nextGeneSymbolID++);
 
             return geneSymbolID;
         }

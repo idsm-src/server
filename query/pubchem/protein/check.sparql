@@ -30,6 +30,7 @@ select distinct ?iri where
         filter(! strstarts(str(?iri), "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID"))
         filter(! strstarts(str(?iri), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"))
         filter(! strstarts(str(?iri), "https://pfam.xfam.org/family/PF"))
+        filter(! strstarts(str(?iri), "https://www.ebi.ac.uk/interpro/entry/InterPro/IPR"))
     }
     union
     {
@@ -41,9 +42,18 @@ select distinct ?iri where
         filter(! strstarts(str(?iri), "https://guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId="))
         filter(! strstarts(str(?iri), "https://www.drugbank.ca/bio_entities/BE"))
         filter(! strstarts(str(?iri), "https://www.ebi.ac.uk/chembl/target_report_card/CHEMBL"))
-        filter(! strstarts(str(?iri), "https://glygen.org/protein/"))
-        filter(! strstarts(str(?iri), "http://glygen.org/glycan/"))
+        filter(! strstarts(str(?iri), "http://glygen.org/protein/"))
         filter(! strstarts(str(?iri), "https://glycosmos.org/glycoproteins/show/uniprot/"))
         filter(! strstarts(str(?iri), "https://alphafold.ebi.ac.uk/entry/"))
+        filter(! strstarts(str(?iri), "http://enzyme.expasy.org/EC/"))
+        filter(! strstarts(str(?iri), "https://pharos.nih.gov/targets/"))
+        filter(! strstarts(str(?iri), "https://platform.opentargets.org/target/ENSG"))
+        filter(! strstarts(str(?iri), "https://proconsortium.org/app/entry/PR:"))
+        filter(! strstarts(str(?iri), "https://wormbase.org/db/seq/protein?name="))
+        filter(! strstarts(str(?iri), "https://www.brenda-enzymes.org/enzyme.php?ecno="))
+        filter(! strstarts(str(?iri), "https://www.ebi.ac.uk/intact/search?query=id:"))
+        filter(! strstarts(str(?iri), "https://www.ebi.ac.uk/interpro/protein/reviewed/"))
+        filter(! strstarts(str(?iri), "https://www.nextprot.org/entry/NX_"))
+        filter(! strstarts(str(?iri), "https://www.proteinatlas.org/ENSG"))
     }
 }

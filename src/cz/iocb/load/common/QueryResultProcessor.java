@@ -72,6 +72,25 @@ public abstract class QueryResultProcessor
     }
 
 
+    protected Integer getIntID(String name, String prefix, String suffix) throws IOException
+    {
+        Resource resource = solution.getResource(name);
+
+        if(resource == null)
+            return null;
+
+        String value = resource.getURI();
+
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        if(!value.endsWith(suffix))
+            throw new IOException("unexpected IRI: " + value);
+
+        return Integer.parseInt(value.substring(prefix.length(), value.length() - suffix.length()));
+    }
+
+
     protected String getStringID(String name, String prefix) throws IOException
     {
         Resource resource = solution.getResource(name);
@@ -85,6 +104,25 @@ public abstract class QueryResultProcessor
             throw new IOException("unexpected IRI: " + value);
 
         return value.substring(prefix.length());
+    }
+
+
+    protected String getStringID(String name, String prefix, String suffix) throws IOException
+    {
+        Resource resource = solution.getResource(name);
+
+        if(resource == null)
+            return null;
+
+        String value = resource.getURI();
+
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        if(!value.endsWith(suffix))
+            throw new IOException("unexpected IRI: " + value);
+
+        return value.substring(prefix.length(), value.length() - suffix.length());
     }
 
 

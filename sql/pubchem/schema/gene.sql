@@ -2,6 +2,7 @@ create table pubchem.gene_symbol_bases
 (
     id             integer not null,
     iri            varchar unique not null,
+    symbol         varchar,
     primary key(id)
 );
 
@@ -105,6 +106,110 @@ create table pubchem.gene_genenames_matches
 
 
 create table pubchem.gene_kegg_matches
+(
+    gene     integer not null,
+    match    varchar not null,
+    primary key(gene, match)
+);
+
+
+create table pubchem.gene_flybase_matches
+(
+    gene     integer not null,
+    match    integer not null,
+    primary key(gene, match)
+);
+
+
+create table pubchem.gene_informatics_matches
+(
+    gene     integer not null,
+    match    integer not null,
+    primary key(gene, match)
+);
+
+
+create table pubchem.gene_wormbase_matches
+(
+    gene     integer not null,
+    match    integer not null,
+    primary key(gene, match)
+);
+
+
+create table pubchem.gene_opentargets_matches
+(
+    gene     integer not null,
+    match    integer not null,
+    primary key(gene, match)
+);
+
+
+create table pubchem.gene_rgdweb_matches
+(
+    gene     integer not null,
+    match    integer not null,
+    primary key(gene, match)
+);
+
+
+create table pubchem.gene_thegencc_matches
+(
+    gene     integer not null,
+    match    integer not null,
+    primary key(gene, match)
+);
+
+
+create table pubchem.gene_xenbase_matches
+(
+    gene     integer not null,
+    match    integer not null,
+    primary key(gene, match)
+);
+
+
+create table pubchem.gene_yeastgenome_matches
+(
+    gene     integer not null,
+    match    integer not null,
+    primary key(gene, match)
+);
+
+
+create table pubchem.gene_pharos_matches
+(
+    gene     integer not null,
+    match    varchar not null,
+    primary key(gene, match)
+);
+
+
+create table pubchem.gene_bgee_matches
+(
+    gene     integer not null,
+    match    varchar not null,
+    primary key(gene, match)
+);
+
+
+create table pubchem.gene_pombase_matches
+(
+    gene     integer not null,
+    match    varchar not null,
+    primary key(gene, match)
+);
+
+
+create table pubchem.gene_veupathdb_matches
+(
+    gene     integer not null,
+    match    varchar not null,
+    primary key(gene, match)
+);
+
+
+create table pubchem.gene_zfin_matches
 (
     gene     integer not null,
     match    varchar not null,

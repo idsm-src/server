@@ -139,14 +139,6 @@ create table pubchem.protein_glygen_matches
 );
 
 
-create table pubchem.protein_glycan_matches
-(
-    protein  integer not null,
-    match    varchar not null,
-    primary key(protein, match)
-);
-
-
 create table pubchem.protein_glycosmos_matches
 (
     protein  integer not null,
@@ -156,6 +148,86 @@ create table pubchem.protein_glycosmos_matches
 
 
 create table pubchem.protein_alphafold_matches
+(
+    protein  integer not null,
+    match    varchar not null,
+    primary key(protein, match)
+);
+
+
+create table pubchem.protein_opentargets_matches
+(
+    protein  integer not null,
+    match    integer not null,
+    primary key(protein, match)
+);
+
+
+create table pubchem.protein_proteinatlas_matches
+(
+    protein  integer not null,
+    match    integer not null,
+    primary key(protein, match)
+);
+
+
+create table pubchem.protein_expasy_matches
+(
+    protein  integer not null,
+    match    varchar not null,
+    primary key(protein, match)
+);
+
+
+create table pubchem.protein_pharos_matches
+(
+    protein  integer not null,
+    match    varchar not null,
+    primary key(protein, match)
+);
+
+
+create table pubchem.protein_proconsortium_matches
+(
+    protein  integer not null,
+    match    varchar not null,
+    primary key(protein, match)
+);
+
+
+create table pubchem.protein_wormbase_matches
+(
+    protein  integer not null,
+    match    varchar not null,
+    primary key(protein, match)
+);
+
+
+create table pubchem.protein_brenda_matches
+(
+    protein  integer not null,
+    match    varchar not null,
+    primary key(protein, match)
+);
+
+
+create table pubchem.protein_intact_matches
+(
+    protein  integer not null,
+    match    varchar not null,
+    primary key(protein, match)
+);
+
+
+create table pubchem.protein_interpro_matches
+(
+    protein  integer not null,
+    match    varchar not null,
+    primary key(protein, match)
+);
+
+
+create table pubchem.protein_nextprot_matches
 (
     protein  integer not null,
     match    varchar not null,
@@ -180,6 +252,14 @@ create table pubchem.protein_continuantparts
 
 
 create table pubchem.protein_families
+(
+    protein    integer not null,
+    family     integer not null,
+    primary key(protein, family)
+);
+
+
+create table pubchem.protein_interpro_families
 (
     protein    integer not null,
     family     integer not null,

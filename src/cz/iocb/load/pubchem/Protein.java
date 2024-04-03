@@ -702,13 +702,13 @@ class Protein extends Updater
         load("select protein,match from pubchem.protein_glygen_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://glygen.org/protein/'))"))
+                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'http://glygen.org/protein/'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer proteinID = getProteinID(getIRI("protein"));
-                String match = getStringID("match", "https://glygen.org/protein/");
+                String match = getStringID("match", "http://glygen.org/protein/");
 
                 Pair<Integer, String> pair = Pair.getPair(proteinID, match);
 
@@ -719,34 +719,6 @@ class Protein extends Updater
 
         store("delete from pubchem.protein_glygen_matches where protein=? and match=?", oldMatches);
         store("insert into pubchem.protein_glygen_matches(protein,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadGlycanMatches(Model model) throws IOException, SQLException
-    {
-        IntStringSet newMatches = new IntStringSet();
-        IntStringSet oldMatches = new IntStringSet();
-
-        load("select protein,match from pubchem.protein_glycan_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'http://glygen.org/glycan/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer proteinID = getProteinID(getIRI("protein"));
-                String match = getStringID("match", "http://glygen.org/glycan/");
-
-                Pair<Integer, String> pair = Pair.getPair(proteinID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.protein_glycan_matches where protein=? and match=?", oldMatches);
-        store("insert into pubchem.protein_glycan_matches(protein,match) values(?,?)", newMatches);
     }
 
 
@@ -803,6 +775,289 @@ class Protein extends Updater
 
         store("delete from pubchem.protein_alphafold_matches where protein=? and match=?", oldMatches);
         store("insert into pubchem.protein_alphafold_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
+
+
+
+    private static void loadOpentargetsCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select protein,match from pubchem.protein_opentargets_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://platform.opentargets.org/target/ENSG'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                Integer match = getIntID("match", "https://platform.opentargets.org/target/ENSG");
+
+                Pair<Integer, Integer> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_opentargets_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_opentargets_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadProteinatlasCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select protein,match from pubchem.protein_proteinatlas_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.proteinatlas.org/ENSG'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                Integer match = getIntID("match", "https://www.proteinatlas.org/ENSG");
+
+                Pair<Integer, Integer> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_proteinatlas_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_proteinatlas_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadExpasyCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select protein,match from pubchem.protein_expasy_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'http://enzyme.expasy.org/EC/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                String match = getStringID("match", "http://enzyme.expasy.org/EC/");
+
+                Pair<Integer, String> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_expasy_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_expasy_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadPharosCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select protein,match from pubchem.protein_pharos_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                String match = getStringID("match", "https://pharos.nih.gov/targets/");
+
+                Pair<Integer, String> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_pharos_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_pharos_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadProconsortiumCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select protein,match from pubchem.protein_proconsortium_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://proconsortium.org/app/entry/PR:'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                String match = getStringID("match", "https://proconsortium.org/app/entry/PR:");
+
+                Pair<Integer, String> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_proconsortium_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_proconsortium_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadWormbaseCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select protein,match from pubchem.protein_wormbase_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://wormbase.org/db/seq/protein?name='))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                String match = getStringID("match", "https://wormbase.org/db/seq/protein?name=", ";class=Protein");
+
+                Pair<Integer, String> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_wormbase_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_wormbase_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadBrendaCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select protein,match from pubchem.protein_brenda_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.brenda-enzymes.org/enzyme.php?ecno='))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                String match = getStringID("match", "https://www.brenda-enzymes.org/enzyme.php?ecno=");
+
+                Pair<Integer, String> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_brenda_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_brenda_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadIntactCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select protein,match from pubchem.protein_intact_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.ebi.ac.uk/intact/search?query=id:'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                String match = getStringID("match", "https://www.ebi.ac.uk/intact/search?query=id:", "#interactors");
+
+                Pair<Integer, String> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_intact_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_intact_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadInterproProteinCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select protein,match from pubchem.protein_interpro_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.ebi.ac.uk/interpro/protein/reviewed/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                String match = getStringID("match", "https://www.ebi.ac.uk/interpro/protein/reviewed/");
+
+                Pair<Integer, String> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_interpro_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_interpro_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadNextprotCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select protein,match from pubchem.protein_nextprot_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.nextprot.org/entry/NX_'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                String match = getStringID("match", "https://www.nextprot.org/entry/NX_");
+
+                Pair<Integer, String> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_nextprot_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_nextprot_matches(protein,match) values(?,?)", newMatches);
     }
 
 
@@ -887,6 +1142,34 @@ class Protein extends Updater
 
         store("delete from pubchem.protein_families where protein=? and family=?", oldFamilies);
         store("insert into pubchem.protein_families(protein,family) values(?,?)", newFamilies);
+    }
+
+
+    private static void loadInterProFamilies(Model model) throws IOException, SQLException
+    {
+        IntPairSet newFamilies = new IntPairSet();
+        IntPairSet oldFamilies = new IntPairSet();
+
+        load("select protein,family from pubchem.protein_interpro_families", oldFamilies);
+
+        new QueryResultProcessor(patternQuery("?protein obo:RO_0002180 ?family "
+                + "filter(strstarts(str(?family), 'https://www.ebi.ac.uk/interpro/entry/InterPro/IPR'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                Integer familyID = getIntID("family", "https://www.ebi.ac.uk/interpro/entry/InterPro/IPR");
+
+                Pair<Integer, Integer> pair = Pair.getPair(proteinID, familyID);
+
+                if(!oldFamilies.remove(pair))
+                    newFamilies.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_interpro_families where protein=? and family=?", oldFamilies);
+        store("insert into pubchem.protein_interpro_families(protein,family) values(?,?)", newFamilies);
     }
 
 
@@ -975,12 +1258,22 @@ class Protein extends Updater
         loadDrugbankCloseMatches(model);
         loadChemblCloseMatches(model);
         loadGlygenCloseMatches(model);
-        loadGlycanMatches(model);
         loadGlycosmosCloseMatches(model);
         loadAlphafoldCloseMatches(model);
+        loadOpentargetsCloseMatches(model);
+        loadProteinatlasCloseMatches(model);
+        loadExpasyCloseMatches(model);
+        loadPharosCloseMatches(model);
+        loadProconsortiumCloseMatches(model);
+        loadWormbaseCloseMatches(model);
+        loadBrendaCloseMatches(model);
+        loadIntactCloseMatches(model);
+        loadInterproProteinCloseMatches(model);
+        loadNextprotCloseMatches(model);
         loadConservedDomains(model);
         loadContinuantParts(model);
         loadFamilies(model);
+        loadInterProFamilies(model);
         loadTypes(model);
         loadReferences(model);
 

@@ -40,6 +40,54 @@ create table pubchem.cell_matches
 );
 
 
+create table pubchem.cell_mesh_matches
+(
+    cell          integer not null,
+    match         varchar not null,
+    primary key(cell, match)
+);
+
+
+create table pubchem.cell_wikidata_matches
+(
+    cell          integer not null,
+    match         integer not null,
+    primary key(cell, match)
+);
+
+
+create table pubchem.cell_cancerrxgene_matches
+(
+    cell          integer not null,
+    match         integer not null,
+    primary key(cell, match)
+);
+
+
+create table pubchem.cell_depmap_matches
+(
+    cell          integer not null,
+    match         integer not null,
+    primary key(cell, match)
+);
+
+
+create table pubchem.cell_sanger_passport_matches
+(
+    cell          integer not null,
+    match         integer not null,
+    primary key(cell, match)
+);
+
+
+create table pubchem.cell_sanger_line_matches
+(
+    cell          integer not null,
+    match         integer not null,
+    primary key(cell, match)
+);
+
+
 create table pubchem.cell_cellosaurus_matches
 (
     cell          integer not null,
@@ -48,10 +96,10 @@ create table pubchem.cell_cellosaurus_matches
 );
 
 
-create table pubchem.cell_mesh_matches
+create table pubchem.cell_chembl_card_matches
 (
     cell          integer not null,
-    match         varchar not null,
+    match         integer not null,
     primary key(cell, match)
 );
 
