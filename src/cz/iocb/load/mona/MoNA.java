@@ -116,15 +116,26 @@ public class MoNA extends Updater
             while((line = reader.readLine()) != null)
             {
                 if(line.equals("[Term]"))
+                {
                     classyFire = null;
+                }
                 else if(line.startsWith("id: "))
+                {
                     classyFire = new ClassyFire(Integer.parseInt(line.replaceFirst("^id: CHEMONTID:", "")));
+                }
                 else if(line.startsWith("name: "))
+                {
                     classyFires.put(line.replaceFirst("^name: ", ""), classyFire);
+                }
                 else if(line.matches("synonym: \".*\" RELATED ChEBI_TERM \\[CHEBI:.*\\]"))
+                {
                     classyFire.chebi.add(Integer.valueOf(line.replaceFirst(".*\\[CHEBI:(.*)\\]$", "$1")));
+                }
                 else if(line.matches("synonym: \".*\" RELATED MeSH_TERM \\[MESH:.*\\]"))
-                    classyFire.mesh.add(line.replaceFirst(".*\\[MESH:(.*)\\]$", "$1"));
+                {
+                    for(String mesh : line.replaceFirst(".*\\[(.*)\\]$", "$1").split(", "))
+                        classyFire.mesh.add(mesh.replaceFirst("^MESH:", ""));
+                }
             }
         }
 
