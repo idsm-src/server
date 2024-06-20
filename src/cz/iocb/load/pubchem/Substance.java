@@ -53,11 +53,6 @@ class Substance extends Updater
                         Integer substanceID = getSubstanceID(subject.getURI(), false, true);
                         Integer compoundID = Compound.getCompoundID(object.getURI());
 
-                        // workaround for pubchem 2024-05-11
-                        if(substanceID == 246344591 && compoundID == 161418871
-                                || substanceID == 347940993 && compoundID == 134343751)
-                            return;
-
                         synchronized(newCompounds)
                         {
                             if(compoundID.equals(oldCompounds.remove(substanceID)))
@@ -296,14 +291,6 @@ class Substance extends Updater
                             throw new IOException();
 
                         Integer substanceID = getSubstanceID(subject.getURI(), false, true);
-
-                        // workaround for pubchem 2024-05-11
-                        if(substanceID == 246344591
-                                && object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/source/ID24262")
-                                || substanceID == 347940993
-                                        && object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/source/ID4488"))
-                            return;
-
                         Integer sourceID = Source.getSourceID(object.getURI());
 
                         synchronized(newSources)
