@@ -320,6 +320,31 @@ class CompoundDescriptor extends Updater
     }
 
 
+    private static void checkIdentifier(String name, String suffix) throws IOException, SQLException
+    {
+        processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
+                        String value = getString(object);
+
+                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
+                            throw new IOException();
+
+                        if(!value.equals(Integer.toString(id)))
+                            throw new IOException();
+                    }
+                }.load(stream);
+            }
+        });
+    }
+
+
     private static void checkType(String name, String suffix, String typeName) throws IOException, SQLException
     {
         final String type = "http://semanticscience.org/resource/" + typeName;
@@ -413,6 +438,8 @@ class CompoundDescriptor extends Updater
         checkUnit("MonoIsotopicWeight", "_Mono_Isotopic_Weight", "UO_0000055");
         checkUnit("TPSA", "_TPSA", "UO_0000324");
 
+        checkIdentifier("Compound_Identifier", "_Compound_Identifier");
+
         checkType("Complexity", "_Structure_Complexity", "CHEMINF_000390");
         checkType("CovalentUnitCount", "_Covalent_Unit_Count", "CHEMINF_000369");
         checkType("DefinedAtomStereoCount", "_Defined_Atom_Stereo_Count", "CHEMINF_000370");
@@ -436,6 +463,7 @@ class CompoundDescriptor extends Updater
         checkType("isoSMILES", "_Isomeric_SMILES", "CHEMINF_000379");
         checkType("InChI", "_IUPAC_InChI", "CHEMINF_000396");
         checkType("IUPACName", "_Preferred_IUPAC_Name", "CHEMINF_000382");
+        checkType("Compound_Identifier", "_Compound_Identifier", "CHEMINF_000140");
 
         System.out.println();
     }
