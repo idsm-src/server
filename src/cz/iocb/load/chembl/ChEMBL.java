@@ -10,7 +10,7 @@ import cz.iocb.load.common.Updater;
 
 public class ChEMBL extends Updater
 {
-    protected static String version = "33.0";
+    protected static String version = "34.0";
 
 
     public static void main(String[] args) throws IOException, SQLException

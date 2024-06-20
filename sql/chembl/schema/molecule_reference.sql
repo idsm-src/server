@@ -10,7 +10,6 @@ create type chembl_tmp.molecule_reference_type as enum
     'KEGG LIGAND',
     'LINCS',
     'MCULE',
-    'MOLPORT',
     'NIKKAJI',
     'NMR SHIFT DB2',
     'PDBE',

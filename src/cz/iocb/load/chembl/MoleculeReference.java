@@ -37,8 +37,6 @@ public class MoleculeReference extends Updater
                 "http://zinc15\\.docking\\.org/substances/ZINC[0-9]{12}"));
         descriptions.put("SureChemblRef", new Description("SURE CHEMBL", "https://www.surechembl.org/chemical/",
                 "https://www\\.surechembl\\.org/chemical/SCHEMBL[0-9]+"));
-        descriptions.put("MolportRef", new Description("MOLPORT", "https://www.molport.com/shop/molecule-link/",
-                "https://www\\.molport\\.com/shop/molecule-link/MolPort(-[0-9]{3}){3}"));
         descriptions.put("EmoleculesRef", new Description("EMOLECULES", "https://www.emolecules.com/cgi-bin/more?vid=",
                 "https://www\\.emolecules\\.com/cgi-bin/more\\?vid=[1-9][0-9]*"));
         descriptions.put("MculeRef",
@@ -67,8 +65,8 @@ public class MoleculeReference extends Updater
                 "https://www\\.pharmgkb\\.org/drug/PA[1-9][0-9]*"));
         descriptions.put("AtlasRef", new Description("ATLAS", "http://www.ebi.ac.uk/gxa/query?conditionQuery=",
                 "http://www\\.ebi\\.ac\\.uk/gxa/query\\?conditionQuery=.+"));
-        descriptions.put("ReconRef", new Description("RECON", "https://vmh.uni.lu/#metabolite/",
-                "https://vmh\\.uni\\.lu/#metabolite/[^/]+"));
+        descriptions.put("ReconRef", new Description("RECON", "https://www.vmh.life/#metabolite/",
+                "https://www\\.vmh\\.life/#metabolite/[^/]+"));
         descriptions.put("WikipediaMolRef", new Description("WIKIPEDIA MOL", "http://en.wikipedia.org/wiki/",
                 "http://en\\.wikipedia\\.org/wiki/.+"));
         descriptions.put("LincsRef", new Description("LINCS", "http://identifiers.org/lincs.smallmolecule/",
