@@ -1,5 +1,6 @@
 package cz.iocb.load.pubchem;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -156,7 +157,7 @@ class Bioassay extends Updater
 
             while(zipStream.getNextEntry() != null)
             {
-                try(InputStream gzipStream = new GZIPInputStream(zipStream))
+                try(InputStream gzipStream = new FilteredInputStream(new GZIPInputStream(zipStream)))
                 {
                     DocumentBuilder db = dbf.newDocumentBuilder();
                     Document document = db.parse(gzipStream);
@@ -536,5 +537,68 @@ class Bioassay extends Updater
     public static int size()
     {
         return newBioassays.size() + keepBioassays.size();
+    }
+
+
+    static class FilteredInputStream extends InputStream
+    {
+        private final InputStream inputStream;
+        private final int[] buffer = new int[3];
+        private int bufferPosition = 0;
+        private int pushBackChar = -1;
+
+        public FilteredInputStream(InputStream inputStream)
+        {
+            this.inputStream = new BufferedInputStream(inputStream);
+        }
+
+        @Override
+        public int read() throws IOException
+        {
+            if(bufferPosition > 0)
+                return buffer[--bufferPosition];
+
+            int byteRead = pushBackChar != -1 ? pushBackChar : inputStream.read();
+
+            if(byteRead <= 0b01111111)
+                return byteRead;
+
+            if(byteRead <= 0b10111111)
+            {
+                System.err.println("  wrong UTF-8 codding");
+                return read();
+            }
+
+            int size = 0;
+
+            if(byteRead <= 0b11011111)
+                size = 0;
+            else if(byteRead <= 0b11101111)
+                size = 1;
+            else if(byteRead <= 0b11110111)
+                size = 2;
+
+            for(int i = size; i >= 0; i--)
+                if(!valid(buffer[i] = inputStream.read()))
+                    return read();
+
+            return byteRead;
+        }
+
+        private boolean valid(int i)
+        {
+            if(i > 0b01111111 && i <= 0b10111111)
+            {
+                bufferPosition++;
+                return true;
+            }
+            else
+            {
+                bufferPosition = 0;
+                pushBackChar = i;
+                System.err.println("  wrong UTF-8 codding");
+                return false;
+            }
+        }
     }
 }
