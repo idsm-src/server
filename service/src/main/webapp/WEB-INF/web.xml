@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+         version="2.5" xmlns="http://java.sun.com/xml/ns/javaee">
+
+  <!-- Default Page -->
+  <welcome-file-list>
+    <welcome-file>Chemweb.html</welcome-file>
+  </welcome-file-list>
+
+
+  <!-- ChemWeb Servlets -->
+  <servlet>
+    <servlet-name>CheckServiceServlet</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.services.check.CheckServiceImpl</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:idsm</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>CheckServiceServlet</servlet-name>
+    <url-pattern>/chemweb/check</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>QueryServiceServlet</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.services.query.QueryServiceImpl</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:idsm</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>QueryServiceServlet</servlet-name>
+    <url-pattern>/chemweb/query</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>DetailsPageServiceServlet</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.services.details.DetailsPageServiceImpl</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:idsm</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>DetailsPageServiceServlet</servlet-name>
+    <url-pattern>/chemweb/details</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>InfoServiceServlet</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.services.info.InfoServiceImpl</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:idsm</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>InfoServiceServlet</servlet-name>
+    <url-pattern>/chemweb/info</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>CompoundImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-pubchem</param-value></init-param>
+    <init-param><param-name>schema</param-name><param-value>molecules</param-value></init-param>
+    <init-param><param-name>table</param-name><param-value>pubchem</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>CompoundImage</servlet-name>
+    <url-pattern>/compound/image</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>Hints</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.hints.GenerateHints</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:idsm</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Hints</servlet-name>
+    <url-pattern>/chemweb/js/sparql-hint-data.js</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>Config</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.config.GenerateConfig</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:idsm</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Config</servlet-name>
+    <url-pattern>/chemweb/js/config.js</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>Examples</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.examples.GenerateExamples</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Examples</servlet-name>
+    <url-pattern>/chemweb/js/examples-data.js</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>DownloadServlet</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.download.DownloadServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>DownloadServlet</servlet-name>
+    <url-pattern>/download/helper/query.sparql</url-pattern>
+  </servlet-mapping>
+
+
+  <!-- SPARQL Endpoint Servlets -->
+  <servlet>
+    <servlet-name>EmptyEndpointServlet</servlet-name>
+    <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:empty</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>EmptyEndpointServlet</servlet-name>
+    <url-pattern>/sparql/endpoint/empty</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>IdsmEndpointServlet</servlet-name>
+    <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:idsm</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>IdsmEndpointServlet</servlet-name>
+    <url-pattern>/sparql/endpoint/idsm</url-pattern>
+  </servlet-mapping>
+
+
+  <servlet>
+    <servlet-name>SachemEndpointServlet</servlet-name>
+    <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:sachem</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>SachemEndpointServlet</servlet-name>
+    <url-pattern>/sachem/endpoint/integrated</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>ChebiSachemEndpointServlet</servlet-name>
+    <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:sachem-chebi</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ChebiSachemEndpointServlet</servlet-name>
+    <url-pattern>/sachem/endpoint/chebi</url-pattern>
+    <url-pattern>/sparql/endpoint/chebi</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>ChemblSachemEndpointServlet</servlet-name>
+    <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:sachem-chembl</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ChemblSachemEndpointServlet</servlet-name>
+    <url-pattern>/sachem/endpoint/chembl</url-pattern>
+    <url-pattern>/sparql/endpoint/chembl</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>DrugbankSachemEndpointServlet</servlet-name>
+    <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:sachem-drugbank</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>DrugbankSachemEndpointServlet</servlet-name>
+    <url-pattern>/sachem/endpoint/drugbank</url-pattern>
+    <url-pattern>/sparql/endpoint/drugbank</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>PubChemSachemEndpointServlet</servlet-name>
+    <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:sachem-pubchem</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>PubChemSachemEndpointServlet</servlet-name>
+    <url-pattern>/sachem/endpoint/pubchem</url-pattern>
+    <url-pattern>/sparql/endpoint/pubchem</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>WikidataSachemEndpointServlet</servlet-name>
+    <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:sachem-wikidata</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>WikidataSachemEndpointServlet</servlet-name>
+    <url-pattern>/sachem/endpoint/wikidata</url-pattern>
+    <url-pattern>/sparql/endpoint/wikidata</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>MonaSachemEndpointServlet</servlet-name>
+    <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:sachem-mona</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MonaSachemEndpointServlet</servlet-name>
+    <url-pattern>/sachem/endpoint/mona</url-pattern>
+    <url-pattern>/sparql/endpoint/mona</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>CorsProxyServlet</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.proxy.CorsProxyServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>CorsProxyServlet</servlet-name>
+    <url-pattern>/sparql/endpoint/proxy</url-pattern>
+  </servlet-mapping>
+
+
+  <!-- Sachem Image Servlets -->
+  <servlet>
+    <servlet-name>ChebiCompoundImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-chebi</param-value></init-param>
+    <init-param><param-name>schema</param-name><param-value>molecules</param-value></init-param>
+    <init-param><param-name>table</param-name><param-value>chebi</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ChebiCompoundImage</servlet-name>
+    <url-pattern>/chebi/compound/image</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>ChemblCompoundImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-chembl</param-value></init-param>
+    <init-param><param-name>schema</param-name><param-value>molecules</param-value></init-param>
+    <init-param><param-name>table</param-name><param-value>chembl</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ChemblCompoundImage</servlet-name>
+    <url-pattern>/chembl/compound/image</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>DrugbankCompoundImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-drugbank</param-value></init-param>
+    <init-param><param-name>schema</param-name><param-value>molecules</param-value></init-param>
+    <init-param><param-name>table</param-name><param-value>drugbank</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>DrugbankCompoundImage</servlet-name>
+    <url-pattern>/drugbank/compound/image</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>PubChemCompoundImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-pubchem</param-value></init-param>
+    <init-param><param-name>schema</param-name><param-value>molecules</param-value></init-param>
+    <init-param><param-name>table</param-name><param-value>pubchem</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>PubChemCompoundImage</servlet-name>
+    <url-pattern>/pubchem/compound/image</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>WikidataCompoundImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-wikidata</param-value></init-param>
+    <init-param><param-name>schema</param-name><param-value>molecules</param-value></init-param>
+    <init-param><param-name>table</param-name><param-value>wikidata</param-value></init-param>
+    <init-param><param-name>structure</param-name><param-value>smiles</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>WikidataCompoundImage</servlet-name>
+    <url-pattern>/wikidata/compound/image</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>MonaCompoundImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.MonaCompoundImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-mona</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MonaCompoundImage</servlet-name>
+    <url-pattern>/mona/compound/image</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>IsdbCompoundImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.IsdbCompoundImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-isdb</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>IsdbCompoundImage</servlet-name>
+    <url-pattern>/isdb/compound/image</url-pattern>
+  </servlet-mapping>
+
+
+  <servlet>
+    <servlet-name>MonaSpectrumServlet</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSpectrumServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:spectra-mona</param-value></init-param>
+    <init-param><param-name>schema</param-name><param-value>mona</param-value></init-param>
+    <init-param><param-name>table</param-name><param-value>compound_bases</param-value></init-param>
+    <init-param><param-name>id</param-name><param-value>accession</param-value></init-param>
+    <init-param><param-name>spectrum</param-name><param-value>spectrum</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MonaSpectrumServlet</servlet-name>
+    <url-pattern>/mona/compound/spectrum</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>IsdbSpectrumServlet</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.IsdbCompoundSpectrumServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:spectra-isdb</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>IsdbSpectrumServlet</servlet-name>
+    <url-pattern>/isdb/compound/spectrum</url-pattern>
+  </servlet-mapping>
+
+
+  <!-- Sachem Statistics Servlet -->
+  <servlet>
+    <servlet-name>SachemEndpointStatisticsServlet</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.endpoint.SachemEndpointStatisticsServlet</servlet-class>
+    <init-param><param-name>resource-chebi</param-name><param-value>jdbc:sachem-chebi</param-value></init-param>
+    <init-param><param-name>resource-chembl</param-name><param-value>jdbc:sachem-chembl</param-value></init-param>
+    <init-param><param-name>resource-drugbank</param-name><param-value>jdbc:sachem-drugbank</param-value></init-param>
+    <init-param><param-name>resource-pubchem</param-name><param-value>jdbc:sachem-pubchem</param-value></init-param>
+    <init-param><param-name>resource-wikidata</param-name><param-value>jdbc:sachem-wikidata</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>SachemEndpointStatisticsServlet</servlet-name>
+    <url-pattern>/endpoint/statistics.json</url-pattern>
+  </servlet-mapping>
+
+
+  <!-- Cache Filter -->
+  <filter>
+    <filter-name>CacheFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.cache.CacheFilter</filter-class>
+    <init-param>
+      <param-name>excludedUrls</param-name>
+      <param-value>/ms.html /css/st.css /js/st.js /js/d3.v3.min.js /js/jquery-3.5.1.min.js</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>CacheFilter</filter-name>
+    <url-pattern>*</url-pattern>
+  </filter-mapping>
+
+
+  <!-- Log Filter -->
+  <filter>
+    <filter-name>LogFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.log.LogFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>LogFilter</filter-name>
+    <url-pattern>*</url-pattern>
+  </filter-mapping>
+
+
+  <!-- Piwik Filters -->
+  <filter>
+    <filter-name>ChemwebPiwikFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <init-param><param-name>rpc</param-name><param-value>true</param-value></init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>ChemwebPiwikFilter</filter-name>
+    <url-pattern>/chemweb/query</url-pattern>
+    <url-pattern>/chemweb/details</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>EmptyEndpointPiwikFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <init-param><param-name>actionName</param-name><param-value>Empty SPARQL Endpoint</param-value></init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>EmptyEndpointPiwikFilter</filter-name>
+    <url-pattern>/sparql/endpoint/empty</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>IdsmEndpointPiwikFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <init-param><param-name>actionName</param-name><param-value>IDSM SPARQL Endpoint</param-value></init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>IdsmEndpointPiwikFilter</filter-name>
+    <url-pattern>/sparql/endpoint/idsm</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>SachemEndpointPiwikFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <init-param><param-name>actionName</param-name><param-value>Sachem SPARQL Endpoint</param-value></init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>SachemEndpointPiwikFilter</filter-name>
+    <url-pattern>/sachem/endpoint/integrated</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>ChebiSachemEndpointPiwikFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <init-param><param-name>actionName</param-name><param-value>ChEBI SPARQL Endpoint</param-value></init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>ChebiSachemEndpointPiwikFilter</filter-name>
+    <url-pattern>/sachem/endpoint/chebi</url-pattern>
+    <url-pattern>/sparql/endpoint/chebi</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>ChemblSachemEndpointPiwikFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <init-param><param-name>actionName</param-name><param-value>ChEMBL SPARQL Endpoint</param-value></init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>ChemblSachemEndpointPiwikFilter</filter-name>
+    <url-pattern>/sachem/endpoint/chembl</url-pattern>
+    <url-pattern>/sparql/endpoint/chembl</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>DrugbankSachemEndpointPiwikFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <init-param><param-name>actionName</param-name><param-value>DrugBank SPARQL Endpoint</param-value></init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>DrugbankSachemEndpointPiwikFilter</filter-name>
+    <url-pattern>/sachem/endpoint/drugbank</url-pattern>
+    <url-pattern>/sparql/endpoint/drugbank</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>PubchemSachemEndpointPiwikFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <init-param><param-name>actionName</param-name><param-value>PubChem SPARQL Endpoint</param-value></init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>PubchemSachemEndpointPiwikFilter</filter-name>
+    <url-pattern>/sachem/endpoint/pubchem</url-pattern>
+    <url-pattern>/sparql/endpoint/pubchem</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>WikidataSachemEndpointPiwikFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <init-param><param-name>actionName</param-name><param-value>PubChem SPARQL Endpoint</param-value></init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>WikidataSachemEndpointPiwikFilter</filter-name>
+    <url-pattern>/sachem/endpoint/wikidata</url-pattern>
+    <url-pattern>/sparql/endpoint/wikidata</url-pattern>
+  </filter-mapping>
+
+</web-app>

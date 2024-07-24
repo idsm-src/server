@@ -1,8 +1,5 @@
-/gwt-unitCache/
-/*.war
-/*.jar
-/war/chemweb/
-/war/WEB-INF/classes/
-/war/WEB-INF/deploy/
-/war/META-INF/context.xml
-/src/cz/iocb/chemweb/test/
+**/.classpath
+**/.project
+**/.settings/
+**/target/
+service/src/main/webapp/META-INF/context.xml
