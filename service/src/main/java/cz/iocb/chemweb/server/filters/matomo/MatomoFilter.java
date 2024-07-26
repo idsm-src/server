@@ -1,10 +1,12 @@
-package cz.iocb.chemweb.server.filters.piwik;
+package cz.iocb.chemweb.server.filters.matomo;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -13,24 +15,22 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.bind.DatatypeConverter;
 //import javax.xml.bind.DatatypeConverter;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.concurrent.FutureCallback;
-import org.piwik.java.tracking.PiwikRequest;
+import org.matomo.java.tracking.MatomoRequest;
+import org.matomo.java.tracking.MatomoTracker;
+import org.matomo.java.tracking.TrackerConfiguration;
+import org.matomo.java.tracking.parameters.VisitorId;
 
 
 
-public class PiwikFilter implements Filter
+public class MatomoFilter implements Filter
 {
-    private int siteId = -1;
-    private String address = null;
-    private String authToken = null;
+    private MatomoTracker tracker = null;
+    private String cookieName = null;
     private String actionName = null;
     private boolean rpc = false;
-
-    private String cookieName = null;
-    private PiwikAsyncTracker tracker = null;
 
 
     static
@@ -43,7 +43,7 @@ public class PiwikFilter implements Filter
             root = root.getParent();
 
         Thread.currentThread().setContextClassLoader(root);
-        //DatatypeConverter.printHexBinary(new byte[0]);
+        DatatypeConverter.printHexBinary(new byte[0]);
         Thread.currentThread().setContextClassLoader(active);
     }
 
@@ -51,27 +51,27 @@ public class PiwikFilter implements Filter
     @Override
     public void init(FilterConfig config) throws ServletException
     {
-        /* obtain the value of init parameter piwikAddress */
-        address = config.getServletContext().getInitParameter("piwikAddress");
+        /* obtain the value of init parameter matomoAddress */
+        String address = config.getServletContext().getInitParameter("matomoAddress");
 
         if(address == null || address.isEmpty())
-            throw new ServletException("Parameter piwikAddress is not specified");
+            throw new ServletException("Parameter matomoAddress is not specified");
 
 
         /* obtain the value of init parameter authToken */
-        authToken = config.getServletContext().getInitParameter("piwikAuthToken");
+        String authToken = config.getServletContext().getInitParameter("matomoAuthToken");
 
         if(authToken == null || authToken.isEmpty())
-            throw new ServletException("Parameter piwikAuthToken is not specified");
+            throw new ServletException("Parameter matomoAuthToken is not specified");
 
 
-        /* obtain the value of init parameter piwikSiteId */
-        String siteIdString = config.getServletContext().getInitParameter("piwikSiteId");
+        /* obtain the value of init parameter matomoSiteId */
+        String siteIdString = config.getServletContext().getInitParameter("matomoSiteId");
 
         if(siteIdString == null || siteIdString.isEmpty())
-            throw new ServletException("Parameter piwikSiteId is not specified");
+            throw new ServletException("Parameter matomoSiteId is not specified");
 
-        siteId = Integer.parseInt(siteIdString);
+        int siteId = Integer.parseInt(siteIdString);
 
 
         /* obtain the value of parameter filterName */
@@ -84,9 +84,23 @@ public class PiwikFilter implements Filter
         if(rpcString != null && !rpcString.isEmpty())
             rpc = Boolean.parseBoolean(rpcString);
 
+
+        /* set cookie name */
         cookieName = "_pk_id." + siteId + ".";
 
-        tracker = new PiwikAsyncTracker(address, 20000);
+
+        try
+        {
+            TrackerConfiguration trackerConfig = TrackerConfiguration.builder().apiEndpoint(new URI(address))
+                    .connectTimeout(Duration.ofSeconds(20)).socketTimeout(Duration.ofSeconds(20))
+                    .defaultAuthToken(authToken).defaultSiteId(siteId).build();
+
+            tracker = new MatomoTracker(trackerConfig);
+        }
+        catch(URISyntaxException e)
+        {
+            throw new ServletException(e);
+        }
     }
 
 
@@ -97,7 +111,7 @@ public class PiwikFilter implements Filter
         {
             tracker.close();
         }
-        catch(IOException e)
+        catch(Throwable e)
         {
             e.printStackTrace();
         }
@@ -139,10 +153,8 @@ public class PiwikFilter implements Filter
 
         try
         {
-            /* create piwik request */
-            PiwikRequest piwikRequest = new PiwikRequest(siteId, (new URI(actionUrl)).toURL());
-            piwikRequest.setActionName(actionName);
-            piwikRequest.setAuthToken(authToken);
+            /* create matomo request */
+            MatomoRequest matomoRequest = MatomoRequest.request().actionUrl(actionUrl).actionName(actionName).build();
 
 
             /* set visitor id */
@@ -154,7 +166,7 @@ public class PiwikFilter implements Filter
                         visitorId = cookie.getValue().substring(0, 16);
 
             if(visitorId != null)
-                piwikRequest.setVisitorId(visitorId);
+                matomoRequest.setVisitorId(VisitorId.fromHex(visitorId));
 
 
             /* set visitor ip */
@@ -177,63 +189,32 @@ public class PiwikFilter implements Filter
                     }
                     catch(UnknownHostException e)
                     {
-                        request.getServletContext().log("PiwikFilter: UnknownHostException: " + e.getMessage());
+                        request.getServletContext().log("MatomoFilter: UnknownHostException: " + e.getMessage());
                     }
                 }
             }
 
-            piwikRequest.setVisitorIp(address != null ? address : httpRequest.getRemoteAddr());
+            matomoRequest.setVisitorIp(address != null ? address : httpRequest.getRemoteAddr());
 
 
             /* set user agent */
             String agent = httpRequest.getHeader("User-Agent");
 
             if(agent != null)
-                piwikRequest.setHeaderUserAgent(agent);
+                matomoRequest.setHeaderUserAgent(agent);
 
 
             /* set action time */
             long actionTime = System.currentTimeMillis();
             filterChain.doFilter(httpRequest, response);
             actionTime = System.currentTimeMillis() - actionTime;
-            piwikRequest.setActionTime(actionTime);
+            matomoRequest.setServerTime(actionTime);
 
-
-            tracker.sendRequest(piwikRequest, new FutureCallback<HttpResponse>()
-            {
-                @Override
-                public void failed(Exception e)
-                {
-                    request.getServletContext()
-                            .log("PiwikFilter: Exception: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-                }
-
-                @Override
-                public void cancelled()
-                {
-                    request.getServletContext().log("PiwikFilter: cancelled");
-                }
-
-                @Override
-                public void completed(HttpResponse response)
-                {
-                }
-            });
+            tracker.sendRequestAsync(matomoRequest);
         }
         catch(Throwable e)
         {
             e.printStackTrace();
-
-            try
-            {
-                tracker.close();
-            }
-            catch(Throwable error)
-            {
-                e.printStackTrace();
-            }
-
-            tracker = new PiwikAsyncTracker(this.address, 20000);
         }
     }
 }

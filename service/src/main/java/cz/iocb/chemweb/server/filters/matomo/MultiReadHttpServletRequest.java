@@ -1,4 +1,4 @@
-package cz.iocb.chemweb.server.filters.piwik;
+package cz.iocb.chemweb.server.filters.matomo;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;

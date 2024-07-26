@@ -359,99 +359,99 @@
   </filter-mapping>
 
 
-  <!-- Piwik Filters -->
+  <!-- Matomo Filters -->
   <filter>
-    <filter-name>ChemwebPiwikFilter</filter-name>
-    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <filter-name>ChemwebMatomoFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.matomo.MatomoFilter</filter-class>
     <init-param><param-name>rpc</param-name><param-value>true</param-value></init-param>
   </filter>
   <filter-mapping>
-    <filter-name>ChemwebPiwikFilter</filter-name>
+    <filter-name>ChemwebMatomoFilter</filter-name>
     <url-pattern>/chemweb/query</url-pattern>
     <url-pattern>/chemweb/details</url-pattern>
   </filter-mapping>
 
   <filter>
-    <filter-name>EmptyEndpointPiwikFilter</filter-name>
-    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <filter-name>EmptyEndpointMatomoFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.matomo.MatomoFilter</filter-class>
     <init-param><param-name>actionName</param-name><param-value>Empty SPARQL Endpoint</param-value></init-param>
   </filter>
   <filter-mapping>
-    <filter-name>EmptyEndpointPiwikFilter</filter-name>
+    <filter-name>EmptyEndpointMatomoFilter</filter-name>
     <url-pattern>/sparql/endpoint/empty</url-pattern>
   </filter-mapping>
 
   <filter>
-    <filter-name>IdsmEndpointPiwikFilter</filter-name>
-    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <filter-name>IdsmEndpointMatomoFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.matomo.MatomoFilter</filter-class>
     <init-param><param-name>actionName</param-name><param-value>IDSM SPARQL Endpoint</param-value></init-param>
   </filter>
   <filter-mapping>
-    <filter-name>IdsmEndpointPiwikFilter</filter-name>
+    <filter-name>IdsmEndpointMatomoFilter</filter-name>
     <url-pattern>/sparql/endpoint/idsm</url-pattern>
   </filter-mapping>
 
   <filter>
-    <filter-name>SachemEndpointPiwikFilter</filter-name>
-    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <filter-name>SachemEndpointMatomoFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.matomo.MatomoFilter</filter-class>
     <init-param><param-name>actionName</param-name><param-value>Sachem SPARQL Endpoint</param-value></init-param>
   </filter>
   <filter-mapping>
-    <filter-name>SachemEndpointPiwikFilter</filter-name>
+    <filter-name>SachemEndpointMatomoFilter</filter-name>
     <url-pattern>/sachem/endpoint/integrated</url-pattern>
   </filter-mapping>
 
   <filter>
-    <filter-name>ChebiSachemEndpointPiwikFilter</filter-name>
-    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <filter-name>ChebiSachemEndpointMatomoFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.matomo.MatomoFilter</filter-class>
     <init-param><param-name>actionName</param-name><param-value>ChEBI SPARQL Endpoint</param-value></init-param>
   </filter>
   <filter-mapping>
-    <filter-name>ChebiSachemEndpointPiwikFilter</filter-name>
+    <filter-name>ChebiSachemEndpointMatomoFilter</filter-name>
     <url-pattern>/sachem/endpoint/chebi</url-pattern>
     <url-pattern>/sparql/endpoint/chebi</url-pattern>
   </filter-mapping>
 
   <filter>
-    <filter-name>ChemblSachemEndpointPiwikFilter</filter-name>
-    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <filter-name>ChemblSachemEndpointMatomoFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.matomo.MatomoFilter</filter-class>
     <init-param><param-name>actionName</param-name><param-value>ChEMBL SPARQL Endpoint</param-value></init-param>
   </filter>
   <filter-mapping>
-    <filter-name>ChemblSachemEndpointPiwikFilter</filter-name>
+    <filter-name>ChemblSachemEndpointMatomoFilter</filter-name>
     <url-pattern>/sachem/endpoint/chembl</url-pattern>
     <url-pattern>/sparql/endpoint/chembl</url-pattern>
   </filter-mapping>
 
   <filter>
-    <filter-name>DrugbankSachemEndpointPiwikFilter</filter-name>
-    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <filter-name>DrugbankSachemEndpointMatomoFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.matomo.MatomoFilter</filter-class>
     <init-param><param-name>actionName</param-name><param-value>DrugBank SPARQL Endpoint</param-value></init-param>
   </filter>
   <filter-mapping>
-    <filter-name>DrugbankSachemEndpointPiwikFilter</filter-name>
+    <filter-name>DrugbankSachemEndpointMatomoFilter</filter-name>
     <url-pattern>/sachem/endpoint/drugbank</url-pattern>
     <url-pattern>/sparql/endpoint/drugbank</url-pattern>
   </filter-mapping>
 
   <filter>
-    <filter-name>PubchemSachemEndpointPiwikFilter</filter-name>
-    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <filter-name>PubchemSachemEndpointMatomoFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.matomo.MatomoFilter</filter-class>
     <init-param><param-name>actionName</param-name><param-value>PubChem SPARQL Endpoint</param-value></init-param>
   </filter>
   <filter-mapping>
-    <filter-name>PubchemSachemEndpointPiwikFilter</filter-name>
+    <filter-name>PubchemSachemEndpointMatomoFilter</filter-name>
     <url-pattern>/sachem/endpoint/pubchem</url-pattern>
     <url-pattern>/sparql/endpoint/pubchem</url-pattern>
   </filter-mapping>
 
   <filter>
-    <filter-name>WikidataSachemEndpointPiwikFilter</filter-name>
-    <filter-class>cz.iocb.chemweb.server.filters.piwik.PiwikFilter</filter-class>
+    <filter-name>WikidataSachemEndpointMatomoFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.matomo.MatomoFilter</filter-class>
     <init-param><param-name>actionName</param-name><param-value>PubChem SPARQL Endpoint</param-value></init-param>
   </filter>
   <filter-mapping>
-    <filter-name>WikidataSachemEndpointPiwikFilter</filter-name>
+    <filter-name>WikidataSachemEndpointMatomoFilter</filter-name>
     <url-pattern>/sachem/endpoint/wikidata</url-pattern>
     <url-pattern>/sparql/endpoint/wikidata</url-pattern>
   </filter-mapping>

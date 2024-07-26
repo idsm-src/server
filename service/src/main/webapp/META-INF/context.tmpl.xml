@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Context>
-  <Parameter name="piwikAuthToken" value="%token%" override="false"/>
-  <Parameter name="piwikAddress" value="%url%" override="false"/>
-  <Parameter name="piwikSiteId" value="%id%" override="false"/>
+  <Parameter name="matomoAuthToken" value="%token%" override="false"/>
+  <Parameter name="matomoAddress" value="%url%" override="false"/>
+  <Parameter name="matomoSiteId" value="%id%" override="false"/>
 
   <Resource name="jdbc:empty" auth="Container"
       factory="org.apache.tomcat.jdbc.pool.DataSourceFactory" closeMethod="close"
