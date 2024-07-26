@@ -14,6 +14,8 @@ import com.google.gwt.dom.client.UListElement;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.safehtml.client.SafeHtmlTemplates;
 import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.safehtml.shared.SafeUri;
+import com.google.gwt.safehtml.shared.UriUtils;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.Timer;
@@ -37,7 +39,7 @@ public class AboutPart extends Composite
     public interface SourceTemplate extends SafeHtmlTemplates
     {
         @Template("<span><a href=\"{0}\" target=\"_blank\">{1}</a>: {2}</span>")
-        SafeHtml format(String url, String name, String version);
+        SafeHtml format(SafeUri url, String name, String version);
     }
 
 
@@ -124,7 +126,8 @@ public class AboutPart extends Composite
                         for(SourceItem source : sources)
                         {
                             LIElement liElement = Document.get().createLIElement();
-                            liElement.setInnerSafeHtml(sourceTemplate.format(source.url, source.name, source.version));
+                            liElement.setInnerSafeHtml(sourceTemplate.format(UriUtils.fromString(source.url),
+                                    source.name, source.version));
                             sourcesList.appendChild(liElement);
                         }
 
