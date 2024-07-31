@@ -1,0 +1,38 @@
+select distinct ?iri where
+{
+    {
+        ?iri rdf:type owl:ObjectProperty
+    }
+    union
+    {
+        ?iri rdf:type owl:DatatypeProperty
+    }
+    union
+    {
+        ?iri rdf:type owl:AnnotationProperty
+    }
+    union
+    {
+        ?iri rdf:type rdf:Property
+    }
+    union
+    {
+        ?P rdfs:subPropertyOf ?iri
+    }
+    union
+    {
+        ?iri rdfs:subPropertyOf ?S
+    }
+    union
+    {
+        ?iri rdfs:domain ?D
+    }
+    union
+    {
+        ?iri rdfs:range ?P
+    }
+    union
+    {
+        ?R owl:onProperty ?iri
+    }
+}

@@ -1,0 +1,15 @@
+alter table ontology.superclasses add foreign key (class_unit, class_id) references ontology.classes(class_unit, class_id) initially deferred;
+alter table ontology.superclasses add foreign key (superclass_unit, superclass_id) references ontology.classes(class_unit, class_id) initially deferred;
+alter table ontology.superproperties add foreign key (property_unit, property_id) references ontology.properties(property_unit, property_id) initially deferred;
+alter table ontology.superproperties add foreign key (superproperty_unit, superproperty_id) references ontology.properties(property_unit, property_id) initially deferred;
+alter table ontology.property_domains add foreign key (property_unit, property_id) references ontology.properties(property_unit, property_id) initially deferred;
+alter table ontology.property_domains add foreign key (domain_unit, domain_id) references ontology.classes(class_unit, class_id) initially deferred;
+alter table ontology.property_ranges add foreign key (property_unit, property_id) references ontology.properties(property_unit, property_id) initially deferred;
+alter table ontology.property_ranges add foreign key (range_unit, range_id) references ontology.classes(class_unit, class_id) initially deferred;
+alter table ontology.somevaluesfrom_restrictions add foreign key (property_unit, property_id) references ontology.properties(property_unit, property_id) initially deferred;
+alter table ontology.somevaluesfrom_restrictions add foreign key (class_unit, class_id) references ontology.classes(class_unit, class_id) initially deferred;
+alter table ontology.allvaluesfrom_restrictions add foreign key (property_unit, property_id) references ontology.properties(property_unit, property_id) initially deferred;
+alter table ontology.allvaluesfrom_restrictions add foreign key (class_unit, class_id) references ontology.classes(class_unit, class_id) initially deferred;
+alter table ontology.cardinality_restrictions add foreign key (property_unit, property_id) references ontology.properties(property_unit, property_id) initially deferred;
+alter table ontology.mincardinality_restrictions add foreign key (property_unit, property_id) references ontology.properties(property_unit, property_id) initially deferred;
+alter table ontology.maxcardinality_restrictions add foreign key (property_unit, property_id) references ontology.properties(property_unit, property_id) initially deferred;

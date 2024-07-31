@@ -1,0 +1,21 @@
+alter table chembl_tmp.docs drop column doc_id;
+alter table chembl_tmp.docs drop column journal;
+alter table chembl_tmp.docs drop column authors;
+alter table chembl_tmp.docs drop column abstract;
+alter table chembl_tmp.docs drop column patent_id;
+alter table chembl_tmp.docs drop column ridx;
+alter table chembl_tmp.docs drop column src_id;
+
+alter table chembl_tmp.docs add primary key (id);
+create index docs__year on chembl_tmp.docs(year);
+create index docs__volume on chembl_tmp.docs(volume);
+create index docs__issue on chembl_tmp.docs(issue);
+create index docs__first_page on chembl_tmp.docs(first_page);
+create index docs__last_page on chembl_tmp.docs(last_page);
+create index docs__pubmed_id on chembl_tmp.docs(pubmed_id);
+create index docs__doi on chembl_tmp.docs(doi);
+create index docs__chembl_id on chembl_tmp.docs(chembl_id);
+create index docs__title on chembl_tmp.docs(title);
+create index docs__doc_type on chembl_tmp.docs(doc_type);
+create index docs__journal_id on chembl_tmp.docs(journal_id);
+grant select on chembl_tmp.docs to sparql;

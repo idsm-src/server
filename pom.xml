@@ -7,6 +7,7 @@
   <name>idsm</name>
 
   <modules>
-  	<module>service</module>
+    <module>service</module>
+    <module>loaders</module>
   </modules>
 </project>

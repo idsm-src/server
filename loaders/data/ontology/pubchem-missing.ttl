@@ -1,0 +1,13 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix sio: <http://semanticscience.org/resource/> .
+@prefix obo: <http://purl.obolibrary.org/obo/> .
+
+dcterms:Dataset rdf:type owl:Class .
+sio:is-attribute-of rdf:type rdf:Property ; rdfs:label "is attribute of" .
+sio:has-value rdf:type rdf:Property ; rdfs:label "has value" .
+sio:has-attribute rdf:type rdf:Property ; rdfs:label "has attribute" .
+sio:has-unit rdf:type rdf:Property ; rdfs:label "has unit" .
+obo:has-role rdf:type rdf:Property ; rdfs:label "has role" .

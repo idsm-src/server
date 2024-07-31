@@ -1,0 +1,26 @@
+select distinct ?iri where
+{
+	{
+	    ?S ?iri ?O .
+        filter(?iri != rdf:type)
+        filter(?iri != rdf:subject)
+        filter(?iri != rdf:object)
+        filter(?iri != sio:SIO_000300)
+        filter(?iri != sio:SIO_001157)
+	}
+    union
+    {
+        ?S rdf:type ?iri .
+        filter(?iri != sio:SIO_000983)
+    }
+    union
+    {
+        ?S sio:SIO_001157 ?iri .
+        filter(?iri != edam:operation_0306)
+    }
+    union
+    {
+        ?S sio:SIO_000300 ?iri .
+        filter(datatype(?iri) != xsd:integer)
+    }
+}
