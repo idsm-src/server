@@ -1,0 +1,25 @@
+select distinct ?iri where
+{
+	{
+	    ?S ?iri ?O .
+        filter(?iri != rdf:type)
+        filter(?iri != dcterms:title)
+        filter(?iri != prism:issn)
+        filter(?iri != prism:eissn)
+        filter(?iri != skos:exactMatch)
+        filter(?iri != fabio:hasNationalLibraryOfMedicineJournalId)
+        filter(?iri != fabio:hasNLMJournalTitleAbbreviation)
+	}
+    union
+    {
+        ?S rdf:type ?iri .
+        filter(?iri != fabio:Journal)
+    }
+    union
+    {
+        ?S skos:exactMatch ?iri .
+        optional { ?S fabio:hasNationalLibraryOfMedicineJournalId ?id }
+        
+        filter(?id != replace(str(?iri), "https://www.ncbi.nlm.nih.gov/nlmcatalog/", ""))
+    }
+}

@@ -1,0 +1,79 @@
+# RDF common
+prefix rdf:             <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs:            <http://www.w3.org/2000/01/rdf-schema#>
+prefix owl:             <http://www.w3.org/2002/07/owl#>
+prefix xsd:             <http://www.w3.org/2001/XMLSchema#>
+
+# PubChem
+prefix author:          <http://rdf.ncbi.nlm.nih.gov/pubchem/author/>
+prefix bioassay:        <http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/>
+prefix book:            <http://rdf.ncbi.nlm.nih.gov/pubchem/book/>
+prefix cell:            <http://rdf.ncbi.nlm.nih.gov/pubchem/cell/>
+prefix compound:        <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+prefix concept:         <http://rdf.ncbi.nlm.nih.gov/pubchem/concept/>
+prefix conserveddomain: <http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/>
+prefix cooccurrence:    <http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/>
+prefix descriptor:      <http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/>
+prefix disease:         <http://rdf.ncbi.nlm.nih.gov/pubchem/disease/>
+prefix endpoint:        <http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/>
+prefix gene:            <http://rdf.ncbi.nlm.nih.gov/pubchem/gene/>
+prefix grant:           <http://rdf.ncbi.nlm.nih.gov/pubchem/grant/>
+prefix inchikey:        <http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/>
+prefix journal:         <http://rdf.ncbi.nlm.nih.gov/pubchem/journal/>
+prefix measuregroup:    <http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/>
+prefix organization:    <http://rdf.ncbi.nlm.nih.gov/pubchem/organization/>
+prefix patent:          <http://rdf.ncbi.nlm.nih.gov/pubchem/patent/>
+prefix pathway:         <http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/>
+prefix protein:         <http://rdf.ncbi.nlm.nih.gov/pubchem/protein/>
+prefix reference:       <http://rdf.ncbi.nlm.nih.gov/pubchem/reference/>
+prefix source:          <http://rdf.ncbi.nlm.nih.gov/pubchem/source/>
+prefix substance:       <http://rdf.ncbi.nlm.nih.gov/pubchem/substance/>
+prefix synonym:         <http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/>
+prefix taxonomy:        <http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/>
+prefix vocab:           <http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#>
+prefix obo:             <http://purl.obolibrary.org/obo/>
+prefix sio:             <http://semanticscience.org/resource/>
+prefix skos:            <http://www.w3.org/2004/02/skos/core#>
+prefix bao:             <http://www.bioassayontology.org/bao#>
+prefix bp:              <http://www.biopax.org/release/biopax-level3.owl#>
+prefix ndfrt:           <http://evs.nci.nih.gov/ftp1/NDF-RT/NDF-RT.owl#>
+prefix ncit:            <http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#>
+prefix wikidata:        <http://www.wikidata.org/entity/>
+prefix ops:             <http://www.openphacts.org/units/>
+prefix cito:            <http://purl.org/spar/cito/>
+prefix fabio:           <http://purl.org/spar/fabio/>
+prefix uniprot:         <http://purl.uniprot.org/uniprot/>
+prefix up:              <http://purl.uniprot.org/core/>
+prefix pdbo:            <https://rdf.wwpdb.org/schema/pdbx-v50.owl#>
+prefix pdbo40:          <http://rdf.wwpdb.org/schema/pdbx-v40.owl#>
+prefix pdbr:            <http://rdf.wwpdb.org/pdb/>
+#prefix taxonomy:       <http://identifiers.org/taxonomy/>
+prefix reactome:        <http://identifiers.org/reactome/>
+#prefix chembl:         <http://rdf.ebi.ac.uk/resource/chembl/molecule/>
+prefix chemblchembl:    <http://linkedchemistry.info/chembl/chemblid/>
+prefix foaf:            <http://xmlns.com/foaf/0.1/>
+prefix void:            <http://rdfs.org/ns/void#>
+prefix dcterms:         <http://purl.org/dc/terms/>
+
+# PubChem extension
+prefix pubchem:         <http://rdf.ncbi.nlm.nih.gov/pubchem/>
+prefix ensembl:         <http://rdf.ebi.ac.uk/resource/ensembl/>
+prefix cheminf:         <http://semanticscience.org/resource/>
+prefix vcard:           <http://www.w3.org/2006/vcard/ns#>
+prefix prism:           <http://prismstandard.org/namespaces/basic/3.0/>
+prefix frapo:           <http://purl.org/cerif/frapo/>
+prefix epo:             <http://data.epo.org/linked-data/def/patent/>
+prefix edam:            <http://edamontology.org/>
+
+# ChEMBL
+prefix bibo:            <http://purl.org/ontology/bibo/>
+prefix cco:             <http://rdf.ebi.ac.uk/terms/chembl#>
+prefix chembl:          <http://rdf.ebi.ac.uk/resource/chembl/>
+
+# ChEBI
+prefix chebi:           <http://purl.obolibrary.org/obo/chebi/>
+prefix oboInOwl:        <http://www.geneontology.org/formats/oboInOwl#>
+
+# MeSH
+prefix mesh:            <http://id.nlm.nih.gov/mesh/>
+prefix meshv:           <http://id.nlm.nih.gov/mesh/vocab#>

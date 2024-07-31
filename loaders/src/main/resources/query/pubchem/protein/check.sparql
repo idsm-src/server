@@ -1,0 +1,59 @@
+select distinct ?iri where
+{
+    {
+        ?S ?iri ?O .
+        filter(?iri != obo:RO_0002180)
+        filter(?iri != up:encodedBy)
+        filter(?iri != up:organism)
+        filter(?iri != up:enzyme)        
+        filter(?iri != vocab:hasSimilarProtein)
+        filter(?iri != pdbo40:link_to_pdb)
+        filter(?iri != bp:organism)
+        filter(?iri != skos:closeMatch)
+        filter(?iri != rdf:type)
+        filter(?iri != owl:sameAs)
+        filter(?iri != skos:prefLabel)
+        filter(?iri != skos:altLabel)
+        filter(?iri != bao:BAO_0002817)
+        filter(?iri != rdfs:subClassOf)
+        filter(?iri != cito:isDiscussedBy)
+    }
+    union
+    {
+        ?S owl:sameAs ?iri .
+        filter(strstarts(str(?S), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC") && replace(str(?S), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC", "") != replace(str(?iri), "https://www.ncbi.nlm.nih.gov/protein/", ""))        
+        filter(strstarts(str(?S), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_") && replace(str(?S), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_", "") != replace(str(?iri), "http://purl.uniprot.org/enzyme/", ""))        
+    }
+    union
+    {
+        ?S obo:RO_0002180 ?iri .
+        filter(! strstarts(str(?iri), "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID"))
+        filter(! strstarts(str(?iri), "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"))
+        filter(! strstarts(str(?iri), "https://pfam.xfam.org/family/PF"))
+        filter(! strstarts(str(?iri), "https://www.ebi.ac.uk/interpro/entry/InterPro/IPR"))
+    }
+    union
+    {
+        ?S skos:closeMatch ?iri .
+        filter(! strstarts(str(?iri), "http://purl.uniprot.org/uniprot/"))
+        filter(! strstarts(str(?iri), "https://www.ncbi.nlm.nih.gov/protein/"))
+        filter(! strstarts(str(?iri), "http://id.nlm.nih.gov/mesh/"))
+        filter(! strstarts(str(?iri), "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C"))
+        filter(! strstarts(str(?iri), "https://guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId="))
+        filter(! strstarts(str(?iri), "https://www.drugbank.ca/bio_entities/BE"))
+        filter(! strstarts(str(?iri), "https://www.ebi.ac.uk/chembl/target_report_card/CHEMBL"))
+        filter(! strstarts(str(?iri), "http://glygen.org/protein/"))
+        filter(! strstarts(str(?iri), "https://glycosmos.org/glycoproteins/show/uniprot/"))
+        filter(! strstarts(str(?iri), "https://alphafold.ebi.ac.uk/entry/"))
+        filter(! strstarts(str(?iri), "http://enzyme.expasy.org/EC/"))
+        filter(! strstarts(str(?iri), "https://pharos.nih.gov/targets/"))
+        filter(! strstarts(str(?iri), "https://platform.opentargets.org/target/ENSG"))
+        filter(! strstarts(str(?iri), "https://proconsortium.org/app/entry/PR:"))
+        filter(! strstarts(str(?iri), "https://wormbase.org/db/seq/protein?name="))
+        filter(! strstarts(str(?iri), "https://www.brenda-enzymes.org/enzyme.php?ecno="))
+        filter(! strstarts(str(?iri), "https://www.ebi.ac.uk/intact/search?query=id:"))
+        filter(! strstarts(str(?iri), "https://www.ebi.ac.uk/interpro/protein/reviewed/"))
+        filter(! strstarts(str(?iri), "https://www.nextprot.org/entry/NX_"))
+        filter(! strstarts(str(?iri), "https://www.proteinatlas.org/ENSG"))
+    }
+}

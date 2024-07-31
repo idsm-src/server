@@ -1,0 +1,18 @@
+select distinct ?iri where
+{
+    {
+        ?S ?iri ?O .
+        filter(?iri != dcterms:title)
+        filter(?iri != dcterms:alternative)
+        filter(?iri != dcterms:subject)
+        filter(?iri != dcterms:license)
+        filter(?iri != dcterms:rights)
+        filter(?iri != foaf:homepage)
+        filter(?iri != rdf:type)
+    }
+    union
+    {
+        ?S rdf:type ?iri .
+        filter(?iri != dcterms:Dataset)
+    }
+}
