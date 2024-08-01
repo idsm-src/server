@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -60,7 +61,7 @@ public class DrugbankCompoundUpdater
             }
 
 
-            URL infoUrl = new URL(httpServer + "/releases/latest#open-data");
+            URL infoUrl = new URI(httpServer + "/releases/latest#open-data").toURL();
             HttpURLConnection infoConnection = (HttpURLConnection) infoUrl.openConnection();
             infoConnection.addRequestProperty("User-Agent", "Java HttpURLConnection");
             infoConnection.addRequestProperty("Accept", "*/*");
@@ -119,7 +120,8 @@ public class DrugbankCompoundUpdater
             directory.mkdirs();
 
 
-            URL downloadUrl = new URL(httpServer + "/releases/" + versionTag + "/downloads/all-open-structures");
+            URL downloadUrl = new URI(httpServer + "/releases/" + versionTag + "/downloads/all-open-structures")
+                    .toURL();
             HttpURLConnection downloadConnection = (HttpURLConnection) downloadUrl.openConnection();
             downloadConnection.addRequestProperty("User-Agent", "Java HttpURLConnection");
             downloadConnection.addRequestProperty("Accept", "*/*");

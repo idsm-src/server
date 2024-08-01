@@ -1,12 +1,13 @@
 package cz.iocb.load.sachem;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.PreparedStatement;
@@ -40,19 +41,19 @@ public class WikidataCompoundUpdater extends Updater
             String inchi = "SELECT?entity?inchi WHERE{?entity<http://www.wikidata.org/prop/direct/P234>?inchi}";
 
             Path isomericPath = Path.of(path, "/isomeric.smiles");
-            URL isomericDownloadUrl = new URL(httpServer + URLEncoder.encode(isomeric, Charset.defaultCharset()));
+            URL isomericDownloadUrl = new URI(httpServer + URLEncoder.encode(isomeric, UTF_8)).toURL();
             HttpURLConnection isomericDownloadConnection = (HttpURLConnection) isomericDownloadUrl.openConnection();
             isomericDownloadConnection.addRequestProperty("Accept", "text/tab-separated-values");
             Files.copy(isomericDownloadConnection.getInputStream(), isomericPath);
 
             Path canonicalPath = Path.of(path, "/canonical.smiles");
-            URL canonicalDownloadUrl = new URL(httpServer + URLEncoder.encode(canonical, Charset.defaultCharset()));
+            URL canonicalDownloadUrl = new URI(httpServer + URLEncoder.encode(canonical, UTF_8)).toURL();
             HttpURLConnection canonicalDownloadConnection = (HttpURLConnection) canonicalDownloadUrl.openConnection();
             canonicalDownloadConnection.addRequestProperty("Accept", "text/tab-separated-values");
             Files.copy(canonicalDownloadConnection.getInputStream(), canonicalPath);
 
             Path inchiPath = Path.of(path, "/inchies");
-            URL inchiDownloadUrl = new URL(httpServer + URLEncoder.encode(inchi, Charset.defaultCharset()));
+            URL inchiDownloadUrl = new URI(httpServer + URLEncoder.encode(inchi, UTF_8)).toURL();
             HttpURLConnection inchiDownloadConnection = (HttpURLConnection) inchiDownloadUrl.openConnection();
             inchiDownloadConnection.addRequestProperty("Accept", "text/tab-separated-values");
             Files.copy(inchiDownloadConnection.getInputStream(), inchiPath);
