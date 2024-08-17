@@ -15,6 +15,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.riot.Lang;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -1160,7 +1161,7 @@ public class Ontology extends Updater
             Model model = ModelFactory.createDefaultModel();
 
             processFiles("ontology", ".*", file -> {
-                String lang = file.endsWith(".ttl") ? "TTL" : null;
+                Lang lang = file.endsWith(".ttl") ? Lang.TTL : Lang.RDFXML;
                 Model submodel = getModel(file, lang);
 
                 synchronized(model)

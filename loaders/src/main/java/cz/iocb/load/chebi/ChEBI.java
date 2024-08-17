@@ -8,6 +8,7 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.Lang;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -626,7 +627,7 @@ public class ChEBI extends Updater
             init();
             Ontology.loadCategories();
 
-            Model model = getModel("chebi/chebi.owl", null);
+            Model model = getModel("chebi/chebi.owl", Lang.RDFXML);
 
             String version = getVersion(model);
             System.out.println("=== load ChEBI version " + version + " ===");

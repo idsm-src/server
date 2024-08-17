@@ -7,7 +7,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Node_Literal;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFParser;
 
 
 
@@ -17,7 +17,7 @@ public abstract class TripleStreamProcessor
     {
         try
         {
-            RDFDataMgr.parse(new VoidStreamRDF()
+            RDFParser.source(stream).lang(Lang.TURTLE).parse(new VoidStreamRDF()
             {
                 @Override
                 public void triple(Triple triple)
@@ -31,7 +31,7 @@ public abstract class TripleStreamProcessor
                         throw new RuntimeException(e);
                     }
                 }
-            }, stream, Lang.TURTLE);
+            });
         }
         catch(RuntimeException e)
         {

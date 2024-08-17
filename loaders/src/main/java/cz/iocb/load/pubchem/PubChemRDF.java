@@ -1,5 +1,6 @@
 package cz.iocb.load.pubchem;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -9,7 +10,6 @@ import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.util.FileManager;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
 
@@ -23,18 +23,20 @@ public class PubChemRDF extends Updater
         String query = prefixes + base + "select * { <void.ttl#PubChemRDF> dcterms:modified ?date }";
 
         Model model = ModelFactory.createDefaultModel();
-        InputStream in = FileManager.get().open(baseDirectory + "pubchem/RDF/void.ttl");
-        model.read(in, null, "TTL");
+        try(InputStream in = new FileInputStream(baseDirectory + "pubchem/RDF/void.ttl"))
+        {
+            model.read(in, null, "TTL");
 
-        try(QueryExecution qexec = QueryExecutionFactory.create(query, model))
-        {
-            ResultSet results = qexec.execSelect();
-            QuerySolution solution = results.nextSolution();
-            return solution.getLiteral("date").getLexicalForm();
-        }
-        finally
-        {
-            model.close();
+            try(QueryExecution qexec = QueryExecutionFactory.create(query, model))
+            {
+                ResultSet results = qexec.execSelect();
+                QuerySolution solution = results.nextSolution();
+                return solution.getLiteral("date").getLexicalForm();
+            }
+            finally
+            {
+                model.close();
+            }
         }
     }
 

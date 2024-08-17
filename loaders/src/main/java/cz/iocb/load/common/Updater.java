@@ -32,7 +32,8 @@ import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.util.FileManager;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.xml.sax.SAXException;
 
 
@@ -783,23 +784,42 @@ public class Updater
     }
 
 
-    protected static Model getModel(String file, String lang) throws IOException
+    protected static Model getModel(String file, Lang lang) throws IOException
     {
         System.out.println("  load " + file);
 
         Model model = ModelFactory.createDefaultModel();
-        InputStream in = FileManager.get().open(baseDirectory + file);
 
-        if("TTL".equals(lang))
-            in = new InputStreamFixer(in);
+        if(lang != Lang.TTL)
+        {
+            try(InputStream input = new FileInputStream(baseDirectory + file))
+            {
+                RDFDataMgr.read(model, input, lang);
+            }
+        }
+        else if(file.endsWith(".gz"))
+        {
+            try(InputStream input = new InputStreamFixer(
+                    new GZIPInputStream(new FileInputStream(baseDirectory + file), 65536)))
+            {
+                RDFDataMgr.read(model, input, lang);
+            }
+        }
+        else
+        {
+            try(InputStream input = new InputStreamFixer(new FileInputStream(baseDirectory + file)))
+            {
+                RDFDataMgr.read(model, input, lang);
+            }
+        }
 
-        return model.read(in, null, lang);
+        return model;
     }
 
 
     protected static Model getModel(String file) throws IOException
     {
-        return getModel(file, "TTL");
+        return getModel(file, Lang.TTL);
     }
 
 
