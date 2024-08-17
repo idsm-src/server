@@ -1,5 +1,24 @@
 #!/bin/bash
 
+set -ueo pipefail
+
+source datasource.properties
+
+version=$(date '+%Y-%m-%d')
+
+if [ -e "$base/ontology-$version" ]; then
+    suffix=1
+    while [ -e "$base/ontology-$version.$suffix" ]; do
+        suffix=$((suffix + 1))
+    done
+    version="$version.$suffix"
+fi
+
+output="$base/ontology-$version"
+mkdir "$output"
+
+data="${data:-data/ontology}"
+
 sources=(
 
 # PubChem Ontology
@@ -161,10 +180,11 @@ http://www.ebi.ac.uk/efo/efo.owl
 https://sparontologies.github.io/frapo/current/frapo.owl
 
 # Patent Ontology (EPO)
-https://data.epo.org/linked-data/download/vocabularies/patent.ttl
-http://data.epo.org/linked-data/def/cpc.ttl
-http://data.epo.org/linked-data/def/ipc.ttl
-http://data.epo.org/linked-data/def/st3.ttl
+https://data.epo.org/linked-data/api/datasets/download?path=vocabularies\&fileName=patent.ttl
+https://data.epo.org/linked-data/api/datasets/download?path=vocabularies\&fileName=cpcOnt.ttl
+https://data.epo.org/linked-data/api/datasets/download?path=vocabularies\&fileName=ipcOnt.ttl
+https://data.epo.org/linked-data/api/datasets/download?path=vocabularies\&fileName=st3Ont.ttl
+https://data.epo.org/linked-data/api/datasets/download?path=vocabularies\&fileName=st3Ref.ttl
 
 # W3C PROVenance Interchange
 http://www.w3.org/ns/prov.ttl
@@ -272,16 +292,15 @@ declare -A rewrite=(
 )
 
 
-err()
-{
-    echo "$@"
-    exit 1
-}
-
-
 get_imports()
 {
-    java -cp "$base/lib/*:$base/classes" cz.iocb.load.ontology.Imports "$@"
+    if [[ "$1" == *.ttl ]]; then
+        format=turtle
+    else
+        format=rdfxml
+    fi
+
+    rapper --ignore-errors --quiet --input $format --output ntriples "$1" | (grep -F ' <http://www.w3.org/2002/07/owl#imports> ' || true) | cut -d' ' -f 3 | sed 's/^.\(.*\).$/\1/'
 }
 
 
@@ -294,6 +313,8 @@ get_name()
         filename=NDF-RT.owl
     elif [[ "$filename" =~ \.(gz|zip)$ ]]; then
         filename="${filename%.*}"
+    elif [[ "$filename" =~ fileName= ]]; then
+        filename="${filename#*fileName=}"
     fi
 
     if [[ -e "$output/$filename" ]]; then
@@ -367,17 +388,23 @@ download()
 
     case "$iri" in
         http://www.loc.gov/standards/mads/rdf/v1.rdf)
-            if [ "$(cat "$output/$filename" | md5sum)" = "ec41226b9aca9fa3f4e18fd36a0175a0  -" ]; then
-                sed -i 's|<rdf:Description rdf:resource=|<rdf:Description rdf:about=|g' "$output/$filename"
-            fi
+            sed -i 's|<rdf:Description rdf:resource=|<rdf:Description rdf:about=|g' "$output/$filename"
             ;;
 
-        http://semanticscience.org/ontology/cheminf.owl)
-            if [ "$(cat "$output/$filename" | md5sum)" = "2259caf7e899436fd9430a9560334a79  -" ]; then
-                sed -i 's|&chebi;CHEBI_|\&obo;CHEBI_|g' "$output/$filename"
-            else
-                err "$output/$filename: unknown version"
-            fi
+        http://purl.obolibrary.org/obo/caro.owl)
+            sed -i 's|\([^h]\)ttp://www.geneontology.org|\1http://www.geneontology.org|g' "$output/$filename"
+            ;;
+
+        http://rdf.wwpdb.org/schema/pdbx-v50.owl)
+            sed -i 's|rdf:resource="dcterms:|rdf:resource="http://purl.org/dc/terms/|g' "$output/$filename"
+            ;;
+
+        https://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary.owl)
+            sed -i 's|xml:lang="FDA:[^"]*"|xml:lang="en"|' "$output/$filename"
+            ;;
+
+        https://edamontology.org/EDAM.owl)
+            sed -i 's|rdf:resource="https:doi.org|rdf:resource="https://doi.org|' "$output/$filename"
             ;;
     esac
 
@@ -392,39 +419,17 @@ download()
 }
 
 
-
-set -ue -o pipefail
-
-if [[ $BASH_SOURCE = */* ]]; then
-  base="${BASH_SOURCE%/*}/.."
-else
-  err "cannot detect source path"
-fi
-
-if [[ $# -gt 1 ]]; then
-  err "two many arguments"
-fi
-
-output=${1:-data/ontology}
-
-if [[ -e "$output" ]]; then
-    err "output directory '$output' already exist"
-fi
-
-mkdir -p "$output"
-
-
 # PDBx ontology 4.0
-cp "$base/data/ontology/pdbx-v40.owl" "$output"
+cp "$data/pdbx-v40.owl" "$output"
 
 # Eagle-i Resource Ontology (ERO)
-cp "$base/data/ontology/ero.owl" "$output"
+cp "$data/ero.owl" "$output"
 
 # other ontologies
-cp "$base/data/ontology/base.owl" "$output"
-cp "$base/data/ontology/pubchem-missing.ttl" "$output"
-cp "$base/data/ontology/xsd.owl" "$output"
-cp "$base/data/ontology/ChemOnt_2_1.owl" "$output"
+cp "$data/base.owl" "$output"
+cp "$data/pubchem-missing.ttl" "$output"
+cp "$data/xsd.owl" "$output"
+cp "$data/ChemOnt_2_1.owl" "$output"
 
 
 declare -A downloaded
@@ -440,10 +445,10 @@ md5sum -c --quiet <<EOF
 eecf96b8bf61fa82d6825b948f7dedad  $output/${downloaded[https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_elements.rdf]}
 60fe93118b817beeb2933d31fa439f43  $output/${downloaded[https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_terms.rdf]}
 6ff992991c5ea9330532903ab2e37ea2  $output/${downloaded[https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_type.rdf]}
-57619032fc0d43b45fe7b2951c8ee8e2  $output/${downloaded[http://purl.obolibrary.org/obo/disdriv.owl]}
+2d0905d3eab903326384b758dc39eb37  $output/${downloaded[http://purl.obolibrary.org/obo/disdriv.owl]}
 680d65b279cb55d86f292ab6ecd31124  $output/${downloaded[https://github.com/ewilderj/doap/raw/master/schema/doap.rdf]}
 f6575d8f9f50e5355506e1d87e9d11ef  $output/${downloaded[http://biohackathon.org/resource/faldo.ttl]}
-8a16b9a4c8c98bd9b5776adc2a27d09b  $output/${downloaded[http://xmlns.com/foaf/0.1/index.rdf]}
+3a5d4778240b986a35566dd0f0619ce8  $output/${downloaded[http://xmlns.com/foaf/0.1/index.rdf]}
 549f93606e3c1ffb60164305065841d1  $output/${downloaded[https://github.com/openphacts/jqudt/raw/master/src/main/resources/onto/ops.ttl]}
 a6340a448fc6b84f33badab46913ffc6  $output/${downloaded[http://www.w3.org/2002/07/owl.ttl]}
 becfa1348a8949ba77585878dd9b66a5  $output/${downloaded[http://www.w3.org/2000/01/rdf-schema.ttl]}
@@ -453,7 +458,7 @@ becfa1348a8949ba77585878dd9b66a5  $output/${downloaded[http://www.w3.org/2000/01
 5422c841e9cecbabe99c016c4004238b  $output/${downloaded[http://www.ontologydesignpatterns.org/cp/owl/situation.owl]}
 ea21388ea72fb98aaecec48b8f8a5765  $output/${downloaded[http://www.w3.org/TR/skos-reference/skos.rdf]}
 4eda1eb9c5e33f0e31e5130b03112e6e  $output/${downloaded[http://www.w3.org/2003/06/sw-vocab-status/ns.rdf]}
-fb847ada13e21c02426e25b8bd6c5602  $output/${downloaded[http://purl.obolibrary.org/obo/upheno/v2/upheno.owl]}
+6e54cb65a79d14956bc1e5a768d797ca  $output/${downloaded[http://purl.obolibrary.org/obo/upheno/v2/upheno.owl]}
 3990536d17244347bc22256c4d524dc4  $output/${downloaded[http://www.w3.org/2006/vcard/ns.ttl]}
 57d88c7d6a44220fd95189d0f995e51d  $output/${downloaded[http://vocab.deri.ie/void.ttl]}
 8ab3a314969cd6ab4094a9bb4213ebdb  $output/${downloaded[https://data.bioontology.org/ontologies/NDF-RT/submissions/1/download?apikey=8b5b7825-538d-40e0-9e9e-5ab9274a9aeb]}
@@ -462,3 +467,6 @@ EOF
 
 echo
 echo "download completed"
+
+test -L "$base/ontology" && rm "$base/ontology"
+ln -s "ontology-$version" "$base/ontology"

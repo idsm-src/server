@@ -48,6 +48,8 @@ insert into isdb.spectrum_bases(id, ionmode, pepmass, spectrum)
   select b.id, 'P', d.pepmass, d.spectrum from isdb_pos d, isdb.compound_bases b where b.accession = d.name;
 
 
+refresh materialized view isdb.compound_pubchem_compounds;
+refresh materialized view isdb.compound_wikidata_compounds;
 select sachem.sync_data('isdb');
 
 commit;

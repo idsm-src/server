@@ -6,7 +6,7 @@ alter table chembl_tmp.cell_dictionary add column clo_resource_id integer;
 update chembl_tmp.cell_dictionary set clo_resource_id = replace(clo_id, 'CLO_', '')::integer where clo_id like 'CLO\_%';
 
 alter table chembl_tmp.cell_dictionary add column efo_resource_id integer;
-update chembl_tmp.cell_dictionary set efo_resource_id = replace(efo_id, 'EFO_', '')::integer;
+update chembl_tmp.cell_dictionary set efo_resource_id = regexp_replace(efo_id, 'EFO_?', '')::integer;
 
 alter table chembl_tmp.cell_dictionary alter column cell_source_tax_id type integer;
 

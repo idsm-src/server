@@ -1611,6 +1611,7 @@ public class MoNA extends Updater
         {
             statement.execute("select sachem.cleanup('mona')");
             statement.execute("select sachem.sync_data('mona', false, true)");
+            statement.execute("refresh materialized view mona.compound_pubchem_compounds");
         }
 
 

@@ -1,34 +1,27 @@
 #!/bin/bash
 
-err()
-{
-    echo "$@"
-    exit 1
-}
+set -ueo pipefail
 
-set -ue -o pipefail
+source datasource.properties
 
-if [[ $BASH_SOURCE = */* ]]; then
-  base="${BASH_SOURCE%/*}/.."
-else
-  err "cannot detect source path"
+version=$(wget -q ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/void.ttl -O - | sed -n '/dcterms:modified/s/.*dcterms:modified."\([^"]*\)"\^\^xsd:date.*/\1/p')
+
+if [ -e "$base/pubchem-$version" ]; then
+    suffix=1
+    while [ -e "$base/pubchem-$version.$suffix" ]; do
+        suffix=$((suffix + 1))
+    done
+    version="$version.$suffix"
 fi
 
-if [[ $# -gt 1 ]]; then
-  err "two many arguments"
-fi
+output="$base/pubchem-$version"
+mkdir "$output"
 
-output=${1:-data/pubchem}
+wget --progress=bar:force -P "$output" -r -l 3 -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF
+wget --progress=bar:force -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/compound/general
+wget --progress=bar:force -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/descriptor
+wget --progress=bar:force -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/Bioassay/XML
+wget --progress=bar:force -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/Compound/Extras/CID-Title.gz
 
-if [[ -e "$output" ]]; then
-    err "output directory '$output' already exist"
-fi
-
-mkdir -p "$output"
-
-
-wget -P "$output" -r -l 3 -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF
-wget -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/compound/general
-wget -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/descriptor
-wget -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/Bioassay/XML
-wget -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/Compound/Extras/CID-Title.gz
+test -L "$base/pubchem" && rm "$base/pubchem"
+ln -s "pubchem-$version" "$base/pubchem"

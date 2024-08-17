@@ -336,7 +336,7 @@ public class Ontology extends Updater
         sources.add(new OwlSource("Protein Ontology (PRO)", "http://purl.obolibrary.org/obo/pr.owl"));
         sources.add(new OwlSource("Gene Ontology (GO)", "http://purl.obolibrary.org/obo/go.owl"));
         sources.add(new OwlSource("Sequence Ontology (SO)", "http://purl.obolibrary.org/obo/so.owl"));
-        sources.add(new OwlSource("Cell Line Ontology (CLO)", "http://purl.obolibrary.org/obo/clo.owl"));
+        sources.add(new OwlSource("Cell Line Ontology (CLO)", "http://purl.obolibrary.org/obo/clo_merged.owl"));
         sources.add(new OwlSource("Cell Ontology (CL)", "http://purl.obolibrary.org/obo/cl.owl"));
         sources.add(new OwlSource("The BRENDA Tissue Ontology (BTO)", "http://purl.obolibrary.org/obo/bto.owl"));
         sources.add(new OwlSource("Human Disease Ontology (DO)", "http://purl.obolibrary.org/obo/doid.owl"));
@@ -358,7 +358,7 @@ public class Ontology extends Updater
         sources.add(new OwlSource("Basic Formal Ontology (BFO)", "http://purl.obolibrary.org/obo/bfo.owl"));
         sources.add(new OwlSource("Food Ontology (FOODON)", "http://purl.obolibrary.org/obo/foodon.owl"));
         sources.add(new OwlSource("Evidence and Conclusion Ontology (ECO)", "http://purl.obolibrary.org/obo/eco.owl"));
-        sources.add(new StaticSource("Disease Drivers Ontology (DISDRIV)", "2021-09-29"));
+        sources.add(new StaticSource("Disease Drivers Ontology (DISDRIV)", "2023-12-15"));
         sources.add(new OwlSource("Genotype Ontology (GENO)", "http://purl.obolibrary.org/obo/geno.owl"));
         sources.add(
                 new OwlSource("Common Anatomy Reference Ontology (CARO)", "http://purl.obolibrary.org/obo/caro.owl"));
@@ -369,7 +369,7 @@ public class Ontology extends Updater
         sources.add(new OwlSource("OBO Metadata Ontology", "http://purl.obolibrary.org/obo/omo.owl"));
         sources.add(new StaticSource("Biological Pathway Exchange (BioPAX)", "1.0"));
         sources.add(new OwlSource("UniProt RDF schema ontology", "http://purl.uniprot.org/core/"));
-        sources.add(new OwlSource("PDBx ontology", "http://rdf.wwpdb.org/schema/pdbx-v50.owl"));
+        sources.add(new OwlSource("PDBx ontology", "https://rdf.wwpdb.org/schema/pdbx-v50.owl"));
         sources.add(new OwlSource("Quantities, Units, Dimensions and Types Ontology (QUDT)",
                 "http://qudt.org/2.1/schema/qudt"));
         sources.add(new StaticSource("Open PHACTS Units extending QUDT", "2013-09-18"));
@@ -460,6 +460,7 @@ public class Ontology extends Updater
         builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#Term", 44);
         builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#TopicalDescriptor", 45);
         builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#TreeNumber", 46);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Anatomy", 47);
 
         // ChEBI
         builtinResources.put("http://purl.obolibrary.org/obo/chebi#has_functional_parent", 64);

@@ -1,10 +1,13 @@
 package cz.iocb.load.mesh;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.zip.GZIPInputStream;
 import org.apache.jena.rdf.model.Model;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
@@ -22,7 +25,8 @@ public class Mesh extends Updater
     private static final StringSet newMeshes = new StringSet();
     private static final StringSet oldMeshes = new StringSet();
 
-    @SuppressWarnings("serial") private static HashMap<String, Integer> zoneTable = new HashMap<String, Integer>()
+    @SuppressWarnings("serial")
+    private static HashMap<String, Integer> zoneTable = new HashMap<String, Integer>()
     {
         {
             put("", -2147483648);
@@ -34,15 +38,20 @@ public class Mesh extends Updater
 
     private static String getVersion(String file) throws IOException
     {
-        try(BufferedReader reader = new BufferedReader(new FileReader(file)))
+        try(BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new GZIPInputStream(new FileInputStream(file), 65536), UTF_8)))
         {
-            String line = reader.readLine();
+            String line;
 
-            if(!line.matches("# <http://id\\.nlm\\.nih\\.gov/mesh> exported at 20[0-9]{2}-[0-9]{2}-[0-9]{2} .*"))
-                throw new IOException();
+            while((line = reader.readLine()) != null)
+            {
+                if(line.matches("# <http://id\\.nlm\\.nih\\.gov/mesh> exported at 20[0-9]{2}-[0-9]{2}-[0-9]{2} .*"))
+                    return line.replaceFirst(
+                            "^# <http://id\\.nlm\\.nih\\.gov/mesh> exported at (20[0-9]{2}-[0-9]{2}-[0-9]{2}) .*$",
+                            "$1");
+            }
 
-            return line.replaceFirst(
-                    "^# <http://id\\.nlm\\.nih\\.gov/mesh> exported at (20[0-9]{2}-[0-9]{2}-[0-9]{2}) .*$", "$1");
+            throw new IOException();
         }
     }
 
@@ -64,8 +73,8 @@ public class Mesh extends Updater
                 String meshID = getStringID("mesh", prefix);
                 Pair<Integer, Integer> type = Ontology.getId(getIRI("type"));
 
-                if(type.getOne() != Ontology.unitUncategorized)
-                    throw new IOException();
+                if(type == null || type.getOne() != Ontology.unitUncategorized)
+                    throw new IOException(getIRI("type"));
 
                 oldMeshes.remove(meshID);
                 keepMeshes.add(meshID);
@@ -408,7 +417,7 @@ public class Mesh extends Updater
 
     public static void main(String[] args) throws SQLException, IOException
     {
-        String file = "mesh/mesh.nt";
+        String file = "mesh/mesh.nt.gz";
 
         try
         {

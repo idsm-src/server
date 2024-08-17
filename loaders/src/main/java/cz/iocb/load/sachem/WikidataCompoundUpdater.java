@@ -27,12 +27,14 @@ public class WikidataCompoundUpdater extends Updater
 
     public static void main(String[] args) throws Throwable
     {
+        Updater.lock("sachem-wikidata.lock");
+
         try
         {
             init();
 
             Date date = new Date();
-            String path = baseDirectory + "sachem-wikidata/" + new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(date);
+            String path = baseDirectory + "sachem/wikidata/" + new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(date);
             File directory = new File(path);
             directory.mkdirs();
 

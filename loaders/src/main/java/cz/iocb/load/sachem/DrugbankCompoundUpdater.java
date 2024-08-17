@@ -2,6 +2,7 @@ package cz.iocb.load.sachem;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +17,7 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import cz.iocb.load.common.Updater;
@@ -24,33 +26,49 @@ import cz.iocb.load.common.Updater;
 
 public class DrugbankCompoundUpdater
 {
+    private static final String index = "drugbank";
+    private static final boolean optimize = true;
+    private static final boolean autoclean = true;
+    private static final boolean rename = true;
+
+    private static final String httpServer = "https://go.drugbank.com";
+    private static final String fileName = "drugbank_all_open_structures.sdf.zip";
+    private static final String idTag = "DRUGBANK_ID";
+    private static final String idPrefix = "DB";
+
+
     public static void main(String[] args) throws Throwable
     {
+        Updater.lock("sachem-drugbank.lock");
+
         Date checkdate = new Date();
-        ConfigurationProperties properties = new ConfigurationProperties("config/drugbank.properties");
 
-        String pgHost = properties.getProperty("postgres.host");
-        int pgPort = properties.getIntProperty("postgres.port");
-        String pgUserName = properties.getProperty("postgres.username");
-        String pgPassword = properties.getProperty("postgres.password");
-        String pgDatabase = properties.getProperty("postgres.database");
-        String index = properties.getProperty("sachem.index");
-        boolean optimize = properties.getBooleanProperty("sachem.optimize");
-        boolean autoclean = properties.getBooleanProperty("sachem.autoclean");
-        boolean rename = properties.getBooleanProperty("sachem.rename");
+        Properties properties = new Properties();
 
-        String httpServer = properties.getProperty("http.server");
-
-        String workdir = properties.getProperty("sdf.directory");
-        String fileName = properties.getProperty("sdf.file");
-        String idTag = properties.getProperty("sdf.idtag");
-        String idPrefix = properties.getProperty("sdf.idprefix");
-
-
-        String pgUrl = "jdbc:postgresql://" + pgHost + ":" + pgPort + "/" + pgDatabase;
-
-        try(Connection connection = DriverManager.getConnection(pgUrl, pgUserName, pgPassword))
+        try(FileInputStream in = new FileInputStream("datasource.properties"))
         {
+            properties.load(in);
+        }
+
+        String url = properties.getProperty("url");
+        properties.remove("url");
+
+        boolean autoCommit = Boolean.valueOf(properties.getProperty("autoCommit"));
+        properties.remove("autoCommit");
+
+        String basedir = properties.getProperty("base");
+        properties.remove("base");
+
+        if(!basedir.endsWith("/"))
+            basedir += "/";
+
+        String workdir = basedir + "/sachem/drugbank/";
+
+
+        try(Connection connection = DriverManager.getConnection(url, properties))
+        {
+            connection.setAutoCommit(autoCommit);
+
             if(autoclean)
             {
                 try(PreparedStatement statement = connection.prepareStatement("select sachem.cleanup(?)"))
@@ -142,8 +160,6 @@ public class DrugbankCompoundUpdater
                 }
             }
 
-
-            connection.setAutoCommit(false);
 
             try
             {

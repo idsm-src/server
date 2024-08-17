@@ -1,6 +1,7 @@
 package cz.iocb.load.sachem;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,6 +11,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.Properties;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
@@ -19,34 +21,50 @@ import cz.iocb.load.common.Updater;
 
 public class ChEBICompoundUpdater
 {
+    private static final String index = "chebi";
+    private static final boolean optimize = true;
+    private static final boolean autoclean = true;
+    private static final boolean rename = true;
+
+    private static final String ftpServer = "ftp.ebi.ac.uk";
+    private static final int ftpPort = 21;
+    private static final String ftpUserName = "anonymous";
+    private static final String ftpPassword = "anonymous";
+    private static final String ftpPath = "pub/databases/chebi/SDF/";
+
+    private static final String filePattern = ".*_complete\\.sdf\\.gz";
+    private static final String idTag = "ChEBI ID";
+    private static final String idPrefix = "CHEBI:";
+
+
     public static void main(String[] args) throws Exception
     {
+        Updater.lock("sachem-chebi.lock");
+
         Date checkdate = new Date();
-        ConfigurationProperties properties = new ConfigurationProperties("config/chebi.properties");
 
-        String pgHost = properties.getProperty("postgres.host");
-        int pgPort = properties.getIntProperty("postgres.port");
-        String pgUserName = properties.getProperty("postgres.username");
-        String pgPassword = properties.getProperty("postgres.password");
-        String pgDatabase = properties.getProperty("postgres.database");
-        String index = properties.getProperty("sachem.index");
-        boolean optimize = properties.getBooleanProperty("sachem.optimize");
-        boolean autoclean = properties.getBooleanProperty("sachem.autoclean");
-        boolean rename = properties.getBooleanProperty("sachem.rename");
+        Properties properties = new Properties();
 
-        String ftpServer = properties.getProperty("ftp.server");
-        int ftpPort = properties.getIntProperty("ftp.port");
-        String ftpUserName = properties.getProperty("ftp.username");
-        String ftpPassword = properties.getProperty("ftp.password");
-        String ftpPath = properties.getProperty("ftp.path");
+        try(FileInputStream in = new FileInputStream("datasource.properties"))
+        {
+            properties.load(in);
+        }
 
-        String filePattern = properties.getProperty("sdf.pattern");
-        String workdir = properties.getProperty("sdf.directory");
-        String idTag = properties.getProperty("sdf.idtag");
-        String idPrefix = properties.getProperty("sdf.idprefix");
+        String url = properties.getProperty("url");
+        properties.remove("url");
+
+        boolean autoCommit = Boolean.valueOf(properties.getProperty("autoCommit"));
+        properties.remove("autoCommit");
+
+        String basedir = properties.getProperty("base");
+        properties.remove("base");
+
+        if(!basedir.endsWith("/"))
+            basedir += "/";
+
+        String workdir = basedir + "sachem/chebi/";
 
 
-        String pgUrl = "jdbc:postgresql://" + pgHost + ":" + pgPort + "/" + pgDatabase;
         String path = workdir + "/" + new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
         File directory = new File(path);
 
@@ -54,8 +72,10 @@ public class ChEBICompoundUpdater
         boolean hasNewItem = false;
 
 
-        try(Connection connection = DriverManager.getConnection(pgUrl, pgUserName, pgPassword))
+        try(Connection connection = DriverManager.getConnection(url, properties))
         {
+            connection.setAutoCommit(autoCommit);
+
             if(autoclean)
             {
                 try(PreparedStatement statement = connection.prepareStatement("select sachem.cleanup(?)"))
@@ -139,8 +159,6 @@ public class ChEBICompoundUpdater
                 return;
             }
 
-
-            connection.setAutoCommit(false);
 
             try
             {

@@ -1,31 +1,24 @@
 #!/bin/bash
 
-err()
-{
-    echo "$@"
-    exit 1
-}
+set -ueo pipefail
 
-set -ue -o pipefail
+source datasource.properties
 
-if [[ $BASH_SOURCE = */* ]]; then
-  base="${BASH_SOURCE%/*}/.."
-else
-  err "cannot detect source path"
+version=$(echo -e "open ftp.ebi.ac.uk\nuser anonymous\ncd /pub/databases/chembl/ChEMBL-RDF\nls -l\nbye\n" | ftp -inv | sed -n '/latest -> /s/.*latest -> //p')
+
+if [ -e "$base/chembl-$version" ]; then
+    suffix=1
+    while [ -e "$base/chembl-$version.$suffix" ]; do
+        suffix=$((suffix + 1))
+    done
+    version="$version.$suffix"
 fi
 
-if [[ $# -gt 1 ]]; then
-  err "two many arguments"
-fi
+output="$base/chembl-$version"
+mkdir "$output"
 
-output=${1:-data/chembl}
+wget --progress=bar:force -P "$output" -r -A 'chembl_*_postgresql.tar.gz' -nH --cut-dirs=5 "ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest/"
+wget --progress=bar:force -P "$output"/rdf -r -A ttl.gz -nH --cut-dirs=5 "ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBL-RDF/latest/"
 
-if [[ -e "$output" ]]; then
-    err "output directory '$output' already exist"
-fi
-
-mkdir -p "$output"
-
-
-wget -P "$output" -r -A 'chembl_*_postgresql.tar.gz' -nH --cut-dirs=5 ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest/
-wget -P "$output"/rdf -r -A ttl.gz -nH --cut-dirs=5 ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBL-RDF/latest/
+test -L "$base/chembl" && rm "$base/chembl"
+ln -s "chembl-$version" "$base/chembl"

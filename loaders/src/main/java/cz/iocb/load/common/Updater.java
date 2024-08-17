@@ -5,9 +5,12 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -730,10 +733,14 @@ public class Updater
 
     protected static void init() throws SQLException, IOException
     {
-        prefixes = new String(Updater.class.getResourceAsStream("query/prefixes.sparql").readAllBytes(), UTF_8);
+        prefixes = new String(Updater.class.getResourceAsStream("/query/prefixes.sparql").readAllBytes(), UTF_8);
 
         Properties properties = new Properties();
-        properties.load(Updater.class.getClassLoader().getResourceAsStream("config/datasource.properties"));
+
+        try(FileInputStream in = new FileInputStream("datasource.properties"))
+        {
+            properties.load(in);
+        }
 
         String url = properties.getProperty("url");
         properties.remove("url");
@@ -825,7 +832,7 @@ public class Updater
 
     protected static String loadQuery(String path) throws IOException
     {
-        byte[] encoded = Updater.class.getResourceAsStream("query/" + path).readAllBytes();
+        byte[] encoded = Updater.class.getResourceAsStream("/query/" + path).readAllBytes();
         return new String(encoded, UTF_8);
     }
 
@@ -958,7 +965,7 @@ public class Updater
                 try(PreparedStatement statement = connection
                         .prepareStatement("update info.idsm_sources set version=? where name=?"))
                 {
-                    statement.setString(1, version);
+                    statement.setString(1, version == null ? "" : version);
                     statement.setString(2, name);
 
                     if(statement.executeUpdate() != 1)
@@ -998,6 +1005,8 @@ public class Updater
     {
         if(!connection.getAutoCommit())
             connection.commit();
+
+        connection.close();
     }
 
 
@@ -1005,5 +1014,32 @@ public class Updater
     {
         if(connection != null && !connection.getAutoCommit())
             connection.rollback();
+
+        connection.close();
+    }
+
+
+    public static void lock(String lockName) throws IOException
+    {
+        File file = new File(lockName);
+        @SuppressWarnings("resource")
+        FileChannel channel = new FileOutputStream(file).getChannel();
+        FileLock lock = channel.tryLock();
+
+        if(lock == null)
+            throw new IOException("cannot obtain lock file " + lockName);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try
+            {
+                lock.release();
+                channel.close();
+                file.delete();
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+            }
+        }));
     }
 }

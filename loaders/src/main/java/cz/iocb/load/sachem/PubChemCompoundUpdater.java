@@ -2,6 +2,7 @@ package cz.iocb.load.sachem;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.sql.Connection;
@@ -13,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.Properties;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
@@ -22,6 +24,21 @@ import cz.iocb.load.common.Updater;
 
 public class PubChemCompoundUpdater
 {
+    private static final String index = "pubchem";
+    private static final boolean optimize = false;
+    private static final boolean autoclean = true;
+    private static final boolean rename = true;
+
+    private static final String ftpServer = "ftp.ncbi.nlm.nih.gov";
+    private static final int ftpPort = 21;
+    private static final String ftpUserName = "anonymous";
+    private static final String ftpPassword = "anonymous";
+    private static final String ftpPath = "pubchem/Compound";
+
+    private static final String filePattern = ".*\\.sdf\\.gz";
+    private static final String idTag = "PUBCHEM_COMPOUND_CID";
+    private static final String idPrefix = "";
+
     private static final int DAY = 24 * 60 * 60 * 1000;
     private static final String DAILY = "/Daily";
     private static final String WEEKLY = "/Weekly";
@@ -29,38 +46,44 @@ public class PubChemCompoundUpdater
 
     public static void main(String[] args) throws Exception
     {
+        Updater.lock("sachem-pubchem.lock");
+
         Date checkdate = new Date();
-        ConfigurationProperties properties = new ConfigurationProperties("config/pubchem.properties");
 
-        String pgHost = properties.getProperty("postgres.host");
-        int pgPort = properties.getIntProperty("postgres.port");
-        String pgUserName = properties.getProperty("postgres.username");
-        String pgPassword = properties.getProperty("postgres.password");
-        String pgDatabase = properties.getProperty("postgres.database");
-        String index = properties.getProperty("sachem.index");
-        boolean optimize = properties.getBooleanProperty("sachem.optimize");
-        boolean autoclean = properties.getBooleanProperty("sachem.autoclean");
-        boolean rename = properties.getBooleanProperty("sachem.rename");
+        Properties properties = new Properties();
 
-        String ftpServer = properties.getProperty("ftp.server");
-        int ftpPort = properties.getIntProperty("ftp.port");
-        String ftpUserName = properties.getProperty("ftp.username");
-        String ftpPassword = properties.getProperty("ftp.password");
-        String ftpPath = properties.getProperty("ftp.path");
-
-        String filePattern = properties.getProperty("sdf.pattern");
-        String workdir = properties.getProperty("sdf.directory");
-        String idTag = properties.getProperty("sdf.idtag");
-        String idPrefix = properties.getProperty("sdf.idprefix");
-
-        String baseDirectory = properties.getProperty("base.directory");
-        String baseVersion = properties.getProperty("base.version");
-
-
-        String pgUrl = "jdbc:postgresql://" + pgHost + ":" + pgPort + "/" + pgDatabase;
-
-        try(Connection connection = DriverManager.getConnection(pgUrl, pgUserName, pgPassword))
+        try(FileInputStream in = new FileInputStream("datasource.properties"))
         {
+            properties.load(in);
+        }
+
+        String url = properties.getProperty("url");
+        properties.remove("url");
+
+        boolean autoCommit = Boolean.valueOf(properties.getProperty("autoCommit"));
+        properties.remove("autoCommit");
+
+        String basedir = properties.getProperty("base");
+        properties.remove("base");
+
+        if(!basedir.endsWith("/"))
+            basedir += "/";
+
+        String workdir = basedir + "sachem/pubchem/";
+
+
+        String[] condidates = new File(workdir).list((d, n) -> n.matches("base-[0-9]{4}-[0-9]{2}-[0-9]{2}"));
+        Arrays.sort(condidates);
+
+        String base = condidates[condidates.length - 1];
+
+        String baseVersion = base.substring(5);
+        String baseDirectory = workdir + base;
+
+        try(Connection connection = DriverManager.getConnection(url, properties))
+        {
+            connection.setAutoCommit(autoCommit);
+
             if(autoclean)
             {
                 try(PreparedStatement statement = connection.prepareStatement("select sachem.cleanup(?)"))
@@ -119,7 +142,7 @@ public class PubChemCompoundUpdater
                 {
                     String name = update.getName();
 
-                    if(name.compareTo(lastVersion) == 0)
+                    if(name.compareTo(lastVersion) <= 0)
                     {
                         coveredByDaily = true;
                     }
@@ -149,6 +172,10 @@ public class PubChemCompoundUpdater
 
                     String limit = format.format(new Date(format.parse(oldestDailyUpdate).getTime() + 6 * DAY));
                     String oldestWeeklyUpdate = null;
+
+                    System.err.println("oldestDailyUpdate : " + oldestDailyUpdate);
+                    System.err.println("limit             : " + limit);
+
 
                     for(FTPFile update : weeklyUpdates)
                     {
@@ -249,8 +276,6 @@ public class PubChemCompoundUpdater
                 return;
             }
 
-
-            connection.setAutoCommit(version == null);
 
             try
             {
