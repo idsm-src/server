@@ -9,7 +9,6 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.exception.TemplateInitException;
 import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.runtime.directive.Directive;
-import org.apache.velocity.runtime.log.Log;
 import org.apache.velocity.runtime.parser.node.Node;
 
 
@@ -19,10 +18,7 @@ public class UrlDirective extends Directive
     public static enum Context
     {
         DETAILS, NODE, PAGE
-    };
-
-    private Log log;
-
+    }
 
 
     @Override
@@ -43,7 +39,6 @@ public class UrlDirective extends Directive
     public void init(RuntimeServices rs, InternalContextAdapter context, Node node) throws TemplateInitException
     {
         super.init(rs, context, node);
-        log = rs.getLog();
     }
 
 

@@ -11,15 +11,14 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.exception.TemplateInitException;
 import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.runtime.directive.Directive;
-import org.apache.velocity.runtime.log.Log;
 import org.apache.velocity.runtime.parser.node.ASTReference;
 import org.apache.velocity.runtime.parser.node.Node;
 import org.apache.velocity.runtime.parser.node.SimpleNode;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
+import cz.iocb.sparql.engine.error.TranslateExceptions;
 import cz.iocb.sparql.engine.request.Engine;
 import cz.iocb.sparql.engine.request.Request;
 import cz.iocb.sparql.engine.request.Result;
-import cz.iocb.sparql.engine.error.TranslateExceptions;
 
 
 
@@ -28,7 +27,6 @@ public class SparqlDirective extends Directive
     public static final String SPARQL_CONFIG = "SPARQL_CONFIG";
 
     private Engine engine;
-    private Log log;
 
 
     @Override
@@ -49,7 +47,6 @@ public class SparqlDirective extends Directive
     public void init(RuntimeServices rs, InternalContextAdapter context, Node node) throws TemplateInitException
     {
         super.init(rs, context, node);
-        log = rs.getLog();
 
         SparqlDatabaseConfiguration dbConfig = (SparqlDatabaseConfiguration) rs.getApplicationAttribute(SPARQL_CONFIG);
         engine = new Engine(dbConfig);
