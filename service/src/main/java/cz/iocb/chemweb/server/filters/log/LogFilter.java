@@ -8,15 +8,18 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.log4j.MDC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 
 
 public class LogFilter implements Filter
 {
-    //private static final Logger logger = Logger.getLogger(LogFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(LogFilter.class);
 
-    @SuppressWarnings("unused") private FilterConfig filterConfig;
+    @SuppressWarnings("unused")
+    private FilterConfig filterConfig;
 
 
 
@@ -30,7 +33,7 @@ public class LogFilter implements Filter
         MDC.put("remotehost", httpRequest.getRemoteHost());
         MDC.put("session", httpRequest.getSession().getId());
 
-        //logger.info(httpRequest.getRequestURI());
+        logger.info(httpRequest.getRequestURI());
         filterChain.doFilter(request, response);
 
         MDC.remove("remoteaddr");

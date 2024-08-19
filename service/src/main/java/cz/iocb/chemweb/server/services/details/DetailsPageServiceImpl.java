@@ -10,24 +10,25 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import org.apache.log4j.Logger;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.request.IriNode;
 import cz.iocb.chemweb.server.velocity.NodeUtils;
 import cz.iocb.chemweb.server.velocity.SparqlDirective;
 import cz.iocb.chemweb.server.velocity.UrlDirective;
 import cz.iocb.chemweb.shared.services.details.DetailsPageService;
+import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
+import cz.iocb.sparql.engine.request.IriNode;
 
 
 
 public class DetailsPageServiceImpl extends RemoteServiceServlet implements DetailsPageService
 {
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = Logger.getLogger(DetailsPageServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(DetailsPageServiceImpl.class);
 
     private SparqlDatabaseConfiguration dbConfig;
     private VelocityEngine ve;

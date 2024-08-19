@@ -19,19 +19,13 @@ import javax.naming.NamingException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpSession;
-import org.apache.log4j.Logger;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import cz.iocb.chemweb.server.services.SessionData;
-import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.request.Engine;
-import cz.iocb.sparql.engine.request.LiteralNode;
-import cz.iocb.sparql.engine.request.RdfNode;
-import cz.iocb.sparql.engine.request.Request;
-import cz.iocb.sparql.engine.request.Result;
-import cz.iocb.sparql.engine.error.TranslateExceptions;
 import cz.iocb.chemweb.server.velocity.NodeUtils;
 import cz.iocb.chemweb.server.velocity.SparqlDirective;
 import cz.iocb.chemweb.server.velocity.UrlDirective;
@@ -41,6 +35,13 @@ import cz.iocb.chemweb.shared.services.query.DataGridNode;
 import cz.iocb.chemweb.shared.services.query.QueryException;
 import cz.iocb.chemweb.shared.services.query.QueryResult;
 import cz.iocb.chemweb.shared.services.query.QueryService;
+import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
+import cz.iocb.sparql.engine.error.TranslateExceptions;
+import cz.iocb.sparql.engine.request.Engine;
+import cz.iocb.sparql.engine.request.LiteralNode;
+import cz.iocb.sparql.engine.request.RdfNode;
+import cz.iocb.sparql.engine.request.Request;
+import cz.iocb.sparql.engine.request.Result;
 
 
 
@@ -58,7 +59,7 @@ public class QueryServiceImpl extends RemoteServiceServlet implements QueryServi
     private static final long serialVersionUID = 1L;
     private static final long timeout = 15 * 60 * 1000000000l; // 15 minutes
     private static final SessionData<QueryState> sessionData = new SessionData<QueryState>("QuerySessionStorage");
-    private static final Logger logger = Logger.getLogger(QueryServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(QueryServiceImpl.class);
     private static final int cacheSize = 1000000;
     private static final Map<String, Map<RdfNode, String>> nodeHashMaps = new HashMap<String, Map<RdfNode, String>>();
 
@@ -87,7 +88,6 @@ public class QueryServiceImpl extends RemoteServiceServlet implements QueryServi
 
 
             Properties properties = new Properties();
-            properties.put("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.NullLogChute");
             properties.put("file.resource.loader.path", config.getServletContext().getRealPath("/templates"));
             properties.put("userdirective",
                     "cz.iocb.chemweb.server.velocity.SparqlDirective,cz.iocb.chemweb.server.velocity.UrlDirective");
