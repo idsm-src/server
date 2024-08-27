@@ -369,7 +369,7 @@ public class Ontology extends Updater
         sources.add(new OwlSource("OBO Metadata Ontology", "http://purl.obolibrary.org/obo/omo.owl"));
         sources.add(new StaticSource("Biological Pathway Exchange (BioPAX)", "1.0"));
         sources.add(new OwlSource("UniProt RDF schema ontology", "http://purl.uniprot.org/core/"));
-        sources.add(new OwlSource("PDBx ontology", "https://rdf.wwpdb.org/schema/pdbx-v50.owl"));
+        sources.add(new OwlSource("PDBx ontology", "http://rdf.wwpdb.org/schema/pdbx-v50.owl"));
         sources.add(new OwlSource("Quantities, Units, Dimensions and Types Ontology (QUDT)",
                 "http://qudt.org/2.1/schema/qudt"));
         sources.add(new StaticSource("Open PHACTS Units extending QUDT", "2013-09-18"));

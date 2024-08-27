@@ -397,6 +397,7 @@ download()
 
         http://rdf.wwpdb.org/schema/pdbx-v50.owl)
             sed -i 's|rdf:resource="dcterms:|rdf:resource="http://purl.org/dc/terms/|g' "$output/$filename"
+	    sed -i 's|https://rdf\.wwpdb\.org/|http://rdf.wwpdb.org/|g' "$output/$filename"
             ;;
 
         https://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary.owl)

@@ -73,7 +73,7 @@ public class ChemblConfiguration extends SparqlDatabaseConfiguration
         //addPrefix("uo", "http://purl.obolibrary.org/obo/");
 
         // extension
-        addPrefix("pdbo", "https://rdf.wwpdb.org/schema/pdbx-v50.owl#");
+        addPrefix("pdbo", "http://rdf.wwpdb.org/schema/pdbx-v50.owl#");
         addPrefix("sio", "http://semanticscience.org/resource/");
     }
 

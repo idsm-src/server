@@ -89,7 +89,7 @@ public class PubChemConfiguration extends SparqlDatabaseConfiguration
         addPrefix("fabio", "http://purl.org/spar/fabio/");
         addPrefix("uniprot", "http://purl.uniprot.org/uniprot/");
         addPrefix("up", "http://purl.uniprot.org/core/");
-        addPrefix("pdbo", "https://rdf.wwpdb.org/schema/pdbx-v50.owl#");
+        addPrefix("pdbo", "http://rdf.wwpdb.org/schema/pdbx-v50.owl#");
         addPrefix("pdbo40", "http://rdf.wwpdb.org/schema/pdbx-v40.owl#");
         addPrefix("pdbr", "http://rdf.wwpdb.org/pdb/");
         //addPrefix("taxonomy", "http://identifiers.org/taxonomy/");
