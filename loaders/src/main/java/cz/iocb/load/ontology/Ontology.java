@@ -336,7 +336,7 @@ public class Ontology extends Updater
         sources.add(new OwlSource("Protein Ontology (PRO)", "http://purl.obolibrary.org/obo/pr.owl"));
         sources.add(new OwlSource("Gene Ontology (GO)", "http://purl.obolibrary.org/obo/go.owl"));
         sources.add(new OwlSource("Sequence Ontology (SO)", "http://purl.obolibrary.org/obo/so.owl"));
-        sources.add(new OwlSource("Cell Line Ontology (CLO)", "http://purl.obolibrary.org/obo/clo_merged.owl"));
+        sources.add(new OwlSource("Cell Line Ontology (CLO)", "http://purl.obolibrary.org/obo/clo/clo_merged.owl"));
         sources.add(new OwlSource("Cell Ontology (CL)", "http://purl.obolibrary.org/obo/cl.owl"));
         sources.add(new OwlSource("The BRENDA Tissue Ontology (BTO)", "http://purl.obolibrary.org/obo/bto.owl"));
         sources.add(new OwlSource("Human Disease Ontology (DO)", "http://purl.obolibrary.org/obo/doid.owl"));
