@@ -153,7 +153,7 @@
     <div class="VET-Header">Properties</div>
     <div>
       #foreach($property in $properties)
-      #if($velocityCount > 1)<br/>#end
+      #if($foreach.count > 1)<br/>#end
       #url($property.PROPERTY)#escapeIRI($property.PROPERTY)#end (#escapeHTML($property.LABEL))
 
       <table style="margin-left: 10px">

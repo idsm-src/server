@@ -7,7 +7,7 @@
   }
 #end
 #if($info.LABEL)
-#escapeHTML($info.LABEL)## xxx
+#escapeHTML($info.LABEL)##
 ###else
 ###sparql($union)
 ##  SELECT ?CLASS FROM dataset:ontology WHERE
@@ -16,7 +16,7 @@
 ##  }
 ###end
 ###if( $union.count > 0 )
-###foreach($u in $union)#if($velocityCount > 1) | #end#label($u.CLASS)#end##
+###foreach($u in $union)#if($foreach.count > 1) | #end#label($u.CLASS)#end##
 ###else
 ###sparql($intersection)
 ##  SELECT ?CLASS FROM dataset:ontology WHERE
@@ -25,7 +25,7 @@
 ##  }
 ###end
 ###if( $intersection.count > 0 )
-###foreach($u in $intersection)#if($velocityCount > 1) & #end#label($u.CLASS)#end##
+###foreach($u in $intersection)#if($foreach.count > 1) & #end#label($u.CLASS)#end##
 #else
 #sparql($complement)
   SELECT ?CLASS FROM dataset:ontology WHERE
@@ -36,7 +36,7 @@
 #if( $complement.count == 1 )
 !#label($complement.CLASS)##
 #elseif( $complement.count > 1 )
-!{#foreach($c in $complement)#if($velocityCount > 1) & #end#label($c.CLASS)#end}##
+!{#foreach($c in $complement)#if($foreach.count > 1) & #end#label($c.CLASS)#end}##
 #else
 #sparql($restriction)
   SELECT ?PROPERTY ?TYPE ?VALUE FROM dataset:ontology FROM ebi:chebi WHERE
@@ -142,7 +142,7 @@
 ##  }
 ###end
 ###if( $data.count > 0 )
-##values: #foreach($d in $data)#if($velocityCount > 1), #end#if($velocityCount == $data.count)and #end#escapeHTML($d.VALUE)#end##
+##values: #foreach($d in $data)#if($foreach.count > 1), #end#if($foreach.count == $data.count)and #end#escapeHTML($d.VALUE)#end##
 #else
 #escapeIRI($class)
 #end
