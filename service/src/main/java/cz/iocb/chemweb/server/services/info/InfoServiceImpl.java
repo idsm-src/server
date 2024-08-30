@@ -12,7 +12,7 @@ import javax.naming.NamingException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.sql.DataSource;
-import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import cz.iocb.chemweb.server.services.GWTRemoteServiceServlet;
 import cz.iocb.chemweb.shared.services.DatabaseException;
 import cz.iocb.chemweb.shared.services.info.CountItem;
 import cz.iocb.chemweb.shared.services.info.InfoService;
@@ -20,7 +20,7 @@ import cz.iocb.chemweb.shared.services.info.SourceItem;
 
 
 
-public class InfoServiceImpl extends RemoteServiceServlet implements InfoService
+public class InfoServiceImpl extends GWTRemoteServiceServlet implements InfoService
 {
     private static final long serialVersionUID = 1L;
 

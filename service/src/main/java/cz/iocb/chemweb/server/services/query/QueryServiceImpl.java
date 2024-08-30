@@ -24,7 +24,7 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import cz.iocb.chemweb.server.services.GWTRemoteServiceServlet;
 import cz.iocb.chemweb.server.services.SessionData;
 import cz.iocb.chemweb.server.velocity.NodeUtils;
 import cz.iocb.chemweb.server.velocity.SparqlDirective;
@@ -45,7 +45,7 @@ import cz.iocb.sparql.engine.request.Result;
 
 
 
-public class QueryServiceImpl extends RemoteServiceServlet implements QueryService
+public class QueryServiceImpl extends GWTRemoteServiceServlet implements QueryService
 {
     private static class QueryState
     {

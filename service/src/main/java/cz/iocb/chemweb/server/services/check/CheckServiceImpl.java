@@ -6,19 +6,19 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.request.Engine;
-import cz.iocb.sparql.engine.request.Request;
-import cz.iocb.sparql.engine.error.TranslateMessage;
+import cz.iocb.chemweb.server.services.GWTRemoteServiceServlet;
 import cz.iocb.chemweb.shared.services.DatabaseException;
 import cz.iocb.chemweb.shared.services.check.CheckResult;
 import cz.iocb.chemweb.shared.services.check.CheckService;
 import cz.iocb.chemweb.shared.services.check.CheckerWarning;
+import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
+import cz.iocb.sparql.engine.error.TranslateMessage;
+import cz.iocb.sparql.engine.request.Engine;
+import cz.iocb.sparql.engine.request.Request;
 
 
 
-public class CheckServiceImpl extends RemoteServiceServlet implements CheckService
+public class CheckServiceImpl extends GWTRemoteServiceServlet implements CheckService
 {
     private static final long serialVersionUID = 1L;
 
