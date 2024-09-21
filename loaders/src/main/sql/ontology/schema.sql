@@ -284,3 +284,6 @@ insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (179, 'https://www.orpha.net/consor/cgi-bin/OC_Exp.php?Expert=' , 56,  0, '^https://www\.orpha\.net/consor/cgi-bin/OC_Exp\.php\?Expert=[1-9][0-9]*$');
 
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (180, 'https://rarediseases.info.nih.gov/diseases/' , 44,  0, '^https://rarediseases\.info\.nih\.gov/diseases/[1-9][0-9]*/index$');
+
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (181, 'http://nanbyodata.jp/ontology/NANDO_', 37, 7, '^http://nanbyodata\.jp/ontology/NANDO_[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (182, 'https://www.kegg.jp/entry/H', 28, 5, '^https://www\.kegg\.jp/entry/H[0-9]{5}$');

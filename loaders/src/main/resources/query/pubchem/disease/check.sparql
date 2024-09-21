@@ -31,6 +31,8 @@ select distinct ?iri where
         filter(!strstarts(str(?iri), 'https://www.ncbi.nlm.nih.gov/medgen/CN'))
         filter(!strstarts(str(?iri), 'https://rarediseases.info.nih.gov/diseases/'))
         filter(!strstarts(str(?iri), 'https://www.guidetopharmacology.org/GRAC/DiseaseDisplayForward?diseaseId='))
+        filter(!strstarts(str(?iri), 'https://www.kegg.jp/entry/H'))
+        filter(!strstarts(str(?iri), 'http://nanbyodata.jp/ontology/NANDO_'))
     }
     union
     {
@@ -49,5 +51,7 @@ select distinct ?iri where
         filter(!strstarts(str(?iri), 'https://www.orpha.net/consor/cgi-bin/OC_Exp.php?Expert='))
         filter(!strstarts(str(?iri), 'https://www.guidetopharmacology.org/GRAC/DiseaseDisplayForward?diseaseId='))
         filter(!strstarts(str(?iri), 'http://id.nlm.nih.gov/mesh/'))
+        filter(!strstarts(str(?iri), 'https://www.kegg.jp/entry/H'))
+        filter(!strstarts(str(?iri), 'http://nanbyodata.jp/ontology/NANDO_'))
     }
 }
