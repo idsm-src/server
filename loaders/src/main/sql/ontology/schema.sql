@@ -287,3 +287,5 @@ insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset
 
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (181, 'http://nanbyodata.jp/ontology/NANDO_', 37, 7, '^http://nanbyodata\.jp/ontology/NANDO_[0-9]{7}$');
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (182, 'https://www.kegg.jp/entry/H', 28, 5, '^https://www\.kegg\.jp/entry/H[0-9]{5}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (183, 'http://www.wikidata.org/prop/direct/P', 38, 0, '^http://www\.wikidata\.org/prop/direct/P[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (184, 'http://purl.obolibrary.org/obo/MS_', 35, 7, '^http://purl\.obolibrary\.org/obo/MS_[0-9]{7}$');
