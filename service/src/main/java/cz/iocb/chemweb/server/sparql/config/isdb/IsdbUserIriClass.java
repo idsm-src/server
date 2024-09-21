@@ -1,8 +1,8 @@
 package cz.iocb.chemweb.server.sparql.config.isdb;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -11,8 +11,6 @@ import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.ConstantColumn;
 import cz.iocb.sparql.engine.database.ExpressionColumn;
 import cz.iocb.sparql.engine.database.SQLRuntimeException;
-import cz.iocb.sparql.engine.request.IriCache;
-import cz.iocb.sparql.engine.request.Request;
 import cz.iocb.sparql.engine.mapping.classes.ResultTag;
 import cz.iocb.sparql.engine.mapping.classes.UserIriClass;
 import cz.iocb.sparql.engine.parser.model.IRI;
@@ -30,6 +28,7 @@ public class IsdbUserIriClass extends UserIriClass
     private final String sqlQuery;
     private final int prefixLen;
     private final int suffixLen;
+
 
     public IsdbUserIriClass(String name, String prefix, String suffix)
     {
@@ -54,30 +53,22 @@ public class IsdbUserIriClass extends UserIriClass
 
 
     @Override
-    public List<Column> toColumns(Node node)
+    public List<Column> toColumns(Statement statement, Node node)
     {
         IRI iri = (IRI) node;
-        assert match(iri);
+        assert match(statement, iri);
 
-        IriCache cache = Request.currentRequest().getIriCache();
-
-        List<Column> hit = cache.getFromCache(iri, this);
-
-        if(hit != null)
-            return hit;
-
-        try(PreparedStatement statement = Request.currentRequest().getStatement(sqlQuery))
+        try
         {
-            statement.setString(1, iri.getValue().substring(prefixLen, prefixLen + 14));
+            String sql = sqlQuery.replaceAll("\\?",
+                    sanitizeString(iri.getValue().substring(prefixLen, prefixLen + 14)));
 
-            try(ResultSet result = statement.executeQuery())
+            try(ResultSet result = statement.executeQuery(sql))
             {
                 if(result.next())
                 {
-                    List<Column> columns = List.of(new ConstantColumn(result.getString(1), "integer"),
+                    return List.of(new ConstantColumn(result.getString(1), "integer"),
                             new ConstantColumn(iri.getValue().substring(prefix.length() + 15), "char"));
-                    cache.storeToCache(iri, this, columns);
-                    return columns;
                 }
                 else
                 {
@@ -93,42 +84,21 @@ public class IsdbUserIriClass extends UserIriClass
 
 
     @Override
-    public boolean match(IRI iri)
+    public boolean match(Statement statement, IRI iri)
     {
         Matcher matcher = pattern.matcher(iri.getValue());
 
         if(!matcher.matches())
             return false;
 
-        IriCache cache = Request.currentRequest().getIriCache();
-
-        List<Column> hit = cache.getFromCache(iri, this);
-
-        if(hit == IriCache.mismatch)
-            return false;
-        else if(hit != null)
-            return true;
-
-        try(PreparedStatement statement = Request.currentRequest().getStatement(sqlQuery))
+        try
         {
-            statement.setString(1, iri.getValue().substring(prefixLen, prefixLen + 14));
+            String sql = sqlQuery.replaceAll("\\?",
+                    sanitizeString(iri.getValue().substring(prefixLen, prefixLen + 14)));
 
-            try(ResultSet result = statement.executeQuery())
+            try(ResultSet result = statement.executeQuery(sql))
             {
-                boolean match = result.next();
-
-                if(!match)
-                {
-                    cache.storeToCache(iri, this, IriCache.mismatch);
-                }
-                else
-                {
-                    List<Column> columns = List.of(new ConstantColumn(result.getString(1), "integer"),
-                            new ConstantColumn(iri.getValue().substring(prefixLen + 15), "char"));
-                    cache.storeToCache(iri, this, columns);
-                }
-
-                return match;
+                return result.next();
             }
         }
         catch(SQLException e)
@@ -249,7 +219,7 @@ public class IsdbUserIriClass extends UserIriClass
 
 
     @Override
-    public boolean match(Node node)
+    public boolean match(Statement statement, Node node)
     {
         if(node instanceof VariableOrBlankNode)
             return true;
@@ -257,7 +227,7 @@ public class IsdbUserIriClass extends UserIriClass
         if(!(node instanceof IRI))
             return false;
 
-        return match((IRI) node);
+        return match(statement, (IRI) node);
     }
 
 

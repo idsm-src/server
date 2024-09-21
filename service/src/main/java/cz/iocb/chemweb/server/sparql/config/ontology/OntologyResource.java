@@ -1,7 +1,6 @@
 package cz.iocb.chemweb.server.sparql.config.ontology;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -14,8 +13,6 @@ import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.ConstantColumn;
 import cz.iocb.sparql.engine.database.SQLRuntimeException;
-import cz.iocb.sparql.engine.request.IriCache;
-import cz.iocb.sparql.engine.request.Request;
 import cz.iocb.sparql.engine.mapping.classes.GeneralUserIriClass;
 import cz.iocb.sparql.engine.parser.model.IRI;
 import cz.iocb.sparql.engine.parser.model.triple.Node;
@@ -39,7 +36,6 @@ public class OntologyResource extends GeneralUserIriClass
     }
 
 
-    private static final IriCache cache = new IriCache(1000, 10);
     private static final String sqlQuery = "select resource_id from ontology.resources__reftable where iri = ?";
     private static OntologyResource instance;
     private static List<Unit> units = new ArrayList<Unit>();
@@ -64,12 +60,12 @@ public class OntologyResource extends GeneralUserIriClass
 
 
     @Override
-    public List<Column> toColumns(Node node)
+    public List<Column> toColumns(Statement statement, Node node)
     {
         IRI iri = (IRI) node;
         String val = (iri).getValue();
 
-        assert match(iri);
+        assert match(statement, iri);
 
         for(Unit unit : units)
         {
@@ -134,27 +130,16 @@ public class OntologyResource extends GeneralUserIriClass
             }
         }
 
-
-        List<Column> hit = cache.getFromCache(iri, this);
-
-        if(hit != null)
-            return hit;
-
-
-        try(PreparedStatement statement = Request.currentRequest().getStatement(sqlQuery))
+        try
         {
-            statement.setString(1, val);
+            String sql = sqlQuery.replaceAll("\\?", sanitizeString(val));
 
-            try(ResultSet result = statement.executeQuery())
+            try(ResultSet result = statement.executeQuery(sql))
             {
                 result.next();
 
-                List<Column> columns = new ArrayList<Column>();
-                columns.add(new ConstantColumn(unitUncategorized, "smallint"));
-                columns.add(new ConstantColumn(result.getInt(1), "integer"));
-
-                cache.storeToCache(iri, this, columns);
-                return columns;
+                return List.of(new ConstantColumn(unitUncategorized, "smallint"),
+                        new ConstantColumn(result.getInt(1), "integer"));
             }
         }
         catch(SQLException e)
@@ -167,11 +152,6 @@ public class OntologyResource extends GeneralUserIriClass
     @Override
     public String getPrefix(List<Column> columns)
     {
-        IRI iri = cache.getFromCache(this, columns);
-
-        if(iri != null)
-            return iri.getValue();
-
         String prefix = prefixMap.get(columns.get(0));
 
         if(prefix != null)
@@ -182,7 +162,7 @@ public class OntologyResource extends GeneralUserIriClass
 
 
     @Override
-    public boolean match(IRI iri)
+    public boolean match(Statement statement, IRI iri)
     {
         String val = (iri).getValue();
 
@@ -190,34 +170,13 @@ public class OntologyResource extends GeneralUserIriClass
             if(val.matches(unit.pattern))
                 return true;
 
-
-        List<Column> hit = cache.getFromCache(iri, this);
-
-        if(hit == IriCache.mismatch)
-            return false;
-        else if(hit != null)
-            return true;
-
-
-        try(PreparedStatement statement = Request.currentRequest().getStatement(sqlQuery))
+        try
         {
-            statement.setString(1, val);
+            String sql = sqlQuery.replaceAll("\\?", sanitizeString(val));
 
-            try(ResultSet result = statement.executeQuery())
+            try(ResultSet result = statement.executeQuery(sql))
             {
-                if(!result.next())
-                {
-                    cache.storeToCache(iri, this, IriCache.mismatch);
-                    return false;
-                }
-
-                List<Column> columns = new ArrayList<Column>();
-                columns.add(new ConstantColumn(unitUncategorized, "smallint"));
-                columns.add(new ConstantColumn(result.getInt(1), "integer"));
-
-                cache.storeToCache(iri, this, columns);
-
-                return true;
+                return result.next();
             }
         }
         catch(SQLException e)
