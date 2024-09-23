@@ -1,8 +1,11 @@
 package cz.iocb.chemweb.server.sparql.config.idsm;
 
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.chebi.ChebiConfiguration;
@@ -24,11 +27,20 @@ import cz.iocb.chemweb.server.sparql.config.sachem.WikidataSachemConfiguration;
 import cz.iocb.chemweb.server.sparql.config.wikidata.WikidataConfiguration;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Column;
+import cz.iocb.sparql.engine.database.ConstantColumn;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
 import cz.iocb.sparql.engine.database.Table;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
+import cz.iocb.sparql.engine.mapping.JoinTableQuadMapping;
+import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.QuadMapping;
+import cz.iocb.sparql.engine.mapping.SingleTableQuadMapping;
+import cz.iocb.sparql.engine.mapping.classes.BuiltinClasses;
 import cz.iocb.sparql.engine.mapping.classes.DateTimeConstantZoneClass;
+import cz.iocb.sparql.engine.mapping.classes.IriClass;
 import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
+import cz.iocb.sparql.engine.mapping.classes.UserIriClass;
+import cz.iocb.sparql.engine.parser.model.IRI;
 
 
 
@@ -43,6 +55,110 @@ public class IdsmConfiguration extends SparqlDatabaseConfiguration
         addServices();
 
         addServiceDescription();
+
+        detectIriResourceClasses();
+    }
+
+
+    private void detectIriResourceClasses() throws SQLException
+    {
+        try(Connection connection = connectionPool.getConnection())
+        {
+            try(Statement stmt = connection.createStatement())
+            {
+                for(List<QuadMapping> m : mappings.values())
+                {
+                    ListIterator<QuadMapping> it = m.listIterator();
+
+                    while(it.hasNext())
+                    {
+                        QuadMapping original = it.next();
+
+                        if(original instanceof SingleTableQuadMapping map)
+                        {
+                            SingleTableQuadMapping mapping = new SingleTableQuadMapping(map.getTable(),
+                                    remap(stmt, map.getGraph()), remap(stmt, map.getSubject()),
+                                    remap(stmt, map.getPredicate()), remap(stmt, map.getObject()), map.getConditions());
+
+                            it.set(mapping);
+                        }
+                        else if(original instanceof JoinTableQuadMapping map)
+                        {
+                            JoinTableQuadMapping mapping = new JoinTableQuadMapping(map.getTables(),
+                                    map.getJoinColumnsPairs(), remap(stmt, map.getGraph()),
+                                    remap(stmt, map.getSubject()), (ConstantIriMapping) remap(stmt, map.getPredicate()),
+                                    remap(stmt, map.getObject()), map.getConditions());
+
+                            it.set(mapping);
+                        }
+                        else
+                        {
+                            throw new IllegalArgumentException();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    @SuppressWarnings("unchecked")
+    private <T extends NodeMapping> T remap(Statement statement, T mapping)
+    {
+        if(mapping instanceof ConstantIriMapping original)
+        {
+            if(original.getResourceClass() != null && original.getColumns() != null)
+                return mapping;
+
+            IRI iri = original.getIRI();
+            IriClass iriClass = iriCache.getIriClass(iri);
+            List<Column> columns = iriCache.getIriColumns(iri);
+
+            if(iriClass == null || columns == null)
+            {
+                iriClass = detectIriClass(statement, iri);
+                columns = iriClass.toColumns(statement, iri);
+                iriCache.storeToCache(iri, iriClass, columns);
+
+                if(shouldBeReported(iriClass, columns))
+                    System.err.println("detect " + iri + " as '" + iriClass.getName() + "' " + columns);
+            }
+
+            return (T) new ConstantIriMapping(iri, iriClass, columns);
+        }
+
+        return mapping;
+    }
+
+
+    private boolean shouldBeReported(IriClass iriClass, List<Column> columns)
+    {
+        if(iriClass.getName().equals("unsupported"))
+            return true;
+
+        if(iriClass.getName().equals("ontology:resource"))
+        {
+            if(columns.get(0) instanceof ConstantColumn col0 && columns.get(1) instanceof ConstantColumn col1)
+            {
+                if(!col0.getValue().equals("0"))
+                    return false;
+
+                if(col1.getValue().length() > 3)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    private IriClass detectIriClass(Statement statement, IRI value)
+    {
+        for(UserIriClass iriClass : getIriClasses())
+            if(iriClass.match(statement, value))
+                return iriClass;
+
+        return BuiltinClasses.unsupportedIri;
     }
 
 
