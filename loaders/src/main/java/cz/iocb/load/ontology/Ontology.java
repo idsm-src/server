@@ -871,6 +871,22 @@ public class Ontology extends Updater
         builtinResources.put("http://www.w3.org/2006/vcard/ns#Individual", 618);
         builtinResources.put("http://www.w3.org/2006/vcard/ns#Organization", 619);
         builtinResources.put("http://xmlns.com/foaf/0.1/Image", 620);
+
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#boolean", 900);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#short", 901);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#int", 902);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#long", 903);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#integer", 904);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#decimal", 905);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#float", 906);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#double", 907);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#date", 908);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#dateTime", 909);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#dayTimeDuration", 910);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#string", 911);
+        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", 912);
+        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#HTML", 913);
+        builtinResources.put("http://bioinfo.uochb.cas.cz/rdf/v1.0/ms#spectrum", 914);
     }
 
 

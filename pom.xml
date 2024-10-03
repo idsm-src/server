@@ -8,6 +8,7 @@
 
   <modules>
     <module>service</module>
+    <module>config</module>
     <module>loaders</module>
   </modules>
 </project>
