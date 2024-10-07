@@ -16,6 +16,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>cz.iocb.idsm</groupId>
+      <artifactId>config</artifactId>
+      <version>0.9.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-arq</artifactId>
       <version>5.1.0</version>
@@ -29,7 +35,6 @@
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>42.7.3</version>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -390,7 +395,7 @@
             </configuration>
           </execution>
 
-          <!--isdb -->
+          <!-- isdb -->
           <execution>
             <id>isdb-download</id>
             <goals>
@@ -424,6 +429,32 @@
             </goals>
             <configuration>
               <executable>src/main/scripts/load-isdb.sh</executable>
+            </configuration>
+          </execution>
+
+          <!-- stats -->
+          <execution>
+            <id>stats-dbinit</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/stats/base.sql</argument>
+                <argument>src/main/sql/stats/schema.sql</argument>
+                <argument>src/main/sql/stats/settings.sql</argument>
+                <argument>src/main/sql/stats/foreignkey.sql</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>stats-load</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>cz.iocb.load.stats.GenerateVoid</mainClass>
             </configuration>
           </execution>
 

@@ -24,19 +24,18 @@ import cz.iocb.chemweb.server.sparql.config.sachem.MonaSachemConfiguration;
 import cz.iocb.chemweb.server.sparql.config.sachem.PubChemSachemConfiguration;
 import cz.iocb.chemweb.server.sparql.config.sachem.Sachem;
 import cz.iocb.chemweb.server.sparql.config.sachem.WikidataSachemConfiguration;
+import cz.iocb.chemweb.server.sparql.config.stats.VoidConfiguration;
 import cz.iocb.chemweb.server.sparql.config.wikidata.WikidataConfiguration;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.ConstantColumn;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
-import cz.iocb.sparql.engine.database.Table;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.JoinTableQuadMapping;
 import cz.iocb.sparql.engine.mapping.NodeMapping;
 import cz.iocb.sparql.engine.mapping.QuadMapping;
 import cz.iocb.sparql.engine.mapping.SingleTableQuadMapping;
 import cz.iocb.sparql.engine.mapping.classes.BuiltinClasses;
-import cz.iocb.sparql.engine.mapping.classes.DateTimeConstantZoneClass;
 import cz.iocb.sparql.engine.mapping.classes.IriClass;
 import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
 import cz.iocb.sparql.engine.mapping.classes.UserIriClass;
@@ -48,13 +47,11 @@ public class IdsmConfiguration extends SparqlDatabaseConfiguration
 {
     public IdsmConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
-        super(service != null ? service : "https://idsm.elixir-czech.cz/sparql/endpoint/idsm", connectionPool, schema);
+        super(service != null ? service : "https://idsm.elixir-czech.cz/sparql/endpoint/idsm",
+                service != null ? null : "https://idsm.elixir-czech.cz/.well-known/void", connectionPool, schema);
 
         addPrefixes();
-        addQuadMappings();
         addServices();
-
-        addServiceDescription();
 
         detectIriResourceClasses();
     }
@@ -198,25 +195,6 @@ public class IdsmConfiguration extends SparqlDatabaseConfiguration
     }
 
 
-    private void addQuadMappings()
-    {
-        {
-            Table table = new Table("info", "idsm_version");
-            ConstantIriMapping graph = createIriMapping(getDescriptionGraphIri());
-            ConstantIriMapping defaultDataset = createIriMapping("<" + getServiceIri().getValue() + "#DefaultDataset>");
-            ConstantIriMapping defaultGraph = createIriMapping("<" + getServiceIri().getValue() + "#DefaultGraph>");
-
-            DateTimeConstantZoneClass xsdDateTimeM0 = DateTimeConstantZoneClass.get(0);
-
-            addQuadMapping(table, graph, defaultDataset, createIriMapping("dcterms:issued"),
-                    createLiteralMapping(xsdDateTimeM0, "date"));
-
-            addQuadMapping(table, graph, defaultGraph, createIriMapping("dcterms:issued"),
-                    createLiteralMapping(xsdDateTimeM0, "date"));
-        }
-    }
-
-
     private void addServices() throws SQLException
     {
         addService(new ChebiConfiguration(null, connectionPool, getDatabaseSchema()), true);
@@ -228,6 +206,7 @@ public class IdsmConfiguration extends SparqlDatabaseConfiguration
         addService(new IsdbConfiguration(null, connectionPool, getDatabaseSchema()), true);
         addService(new DrugBankConfiguration(null, connectionPool, getDatabaseSchema()), true);
         addService(new WikidataConfiguration(null, connectionPool, getDatabaseSchema()), true);
+        addService(new VoidConfiguration(null, connectionPool, getDatabaseSchema()), true);
 
         Map<ResourceClass, List<Column>> mapping = new HashMap<ResourceClass, List<Column>>();
         mapping.put(getIriClass("ontology:resource"), List.of(getColumn(Ontology.unitCHEBI), getColumn("chebi")));

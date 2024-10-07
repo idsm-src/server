@@ -1,0 +1,15 @@
+alter table void.class_partitions add foreign key (graph) references void.graphs(id) initially deferred;
+alter table void.property_partitions add foreign key (graph) references void.graphs(id) initially deferred;
+alter table void.class_property_partitions add foreign key (graph) references void.graphs(id) initially deferred;
+alter table void.class_property_partitions add foreign key (graph, class_unit, class_id) references void.class_partitions(graph, class_unit, class_id) initially deferred;
+alter table void.class_property_partitions add foreign key (graph, property_unit, property_id) references void.property_partitions(graph, property_unit, property_id) initially deferred;
+alter table void.linksets add foreign key (property_graph) references void.graphs(id) initially deferred;
+alter table void.linksets add foreign key (property_graph, property_unit, property_id) references void.property_partitions(graph, property_unit, property_id) initially deferred;
+alter table void.linksets add foreign key (subject_graph) references void.graphs(id) initially deferred;
+alter table void.linksets add foreign key (subject_graph, subject_unit, subject_id) references void.class_partitions(graph, class_unit, class_id) initially deferred;
+alter table void.linksets add foreign key (object_graph) references void.graphs(id) initially deferred;
+alter table void.linksets add foreign key (object_graph, object_unit, object_id) references void.class_partitions(graph, class_unit, class_id) initially deferred;
+alter table void.literal_linksets add foreign key (property_graph) references void.graphs(id) initially deferred;
+alter table void.literal_linksets add foreign key (property_graph, property_unit, property_id) references void.property_partitions(graph, property_unit, property_id) initially deferred;
+alter table void.literal_linksets add foreign key (subject_graph) references void.graphs(id) initially deferred;
+alter table void.literal_linksets add foreign key (subject_graph, subject_unit, subject_id) references void.class_partitions(graph, class_unit, class_id) initially deferred;

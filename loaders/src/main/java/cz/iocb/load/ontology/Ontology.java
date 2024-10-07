@@ -758,6 +758,21 @@ public class Ontology extends Updater
         builtinResources.put("http://www.w3.org/2006/vcard/ns#organization-name", 407);
         builtinResources.put("http://xmlns.com/foaf/0.1/depiction", 408);
         builtinResources.put("http://xmlns.com/foaf/0.1/homepage", 409);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#name", 410);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#availableGraphs", 411);
+        builtinResources.put("http://rdfs.org/ns/void#triples", 412);
+        builtinResources.put("http://rdfs.org/ns/void#classes", 413);
+        builtinResources.put("http://rdfs.org/ns/void#properties", 414);
+        builtinResources.put("http://rdfs.org/ns/void#distinctSubjects", 415);
+        builtinResources.put("http://rdfs.org/ns/void#distinctObjects", 416);
+        builtinResources.put("http://rdfs.org/ns/void#subset", 417);
+        builtinResources.put("http://rdfs.org/ns/void#classPartition", 418);
+        builtinResources.put("http://rdfs.org/ns/void#class", 419);
+        builtinResources.put("http://rdfs.org/ns/void#propertyPartition", 420);
+        builtinResources.put("http://rdfs.org/ns/void#property", 421);
+        builtinResources.put("http://rdfs.org/ns/void#target", 422);
+        builtinResources.put("http://rdfs.org/ns/void#subjectsTarget", 423);
+        builtinResources.put("http://rdfs.org/ns/void#objectsTarget", 424);
 
         // classes
         builtinResources.put("http://data.epo.org/linked-data/def/patent/Publication", 512);
@@ -869,7 +884,10 @@ public class Ontology extends Updater
         builtinResources.put("http://www.w3.org/2006/vcard/ns#Individual", 618);
         builtinResources.put("http://www.w3.org/2006/vcard/ns#Organization", 619);
         builtinResources.put("http://xmlns.com/foaf/0.1/Image", 620);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#GraphCollection", 621);
+        builtinResources.put("http://rdfs.org/ns/void#Dataset", 622);
 
+        // datatypes
         builtinResources.put("http://www.w3.org/2001/XMLSchema#boolean", 900);
         builtinResources.put("http://www.w3.org/2001/XMLSchema#short", 901);
         builtinResources.put("http://www.w3.org/2001/XMLSchema#int", 902);
