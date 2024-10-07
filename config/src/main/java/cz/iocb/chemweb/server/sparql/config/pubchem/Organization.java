@@ -33,10 +33,6 @@ public class Organization
                     config.createIriMapping("vcard:Organization"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("frapo:FundingAgency"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Organization.vm"));
         }
 
         {

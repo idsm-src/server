@@ -66,10 +66,6 @@ public class Gene
             // extension
             config.addQuadMapping(table, graph, subject, config.createIriMapping("up:organism"),
                     config.createIriMapping("ontology:resource", Ontology.unitNCBITaxon, "organism"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Gene.vm"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("pubchem/Gene.vm"));
 
             // deprecated extension
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bp:organism"),

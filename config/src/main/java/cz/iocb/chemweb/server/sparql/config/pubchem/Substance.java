@@ -36,12 +36,6 @@ public class Substance
                     config.createLiteralMapping(xsdDateM4, "modified"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:CHEMINF_000477"),
                     config.createIriMapping("pubchem:compound", "compound"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Substance.vm"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("pubchem/Substance.vm"));
         }
 
         {

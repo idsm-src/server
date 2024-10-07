@@ -478,8 +478,6 @@ public class Ontology extends Updater
         builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym", 76);
 
         // predicates
-        builtinResources.put("http://bioinfo.iocb.cz/0.9/template#itemTemplate", 128);
-        builtinResources.put("http://bioinfo.iocb.cz/0.9/template#pageTemplate", 129);
         builtinResources.put("http://data.epo.org/linked-data/def/patent/applicantVC", 130);
         builtinResources.put("http://data.epo.org/linked-data/def/patent/classificationCPCAdditional", 131);
         builtinResources.put("http://data.epo.org/linked-data/def/patent/classificationCPCInventive", 132);

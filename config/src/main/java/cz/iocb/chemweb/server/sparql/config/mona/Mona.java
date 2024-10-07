@@ -163,22 +163,6 @@ public class Mona
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_001278"), // is data item in
                     library);
-
-            // extension
-            config.addQuadMapping(table, graph, experiment, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Experiment.vm"));
-            config.addQuadMapping(table, graph, experiment, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("mona/Experiment.vm"));
-
-            config.addQuadMapping(table, graph, compound, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Compound.vm"));
-            config.addQuadMapping(table, graph, compound, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("mona/Compound.vm"));
-
-            config.addQuadMapping(table, graph, spectrum, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Spectrum.vm"));
-            config.addQuadMapping(table, graph, spectrum, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("mona/Spectrum.vm"));
         }
 
         {
@@ -205,10 +189,6 @@ public class Mona
                     spectrum, condition);
             config.addQuadMapping(table, graph, spectrum, config.createIriMapping("sio:SIO_000008"), // has attribute
                     subject, condition);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"), condition);
         }
 
         {
@@ -227,10 +207,6 @@ public class Mona
                     experiment, condition);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject, condition);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"), condition);
         }
 
         {
@@ -250,10 +226,6 @@ public class Mona
                     experiment, condition);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject, condition);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/TypedDescriptor.vm"), condition);
         }
 
         {
@@ -291,10 +263,6 @@ public class Mona
                     experiment, condition);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject, condition);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/TypedDescriptor.vm"), condition);
         }
 
         /* TODO:
@@ -317,10 +285,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000008"), // has attribute
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -337,10 +301,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000671"), // has identifier
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -381,10 +341,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000008"), // has attribute
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -401,10 +357,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000008"), // has attribute
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -421,10 +373,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000008"), // has attribute
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -441,10 +389,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000008"), // has attribute
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -463,10 +407,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000008"), // has attribute
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -485,10 +425,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000008"), // has attribute
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -505,10 +441,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000671"), // has identifier
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -525,10 +457,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000671"), // has identifier
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -548,10 +476,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000671"), // has identifier
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -568,10 +492,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000671"), // has identifier
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -588,10 +508,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000671"), // has identifier
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         /* TODO:
@@ -613,10 +529,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000671"), // has identifier
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -633,10 +545,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000671"), // has identifier
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -664,10 +572,6 @@ public class Mona
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000671"), // has identifier
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -684,10 +588,6 @@ public class Mona
                     spectrum);
             config.addQuadMapping(table, graph, spectrum, config.createIriMapping("sio:SIO_000369"), // has component part
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Peak.vm"));
         }
 
         {
@@ -704,10 +604,6 @@ public class Mona
                     peak);
             config.addQuadMapping(table, graph, peak, config.createIriMapping("sio:SIO_000255"), // has annotation
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -724,10 +620,6 @@ public class Mona
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000255"), // has annotation
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         /* TODO:
@@ -755,10 +647,6 @@ public class Mona
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -791,10 +679,6 @@ public class Mona
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -824,10 +708,6 @@ public class Mona
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -857,10 +737,6 @@ public class Mona
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -877,10 +753,6 @@ public class Mona
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -897,10 +769,6 @@ public class Mona
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -917,10 +785,6 @@ public class Mona
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -939,10 +803,6 @@ public class Mona
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Descriptor.vm"));
         }
 
         {
@@ -956,12 +816,6 @@ public class Mona
                     config.createLiteralMapping(xsdString, "name"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:description"),
                     config.createLiteralMapping(xsdString, "description"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Library.vm"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("mona/Library.vm"));
         }
 
         {
@@ -979,12 +833,6 @@ public class Mona
                     config.createIriMapping("common:email", "email"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vcard:organization-name"),
                     config.createLiteralMapping(xsdString, "institution"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mona/Submitter.vm"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("mona/Submitter.vm"));
         }
     }
 

@@ -37,10 +37,6 @@ public class SubstanceDescriptor
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-value"),
                     config.createLiteralMapping(xsdInt, "version"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/SubstanceDescriptor.vm"));
         }
     }
 }

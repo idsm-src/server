@@ -128,10 +128,6 @@ public class Molecule
             // extension
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("cco:Substance"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("chembl/Substance.vm"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("chembl/Substance.vm"));
         }
 
         {

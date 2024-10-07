@@ -34,10 +34,6 @@ public class Anatomy
                     config.createIriMapping("ontology:resource", Ontology.unitUberon, "id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
                     config.createLiteralMapping(xsdString, "label"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Anatomy.vm"));
         }
 
         {

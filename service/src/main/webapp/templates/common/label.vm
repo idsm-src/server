@@ -99,7 +99,12 @@
 #escapeIRI($restriction.PROPERTY): all values from '#label($restriction.VALUE)'
 #elseif($restriction.TYPE.value == "http://www.w3.org/2002/07/owl#hasValue")
 #if($restriction.VALUE.isLiteral())
-#escapeIRI($restriction.PROPERTY): has value #escapeVal($restriction.VALUE)
+#escapeIRI($restriction.PROPERTY): has value "#escapeHTML($restriction.VALUE)"##
+#if($restriction.VALUE.getLanguage())
+@$restriction.VALUE.getLanguage()
+#elseif($restriction.VALUE.getDatatype())
+^^#escapeIRI($restriction.VALUE.getDatatype())
+#end
 #else
 #escapeIRI($restriction.PROPERTY): has value #escapeIRI($restriction.VALUE)
 #end

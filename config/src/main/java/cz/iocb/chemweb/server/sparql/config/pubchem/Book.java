@@ -43,10 +43,6 @@ public class Book
                     config.createLiteralMapping(xsdString, "isbn"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
                     config.createIriMapping("ncbi:book", "id"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Book.vm"));
         }
 
         {

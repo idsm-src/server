@@ -125,7 +125,6 @@ public class PubChemConfiguration extends SparqlDatabaseConfiguration
 
         // extensions
         addPrefix("sachem", "http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#");
-        addPrefix("template", "http://bioinfo.iocb.cz/0.9/template#");
         addPrefix("fulltext", "http://bioinfo.uochb.cas.cz/rdf/v1.0/fulltext#");
     }
 

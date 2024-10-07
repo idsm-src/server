@@ -24,11 +24,10 @@ public class LinkCell extends AbstractCell<DataGridNode>
             return;
         }
 
-
-        String htmlCode = value.html;
-
-        if(value.ref != null)
-            htmlCode = "<div class=\"BOX-selection BOX-NODE_" + Encode.base32m(value.ref) + "\">" + htmlCode + "</div>";
+        String htmlCode = "<div lang=\"en\" "
+                + (value.ref != null ? "class=\"BOX-selection BOX-NODE_" + Encode.base32m(value.ref) + "\" " : "")
+                + "style=\"-webkit-hyphens: auto; -moz-hyphens: auto; -ms-hyphens: auto; hyphens: auto;\">" + value.html
+                + "</div>";
 
         sb.append(SafeHtmlUtils.fromTrustedString(htmlCode));
     }

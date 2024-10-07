@@ -36,10 +36,6 @@ public class Taxonomy
                     config.createIriMapping("ontology:resource", Ontology.unitNCBITaxon, "id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
                     config.createLiteralMapping(xsdString, "label"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Taxonomy.vm"));
         }
 
         {

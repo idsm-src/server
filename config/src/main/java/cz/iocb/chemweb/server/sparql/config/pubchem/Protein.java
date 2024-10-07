@@ -46,10 +46,6 @@ public class Protein
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("up:Enzyme"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Enzyme.vm"));
         }
 
         {
@@ -84,10 +80,6 @@ public class Protein
             // extension
             config.addQuadMapping(table, graph, subject, config.createIriMapping("up:organism"),
                     config.createIriMapping("ontology:resource", Ontology.unitNCBITaxon, "organism"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Protein.vm"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("pubchem/Protein.vm"));
 
             // deprecated extension
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bp:organism"),

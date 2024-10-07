@@ -25,15 +25,6 @@ public class Author
         ConstantIriMapping graph = config.createIriMapping("pubchem:author");
 
         {
-            Table table = new Table(schema, "author_bases");
-            NodeMapping subject = config.createIriMapping("pubchem:author", "id");
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Author.vm"));
-        }
-
-        {
             Table table = new Table(schema, "author_given_names");
             NodeMapping subject = config.createIriMapping("pubchem:author", "author");
 

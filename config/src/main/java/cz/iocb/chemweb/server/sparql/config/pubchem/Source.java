@@ -43,10 +43,6 @@ public class Source
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:rights"),
                     config.createLiteralMapping(xsdString, "rights"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Source.vm"));
         }
 
         {

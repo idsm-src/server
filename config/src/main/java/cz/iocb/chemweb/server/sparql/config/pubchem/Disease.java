@@ -33,10 +33,6 @@ public class Disease
                     config.createIriMapping("obo:MONDO_0000001"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
                     config.createLiteralMapping(xsdString, "label"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Disease.vm"));
         }
 
         {

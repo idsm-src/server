@@ -51,14 +51,6 @@ public class Ontology
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Class"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("base/Class.vm"),
-                    config.createAreNotEqualCondition("class_unit", Ontology.unitCHEBI));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("base/Class.vm"),
-                    config.createAreNotEqualCondition("class_unit", Ontology.unitCHEBI));
         }
 
         {
@@ -67,12 +59,6 @@ public class Ontology
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("rdf:Property"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("base/Property.vm"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("base/Property.vm"));
         }
 
         {
@@ -81,10 +67,6 @@ public class Ontology
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:NamedIndividual"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("base/NamedIndividual.vm"));
         }
 
         {

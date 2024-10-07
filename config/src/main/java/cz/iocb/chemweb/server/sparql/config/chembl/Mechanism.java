@@ -48,9 +48,5 @@ public class Mechanism
                 config.createIriMapping("cco:hasMechanism"), subject);
         config.addQuadMapping(table, graph, config.createIriMapping("chembl:target", "target_id"),
                 config.createIriMapping("cco:isTargetForMechanism"), subject);
-
-        // extension
-        config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                config.createLiteralMapping("chembl/Mechanism.vm"));
     }
 }

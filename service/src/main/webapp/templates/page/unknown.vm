@@ -1,0 +1,51 @@
+#sparql($type)
+  SELECT ?TEMPLATE WHERE
+  {
+    {
+      $entity rdf:type owl:Class.
+      VALUES ?TEMPLATE { "base/Class.vm" }
+    }
+    UNION
+    {
+      $entity rdf:type rdf:Property.
+      VALUES ?TEMPLATE { "base/Property.vm" }
+    }
+    UNION
+    {
+      $entity rdf:type owl:NamedIndividual.
+      VALUES ?TEMPLATE { "base/NamedIndividual.vm" }
+    }
+  }
+#end
+
+#if($type.TEMPLATE)
+  #parse("page/$type.TEMPLATE.value")
+#else
+  #sparql($info)
+    SELECT ?TYPE WHERE
+    {
+      $entity rdf:type ?TYPE.
+    }
+  #end
+
+  #sparql($triple)
+    SELECT ?P WHERE
+    {
+      $entity ?P ?O.
+    }
+    LIMIT 1
+  #end
+
+  <div style="margin:10px">
+    <table cellpadding="10"><tr>
+      <td><img width="32px" height="32px" src="images/dialog-information.png"></td>
+      <td><b>
+        #if($triple.P)
+          There is no template for node #escapeIRI($entity)#if($info.TYPE) (type #escapeIRI($info.TYPE))#end.
+        #else
+          There is no node #escapeIRI($entity) in the database.
+        #end
+        </b></td>
+    </tr></table>
+  </div>
+#end

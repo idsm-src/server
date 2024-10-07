@@ -40,9 +40,5 @@ public class Journal
                 config.createLiteralMapping(xsdString, "issn"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("bibo:eissn"),
                 config.createLiteralMapping(xsdString, "eissn"));
-
-        // extension
-        config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                config.createLiteralMapping("chembl/Journal.vm"));
     }
 }

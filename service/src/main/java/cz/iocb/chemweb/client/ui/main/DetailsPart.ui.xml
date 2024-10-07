@@ -8,6 +8,11 @@
   <ui:style>
     .frame {
       border: none;
+      hyphens:auto;
+      -webkit-hyphens:auto;
+      -moz-hyphens:auto;
+      -ms-hyphens:auto;
+      min-width:500px;
     }
 
     .Toolbar {

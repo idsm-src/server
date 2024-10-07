@@ -53,10 +53,6 @@ public class Patent
                     config.createLiteralMapping(xsdDateM4, "publication_date"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:priorityDate"),
                     config.createLiteralMapping(xsdDateM4, "priority_date"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Patent.vm"));
         }
 
         {

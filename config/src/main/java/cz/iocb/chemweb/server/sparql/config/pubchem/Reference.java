@@ -46,12 +46,6 @@ public class Reference
                     config.createLiteralMapping(xsdString, "page_range"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:language"),
                     config.createLiteralMapping(xsdString, "lang"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Reference.vm"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("pubchem/Reference.vm"));
         }
 
         {

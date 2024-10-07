@@ -1,0 +1,25 @@
+#sparql($type)
+  SELECT ?TEMPLATE WHERE
+  {
+    {
+      $entity rdf:type owl:Class.
+      VALUES ?TEMPLATE { "base/Class.vm" }
+    }
+    UNION
+    {
+      $entity rdf:type rdf:Property.
+      VALUES ?TEMPLATE { "base/Property.vm" }
+    }
+    UNION
+    {
+      $entity rdf:type owl:NamedIndividual.
+      VALUES ?TEMPLATE { "base/NamedIndividual.vm" }
+    }
+  }
+#end
+
+#if($type.TEMPLATE)
+  #parse("item/$type.TEMPLATE.value")
+#else
+  #escapeIRI($entity)
+#end

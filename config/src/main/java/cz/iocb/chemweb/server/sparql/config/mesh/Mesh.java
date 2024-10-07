@@ -34,10 +34,6 @@ public class Mesh
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("ontology:resource", Ontology.unitUncategorized, "type_id"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("mesh/Mesh.vm"));
         }
 
         {

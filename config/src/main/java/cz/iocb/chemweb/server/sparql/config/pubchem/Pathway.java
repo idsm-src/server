@@ -127,10 +127,6 @@ public class Pathway
                             "reference_type", "'PANTHERDB'::" + schema + ".pathway_reference_type"));
 
             // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Pathway.vm"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("pubchem/Pathway.vm"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("up:organism"),
                     config.createIriMapping("ontology:resource", Ontology.unitNCBITaxon, "organism"));
 

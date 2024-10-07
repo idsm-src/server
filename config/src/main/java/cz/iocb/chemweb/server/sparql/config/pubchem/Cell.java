@@ -35,10 +35,6 @@ public class Cell
                     config.createIriMapping("pubchem:taxonomy", "organism"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
                     config.createLiteralMapping(xsdString, "label"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Cell.vm"));
         }
 
         {

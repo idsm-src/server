@@ -37,11 +37,6 @@ public class Compound
                     config.createIriMapping("pubchem:compound_identifier", "id"));
 
             // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Compound.vm"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("pubchem/Compound.vm"));
-
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:compound_identifier", "id"),
                     config.createIriMapping("sio:SIO_000011"), subject);
 

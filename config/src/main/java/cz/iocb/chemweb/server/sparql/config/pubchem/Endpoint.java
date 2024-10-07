@@ -37,10 +37,6 @@ public class Endpoint
                     config.createIriMapping("pubchem:substance", "substance"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:PubChemAssayOutcome"),
                     config.createIriMapping("ontology:resource", Ontology.unitUncategorized, "outcome_id"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Endpoint.vm"));
         }
 
         {

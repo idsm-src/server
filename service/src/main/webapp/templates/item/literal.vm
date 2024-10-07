@@ -1,0 +1,16 @@
+<table style="width:100%">
+  <tbody>
+    <tr><td>
+      <div style="white-space: pre-wrap;">#escapeHTML($entity)</div>
+    </td></tr>
+    #if($entity.getLanguage())
+    <tr><td>
+      <small style="color:gray">Lang: $entity.getLanguage()</small>
+    </td></tr>
+    #elseif($entity.getDatatype())
+    <tr><td>
+      <small style="color:gray">Datatype: #escapeIRI($entity.getDatatype())</small>
+    </td></tr>
+    #end
+  </tbody>
+</table>

@@ -37,10 +37,6 @@ public class Measuregroup
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:bioassay", "bioassay"),
                     config.createIriMapping("bao:BAO_0000209"), subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Measuregroup.vm"));
         }
 
         {

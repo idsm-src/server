@@ -67,7 +67,5 @@ public class Document
         // extension
         config.addQuadMapping(table, graph, config.createIriMapping("pubchem:reference", "pubmed_id"),
                 config.createIriMapping("skos:exactMatch"), subject);
-        config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                config.createLiteralMapping("chembl/Document.vm"), valueCondition);
     }
 }

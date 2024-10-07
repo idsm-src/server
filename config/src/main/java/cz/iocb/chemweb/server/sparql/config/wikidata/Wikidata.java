@@ -26,17 +26,6 @@ public class Wikidata
 
         {
             Table table = new Table("molecules", "wikidata");
-            NodeMapping subject = config.createIriMapping("wikidata:entity", "id");
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("wikidata/Compound.vm"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("wikidata/Compound.vm"));
-        }
-
-        {
-            Table table = new Table("molecules", "wikidata");
             NodeMapping subject = config.createIriMapping("wikidata:smiles", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

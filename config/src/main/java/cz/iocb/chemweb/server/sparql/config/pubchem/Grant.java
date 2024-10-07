@@ -34,10 +34,6 @@ public class Grant
                     config.createLiteralMapping(xsdString, "number"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("frapo:hasFundingAgency"),
                     config.createIriMapping("pubchem:organization", "organization"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Grant.vm"));
         }
     }
 }

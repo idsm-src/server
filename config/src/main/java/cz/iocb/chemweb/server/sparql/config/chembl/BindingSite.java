@@ -38,9 +38,5 @@ public class BindingSite
                 config.createLiteralMapping(xsdString, "site_name"));
         config.addQuadMapping(table, graph, config.createIriMapping("chembl:target", "target_id"),
                 config.createIriMapping("cco:hasBindingSite"), subject);
-
-        // extension
-        config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                config.createLiteralMapping("chembl/BindingSite.vm"));
     }
 }

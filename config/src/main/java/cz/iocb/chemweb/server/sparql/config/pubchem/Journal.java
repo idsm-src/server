@@ -43,10 +43,6 @@ public class Journal
                     config.createLiteralMapping(xsdString, "eissn"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
                     config.createIriMapping("ncbi:journal", "catalogid"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Journal.vm"));
         }
     }
 }

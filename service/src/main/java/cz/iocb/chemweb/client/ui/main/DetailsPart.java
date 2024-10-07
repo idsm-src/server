@@ -63,6 +63,7 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
 
         history = visitingHistory;
         pageHTML.getElement().setId("pageHTML");
+        pageHTML.getElement().setLang("en");
         iriTextBox.getElement().setAttribute("spellCheck", "false");
     }
 

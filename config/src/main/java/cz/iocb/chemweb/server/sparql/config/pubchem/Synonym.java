@@ -26,15 +26,6 @@ public class Synonym
         ConstantIriMapping graph = config.createIriMapping("pubchem:synonym");
 
         {
-            Table table = new Table(schema, "synonym_bases");
-            NodeMapping subject = config.createIriMapping("pubchem:synonym", "id");
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/Synonym.vm"));
-        }
-
-        {
             Table table = new Table(schema, "synonym_values");
             NodeMapping subject = config.createIriMapping("pubchem:synonym", "synonym");
 

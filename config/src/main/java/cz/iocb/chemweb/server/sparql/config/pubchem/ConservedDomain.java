@@ -33,12 +33,6 @@ public class ConservedDomain
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:abstract"),
                     config.createLiteralMapping(xsdString, "abstract"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("pubchem/ConservedDomain.vm"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("pubchem/ConservedDomain.vm"));
         }
 
         {

@@ -86,12 +86,6 @@ public class Isdb
 
             config.addQuadMapping(table, graph, compound, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_011125")); // molecule
-
-            // extension
-            config.addQuadMapping(table, graph, compound, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Compound.vm"));
-            config.addQuadMapping(table, graph, compound, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("isdb/Compound.vm"));
         }
 
         {
@@ -108,10 +102,6 @@ public class Isdb
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000008"), // has attribute
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Descriptor.vm"));
         }
 
         {
@@ -128,10 +118,6 @@ public class Isdb
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000008"), // has attribute
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Descriptor.vm"));
         }
 
         {
@@ -148,10 +134,6 @@ public class Isdb
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000008"), // has attribute
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Descriptor.vm"));
         }
 
         {
@@ -170,10 +152,6 @@ public class Isdb
                     compound);
             config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000008"), // has attribute
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Descriptor.vm"));
         }
 
         {
@@ -204,17 +182,6 @@ public class Isdb
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_001278"), // is data item in
                     library);
-
-            // extension
-            config.addQuadMapping(table, graph, experiment, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Experiment.vm"));
-            config.addQuadMapping(table, graph, experiment, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("isdb/Experiment.vm"));
-
-            config.addQuadMapping(table, graph, spectrum, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Spectrum.vm"));
-            config.addQuadMapping(table, graph, spectrum, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("isdb/Spectrum.vm"));
         }
 
         {
@@ -241,10 +208,6 @@ public class Isdb
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/TypedDescriptor.vm"));
         }
 
         {
@@ -259,10 +222,6 @@ public class Isdb
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/TypedDescriptor.vm"));
         }
 
         {
@@ -279,10 +238,6 @@ public class Isdb
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Descriptor.vm"));
         }
 
         {
@@ -299,10 +254,6 @@ public class Isdb
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Descriptor.vm"));
         }
 
         /*
@@ -310,20 +261,16 @@ public class Isdb
             Table table = new Table(schema, "spectrum_bases");
             NodeMapping subject = config.createIriMapping("isdb:instrument", "id", "ionmode");
             NodeMapping experiment = config.createIriMapping("isdb:experiment", "id", "ionmode");
-        
+
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000031")); // instrument model
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"), // has value
                     config.createLiteralMapping("")); //TODO:
-        
+
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000553"), // is parameter in
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Descriptor.vm"));
         }
         */
 
@@ -343,10 +290,6 @@ public class Isdb
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Descriptor.vm"));
         }
 
         {
@@ -365,10 +308,6 @@ public class Isdb
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Descriptor.vm"));
         }
 
         {
@@ -387,10 +326,6 @@ public class Isdb
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Descriptor.vm"));
         }
 
         {
@@ -407,10 +342,6 @@ public class Isdb
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000255"), // has annotation
                     subject);
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Descriptor.vm"));
         }
 
         {
@@ -424,12 +355,6 @@ public class Isdb
             config.addQuadMapping(null, graph, subject, config.createIriMapping("dcterms:description"),
                     config.createLiteralMapping("An In Silico spectral DataBase (ISDB) of natural products "
                             + "calculated from structures aggregated in the frame of the LOTUS Initiative."));
-
-            // extension
-            config.addQuadMapping(null, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("isdb/Library.vm"));
-            config.addQuadMapping(null, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("isdb/Library.vm"));
         }
 
         {

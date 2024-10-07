@@ -34,9 +34,5 @@ public class Source
                 config.createLiteralMapping(xsdString, "src_short_name"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:description"),
                 config.createLiteralMapping(xsdString, "src_description"));
-
-        // extension
-        config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                config.createLiteralMapping("chembl/Source.vm"));
     }
 }

@@ -66,7 +66,6 @@ public class CompoundDescriptor
     {
         ConstantIriMapping graph = config.createIriMapping("descriptor:compound");
         ConstantIriMapping type = config.createIriMapping("rdf:type");
-        ConstantIriMapping template = config.createIriMapping("template:itemTemplate");
         ConstantIriMapping value = config.createIriMapping("sio:SIO_000300");
         ConstantIriMapping unit = config.createIriMapping("sio:SIO_000221");
 
@@ -83,10 +82,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(rdfLangStringEn, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"));
         }
 
         {
@@ -100,11 +95,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -118,11 +108,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -136,11 +121,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -154,11 +134,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -172,11 +147,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -190,11 +160,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -208,11 +173,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -226,11 +186,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -244,11 +199,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -262,11 +212,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -280,11 +225,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -298,11 +238,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -316,11 +251,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -338,11 +268,6 @@ public class CompoundDescriptor
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
             config.addQuadMapping(table, graph, subject, oldUnit, config.createIriMapping("obo:UO_0000055"),
                     config.createIsNotNullCondition(field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -356,11 +281,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -374,11 +294,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -395,11 +310,6 @@ public class CompoundDescriptor
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
             config.addQuadMapping(table, graph, subject, oldUnit, config.createIriMapping("obo:UO_0000055"),
-                    config.createIsNotNullCondition(field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
                     config.createIsNotNullCondition(field));
         }
 
@@ -418,11 +328,6 @@ public class CompoundDescriptor
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
             config.addQuadMapping(table, graph, subject, oldUnit, config.createIriMapping("obo:UO_0000055"),
                     config.createIsNotNullCondition(field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -440,11 +345,6 @@ public class CompoundDescriptor
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
             config.addQuadMapping(table, graph, subject, oldUnit, config.createIriMapping("obo:UO_0000324"),
                     config.createIsNotNullCondition(field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"),
-                    config.createIsNotNullCondition(field));
         }
 
         {
@@ -457,10 +357,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(rdfLangStringEn, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"));
         }
 
         {
@@ -473,10 +369,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(rdfLangStringEn, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"));
         }
 
         {
@@ -489,10 +381,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(rdfLangStringEn, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"));
         }
 
         {
@@ -505,10 +393,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(rdfLangStringEn, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"));
         }
 
         {
@@ -521,10 +405,6 @@ public class CompoundDescriptor
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(rdfLangStringEn, field));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, template,
-                    config.createLiteralMapping("pubchem/CompoundDescriptor.vm"));
         }
     }
 }

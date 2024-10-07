@@ -27,17 +27,6 @@ public class DrugBank
 
         {
             Table table = new Table("molecules", "drugbank");
-            NodeMapping subject = config.createIriMapping("drugbank:compound", "id");
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:itemTemplate"),
-                    config.createLiteralMapping("drugbank/Compound.vm"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("template:pageTemplate"),
-                    config.createLiteralMapping("drugbank/Compound.vm"));
-        }
-
-        {
-            Table table = new Table("molecules", "drugbank");
             NodeMapping subject = config.createIriMapping("drugbank:molfile", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
