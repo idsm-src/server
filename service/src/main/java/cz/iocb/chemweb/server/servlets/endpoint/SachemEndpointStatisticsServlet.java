@@ -124,6 +124,8 @@ public class SachemEndpointStatisticsServlet extends HttpServlet
     {
         try(Connection connection = drugbankPool.getConnection())
         {
+            connection.setAutoCommit(true);
+
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet result = statement
@@ -148,6 +150,8 @@ public class SachemEndpointStatisticsServlet extends HttpServlet
     {
         try(Connection connection = pubchemPool.getConnection())
         {
+            connection.setAutoCommit(true);
+
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet result = statement.executeQuery("select version, sachem.index_size('pubchem'), checkdate "
@@ -171,6 +175,8 @@ public class SachemEndpointStatisticsServlet extends HttpServlet
     {
         try(Connection connection = chemblPool.getConnection())
         {
+            connection.setAutoCommit(true);
+
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet result = statement.executeQuery("select f.name, sachem.index_size('chembl'), s.checkdate "
@@ -198,6 +204,8 @@ public class SachemEndpointStatisticsServlet extends HttpServlet
 
         try(Connection connection = chebiPool.getConnection())
         {
+            connection.setAutoCommit(true);
+
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet result = statement
@@ -223,6 +231,8 @@ public class SachemEndpointStatisticsServlet extends HttpServlet
     {
         try(Connection connection = wikidataPool.getConnection())
         {
+            connection.setAutoCommit(true);
+
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet result = statement.executeQuery("select sachem.index_size('wikidata'), checkdate "

@@ -199,6 +199,8 @@ public class OntologyResource extends GeneralUserIriClass
 
         try(Connection connection = config.getConnectionPool().getConnection())
         {
+            connection.setAutoCommit(true);
+
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet result = statement.executeQuery("select unit_id, value_offset - 1, pattern, prefix "

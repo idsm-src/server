@@ -252,6 +252,8 @@ public class CompoundImageServlet extends HttpServlet
     {
         try(Connection connection = connectionPool.getConnection())
         {
+            connection.setAutoCommit(true);
+
             try(PreparedStatement statement = connection.prepareStatement(query))
             {
                 statement.setInt(1, id);

@@ -121,6 +121,8 @@ public class CompoundSpectrumServlet extends HttpServlet
     {
         try(Connection connection = connectionPool.getConnection())
         {
+            connection.setAutoCommit(true);
+
             try(PreparedStatement statement = connection.prepareStatement(query))
             {
                 statement.setString(1, id);

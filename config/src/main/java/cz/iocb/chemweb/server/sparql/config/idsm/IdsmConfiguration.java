@@ -61,6 +61,8 @@ public class IdsmConfiguration extends SparqlDatabaseConfiguration
     {
         try(Connection connection = connectionPool.getConnection())
         {
+            connection.setAutoCommit(true);
+
             try(Statement stmt = connection.createStatement())
             {
                 for(List<QuadMapping> m : mappings.values())

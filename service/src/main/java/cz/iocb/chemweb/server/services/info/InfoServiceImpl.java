@@ -56,6 +56,8 @@ public class InfoServiceImpl extends GWTRemoteServiceServlet implements InfoServ
 
         try(Connection connection = connectionPool.getConnection())
         {
+            connection.setAutoCommit(true);
+
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet result = statement.executeQuery("select name, count from info.idsm_counts order by id"))
@@ -81,6 +83,8 @@ public class InfoServiceImpl extends GWTRemoteServiceServlet implements InfoServ
 
         try(Connection connection = connectionPool.getConnection())
         {
+            connection.setAutoCommit(true);
+
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet result = statement
