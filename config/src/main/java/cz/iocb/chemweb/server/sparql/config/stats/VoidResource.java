@@ -209,6 +209,13 @@ public class VoidResource extends UserIriClass
 
 
     @Override
+    public List<Column> toOrderColumns(List<Column> columns)
+    {
+        return columns;
+    }
+
+
+    @Override
     public String getPrefix(List<Column> columns)
     {
         return prefix;

@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.ConstantColumn;
+import cz.iocb.sparql.engine.database.ExpressionColumn;
 import cz.iocb.sparql.engine.database.SQLRuntimeException;
 import cz.iocb.sparql.engine.mapping.classes.GeneralUserIriClass;
 import cz.iocb.sparql.engine.parser.model.IRI;
@@ -21,25 +22,15 @@ import cz.iocb.sparql.engine.parser.model.triple.Node;
 
 public class OntologyResource extends GeneralUserIriClass
 {
-    private static class Unit
+    private static record Unit(short id, String prefix, int valueOffset, int valueLength, String pattern)
     {
-        short id;
-        int valueOffset;
-        String pattern;
-
-        Unit(short id, int valueOffset, String pattern)
-        {
-            this.id = id;
-            this.valueOffset = valueOffset;
-            this.pattern = pattern;
-        }
     }
 
 
     private static final String sqlQuery = "select resource_id from ontology.resources__reftable where iri = ?";
     private static OntologyResource instance;
     private static List<Unit> units = new ArrayList<Unit>();
-    private static Map<Column, String> prefixMap = new HashMap<Column, String>();
+    private static Map<Column, Unit> unitMap = new HashMap<Column, Unit>();
 
     private static final short unitUncategorized = 0;
     private static final short unitPR0 = 31;
@@ -71,7 +62,7 @@ public class OntologyResource extends GeneralUserIriClass
         {
             if(val.matches(unit.pattern))
             {
-                String tail = val.substring(unit.valueOffset);
+                String tail = val.substring(unit.valueOffset - 1);
                 int id = 0;
 
                 if(unit.id == unitPR0)
@@ -150,14 +141,90 @@ public class OntologyResource extends GeneralUserIriClass
 
 
     @Override
+    public List<Column> toGeneralClass(List<Column> columns, boolean check)
+    {
+        return List.of(new ExpressionColumn(getInverseCode(columns)));
+    }
+
+
+    @Override
+    public Column toExpression(List<Column> columns)
+    {
+        return new ExpressionColumn(getInverseCode(columns));
+    }
+
+
+    @Override
+    public Column toBoxedExpression(List<Column> columns)
+    {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("sparql.rdfbox_create_from_iri(");
+        builder.append(getInverseCode(columns));
+        builder.append(")");
+
+        return new ExpressionColumn(builder.toString());
+    }
+
+
+    @Override
+    public List<Column> toResult(List<Column> columns)
+    {
+        return List.of(new ExpressionColumn(getInverseCode(columns)));
+    }
+
+
+    @Override
+    public List<Column> toOrderColumns(List<Column> columns)
+    {
+        Unit unit = unitMap.get(columns.get(0));
+
+        if(unit == null || unit.valueLength < 0)
+        {
+            return super.toOrderColumns(columns);
+        }
+        else if(unit.id == unitStar)
+        {
+            return List.of(columns.get(1));
+        }
+        else if(unit.id == unitRareDiseases)
+        {
+            return List.of(columns.get(1));
+        }
+        else if(unit.valueLength == 0)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            builder.append("(");
+            builder.append(columns.get(1));
+            builder.append(")::varchar");
+
+            return List.of(new ExpressionColumn(builder.toString()));
+        }
+        else
+        {
+            StringBuilder builder = new StringBuilder();
+
+            builder.append("lpad((");
+            builder.append(columns.get(1));
+            builder.append(")::varchar, ");
+            builder.append(unit.valueLength);
+            builder.append(", '0')::varchar)");
+
+            return List.of(new ExpressionColumn(builder.toString()));
+        }
+    }
+
+
+    @Override
     public String getPrefix(List<Column> columns)
     {
-        String prefix = prefixMap.get(columns.get(0));
+        Unit unit = unitMap.get(columns.get(0));
 
-        if(prefix != null)
-            return prefix;
+        if(unit == null)
+            return "";
 
-        return "";
+        return unit.prefix();
     }
 
 
@@ -186,6 +253,65 @@ public class OntologyResource extends GeneralUserIriClass
     }
 
 
+    private String getInverseCode(List<Column> columns)
+    {
+        StringBuilder builder = new StringBuilder();
+        Unit unit = unitMap.get(columns.get(0));
+
+        if(unit == null || unit.valueLength < 0)
+        {
+            builder.append(function);
+            builder.append("(");
+
+            for(int i = 0; i < getColumnCount(); i++)
+            {
+                if(i > 0)
+                    builder.append(", ");
+
+                builder.append(columns.get(i));
+            }
+
+            builder.append(")");
+        }
+        else if(unit.id == unitStar)
+        {
+            builder.append("('");
+            builder.append(unit.prefix().replaceAll("'", "''"));
+            builder.append("' || (");
+            builder.append(columns.get(1));
+            builder.append(")::varchar || '_STAR')");
+        }
+        else if(unit.id == unitRareDiseases)
+        {
+            builder.append("('");
+            builder.append(unit.prefix().replaceAll("'", "''"));
+            builder.append("' || (");
+            builder.append(columns.get(1));
+            builder.append(")::varchar || '/index')");
+        }
+        else if(unit.valueLength == 0)
+        {
+            builder.append("('");
+            builder.append(unit.prefix().replaceAll("'", "''"));
+            builder.append("' || (");
+            builder.append(columns.get(1));
+            builder.append(")::varchar)");
+        }
+        else
+        {
+            builder.append("('");
+            builder.append(unit.prefix().replaceAll("'", "''"));
+            builder.append("' || lpad((");
+            builder.append(columns.get(1));
+            builder.append(")::varchar, ");
+            builder.append(unit.valueLength);
+            builder.append(", '0')::varchar)");
+        }
+
+        return builder.toString();
+    }
+
+
     private static int code(char value)
     {
         return value > '9' ? 10 + value - 'A' : value - '0';
@@ -203,14 +329,14 @@ public class OntologyResource extends GeneralUserIriClass
 
             try(Statement statement = connection.createStatement())
             {
-                try(ResultSet result = statement.executeQuery("select unit_id, value_offset - 1, pattern, prefix "
+                try(ResultSet r = statement.executeQuery("select unit_id, prefix, value_offset, value_length, pattern "
                         + "from ontology.resource_categories__reftable order by unit_id"))
                 {
-                    while(result.next())
+                    while(r.next())
                     {
-                        Unit unit = new Unit(result.getShort(1), result.getInt(2), result.getString(3));
+                        Unit unit = new Unit(r.getShort(1), r.getString(2), r.getInt(3), r.getInt(4), r.getString(5));
                         units.add(unit);
-                        prefixMap.put(new ConstantColumn(Short.toString(unit.id), "smallint"), result.getString(4));
+                        unitMap.put(new ConstantColumn(Short.toString(unit.id), "smallint"), unit);
                     }
                 }
             }

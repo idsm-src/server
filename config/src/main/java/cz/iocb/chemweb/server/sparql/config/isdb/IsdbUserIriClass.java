@@ -119,8 +119,7 @@ public class IsdbUserIriClass extends UserIriClass
     {
         String access = "(SELECT id as \"@from\", accession as \"@to\" FROM isdb.compound_bases) as \"@rctab\"";
 
-        String code = String.format("'%s' || \"@to\" || '-' || %s", prefix.replaceAll("'", "''"), columns.get(1),
-                columns.get(1).toString());
+        String code = String.format("'%s' || \"@to\" || '-' || %s", prefix.replaceAll("'", "''"), columns.get(1));
 
         if(suffix != null)
             code = String.format("%s || '%s'", code, suffix.replaceAll("'", "''"));
@@ -208,6 +207,14 @@ public class IsdbUserIriClass extends UserIriClass
     public List<Column> toResult(List<Column> columns)
     {
         return List.of(generateFunction(columns));
+    }
+
+
+    @Override
+    public List<Column> toOrderColumns(List<Column> columns)
+    {
+        String code = String.format("(SELECT accession FROM isdb.compound_bases WHERE id = %s)", columns.get(0));
+        return List.of(new ExpressionColumn(code), columns.get(1));
     }
 
 
