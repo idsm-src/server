@@ -21,14 +21,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import cz.iocb.chemweb.server.servlets.hints.NormalizeIRI.PrefixedName;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.request.Engine;
-import cz.iocb.sparql.engine.request.RdfNode;
-import cz.iocb.sparql.engine.request.Request;
-import cz.iocb.sparql.engine.request.Result;
 import cz.iocb.sparql.engine.error.TranslateExceptions;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.QuadMapping;
 import cz.iocb.sparql.engine.parser.model.IRI;
+import cz.iocb.sparql.engine.request.Engine;
+import cz.iocb.sparql.engine.request.RdfNode;
+import cz.iocb.sparql.engine.request.Request;
+import cz.iocb.sparql.engine.request.Result;
+import cz.iocb.sparql.engine.translator.ServiceException;
 
 
 
@@ -71,7 +72,7 @@ public class GenerateHints extends HttpServlet
                     hintsJS = generateHints(dbConfig);
                     hintsMap.put(resourceName, hintsJS);
                 }
-                catch(NamingException | TranslateExceptions | SQLException e)
+                catch(NamingException | TranslateExceptions | ServiceException | SQLException e)
                 {
                     throw new ServletException(e);
                 }
@@ -103,7 +104,7 @@ public class GenerateHints extends HttpServlet
 
 
     private static String generateHints(SparqlDatabaseConfiguration sparqlConfig)
-            throws TranslateExceptions, SQLException
+            throws TranslateExceptions, SQLException, ServiceException
     {
         Set<String> iris = new HashSet<String>();
 

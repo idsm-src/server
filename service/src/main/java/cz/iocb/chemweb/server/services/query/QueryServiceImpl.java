@@ -46,6 +46,7 @@ import cz.iocb.sparql.engine.request.LiteralNode;
 import cz.iocb.sparql.engine.request.RdfNode;
 import cz.iocb.sparql.engine.request.Request;
 import cz.iocb.sparql.engine.request.Result;
+import cz.iocb.sparql.engine.translator.ServiceException;
 
 
 
@@ -496,7 +497,7 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
                 return Integer.parseInt(result.get(0).getValue());
             }
         }
-        catch(URISyntaxException | TranslateExceptions | SQLException e)
+        catch(URISyntaxException | TranslateExceptions | ServiceException | SQLException e)
         {
             throw new DatabaseException(e);
         }
