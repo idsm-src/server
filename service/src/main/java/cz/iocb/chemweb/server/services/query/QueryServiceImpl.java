@@ -360,7 +360,7 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
                                         }
                                         else
                                         {
-                                            stringRow[i].html = "null";
+                                            stringRow[i].html = "";
                                         }
                                     }
                                     catch(Throwable e)
@@ -514,6 +514,10 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
     {
         switch(node)
         {
+            case null ->
+            {
+                return null;
+            }
             case IriNode iri ->
             {
                 String value = iri.getValue();

@@ -26,8 +26,8 @@ public class LinkCell extends AbstractCell<DataGridNode>
 
         String htmlCode = "<div lang=\"en\" "
                 + (value.ref != null ? "class=\"BOX-selection BOX-NODE_" + Encode.base32m(value.ref) + "\" " : "")
-                + "style=\"-webkit-hyphens: auto; -moz-hyphens: auto; -ms-hyphens: auto; hyphens: auto;\">" + value.html
-                + "</div>";
+                + "style=\"-webkit-hyphens: auto; -moz-hyphens: auto; -ms-hyphens: auto; hyphens: auto; min-height: 20px\">"
+                + value.html + "</div>";
 
         sb.append(SafeHtmlUtils.fromTrustedString(htmlCode));
     }
