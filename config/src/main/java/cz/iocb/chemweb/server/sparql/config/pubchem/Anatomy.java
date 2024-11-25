@@ -53,22 +53,6 @@ public class Anatomy
         }
 
         {
-            Table table = new Table(schema, "anatomy_chembl_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:anatomy", "anatomy");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("chembl:tissue_report_card", "match"));
-        }
-
-        {
-            Table table = new Table(schema, "anatomy_nextprot_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:anatomy", "anatomy");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("nextprot:term", "match"));
-        }
-
-        {
             Table table = new Table(schema, "anatomy_mesh_matches");
             NodeMapping subject = config.createIriMapping("pubchem:anatomy", "anatomy");
 

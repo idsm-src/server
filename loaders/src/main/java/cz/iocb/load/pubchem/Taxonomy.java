@@ -137,32 +137,34 @@ public class Taxonomy extends Updater
     }
 
 
-    private static void loadUniprotCloseMatches(Model model) throws IOException, SQLException
+    private static void loadCloseMatches(Model model) throws IOException, SQLException
     {
-        IntSet newMatches = new IntSet();
-        IntSet oldMatches = new IntSet();
+        IntIntPairSet newMatches = new IntIntPairSet();
+        IntIntPairSet oldMatches = new IntIntPairSet();
 
-        load("select taxonomy from pubchem.taxonomy_uniprot_matches", oldMatches);
+        load("select taxonomy,match_unit,match_id from pubchem.taxonomy_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?taxonomy skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'http://purl.uniprot.org/taxonomy/'))"))
+        new QueryResultProcessor(patternQuery(
+                "?taxonomy skos:closeMatch ?match. " + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
+                        + "filter(!strstarts(str(?match), 'https://identifiers.org/mesh:'))"
+                        + "filter(!strstarts(str(?match), 'https://www.catalogueoflife.org/data/taxon/'))"
+                        + "filter(!strstarts(str(?match), 'https://identifiers.org/col:'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"));
-                Integer match = getIntID("match", "http://purl.uniprot.org/taxonomy/");
+                Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
 
-                if(!taxonomyID.equals(match))
-                    throw new IOException();
+                Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(taxonomyID, match);
 
-                if(!oldMatches.remove(taxonomyID))
-                    newMatches.add(taxonomyID);
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
             }
         }.load(model);
 
-        store("delete from pubchem.taxonomy_uniprot_matches where taxonomy=?", oldMatches);
-        store("insert into pubchem.taxonomy_uniprot_matches(taxonomy) values(?)", newMatches);
+        store("delete from pubchem.taxonomy_matches where taxonomy=? and match_unit=? and match_id=?", oldMatches);
+        store("insert into pubchem.taxonomy_matches(taxonomy,match_unit,match_id) values(?,?,?)", newMatches);
     }
 
 
@@ -222,66 +224,6 @@ public class Taxonomy extends Updater
     }
 
 
-    private static void loadThesaurusCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select taxonomy,match from pubchem.taxonomy_thesaurus_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?taxonomy skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"));
-                Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
-
-                if(match.getOne() != Ontology.unitThesaurus)
-                    throw new IOException();
-
-                Pair<Integer, Integer> pair = Pair.getPair(taxonomyID, match.getTwo());
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.taxonomy_thesaurus_matches where taxonomy=? and match=?", oldMatches);
-        store("insert into pubchem.taxonomy_thesaurus_matches(taxonomy,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadItisCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select taxonomy,match from pubchem.taxonomy_itis_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?taxonomy skos:closeMatch ?match. filter(strstarts(str(?match), "
-                + "'https://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value='))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"));
-                Integer match = getIntID("match",
-                        "https://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value=");
-
-                Pair<Integer, Integer> pair = Pair.getPair(taxonomyID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.taxonomy_itis_matches where taxonomy=? and match=?", oldMatches);
-        store("insert into pubchem.taxonomy_itis_matches(taxonomy,match) values(?,?)", newMatches);
-    }
-
-
     static void load() throws IOException, SQLException
     {
         System.out.println("load taxonomies ...");
@@ -294,11 +236,9 @@ public class Taxonomy extends Updater
         loadLabels(model);
         loadAlternatives(model);
         loadReferences(model);
-        loadUniprotCloseMatches(model);
+        loadCloseMatches(model);
         loadMeshCloseMatches(model);
         loadCatalogueoflifeCloseMatches(model);
-        loadThesaurusCloseMatches(model);
-        loadItisCloseMatches(model);
 
         model.close();
         System.out.println();

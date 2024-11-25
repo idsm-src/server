@@ -117,10 +117,8 @@ public class Anatomy extends Updater
 
         load("select anatomy,match_unit,match_id from pubchem.anatomy_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?anatomy skos:closeMatch ?match. "
-                + "filter(!strstarts(str(?match), 'https://www.ebi.ac.uk/chembl/tissue_report_card/CHEMBL'))"
-                + "filter(!strstarts(str(?match), 'https://www.nextprot.org/term/TS-'))"
-                + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
+        new QueryResultProcessor(patternQuery(
+                "?anatomy skos:closeMatch ?match. filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -138,62 +136,6 @@ public class Anatomy extends Updater
 
         store("delete from pubchem.anatomy_matches where anatomy=? and match_unit=? and match_id=?", oldMatches);
         store("insert into pubchem.anatomy_matches(anatomy,match_unit,match_id) values(?,?,?)", newMatches);
-    }
-
-
-    private static void loadChemblCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select anatomy,match from pubchem.anatomy_chembl_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?anatomy skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://www.ebi.ac.uk/chembl/tissue_report_card/CHEMBL'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer anatomyID = getAnatomyID(getIRI("anatomy"));
-                Integer match = getIntID("match", "https://www.ebi.ac.uk/chembl/tissue_report_card/CHEMBL");
-
-                Pair<Integer, Integer> pair = Pair.getPair(anatomyID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.anatomy_chembl_matches where anatomy=? and match=?", oldMatches);
-        store("insert into pubchem.anatomy_chembl_matches(anatomy,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadNextprotCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select anatomy,match from pubchem.anatomy_nextprot_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery(
-                "?anatomy skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.nextprot.org/term/TS-'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer anatomyID = getAnatomyID(getIRI("anatomy"));
-                Integer match = getIntID("match", "https://www.nextprot.org/term/TS-");
-
-                Pair<Integer, Integer> pair = Pair.getPair(anatomyID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.anatomy_nextprot_matches where anatomy=? and match=?", oldMatches);
-        store("insert into pubchem.anatomy_nextprot_matches(anatomy,match) values(?,?)", newMatches);
     }
 
 
@@ -225,9 +167,6 @@ public class Anatomy extends Updater
     }
 
 
-
-
-
     static void load() throws IOException, SQLException
     {
         System.out.println("load anatomys ...");
@@ -240,8 +179,6 @@ public class Anatomy extends Updater
         loadLabels(model);
         loadAlternatives(model);
         loadCloseMatches(model);
-        loadChemblCloseMatches(model);
-        loadNextprotCloseMatches(model);
         loadMeshCloseMatches(model);
 
         model.close();

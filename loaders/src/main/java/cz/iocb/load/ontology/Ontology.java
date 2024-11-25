@@ -328,6 +328,7 @@ public class Ontology extends Updater
     public static final int unitZDBGENE = 35;
     public static final int unitStar = 95;
     public static final int unitRareDiseases = 180;
+    public static final int unitWormbaseGene = 244;
 
 
     private static void initSourceList()
@@ -960,6 +961,11 @@ public class Ontology extends Updater
                 else if(unit.id == unitRareDiseases)
                 {
                     id = Integer.parseInt(tail.substring(0, tail.length() - 6));
+                }
+
+                else if(unit.id == unitWormbaseGene)
+                {
+                    id = Integer.parseInt(tail.substring(0, 8));
                 }
                 else
                 {

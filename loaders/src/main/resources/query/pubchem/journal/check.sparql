@@ -20,6 +20,6 @@ select distinct ?iri where
         ?S skos:exactMatch ?iri .
         optional { ?S fabio:hasNationalLibraryOfMedicineJournalId ?id }
         
-        filter(?id != replace(str(?iri), "https://www.ncbi.nlm.nih.gov/nlmcatalog/", ""))
+        filter(?id != replace(str(?iri), 'https://www.ncbi.nlm.nih.gov/nlmcatalog/', ''))
     }
 }

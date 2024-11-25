@@ -494,6 +494,51 @@ class Protein extends Updater
     }
 
 
+    private static void loadCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntIntPairSet newMatches = new IntIntPairSet();
+        IntIntPairSet oldMatches = new IntIntPairSet();
+
+        load("select protein,match_unit,match_id from pubchem.protein_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?protein skos:closeMatch ?match. "
+                + "filter(!strstarts(str(?match), 'https://www.ncbi.nlm.nih.gov/protein/'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/refseq:'))"
+                + "filter(!strstarts(str(?match), 'http://purl.uniprot.org/uniprot/'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/uniprot:'))"
+                + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/mesh:'))"
+                + "filter(!strstarts(str(?match), 'https://www.nextprot.org/entry/NX_'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/nextprot:NX_'))"
+                + "filter(!strstarts(str(?match), 'http://glygen.org/protein/'))"
+                + "filter(!strstarts(str(?match), 'https://glycosmos.org/glycoproteins/show/uniprot/'))"
+                + "filter(!strstarts(str(?match), 'https://alphafold.ebi.ac.uk/entry/'))"
+                + "filter(!strstarts(str(?match), 'http://enzyme.expasy.org/EC/'))"
+                + "filter(!strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"
+                + "filter(!strstarts(str(?match), 'https://proconsortium.org/app/entry/PR:'))"
+                + "filter(!strstarts(str(?match), 'https://wormbase.org/db/seq/protein?name='))"
+                + "filter(!strstarts(str(?match), 'https://www.brenda-enzymes.org/enzyme.php?ecno='))"
+                + "filter(!strstarts(str(?match), 'https://www.ebi.ac.uk/intact/search?query=id:'))"
+                + "filter(!strstarts(str(?match), 'https://www.ebi.ac.uk/interpro/protein/reviewed/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
+
+                Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_matches where protein=? and match_unit=? and match_id=?", oldMatches);
+        store("insert into pubchem.protein_matches(protein,match_unit,match_id) values(?,?,?)", newMatches);
+    }
+
+
     private static void loadNcbiCloseMatches(Model model) throws IOException, SQLException
     {
         IntStringSet newMatches = new IntStringSet();
@@ -578,122 +623,6 @@ class Protein extends Updater
     }
 
 
-    private static void loadThesaurusCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select protein,match from pubchem.protein_thesaurus_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?protein skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer proteinID = getProteinID(getIRI("protein"));
-                Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
-
-                if(match.getOne() != Ontology.unitThesaurus)
-                    throw new IOException();
-
-                Pair<Integer, Integer> pair = Pair.getPair(proteinID, match.getTwo());
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.protein_thesaurus_matches where protein=? and match=?", oldMatches);
-        store("insert into pubchem.protein_thesaurus_matches(protein,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadGuidetopharmacologyCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select protein,match from pubchem.protein_guidetopharmacology_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?protein skos:closeMatch ?match. filter(strstarts(str(?match), "
-                + "'https://guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId='))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer proteinID = getProteinID(getIRI("protein"));
-                Integer match = getIntID("match",
-                        "https://guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId=");
-
-                Pair<Integer, Integer> pair = Pair.getPair(proteinID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.protein_guidetopharmacology_matches where protein=? and match=?", oldMatches);
-        store("insert into pubchem.protein_guidetopharmacology_matches(protein,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadDrugbankCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select protein,match from pubchem.protein_drugbank_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?protein skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://www.drugbank.ca/bio_entities/BE'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer proteinID = getProteinID(getIRI("protein"));
-                Integer match = getIntID("match", "https://www.drugbank.ca/bio_entities/BE");
-
-                Pair<Integer, Integer> pair = Pair.getPair(proteinID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.protein_drugbank_matches where protein=? and match=?", oldMatches);
-        store("insert into pubchem.protein_drugbank_matches(protein,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadChemblCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select protein,match from pubchem.protein_chembl_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?protein skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://www.ebi.ac.uk/chembl/target_report_card/CHEMBL'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer proteinID = getProteinID(getIRI("protein"));
-                Integer match = getIntID("match", "https://www.ebi.ac.uk/chembl/target_report_card/CHEMBL");
-
-                Pair<Integer, Integer> pair = Pair.getPair(proteinID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.protein_chembl_matches where protein=? and match=?", oldMatches);
-        store("insert into pubchem.protein_chembl_matches(protein,match) values(?,?)", newMatches);
-    }
-
-
     private static void loadGlygenCloseMatches(Model model) throws IOException, SQLException
     {
         IntStringSet newMatches = new IntStringSet();
@@ -775,65 +704,6 @@ class Protein extends Updater
 
         store("delete from pubchem.protein_alphafold_matches where protein=? and match=?", oldMatches);
         store("insert into pubchem.protein_alphafold_matches(protein,match) values(?,?)", newMatches);
-    }
-
-
-
-
-
-    private static void loadOpentargetsCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select protein,match from pubchem.protein_opentargets_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://platform.opentargets.org/target/ENSG'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer proteinID = getProteinID(getIRI("protein"));
-                Integer match = getIntID("match", "https://platform.opentargets.org/target/ENSG");
-
-                Pair<Integer, Integer> pair = Pair.getPair(proteinID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.protein_opentargets_matches where protein=? and match=?", oldMatches);
-        store("insert into pubchem.protein_opentargets_matches(protein,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadProteinatlasCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select protein,match from pubchem.protein_proteinatlas_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.proteinatlas.org/ENSG'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer proteinID = getProteinID(getIRI("protein"));
-                Integer match = getIntID("match", "https://www.proteinatlas.org/ENSG");
-
-                Pair<Integer, Integer> pair = Pair.getPair(proteinID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.protein_proteinatlas_matches where protein=? and match=?", oldMatches);
-        store("insert into pubchem.protein_proteinatlas_matches(protein,match) values(?,?)", newMatches);
     }
 
 
@@ -1250,18 +1120,13 @@ class Protein extends Updater
         loadSimilarProteins(model);
         loadGenes(model);
         loadEnzymes(model);
+        loadCloseMatches(model);
         loadNcbiCloseMatches(model);
         loadUniprotCloseMatches(model);
         loadMeshCloseMatches(model);
-        loadThesaurusCloseMatches(model);
-        loadGuidetopharmacologyCloseMatches(model);
-        loadDrugbankCloseMatches(model);
-        loadChemblCloseMatches(model);
         loadGlygenCloseMatches(model);
         loadGlycosmosCloseMatches(model);
         loadAlphafoldCloseMatches(model);
-        loadOpentargetsCloseMatches(model);
-        loadProteinatlasCloseMatches(model);
         loadExpasyCloseMatches(model);
         loadPharosCloseMatches(model);
         loadProconsortiumCloseMatches(model);

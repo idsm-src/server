@@ -24,4 +24,93 @@ select distinct ?iri where
         filter(!strstarts(str(?iri), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/'))
         filter(!strstarts(str(?iri), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/'))
     }
+    union
+    {
+        ?S owl:sameAs ?iri .
+        filter(!strstarts(str(?iri), ''))
+        filter(!strstarts(str(?match), 'http://pathbank.org/view/'))
+        filter(!strstarts(str(?match), 'https://reactome.org/content/detail/'))
+        filter(!strstarts(str(?match), 'https://biocyc.org/pathway?'))
+        filter(!strstarts(str(?match), 'https://www.wikipathways.org/pathways/'))
+        filter(!strstarts(str(?match), 'https://pmn.plantcyc.org/pathway?'))
+        filter(!strstarts(str(?match), 'http://pid.nci.nih.gov/search/pathway_landing.shtml?pathway_id='))
+        filter(!strstarts(str(?match), 'http://www.inoh.org/inohviewer/inohclient.jnlp?id='))
+        filter(!strstarts(str(?match), 'https://plantreactome.gramene.org/content/detail/'))
+        filter(!strstarts(str(?match), 'https://www.pharmgkb.org/pathway/'))
+        filter(!strstarts(str(?match), 'https://fairdomhub.org/models/'))
+        filter(!strstarts(str(?match), 'https://www.lipidmaps.org/data/IntegratedPathwaysData/SetupIntegratedPathways.pl?imgsize=730&Mode=BMDMATPS11&DataType='))
+        filter(!strstarts(str(?match), 'https://www.pantherdb.org/pathway/pathDetail.do?clsAccession='))
+        filter(!strstarts(str(?match), 'https://identifiers.org/pid.pathway:'))
+        filter(!strstarts(str(?match), 'https://identifiers.org/wikipathways:'))
+        filter(!strstarts(str(?match), 'https://identifiers.org/reactome:'))
+        filter(!strstarts(str(?match), 'https://identifiers.org/panther.pathway:'))
+        filter(!strstarts(str(?match), 'https://identifiers.org/pharmgkb.pathways:'))
+        filter(!strstarts(str(?match), 'https://identifiers.org/biocyc:'))
+        filter(!strstarts(str(?match), 'file://'))
+    }
+    union
+    {
+        ?S owl:sameAs ?iri .
+        filter(strstarts(str(?iri), 'https://identifiers.org/wikipathways:'))
+        bind (replace(str(?iri), 'https://identifiers.org/wikipathways:', '') as ?match)
+        
+        minus
+        {
+            ?S owl:sameAs ?iri2 .
+            filter(strstarts(str(?iri2), 'https://www.wikipathways.org/pathways/'))
+            bind (replace(str(?iri2), 'https://www.wikipathways.org/pathways/', '') as ?match)
+        }
+    }
+    union
+    {
+        ?S owl:sameAs ?iri .
+        filter(strstarts(str(?iri), 'https://identifiers.org/reactome:'))
+        bind (replace(str(?iri), 'https://identifiers.org/reactome:', '') as ?match)
+        
+        minus
+        {
+            ?S owl:sameAs ?iri2 .
+            filter(strstarts(str(?iri2), 'https://reactome.org/content/detail/'))
+            bind (replace(str(?iri2), 'https://reactome.org/content/detail/', '') as ?match)
+        }
+    }
+    union
+    {
+        ?S owl:sameAs ?iri .
+        filter(strstarts(str(?iri), 'https://identifiers.org/panther.pathway:'))
+        bind (replace(str(?iri), 'https://identifiers.org/panther.pathway:', '') as ?match)
+        
+        minus
+        {
+            ?S owl:sameAs ?iri2 .
+            filter(strstarts(str(?iri2), 'https://www.pantherdb.org/pathway/pathDetail.do?clsAccession='))
+            bind (replace(str(?iri2), 'https://www.pantherdb.org/pathway/pathDetail.do\\?clsAccession=', '') as ?match)
+        }
+    }
+    union
+    {
+        ?S owl:sameAs ?iri .
+        filter(strstarts(str(?iri), 'https://identifiers.org/pharmgkb.pathways:'))
+        bind (replace(str(?iri), 'https://identifiers.org/pharmgkb.pathways:', '') as ?match)
+        
+        minus
+        {
+            ?S owl:sameAs ?iri2 .
+            filter(strstarts(str(?iri2), 'https://www.pharmgkb.org/pathway/'))
+            bind (replace(str(?iri2), 'https://www.pharmgkb.org/pathway/', '') as ?match)
+        }
+    }
+    union
+    {
+        ?S owl:sameAs ?iri .
+        filter(strstarts(str(?iri), 'https://identifiers.org/biocyc:'))
+        bind (replace(str(?iri), 'https://identifiers.org/biocyc:', '') as ?match)
+        
+        minus
+        {
+            ?S owl:sameAs ?iri2 .
+            filter(strstarts(str(?iri2), 'https://biocyc.org/pathway?'))
+            bind (replace(str(?iri2), 'https://biocyc.org/pathway\\?orgid=(.*)&id=(.*)', '$1CYC:$2') as ?match)
+        }
+    }
 }

@@ -22,10 +22,12 @@ create table pubchem.taxonomy_references
 );
 
 
-create table pubchem.taxonomy_uniprot_matches
+create table pubchem.taxonomy_matches
 (
     taxonomy      integer not null,
-    primary key(taxonomy)
+    match_unit    smallint not null,
+    match_id      integer not null,
+    primary key(taxonomy, match_unit, match_id)
 );
 
 
@@ -41,21 +43,5 @@ create table pubchem.taxonomy_catalogueoflife_matches
 (
     taxonomy      integer not null,
     match         varchar not null,
-    primary key(taxonomy, match)
-);
-
-
-create table pubchem.taxonomy_thesaurus_matches
-(
-    taxonomy      integer not null,
-    match         integer not null,
-    primary key(taxonomy, match)
-);
-
-
-create table pubchem.taxonomy_itis_matches
-(
-    taxonomy      integer not null,
-    match         integer not null,
     primary key(taxonomy, match)
 );

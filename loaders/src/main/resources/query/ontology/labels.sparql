@@ -1,6 +1,6 @@
 select ?iri (max(?lbl) as ?label) where
 {
     ?iri rdfs:label ?lbl
-    filter(lang(?lbl) = "en" || lang(?lbl) = "")
+    filter(lang(?lbl) = 'en' || lang(?lbl) = '')
 }
 group by ?iri

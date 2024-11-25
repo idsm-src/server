@@ -347,7 +347,7 @@ class Compound extends Updater
                 Integer compoundID = Integer.parseInt(line.replaceFirst("\t.*$", ""));
                 String title = line.replaceFirst("^[^\t]+\t", "");
 
-                addCompoundID(compoundID);
+                addCompoundID(compoundID, false);
 
                 if(title.equals(oldTitles.remove(compoundID)))
                 {
@@ -508,11 +508,18 @@ class Compound extends Updater
 
     static void addCompoundID(Integer compoundID) throws IOException
     {
+        addCompoundID(compoundID, true);
+    }
+
+
+    static void addCompoundID(Integer compoundID, boolean verbose) throws IOException
+    {
         synchronized(newCompounds)
         {
             if(!keepCompounds.contains(compoundID) && !newCompounds.contains(compoundID))
             {
-                System.out.println("    add missing compound CID" + compoundID);
+                if(verbose)
+                    System.out.println("    add missing compound CID" + compoundID);
 
                 if(oldCompounds.remove(compoundID))
                     keepCompounds.add(compoundID);

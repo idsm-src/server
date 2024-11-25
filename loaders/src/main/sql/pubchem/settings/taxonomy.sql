@@ -15,7 +15,9 @@ grant select on pubchem.taxonomy_references to sparql;
 
 --------------------------------------------------------------------------------
 
-grant select on pubchem.taxonomy_uniprot_matches to sparql;
+create index taxonomy_matches__taxonomy on pubchem.taxonomy_matches(taxonomy);
+create index taxonomy_matches__match on pubchem.taxonomy_matches(match_unit, match_id);
+grant select on pubchem.taxonomy_matches to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -28,15 +30,3 @@ grant select on pubchem.taxonomy_mesh_matches to sparql;
 create index taxonomy_catalogueoflife_matches__taxonomy on pubchem.taxonomy_catalogueoflife_matches(taxonomy);
 create index taxonomy_catalogueoflife_matches__match on pubchem.taxonomy_catalogueoflife_matches(match);
 grant select on pubchem.taxonomy_catalogueoflife_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index taxonomy_thesaurus_matches__taxonomy on pubchem.taxonomy_thesaurus_matches(taxonomy);
-create index taxonomy_thesaurus_matches__match on pubchem.taxonomy_thesaurus_matches(match);
-grant select on pubchem.taxonomy_thesaurus_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index taxonomy_itis_matches__taxonomy on pubchem.taxonomy_itis_matches(taxonomy);
-create index taxonomy_itis_matches__match on pubchem.taxonomy_itis_matches(match);
-grant select on pubchem.taxonomy_itis_matches to sparql;

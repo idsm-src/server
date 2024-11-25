@@ -300,6 +300,50 @@ class Gene extends Updater
     }
 
 
+    private static void loadCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntIntPairSet newMatches = new IntIntPairSet();
+        IntIntPairSet oldMatches = new IntIntPairSet();
+
+        load("select gene,match_unit,match_id from pubchem.gene_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+                + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/ensembl/'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/ensembl:'))"
+                + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/mesh:'))"
+                + "filter(!strstarts(str(?match), 'https://www.kegg.jp/entry/'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/kegg.genes:'))"
+                + "filter(!strstarts(str(?match), 'https://www.bgee.org/gene/'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/bgee.gene:'))"
+                + "filter(!strstarts(str(?match), 'https://www.pombase.org/gene/'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/pombase:'))"
+                + "filter(!strstarts(str(?match), 'https://zfin.org/ZDB-'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/zfin:ZDB-'))"
+                + "filter(!strstarts(str(?match), 'https://enzyme.expasy.org/EC/'))"
+                + "filter(!strstarts(str(?match), 'https://medlineplus.gov/genetics/gene/'))"
+                + "filter(!strstarts(str(?match), 'https://www.alliancegenome.org/gene/'))"
+                + "filter(!strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"
+                + "filter(!strstarts(str(?match), 'https://www.veupathdb.org/gene/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
+
+                Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_matches where gene=? and match_unit=? and match_id=?", oldMatches);
+        store("insert into pubchem.gene_matches(gene,match_unit,match_id) values(?,?,?)", newMatches);
+    }
+
+
     private static void loadEnsemblCloseMatches(Model model) throws IOException, SQLException
     {
         IntStringSet newMatches = new IntStringSet();
@@ -353,65 +397,6 @@ class Gene extends Updater
 
         store("delete from pubchem.gene_mesh_matches where gene=? and match=?", oldMatches);
         store("insert into pubchem.gene_mesh_matches(gene,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadThesaurusCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select gene,match from pubchem.gene_thesaurus_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
-
-                if(match.getOne() != Ontology.unitThesaurus)
-                    throw new IOException();
-
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, match.getTwo());
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.gene_thesaurus_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_thesaurus_matches(gene,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadCtdbaseCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select gene,match from pubchem.gene_ctdbase_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://ctdbase.org/detail.go?type=gene&acc='))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer match = getIntID("match", "https://ctdbase.org/detail.go?type=gene&acc=");
-
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.gene_ctdbase_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_ctdbase_matches(gene,match) values(?,?)", newMatches);
     }
 
 
@@ -471,34 +456,6 @@ class Gene extends Updater
     }
 
 
-    private static void loadOmimCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select gene,match from pubchem.gene_omim_matches", oldMatches);
-
-        new QueryResultProcessor(
-                patternQuery("?gene skos:closeMatch ?match. filter(strstarts(str(?match), 'https://omim.org/entry/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer match = getIntID("match", "https://omim.org/entry/");
-
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.gene_omim_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_omim_matches(gene,match) values(?,?)", newMatches);
-    }
-
-
     private static void loadAlliancegenomeCloseMatches(Model model) throws IOException, SQLException
     {
         IntStringSet newMatches = new IntStringSet();
@@ -527,34 +484,6 @@ class Gene extends Updater
     }
 
 
-    private static void loadGenenamesCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select gene,match from pubchem.gene_genenames_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer match = getIntID("match", "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:");
-
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.gene_genenames_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_genenames_matches(gene,match) values(?,?)", newMatches);
-    }
-
-
     private static void loadKeggCloseMatches(Model model) throws IOException, SQLException
     {
         IntStringSet newMatches = new IntStringSet();
@@ -580,231 +509,6 @@ class Gene extends Updater
 
         store("delete from pubchem.gene_kegg_matches where gene=? and match=?", oldMatches);
         store("insert into pubchem.gene_kegg_matches(gene,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadFlybaseCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select gene,match from pubchem.gene_flybase_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery(
-                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'http://flybase.org/reports/FBgn'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer match = getIntID("match", "http://flybase.org/reports/FBgn");
-
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.gene_flybase_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_flybase_matches(gene,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadInformaticsCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select gene,match from pubchem.gene_informatics_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'http://www.informatics.jax.org/marker/MGI:'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer match = getIntID("match", "http://www.informatics.jax.org/marker/MGI:");
-
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.gene_informatics_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_informatics_matches(gene,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadWormbaseCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select gene,match from pubchem.gene_wormbase_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'http://www.wormbase.org/db/gene/gene?name=WBGene'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer match = getIntID("match", "http://www.wormbase.org/db/gene/gene?name=WBGene", ";class=Gene");
-
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.gene_wormbase_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_wormbase_matches(gene,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadOpentargetsCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select gene,match from pubchem.gene_opentargets_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://platform.opentargets.org/target/ENSG'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer match = getIntID("match", "https://platform.opentargets.org/target/ENSG");
-
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.gene_opentargets_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_opentargets_matches(gene,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadRgdwebCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select gene,match from pubchem.gene_rgdweb_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://rgd.mcw.edu/rgdweb/report/gene/main.html?id='))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer match = getIntID("match", "https://rgd.mcw.edu/rgdweb/report/gene/main.html?id=");
-
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.gene_rgdweb_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_rgdweb_matches(gene,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadThegenccCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select gene,match from pubchem.gene_thegencc_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://search.thegencc.org/genes/HGNC:'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer match = getIntID("match", "https://search.thegencc.org/genes/HGNC:");
-
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.gene_thegencc_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_thegencc_matches(gene,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadXenbaseCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select gene,match from pubchem.gene_xenbase_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://www.xenbase.org/gene/showgene.do?method=display&geneId=XB-GENE-'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer match = getIntID("match", "https://www.xenbase.org/gene/showgene.do?method=display&geneId=XB-"
-                        + (getIRI("match").contains("GENEPAGE") ? "GENEPAGE-" : "GENE-"));
-
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.gene_xenbase_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_xenbase_matches(gene,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadYeastgenomeCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select gene,match from pubchem.gene_yeastgenome_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://www.yeastgenome.org/locus/S'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer match = getIntID("match", "https://www.yeastgenome.org/locus/S");
-
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.gene_yeastgenome_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_yeastgenome_matches(gene,match) values(?,?)", newMatches);
     }
 
 
@@ -1085,24 +789,13 @@ class Gene extends Updater
         loadLocations(model);
         loadAlternatives(model);
         loadReferences(model);
+        loadCloseMatches(model);
         loadEnsemblCloseMatches(model);
         loadMeshCloseMatches(model);
-        loadThesaurusCloseMatches(model);
-        loadCtdbaseCloseMatches(model);
         loadExpasyCloseMatches(model);
         loadMedlineplusCloseMatches(model);
-        loadOmimCloseMatches(model);
         loadAlliancegenomeCloseMatches(model);
-        loadGenenamesCloseMatches(model);
         loadKeggCloseMatches(model);
-        loadFlybaseCloseMatches(model);
-        loadInformaticsCloseMatches(model);
-        loadWormbaseCloseMatches(model);
-        loadOpentargetsCloseMatches(model);
-        loadRgdwebCloseMatches(model);
-        loadThegenccCloseMatches(model);
-        loadXenbaseCloseMatches(model);
-        loadYeastgenomeCloseMatches(model);
         loadPharosCloseMatches(model);
         loadBgeeCloseMatches(model);
         loadPombaseCloseMatches(model);

@@ -73,9 +73,9 @@ public class TargetComponentReference
                     config.createAreEqualCondition("reference_type", "'INTERPRO'::" + componentReferenceType));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
-                    config.createIriMapping("identifiers:reactome", "reference"),
+                    config.createIriMapping("identifiers:reactome_old", "reference"),
                     config.createAreEqualCondition("reference_type", "'REACTOME'::" + componentReferenceType));
-            config.addQuadMapping(table, graph, config.createIriMapping("identifiers:reactome", "reference"),
+            config.addQuadMapping(table, graph, config.createIriMapping("identifiers:reactome_old", "reference"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
                             "('CHEMBL_TC_' || component_id || ' Reactome Reference: ' || reference)"),
@@ -167,7 +167,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:interpro", "reference"),
                     config.createIriMapping("rdf:type"), config.createIriMapping("cco:InterproRef"),
                     config.createAreEqualCondition("reference_type", "'INTERPRO'::" + componentReferenceType));
-            config.addQuadMapping(table, graph, config.createIriMapping("identifiers:reactome", "reference"),
+            config.addQuadMapping(table, graph, config.createIriMapping("identifiers:reactome_old", "reference"),
                     config.createIriMapping("rdf:type"), config.createIriMapping("cco:ReactomeRef"),
                     config.createAreEqualCondition("reference_type", "'REACTOME'::" + componentReferenceType));
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:pfam", "reference"),
@@ -208,7 +208,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:interpro", "reference"),
                     config.createIriMapping("dc:identifier"), config.createLiteralMapping(xsdString, "reference"),
                     config.createAreEqualCondition("reference_type", "'INTERPRO'::" + componentReferenceType));
-            config.addQuadMapping(table, graph, config.createIriMapping("identifiers:reactome", "reference"),
+            config.addQuadMapping(table, graph, config.createIriMapping("identifiers:reactome_old", "reference"),
                     config.createIriMapping("dc:identifier"), config.createLiteralMapping(xsdString, "reference"),
                     config.createAreEqualCondition("reference_type", "'REACTOME'::" + componentReferenceType));
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:pfam", "reference"),

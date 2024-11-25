@@ -23,26 +23,9 @@ create table pubchem.anatomy_matches
 );
 
 
-create table pubchem.anatomy_chembl_matches
-(
-    anatomy       integer not null,
-    match         integer not null,
-    primary key(anatomy, match)
-);
-
-
-create table pubchem.anatomy_nextprot_matches
-(
-    anatomy       integer not null,
-    match         integer not null,
-    primary key(anatomy, match)
-);
-
-
 create table pubchem.anatomy_mesh_matches
 (
     anatomy       integer not null,
     match         varchar not null,
     primary key(anatomy, match)
 );
-

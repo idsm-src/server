@@ -40,30 +40,6 @@ grant select on pubchem.cell_wikidata_matches to sparql;
 
 --------------------------------------------------------------------------------
 
-create index cell_cancerrxgene_matches__cell on pubchem.cell_cancerrxgene_matches(cell);
-create index cell_cancerrxgene_matches__match on pubchem.cell_cancerrxgene_matches(match);
-grant select on pubchem.cell_cancerrxgene_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index cell_depmap_matches__cell on pubchem.cell_depmap_matches(cell);
-create index cell_depmap_matches__match on pubchem.cell_depmap_matches(match);
-grant select on pubchem.cell_depmap_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index cell_sanger_passport_matches__cell on pubchem.cell_sanger_passport_matches(cell);
-create index cell_sanger_passport_matches__match on pubchem.cell_sanger_passport_matches(match);
-grant select on pubchem.cell_sanger_passport_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index cell_sanger_line_matches__cell on pubchem.cell_sanger_line_matches(cell);
-create index cell_sanger_line_matches__match on pubchem.cell_sanger_line_matches(match);
-grant select on pubchem.cell_sanger_line_matches to sparql;
-
---------------------------------------------------------------------------------
-
 create index cell_cellosaurus_matches__cell on pubchem.cell_cellosaurus_matches(cell);
 create index cell_cellosaurus_matches__match on pubchem.cell_cellosaurus_matches(match);
 grant select on pubchem.cell_cellosaurus_matches to sparql;

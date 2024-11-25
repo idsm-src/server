@@ -33,24 +33,25 @@ class Pathway extends Updater
     static
     {
         descriptions.add(new Description("PATHBANK", "http://pathbank.org/view/", "SMP[0-9]{5,7}"));
-        descriptions.add(new Description("BIOCYC_IMAGE", "https://biocyc.org/", "[^/]*/NEW-IMAGE\\?object=.*"));
-        descriptions.add(new Description("REACTOME", "http://identifiers.org/reactome/", "R-[A-Z]{3}-[1-9][0-9]*"));
-        descriptions.add(new Description("BIOCYC", "http://identifiers.org/biocyc/", "[^:]*:[^:]*"));
-        descriptions.add(new Description("WIKIPATHWAY", "http://identifiers.org/wikipathways/WP", "[1-9][0-9]*"));
-        descriptions.add(new Description("PLANTCYC", "https://pmn.plantcyc.org/", "[^/]*/new-image\\?object=.*"));
+        descriptions.add(new Description("REACTOME", "https://reactome.org/content/detail/", "R-[A-Z]{3}-[1-9][0-9]*"));
+        descriptions.add(new Description("BIOCYC", "https://biocyc.org/pathway?", "orgid=.*&id=.*"));
+        descriptions.add(new Description("WIKIPATHWAY", "https://www.wikipathways.org/pathways/", "WP[1-9][0-9]*"));
+        descriptions.add(
+                new Description("PLANTCYC", "https://pmn.plantcyc.org/pathway?", "orgid=[A-Z0-9_]+&id=[-A-Z0-9]+"));
         descriptions
                 .add(new Description("PID", "http://pid.nci.nih.gov/search/pathway_landing.shtml?pathway_id=", ".*"));
         descriptions.add(new Description("INOH", "http://www.inoh.org/inohviewer/inohclient.jnlp?id=", ".*"));
-        descriptions.add(
-                new Description("PLANTREACTOME", "http://plantreactome.gramene.org/content/detail/", "R-OSA-[0-9]{7}"));
+        descriptions.add(new Description("PLANTREACTOME", "https://plantreactome.gramene.org/content/detail/",
+                "R-OSA-[0-9]{7}"));
         descriptions.add(new Description("PHARMGKB", "https://www.pharmgkb.org/pathway/", "PA[1-9][0-9]*"));
         descriptions.add(new Description("FAIRDOMHUB", "https://fairdomhub.org/models/", "[0-9]+"));
         descriptions.add(new Description("LIPIDMAPS",
-                "http://www.lipidmaps.org/data/IntegratedPathwaysData/SetupIntegratedPathways.pl?"
+                "https://www.lipidmaps.org/data/IntegratedPathwaysData/SetupIntegratedPathways.pl?"
                         + "imgsize=730&Mode=BMDMATPS11&DataType=",
                 ".*"));
-        descriptions.add(new Description("PANTHERDB", "http://www.pantherdb.org/pathway/pathDetail.do?clsAccession=",
+        descriptions.add(new Description("PANTHERDB", "https://www.pantherdb.org/pathway/pathDetail.do?clsAccession=",
                 "P[0-9]{5}"));
+        descriptions.add(new Description("PIDPATHWAY", "https://identifiers.org/pid.pathway:", ".*"));
     }
 
 
@@ -177,7 +178,13 @@ class Pathway extends Updater
         load("select id,reference_type::varchar,reference from pubchem.pathway_bases where reference is not null",
                 oldReferences);
 
-        new QueryResultProcessor(patternQuery("?pathway owl:sameAs ?match"))
+        new QueryResultProcessor(patternQuery("?pathway owl:sameAs ?match "
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/wikipathways:'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/reactome:'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/panther.pathway:'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/pharmgkb.pathways:'))"
+                + "filter(!strstarts(str(?match), 'https://identifiers.org/biocyc:'))"
+                + "filter(!strstarts(str(?match), 'file://'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -218,7 +225,7 @@ class Pathway extends Updater
         }.load(model);
 
         store("update pubchem.pathway_bases set reference_type=null,reference=null "
-                + "where id=? and reference_type=? and reference=?", oldReferences);
+                + "where id=? and reference_type=?::pubchem.pathway_reference_type and reference=?", oldReferences);
         store("insert into pubchem.pathway_bases(id,reference_type,reference) "
                 + "values(?,?::pubchem.pathway_reference_type,?) "
                 + "on conflict(id) do update set reference_type=EXCLUDED.reference_type, reference=EXCLUDED.reference",

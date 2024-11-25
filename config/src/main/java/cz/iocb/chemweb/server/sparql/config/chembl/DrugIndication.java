@@ -30,7 +30,7 @@ public class DrugIndication
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                 config.createIriMapping("cco:DrugIndication"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasMesh"),
-                config.createIriMapping("identifiers:mesh", "mesh_id"));
+                config.createIriMapping("identifiers:mesh_old", "mesh_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasEFO"),
                 config.createIriMapping("ontology:resource", "efo_resource_unit", "efo_resource_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasMolecule"),

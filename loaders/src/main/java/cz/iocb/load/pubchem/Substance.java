@@ -373,10 +373,10 @@ class Substance extends Updater
                                     newChemblMatches.add(pair);
                             }
                         }
-                        else if(value.startsWith("http://identifiers.org/glytoucan/"))
+                        else if(value.startsWith("https://identifiers.org/glytoucan:"))
                         {
                             Integer substanceID = getSubstanceID(subject.getURI(), false, false);
-                            String match = getStringID(object, "http://identifiers.org/glytoucan/");
+                            String match = getStringID(object, "https://identifiers.org/glytoucan:");
 
                             synchronized(newGlytoucanMatches)
                             {

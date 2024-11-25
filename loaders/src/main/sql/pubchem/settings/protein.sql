@@ -54,6 +54,12 @@ grant select on pubchem.protein_uniprot_enzymes to sparql;
 
 --------------------------------------------------------------------------------
 
+create index protein_matches__protein on pubchem.protein_matches(protein);
+create index protein_matches__match on pubchem.protein_matches(match_unit, match_id);
+grant select on pubchem.protein_matches to sparql;
+
+--------------------------------------------------------------------------------
+
 create index protein_ncbi_matches__protein on pubchem.protein_ncbi_matches(protein);
 create index protein_ncbi_matches__match on pubchem.protein_ncbi_matches(match);
 grant select on pubchem.protein_ncbi_matches to sparql;
@@ -72,30 +78,6 @@ grant select on pubchem.protein_mesh_matches to sparql;
 
 --------------------------------------------------------------------------------
 
-create index protein_thesaurus_matches__protein on pubchem.protein_thesaurus_matches(protein);
-create index protein_thesaurus_matches__match on pubchem.protein_thesaurus_matches(match);
-grant select on pubchem.protein_thesaurus_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index protein_guidetopharmacology_matches__protein on pubchem.protein_guidetopharmacology_matches(protein);
-create index protein_guidetopharmacology_matches__match on pubchem.protein_guidetopharmacology_matches(match);
-grant select on pubchem.protein_guidetopharmacology_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index protein_drugbank_matches__protein on pubchem.protein_drugbank_matches(protein);
-create index protein_drugbank_matches__match on pubchem.protein_drugbank_matches(match);
-grant select on pubchem.protein_drugbank_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index protein_chembl_matches__protein on pubchem.protein_chembl_matches(protein);
-create index protein_chembl_matches__match on pubchem.protein_chembl_matches(match);
-grant select on pubchem.protein_chembl_matches to sparql;
-
---------------------------------------------------------------------------------
-
 create index protein_glygen_matches__protein on pubchem.protein_glygen_matches(protein);
 create index protein_glygen_matches__match on pubchem.protein_glygen_matches(match);
 grant select on pubchem.protein_glygen_matches to sparql;
@@ -111,18 +93,6 @@ grant select on pubchem.protein_glycosmos_matches to sparql;
 create index protein_alphafold_matches__protein on pubchem.protein_alphafold_matches(protein);
 create index protein_alphafold_matches__match on pubchem.protein_alphafold_matches(match);
 grant select on pubchem.protein_alphafold_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index protein_opentargets_matches__protein on pubchem.protein_opentargets_matches(protein);
-create index protein_opentargets_matches__match on pubchem.protein_opentargets_matches(match);
-grant select on pubchem.protein_opentargets_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index protein_proteinatlas_matches__protein on pubchem.protein_proteinatlas_matches(protein);
-create index protein_proteinatlas_matches__match on pubchem.protein_proteinatlas_matches(match);
-grant select on pubchem.protein_proteinatlas_matches to sparql;
 
 --------------------------------------------------------------------------------
 

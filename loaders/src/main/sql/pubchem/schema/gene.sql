@@ -33,6 +33,15 @@ create table pubchem.gene_references
 );
 
 
+create table pubchem.gene_matches
+(
+    gene          integer not null,
+    match_unit    smallint not null,
+    match_id      integer not null,
+    primary key(gene, match_unit, match_id)
+);
+
+
 create table pubchem.gene_ensembl_matches
 (
     gene     integer not null,
@@ -45,22 +54,6 @@ create table pubchem.gene_mesh_matches
 (
     gene     integer not null,
     match    varchar not null,
-    primary key(gene, match)
-);
-
-
-create table pubchem.gene_thesaurus_matches
-(
-    gene     integer not null,
-    match    integer not null,
-    primary key(gene, match)
-);
-
-
-create table pubchem.gene_ctdbase_matches
-(
-    gene     integer not null,
-    match    integer not null,
     primary key(gene, match)
 );
 
@@ -81,14 +74,6 @@ create table pubchem.gene_medlineplus_matches
 );
 
 
-create table pubchem.gene_omim_matches
-(
-    gene     integer not null,
-    match    integer not null,
-    primary key(gene, match)
-);
-
-
 create table pubchem.gene_alliancegenome_matches
 (
     gene     integer not null,
@@ -97,82 +82,10 @@ create table pubchem.gene_alliancegenome_matches
 );
 
 
-create table pubchem.gene_genenames_matches
-(
-    gene     integer not null,
-    match    integer not null,
-    primary key(gene, match)
-);
-
-
 create table pubchem.gene_kegg_matches
 (
     gene     integer not null,
     match    varchar not null,
-    primary key(gene, match)
-);
-
-
-create table pubchem.gene_flybase_matches
-(
-    gene     integer not null,
-    match    integer not null,
-    primary key(gene, match)
-);
-
-
-create table pubchem.gene_informatics_matches
-(
-    gene     integer not null,
-    match    integer not null,
-    primary key(gene, match)
-);
-
-
-create table pubchem.gene_wormbase_matches
-(
-    gene     integer not null,
-    match    integer not null,
-    primary key(gene, match)
-);
-
-
-create table pubchem.gene_opentargets_matches
-(
-    gene     integer not null,
-    match    integer not null,
-    primary key(gene, match)
-);
-
-
-create table pubchem.gene_rgdweb_matches
-(
-    gene     integer not null,
-    match    integer not null,
-    primary key(gene, match)
-);
-
-
-create table pubchem.gene_thegencc_matches
-(
-    gene     integer not null,
-    match    integer not null,
-    primary key(gene, match)
-);
-
-
-create table pubchem.gene_xenbase_matches
-(
-    gene     integer not null,
-    match    integer not null,
-    primary key(gene, match)
-);
-
-
-create table pubchem.gene_yeastgenome_matches
-(
-    gene     integer not null,
-    match    integer not null,
     primary key(gene, match)
 );
 

@@ -118,7 +118,8 @@ public class Disease extends Updater
         load("select disease,match_unit,match_id from pubchem.disease_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?disease skos:closeMatch ?match. filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
+                "?disease skos:closeMatch ?match. filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/')) "
+                        + "filter(!strstarts(str(?match), 'https://identifiers.org/mesh:'))"))
         {
             @Override
             protected void parse() throws IOException

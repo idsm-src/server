@@ -33,9 +33,13 @@ public class Taxonomy
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:sameAs"),
                     config.createIriMapping("ncbi:taxonomy", "id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:sameAs"),
-                    config.createIriMapping("ontology:resource", Ontology.unitNCBITaxon, "id"));
+                    config.createIriMapping("identifiers:taxonomy", "id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
                     config.createLiteralMapping(xsdString, "label"));
+
+            // extension
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:sameAs"),
+                    config.createIriMapping("ontology:resource", Ontology.unitNCBITaxon, "id"));
         }
 
         {
@@ -68,6 +72,9 @@ public class Taxonomy
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
                     config.createIriMapping("mesh:heading", "match"));
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+                    config.createIriMapping("identifiers:mesh", "match"));
         }
 
         {
@@ -76,6 +83,9 @@ public class Taxonomy
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
                     config.createIriMapping("catalogueoflife:taxon", "match"));
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+                    config.createIriMapping("identifiers:col", "match"));
         }
 
         {

@@ -1,7 +1,6 @@
 create type pubchem.pathway_reference_type as enum
 (
     'PATHBANK',
-    'BIOCYC_IMAGE',
     'REACTOME',
     'WIKIPATHWAY',
     'BIOCYC',
@@ -12,7 +11,8 @@ create type pubchem.pathway_reference_type as enum
     'PHARMGKB',
     'FAIRDOMHUB',
     'LIPIDMAPS',
-    'PANTHERDB'
+    'PANTHERDB',
+    'PIDPATHWAY'
 );
 
 

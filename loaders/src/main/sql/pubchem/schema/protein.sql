@@ -75,6 +75,15 @@ create table pubchem.protein_uniprot_enzymes
 );
 
 
+create table pubchem.protein_matches
+(
+    protein       integer not null,
+    match_unit    smallint not null,
+    match_id      integer not null,
+    primary key(protein, match_unit, match_id)
+);
+
+
 create table pubchem.protein_ncbi_matches
 (
     protein    integer not null,
@@ -99,38 +108,6 @@ create table pubchem.protein_mesh_matches
 );
 
 
-create table pubchem.protein_thesaurus_matches
-(
-    protein  integer not null,
-    match    integer not null,
-    primary key(protein, match)
-);
-
-
-create table pubchem.protein_guidetopharmacology_matches
-(
-    protein  integer not null,
-    match    integer not null,
-    primary key(protein, match)
-);
-
-
-create table pubchem.protein_drugbank_matches
-(
-    protein  integer not null,
-    match    integer not null,
-    primary key(protein, match)
-);
-
-
-create table pubchem.protein_chembl_matches
-(
-    protein  integer not null,
-    match    integer not null,
-    primary key(protein, match)
-);
-
-
 create table pubchem.protein_glygen_matches
 (
     protein  integer not null,
@@ -151,22 +128,6 @@ create table pubchem.protein_alphafold_matches
 (
     protein  integer not null,
     match    varchar not null,
-    primary key(protein, match)
-);
-
-
-create table pubchem.protein_opentargets_matches
-(
-    protein  integer not null,
-    match    integer not null,
-    primary key(protein, match)
-);
-
-
-create table pubchem.protein_proteinatlas_matches
-(
-    protein  integer not null,
-    match    integer not null,
     primary key(protein, match)
 );
 

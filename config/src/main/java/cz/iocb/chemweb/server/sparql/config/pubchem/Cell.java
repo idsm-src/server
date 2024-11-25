@@ -75,6 +75,9 @@ public class Cell
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
                     config.createIriMapping("mesh:heading", "match"));
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+                    config.createIriMapping("identifiers:mesh", "match"));
         }
 
         {
@@ -83,38 +86,9 @@ public class Cell
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
                     config.createIriMapping("wikidata:wiki", "match"));
-        }
-
-        {
-            Table table = new Table(schema, "cell_cancerrxgene_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("cancerrxgene:celline", "match"));
-        }
-
-        {
-            Table table = new Table(schema, "cell_depmap_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("depmap:celline", "match"));
-        }
-
-        {
-            Table table = new Table(schema, "cell_sanger_passport_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("sanger:passport", "match"));
-        }
-
-        {
-            Table table = new Table(schema, "cell_sanger_line_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("sanger:line", "match"));
+                    config.createIriMapping("identifiers:wikidata", "match"));
         }
 
         {

@@ -218,14 +218,11 @@ public class Cell extends Updater
 
         load("select cell,match_unit,match_id from pubchem.cell_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?cell skos:closeMatch ?match. "
-                + "filter(!strstarts(str(?match), 'https://web.expasy.org/cellosaurus/CVCL_'))"
-                + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
-                + "filter(!strstarts(str(?match), 'https://www.wikidata.org/wiki/Q'))"
-                + "filter(!strstarts(str(?match), 'https://www.cancerrxgene.org/translation/CellLine/'))"
-                + "filter(!strstarts(str(?match), 'https://depmap.org/portal/cell_line/ACH-'))"
-                + "filter(!strstarts(str(?match), 'https://cellmodelpassports.sanger.ac.uk/passports/SIDM'))"
-                + "filter(!strstarts(str(?match), 'https://cancer.sanger.ac.uk/cell_lines/sample/overview?id='))"))
+        new QueryResultProcessor(patternQuery(
+                "?cell skos:closeMatch ?match. filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
+                        + "filter(!strstarts(str(?match), 'https://identifiers.org/mesh:'))"
+                        + "filter(!strstarts(str(?match), 'https://www.wikidata.org/wiki/Q'))"
+                        + "filter(!strstarts(str(?match), 'https://identifiers.org/wikidata:Q'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -237,7 +234,6 @@ public class Cell extends Updater
 
                 if(!oldMatches.remove(pair))
                     newMatches.add(pair);
-
             }
         }.load(model);
 
@@ -299,118 +295,6 @@ public class Cell extends Updater
 
         store("delete from pubchem.cell_wikidata_matches where cell=? and match=?", oldMatches);
         store("insert into pubchem.cell_wikidata_matches(cell,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadCancerrxgeneCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select cell,match from pubchem.cell_cancerrxgene_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery(
-                "?cell skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.cancerrxgene.org/translation/CellLine/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer cellID = getCellID(getIRI("cell"));
-                Integer match = getIntID("match", "https://www.cancerrxgene.org/translation/CellLine/");
-
-                Pair<Integer, Integer> pair = Pair.getPair(cellID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.cell_cancerrxgene_matches where cell=? and match=?", oldMatches);
-        store("insert into pubchem.cell_cancerrxgene_matches(cell,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadDepmapCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select cell,match from pubchem.cell_depmap_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery(
-                "?cell skos:closeMatch ?match. filter(strstarts(str(?match), 'https://depmap.org/portal/cell_line/ACH-'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer cellID = getCellID(getIRI("cell"));
-                Integer match = getIntID("match", "https://depmap.org/portal/cell_line/ACH-");
-
-                Pair<Integer, Integer> pair = Pair.getPair(cellID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.cell_depmap_matches where cell=? and match=?", oldMatches);
-        store("insert into pubchem.cell_depmap_matches(cell,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadSangerPassportCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select cell,match from pubchem.cell_sanger_passport_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery(
-                "?cell skos:closeMatch ?match. filter(strstarts(str(?match), 'https://cellmodelpassports.sanger.ac.uk/passports/SIDM'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer cellID = getCellID(getIRI("cell"));
-                Integer match = getIntID("match", "https://cellmodelpassports.sanger.ac.uk/passports/SIDM");
-
-                Pair<Integer, Integer> pair = Pair.getPair(cellID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.cell_sanger_passport_matches where cell=? and match=?", oldMatches);
-        store("insert into pubchem.cell_sanger_passport_matches(cell,match) values(?,?)", newMatches);
-    }
-
-
-    private static void loadSangerLineCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntPairSet newMatches = new IntPairSet();
-        IntPairSet oldMatches = new IntPairSet();
-
-        load("select cell,match from pubchem.cell_sanger_line_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery(
-                "?cell skos:closeMatch ?match. filter(strstarts(str(?match), 'https://cancer.sanger.ac.uk/cell_lines/sample/overview?id='))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer cellID = getCellID(getIRI("cell"));
-                Integer match = getIntID("match", "https://cancer.sanger.ac.uk/cell_lines/sample/overview?id=");
-
-                Pair<Integer, Integer> pair = Pair.getPair(cellID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.cell_sanger_line_matches where cell=? and match=?", oldMatches);
-        store("insert into pubchem.cell_sanger_line_matches(cell,match) values(?,?)", newMatches);
     }
 
 
@@ -514,10 +398,6 @@ public class Cell extends Updater
         loadCloseMatches(model);
         loadMeshCloseMatches(model);
         loadWikidataCloseMatches(model);
-        loadCancerrxgeneCloseMatches(model);
-        loadDepmapCloseMatches(model);
-        loadSangerPassportCloseMatches(model);
-        loadSangerLineCloseMatches(model);
         loadCellosaurusMatches(model);
         loadChemblCardCloseMatches(model);
         loadAnatomies(model);

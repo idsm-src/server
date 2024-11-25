@@ -38,6 +38,41 @@ select distinct ?iri where
         filter(!strstarts(str(?iri), 'https://depmap.org/portal/cell_line/ACH-'))
         filter(!strstarts(str(?iri), 'https://cellmodelpassports.sanger.ac.uk/passports/SIDM'))
         filter(!strstarts(str(?iri), 'https://cancer.sanger.ac.uk/cell_lines/sample/overview?id='))
+        filter(!strstarts(str(?iri), 'https://identifiers.org/ncit:C'))
+        filter(!strstarts(str(?iri), 'https://identifiers.org/mesh:'))
+        filter(!strstarts(str(?iri), 'https://identifiers.org/CL:'))
+        filter(!strstarts(str(?iri), 'https://identifiers.org/lincs.cell:LCL-'))
+        filter(!strstarts(str(?iri), 'https://identifiers.org/chembl:CHEMBL'))
+        filter(!strstarts(str(?iri), 'https://identifiers.org/efo:'))
+        filter(!strstarts(str(?iri), 'https://identifiers.org/BTO:'))
+        filter(!strstarts(str(?iri), 'https://identifiers.org/CLO:'))
+        filter(!strstarts(str(?iri), 'https://identifiers.org/wikidata:Q'))
+    }
+    union
+    {
+        ?S skos:closeMatch ?iri .
+        filter(strstarts(str(?iri), 'https://identifiers.org/mesh:'))
+        bind (replace(str(?iri), 'https://identifiers.org/mesh:', '') as ?match)
+        
+        minus
+        {
+            ?S skos:closeMatch ?iri2 .
+            filter(strstarts(str(?iri2), 'http://id.nlm.nih.gov/mesh/'))
+            bind (replace(str(?iri2), 'http://id.nlm.nih.gov/mesh/', '') as ?match)
+        }
+    }
+    union
+    {
+        ?S skos:closeMatch ?iri .
+        filter(strstarts(str(?iri), 'https://identifiers.org/wikidata:Q'))
+        bind (replace(str(?iri), 'https://identifiers.org/wikidata:Q', '') as ?match)
+        
+        minus
+        {
+            ?S skos:closeMatch ?iri2 .
+            filter(strstarts(str(?iri2), 'https://www.wikidata.org/wiki/Q'))
+            bind (replace(str(?iri2), 'https://www.wikidata.org/wiki/Q', '') as ?match)
+        }
     }
     union
     {

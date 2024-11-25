@@ -15,18 +15,6 @@ grant select on pubchem.anatomy_matches to sparql;
 
 --------------------------------------------------------------------------------
 
-create index anatomy_chembl_matches__anatomy on pubchem.anatomy_chembl_matches(anatomy);
-create index anatomy_chembl_matches__match on pubchem.anatomy_chembl_matches(match);
-grant select on pubchem.anatomy_chembl_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index anatomy_nextprot_matches__anatomy on pubchem.anatomy_nextprot_matches(anatomy);
-create index anatomy_nextprot_matches__match on pubchem.anatomy_nextprot_matches(match);
-grant select on pubchem.anatomy_nextprot_matches to sparql;
-
---------------------------------------------------------------------------------
-
 create index anatomy_mesh_matches__anatomy on pubchem.anatomy_mesh_matches(anatomy);
 create index anatomy_mesh_matches__match on pubchem.anatomy_mesh_matches(match);
 grant select on pubchem.anatomy_mesh_matches to sparql;

@@ -23,6 +23,12 @@ grant select on pubchem.gene_references to sparql;
 
 --------------------------------------------------------------------------------
 
+create index gene_matches__gene on pubchem.gene_matches(gene);
+create index gene_matches__match on pubchem.gene_matches(match_unit, match_id);
+grant select on pubchem.gene_matches to sparql;
+
+--------------------------------------------------------------------------------
+
 create index gene_ensembl_matches__gene on pubchem.gene_ensembl_matches(gene);
 create index gene_ensembl_matches__match on pubchem.gene_ensembl_matches(match);
 grant select on pubchem.gene_ensembl_matches to sparql;
@@ -32,18 +38,6 @@ grant select on pubchem.gene_ensembl_matches to sparql;
 create index gene_mesh_matches__gene on pubchem.gene_mesh_matches(gene);
 create index gene_mesh_matches__match on pubchem.gene_mesh_matches(match);
 grant select on pubchem.gene_mesh_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index gene_thesaurus_matches__gene on pubchem.gene_thesaurus_matches(gene);
-create index gene_thesaurus_matches__match on pubchem.gene_thesaurus_matches(match);
-grant select on pubchem.gene_thesaurus_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index gene_ctdbase_matches__gene on pubchem.gene_ctdbase_matches(gene);
-create index gene_ctdbase_matches__match on pubchem.gene_ctdbase_matches(match);
-grant select on pubchem.gene_ctdbase_matches to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -59,75 +53,15 @@ grant select on pubchem.gene_medlineplus_matches to sparql;
 
 --------------------------------------------------------------------------------
 
-create index gene_omim_matches__gene on pubchem.gene_omim_matches(gene);
-create index gene_omim_matches__match on pubchem.gene_omim_matches(match);
-grant select on pubchem.gene_omim_matches to sparql;
-
---------------------------------------------------------------------------------
-
 create index gene_alliancegenome_matches__gene on pubchem.gene_alliancegenome_matches(gene);
 create index gene_alliancegenome_matches__match on pubchem.gene_alliancegenome_matches(match);
 grant select on pubchem.gene_alliancegenome_matches to sparql;
 
 --------------------------------------------------------------------------------
 
-create index gene_genenames_matches__gene on pubchem.gene_genenames_matches(gene);
-create index gene_genenames_matches__match on pubchem.gene_genenames_matches(match);
-grant select on pubchem.gene_genenames_matches to sparql;
-
---------------------------------------------------------------------------------
-
 create index gene_kegg_matches__gene on pubchem.gene_kegg_matches(gene);
 create index gene_kegg_matches__match on pubchem.gene_kegg_matches(match);
 grant select on pubchem.gene_kegg_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index gene_flybase_matches__gene on pubchem.gene_flybase_matches(gene);
-create index gene_flybase_matches__match on pubchem.gene_flybase_matches(match);
-grant select on pubchem.gene_flybase_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index gene_informatics_matches__gene on pubchem.gene_informatics_matches(gene);
-create index gene_informatics_matches__match on pubchem.gene_informatics_matches(match);
-grant select on pubchem.gene_informatics_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index gene_wormbase_matches__gene on pubchem.gene_wormbase_matches(gene);
-create index gene_wormbase_matches__match on pubchem.gene_wormbase_matches(match);
-grant select on pubchem.gene_wormbase_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index gene_opentargets_matches__gene on pubchem.gene_opentargets_matches(gene);
-create index gene_opentargets_matches__match on pubchem.gene_opentargets_matches(match);
-grant select on pubchem.gene_opentargets_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index gene_rgdweb_matches__gene on pubchem.gene_rgdweb_matches(gene);
-create index gene_rgdweb_matches__match on pubchem.gene_rgdweb_matches(match);
-grant select on pubchem.gene_rgdweb_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index gene_thegencc_matches__gene on pubchem.gene_thegencc_matches(gene);
-create index gene_thegencc_matches__match on pubchem.gene_thegencc_matches(match);
-grant select on pubchem.gene_thegencc_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index gene_xenbase_matches__gene on pubchem.gene_xenbase_matches(gene);
-create index gene_xenbase_matches__match on pubchem.gene_xenbase_matches(match);
-grant select on pubchem.gene_xenbase_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index gene_yeastgenome_matches__gene on pubchem.gene_yeastgenome_matches(gene);
-create index gene_yeastgenome_matches__match on pubchem.gene_yeastgenome_matches(match);
-grant select on pubchem.gene_yeastgenome_matches to sparql;
 
 --------------------------------------------------------------------------------
 

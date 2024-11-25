@@ -135,11 +135,22 @@ public class Protein
         }
 
         {
+            Table table = new Table(schema, "protein_matches");
+            NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+                    config.createIriMapping("ontology:resource", "match_unit", "match_id"));
+        }
+
+        {
             Table table = new Table(schema, "protein_ncbi_matches");
             NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
                     config.createIriMapping("ncbi:protein", "match"));
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+                    config.createIriMapping("identifiers:refseq", "match"));
         }
 
         {
@@ -148,6 +159,9 @@ public class Protein
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
                     config.createIriMapping("purl:uniprot", "match"));
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+                    config.createIriMapping("identifiers:uniprot", "match"));
         }
 
         {
@@ -156,38 +170,9 @@ public class Protein
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
                     config.createIriMapping("mesh:heading", "match"));
-        }
-
-        {
-            Table table = new Table(schema, "protein_thesaurus_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("ontology:resource", Ontology.unitThesaurus, "match"));
-        }
-
-        {
-            Table table = new Table(schema, "protein_guidetopharmacology_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("guidetopharmacology:target", "match"));
-        }
-
-        {
-            Table table = new Table(schema, "protein_drugbank_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("drugbank:bio_entities", "match"));
-        }
-
-        {
-            Table table = new Table(schema, "protein_chembl_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("chembl:target_report_card", "match"));
+                    config.createIriMapping("identifiers:mesh", "match"));
         }
 
         {
@@ -212,22 +197,6 @@ public class Protein
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
                     config.createIriMapping("alphafold:entry", "match"));
-        }
-
-        {
-            Table table = new Table(schema, "protein_opentargets_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("opentargets:target", "match"));
-        }
-
-        {
-            Table table = new Table(schema, "protein_proteinatlas_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("proteinatlas:entry", "match"));
         }
 
         {
@@ -292,6 +261,9 @@ public class Protein
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
                     config.createIriMapping("nextprot:entry", "match"));
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+                    config.createIriMapping("identifiers:nextprot", "match"));
         }
 
         {
