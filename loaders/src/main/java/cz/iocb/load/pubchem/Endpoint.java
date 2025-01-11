@@ -887,7 +887,7 @@ class Endpoint extends Updater
                 {
                     EndpointID endpoint = parseEndpoint(subject, false);
                     Integer type = getIntID(predicate, "http://semanticscience.org/resource/SIO_");
-                    Float measurement = getFloat(object);
+                    Float measurement = getFloatFromDecimal(object);
                     Pair<Integer, Float> pair = Pair.getPair(type, measurement);
 
                     if(type != 300 && type != 738 && type != 734 && type != 735 && type != 733 && type != 699)

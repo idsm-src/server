@@ -145,10 +145,10 @@ public class Taxonomy extends Updater
         load("select taxonomy,match_unit,match_id from pubchem.taxonomy_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?taxonomy skos:closeMatch ?match. " + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
-                        + "filter(!strstarts(str(?match), 'https://identifiers.org/mesh:'))"
-                        + "filter(!strstarts(str(?match), 'https://www.catalogueoflife.org/data/taxon/'))"
-                        + "filter(!strstarts(str(?match), 'https://identifiers.org/col:'))"))
+                "?taxonomy rdfs:seeAlso ?match. " + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/taxonomy:'))"
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/col:'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -176,7 +176,7 @@ public class Taxonomy extends Updater
         load("select taxonomy,match from pubchem.taxonomy_mesh_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?taxonomy skos:closeMatch ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
+                "?taxonomy rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -203,14 +203,14 @@ public class Taxonomy extends Updater
 
         load("select taxonomy,match from pubchem.taxonomy_catalogueoflife_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?taxonomy skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://www.catalogueoflife.org/data/taxon/'))"))
+        new QueryResultProcessor(patternQuery(
+                "?taxonomy rdfs:seeAlso ?match. " + "filter(strstarts(str(?match), 'http://identifiers.org/col:'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"));
-                String match = getStringID("match", "https://www.catalogueoflife.org/data/taxon/");
+                String match = getStringID("match", "http://identifiers.org/col:");
 
                 Pair<Integer, String> pair = Pair.getPair(taxonomyID, match);
 

@@ -130,6 +130,14 @@ create table pubchem.gene_zfin_matches
 );
 
 
+create table pubchem.gene_enzyme_matches
+(
+    gene     integer not null,
+    match    varchar not null,
+    primary key(gene, match)
+);
+
+
 create table pubchem.gene_processes
 (
     gene            integer not null,

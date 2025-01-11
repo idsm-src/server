@@ -33,25 +33,21 @@ class Pathway extends Updater
     static
     {
         descriptions.add(new Description("PATHBANK", "http://pathbank.org/view/", "SMP[0-9]{5,7}"));
-        descriptions.add(new Description("REACTOME", "https://reactome.org/content/detail/", "R-[A-Z]{3}-[1-9][0-9]*"));
-        descriptions.add(new Description("BIOCYC", "https://biocyc.org/pathway?", "orgid=.*&id=.*"));
-        descriptions.add(new Description("WIKIPATHWAY", "https://www.wikipathways.org/pathways/", "WP[1-9][0-9]*"));
+        descriptions.add(new Description("REACTOME", "http://identifiers.org/reactome:", "R-[A-Z]{3}-[1-9][0-9]*"));
+        descriptions.add(new Description("BIOCYC", "http://identifiers.org/biocyc:", ".*CYC:.*"));
+        descriptions.add(new Description("WIKIPATHWAY", "http://identifiers.org/wikipathways:", "WP[1-9][0-9]*"));
         descriptions.add(
                 new Description("PLANTCYC", "https://pmn.plantcyc.org/pathway?", "orgid=[A-Z0-9_]+&id=[-A-Z0-9]+"));
-        descriptions
-                .add(new Description("PID", "http://pid.nci.nih.gov/search/pathway_landing.shtml?pathway_id=", ".*"));
-        descriptions.add(new Description("INOH", "http://www.inoh.org/inohviewer/inohclient.jnlp?id=", ".*"));
         descriptions.add(new Description("PLANTREACTOME", "https://plantreactome.gramene.org/content/detail/",
                 "R-OSA-[0-9]{7}"));
-        descriptions.add(new Description("PHARMGKB", "https://www.pharmgkb.org/pathway/", "PA[1-9][0-9]*"));
+        descriptions.add(new Description("PHARMGKB", "http://identifiers.org/pharmgkb.pathways:", "PA[1-9][0-9]*"));
         descriptions.add(new Description("FAIRDOMHUB", "https://fairdomhub.org/models/", "[0-9]+"));
         descriptions.add(new Description("LIPIDMAPS",
                 "https://www.lipidmaps.org/data/IntegratedPathwaysData/SetupIntegratedPathways.pl?"
                         + "imgsize=730&Mode=BMDMATPS11&DataType=",
                 ".*"));
-        descriptions.add(new Description("PANTHERDB", "https://www.pantherdb.org/pathway/pathDetail.do?clsAccession=",
-                "P[0-9]{5}"));
-        descriptions.add(new Description("PIDPATHWAY", "https://identifiers.org/pid.pathway:", ".*"));
+        descriptions.add(new Description("PANTHERDB", "http://identifiers.org/panther.pathway:", "P[0-9]{5}"));
+        descriptions.add(new Description("PIDPATHWAY", "http://identifiers.org/pid.pathway:", ".*"));
     }
 
 
@@ -178,13 +174,12 @@ class Pathway extends Updater
         load("select id,reference_type::varchar,reference from pubchem.pathway_bases where reference is not null",
                 oldReferences);
 
-        new QueryResultProcessor(patternQuery("?pathway owl:sameAs ?match "
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/wikipathways:'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/reactome:'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/panther.pathway:'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/pharmgkb.pathways:'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/biocyc:'))"
-                + "filter(!strstarts(str(?match), 'file://'))"))
+        new QueryResultProcessor(patternQuery("?pathway rdfs:seeAlso ?match "
+                + "filter(!strstarts(str(?match), 'http://identifiers.org/wikipathways:'))"
+                + "filter(!strstarts(str(?match), 'http://identifiers.org/reactome:'))"
+                + "filter(!strstarts(str(?match), 'http://identifiers.org/panther.pathway:'))"
+                + "filter(!strstarts(str(?match), 'http://identifiers.org/pharmgkb.pathways:'))"
+                + "filter(!strstarts(str(?match), 'http://identifiers.org/biocyc:'))"))
         {
             @Override
             protected void parse() throws IOException

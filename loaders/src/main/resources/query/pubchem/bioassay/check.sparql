@@ -11,10 +11,23 @@ select distinct ?iri where
         filter(?iri != bao:BAO_0001094)
         filter(?iri != rdf:type)
         filter(?iri != cito:isDiscussedBy)
+        filter(?iri != rdfs:seeAlso)
+        filter(?iri != dcterms:identifier)
     }
     union
     {
         ?S rdf:type ?iri .
         filter(?iri != bao:BAO_0000015)
+    }
+    union
+    {
+        ?iri dcterms:identifier ?O .
+        filter(replace(str(?iri), 'http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID', '') != str(?O))
+    }
+    union
+    {
+        ?S rdfs:seeAlso ?iri .
+        filter(!strstarts(str(?iri), 'http://rdf.ebi.ac.uk/resource/chembl/assay/CHEMBL'))
+        filter(!strstarts(str(?iri), 'http://rdf.ebi.ac.uk/resource/chembl/assay/drug_mech_'))
     }
 }

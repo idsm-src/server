@@ -218,11 +218,12 @@ public class Cell extends Updater
 
         load("select cell,match_unit,match_id from pubchem.cell_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?cell skos:closeMatch ?match. filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
-                        + "filter(!strstarts(str(?match), 'https://identifiers.org/mesh:'))"
-                        + "filter(!strstarts(str(?match), 'https://www.wikidata.org/wiki/Q'))"
-                        + "filter(!strstarts(str(?match), 'https://identifiers.org/wikidata:Q'))"))
+        new QueryResultProcessor(
+                patternQuery("?cell rdfs:seeAlso ?match. filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/wikidata:Q'))"
+                        + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/cell_line/CHEMBL'))"
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/cellosaurus:CVCL_'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -250,7 +251,7 @@ public class Cell extends Updater
         load("select cell,match from pubchem.cell_mesh_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?cell skos:closeMatch ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
+                "?cell rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -278,7 +279,7 @@ public class Cell extends Updater
         load("select cell,match from pubchem.cell_wikidata_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?cell skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.wikidata.org/wiki/Q'))"))
+                "?cell rdfs:seeAlso ?match. filter(strstarts(str(?match), 'https://www.wikidata.org/wiki/Q'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -305,14 +306,14 @@ public class Cell extends Updater
 
         load("select cell,match from pubchem.cell_cellosaurus_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?cell skos:sameAs ?match. "
-                + "filter(strstarts(str(?match), 'https://web.expasy.org/cellosaurus/CVCL_'))"))
+        new QueryResultProcessor(patternQuery("?cell rdfs:seeAlso ?match. "
+                + "filter(strstarts(str(?match), 'http://identifiers.org/cellosaurus:CVCL_'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer cellID = getCellID(getIRI("cell"));
-                String match = getStringID("match", "https://web.expasy.org/cellosaurus/CVCL_");
+                String match = getStringID("match", "http://identifiers.org/cellosaurus:CVCL_");
 
                 Pair<Integer, String> pair = Pair.getPair(cellID, match);
 
@@ -334,13 +335,13 @@ public class Cell extends Updater
         load("select cell,match from pubchem.cell_chembl_card_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?cell skos:sameAs ?match. filter(strstarts(str(?match), 'https://www.ebi.ac.uk/chembl/cell_line_report_card/CHEMBL'))"))
+                "?cell rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/cell_line/CHEMBL'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer cellID = getCellID(getIRI("cell"));
-                Integer match = getIntID("match", "https://www.ebi.ac.uk/chembl/cell_line_report_card/CHEMBL");
+                Integer match = getIntID("match", "http://rdf.ebi.ac.uk/resource/chembl/cell_line/CHEMBL");
 
                 Pair<Integer, Integer> pair = Pair.getPair(cellID, match);
 

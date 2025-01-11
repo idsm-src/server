@@ -48,7 +48,7 @@ public class Anatomy
             Table table = new Table(schema, "anatomy_matches");
             NodeMapping subject = config.createIriMapping("pubchem:anatomy", "anatomy");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("ontology:resource", "match_unit", "match_id"));
         }
 
@@ -56,8 +56,11 @@ public class Anatomy
             Table table = new Table(schema, "anatomy_mesh_matches");
             NodeMapping subject = config.createIriMapping("pubchem:anatomy", "anatomy");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("mesh:heading", "match"));
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("identifiers:mesh", "match"));
         }
     }
 }

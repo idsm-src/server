@@ -2,27 +2,35 @@ select distinct ?iri where
 {
     {
         ?S ?iri ?O .
+        filter(! strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_'))
         filter(?iri != obo:RO_0002180)
         filter(?iri != up:encodedBy)
         filter(?iri != up:organism)
-        filter(?iri != up:enzyme)        
+        filter(?iri != up:enzyme)
         filter(?iri != vocab:hasSimilarProtein)
         filter(?iri != pdbo40:link_to_pdb)
-        filter(?iri != bp:organism)
-        filter(?iri != skos:closeMatch)
+        filter(?iri != rdfs:seeAlso)
         filter(?iri != rdf:type)
-        filter(?iri != owl:sameAs)
         filter(?iri != skos:prefLabel)
         filter(?iri != skos:altLabel)
         filter(?iri != bao:BAO_0002817)
-        filter(?iri != rdfs:subClassOf)
         filter(?iri != cito:isDiscussedBy)
+        filter(?iri != dcterms:identifier)
     }
     union
     {
-        ?S owl:sameAs ?iri .
-        filter(strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC') && replace(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC', '') != replace(str(?iri), 'https://www.ncbi.nlm.nih.gov/protein/', ''))        
-        filter(strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_') && replace(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_', '') != replace(str(?iri), 'http://purl.uniprot.org/enzyme/', ''))        
+        ?S ?iri ?O .
+        filter(strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_'))
+        filter(?iri != rdf:type)
+        filter(?iri != rdfs:seeAlso)
+        filter(?iri != rdfs:subClassOf)
+        filter(?iri != skos:prefLabel)
+        filter(?iri != skos:altLabel)
+    }
+    union
+    {
+        ?iri dcterms:identifier ?O .
+        filter(replace(str(?iri), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC', '') != str(?O))
     }
     union
     {
@@ -34,86 +42,70 @@ select distinct ?iri where
     }
     union
     {
-        ?S skos:closeMatch ?iri .
+        ?S rdfs:seeAlso ?iri .
+        filter(! strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_'))
         filter(! strstarts(str(?iri), 'http://purl.uniprot.org/uniprot/'))
-        filter(! strstarts(str(?iri), 'https://www.ncbi.nlm.nih.gov/protein/'))
         filter(! strstarts(str(?iri), 'http://id.nlm.nih.gov/mesh/'))
         filter(! strstarts(str(?iri), 'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C'))
-        filter(! strstarts(str(?iri), 'https://guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId='))
         filter(! strstarts(str(?iri), 'https://www.drugbank.ca/bio_entities/BE'))
-        filter(! strstarts(str(?iri), 'https://www.ebi.ac.uk/chembl/target_report_card/CHEMBL'))
-        filter(! strstarts(str(?iri), 'http://glygen.org/protein/'))
-        filter(! strstarts(str(?iri), 'https://glycosmos.org/glycoproteins/show/uniprot/'))
         filter(! strstarts(str(?iri), 'https://alphafold.ebi.ac.uk/entry/'))
-        filter(! strstarts(str(?iri), 'http://enzyme.expasy.org/EC/'))
         filter(! strstarts(str(?iri), 'https://pharos.nih.gov/targets/'))
         filter(! strstarts(str(?iri), 'https://platform.opentargets.org/target/ENSG'))
-        filter(! strstarts(str(?iri), 'https://proconsortium.org/app/entry/PR:'))
         filter(! strstarts(str(?iri), 'https://wormbase.org/db/seq/protein?name='))
         filter(! strstarts(str(?iri), 'https://www.brenda-enzymes.org/enzyme.php?ecno='))
-        filter(! strstarts(str(?iri), 'https://www.ebi.ac.uk/intact/search?query=id:'))
+        filter(! strstarts(str(?iri), 'https://www.ebi.ac.uk/intact/search?query='))
         filter(! strstarts(str(?iri), 'https://www.ebi.ac.uk/interpro/protein/reviewed/'))
-        filter(! strstarts(str(?iri), 'https://www.nextprot.org/entry/NX_'))
-        filter(! strstarts(str(?iri), 'https://www.proteinatlas.org/ENSG'))
-        filter(! strstarts(str(?iri), 'https://identifiers.org/mesh:'))
-        filter(! strstarts(str(?iri), 'https://identifiers.org/nextprot:NX_'))
-        filter(! strstarts(str(?iri), 'https://identifiers.org/uniprot:'))
-        filter(! strstarts(str(?iri), 'https://identifiers.org/refseq:'))
-        filter(! strstarts(str(?iri), 'https://identifiers.org/chembl:CHEMBL'))
-        filter(! strstarts(str(?iri), 'https://identifiers.org/iuphar.receptor:'))
-        filter(! strstarts(str(?iri), 'https://identifiers.org/ncit:C'))
-        filter(! strstarts(str(?iri), 'https://identifiers.org/hpa:ENSG'))
+        filter(! strstarts(str(?iri), 'http://identifiers.org/mesh:'))
+        filter(! strstarts(str(?iri), 'http://identifiers.org/nextprot:NX_'))
+        filter(! strstarts(str(?iri), 'http://identifiers.org/uniprot:'))
+        filter(! strstarts(str(?iri), 'http://identifiers.org/refseq:'))
+        filter(! strstarts(str(?iri), 'http://identifiers.org/chembl:CHEMBL'))
+        filter(! strstarts(str(?iri), 'http://identifiers.org/iuphar.receptor:'))
+        filter(! strstarts(str(?iri), 'http://identifiers.org/ncit:C'))
+        filter(! strstarts(str(?iri), 'http://identifiers.org/hpa:ENSG'))
+        filter(! strstarts(str(?iri), 'https://glygen.org/protein/'))
+        filter(! strstarts(str(?iri), 'https://glycosmos.org/glycoproteins/'))
+        filter(! strstarts(str(?iri), 'http://identifiers.org/PR:'))
+        filter(! strstarts(str(?iri), 'http://identifiers.org/ncbiprotein:'))
+        filter(! strstarts(str(?iri), 'http://purl.obolibrary.org/obo/PR_'))
+        filter(! strstarts(str(?iri), 'http://rdf.ebi.ac.uk/resource/chembl/target/CHEMBL'))
     }
     union
     {
-        ?S skos:closeMatch ?iri .
-        filter(strstarts(str(?iri), 'https://identifiers.org/refseq:'))
-        bind (replace(str(?iri), 'https://identifiers.org/refseq:', '') as ?match)
-        
-        minus
-        {
-            ?S skos:closeMatch ?iri2 .
-            filter(strstarts(str(?iri2), 'https://www.ncbi.nlm.nih.gov/protein/'))
-            bind (replace(str(?iri2), 'https://www.ncbi.nlm.nih.gov/protein/', '') as ?match)
-        }
+        ?S rdfs:seeAlso ?iri .
+        filter(strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_'))
+        filter(replace(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_', '') != replace(str(?iri), 'http://purl.uniprot.org/enzyme/', ''))
     }
     union
     {
-        ?S skos:closeMatch ?iri .
-        filter(strstarts(str(?iri), 'https://identifiers.org/uniprot:'))
-        bind (replace(str(?iri), 'https://identifiers.org/uniprot:', '') as ?match)
+        ?S rdfs:seeAlso ?iri .
+        filter(strstarts(str(?iri), 'http://identifiers.org/ncbiprotein:'))
+        filter(replace(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC', '') != replace(str(?iri), 'http://identifiers.org/ncbiprotein:', ''))
+    }
+    union
+    {
+        ?S rdfs:seeAlso ?iri .
+        filter(strstarts(str(?iri), 'http://identifiers.org/uniprot:'))
+        bind (replace(str(?iri), 'http://identifiers.org/uniprot:', '') as ?match)
         
         minus
         {
-            ?S skos:closeMatch ?iri2 .
+            ?S rdfs:seeAlso ?iri2 .
             filter(strstarts(str(?iri2), 'http://purl.uniprot.org/uniprot/'))
             bind (replace(str(?iri2), 'http://purl.uniprot.org/uniprot/', '') as ?match)
         }
     }
     union
     {
-        ?S skos:closeMatch ?iri .
-        filter(strstarts(str(?iri), 'https://identifiers.org/mesh:'))
-        bind (replace(str(?iri), 'https://identifiers.org/mesh:', '') as ?match)
+        ?S rdfs:seeAlso ?iri .
+        filter(strstarts(str(?iri), 'http://identifiers.org/mesh:'))
+        bind (replace(str(?iri), 'http://identifiers.org/mesh:', '') as ?match)
         
         minus
         {
-            ?S skos:closeMatch ?iri2 .
+            ?S rdfs:seeAlso ?iri2 .
             filter(strstarts(str(?iri2), 'http://id.nlm.nih.gov/mesh/'))
             bind (replace(str(?iri2), 'http://id.nlm.nih.gov/mesh/', '') as ?match)
-        }
-    }
-    union
-    {
-        ?S skos:closeMatch ?iri .
-        filter(strstarts(str(?iri), 'https://identifiers.org/nextprot:NX_'))
-        bind (replace(str(?iri), 'https://identifiers.org/nextprot:NX_', '') as ?match)
-        
-        minus
-        {
-            ?S skos:closeMatch ?iri2 .
-            filter(strstarts(str(?iri2), 'https://www.nextprot.org/entry/NX_'))
-            bind (replace(str(?iri2), 'https://www.nextprot.org/entry/NX_', '') as ?match)
         }
     }
 }

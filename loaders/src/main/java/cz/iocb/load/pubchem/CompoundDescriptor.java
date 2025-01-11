@@ -102,7 +102,7 @@ class CompoundDescriptor extends Updater
                             throw new IOException();
 
                         Integer id = getDescriptorID(subject.getURI(), suffix);
-                        Float value = getFloat(object);
+                        Float value = getFloatFromDecimal(object);
 
                         synchronized(newValues)
                         {
@@ -164,7 +164,7 @@ class CompoundDescriptor extends Updater
                         if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
                             throw new IOException();
 
-                        Float value = getFloat(object);
+                        Float value = getFloatFromDecimal(object);
 
                         if(subject.getURI().endsWith("-AA"))
                         {

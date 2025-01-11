@@ -311,7 +311,7 @@ class Patent extends Updater
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
                         // workaround
-                        if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/filingDate"))
+                        if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/grantDate"))
                             throw new IOException();
 
                         Integer patentID = getPatentID(subject.getURI(), true);

@@ -44,10 +44,8 @@ public class Gene
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_010035"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:sameAs"),
-                    config.createIriMapping("ncbi:gene", "id"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:sameAs"),
-                    config.createIriMapping("identifiers:ncbigene", "id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),
+                    config.createLiteralMapping(xsdString, "(id::varchar)"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0002870"),
@@ -98,7 +96,7 @@ public class Gene
             Table table = new Table(schema, "gene_matches");
             NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("ontology:resource", "match_unit", "match_id"));
         }
 
@@ -106,10 +104,10 @@ public class Gene
             Table table = new Table(schema, "gene_ensembl_matches");
             NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("rdf:ensembl", "match"));
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:ensembl", "match"));
         }
 
@@ -117,10 +115,10 @@ public class Gene
             Table table = new Table(schema, "gene_mesh_matches");
             NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("mesh:heading", "match"));
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:mesh", "match"));
         }
 
@@ -128,7 +126,7 @@ public class Gene
             Table table = new Table(schema, "gene_expasy_matches");
             NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("expasy:enzyme", "match"));
         }
 
@@ -136,7 +134,7 @@ public class Gene
             Table table = new Table(schema, "gene_medlineplus_matches");
             NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("medlineplus:gene", "match"));
         }
 
@@ -144,7 +142,7 @@ public class Gene
             Table table = new Table(schema, "gene_alliancegenome_matches");
             NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("alliancegenome:gene", "match"));
         }
 
@@ -152,10 +150,7 @@ public class Gene
             Table table = new Table(schema, "gene_kegg_matches");
             NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("kegg:entry", "match"));
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:kegg", "match"));
         }
 
@@ -163,7 +158,7 @@ public class Gene
             Table table = new Table(schema, "gene_pharos_matches");
             NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("pharos:target", "match"));
         }
 
@@ -171,10 +166,7 @@ public class Gene
             Table table = new Table(schema, "gene_bgee_matches");
             NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("bgee:gene", "match"));
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:bgee", "match"));
         }
 
@@ -182,10 +174,7 @@ public class Gene
             Table table = new Table(schema, "gene_pombase_matches");
             NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("pombase:gene", "match"));
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:pombase", "match"));
         }
 
@@ -193,7 +182,7 @@ public class Gene
             Table table = new Table(schema, "gene_veupathdb_matches");
             NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("veupathdb:gene", "match"));
         }
 
@@ -201,11 +190,16 @@ public class Gene
             Table table = new Table(schema, "gene_zfin_matches");
             NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("zfin:entry", "match"));
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:zfin", "match"));
+        }
+
+        {
+            Table table = new Table(schema, "gene_enzyme_matches");
+            NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("purl:enzyme", "match"));
         }
 
         {

@@ -182,7 +182,7 @@ class Measuregroup extends Updater
         load("select bioassay,measuregroup,cell from pubchem.measuregroup_cells", oldCells);
         load("select bioassay,measuregroup,anatomy from pubchem.measuregroup_anatomies", oldAnatomies);
 
-        try(InputStream stream = getTtlStream("pubchem/RDF/measuregroup/pc_measuregroup2protein.ttl.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/measuregroup/pc_measuregroup2participant.ttl.gz"))
         {
             new TripleStreamProcessor()
             {

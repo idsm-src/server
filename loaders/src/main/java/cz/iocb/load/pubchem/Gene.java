@@ -307,24 +307,21 @@ class Gene extends Updater
 
         load("select gene,match_unit,match_id from pubchem.gene_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+        new QueryResultProcessor(patternQuery("?gene rdfs:seeAlso ?match. "
                 + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/ensembl/'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/ensembl:'))"
+                + "filter(!strstarts(str(?match), 'http://identifiers.org/ensembl:'))"
                 + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/mesh:'))"
-                + "filter(!strstarts(str(?match), 'https://www.kegg.jp/entry/'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/kegg.genes:'))"
-                + "filter(!strstarts(str(?match), 'https://www.bgee.org/gene/'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/bgee.gene:'))"
-                + "filter(!strstarts(str(?match), 'https://www.pombase.org/gene/'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/pombase:'))"
-                + "filter(!strstarts(str(?match), 'https://zfin.org/ZDB-'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/zfin:ZDB-'))"
+                + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"
+                + "filter(!strstarts(str(?match), 'http://identifiers.org/kegg.genes:'))"
+                + "filter(!strstarts(str(?match), 'http://identifiers.org/bgee.gene:'))"
+                + "filter(!strstarts(str(?match), 'http://identifiers.org/pombase:'))"
+                + "filter(!strstarts(str(?match), 'http://identifiers.org/zfin:ZDB-'))"
                 + "filter(!strstarts(str(?match), 'https://enzyme.expasy.org/EC/'))"
                 + "filter(!strstarts(str(?match), 'https://medlineplus.gov/genetics/gene/'))"
                 + "filter(!strstarts(str(?match), 'https://www.alliancegenome.org/gene/'))"
                 + "filter(!strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"
-                + "filter(!strstarts(str(?match), 'https://www.veupathdb.org/gene/'))"))
+                + "filter(!strstarts(str(?match), 'https://www.veupathdb.org/gene/'))"
+                + "filter(!strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -351,7 +348,7 @@ class Gene extends Updater
 
         load("select gene,match from pubchem.gene_ensembl_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+        new QueryResultProcessor(patternQuery("?gene rdfs:seeAlso ?match. "
                 + "filter(strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/ensembl/'))"))
         {
             @Override
@@ -380,7 +377,7 @@ class Gene extends Updater
         load("select gene,match from pubchem.gene_mesh_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?gene skos:closeMatch ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
+                "?gene rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -408,7 +405,7 @@ class Gene extends Updater
         load("select gene,match from pubchem.gene_expasy_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?gene skos:closeMatch ?match. filter(strstarts(str(?match), 'https://enzyme.expasy.org/EC/'))"))
+                "?gene rdfs:seeAlso ?match. filter(strstarts(str(?match), 'https://enzyme.expasy.org/EC/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -435,7 +432,7 @@ class Gene extends Updater
 
         load("select gene,match from pubchem.gene_medlineplus_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+        new QueryResultProcessor(patternQuery("?gene rdfs:seeAlso ?match. "
                 + "filter(strstarts(str(?match), 'https://medlineplus.gov/genetics/gene/'))"))
         {
             @Override
@@ -463,7 +460,7 @@ class Gene extends Updater
 
         load("select gene,match from pubchem.gene_alliancegenome_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?gene skos:closeMatch ?match. "
+        new QueryResultProcessor(patternQuery("?gene rdfs:seeAlso ?match. "
                 + "filter(strstarts(str(?match), 'https://www.alliancegenome.org/gene/'))"))
         {
             @Override
@@ -492,13 +489,13 @@ class Gene extends Updater
         load("select gene,match from pubchem.gene_kegg_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?gene skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.kegg.jp/entry/'))"))
+                "?gene rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://identifiers.org/kegg.genes:'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "https://www.kegg.jp/entry/");
+                String match = getStringID("match", "http://identifiers.org/kegg.genes:");
 
                 Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
@@ -520,7 +517,7 @@ class Gene extends Updater
         load("select gene,match from pubchem.gene_pharos_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"))
+                "?gene rdfs:seeAlso ?match. " + "filter(strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -548,13 +545,13 @@ class Gene extends Updater
         load("select gene,match from pubchem.gene_bgee_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://www.bgee.org/gene/'))"))
+                "?gene rdfs:seeAlso ?match. " + "filter(strstarts(str(?match), 'http://identifiers.org/bgee.gene:'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "https://www.bgee.org/gene/");
+                String match = getStringID("match", "http://identifiers.org/bgee.gene:");
 
                 Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
@@ -576,13 +573,13 @@ class Gene extends Updater
         load("select gene,match from pubchem.gene_pombase_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://www.pombase.org/gene/'))"))
+                "?gene rdfs:seeAlso ?match. " + "filter(strstarts(str(?match), 'http://identifiers.org/pombase:'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "https://www.pombase.org/gene/");
+                String match = getStringID("match", "http://identifiers.org/pombase:");
 
                 Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
@@ -604,7 +601,7 @@ class Gene extends Updater
         load("select gene,match from pubchem.gene_veupathdb_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://www.veupathdb.org/gene/'))"))
+                "?gene rdfs:seeAlso ?match. " + "filter(strstarts(str(?match), 'https://www.veupathdb.org/gene/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -632,13 +629,13 @@ class Gene extends Updater
         load("select gene,match from pubchem.gene_zfin_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?gene skos:closeMatch ?match. " + "filter(strstarts(str(?match), 'https://zfin.org/ZDB-'))"))
+                "?gene rdfs:seeAlso ?match. " + "filter(strstarts(str(?match), 'http://identifiers.org/zfin:ZDB-'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "https://zfin.org/ZDB-");
+                String match = getStringID("match", "http://identifiers.org/zfin:ZDB-");
 
                 Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
@@ -649,6 +646,34 @@ class Gene extends Updater
 
         store("delete from pubchem.gene_zfin_matches where gene=? and match=?", oldMatches);
         store("insert into pubchem.gene_zfin_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadEnzymeCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select gene,match from pubchem.gene_enzyme_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?gene rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                String match = getStringID("match", "http://purl.uniprot.org/enzyme/");
+
+                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_enzyme_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_enzyme_matches(gene,match) values(?,?)", newMatches);
     }
 
 
@@ -801,6 +826,7 @@ class Gene extends Updater
         loadPombaseCloseMatches(model);
         loadVeupathdbCloseMatches(model);
         loadZfinCloseMatches(model);
+        loadEnzymeCloseMatches(model);
         loadOrthologs(model);
 
         model.close();

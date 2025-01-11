@@ -117,4 +117,16 @@ public abstract class TripleStreamProcessor
 
         return Float.parseFloat(literal.getLiteralLexicalForm());
     }
+
+
+    public static float getFloatFromDecimal(Node node) throws IOException
+    {
+        Node_Literal literal = (Node_Literal) node;
+
+        if(!literal.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#integer")
+                && !literal.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#decimal"))
+            throw new IOException("unexpected literal datatype");
+
+        return Float.parseFloat(literal.getLiteralLexicalForm());
+    }
 }

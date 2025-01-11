@@ -30,15 +30,17 @@ public class Taxonomy
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_010000"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:sameAs"),
-                    config.createIriMapping("ncbi:taxonomy", "id"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:sameAs"),
-                    config.createIriMapping("identifiers:taxonomy", "id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
                     config.createLiteralMapping(xsdString, "label"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),
+                    config.createLiteralMapping(xsdString, "(id::varchar)"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("identifiers:taxonomy", "id"));
 
             // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:sameAs"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("ncbi:taxonomy", "id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("ontology:resource", Ontology.unitNCBITaxon, "id"));
         }
 
@@ -59,21 +61,21 @@ public class Taxonomy
         }
 
         {
-            Table table = new Table(schema, "taxonomy_uniprot_matches");
+            Table table = new Table(schema, "taxonomy_matches");
             NodeMapping subject = config.createIriMapping("pubchem:taxonomy", "taxonomy");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("purl:taxonomy", "taxonomy"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("ontology:resource", "match_unit", "match_id"));
         }
 
         {
             Table table = new Table(schema, "taxonomy_mesh_matches");
             NodeMapping subject = config.createIriMapping("pubchem:taxonomy", "taxonomy");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("mesh:heading", "match"));
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:mesh", "match"));
         }
 
@@ -81,27 +83,8 @@ public class Taxonomy
             Table table = new Table(schema, "taxonomy_catalogueoflife_matches");
             NodeMapping subject = config.createIriMapping("pubchem:taxonomy", "taxonomy");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("catalogueoflife:taxon", "match"));
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:col", "match"));
-        }
-
-        {
-            Table table = new Table(schema, "taxonomy_thesaurus_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:taxonomy", "taxonomy");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("ontology:resource", Ontology.unitThesaurus, "match"));
-        }
-
-        {
-            Table table = new Table(schema, "taxonomy_itis_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:taxonomy", "taxonomy");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("itis:taxonomy", "match"));
         }
     }
 }

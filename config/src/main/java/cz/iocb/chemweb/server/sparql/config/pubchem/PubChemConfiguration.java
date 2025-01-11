@@ -6,8 +6,10 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.chebi.Chebi;
 import cz.iocb.chemweb.server.sparql.config.chembl.Assay;
+import cz.iocb.chemweb.server.sparql.config.chembl.CellLine;
 import cz.iocb.chemweb.server.sparql.config.chembl.Mechanism;
 import cz.iocb.chemweb.server.sparql.config.chembl.Molecule;
+import cz.iocb.chemweb.server.sparql.config.chembl.Target;
 import cz.iocb.chemweb.server.sparql.config.common.Common;
 import cz.iocb.chemweb.server.sparql.config.mesh.Mesh;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
@@ -133,11 +135,14 @@ public class PubChemConfiguration extends SparqlDatabaseConfiguration
     {
         Common.addResourceClasses(this);
         Chebi.addResourceClasses(this);
-        Molecule.addResourceClasses(this);
         Mesh.addResourceClasses(this);
         Ontology.addResourceClasses(this);
+
         Assay.addResourceClasses(this);
+        CellLine.addResourceClasses(this);
         Mechanism.addResourceClasses(this);
+        Molecule.addResourceClasses(this);
+        Target.addResourceClasses(this);
 
         Anatomy.addResourceClasses(this);
         Author.addResourceClasses(this);

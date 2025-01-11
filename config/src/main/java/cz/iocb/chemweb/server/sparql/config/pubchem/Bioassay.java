@@ -37,6 +37,8 @@ public class Bioassay
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0000015"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),
+                    config.createLiteralMapping(xsdString, "(id::varchar)"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:title"),
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:source"),
@@ -80,7 +82,7 @@ public class Bioassay
             Table table = new Table(schema, "bioassay_chembl_assays");
             NodeMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("chembl:assay", "chembl_assay"));
         }
 
@@ -88,7 +90,7 @@ public class Bioassay
             Table table = new Table(schema, "bioassay_chembl_mechanisms");
             NodeMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("chembl:mechanism", "chembl_mechanism"));
         }
 

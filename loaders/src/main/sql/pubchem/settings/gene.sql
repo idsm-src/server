@@ -95,6 +95,12 @@ grant select on pubchem.gene_zfin_matches to sparql;
 
 --------------------------------------------------------------------------------
 
+create index gene_enzyme_matches__gene on pubchem.gene_enzyme_matches(gene);
+create index gene_enzyme_matches__match on pubchem.gene_enzyme_matches(match);
+grant select on pubchem.gene_enzyme_matches to sparql;
+
+--------------------------------------------------------------------------------
+
 create index gene_processes__gene on pubchem.gene_processes(gene);
 create index gene_processes__process on pubchem.gene_processes(process_id);
 grant select on pubchem.gene_processes to sparql;
