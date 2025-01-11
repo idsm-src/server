@@ -254,4 +254,35 @@ public class IdsmConfiguration extends SparqlDatabaseConfiguration
         addService(new PubChemSachemConfiguration("https://idsm.elixir-czech.cz/sachem/endpoint/pubchem",
                 connectionPool, getDatabaseSchema()), false);
     }
+
+
+    @Override
+    public String getServiceDescriptionQuery()
+    {
+        return """
+                prefix sd: <http://www.w3.org/ns/sparql-service-description#>
+                prefix void: <http://rdfs.org/ns/void#>
+
+                construct {?s ?p ?o} from <FROM> where
+                {
+                  ?s ?p ?o
+
+                  filter not exists
+                  {
+                    ?s a  void:Dataset
+                    filter not exists {
+                      ?s a sd:Graph
+                    }
+                  }
+
+                  filter not exists
+                  {
+                    ?o a  void:Dataset
+                    filter not exists {
+                      ?o a sd:Graph
+                    }
+                  }
+                }
+                """.replace("<FROM>", descriptionGraphIri.toString());
+    }
 }
