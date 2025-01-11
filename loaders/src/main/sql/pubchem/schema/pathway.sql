@@ -5,8 +5,6 @@ create type pubchem.pathway_reference_type as enum
     'WIKIPATHWAY',
     'BIOCYC',
     'PLANTCYC',
-    'PID',
-    'INOH',
     'PLANTREACTOME',
     'PHARMGKB',
     'FAIRDOMHUB',

@@ -501,31 +501,35 @@ class Protein extends Updater
 
         load("select protein,match_unit,match_id from pubchem.protein_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?protein skos:closeMatch ?match. "
-                + "filter(!strstarts(str(?match), 'https://www.ncbi.nlm.nih.gov/protein/'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/refseq:'))"
-                + "filter(!strstarts(str(?match), 'http://purl.uniprot.org/uniprot/'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/uniprot:'))"
-                + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/mesh:'))"
-                + "filter(!strstarts(str(?match), 'https://www.nextprot.org/entry/NX_'))"
-                + "filter(!strstarts(str(?match), 'https://identifiers.org/nextprot:NX_'))"
-                + "filter(!strstarts(str(?match), 'http://glygen.org/protein/'))"
-                + "filter(!strstarts(str(?match), 'https://glycosmos.org/glycoproteins/show/uniprot/'))"
-                + "filter(!strstarts(str(?match), 'https://alphafold.ebi.ac.uk/entry/'))"
-                + "filter(!strstarts(str(?match), 'http://enzyme.expasy.org/EC/'))"
-                + "filter(!strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"
-                + "filter(!strstarts(str(?match), 'https://proconsortium.org/app/entry/PR:'))"
-                + "filter(!strstarts(str(?match), 'https://wormbase.org/db/seq/protein?name='))"
-                + "filter(!strstarts(str(?match), 'https://www.brenda-enzymes.org/enzyme.php?ecno='))"
-                + "filter(!strstarts(str(?match), 'https://www.ebi.ac.uk/intact/search?query=id:'))"
-                + "filter(!strstarts(str(?match), 'https://www.ebi.ac.uk/interpro/protein/reviewed/'))"))
+        new QueryResultProcessor(patternQuery(
+                "?protein rdfs:seeAlso ?match. " + "filter(!strstarts(str(?match), 'http://identifiers.org/refseq:'))"
+                        + "filter(!strstarts(str(?match), 'http://purl.uniprot.org/uniprot/'))"
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/uniprot:'))"
+                        + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/nextprot:NX_'))"
+                        + "filter(!strstarts(str(?match), 'https://glygen.org/protein/'))"
+                        + "filter(!strstarts(str(?match), 'https://glycosmos.org/glycoproteins/'))"
+                        + "filter(!strstarts(str(?match), 'https://alphafold.ebi.ac.uk/entry/'))"
+                        + "filter(!strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/PR:'))"
+                        + "filter(!strstarts(str(?match), 'https://wormbase.org/db/seq/protein?name='))"
+                        + "filter(!strstarts(str(?match), 'https://www.brenda-enzymes.org/enzyme.php?ecno='))"
+                        + "filter(!strstarts(str(?match), 'https://www.ebi.ac.uk/intact/search?query='))"
+                        + "filter(!strstarts(str(?match), 'https://www.ebi.ac.uk/interpro/protein/reviewed/'))"
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/ncbiprotein:'))"
+                        + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/target/'))"
+                        + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/target/CHEMBL'))"
+                        + "filter(!strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer proteinID = getProteinID(getIRI("protein"));
                 Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
+
+                if(match == null)
+                    System.err.println("xxx " + getIRI("match"));
 
                 Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(proteinID, match);
 
@@ -546,14 +550,14 @@ class Protein extends Updater
 
         load("select protein,match from pubchem.protein_ncbi_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?protein skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://www.ncbi.nlm.nih.gov/protein/'))"))
+        new QueryResultProcessor(patternQuery(
+                "?protein rdfs:seeAlso ?match. " + "filter(strstarts(str(?match), 'http://identifiers.org/refseq:'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer proteinID = getProteinID(getIRI("protein"));
-                String match = getStringID("match", "https://www.ncbi.nlm.nih.gov/protein/");
+                String match = getStringID("match", "http://identifiers.org/refseq:");
 
                 Pair<Integer, String> pair = Pair.getPair(proteinID, match);
 
@@ -574,7 +578,7 @@ class Protein extends Updater
 
         load("select protein,match from pubchem.protein_uniprot_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?protein skos:closeMatch ?match. "
+        new QueryResultProcessor(patternQuery("?protein rdfs:seeAlso ?match. "
                 + "filter(strstarts(str(?match), 'http://purl.uniprot.org/uniprot/'))"))
         {
             @Override
@@ -603,7 +607,7 @@ class Protein extends Updater
         load("select protein,match from pubchem.protein_mesh_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
+                "?protein rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -631,13 +635,13 @@ class Protein extends Updater
         load("select protein,match from pubchem.protein_glygen_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'http://glygen.org/protein/'))"))
+                "?protein rdfs:seeAlso ?match. filter(strstarts(str(?match), 'https://glygen.org/protein/'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer proteinID = getProteinID(getIRI("protein"));
-                String match = getStringID("match", "http://glygen.org/protein/");
+                String match = getStringID("match", "https://glygen.org/protein/");
 
                 Pair<Integer, String> pair = Pair.getPair(proteinID, match);
 
@@ -658,14 +662,14 @@ class Protein extends Updater
 
         load("select protein,match from pubchem.protein_glycosmos_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?protein skos:closeMatch ?match. "
-                + "filter(strstarts(str(?match), 'https://glycosmos.org/glycoproteins/show/uniprot/'))"))
+        new QueryResultProcessor(patternQuery("?protein rdfs:seeAlso ?match. "
+                + "filter(strstarts(str(?match), 'https://glycosmos.org/glycoproteins/'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer proteinID = getProteinID(getIRI("protein"));
-                String match = getStringID("match", "https://glycosmos.org/glycoproteins/show/uniprot/");
+                String match = getStringID("match", "https://glycosmos.org/glycoproteins/");
 
                 Pair<Integer, String> pair = Pair.getPair(proteinID, match);
 
@@ -686,7 +690,7 @@ class Protein extends Updater
 
         load("select protein,match from pubchem.protein_alphafold_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?protein skos:closeMatch ?match. "
+        new QueryResultProcessor(patternQuery("?protein rdfs:seeAlso ?match. "
                 + "filter(strstarts(str(?match), 'https://alphafold.ebi.ac.uk/entry/'))"))
         {
             @Override
@@ -707,34 +711,6 @@ class Protein extends Updater
     }
 
 
-    private static void loadExpasyCloseMatches(Model model) throws IOException, SQLException
-    {
-        IntStringSet newMatches = new IntStringSet();
-        IntStringSet oldMatches = new IntStringSet();
-
-        load("select protein,match from pubchem.protein_expasy_matches", oldMatches);
-
-        new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'http://enzyme.expasy.org/EC/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer proteinID = getProteinID(getIRI("protein"));
-                String match = getStringID("match", "http://enzyme.expasy.org/EC/");
-
-                Pair<Integer, String> pair = Pair.getPair(proteinID, match);
-
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.protein_expasy_matches where protein=? and match=?", oldMatches);
-        store("insert into pubchem.protein_expasy_matches(protein,match) values(?,?)", newMatches);
-    }
-
-
     private static void loadPharosCloseMatches(Model model) throws IOException, SQLException
     {
         IntStringSet newMatches = new IntStringSet();
@@ -743,7 +719,7 @@ class Protein extends Updater
         load("select protein,match from pubchem.protein_pharos_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"))
+                "?protein rdfs:seeAlso ?match. filter(strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -771,13 +747,13 @@ class Protein extends Updater
         load("select protein,match from pubchem.protein_proconsortium_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://proconsortium.org/app/entry/PR:'))"))
+                "?protein rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://identifiers.org/PR:'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer proteinID = getProteinID(getIRI("protein"));
-                String match = getStringID("match", "https://proconsortium.org/app/entry/PR:");
+                String match = getStringID("match", "http://identifiers.org/PR:");
 
                 Pair<Integer, String> pair = Pair.getPair(proteinID, match);
 
@@ -799,7 +775,7 @@ class Protein extends Updater
         load("select protein,match from pubchem.protein_wormbase_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://wormbase.org/db/seq/protein?name='))"))
+                "?protein rdfs:seeAlso ?match. filter(strstarts(str(?match), 'https://wormbase.org/db/seq/protein?name='))"))
         {
             @Override
             protected void parse() throws IOException
@@ -827,7 +803,7 @@ class Protein extends Updater
         load("select protein,match from pubchem.protein_brenda_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.brenda-enzymes.org/enzyme.php?ecno='))"))
+                "?protein rdfs:seeAlso ?match. filter(strstarts(str(?match), 'https://www.brenda-enzymes.org/enzyme.php?ecno='))"))
         {
             @Override
             protected void parse() throws IOException
@@ -855,13 +831,13 @@ class Protein extends Updater
         load("select protein,match from pubchem.protein_intact_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.ebi.ac.uk/intact/search?query=id:'))"))
+                "?protein rdfs:seeAlso ?match. filter(strstarts(str(?match), 'https://www.ebi.ac.uk/intact/search?query='))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer proteinID = getProteinID(getIRI("protein"));
-                String match = getStringID("match", "https://www.ebi.ac.uk/intact/search?query=id:", "#interactors");
+                String match = getStringID("match", "https://www.ebi.ac.uk/intact/search?query=");
 
                 Pair<Integer, String> pair = Pair.getPair(proteinID, match);
 
@@ -883,7 +859,7 @@ class Protein extends Updater
         load("select protein,match from pubchem.protein_interpro_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.ebi.ac.uk/interpro/protein/reviewed/'))"))
+                "?protein rdfs:seeAlso ?match. filter(strstarts(str(?match), 'https://www.ebi.ac.uk/interpro/protein/reviewed/'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -911,13 +887,13 @@ class Protein extends Updater
         load("select protein,match from pubchem.protein_nextprot_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?protein skos:closeMatch ?match. filter(strstarts(str(?match), 'https://www.nextprot.org/entry/NX_'))"))
+                "?protein rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://identifiers.org/nextprot:NX_'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer proteinID = getProteinID(getIRI("protein"));
-                String match = getStringID("match", "https://www.nextprot.org/entry/NX_");
+                String match = getStringID("match", "http://identifiers.org/nextprot:NX_");
 
                 Pair<Integer, String> pair = Pair.getPair(proteinID, match);
 
@@ -928,6 +904,34 @@ class Protein extends Updater
 
         store("delete from pubchem.protein_nextprot_matches where protein=? and match=?", oldMatches);
         store("insert into pubchem.protein_nextprot_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadChemblCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select protein,match from pubchem.protein_chembl_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/target/CHEMBL'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                Integer match = getIntID("match", "http://rdf.ebi.ac.uk/resource/chembl/target/CHEMBL");
+
+                Pair<Integer, Integer> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_chembl_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_chembl_matches(protein,match) values(?,?)", newMatches);
     }
 
 
@@ -1127,7 +1131,6 @@ class Protein extends Updater
         loadGlygenCloseMatches(model);
         loadGlycosmosCloseMatches(model);
         loadAlphafoldCloseMatches(model);
-        loadExpasyCloseMatches(model);
         loadPharosCloseMatches(model);
         loadProconsortiumCloseMatches(model);
         loadWormbaseCloseMatches(model);
@@ -1135,6 +1138,7 @@ class Protein extends Updater
         loadIntactCloseMatches(model);
         loadInterproProteinCloseMatches(model);
         loadNextprotCloseMatches(model);
+        loadChemblCloseMatches(model);
         loadConservedDomains(model);
         loadContinuantParts(model);
         loadFamilies(model);

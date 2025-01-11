@@ -96,12 +96,6 @@ grant select on pubchem.protein_alphafold_matches to sparql;
 
 --------------------------------------------------------------------------------
 
-create index protein_expasy_matches__protein on pubchem.protein_expasy_matches(protein);
-create index protein_expasy_matches__match on pubchem.protein_expasy_matches(match);
-grant select on pubchem.protein_expasy_matches to sparql;
-
---------------------------------------------------------------------------------
-
 create index protein_pharos_matches__protein on pubchem.protein_pharos_matches(protein);
 create index protein_pharos_matches__match on pubchem.protein_pharos_matches(match);
 grant select on pubchem.protein_pharos_matches to sparql;
@@ -141,6 +135,12 @@ grant select on pubchem.protein_interpro_matches to sparql;
 create index protein_nextprot_matches__protein on pubchem.protein_nextprot_matches(protein);
 create index protein_nextprot_matches__match on pubchem.protein_nextprot_matches(match);
 grant select on pubchem.protein_nextprot_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index protein_chembl_matches__protein on pubchem.protein_chembl_matches(protein);
+create index protein_chembl_matches__match on pubchem.protein_chembl_matches(match);
+grant select on pubchem.protein_chembl_matches to sparql;
 
 --------------------------------------------------------------------------------
 

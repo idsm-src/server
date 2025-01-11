@@ -119,7 +119,7 @@ public class Disease extends Updater
 
         new QueryResultProcessor(patternQuery(
                 "?disease skos:closeMatch ?match. filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/')) "
-                        + "filter(!strstarts(str(?match), 'https://identifiers.org/mesh:'))"))
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"))
         {
             @Override
             protected void parse() throws IOException

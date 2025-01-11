@@ -5,9 +5,10 @@ import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.TableColumn;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.NodeMapping;
-import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
+import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
 
 
@@ -16,8 +17,8 @@ public class Patent
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(
-                new IntegerUserIriClass("pubchem:patent", "integer", "http://rdf.ncbi.nlm.nih.gov/pubchem/patent/"));
+        config.addIriClass(new MapUserIriClass("pubchem:patent", "integer", new Table(schema, "patent_bases"),
+                new TableColumn("id"), new TableColumn("iri"), "http://rdf.ncbi.nlm.nih.gov/pubchem/patent/"));
         config.addIriClass(
                 new StringUserIriClass("pubchem:inventor", "http://rdf.ncbi.nlm.nih.gov/pubchem/patentinventor/MD5_"));
         config.addIriClass(

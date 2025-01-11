@@ -90,6 +90,8 @@ $$
       return rec.prefix || id || '_STAR';
     elsif unit = 180 then
       return rec.prefix || id || '/index';
+    elsif unit = 244 then
+      return rec.prefix || lpad(id::varchar, rec.value_length, '0') || ';class=Gene';
     elsif rec.value_length = 0 then
       return rec.prefix || id;
     else

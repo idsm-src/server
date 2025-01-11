@@ -118,7 +118,8 @@ public class Anatomy extends Updater
         load("select anatomy,match_unit,match_id from pubchem.anatomy_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?anatomy skos:closeMatch ?match. filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
+                "?anatomy rdfs:seeAlso ?match. " + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -147,7 +148,7 @@ public class Anatomy extends Updater
         load("select anatomy,match from pubchem.anatomy_mesh_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?anatomy skos:closeMatch ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
+                "?anatomy rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
         {
             @Override
             protected void parse() throws IOException

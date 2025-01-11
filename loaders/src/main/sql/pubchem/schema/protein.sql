@@ -132,14 +132,6 @@ create table pubchem.protein_alphafold_matches
 );
 
 
-create table pubchem.protein_expasy_matches
-(
-    protein  integer not null,
-    match    varchar not null,
-    primary key(protein, match)
-);
-
-
 create table pubchem.protein_pharos_matches
 (
     protein  integer not null,
@@ -192,6 +184,14 @@ create table pubchem.protein_nextprot_matches
 (
     protein  integer not null,
     match    varchar not null,
+    primary key(protein, match)
+);
+
+
+create table pubchem.protein_chembl_matches
+(
+    protein  integer not null,
+    match    integer not null,
     primary key(protein, match)
 );
 

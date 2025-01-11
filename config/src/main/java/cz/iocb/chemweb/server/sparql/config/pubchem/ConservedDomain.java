@@ -33,6 +33,8 @@ public class ConservedDomain
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:abstract"),
                     config.createLiteralMapping(xsdString, "abstract"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("ncbi:conserveddomain", "id"));
         }
 
         {

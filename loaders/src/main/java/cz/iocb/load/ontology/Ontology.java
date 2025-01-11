@@ -774,6 +774,7 @@ public class Ontology extends Updater
         builtinResources.put("http://rdfs.org/ns/void#target", 422);
         builtinResources.put("http://rdfs.org/ns/void#subjectsTarget", 423);
         builtinResources.put("http://rdfs.org/ns/void#objectsTarget", 424);
+        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#seeAlso", 425);
 
         // classes
         builtinResources.put("http://data.epo.org/linked-data/def/patent/Publication", 512);

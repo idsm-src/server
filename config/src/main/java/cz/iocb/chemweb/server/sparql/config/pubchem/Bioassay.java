@@ -24,6 +24,8 @@ public class Bioassay
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID", "_Protocol"));
         config.addIriClass(new IntegerUserIriClass("pubchem:bioassay_comment", "integer",
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID", "_Comment"));
+        config.addIriClass(new IntegerUserIriClass("pubchem:chembl_mechanism", "integer",
+                "http://rdf.ebi.ac.uk/resource/chembl/assay/drug_mech_"));
     }
 
 
@@ -37,6 +39,8 @@ public class Bioassay
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0000015"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),
+                    config.createLiteralMapping(xsdString, "(id::varchar)"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:title"),
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:source"),
@@ -53,26 +57,26 @@ public class Bioassay
 
         {
             Table table = new Table(schema, "bioassay_confirmatory_assays");
-            NodeMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");
+            NodeMapping subject = config.createIriMapping("pubchem:bioassay", "confirmatory_assay");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000540"),
-                    config.createIriMapping("pubchem:bioassay", "confirmatory_assay"));
+                    config.createIriMapping("pubchem:bioassay", "bioassay"));
         }
 
         {
             Table table = new Table(schema, "bioassay_primary_assays");
-            NodeMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");
+            NodeMapping subject = config.createIriMapping("pubchem:bioassay", "primary_assay");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0001067"),
-                    config.createIriMapping("pubchem:bioassay", "primary_assay"));
+                    config.createIriMapping("pubchem:bioassay", "bioassay"));
         }
 
         {
             Table table = new Table(schema, "bioassay_summary_assays");
-            NodeMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");
+            NodeMapping subject = config.createIriMapping("pubchem:bioassay", "summary_assay");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0001094"),
-                    config.createIriMapping("pubchem:bioassay", "summary_assay"));
+                    config.createIriMapping("pubchem:bioassay", "bioassay"));
         }
 
         // extensions
@@ -80,7 +84,7 @@ public class Bioassay
             Table table = new Table(schema, "bioassay_chembl_assays");
             NodeMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("chembl:assay", "chembl_assay"));
         }
 
@@ -88,8 +92,8 @@ public class Bioassay
             Table table = new Table(schema, "bioassay_chembl_mechanisms");
             NodeMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
-                    config.createIriMapping("chembl:mechanism", "chembl_mechanism"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("pubchem:chembl_mechanism", "chembl_mechanism"));
         }
 
         {
@@ -167,6 +171,14 @@ public class Bioassay
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
                     config.createIriMapping("pubchem:patent", "patent"));
+        }
+
+        {
+            Table table = new Table(schema, "measuregroup_bases");
+            NodeMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000209"),
+                    config.createIriMapping("pubchem:measuregroup", "bioassay", "measuregroup"));
         }
     }
 }

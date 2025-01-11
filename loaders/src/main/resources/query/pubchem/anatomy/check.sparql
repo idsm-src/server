@@ -3,11 +3,9 @@ select distinct ?iri where
 	{
 	    ?S ?iri ?O .
         filter(?iri != rdf:type)
-        filter(?iri != owl:sameAs)
         filter(?iri != skos:prefLabel)
         filter(?iri != skos:altLabel)
-        filter(?iri != skos:closeMatch)
-        filter(?iri != cito:isDiscussedBy)
+        filter(?iri != rdfs:seeAlso)
 	}
     union
     {
@@ -16,12 +14,31 @@ select distinct ?iri where
     }
     union
     {
-        ?S skos:closeMatch ?iri .
+        ?S rdfs:seeAlso ?iri .
         filter(!strstarts(str(?iri), 'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C'))
         filter(!strstarts(str(?iri), 'http://purl.obolibrary.org/obo/BTO_'))
         filter(!strstarts(str(?iri), 'http://www.ebi.ac.uk/efo/EFO_'))
         filter(!strstarts(str(?iri), 'https://www.ebi.ac.uk/chembl/tissue_report_card/CHEMBL'))
         filter(!strstarts(str(?iri), 'https://www.nextprot.org/term/TS-'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/efo:'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/BTO:'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/ncit:C'))
         filter(!strstarts(str(?iri), 'http://id.nlm.nih.gov/mesh/'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/mesh:'))
+        filter(!strstarts(str(?iri), 'http://purl.obolibrary.org/obo/UBERON_'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/UBERON:'))
+    }
+    union
+    {
+        ?S rdfs:seeAlso ?iri .
+        filter(strstarts(str(?iri), 'http://identifiers.org/mesh:'))
+        bind (replace(str(?iri), 'http://identifiers.org/mesh:', '') as ?mesh)
+        
+        minus
+        {
+            ?S rdfs:seeAlso ?iri2 .
+            filter(strstarts(str(?iri2), 'http://id.nlm.nih.gov/mesh/'))
+            bind (replace(str(?iri2), 'http://id.nlm.nih.gov/mesh/', '') as ?mesh)
+        }
     }
 }

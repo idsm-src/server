@@ -5,11 +5,17 @@ select distinct ?iri where
         filter(?iri != dcterms:abstract)
         filter(?iri != dcterms:title)
         filter(?iri != rdf:type)
+        filter(?iri != rdfs:seeAlso)
         filter(?iri != cito:isDiscussedBy)
     }
     union
     {
         ?S rdf:type ?iri .
         filter(?iri != obo:SO_0000417)
+    }
+    union
+    {
+        ?S rdfs:seeAlso ?iri .
+        filter(replace(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID', '') != replace(str(?iri), 'https://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi\\?uid=', ''))
     }
 }

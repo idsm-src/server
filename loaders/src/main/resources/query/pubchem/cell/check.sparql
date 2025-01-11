@@ -5,8 +5,7 @@ select distinct ?iri where
         filter(?iri != rdf:type)
         filter(?iri != skos:prefLabel)
         filter(?iri != skos:altLabel)
-        filter(?iri != skos:sameAs)
-        filter(?iri != skos:closeMatch)
+        filter(?iri != rdfs:seeAlso)
         filter(?iri != cito:isDiscussedBy)
         filter(?iri != up:organism)
         filter(?iri != obo:BFO_0000050)
@@ -20,64 +19,40 @@ select distinct ?iri where
     }
     union
     {
-        ?S skos:closeMatch ?iri .
+        ?S rdfs:seeAlso ?iri .
         filter(!strstarts(str(?iri), 'http://purl.obolibrary.org/obo/CL_'))
         filter(!strstarts(str(?iri), 'http://purl.obolibrary.org/obo/CLO_'))
         filter(!strstarts(str(?iri), 'http://purl.obolibrary.org/obo/BTO_'))
-        filter(!strstarts(str(?iri), 'https://www.ebi.ac.uk/efo/EFO_'))
-        filter(!strstarts(str(?iri), 'https://www.ebi.ac.uk/chembl/cell_line_report_card/CHEMBL'))
-        filter(!strstarts(str(?iri), 'http://lincsportal.ccs.miami.edu/cells/#/view/LPC-'))
-        filter(!strstarts(str(?iri), 'http://lincsportal.ccs.miami.edu/cells/#/view/LSC-'))
-        filter(!strstarts(str(?iri), 'http://lincsportal.ccs.miami.edu/cells/#/view/LCL-'))
-        filter(!strstarts(str(?iri), 'http://lincsportal.ccs.miami.edu/cells/#/view/ES-'))
-        filter(!strstarts(str(?iri), 'https://lincs.hms.harvard.edu/db/cells/'))
+        filter(!strstarts(str(?iri), 'http://www.ebi.ac.uk/efo/EFO_'))
         filter(!strstarts(str(?iri), 'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C'))
         filter(!strstarts(str(?iri), 'http://id.nlm.nih.gov/mesh/'))
-        filter(!strstarts(str(?iri), 'https://www.wikidata.org/wiki/Q'))
         filter(!strstarts(str(?iri), 'https://www.cancerrxgene.org/translation/CellLine/'))
         filter(!strstarts(str(?iri), 'https://depmap.org/portal/cell_line/ACH-'))
         filter(!strstarts(str(?iri), 'https://cellmodelpassports.sanger.ac.uk/passports/SIDM'))
         filter(!strstarts(str(?iri), 'https://cancer.sanger.ac.uk/cell_lines/sample/overview?id='))
-        filter(!strstarts(str(?iri), 'https://identifiers.org/ncit:C'))
-        filter(!strstarts(str(?iri), 'https://identifiers.org/mesh:'))
-        filter(!strstarts(str(?iri), 'https://identifiers.org/CL:'))
-        filter(!strstarts(str(?iri), 'https://identifiers.org/lincs.cell:LCL-'))
-        filter(!strstarts(str(?iri), 'https://identifiers.org/chembl:CHEMBL'))
-        filter(!strstarts(str(?iri), 'https://identifiers.org/efo:'))
-        filter(!strstarts(str(?iri), 'https://identifiers.org/BTO:'))
-        filter(!strstarts(str(?iri), 'https://identifiers.org/CLO:'))
-        filter(!strstarts(str(?iri), 'https://identifiers.org/wikidata:Q'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/ncit:C'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/mesh:'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/CL:'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/lincs.cell:LCL-'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/efo:'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/BTO:'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/CLO:'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/wikidata:Q'))
+        filter(!strstarts(str(?iri), 'http://rdf.ebi.ac.uk/resource/chembl/cell_line/CHEMBL'))
+        filter(!strstarts(str(?iri), 'http://identifiers.org/cellosaurus:CVCL_'))
+        filter(!strstarts(str(?iri), 'https://lincs.hms.harvard.edu/db/cells/'))
     }
     union
     {
-        ?S skos:closeMatch ?iri .
-        filter(strstarts(str(?iri), 'https://identifiers.org/mesh:'))
-        bind (replace(str(?iri), 'https://identifiers.org/mesh:', '') as ?match)
+        ?S rdfs:seeAlso ?iri .
+        filter(strstarts(str(?iri), 'http://identifiers.org/mesh:'))
+        bind (replace(str(?iri), 'http://identifiers.org/mesh:', '') as ?match)
         
         minus
         {
-            ?S skos:closeMatch ?iri2 .
+            ?S rdfs:seeAlso ?iri2 .
             filter(strstarts(str(?iri2), 'http://id.nlm.nih.gov/mesh/'))
             bind (replace(str(?iri2), 'http://id.nlm.nih.gov/mesh/', '') as ?match)
         }
-    }
-    union
-    {
-        ?S skos:closeMatch ?iri .
-        filter(strstarts(str(?iri), 'https://identifiers.org/wikidata:Q'))
-        bind (replace(str(?iri), 'https://identifiers.org/wikidata:Q', '') as ?match)
-        
-        minus
-        {
-            ?S skos:closeMatch ?iri2 .
-            filter(strstarts(str(?iri2), 'https://www.wikidata.org/wiki/Q'))
-            bind (replace(str(?iri2), 'https://www.wikidata.org/wiki/Q', '') as ?match)
-        }
-    }
-    union
-    {
-        ?S owl:sameAs ?iri .
-        filter(!strstarts(str(?iri), 'https://web.expasy.org/cellosaurus/CVCL_'))
-        filter(!strstarts(str(?iri), 'https://www.ebi.ac.uk/chembl/cell_line_report_card/CHEMBL'))
     }
 }

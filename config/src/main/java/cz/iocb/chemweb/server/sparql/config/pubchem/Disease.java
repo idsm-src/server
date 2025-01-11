@@ -40,7 +40,7 @@ public class Disease
             NodeMapping subject = config.createIriMapping("pubchem:disease", "disease");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:altLabel"),
-                    config.createLiteralMapping("alternative"));
+                    config.createLiteralMapping(xsdString, "alternative"));
         }
 
         {

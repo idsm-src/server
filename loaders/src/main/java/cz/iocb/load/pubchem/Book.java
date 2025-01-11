@@ -177,7 +177,7 @@ public class Book extends Updater
 
         load("select id,subtitle from pubchem.book_bases where subtitle is not null", oldSubtitles);
 
-        new QueryResultProcessor(patternQuery("?book dcterms:publisher ?subtitle"))
+        new QueryResultProcessor(patternQuery("?book prism:subtitle ?subtitle"))
         {
             @Override
             protected void parse() throws IOException

@@ -149,6 +149,7 @@ alter table pubchem.gene_bgee_matches add foreign key (gene) references pubchem.
 alter table pubchem.gene_pombase_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_veupathdb_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_zfin_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_enzyme_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_processes add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_functions add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_locations add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
@@ -255,7 +256,6 @@ alter table pubchem.protein_mesh_matches add foreign key (protein) references pu
 alter table pubchem.protein_glygen_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_glycosmos_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_alphafold_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
-alter table pubchem.protein_expasy_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_pharos_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_proconsortium_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_wormbase_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
@@ -263,6 +263,7 @@ alter table pubchem.protein_brenda_matches add foreign key (protein) references 
 alter table pubchem.protein_intact_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_interpro_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_nextprot_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_chembl_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_conserveddomains add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_conserveddomains add foreign key (domain) references pubchem.conserveddomain_bases(id) initially deferred;
 alter table pubchem.protein_continuantparts add foreign key (protein) references pubchem.protein_bases(id) initially deferred;

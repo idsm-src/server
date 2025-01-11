@@ -35,8 +35,6 @@ public class Measuregroup
                     config.createIriMapping("pubchem:source", "source"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:title"),
                     config.createLiteralMapping(xsdString, "title"));
-            config.addQuadMapping(table, graph, config.createIriMapping("pubchem:bioassay", "bioassay"),
-                    config.createIriMapping("bao:BAO_0000209"), subject);
         }
 
         {
