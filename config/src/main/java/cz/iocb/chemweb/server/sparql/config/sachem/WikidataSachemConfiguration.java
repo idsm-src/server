@@ -50,7 +50,7 @@ public class WikidataSachemConfiguration extends SparqlDatabaseConfiguration
     {
         {
             Table table = new Table("wikidata", "canonical_smiles");
-            NodeMapping subject = createIriMapping("wikidata:entity", "id");
+            NodeMapping subject = createIriMapping("wikidata:entity", "compound");
 
             addQuadMapping(table, null, subject, createIriMapping("wdt:P233"),
                     createLiteralMapping(xsdString, "smiles"));
@@ -58,7 +58,7 @@ public class WikidataSachemConfiguration extends SparqlDatabaseConfiguration
 
         {
             Table table = new Table("wikidata", "isomeric_smiles");
-            NodeMapping subject = createIriMapping("wikidata:entity", "id");
+            NodeMapping subject = createIriMapping("wikidata:entity", "compound");
 
             addQuadMapping(table, null, subject, createIriMapping("wdt:P2017"),
                     createLiteralMapping(xsdString, "smiles"));
