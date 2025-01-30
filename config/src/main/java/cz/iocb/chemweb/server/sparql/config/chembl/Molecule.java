@@ -103,8 +103,8 @@ public class Molecule
                     config.createIriMapping("cco:SmallMolecule"),
                     config.createAreEqualCondition("molecule_type", "'Small molecule'::varchar"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("cco:UnclassifiedMolecule"),
-                    config.createAreEqualCondition("molecule_type", "'Gene'::varchar"));
+                    config.createIriMapping("cco:UnclassifiedMolecule"), config.createAreEqualCondition("molecule_type",
+                            "'Gene'::varchar", "'Antibody drug conjugate'::varchar"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("foaf:depiction"),
                     config.createIriMapping("chembl:image", "id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),

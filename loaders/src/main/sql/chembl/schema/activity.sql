@@ -13,7 +13,7 @@ update chembl_tmp.activities set molecule_id = replace(chembl_tmp.molecule_dicti
 alter table chembl_tmp.activities alter column molecule_id drop default;
 
 alter table chembl_tmp.activities add column qudt_id integer;
-update chembl_tmp.activities set qudt_id = (select resource_id from ontology.resources__reftable where iri = qudt_units);
+update chembl_tmp.activities set qudt_id = (select resource_id from ontology.resources__reftable where iri = qudt_units and resource_id < 1000);
 
 alter table chembl_tmp.activities add column uo_unit_id integer;
 update chembl_tmp.activities set uo_unit_id = replace(uo_units, 'UO_', '')::integer;

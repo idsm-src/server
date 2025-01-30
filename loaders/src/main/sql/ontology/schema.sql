@@ -359,3 +359,5 @@ insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (251, 'http://identifiers.org/UBERON:' , 31,  7, '^http://identifiers\.org/UBERON:[0-9]{7}$');
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (252, 'http://identifiers.org/fb:FBgn' , 31,  7, '^http://identifiers\.org/fb:FBgn[0-9]{7}$');
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (253, 'http://identifiers.org/ncbigene:' , 33,  0, '^http://identifiers\.org/ncbigene:[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (254, 'http://www.ebi.ac.uk/efo/UBERON:' , 33,  7, '^http://www\.ebi\.ac\.uk/efo/UBERON:[0-9]{7}$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (255, 'http://www.ebi.ac.uk/efo/CHEBI:' , 32,  0, '^http://www\.ebi\.ac\.uk/efo/CHEBI:[1-9][0-9]*$');

@@ -1,7 +1,7 @@
 package cz.iocb.chemweb.server.sparql.config.chembl;
 
 import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.schema;
-import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Table;
@@ -36,7 +36,7 @@ public class DrugIndication
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasMolecule"),
                 config.createIriMapping("chembl:compound", "molecule_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:highestDevelopmentPhase"),
-                config.createLiteralMapping(xsdFloat, "max_phase_for_ind"));
+                config.createLiteralMapping(xsdInt, "max_phase_for_ind"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:chemblId"),
                 config.createLiteralMapping(xsdString, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),

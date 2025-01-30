@@ -478,6 +478,33 @@ public class Ontology extends Updater
         builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasExactSynonym", 75);
         builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym", 76);
 
+        // units
+        builtinResources.put("http://qudt.org/vocab/unit#Centimeter", 80);
+        builtinResources.put("http://qudt.org/vocab/unit#Day", 81);
+        builtinResources.put("http://qudt.org/vocab/unit#DegreeCelsius", 82);
+        builtinResources.put("http://qudt.org/vocab/unit#Gram", 83);
+        builtinResources.put("http://qudt.org/vocab/unit#Hour", 84);
+        builtinResources.put("http://qudt.org/vocab/unit#InternationalUnitPerLiter", 85);
+        builtinResources.put("http://qudt.org/vocab/unit#Kilogram", 86);
+        builtinResources.put("http://qudt.org/vocab/unit#Liter", 87);
+        builtinResources.put("http://qudt.org/vocab/unit#Micrometer", 88);
+        builtinResources.put("http://qudt.org/vocab/unit#Millimeter", 89);
+        builtinResources.put("http://qudt.org/vocab/unit#MilliSecond", 90);
+        builtinResources.put("http://qudt.org/vocab/unit#MinuteTime", 91);
+        builtinResources.put("http://qudt.org/vocab/unit#Percent", 92);
+        builtinResources.put("http://qudt.org/vocab/unit#SecondTime", 93);
+        builtinResources.put("http://www.openphacts.org/units/GramPerLiter", 94);
+        builtinResources.put("http://www.openphacts.org/units/MicrogramPerMilliliter", 95);
+        builtinResources.put("http://www.openphacts.org/units/Micromolar", 96);
+        builtinResources.put("http://www.openphacts.org/units/MilligramPerDeciliter", 97);
+        builtinResources.put("http://www.openphacts.org/units/MilligramPerMilliliter", 98);
+        builtinResources.put("http://www.openphacts.org/units/Millimolar", 99);
+        builtinResources.put("http://www.openphacts.org/units/Molar", 100);
+        builtinResources.put("http://www.openphacts.org/units/NanogramPerMilliliter", 101);
+        builtinResources.put("http://www.openphacts.org/units/Nanomolar", 102);
+        builtinResources.put("http://www.openphacts.org/units/PicogramPerMilliliter", 103);
+        builtinResources.put("http://www.openphacts.org/units/Picomolar", 104);
+
         // predicates
         builtinResources.put("http://data.epo.org/linked-data/def/patent/applicantVC", 130);
         builtinResources.put("http://data.epo.org/linked-data/def/patent/classificationCPCAdditional", 131);
