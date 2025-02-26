@@ -27,6 +27,7 @@ import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
 
 public class Mona
 {
+    public static final String web = "https://mona.fiehnlab.ucdavis.edu/spectra/display/";
     public static final String mona = "https://idsm.elixir-czech.cz/rdf/mona/";
     public static final String bnmona = "https://idsm.elixir-czech.cz/rdf/mona/bn";
 
@@ -59,6 +60,9 @@ public class Mona
 
         Matchms.addResourceClasses(config);
         Sachem.addResourceClasses(config);
+
+        config.addIriClass(new MapUserIriClass("mona:web", "integer", new Table(schema, "compound_bases"),
+                new TableColumn("id"), new TableColumn("accession"), web, ".*"));
 
         config.addIriClass(new MapUserIriClass("mona:experiment", "integer", new Table(schema, "compound_bases"),
                 new TableColumn("id"), new TableColumn("accession"), mona, ".*", "_EXP"));
@@ -163,6 +167,13 @@ public class Mona
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_001278"), // is data item in
                     library);
+
+            config.addQuadMapping(table, graph, experiment, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("mona:web", "id"));
+            config.addQuadMapping(table, graph, spectrum, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("mona:web", "id"));
+            config.addQuadMapping(table, graph, compound, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("mona:web", "id"));
         }
 
         {
