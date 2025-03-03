@@ -433,7 +433,7 @@ class Substance extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://rdf.wwpdb.org/schema/pdbx-v40.owl#link_to_pdb"))
+                    if(!predicate.getURI().equals("http://rdf.wwpdb.org/schema/pdbx-v50.owl#link_to_pdb"))
                         throw new IOException();
 
                     Integer substanceID = getSubstanceID(subject.getURI(), false, false);

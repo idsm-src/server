@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
@@ -129,7 +128,7 @@ class Endpoint extends Updater
 
 
     @SuppressWarnings("serial")
-    private static class IntQuaterpletIntFloatPairMap extends SqlMap<EndpointID, Pair<Integer, Float>>
+    private static class IntQuaterpletFloatMap extends SqlMap<EndpointID, Float>
     {
         @Override
         public EndpointID getKey(ResultSet result) throws SQLException
@@ -138,20 +137,19 @@ class Endpoint extends Updater
         }
 
         @Override
-        public Pair<Integer, Float> getValue(ResultSet result) throws SQLException
+        public Float getValue(ResultSet result) throws SQLException
         {
-            return Pair.getPair(result.getInt(5), result.getFloat(6));
+            return result.getFloat(5);
         }
 
         @Override
-        public void set(PreparedStatement statement, EndpointID key, Pair<Integer, Float> value) throws SQLException
+        public void set(PreparedStatement statement, EndpointID key, Float value) throws SQLException
         {
             statement.setInt(1, key.substance);
             statement.setInt(2, key.bioassay);
             statement.setInt(3, key.measuregroup);
             statement.setInt(4, key.value);
-            statement.setInt(5, value.getOne());
-            statement.setFloat(6, value.getTwo());
+            statement.setFloat(5, value);
         }
     }
 
@@ -263,251 +261,6 @@ class Endpoint extends Updater
 
     private static void loadTypes() throws IOException, SQLException
     {
-        // workaround
-        HashSet<Pair<EndpointID, Integer>> wrongTypes = new HashSet<Pair<EndpointID, Integer>>();
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 1, 1), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 2, 2), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 3, 3), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 4, 4), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 5, 5), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 6, 6), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 7, 7), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 8, 33), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 9, 34), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 10, 35), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 11, 36), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 12, 37), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 13, 38), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 14, 39), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 15, 40), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 16, 41), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 17, 42), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 18, 43), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 19, 44), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 20, 45), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 21, 46), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 22, 47), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 23, 48), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 24, 49), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 25, 50), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 1, 1), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 2, 2), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 3, 3), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 4, 4), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 5, 5), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 6, 6), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(87544119, 1801, 7, 7), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 8, 33), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 9, 34), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 10, 35), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 11, 36), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 12, 37), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 13, 38), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 14, 39), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 15, 40), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 16, 41), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 17, 42), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 18, 43), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 19, 44), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 20, 45), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 21, 46), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 22, 47), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 23, 48), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 24, 49), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103911214, 1801, 25, 50), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(96021160, 1880, 1, 1), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(96021160, 1880, 2, 2), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(96021160, 1880, 3, 3), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(110923218, 1880, 4, 14), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(110923218, 1880, 5, 15), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(110923218, 1880, 6, 16), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(110923218, 1880, 7, 17), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(110923218, 1880, 8, 18), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(110923218, 1880, 9, 19), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(110923218, 1880, 10, 20), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288063, 2049, 1, 41), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288063, 2049, 2, 42), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288064, 2049, 1, 25), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288064, 2049, 2, 26), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288068, 2049, 1, 33), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288068, 2049, 2, 34), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288069, 2049, 1, 37), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288069, 2049, 2, 38), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288070, 2049, 1, 29), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288070, 2049, 2, 30), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85261423, 2049, 1, 45), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85261423, 2049, 2, 46), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85261424, 2049, 1, 49), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85261424, 2049, 2, 50), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85261425, 2049, 1, 53), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85261425, 2049, 2, 54), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85261426, 2049, 1, 57), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85261426, 2049, 2, 58), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87326009, 2049, 1, 9), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87326009, 2049, 2, 10), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87326010, 2049, 1, 1), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87326010, 2049, 2, 2), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87326011, 2049, 1, 13), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87326011, 2049, 2, 14), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87334054, 2049, 3, 7), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(87350366, 2049, 1, 17), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87350366, 2049, 2, 18), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87350367, 2049, 1, 21), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87350367, 2049, 2, 22), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(4257091, 2067, 1, 50), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(7972299, 2067, 1, 1), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(7972299, 2067, 2, 2), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(7972299, 2067, 3, 3), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288001, 2067, 1, 8), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288001, 2067, 2, 9), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288001, 2067, 3, 10), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288002, 2067, 1, 22), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288002, 2067, 3, 24), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288005, 2067, 1, 29), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288005, 2067, 3, 31), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288006, 2067, 1, 36), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288006, 2067, 3, 38), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(87241484, 2067, 2, 58), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(87241484, 2067, 3, 59), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(87350363, 2067, 1, 43), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(87350363, 2067, 3, 45), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(87350364, 2067, 1, 15), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(87350364, 2067, 3, 17), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(57287832, 2078, 1, 33), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57287832, 2078, 2, 34), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57287833, 2078, 1, 45), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57287833, 2078, 2, 46), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57287838, 2078, 1, 57), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57287838, 2078, 2, 58), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57287843, 2078, 1, 61), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57287843, 2078, 2, 62), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288032, 2078, 1, 41), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288032, 2078, 2, 42), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288035, 2078, 1, 73), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288035, 2078, 2, 74), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288036, 2078, 1, 65), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288036, 2078, 2, 66), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288037, 2078, 1, 49), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288037, 2078, 2, 50), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288038, 2078, 1, 37), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288038, 2078, 2, 38), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288040, 2078, 1, 29), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288040, 2078, 2, 30), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288041, 2078, 1, 69), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288041, 2078, 2, 70), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288042, 2078, 1, 53), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288042, 2078, 2, 54), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288075, 2078, 1, 25), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(57288075, 2078, 2, 26), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(81080221, 2078, 1, 17), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(81080221, 2078, 2, 18), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(81080222, 2078, 1, 13), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(81080222, 2078, 2, 14), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(81080223, 2078, 1, 9), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(81080223, 2078, 2, 10), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85145925, 2078, 1, 21), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85145925, 2078, 2, 22), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85281103, 2078, 1, 77), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85281103, 2078, 2, 78), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85281104, 2078, 1, 81), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(85281104, 2078, 2, 82), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87326012, 2078, 1, 1), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87326012, 2078, 2, 2), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(87349854, 2078, 3, 7), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257295, 2117, 1, 13), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257295, 2117, 2, 14), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257295, 2117, 3, 15), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257295, 2117, 4, 16), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257296, 2117, 1, 18), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257296, 2117, 2, 19), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257296, 2117, 3, 20), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257296, 2117, 4, 21), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257297, 2117, 1, 23), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257297, 2117, 2, 24), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257297, 2117, 3, 25), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257297, 2117, 4, 26), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257298, 2117, 1, 7), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257298, 2117, 2, 8), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257298, 2117, 3, 9), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257298, 2117, 4, 10), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257298, 2117, 6, 12), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257300, 2117, 1, 28), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257300, 2117, 2, 29), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257300, 2117, 3, 30), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257300, 2117, 4, 31), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257301, 2117, 1, 1), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257301, 2117, 2, 2), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257301, 2117, 3, 3), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257301, 2117, 4, 4), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85257301, 2117, 6, 6), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(85856282, 2128, 1, 1), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85856282, 2128, 2, 2), 192));
-        wrongTypes.add(Pair.getPair(new EndpointID(85856282, 2128, 3, 3), 192));
-        wrongTypes.add(Pair.getPair(new EndpointID(85856282, 2128, 4, 4), 192));
-        wrongTypes.add(Pair.getPair(new EndpointID(85856281, 2317, 1, 1), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(85856281, 2317, 2, 2), 192));
-        wrongTypes.add(Pair.getPair(new EndpointID(85856281, 2317, 3, 3), 192));
-        wrongTypes.add(Pair.getPair(new EndpointID(85856281, 2317, 4, 4), 192));
-        wrongTypes.add(Pair.getPair(new EndpointID(103913572, 492969, 1, 1), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(103913572, 492969, 2, 2), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(103913572, 492969, 3, 3), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269096, 504420, 1, 23), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269096, 504420, 2, 24), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269096, 504420, 3, 25), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269096, 504420, 4, 26), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269096, 504420, 5, 27), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269096, 504420, 6, 28), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269120, 504420, 10, 10), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269120, 504420, 11, 11), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269120, 504420, 5, 5), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269120, 504420, 6, 6), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269120, 504420, 7, 7), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269120, 504420, 8, 8), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269120, 504420, 9, 9), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269138, 504420, 1, 12), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269138, 504420, 2, 13), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269138, 504420, 3, 14), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269138, 504420, 4, 15), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269138, 504420, 5, 16), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(125269138, 504420, 6, 17), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(124360653, 540309, 1, 29), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(124360653, 540309, 2, 30), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(124360653, 540309, 3, 31), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(124360653, 540309, 4, 32), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(124360653, 540309, 5, 33), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(124360653, 540309, 6, 34), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(124360653, 540309, 7, 35), 187));
-        wrongTypes.add(Pair.getPair(new EndpointID(117695958, 624279, 1, 1), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(117695958, 624279, 2, 2), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(117695958, 624279, 3, 3), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(117695958, 624279, 4, 4), 190));
-        wrongTypes.add(Pair.getPair(new EndpointID(117695958, 624279, 5, 5), 188));
-        wrongTypes.add(Pair.getPair(new EndpointID(3716460, 652181, 1, 1), 34));
-        wrongTypes.add(Pair.getPair(new EndpointID(3716460, 652181, 2, 2), 34));
-        wrongTypes.add(Pair.getPair(new EndpointID(3716460, 652181, 3, 3), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(7973466, 652181, 1, 10), 34));
-        wrongTypes.add(Pair.getPair(new EndpointID(7973466, 652181, 3, 12), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(17415857, 652181, 1, 4), 34));
-        wrongTypes.add(Pair.getPair(new EndpointID(17415857, 652181, 2, 5), 34));
-        wrongTypes.add(Pair.getPair(new EndpointID(17415857, 652181, 3, 6), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(17432643, 652181, 1, 13), 34));
-        wrongTypes.add(Pair.getPair(new EndpointID(17432643, 652181, 3, 15), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(26657680, 652181, 3, 24), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(26671645, 652181, 3, 30), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(26730174, 652181, 3, 21), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(26730315, 652181, 3, 27), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(49669817, 652181, 1, 7), 34));
-        wrongTypes.add(Pair.getPair(new EndpointID(49669817, 652181, 2, 8), 34));
-        wrongTypes.add(Pair.getPair(new EndpointID(49669817, 652181, 3, 9), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(49680441, 652181, 1, 16), 34));
-        wrongTypes.add(Pair.getPair(new EndpointID(49680441, 652181, 2, 17), 34));
-        wrongTypes.add(Pair.getPair(new EndpointID(49680441, 652181, 3, 18), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(85267040, 652181, 3, 32), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(85267041, 652181, 3, 34), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(85267042, 652181, 3, 36), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(85267043, 652181, 3, 38), 2162));
-        wrongTypes.add(Pair.getPair(new EndpointID(85267044, 652181, 3, 40), 2162));
-
         IntQuaterpletIntMap keepTypes = new IntQuaterpletIntMap();
         IntQuaterpletIntMap newTypes = new IntQuaterpletIntMap();
         IntQuaterpletIntMap oldTypes = new IntQuaterpletIntMap();
@@ -530,9 +283,6 @@ class Endpoint extends Updater
 
                     if(type.getOne() != Ontology.unitBAO)
                         throw new IOException();
-
-                    if(wrongTypes.contains(Pair.getPair(endpoint, type.getTwo())))
-                        return;
 
                     oldMeasurements.remove(endpoint);
 
@@ -569,251 +319,6 @@ class Endpoint extends Updater
 
     private static void loadLabels() throws IOException, SQLException
     {
-        // workaround
-        HashSet<Pair<EndpointID, String>> wrongLabels = new HashSet<Pair<EndpointID, String>>();
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 1, 1), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 2, 2), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 3, 3), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 4, 4), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 5, 5), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 6, 6), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 7, 7), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 8, 33), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 9, 34), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 10, 35), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 11, 36), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 12, 37), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 13, 38), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 14, 39), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 15, 40), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 16, 41), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 17, 42), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 18, 43), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 19, 44), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 20, 45), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 21, 46), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 22, 47), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 23, 48), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 24, 49), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 25, 50), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 1, 1), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 2, 2), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 3, 3), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 4, 4), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 5, 5), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 6, 6), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87544119, 1801, 7, 7), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 8, 33), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 9, 34), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 10, 35), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 11, 36), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 12, 37), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 13, 38), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 14, 39), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 15, 40), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 16, 41), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 17, 42), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 18, 43), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 19, 44), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 20, 45), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 21, 46), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 22, 47), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 23, 48), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 24, 49), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103911214, 1801, 25, 50), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(96021160, 1880, 1, 1), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(96021160, 1880, 2, 2), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(96021160, 1880, 3, 3), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(110923218, 1880, 4, 14), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(110923218, 1880, 5, 15), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(110923218, 1880, 6, 16), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(110923218, 1880, 7, 17), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(110923218, 1880, 8, 18), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(110923218, 1880, 9, 19), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(110923218, 1880, 10, 20), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288063, 2049, 1, 41), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288063, 2049, 2, 42), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288064, 2049, 1, 25), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288064, 2049, 2, 26), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288068, 2049, 1, 33), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288068, 2049, 2, 34), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288069, 2049, 1, 37), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288069, 2049, 2, 38), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288070, 2049, 1, 29), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288070, 2049, 2, 30), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85261423, 2049, 1, 45), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85261423, 2049, 2, 46), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85261424, 2049, 1, 49), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85261424, 2049, 2, 50), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85261425, 2049, 1, 53), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85261425, 2049, 2, 54), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85261426, 2049, 1, 57), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85261426, 2049, 2, 58), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87326009, 2049, 1, 9), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87326009, 2049, 2, 10), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87326010, 2049, 1, 1), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87326010, 2049, 2, 2), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87326011, 2049, 1, 13), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87326011, 2049, 2, 14), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87334054, 2049, 3, 7), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87350366, 2049, 1, 17), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87350366, 2049, 2, 18), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87350367, 2049, 1, 21), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87350367, 2049, 2, 22), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(4257091, 2067, 1, 50), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(7972299, 2067, 1, 1), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(7972299, 2067, 2, 2), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(7972299, 2067, 3, 3), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288001, 2067, 1, 8), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288001, 2067, 2, 9), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288001, 2067, 3, 10), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288002, 2067, 1, 22), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288002, 2067, 3, 24), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288005, 2067, 1, 29), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288005, 2067, 3, 31), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288006, 2067, 1, 36), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288006, 2067, 3, 38), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(87241484, 2067, 2, 58), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87241484, 2067, 3, 59), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(87350363, 2067, 1, 43), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(87350363, 2067, 3, 45), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(87350364, 2067, 1, 15), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(87350364, 2067, 3, 17), "Ki "));
-        wrongLabels.add(Pair.getPair(new EndpointID(57287832, 2078, 1, 33), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57287832, 2078, 2, 34), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57287833, 2078, 1, 45), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57287833, 2078, 2, 46), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57287838, 2078, 1, 57), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57287838, 2078, 2, 58), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57287843, 2078, 1, 61), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57287843, 2078, 2, 62), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288032, 2078, 1, 41), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288032, 2078, 2, 42), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288035, 2078, 1, 73), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288035, 2078, 2, 74), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288036, 2078, 1, 65), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288036, 2078, 2, 66), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288037, 2078, 1, 49), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288037, 2078, 2, 50), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288038, 2078, 1, 37), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288038, 2078, 2, 38), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288040, 2078, 1, 29), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288040, 2078, 2, 30), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288041, 2078, 1, 69), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288041, 2078, 2, 70), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288042, 2078, 1, 53), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288042, 2078, 2, 54), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288075, 2078, 1, 25), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(57288075, 2078, 2, 26), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(81080221, 2078, 1, 17), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(81080221, 2078, 2, 18), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(81080222, 2078, 1, 13), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(81080222, 2078, 2, 14), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(81080223, 2078, 1, 9), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(81080223, 2078, 2, 10), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85145925, 2078, 1, 21), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85145925, 2078, 2, 22), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85281103, 2078, 1, 77), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85281103, 2078, 2, 78), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85281104, 2078, 1, 81), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85281104, 2078, 2, 82), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87326012, 2078, 1, 1), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87326012, 2078, 2, 2), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(87349854, 2078, 3, 7), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257295, 2117, 1, 13), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257295, 2117, 2, 14), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257295, 2117, 3, 15), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257295, 2117, 4, 16), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257296, 2117, 1, 18), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257296, 2117, 2, 19), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257296, 2117, 3, 20), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257296, 2117, 4, 21), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257297, 2117, 1, 23), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257297, 2117, 2, 24), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257297, 2117, 3, 25), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257297, 2117, 4, 26), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257298, 2117, 1, 7), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257298, 2117, 2, 8), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257298, 2117, 3, 9), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257298, 2117, 4, 10), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257298, 2117, 6, 12), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257300, 2117, 1, 28), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257300, 2117, 2, 29), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257300, 2117, 3, 30), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257300, 2117, 4, 31), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257301, 2117, 1, 1), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257301, 2117, 2, 2), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257301, 2117, 3, 3), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257301, 2117, 4, 4), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85257301, 2117, 6, 6), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85856282, 2128, 1, 1), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85856282, 2128, 2, 2), "Ki"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85856282, 2128, 3, 3), "Ki"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85856282, 2128, 4, 4), "Ki"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85856281, 2317, 1, 1), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85856281, 2317, 2, 2), "Ki"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85856281, 2317, 3, 3), "Ki"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85856281, 2317, 4, 4), "Ki"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103913572, 492969, 1, 1), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103913572, 492969, 2, 2), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(103913572, 492969, 3, 3), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269096, 504420, 1, 23), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269096, 504420, 2, 24), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269096, 504420, 3, 25), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269096, 504420, 4, 26), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269096, 504420, 5, 27), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269096, 504420, 6, 28), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269120, 504420, 10, 10), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269120, 504420, 11, 11), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269120, 504420, 5, 5), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269120, 504420, 6, 6), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269120, 504420, 7, 7), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269120, 504420, 8, 8), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269120, 504420, 9, 9), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269138, 504420, 1, 12), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269138, 504420, 2, 13), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269138, 504420, 3, 14), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269138, 504420, 4, 15), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269138, 504420, 5, 16), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(125269138, 504420, 6, 17), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(124360653, 540309, 1, 29), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(124360653, 540309, 2, 30), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(124360653, 540309, 3, 31), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(124360653, 540309, 4, 32), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(124360653, 540309, 5, 33), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(124360653, 540309, 6, 34), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(124360653, 540309, 7, 35), "CC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(117695958, 624279, 1, 1), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(117695958, 624279, 2, 2), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(117695958, 624279, 3, 3), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(117695958, 624279, 4, 4), "IC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(117695958, 624279, 5, 5), "EC50"));
-        wrongLabels.add(Pair.getPair(new EndpointID(3716460, 652181, 1, 1), "Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(3716460, 652181, 2, 2), "Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(3716460, 652181, 3, 3), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(7973466, 652181, 1, 10), "Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(7973466, 652181, 3, 12), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(17415857, 652181, 1, 4), "Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(17415857, 652181, 2, 5), "Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(17415857, 652181, 3, 6), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(17432643, 652181, 1, 13), "Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(17432643, 652181, 3, 15), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(26657680, 652181, 3, 24), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(26671645, 652181, 3, 30), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(26730174, 652181, 3, 21), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(26730315, 652181, 3, 27), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(49669817, 652181, 1, 7), "Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(49669817, 652181, 2, 8), "Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(49669817, 652181, 3, 9), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(49680441, 652181, 1, 16), "Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(49680441, 652181, 2, 17), "Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(49680441, 652181, 3, 18), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85267040, 652181, 3, 32), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85267041, 652181, 3, 34), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85267042, 652181, 3, 36), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85267043, 652181, 3, 38), "Average Kd"));
-        wrongLabels.add(Pair.getPair(new EndpointID(85267044, 652181, 3, 40), "Average Kd"));
-
         IntQuaterpletStringMap keepLabels = new IntQuaterpletStringMap();
         IntQuaterpletStringMap newLabels = new IntQuaterpletStringMap();
         IntQuaterpletStringMap oldLabels = new IntQuaterpletStringMap();
@@ -833,9 +338,6 @@ class Endpoint extends Updater
 
                     String label = getString(object);
                     EndpointID endpoint = parseEndpoint(subject, false);
-
-                    if(wrongLabels.contains(Pair.getPair(endpoint, label)))
-                        return;
 
                     oldMeasurements.remove(endpoint);
 
@@ -871,12 +373,19 @@ class Endpoint extends Updater
 
     private static void loadMeasuredValues() throws IOException, SQLException
     {
-        IntQuaterpletIntFloatPairMap keepMeasuredValues = new IntQuaterpletIntFloatPairMap();
-        IntQuaterpletIntFloatPairMap newMeasuredValues = new IntQuaterpletIntFloatPairMap();
-        IntQuaterpletIntFloatPairMap oldMeasuredValues = new IntQuaterpletIntFloatPairMap();
+        IntQuaterpletFloatMap keepMeasuredValues = new IntQuaterpletFloatMap();
+        IntQuaterpletFloatMap newMeasuredValues = new IntQuaterpletFloatMap();
+        IntQuaterpletFloatMap oldMeasuredValues = new IntQuaterpletFloatMap();
 
-        load("select substance,bioassay,measuregroup,value,measurement_type_id,measurement from pubchem.endpoint_measurements "
-                + "where measurement_type_id is not null and measurement is not null", oldMeasuredValues);
+        IntQuaterpletStringMap keepQualifiers = new IntQuaterpletStringMap();
+        IntQuaterpletStringMap newQualifiers = new IntQuaterpletStringMap();
+        IntQuaterpletStringMap oldQualifiers = new IntQuaterpletStringMap();
+
+        load("select substance,bioassay,measuregroup,value,measurement from pubchem.endpoint_measurements where "
+                + "measurement is not null", oldMeasuredValues);
+
+        load("select substance,bioassay,measuregroup,value,qualifier from pubchem.endpoint_measurements where "
+                + "qualifier is not null", oldQualifiers);
 
         try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint_value.ttl.gz"))
         {
@@ -886,44 +395,78 @@ class Endpoint extends Updater
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
                     EndpointID endpoint = parseEndpoint(subject, false);
-                    Integer type = getIntID(predicate, "http://semanticscience.org/resource/SIO_");
-                    Float measurement = getFloatFromDecimal(object);
-                    Pair<Integer, Float> pair = Pair.getPair(type, measurement);
 
-                    if(type != 300 && type != 738 && type != 734 && type != 735 && type != 733 && type != 699)
-                        throw new IOException();
-
-                    oldMeasurements.remove(endpoint);
-
-                    if(pair.equals(oldMeasuredValues.remove(endpoint)))
+                    if(predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
                     {
-                        keepMeasuredValues.put(endpoint, pair);
+                        Float measurement = getFloatFromDecimal(object);
+
+                        oldMeasurements.remove(endpoint);
+
+                        if(measurement.equals(oldMeasuredValues.remove(endpoint)))
+                        {
+                            keepMeasuredValues.put(endpoint, measurement);
+                        }
+                        else
+                        {
+                            Float keep = keepMeasuredValues.get(endpoint);
+
+                            if(measurement.equals(keep))
+                                return;
+                            else if(keep != null)
+                                throw new IOException();
+
+                            Float put = newMeasuredValues.put(endpoint, measurement);
+
+                            if(put != null && !measurement.equals(put))
+                                throw new IOException();
+                        }
+                    }
+                    else if(predicate.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#hasQualifier"))
+                    {
+                        String qualifier = getString(object);
+
+                        oldMeasurements.remove(endpoint);
+
+                        if(qualifier.equals(oldQualifiers.remove(endpoint)))
+                        {
+                            keepQualifiers.put(endpoint, qualifier);
+                        }
+                        else
+                        {
+                            String keep = keepQualifiers.get(endpoint);
+
+                            if(qualifier.equals(keep))
+                                return;
+                            else if(keep != null)
+                                throw new IOException();
+
+                            String put = newQualifiers.put(endpoint, qualifier);
+
+                            if(put != null && !qualifier.equals(put))
+                                throw new IOException();
+                        }
+
                     }
                     else
                     {
-                        Pair<Integer, Float> keep = keepMeasuredValues.get(endpoint);
-
-                        if(pair.equals(keep))
-                            return;
-                        else if(keep != null)
-                            throw new IOException();
-
-                        Pair<Integer, Float> put = newMeasuredValues.put(endpoint, pair);
-
-                        if(put != null && !pair.equals(put))
-                            throw new IOException();
+                        throw new IOException();
                     }
                 }
             }.load(stream);
         }
 
         store("update pubchem.endpoint_measurements set label=null "
-                + "where substance=? and bioassay=? and measuregroup=? and value=? and measurement_type_id=? and measurement=?",
+                + "where substance=? and bioassay=? and measuregroup=? and value=? and measurement=?",
                 oldMeasuredValues);
-        store("insert into pubchem.endpoint_measurements(substance,bioassay,measuregroup,value,measurement_type_id,measurement) "
-                + "values(?,?,?,?,?,?) "
-                + "on conflict(substance,bioassay,measuregroup,value) do update set measurement_type_id=EXCLUDED.measurement_type_id, "
-                + "measurement=EXCLUDED.measurement", newMeasuredValues);
+        store("insert into pubchem.endpoint_measurements(substance,bioassay,measuregroup,value,measurement) values(?,?,?,?,?) "
+                + "on conflict(substance,bioassay,measuregroup,value) do update set measurement=EXCLUDED.measurement",
+                newMeasuredValues);
+
+        store("update pubchem.endpoint_measurements set qualifier=null "
+                + "where substance=? and bioassay=? and measuregroup=? and value=? and qualifier=?", oldQualifiers);
+        store("insert into pubchem.endpoint_measurements(substance,bioassay,measuregroup,value,qualifier) values(?,?,?,?,?) "
+                + "on conflict(substance,bioassay,measuregroup,value) do update set qualifier=EXCLUDED.qualifier",
+                newQualifiers);
     }
 
 

@@ -10,8 +10,8 @@ create index endpoint_measurements__substance on pubchem.endpoint_measurements(s
 create index endpoint_measurements__bioassay on pubchem.endpoint_measurements(bioassay);
 create index endpoint_measurements__bioassay_measuregroup on pubchem.endpoint_measurements(bioassay, measuregroup);
 create index endpoint_measurements__endpoint_type_id on pubchem.endpoint_measurements(endpoint_type_id);
-create index endpoint_measurements__measurement_type_id on pubchem.endpoint_measurements(measurement_type_id);
 create index endpoint_measurements__measurement on pubchem.endpoint_measurements(measurement);
+create index endpoint_measurements__qualifier on pubchem.endpoint_measurements(qualifier);
 create index endpoint_measurements__label on pubchem.endpoint_measurements(label);
 grant select on pubchem.endpoint_measurements to sparql;
 

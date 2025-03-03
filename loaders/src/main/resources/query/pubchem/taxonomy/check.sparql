@@ -32,6 +32,7 @@ select distinct ?iri where
         filter(!strstarts(str(?iri), 'http://identifiers.org/taxonomy:'))
         filter(!strstarts(str(?iri), 'http://rdf.glycoinfo.org/source/'))
         filter(!strstarts(str(?iri), 'https://glycosmos.org/organisms/show/'))
+        filter(!strstarts(str(?iri), 'http://www.wikidata.org/entity/Q'))
     }
     union
     {

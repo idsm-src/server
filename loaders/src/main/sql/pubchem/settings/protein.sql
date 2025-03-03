@@ -144,6 +144,12 @@ grant select on pubchem.protein_chembl_matches to sparql;
 
 --------------------------------------------------------------------------------
 
+create index protein_wikidata_matches__protein on pubchem.protein_wikidata_matches(protein);
+create index protein_wikidata_matches__match on pubchem.protein_wikidata_matches(match);
+grant select on pubchem.protein_wikidata_matches to sparql;
+
+--------------------------------------------------------------------------------
+
 create index protein_conserveddomains__protein on pubchem.protein_conserveddomains(protein);
 create index protein_conserveddomains__domain on pubchem.protein_conserveddomains(domain);
 grant select on pubchem.protein_conserveddomains to sparql;

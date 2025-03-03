@@ -97,11 +97,11 @@ public abstract class TripleStreamProcessor
     }
 
 
-    public static int getInteger(Node node) throws IOException
+    public static int getIntFromInteger(Node node) throws IOException
     {
         Node_Literal literal = (Node_Literal) node;
 
-        if(!literal.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#int"))
+        if(!literal.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#integer"))
             throw new IOException("unexpected literal datatype");
 
         return Integer.parseInt(literal.getLiteralLexicalForm());

@@ -182,6 +182,10 @@ class Pathway extends Updater
                 Integer pathwayID = getPathwayID(getIRI("pathway"), true);
                 String iri = getIRI("match");
 
+                // workaround
+                if(iri.startsWith("https://glycosmos.org/pathways/"))
+                    iri = iri.replaceFirst("^https://glycosmos\\.org/pathways/", "http://identifiers.org/reactome:");
+
                 Description description = null;
 
                 for(Description test : descriptions)
@@ -191,7 +195,7 @@ class Pathway extends Updater
                 if(description == null)
                     throw new IOException(iri);
 
-                Pair<String, String> pair = Pair.getPair(description.name, getStringID("match", description.prefix));
+                Pair<String, String> pair = Pair.getPair(description.name, iri.substring(description.prefix.length()));
 
                 if(pair.equals(oldReferences.remove(pathwayID)))
                 {

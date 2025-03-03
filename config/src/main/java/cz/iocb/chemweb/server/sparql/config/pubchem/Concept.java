@@ -1,7 +1,7 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
-import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.rdfLangStringEn;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Table;
 import cz.iocb.sparql.engine.database.TableColumn;
@@ -36,13 +36,13 @@ public class Concept
             NodeMapping subject = config.createIriMapping("pubchem:concept", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
-                    config.createLiteralMapping(rdfLangStringEn, "label"));
+                    config.createLiteralMapping(xsdString, "label"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:inScheme"),
                     config.createIriMapping("pubchem:concept", "scheme"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:broader"),
                     config.createIriMapping("pubchem:concept", "broader"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("<http://purl.org/pav/importedFrom>"),
-                    config.createIriMapping("source:WHO"),
+                    config.createIriMapping("source:ID11950"),
                     config.createAreEqualCondition("(iri like 'ATC%')", "'true'::boolean"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("skos:Concept"),

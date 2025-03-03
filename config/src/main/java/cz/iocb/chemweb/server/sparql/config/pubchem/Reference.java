@@ -189,19 +189,11 @@ public class Reference
         }
 
         {
-            Table table = new Table(schema, "reference_doi_identifiers");
+            Table table = new Table(schema, "reference_identifiers");
             NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),
-                    config.createIriMapping("identifier:doi", "doi"));
-        }
-
-        {
-            Table table = new Table(schema, "reference_pubmed_identifiers");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),
-                    config.createIriMapping("identifier:pubmed", "pubmed"));
+                    config.createLiteralMapping(xsdString, "identifier"));
         }
 
         {

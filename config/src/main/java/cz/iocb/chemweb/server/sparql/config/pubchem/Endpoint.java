@@ -52,23 +52,7 @@ public class Endpoint
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString, "label"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
-                    config.createLiteralMapping(xsdFloat, "measurement"),
-                    config.createAreEqualCondition("measurement_type_id", "'300'::int"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000738"),
-                    config.createLiteralMapping(xsdFloat, "measurement"),
-                    config.createAreEqualCondition("measurement_type_id", "'738'::int"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000734"),
-                    config.createLiteralMapping(xsdFloat, "measurement"),
-                    config.createAreEqualCondition("measurement_type_id", "'734'::int"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000735"),
-                    config.createLiteralMapping(xsdFloat, "measurement"),
-                    config.createAreEqualCondition("measurement_type_id", "'735'::int"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000733"),
-                    config.createLiteralMapping(xsdFloat, "measurement"),
-                    config.createAreEqualCondition("measurement_type_id", "'733'::int"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000699"),
-                    config.createLiteralMapping(xsdFloat, "measurement"),
-                    config.createAreEqualCondition("measurement_type_id", "'699'::int"));
+                    config.createLiteralMapping(xsdFloat, "measurement"));
 
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-unit"),

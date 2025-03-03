@@ -2,7 +2,7 @@ select distinct ?iri where
 {
     {
         ?S ?iri ?O .
-        filter(! strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/MD5_'))
+        filter(strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID'))
         filter(?iri != skos:altLabel)
         filter(?iri != skos:prefLabel)
         filter(?iri != cito:isDiscussedBy)
@@ -19,20 +19,20 @@ select distinct ?iri where
     union
     {
         ?S ?iri ?O .
-        filter(strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/MD5_'))
+        filter(! strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID'))
         filter(?iri != rdf:type)
         filter(?iri != sio:SIO_000300)
     }
     union
     {
         ?S rdf:type ?iri .
-        filter(! strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/MD5_'))
+        filter(strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID'))
         filter(?iri != sio:SIO_010035)
     }
     union
     {
         ?S rdf:type ?iri .
-        filter(strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/MD5_'))
+        filter(! strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID'))
         filter(?iri != sio:SIO_001383)
     }
     union
@@ -74,6 +74,7 @@ select distinct ?iri where
         filter(! strstarts(str(?iri), 'http://glycosmos.org/glycogene/'))
         filter(! strstarts(str(?iri), 'http://identifiers.org/fb:'))
         filter(! strstarts(str(?iri), 'http://identifiers.org/ncbigene:'))
+        filter(! strstarts(str(?iri), 'http://www.wikidata.org/entity/Q'))
     }
     union
     {

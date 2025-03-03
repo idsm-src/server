@@ -35,7 +35,7 @@ class SubstanceDescriptor extends Updater
                             throw new IOException();
 
                         Integer id = getDescriptorID(subject.getURI(), "_Substance_Version");
-                        Integer value = getInteger(object);
+                        Integer value = getIntFromInteger(object);
 
                         synchronized(newValues)
                         {

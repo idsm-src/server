@@ -113,15 +113,9 @@ grant select on pubchem.reference_mined_enzymes to sparql;
 
 --------------------------------------------------------------------------------
 
-create index reference_doi_identifiers__reference on pubchem.reference_doi_identifiers(reference);
-create index reference_doi_identifiers__doi on pubchem.reference_doi_identifiers(doi);
-grant select on pubchem.reference_doi_identifiers to sparql;
-
---------------------------------------------------------------------------------
-
-create index reference_pubmed_identifiers__reference on pubchem.reference_pubmed_identifiers(reference);
-create index reference_pubmed_identifiers__pubmed on pubchem.reference_pubmed_identifiers(pubmed);
-grant select on pubchem.reference_pubmed_identifiers to sparql;
+create index reference_identifiers__reference on pubchem.reference_identifiers(reference);
+create index reference_identifiers__identifier on pubchem.reference_identifiers(identifier);
+grant select on pubchem.reference_identifiers to sparql;
 
 --------------------------------------------------------------------------------
 

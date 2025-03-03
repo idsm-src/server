@@ -45,3 +45,11 @@ create table pubchem.taxonomy_catalogueoflife_matches
     match         varchar not null,
     primary key(taxonomy, match)
 );
+
+
+create table pubchem.taxonomy_wikidata_matches
+(
+    taxonomy      integer not null,
+    match         integer not null,
+    primary key(taxonomy, match)
+);

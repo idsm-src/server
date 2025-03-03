@@ -11,8 +11,7 @@ select distinct ?iri where
     union
     {
         ?S rdf:type ?iri .
-        filter(?iri != obo:DOID_4)
-        filter(?iri != obo:MONDO_0000001)
+        filter(?iri != sio:SIO_010299)
     }
     union
     {

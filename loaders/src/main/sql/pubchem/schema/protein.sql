@@ -196,6 +196,14 @@ create table pubchem.protein_chembl_matches
 );
 
 
+create table pubchem.protein_wikidata_matches
+(
+    protein  integer not null,
+    match    integer not null,
+    primary key(protein, match)
+);
+
+
 create table pubchem.protein_conserveddomains
 (
     protein    integer not null,

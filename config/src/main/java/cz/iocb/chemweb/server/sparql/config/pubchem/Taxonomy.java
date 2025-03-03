@@ -86,5 +86,13 @@ public class Taxonomy
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:col", "match"));
         }
+
+        {
+            Table table = new Table(schema, "taxonomy_wikidata_matches");
+            NodeMapping subject = config.createIriMapping("pubchem:taxonomy", "taxonomy");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("wikidata:entity", "match"));
+        }
     }
 }

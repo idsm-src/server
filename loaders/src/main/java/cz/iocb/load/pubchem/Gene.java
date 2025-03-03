@@ -15,7 +15,7 @@ class Gene extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID";
     static final int prefixLength = prefix.length();
 
-    static final String symbolPrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/MD5_";
+    static final String symbolPrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/";
     static final int symbolPrefixLength = symbolPrefix.length();
 
     private static final IntSet keepGenes = new IntSet();
@@ -321,7 +321,8 @@ class Gene extends Updater
                 + "filter(!strstarts(str(?match), 'https://www.alliancegenome.org/gene/'))"
                 + "filter(!strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"
                 + "filter(!strstarts(str(?match), 'https://www.veupathdb.org/gene/'))"
-                + "filter(!strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))"))
+                + "filter(!strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))"
+                + "filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -677,6 +678,34 @@ class Gene extends Updater
     }
 
 
+    private static void loadWikidataCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select gene,match from pubchem.gene_wikidata_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?gene rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer geneID = getGeneID(getIRI("gene"));
+                Integer match = getIntID("match", "http://www.wikidata.org/entity/Q");
+
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.gene_wikidata_matches where gene=? and match=?", oldMatches);
+        store("insert into pubchem.gene_wikidata_matches(gene,match) values(?,?)", newMatches);
+    }
+
+
     private static void loadProcesses(Model model) throws IOException, SQLException
     {
         IntPairSet newProcesses = new IntPairSet();
@@ -827,6 +856,7 @@ class Gene extends Updater
         loadVeupathdbCloseMatches(model);
         loadZfinCloseMatches(model);
         loadEnzymeCloseMatches(model);
+        loadWikidataCloseMatches(model);
         loadOrthologs(model);
 
         model.close();

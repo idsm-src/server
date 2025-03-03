@@ -85,7 +85,7 @@ public class Cell
             NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("identifiers:wikidata", "match"));
+                    config.createIriMapping("wikidata:entity", "match"));
         }
 
         {

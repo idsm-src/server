@@ -221,7 +221,7 @@ public class Cell extends Updater
         new QueryResultProcessor(
                 patternQuery("?cell rdfs:seeAlso ?match. filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
                         + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/wikidata:Q'))"
+                        + "filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"
                         + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/cell_line/CHEMBL'))"
                         + "filter(!strstarts(str(?match), 'http://identifiers.org/cellosaurus:CVCL_'))"))
         {
@@ -279,13 +279,13 @@ public class Cell extends Updater
         load("select cell,match from pubchem.cell_wikidata_matches", oldMatches);
 
         new QueryResultProcessor(patternQuery(
-                "?cell rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://identifiers.org/wikidata:Q'))"))
+                "?cell rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"))
         {
             @Override
             protected void parse() throws IOException
             {
                 Integer cellID = getCellID(getIRI("cell"));
-                Integer match = getIntID("match", "http://identifiers.org/wikidata:Q");
+                Integer match = getIntID("match", "http://www.wikidata.org/entity/Q");
 
                 Pair<Integer, Integer> pair = Pair.getPair(cellID, match);
 

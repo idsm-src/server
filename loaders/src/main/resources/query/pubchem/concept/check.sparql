@@ -18,7 +18,7 @@ select distinct ?iri where
     union
 	{
 	    ?S <http://purl.org/pav/importedFrom> ?iri
-	    filter(?iri != source:WHO)
+	    filter(?iri != source:ID11950)
 	}
     union
 	{

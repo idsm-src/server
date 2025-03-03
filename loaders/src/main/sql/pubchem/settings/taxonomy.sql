@@ -30,3 +30,9 @@ grant select on pubchem.taxonomy_mesh_matches to sparql;
 create index taxonomy_catalogueoflife_matches__taxonomy on pubchem.taxonomy_catalogueoflife_matches(taxonomy);
 create index taxonomy_catalogueoflife_matches__match on pubchem.taxonomy_catalogueoflife_matches(match);
 grant select on pubchem.taxonomy_catalogueoflife_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index taxonomy_wikidata_matches__taxonomy on pubchem.taxonomy_wikidata_matches(taxonomy);
+create index taxonomy_wikidata_matches__match on pubchem.taxonomy_wikidata_matches(match);
+grant select on pubchem.taxonomy_wikidata_matches to sparql;

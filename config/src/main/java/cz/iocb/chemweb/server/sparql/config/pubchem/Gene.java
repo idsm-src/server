@@ -18,7 +18,7 @@ public class Gene
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pubchem:gene_symbol", "integer", new Table(schema, "gene_symbol_bases"),
-                new TableColumn("id"), new TableColumn("iri"), "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/MD5_"));
+                new TableColumn("id"), new TableColumn("iri"), "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"));
         config.addIriClass(
                 new IntegerUserIriClass("pubchem:gene", "integer", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"));
     }
@@ -200,6 +200,14 @@ public class Gene
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("purl:enzyme", "match"));
+        }
+
+        {
+            Table table = new Table(schema, "gene_wikidata_matches");
+            NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("wikidata:entity", "match"));
         }
 
         {

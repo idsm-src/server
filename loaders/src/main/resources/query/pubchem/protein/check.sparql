@@ -8,7 +8,7 @@ select distinct ?iri where
         filter(?iri != up:organism)
         filter(?iri != up:enzyme)
         filter(?iri != vocab:hasSimilarProtein)
-        filter(?iri != pdbo40:link_to_pdb)
+        filter(?iri != pdbo:link_to_pdb)
         filter(?iri != rdfs:seeAlso)
         filter(?iri != rdf:type)
         filter(?iri != skos:prefLabel)
@@ -69,6 +69,7 @@ select distinct ?iri where
         filter(! strstarts(str(?iri), 'http://identifiers.org/ncbiprotein:'))
         filter(! strstarts(str(?iri), 'http://purl.obolibrary.org/obo/PR_'))
         filter(! strstarts(str(?iri), 'http://rdf.ebi.ac.uk/resource/chembl/target/CHEMBL'))
+        filter(! strstarts(str(?iri), 'http://www.wikidata.org/entity/Q'))
     }
     union
     {

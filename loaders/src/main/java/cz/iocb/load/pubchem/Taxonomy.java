@@ -148,7 +148,8 @@ public class Taxonomy extends Updater
                 "?taxonomy rdfs:seeAlso ?match. " + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
                         + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"
                         + "filter(!strstarts(str(?match), 'http://identifiers.org/taxonomy:'))"
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/col:'))"))
+                        + "filter(!strstarts(str(?match), 'http://identifiers.org/col:'))"
+                        + "filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -224,6 +225,34 @@ public class Taxonomy extends Updater
     }
 
 
+    private static void loadWikidataCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select taxonomy,match from pubchem.taxonomy_wikidata_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?taxonomy rdfs:seeAlso ?match. "
+                + "filter(strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"));
+                Integer match = getIntID("match", "http://www.wikidata.org/entity/Q");
+
+                Pair<Integer, Integer> pair = Pair.getPair(taxonomyID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.taxonomy_wikidata_matches where taxonomy=? and match=?", oldMatches);
+        store("insert into pubchem.taxonomy_wikidata_matches(taxonomy,match) values(?,?)", newMatches);
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load taxonomies ...");
@@ -239,6 +268,7 @@ public class Taxonomy extends Updater
         loadCloseMatches(model);
         loadMeshCloseMatches(model);
         loadCatalogueoflifeCloseMatches(model);
+        loadWikidataCloseMatches(model);
 
         model.close();
         System.out.println();

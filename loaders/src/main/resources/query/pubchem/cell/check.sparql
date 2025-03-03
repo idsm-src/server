@@ -37,7 +37,7 @@ select distinct ?iri where
         filter(!strstarts(str(?iri), 'http://identifiers.org/efo:'))
         filter(!strstarts(str(?iri), 'http://identifiers.org/BTO:'))
         filter(!strstarts(str(?iri), 'http://identifiers.org/CLO:'))
-        filter(!strstarts(str(?iri), 'http://identifiers.org/wikidata:Q'))
+        filter(!strstarts(str(?iri), 'http://www.wikidata.org/entity/Q'))        
         filter(!strstarts(str(?iri), 'http://rdf.ebi.ac.uk/resource/chembl/cell_line/CHEMBL'))
         filter(!strstarts(str(?iri), 'http://identifiers.org/cellosaurus:CVCL_'))
         filter(!strstarts(str(?iri), 'https://lincs.hms.harvard.edu/db/cells/'))

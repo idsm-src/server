@@ -169,19 +169,11 @@ create table pubchem.reference_mined_enzymes
 );
 
 
-create table pubchem.reference_doi_identifiers
+create table pubchem.reference_identifiers
 (
     reference   integer not null,
-    doi         varchar not null,
-    primary key(reference, doi)
-);
-
-
-create table pubchem.reference_pubmed_identifiers
-(
-    reference   integer not null,
-    pubmed      varchar not null,
-    primary key(reference, pubmed)
+    identifier  varchar not null,
+    primary key(reference, identifier)
 );
 
 

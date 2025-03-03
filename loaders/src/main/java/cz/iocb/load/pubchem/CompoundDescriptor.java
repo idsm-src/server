@@ -44,7 +44,7 @@ class CompoundDescriptor extends Updater
                             throw new IOException();
 
                         Integer id = getDescriptorID(subject.getURI(), suffix);
-                        Integer value = getInteger(object);
+                        Integer value = getIntFromInteger(object);
 
                         synchronized(newValues)
                         {

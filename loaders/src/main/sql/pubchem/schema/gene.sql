@@ -138,6 +138,14 @@ create table pubchem.gene_enzyme_matches
 );
 
 
+create table pubchem.gene_wikidata_matches
+(
+    gene     integer not null,
+    match    integer not null,
+    primary key(gene, match)
+);
+
+
 create table pubchem.gene_processes
 (
     gene            integer not null,

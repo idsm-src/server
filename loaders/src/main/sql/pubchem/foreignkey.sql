@@ -150,6 +150,7 @@ alter table pubchem.gene_pombase_matches add foreign key (gene) references pubch
 alter table pubchem.gene_veupathdb_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_zfin_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_enzyme_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
+alter table pubchem.gene_wikidata_matches add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_processes add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_functions add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
 alter table pubchem.gene_locations add foreign key (gene) references pubchem.gene_bases(id) initially deferred;
@@ -264,6 +265,7 @@ alter table pubchem.protein_intact_matches add foreign key (protein) references 
 alter table pubchem.protein_interpro_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_nextprot_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_chembl_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_wikidata_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_conserveddomains add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_conserveddomains add foreign key (domain) references pubchem.conserveddomain_bases(id) initially deferred;
 alter table pubchem.protein_continuantparts add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
@@ -302,8 +304,7 @@ alter table pubchem.reference_mined_genes add foreign key (reference) references
 alter table pubchem.reference_mined_genes add foreign key (gene_symbol) references pubchem.gene_symbol_bases(id) initially deferred;
 alter table pubchem.reference_mined_enzymes add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 alter table pubchem.reference_mined_enzymes add foreign key (enzyme) references pubchem.enzyme_bases(id) initially deferred;
-alter table pubchem.reference_doi_identifiers add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
-alter table pubchem.reference_pubmed_identifiers add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
+alter table pubchem.reference_identifiers add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 alter table pubchem.reference_sources add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 
 
@@ -343,6 +344,7 @@ alter table pubchem.taxonomy_references add foreign key (reference) references p
 alter table pubchem.taxonomy_matches add foreign key (taxonomy) references pubchem.taxonomy_bases(id) initially deferred;
 alter table pubchem.taxonomy_mesh_matches add foreign key (taxonomy) references pubchem.taxonomy_bases(id) initially deferred;
 alter table pubchem.taxonomy_catalogueoflife_matches add foreign key (taxonomy) references pubchem.taxonomy_bases(id) initially deferred;
+alter table pubchem.taxonomy_wikidata_matches add foreign key (taxonomy) references pubchem.taxonomy_bases(id) initially deferred;
 
 
 -- descriptor-compound

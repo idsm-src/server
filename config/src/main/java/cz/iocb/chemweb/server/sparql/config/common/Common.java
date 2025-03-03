@@ -128,8 +128,6 @@ public class Common
         config.addIriClass(new StringUserIriClass("anzsrc:term", "http://purl.org/au-research/vocabulary/anzsrc-for/2008/"));
         config.addIriClass(new StringUserIriClass("identifier:isbn", "https://isbnsearch.org/isbn"));
         config.addIriClass(new StringUserIriClass("identifier:issn", "https://portal.issn.org/resource/ISSN"));
-        config.addIriClass(new StringUserIriClass("identifier:doi", "https://doi.org/"));
-        config.addIriClass(new StringUserIriClass("identifier:pubmed", "https://pubmed.ncbi.nlm.nih.gov/"));
 
         config.addIriClass(new IntegerUserIriClass("wikidata:wiki", "integer", "https://www.wikidata.org/wiki/Q"));
         config.addIriClass(new IntegerUserIriClass("wikidata:entity", "integer", "http://www.wikidata.org/entity/Q"));

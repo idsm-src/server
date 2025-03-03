@@ -372,7 +372,7 @@ class Protein extends Updater
 
         load("select protein,pdblink from pubchem.protein_pdblinks", oldPdbLinks);
 
-        new QueryResultProcessor(patternQuery("?protein pdbo40:link_to_pdb ?pdblink"))
+        new QueryResultProcessor(patternQuery("?protein pdbo:link_to_pdb ?pdblink"))
         {
             @Override
             protected void parse() throws IOException
@@ -520,7 +520,8 @@ class Protein extends Updater
                         + "filter(!strstarts(str(?match), 'http://identifiers.org/ncbiprotein:'))"
                         + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/target/'))"
                         + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/target/CHEMBL'))"
-                        + "filter(!strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))"))
+                        + "filter(!strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))"
+                        + "filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"))
         {
             @Override
             protected void parse() throws IOException
@@ -935,6 +936,34 @@ class Protein extends Updater
     }
 
 
+    private static void loadWikidataCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntPairSet newMatches = new IntPairSet();
+        IntPairSet oldMatches = new IntPairSet();
+
+        load("select protein,match from pubchem.protein_wikidata_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                Integer match = getIntID("match", "http://www.wikidata.org/entity/Q");
+
+                Pair<Integer, Integer> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_wikidata_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_wikidata_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
     private static void loadConservedDomains(Model model) throws IOException, SQLException
     {
         IntPairSet newDomains = new IntPairSet();
@@ -1139,6 +1168,7 @@ class Protein extends Updater
         loadInterproProteinCloseMatches(model);
         loadNextprotCloseMatches(model);
         loadChemblCloseMatches(model);
+        loadWikidataCloseMatches(model);
         loadConservedDomains(model);
         loadContinuantParts(model);
         loadFamilies(model);

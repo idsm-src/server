@@ -100,7 +100,7 @@ public class Protein
             Table table = new Table(schema, "protein_pdblinks");
             NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("pdbo40:link_to_pdb"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("pdbo:link_to_pdb"),
                     config.createIriMapping("rdf:wwpdb", "pdblink"));
         }
 
@@ -260,6 +260,14 @@ public class Protein
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("chembl:target", "match"));
+        }
+
+        {
+            Table table = new Table(schema, "protein_wikidata_matches");
+            NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("wikidata:entity", "match"));
         }
 
         {

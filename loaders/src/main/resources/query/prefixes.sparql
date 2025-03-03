@@ -44,7 +44,7 @@ prefix cito:            <http://purl.org/spar/cito/>
 prefix fabio:           <http://purl.org/spar/fabio/>
 prefix uniprot:         <http://purl.uniprot.org/uniprot/>
 prefix up:              <http://purl.uniprot.org/core/>
-prefix pdbo:            <https://rdf.wwpdb.org/schema/pdbx-v50.owl#>
+prefix pdbo:            <http://rdf.wwpdb.org/schema/pdbx-v50.owl#>
 prefix pdbo40:          <http://rdf.wwpdb.org/schema/pdbx-v40.owl#>
 prefix pdbr:            <http://rdf.wwpdb.org/pdb/>
 #prefix taxonomy:       <http://identifiers.org/taxonomy/>

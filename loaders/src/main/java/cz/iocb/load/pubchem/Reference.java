@@ -1129,16 +1129,11 @@ class Reference extends Updater
 
     private static void loadIdentifiers() throws IOException, SQLException
     {
-        IntStringSet keepDoiIdentifiers = new IntStringSet();
-        IntStringSet newDoiIdentifiers = new IntStringSet();
-        IntStringSet oldDoiIdentifiers = new IntStringSet();
+        IntStringSet keepIdentifiers = new IntStringSet();
+        IntStringSet newIdentifiers = new IntStringSet();
+        IntStringSet oldIdentifiers = new IntStringSet();
 
-        IntStringSet keepPubMedIdentifiers = new IntStringSet();
-        IntStringSet newPubMedIdentifiers = new IntStringSet();
-        IntStringSet oldPubMedIdentifiers = new IntStringSet();
-
-        load("select reference,doi from pubchem.reference_doi_identifiers", oldDoiIdentifiers);
-        load("select reference,pubmed from pubchem.reference_pubmed_identifiers", oldPubMedIdentifiers);
+        load("select reference,identifier from pubchem.reference_identifiers", oldIdentifiers);
 
         processFiles("pubchem/RDF/reference", "pc_reference_identifier_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -1152,49 +1147,24 @@ class Reference extends Updater
                             throw new IOException();
 
                         Integer referenceID = Reference.getReferenceID(subject.getURI());
+                        String identifier = getString(object);
 
-                        if(object.getURI().startsWith("https://doi.org/"))
+                        Pair<Integer, String> pair = Pair.getPair(referenceID, identifier);
+
+                        synchronized(newIdentifiers)
                         {
-                            String doi = getStringID(object, "https://doi.org/");
-
-                            Pair<Integer, String> pair = Pair.getPair(referenceID, doi);
-
-                            synchronized(newDoiIdentifiers)
-                            {
-                                if(oldDoiIdentifiers.remove(pair))
-                                    keepDoiIdentifiers.add(pair);
-                                else if(!keepDoiIdentifiers.contains(pair))
-                                    newDoiIdentifiers.add(pair);
-                            }
-                        }
-                        else if(object.getURI().startsWith("https://pubmed.ncbi.nlm.nih.gov/"))
-                        {
-                            String pubmed = getStringID(object, "https://pubmed.ncbi.nlm.nih.gov/");
-
-                            Pair<Integer, String> pair = Pair.getPair(referenceID, pubmed);
-
-                            synchronized(newPubMedIdentifiers)
-                            {
-                                if(oldPubMedIdentifiers.remove(pair))
-                                    keepPubMedIdentifiers.add(pair);
-                                else if(!keepPubMedIdentifiers.contains(pair))
-                                    newPubMedIdentifiers.add(pair);
-                            }
-                        }
-                        else
-                        {
-                            throw new IOException();
+                            if(oldIdentifiers.remove(pair))
+                                keepIdentifiers.add(pair);
+                            else if(!keepIdentifiers.contains(pair))
+                                newIdentifiers.add(pair);
                         }
                     }
                 }.load(stream);
             }
         });
 
-        store("delete from pubchem.reference_doi_identifiers where reference=? and doi=?", oldDoiIdentifiers);
-        store("insert into pubchem.reference_doi_identifiers(reference,doi) values(?,?)", newDoiIdentifiers);
-
-        store("delete from pubchem.reference_pubmed_identifiers where reference=? and pubmed=?", oldPubMedIdentifiers);
-        store("insert into pubchem.reference_pubmed_identifiers(reference,pubmed) values(?,?)", newPubMedIdentifiers);
+        store("delete from pubchem.reference_identifiers where reference=? and identifier=?", oldIdentifiers);
+        store("insert into pubchem.reference_identifiers(reference,identifier) values(?,?)", newIdentifiers);
     }
 
 
