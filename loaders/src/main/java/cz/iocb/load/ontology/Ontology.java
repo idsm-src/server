@@ -802,6 +802,12 @@ public class Ontology extends Updater
         builtinResources.put("http://rdfs.org/ns/void#subjectsTarget", 423);
         builtinResources.put("http://rdfs.org/ns/void#objectsTarget", 424);
         builtinResources.put("http://www.w3.org/2000/01/rdf-schema#seeAlso", 425);
+        builtinResources.put("http://ldf.fi/void-ext#distinctIRIReferenceSubjects", 426);
+        builtinResources.put("http://ldf.fi/void-ext#distinctIRIReferenceObjects", 427);
+        builtinResources.put("http://ldf.fi/void-ext#distinctLiterals", 428);
+        builtinResources.put("http://rdfs.org/ns/void#linkPredicate", 429);
+        builtinResources.put("http://ldf.fi/void-ext#datatypePartition", 430);
+        builtinResources.put("http://ldf.fi/void-ext#datatype", 431);
 
         // classes
         builtinResources.put("http://data.epo.org/linked-data/def/patent/Publication", 512);
@@ -915,6 +921,7 @@ public class Ontology extends Updater
         builtinResources.put("http://xmlns.com/foaf/0.1/Image", 620);
         builtinResources.put("http://www.w3.org/ns/sparql-service-description#GraphCollection", 621);
         builtinResources.put("http://rdfs.org/ns/void#Dataset", 622);
+        builtinResources.put("http://rdfs.org/ns/void#Linkset", 623);
 
         // datatypes
         builtinResources.put("http://www.w3.org/2001/XMLSchema#boolean", 900);
