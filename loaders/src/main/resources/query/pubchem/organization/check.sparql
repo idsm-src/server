@@ -10,6 +10,7 @@ select distinct ?iri where
     union
 	{
 	    ?S rdf:type ?iri .
+	    filter(?iri != vocab:Organization)
         filter(?iri != frapo:FundingAgency)
         filter(?iri != vcard:Organization)
 	}

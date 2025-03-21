@@ -29,6 +29,8 @@ public class Grant
             NodeMapping subject = config.createIriMapping("pubchem:grant", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Grant"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("frapo:Grant"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("frapo:hasGrantNumber"),
                     config.createLiteralMapping(xsdString, "number"));

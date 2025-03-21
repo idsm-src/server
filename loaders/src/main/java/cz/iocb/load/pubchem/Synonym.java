@@ -215,6 +215,9 @@ class Synonym extends Updater
                         if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                             throw new IOException();
 
+                        if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Synonym"))
+                            return;
+
                         Integer md5ID = getSynonymID(subject.getURI());
                         Integer typeID = getIntID(object, "http://semanticscience.org/resource/CHEMINF_");
 

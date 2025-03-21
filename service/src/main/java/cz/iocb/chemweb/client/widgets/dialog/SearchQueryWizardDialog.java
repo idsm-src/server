@@ -44,39 +44,66 @@ public class SearchQueryWizardDialog extends DialogBox
     }
 
 
-    @UiField CheckBox searchCompoundsCheckBox;
-    @UiField CheckBox searchBioassaysCheckBox;
-    @UiField CheckBox searchParticipantsCheckBox;
+    @UiField
+    CheckBox searchCompoundsCheckBox;
+    @UiField
+    CheckBox searchBioassaysCheckBox;
+    @UiField
+    CheckBox searchParticipantsCheckBox;
 
-    @UiField ListBox queryMethodListBox;
-    @UiField TextArea queryTextArea;
-    @UiField FileUpload queryFileUpload;
-    @UiField TextBox resultLimitTextBox;
-    @UiField Label resultThresholdLabel;
-    @UiField TextBox resultThresholdTextBox;
-    @UiField Label useTautomersLabel;
-    @UiField ListBox useTautomersListBox;
+    @UiField
+    ListBox queryMethodListBox;
+    @UiField
+    TextArea queryTextArea;
+    @UiField
+    FileUpload queryFileUpload;
+    @UiField
+    TextBox resultLimitTextBox;
+    @UiField
+    Label resultThresholdLabel;
+    @UiField
+    TextBox resultThresholdTextBox;
+    @UiField
+    Label useTautomersLabel;
+    @UiField
+    ListBox useTautomersListBox;
 
-    @UiField TextArea keywordsTextArea;
-    @UiField CheckBox activeStatusCheckBox;
-    @UiField CheckBox inactiveStatusCheckBox;
-    @UiField CheckBox inconclusiveStatusCheckBox;
-    @UiField CheckBox probeStatusCheckBox;
-    @UiField CheckBox unspecifiedStatusCheckBox;
+    @UiField
+    TextArea keywordsTextArea;
+    @UiField
+    CheckBox activeStatusCheckBox;
+    @UiField
+    CheckBox inactiveStatusCheckBox;
+    @UiField
+    CheckBox inconclusiveStatusCheckBox;
+    @UiField
+    CheckBox probeStatusCheckBox;
+    @UiField
+    CheckBox unspecifiedStatusCheckBox;
 
-    @UiField TextBox participantTextBox;
-    @UiField CheckBox proteinCheckBox;
-    @UiField CheckBox geneCheckBox;
+    @UiField
+    TextBox participantTextBox;
+    @UiField
+    CheckBox proteinCheckBox;
+    @UiField
+    CheckBox geneCheckBox;
 
-    @UiField CheckBox compoundCheckBox;
-    @UiField CheckBox scoreCheckBox;
-    @UiField CheckBox bioassayCheckBox;
-    @UiField CheckBox statusCheckBox;
-    @UiField CheckBox participantCheckBox;
+    @UiField
+    CheckBox compoundCheckBox;
+    @UiField
+    CheckBox scoreCheckBox;
+    @UiField
+    CheckBox bioassayCheckBox;
+    @UiField
+    CheckBox statusCheckBox;
+    @UiField
+    CheckBox participantCheckBox;
 
-    @UiField ListBox orderByListBox;
+    @UiField
+    ListBox orderByListBox;
 
-    @UiField Button finishButton;
+    @UiField
+    Button finishButton;
 
 
 
@@ -622,7 +649,7 @@ public class SearchQueryWizardDialog extends DialogBox
 
             if(!searchBioassays && !searchParticipants)
             {
-                query.append("\n  ?COMPOUND rdf:type sio:SIO_010004.");
+                query.append("\n  ?COMPOUND rdf:type vocab:Compound.");
             }
             else
             {
@@ -646,7 +673,7 @@ public class SearchQueryWizardDialog extends DialogBox
             }
 
             if(!searchCompounds && !searchParticipants)
-                query.append("\n  ?BIOASSAY rdf:type bao:BAO_0000015.");
+                query.append("\n  ?BIOASSAY rdf:type vocab:BioAssay.");
             else
                 query.append("\n  ?BIOASSAY bao:BAO_0000209 ?MEASUREGROUP.");
         }
@@ -735,18 +762,16 @@ public class SearchQueryWizardDialog extends DialogBox
 
             if(geneCheckBox.getValue() && !proteinCheckBox.getValue())
             {
-                query.append("\n  ?PARTICIPANT rdf:type sio:SIO_010035.");
+                query.append("\n  ?PARTICIPANT rdf:type vocab:Gene.");
             }
             else if(!geneCheckBox.getValue() && proteinCheckBox.getValue())
             {
-                //FIXME: se another type instead of bp:Protein
-                query.append("\n  ?PARTICIPANT rdf:type bp:Protein.");
+                query.append("\n  ?PARTICIPANT rdf:type vocab:Protein.");
             }
             else if(!searchCompounds && !searchBioassays)
             {
-                //FIXME: se another type instead of bp:Protein
                 query.append("\n  ?PARTICIPANT rdf:type ?PARTICIPANT_TYPE.");
-                query.append("\n  FILTER(?PARTICIPANT_TYPE in (sio:SIO_010035, bp:Protein))");
+                query.append("\n  FILTER(?PARTICIPANT_TYPE in (vocab:Gene, vocab:Protein))");
             }
 
             if(!participantTextBox.getValue().trim().isEmpty())

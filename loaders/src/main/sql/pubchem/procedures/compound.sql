@@ -1,9 +1,9 @@
 create function pubchem.compound_fulltext(query in varchar) returns table (compound int, score float4, name varchar) language sql as
 $$
   select distinct on (compound) compound, score, name from (
-    select compound, trgm.similarity(title, query) as score, title as name
-        from pubchem.compound_titles
-        where to_tsvector('simple', title) @@ to_tsquery('simple', query)
+    select compound, trgm.similarity(label, query) as score, label as name
+        from pubchem.compound_labels
+        where to_tsvector('simple', label) @@ to_tsquery('simple', query)
     union all
     select compound, trgm.similarity(preferred_iupac_name, query) as score, preferred_iupac_name as name
         from pubchem.descriptor_compound_preferred_iupac_names

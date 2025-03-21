@@ -25,16 +25,17 @@ public class Concept
         ConstantIriMapping graph = config.createIriMapping("pubchem:concept");
 
         {
-            config.addQuadMapping(null, graph, config.createIriMapping("concept:ATC"),
-                    config.createIriMapping("rdf:type"), config.createIriMapping("skos:ConceptScheme"));
-            config.addQuadMapping(null, graph, config.createIriMapping("concept:SubstanceCategorization"),
-                    config.createIriMapping("rdf:type"), config.createIriMapping("skos:ConceptScheme"));
-        }
-
-        {
             Table table = new Table(schema, "concept_bases");
             NodeMapping subject = config.createIriMapping("pubchem:concept", "id");
 
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Concept"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("skos:ConceptScheme"),
+                    config.createAreEqualCondition("iri", "'ATC'::varchar", "'SubstanceCategorization'::varchar"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("skos:Concept"),
+                    config.createAreNotEqualCondition("iri", "'ATC'::varchar", "'SubstanceCategorization'::varchar"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
                     config.createLiteralMapping(xsdString, "label"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:inScheme"),
@@ -44,9 +45,6 @@ public class Concept
             config.addQuadMapping(table, graph, subject, config.createIriMapping("<http://purl.org/pav/importedFrom>"),
                     config.createIriMapping("source:ID11950"),
                     config.createAreEqualCondition("(iri like 'ATC%')", "'true'::boolean"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("skos:Concept"),
-                    config.createAreNotEqualCondition("iri", "'ATC'::varchar", "'SubstanceCategorization'::varchar"));
         }
     }
 }

@@ -38,6 +38,8 @@ public class Bioassay
             NodeMapping subject = config.createIriMapping("pubchem:bioassay", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:BioAssay"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0000015"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),
                     config.createLiteralMapping(xsdString, "(id::varchar)"));

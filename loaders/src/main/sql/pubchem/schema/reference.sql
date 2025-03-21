@@ -81,6 +81,14 @@ create table pubchem.reference_issn_numbers
 );
 
 
+create table pubchem.reference_isbn_numbers
+(
+    reference   integer not null,
+    isbn        varchar not null,
+    primary key(reference, isbn)
+);
+
+
 create table pubchem.reference_authors
 (
     reference   integer not null,

@@ -47,6 +47,12 @@ grant select on pubchem.reference_issn_numbers to sparql;
 
 --------------------------------------------------------------------------------
 
+create index reference_isbn_numbers__reference on pubchem.reference_isbn_numbers(reference);
+create index reference_isbn_numbers__isbn on pubchem.reference_isbn_numbers(isbn);
+grant select on pubchem.reference_isbn_numbers to sparql;
+
+--------------------------------------------------------------------------------
+
 create index reference_authors__reference on pubchem.reference_authors(reference);
 create index reference_authors__author on pubchem.reference_authors(author);
 grant select on pubchem.reference_authors to sparql;

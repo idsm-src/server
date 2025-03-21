@@ -8,7 +8,13 @@ select distinct ?iri where
         filter(?iri != vcard:organization-name)
         filter(?iri != vcard:hasUID)
         filter(?iri != dcterms:source)
+        filter(?iri != rdf:type)
 	}
+    union
+    {
+        ?S rdf:type ?iri .
+        filter(?iri != vocab:Author)
+    }
     union
 	{
 	    ?S dcterms:source ?iri

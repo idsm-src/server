@@ -30,6 +30,8 @@ public class Measuregroup
             NodeMapping subject = config.createIriMapping("pubchem:measuregroup", "bioassay", "measuregroup");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:MeasureGroup"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0000040"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:source"),
                     config.createIriMapping("pubchem:source", "source"));

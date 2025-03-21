@@ -62,8 +62,8 @@ alter table pubchem.compound_same_connectivities add foreign key (isomer) refere
 alter table pubchem.compound_roles add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.compound_types add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.compound_active_ingredients add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
-alter table pubchem.compound_titles add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
-alter table pubchem.compound_thesaurus_matches add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
+alter table pubchem.compound_labels add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
+alter table pubchem.compound_matches add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.compound_wikidata_matches add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 alter table molecules.pubchem add foreign key (id) references pubchem.compound_bases(id) initially deferred;
 
@@ -217,7 +217,9 @@ alter table pubchem.patent_taxonomies add foreign key (patent) references pubche
 alter table pubchem.patent_taxonomies add foreign key (taxonomy) references pubchem.taxonomy_bases(id) initially deferred;
 alter table pubchem.patent_anatomies add foreign key (patent) references pubchem.patent_bases(id) initially deferred;
 alter table pubchem.patent_inventors add foreign key (patent) references pubchem.patent_bases(id) initially deferred;
+alter table pubchem.patent_inventors add foreign key (inventor) references pubchem.patentinventor_bases(id) initially deferred;
 alter table pubchem.patent_applicants add foreign key (patent) references pubchem.patent_bases(id) initially deferred;
+alter table pubchem.patent_applicants add foreign key (applicant) references pubchem.patentassignee_bases(id) initially deferred;
 
 
 -- pathway
@@ -284,6 +286,7 @@ alter table pubchem.reference_anzsrc_subjects add foreign key (reference) refere
 alter table pubchem.reference_primary_subjects add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 alter table pubchem.reference_content_types add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 alter table pubchem.reference_issn_numbers add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
+alter table pubchem.reference_isbn_numbers add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 alter table pubchem.reference_authors add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
 alter table pubchem.reference_authors add foreign key (author) references pubchem.author_bases(id) initially deferred;
 alter table pubchem.reference_grants add foreign key (reference) references pubchem.reference_bases(id) initially deferred;

@@ -28,6 +28,8 @@ public class Reference
             Table table = new Table(schema, "reference_bases");
             NodeMapping subject = config.createIriMapping("pubchem:reference", "id");
 
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Reference"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:title"),
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:date"),
@@ -94,6 +96,14 @@ public class Reference
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("prism:issn"),
                     config.createLiteralMapping(xsdString, "issn"));
+        }
+
+        {
+            Table table = new Table(schema, "reference_isbn_numbers");
+            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("prism:isbn"),
+                    config.createLiteralMapping(xsdString, "isbn"));
         }
 
         {

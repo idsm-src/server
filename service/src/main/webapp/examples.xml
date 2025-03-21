@@ -22,7 +22,7 @@ WHERE
   ?protein rdf:type sio:SIO_010043.
   ?ep rdf:type bao:BAO_0000190;
     obo:IAO_0000136 ?sub;
-    sio:SIO_000300|sio:SIO_000738 ?value.
+    sio:SIO_000300 ?value.
 
   filter (?value < 10)
 }
@@ -133,7 +133,7 @@ WHERE
   ?protein rdf:type sio:SIO_010043.
   ?ep rdf:type bao:BAO_0000190;
     obo:IAO_0000136 ?sub;
-    sio:SIO_000300|sio:SIO_000738 ?value.
+    sio:SIO_000300 ?value.
 
   filter (?value < 10)
 }
@@ -189,7 +189,7 @@ WHERE
   ?protein rdf:type sio:SIO_010043.
   ?ep rdf:type bao:BAO_0000190;
     obo:IAO_0000136 ?sub;
-    sio:SIO_000300|sio:SIO_000738 ?value.
+    sio:SIO_000300 ?value.
 
   filter (?value < 10)
 }
@@ -222,7 +222,7 @@ WHERE
   ?measuregroup obo:OBI_0000299 ?endpoint.
   ?endpoint obo:IAO_0000136 ?substance.
   ?endpoint rdf:type bao:BAO_0000190.
-  ?endpoint sio:SIO_000300|sio:SIO_000738 ?value.
+  ?endpoint sio:SIO_000300 ?value.
 
   filter (?value < 10)
 }
@@ -254,7 +254,7 @@ WHERE
     owl:someValuesFrom ?role ].
   ?ep obo:IAO_0000136 ?sub;
     rdf:type bao:BAO_0000190;
-    sio:SIO_000300|sio:SIO_000738 ?value.
+    sio:SIO_000300 ?value.
 
   filter (?value < 10)
 }

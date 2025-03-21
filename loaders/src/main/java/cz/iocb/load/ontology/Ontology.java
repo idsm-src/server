@@ -922,6 +922,34 @@ public class Ontology extends Updater
         builtinResources.put("http://www.w3.org/ns/sparql-service-description#GraphCollection", 621);
         builtinResources.put("http://rdfs.org/ns/void#Dataset", 622);
         builtinResources.put("http://rdfs.org/ns/void#Linkset", 623);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Anatomy", 624);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Author", 625);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#BioAssay", 626);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Book", 627);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Cell", 628);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Compound", 629);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Concept", 630);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#ConservedDomain", 631);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Cooccurrence", 632);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Descriptor", 633);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Disease", 634);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Endpoint", 635);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Gene", 636);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Grant", 637);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#InChIKey", 638);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Journal", 639);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MeasureGroup", 640);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Organization", 641);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Patent", 642);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PatentAssignee", 643);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PatentInventor", 644);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Pathway", 645);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Protein", 646);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Reference", 647);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Source", 648);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Substance", 649);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Synonym", 650);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Taxonomy", 651);
 
         // datatypes
         builtinResources.put("http://www.w3.org/2001/XMLSchema#boolean", 900);

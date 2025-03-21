@@ -29,6 +29,8 @@ public class Synonym
             Table table = new Table(schema, "synonym_values");
             NodeMapping subject = config.createIriMapping("pubchem:synonym", "synonym");
 
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Synonym"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
                     config.createLiteralMapping(xsdString, "value"));
 

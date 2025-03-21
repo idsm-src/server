@@ -43,7 +43,8 @@ class Measuregroup extends Updater
                     if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                         throw new IOException();
 
-                    if(!object.getURI().equals("http://www.bioassayontology.org/bao#BAO_0000040"))
+                    if(!object.getURI().equals("http://www.bioassayontology.org/bao#BAO_0000040")
+                            && !object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MeasureGroup"))
                         throw new IOException();
 
                     parseMeasuregroup(subject, false);

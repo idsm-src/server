@@ -29,6 +29,8 @@ public class InchiKey
             NodeMapping subject = config.createIriMapping("pubchem:inchikey", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:InChIKey"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:CHEMINF_000399"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
                     config.createLiteralMapping(rdfLangStringEn, "inchikey"));

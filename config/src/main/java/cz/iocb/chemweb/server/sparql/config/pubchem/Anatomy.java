@@ -28,6 +28,8 @@ public class Anatomy
             NodeMapping subject = config.createIriMapping("pubchem:anatomy", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Anatomy"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_001262"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
                     config.createLiteralMapping(xsdString, "label"));

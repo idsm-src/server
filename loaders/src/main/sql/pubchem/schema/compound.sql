@@ -72,19 +72,20 @@ create table pubchem.compound_active_ingredients
 );
 
 
-create table pubchem.compound_titles
+create table pubchem.compound_labels
 (
     compound           integer not null,
-    title              varchar not null,
+    label              varchar not null,
     primary key(compound)
 );
 
 
-create table pubchem.compound_thesaurus_matches
+create table pubchem.compound_matches
 (
     compound           integer not null,
-    match              integer not null,
-    primary key(compound, match)
+    match_unit         smallint not null,
+    match_id           integer not null,
+    primary key(compound, match_unit, match_id)
 );
 
 

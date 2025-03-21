@@ -31,10 +31,12 @@ public class Compound
             NodeMapping subject = config.createIriMapping("pubchem:compound", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("sio:SIO_010004"));
+                    config.createIriMapping("vocab:Compound"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:compound_identifier", "id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),
+                    config.createLiteralMapping(xsdString, "(id::varchar)"));
 
             // extension
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:compound_identifier", "id"),
@@ -43,6 +45,8 @@ public class Compound
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:compound_identifier", "id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("sio:SIO_010004"));
         }
 
         {
@@ -68,12 +72,15 @@ public class Compound
         }
 
         {
-            Table table = new Table(schema, "compound_titles");
+            Table table = new Table(schema, "compound_labels");
             NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
+                    config.createLiteralMapping(xsdString, "label"));
 
             // extension
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
-                    config.createLiteralMapping(xsdString, "title"));
+                    config.createLiteralMapping(xsdString, "label"));
         }
 
         {
@@ -404,22 +411,18 @@ public class Compound
         }
 
         {
-            Table table = new Table(schema, "compound_thesaurus_matches");
+            Table table = new Table(schema, "compound_matches");
             NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("ontology:resource", Ontology.unitThesaurus, "match"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("ontology:resource", "match_unit", "match_id"));
         }
 
         {
             Table table = new Table(schema, "compound_wikidata_matches");
             NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("wikidata:wiki", "match"));
-
-            // extension
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("wikidata:entity", "match"));
         }
     }

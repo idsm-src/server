@@ -87,12 +87,10 @@ grant select on pubchem.patent_applicants to sparql;
 
 --------------------------------------------------------------------------------
 
-create index patent_inventor_names__inventor on pubchem.patent_inventor_names(inventor);
-create index patent_inventor_names__formatted_name on pubchem.patent_inventor_names(formatted_name);
-grant select on pubchem.patent_inventor_names to sparql;
+create index patentinventor_bases__name on pubchem.patentinventor_bases(name);
+grant select on pubchem.patentinventor_bases to sparql;
 
 --------------------------------------------------------------------------------
 
-create index patent_applicant_names__applicant on pubchem.patent_applicant_names(applicant);
-create index patent_applicant_names__formatted_name on pubchem.patent_applicant_names(formatted_name);
-grant select on pubchem.patent_applicant_names to sparql;
+create index patentassignee_bases__name on pubchem.patentassignee_bases(name);
+grant select on pubchem.patentassignee_bases to sparql;

@@ -117,17 +117,17 @@ create table pubchem.patent_applicants
 );
 
 
-create table pubchem.patent_inventor_names
+create table pubchem.patentinventor_bases
 (
-    inventor            varchar not null,
-    formatted_name      varchar not null,
-    primary key(inventor, formatted_name)
+    id                  varchar not null,
+    name                varchar not null,
+    primary key(id)
 );
 
 
-create table pubchem.patent_applicant_names
+create table pubchem.patentassignee_bases
 (
-    applicant           varchar not null,
-    formatted_name      varchar not null,
-    primary key(applicant, formatted_name)
+    id                  varchar not null,
+    name                varchar,
+    primary key(id)
 );

@@ -26,7 +26,7 @@ class Concept extends Updater
 
         nextConceptID = oldConcepts.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
-        new QueryResultProcessor(patternQuery("?concept rdf:type ?type"))
+        new QueryResultProcessor(patternQuery("?concept rdf:type vocab:Concept"))
         {
             @Override
             protected void parse() throws IOException

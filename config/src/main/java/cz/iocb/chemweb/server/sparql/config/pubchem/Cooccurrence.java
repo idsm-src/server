@@ -80,6 +80,8 @@ public class Cooccurrence
                     "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Cooccurrence"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_001435"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:subject"),
                     config.createIriMapping("pubchem:compound", "subject"));
@@ -95,6 +97,8 @@ public class Cooccurrence
             Table table = new Table(schema, "chemical_disease_cooccurrences");
             NodeMapping subject = config.createIriMapping("pubchem:chemical_disease_cooccurrence", "subject", "object");
 
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Cooccurrence"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_000993"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:subject"),
@@ -112,6 +116,8 @@ public class Cooccurrence
             NodeMapping subject = config.createIriMapping("pubchem:chemical_gene_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Cooccurrence"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_001257"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:subject"),
                     config.createIriMapping("pubchem:compound", "subject"));
@@ -127,6 +133,8 @@ public class Cooccurrence
             Table table = new Table(schema, "chemical_enzyme_cooccurrences");
             NodeMapping subject = config.createIriMapping("pubchem:chemical_enzyme_cooccurrence", "subject", "object");
 
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Cooccurrence"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_001257"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:subject"),
@@ -144,6 +152,8 @@ public class Cooccurrence
             NodeMapping subject = config.createIriMapping("pubchem:disease_chemical_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Cooccurrence"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_000993"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:subject"),
                     config.createIriMapping("pubchem:disease", "subject"));
@@ -159,6 +169,8 @@ public class Cooccurrence
             Table table = new Table(schema, "disease_disease_cooccurrences");
             NodeMapping subject = config.createIriMapping("pubchem:disease_disease_cooccurrence", "subject", "object");
 
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Cooccurrence"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_001436"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:subject"),
@@ -176,6 +188,8 @@ public class Cooccurrence
             NodeMapping subject = config.createIriMapping("pubchem:disease_gene_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Cooccurrence"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_000983"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:subject"),
                     config.createIriMapping("pubchem:disease", "subject"));
@@ -191,6 +205,8 @@ public class Cooccurrence
             Table table = new Table(schema, "disease_enzyme_cooccurrences");
             NodeMapping subject = config.createIriMapping("pubchem:disease_enzyme_cooccurrence", "subject", "object");
 
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Cooccurrence"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_000983"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:subject"),
@@ -208,6 +224,8 @@ public class Cooccurrence
             NodeMapping subject = config.createIriMapping("pubchem:gene_chemical_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Cooccurrence"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_001257"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:subject"),
                     config.createIriMapping("pubchem:gene_symbol", "subject"));
@@ -223,6 +241,8 @@ public class Cooccurrence
             Table table = new Table(schema, "enzyme_chemical_cooccurrences");
             NodeMapping subject = config.createIriMapping("pubchem:enzyme_chemical_cooccurrence", "subject", "object");
 
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Cooccurrence"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_001257"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:subject"),
@@ -240,6 +260,8 @@ public class Cooccurrence
             NodeMapping subject = config.createIriMapping("pubchem:gene_disease_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Cooccurrence"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_000983"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:subject"),
                     config.createIriMapping("pubchem:gene_symbol", "subject"));
@@ -256,6 +278,8 @@ public class Cooccurrence
             NodeMapping subject = config.createIriMapping("pubchem:enzyme_disease_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Cooccurrence"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_000983"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:subject"),
                     config.createIriMapping("pubchem:enzyme", "subject"));
@@ -271,6 +295,8 @@ public class Cooccurrence
             Table table = new Table(schema, "gene_gene_cooccurrences");
             NodeMapping subject = config.createIriMapping("pubchem:gene_gene_cooccurrence", "subject", "object");
 
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Cooccurrence"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_001437"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:subject"),

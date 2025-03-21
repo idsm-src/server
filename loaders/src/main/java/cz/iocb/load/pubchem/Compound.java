@@ -1,6 +1,5 @@
 package cz.iocb.load.pubchem;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -314,6 +313,9 @@ class Compound extends Updater
                     if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                         throw new IOException();
 
+                    if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Compound"))
+                        return;
+
                     Integer compoundID = getCompoundID(subject.getURI(), false);
                     Pair<Integer, Integer> type = Ontology.getId(object.getURI());
 
@@ -332,64 +334,69 @@ class Compound extends Updater
     }
 
 
-    private static void loadTitle() throws IOException, SQLException
+    private static void loadLabels() throws IOException, SQLException
     {
-        IntStringMap keepTitles = new IntStringMap();
-        IntStringMap newTitles = new IntStringMap();
-        IntStringMap oldTitles = new IntStringMap();
+        IntStringMap keepLabels = new IntStringMap();
+        IntStringMap newLabels = new IntStringMap();
+        IntStringMap oldLabels = new IntStringMap();
 
-        load("select compound,title from pubchem.compound_titles", oldTitles);
+        load("select compound,label from pubchem.compound_labels", oldLabels);
 
-        try(BufferedReader reader = getReader("pubchem/Compound/Extras/CID-Title.gz"))
+        try(InputStream stream = getTtlStream("pubchem/RDF/compound/general/pc_compound_label.ttl.gz"))
         {
-            for(String line = reader.readLine(); line != null; line = reader.readLine())
+            new TripleStreamProcessor()
             {
-                Integer compoundID = Integer.parseInt(line.replaceFirst("\t.*$", ""));
-                String title = line.replaceFirst("^[^\t]+\t", "");
-
-                addCompoundID(compoundID, false);
-
-                if(title.equals(oldTitles.remove(compoundID)))
+                @Override
+                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    keepTitles.put(compoundID, title);
-                }
-                else
-                {
-                    String keep = keepTitles.get(compoundID);
-
-                    if(title.equals(keep))
-                        return;
-                    else if(keep != null)
+                    if(!predicate.getURI().equals("http://www.w3.org/2004/02/skos/core#prefLabel"))
                         throw new IOException();
 
-                    String put = newTitles.put(compoundID, title);
+                    Integer compoundID = getCompoundID(subject.getURI(), false);
+                    String label = getString(object);
 
-                    if(put != null && !title.equals(put))
-                        throw new IOException();
+                    if(label.equals(oldLabels.remove(compoundID)))
+                    {
+                        keepLabels.put(compoundID, label);
+                    }
+                    else
+                    {
+                        String keep = keepLabels.get(compoundID);
+
+                        if(label.equals(keep))
+                            return;
+                        else if(keep != null)
+                            throw new IOException();
+
+                        String put = newLabels.put(compoundID, label);
+
+                        if(put != null && !label.equals(put))
+                            throw new IOException();
+                    }
                 }
-            }
+            }.load(stream);
         }
 
-        store("delete from pubchem.compound_titles where compound=? and title=?", oldTitles);
-        store("insert into pubchem.compound_titles(compound,title) values(?,?) "
-                + "on conflict(compound) do update set title=EXCLUDED.title", newTitles);
+        store("delete from pubchem.compound_labels where compound=? and label=?", oldLabels);
+        store("insert into pubchem.compound_labels(compound,label) values(?,?) "
+                + "on conflict(compound) do update set label=EXCLUDED.label", newLabels);
     }
 
 
     private static void loadCloseMatches() throws IOException, SQLException
     {
-        IntPairSet keepThesaurusMatches = new IntPairSet();
-        IntPairSet newThesaurusMatches = new IntPairSet();
-        IntPairSet oldThesaurusMatches = new IntPairSet();
+        IntIntPairSet keepMatches = new IntIntPairSet();
+        IntIntPairSet newMatches = new IntIntPairSet();
+        IntIntPairSet oldMatches = new IntIntPairSet();
 
         IntPairSet keepWikidataMatches = new IntPairSet();
         IntPairSet newWikidataMatches = new IntPairSet();
         IntPairSet oldWikidataMatches = new IntPairSet();
 
-        load("select compound,match from pubchem.compound_thesaurus_matches", oldThesaurusMatches);
+        load("select compound,match_unit,match_id from pubchem.compound_matches", oldMatches);
         load("select compound,match from pubchem.compound_wikidata_matches", oldWikidataMatches);
 
-        processFiles("pubchem/RDF/compound/general", "pc_compound_closematch.ttl[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/compound/general", "pc_compound_seealso_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
@@ -397,28 +404,14 @@ class Compound extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://www.w3.org/2004/02/skos/core#closeMatch"))
+                        if(!predicate.getURI().equals("http://www.w3.org/2000/01/rdf-schema#seeAlso"))
                             throw new IOException();
 
                         Integer compoundID = getCompoundID(subject.getURI(), false);
 
-                        if(object.getURI().startsWith("http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C"))
+                        if(object.getURI().startsWith("http://www.wikidata.org/entity/Q"))
                         {
-                            Integer match = getIntID(object, "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C");
-
-                            Pair<Integer, Integer> pair = Pair.getPair(compoundID, match);
-
-                            synchronized(newThesaurusMatches)
-                            {
-                                if(oldThesaurusMatches.remove(pair))
-                                    keepThesaurusMatches.add(pair);
-                                else if(!keepThesaurusMatches.contains(pair))
-                                    newThesaurusMatches.add(pair);
-                            }
-                        }
-                        else
-                        {
-                            Integer match = getIntID(object, "https://www.wikidata.org/wiki/Q");
+                            Integer match = getIntID(object, "http://www.wikidata.org/entity/Q");
 
                             Pair<Integer, Integer> pair = Pair.getPair(compoundID, match);
 
@@ -430,13 +423,26 @@ class Compound extends Updater
                                     newWikidataMatches.add(pair);
                             }
                         }
+                        else
+                        {
+                            Pair<Integer, Integer> match = Ontology.getId(object.getURI());
+                            Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(compoundID, match);
+
+                            synchronized(newMatches)
+                            {
+                                if(oldMatches.remove(pair))
+                                    keepMatches.add(pair);
+                                else if(!keepMatches.contains(pair))
+                                    newMatches.add(pair);
+                            }
+                        }
                     }
                 }.load(stream);
             }
         });
 
-        store("delete from pubchem.compound_thesaurus_matches where compound=? and match=?", oldThesaurusMatches);
-        store("insert into pubchem.compound_thesaurus_matches(compound,match) values(?,?)", newThesaurusMatches);
+        store("delete from pubchem.compound_matches where compound=? and match_unit=? and match_id=?", oldMatches);
+        store("insert into pubchem.compound_matches(compound,match_unit,match_id) values(?,?,?)", newMatches);
 
         store("delete from pubchem.compound_wikidata_matches where compound=? and match=?", oldWikidataMatches);
         store("insert into pubchem.compound_wikidata_matches(compound,match) values(?,?)", newWikidataMatches);
@@ -453,7 +459,7 @@ class Compound extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        getCompoundID(subject.getURI(), false);
+                        getIntID(subject, prefix);
 
                         if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000008"))
                             throw new IOException();
@@ -463,6 +469,28 @@ class Compound extends Updater
                 }.load(stream);
             }
         });
+    }
+
+
+    private static void checkIdentifiers() throws IOException, SQLException
+    {
+        try(InputStream stream = getTtlStream("pubchem/RDF/compound/general/pc_compound_identifier.ttl.gz"))
+        {
+            new TripleStreamProcessor()
+            {
+                @Override
+                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                {
+                    Integer compoundID = getIntID(subject, prefix);
+
+                    if(!predicate.getURI().equals("http://purl.org/dc/terms/identifier"))
+                        throw new IOException();
+
+                    if(compoundID != Integer.parseInt(object.getLiteral().getLexicalForm()))
+                        throw new IOException();
+                }
+            }.load(stream);
+        }
     }
 
 
@@ -479,9 +507,10 @@ class Compound extends Updater
         loadStereoisomers();
         loadRoles();
         loadTypes();
-        loadTitle();
+        loadLabels();
         loadCloseMatches();
         checkDescriptors();
+        checkIdentifiers();
 
         System.out.println();
     }

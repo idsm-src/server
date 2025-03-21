@@ -180,7 +180,7 @@ class Protein extends Updater
 
         nextProteinID = oldProteins.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
-        new QueryResultProcessor(patternQuery("?protein rdf:type sio:SIO_010043"))
+        new QueryResultProcessor(patternQuery("?protein rdf:type vocab:Protein"))
         {
             @Override
             protected void parse() throws IOException
@@ -1083,7 +1083,7 @@ class Protein extends Updater
 
         load("select protein,type_unit,type_id from pubchem.protein_types", oldTypes);
 
-        new QueryResultProcessor(patternQuery("?protein rdf:type ?type."
+        new QueryResultProcessor(patternQuery("?protein rdf:type ?type. filter(?type != vocab:Protein) "
                 + "filter(strstarts(str(?protein), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC'))"))
         {
             @Override

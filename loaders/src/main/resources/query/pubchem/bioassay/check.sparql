@@ -17,6 +17,7 @@ select distinct ?iri where
     union
     {
         ?S rdf:type ?iri .
+        filter(?iri != vocab:BioAssay)
         filter(?iri != bao:BAO_0000015)
     }
     union

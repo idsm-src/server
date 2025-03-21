@@ -43,6 +43,8 @@ public class Gene
             NodeMapping subject = config.createIriMapping("pubchem:gene", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Gene"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_010035"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),
                     config.createLiteralMapping(xsdString, "(id::varchar)"));

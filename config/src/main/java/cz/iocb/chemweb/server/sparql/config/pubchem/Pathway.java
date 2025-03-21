@@ -29,6 +29,9 @@ public class Pathway
         {
             Table table = new Table(schema, "pathway_bases");
             NodeMapping subject = config.createIriMapping("pubchem:pathway", "id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Pathway"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bp:Pathway"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:title"),

@@ -28,9 +28,9 @@ public class Cell
             NodeMapping subject = config.createIriMapping("pubchem:cell", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("sio:SIO_010054"));
+                    config.createIriMapping("vocab:Cell"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("obo:CLO_0000031"));
+                    config.createIriMapping("sio:SIO_010054"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("up:organism"),
                     config.createIriMapping("pubchem:taxonomy", "organism"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),

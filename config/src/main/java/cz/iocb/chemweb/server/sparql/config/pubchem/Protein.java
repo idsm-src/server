@@ -60,6 +60,9 @@ public class Protein
         {
             Table table = new Table(schema, "protein_bases");
             NodeMapping subject = config.createIriMapping("pubchem:protein", "id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Protein"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("up:organism"),

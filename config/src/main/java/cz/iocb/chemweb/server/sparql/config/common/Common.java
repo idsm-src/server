@@ -41,10 +41,11 @@ public class Common
         config.addIriClass(new StringUserIriClass("purl:uniprot", "http://purl.uniprot.org/uniprot/"));
         config.addIriClass(new StringUserIriClass("purl:enzyme", "http://purl.uniprot.org/enzyme/"));
 
-        config.addIriClass(new IntegerUserIriClass("linkedchemistry:chembl", "integer", "http://linkedchemistry.info/chembl/chemblid/CHEMBL"));
+        config.addIriClass(new IntegerUserIriClass("identifiers:chembl", "integer", "http://identifiers.org/chembl.compound:CHEMBL"));
 
         config.addIriClass(new StringUserIriClass("rdf:wwpdb", "http://rdf.wwpdb.org/pdb/", 4));
         config.addIriClass(new StringUserIriClass("rdf:ensembl", "http://rdf.ebi.ac.uk/resource/ensembl/"));
+        config.addIriClass(new StringUserIriClass("glycoinfo:glycan", "http://rdf.glycoinfo.org/glycan/", "G[0-9]{5}[A-Z]{2}"));
 
         config.addIriClass(new StringUserIriClass("identifiers:pfam", "http://identifiers.org/pfam/", "PF[0-9]{5}"));
         config.addIriClass(new StringUserIriClass("identifiers:intact", "http://identifiers.org/intact/", "[A-Z0-9]*"));

@@ -11,6 +11,7 @@ select distinct ?iri where
     union
     {
         ?S rdf:type ?iri .
+        filter(?iri != vocab:Cooccurrence)
         filter(?iri != sio:SIO_000993)
     }
     union

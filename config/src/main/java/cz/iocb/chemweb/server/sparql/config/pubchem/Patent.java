@@ -39,6 +39,8 @@ public class Patent
             NodeMapping subject = config.createIriMapping("pubchem:patent", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Patent"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("epo:Publication"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:abstract"),
                     config.createLiteralMapping(xsdString, "abstract"));
@@ -162,19 +164,23 @@ public class Patent
         }
 
         {
-            Table table = new Table(schema, "patent_inventor_names");
-            NodeMapping subject = config.createIriMapping("pubchem:inventor", "inventor");
+            Table table = new Table(schema, "patentinventor_bases");
+            NodeMapping subject = config.createIriMapping("pubchem:inventor", "id");
 
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:PatentInventor"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vcard:fn"),
-                    config.createLiteralMapping(xsdString, "formatted_name"));
+                    config.createLiteralMapping(xsdString, "name"));
         }
 
         {
-            Table table = new Table(schema, "patent_applicant_names");
-            NodeMapping subject = config.createIriMapping("pubchem:applicant", "applicant");
+            Table table = new Table(schema, "patentassignee_bases");
+            NodeMapping subject = config.createIriMapping("pubchem:applicant", "id");
 
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:PatentAssignee"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vcard:fn"),
-                    config.createLiteralMapping(xsdString, "formatted_name"));
+                    config.createLiteralMapping(xsdString, "name"));
         }
     }
 }

@@ -362,7 +362,8 @@ class CompoundDescriptor extends Updater
                         if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                             throw new IOException();
 
-                        if(!object.getURI().equals(type))
+                        if(!object.getURI().equals(type)
+                                && !object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Descriptor"))
                             throw new IOException();
                     }
                 }.load(stream);

@@ -34,6 +34,8 @@ public class Source
             NodeMapping subject = config.createIriMapping("pubchem:source", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Source"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("dcterms:Dataset"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:license"),
                     config.createIriMapping("pubchem:source-license", "license"));

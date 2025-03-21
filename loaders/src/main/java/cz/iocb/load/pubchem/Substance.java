@@ -118,6 +118,9 @@ class Substance extends Updater
                     if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                         throw new IOException();
 
+                    if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Substance"))
+                        return;
+
                     Integer substanceID = getSubstanceID(subject.getURI(), false, false);
                     Integer chebiID = getIntID(object, "http://purl.obolibrary.org/obo/CHEBI_");
 
@@ -338,7 +341,7 @@ class Substance extends Updater
         load("select substance,chembl from pubchem.substance_chembl_matches", oldChemblMatches);
         load("select substance,glytoucan from pubchem.substance_glytoucan_matches", oldGlytoucanMatches);
 
-        processFiles("pubchem/RDF/substance", "pc_substance_match\\.ttl[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/substance", "pc_substance_seealso_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
                 new TripleStreamProcessor()
@@ -346,22 +349,17 @@ class Substance extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://www.w3.org/2004/02/skos/core#exactMatch"))
+                        if(!predicate.getURI().equals("http://www.w3.org/2000/01/rdf-schema#seeAlso"))
                             throw new IOException();
 
                         String value = object.getURI();
 
-                        if(value.startsWith("http://rdf.ebi.ac.uk/resource/chembl/molecule/"))
+                        if(value.contains("CHEMBL"))
                         {
-                            // workaround
-                            if(value.matches("http://rdf\\.ebi\\.ac\\.uk/resource/chembl/molecule/[Cc]hembl[0-9]+"))
-                            {
-                                System.out.println("    fix wrong ChEMBL iri: " + value);
-                                value = value.replaceFirst("molecule/[Cc]hembl", "molecule/CHEMBL");
-                            }
-
                             Integer substanceID = getSubstanceID(subject.getURI(), false, false);
-                            Integer chemblID = getIntID(value, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL");
+                            Integer chemblID = value.startsWith("http://identifiers.org") ?
+                                    getIntID(value, "http://identifiers.org/chembl.compound:CHEMBL") :
+                                    getIntID(value, "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL");
 
                             Pair<Integer, Integer> pair = Pair.getPair(substanceID, chemblID);
 
@@ -373,10 +371,12 @@ class Substance extends Updater
                                     newChemblMatches.add(pair);
                             }
                         }
-                        else if(value.startsWith("http://identifiers.org/glytoucan:"))
+                        else
                         {
                             Integer substanceID = getSubstanceID(subject.getURI(), false, false);
-                            String match = getStringID(object, "http://identifiers.org/glytoucan:");
+                            String match = value.startsWith("http://identifiers.org") ?
+                                    getStringID(object, "http://identifiers.org/glytoucan:") :
+                                    getStringID(object, "http://rdf.glycoinfo.org/glycan/");
 
                             synchronized(newGlytoucanMatches)
                             {
@@ -399,10 +399,6 @@ class Substance extends Updater
                                         throw new IOException();
                                 }
                             }
-                        }
-                        else if(!value.startsWith("http://linkedchemistry.info/chembl/chemblid/"))
-                        {
-                            throw new IOException();
                         }
                     }
                 }.load(stream);
@@ -567,6 +563,28 @@ class Substance extends Updater
     }
 
 
+    private static void checkIdentifiers() throws IOException, SQLException
+    {
+        try(InputStream stream = getTtlStream("pubchem/RDF/substance/pc_substance_identifier.ttl.gz"))
+        {
+            new TripleStreamProcessor()
+            {
+                @Override
+                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                {
+                    Integer substanceID = getIntID(subject, prefix);
+
+                    if(!predicate.getURI().equals("http://purl.org/dc/terms/identifier"))
+                        throw new IOException();
+
+                    if(substanceID != Integer.parseInt(object.getLiteral().getLexicalForm()))
+                        throw new IOException();
+                }
+            }.load(stream);
+        }
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load substances ...");
@@ -581,6 +599,7 @@ class Substance extends Updater
         loadReferences();
         loadSynonyms();
         checkMeasuregroups();
+        checkIdentifiers();
 
         System.out.println();
     }

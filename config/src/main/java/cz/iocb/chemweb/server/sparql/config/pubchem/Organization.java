@@ -30,6 +30,8 @@ public class Organization
             NodeMapping subject = config.createIriMapping("pubchem:organization", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Organization"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vcard:Organization"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("frapo:FundingAgency"));

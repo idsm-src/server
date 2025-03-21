@@ -278,6 +278,9 @@ class Endpoint extends Updater
                     if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                         throw new IOException();
 
+                    if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Endpoint"))
+                        return;
+
                     EndpointID endpoint = parseEndpoint(subject, false);
                     Pair<Integer, Integer> type = Ontology.getId(object.getURI());
 

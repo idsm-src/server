@@ -43,17 +43,17 @@ grant select on pubchem.compound_active_ingredients to sparql;
 
 --------------------------------------------------------------------------------
 
-create index compound_titles__title on pubchem.compound_titles(title);
-create index compound_titles__title__lower on pubchem.compound_titles(lower(title));
-create index compound_titles__title__english on pubchem.compound_titles using gin (to_tsvector('english', title));
-create index compound_titles__title__simple on pubchem.compound_titles using gin (to_tsvector('simple', title));
-grant select on pubchem.compound_titles to sparql;
+create index compound_labels__label on pubchem.compound_labels(label);
+create index compound_labels__label__lower on pubchem.compound_labels(lower(label));
+create index compound_labels__label__english on pubchem.compound_labels using gin (to_tsvector('english', label));
+create index compound_labels__label__simple on pubchem.compound_labels using gin (to_tsvector('simple', label));
+grant select on pubchem.compound_labels to sparql;
 
 --------------------------------------------------------------------------------
 
-create index compound_thesaurus_matches__compound on pubchem.compound_thesaurus_matches(compound);
-create index compound_thesaurus_matches__match on pubchem.compound_thesaurus_matches(match);
-grant select on pubchem.compound_thesaurus_matches to sparql;
+create index compound_matches__compound on pubchem.compound_matches(compound);
+create index compound_matches__match on pubchem.compound_matches(match_unit, match_id);
+grant select on pubchem.compound_matches to sparql;
 
 --------------------------------------------------------------------------------
 

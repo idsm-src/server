@@ -4,6 +4,7 @@
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix sio: <http://semanticscience.org/resource/> .
 @prefix obo: <http://purl.obolibrary.org/obo/> .
+@prefix vocab: <http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#>
 
 dcterms:Dataset rdf:type owl:Class .
 sio:is-attribute-of rdf:type rdf:Property ; rdfs:label "is attribute of" .
@@ -11,3 +12,32 @@ sio:has-value rdf:type rdf:Property ; rdfs:label "has value" .
 sio:has-attribute rdf:type rdf:Property ; rdfs:label "has attribute" .
 sio:has-unit rdf:type rdf:Property ; rdfs:label "has unit" .
 obo:has-role rdf:type rdf:Property ; rdfs:label "has role" .
+
+vocab:Anatomy rdfs:label "PubChem Anatomy" .
+vocab:Author rdfs:label "PubChem Author" .
+vocab:BioAssay rdfs:label "PubChem BioAssay" .
+vocab:Book rdfs:label "PubChem Book" .
+vocab:Cell rdfs:label "PubChem Cell" .
+vocab:Compound rdfs:label "PubChem Compound" .
+vocab:Concept rdfs:label "PubChem Concept" .
+vocab:ConservedDomain rdfs:label "PubChem ConservedDomain" .
+vocab:Cooccurrence rdfs:label "PubChem Cooccurrence" .
+vocab:Descriptor rdfs:label "PubChem Descriptor" .
+vocab:Disease rdfs:label "PubChem Disease" .
+vocab:Endpoint rdfs:label "PubChem Endpoint" .
+vocab:Gene rdfs:label "PubChem Gene" .
+vocab:Grant rdfs:label "PubChem Grant" .
+vocab:InChIKey rdfs:label "PubChem InChIKey" .
+vocab:Journal rdfs:label "PubChem Journal" .
+vocab:MeasureGroup rdfs:label "PubChem MeasureGroup" .
+vocab:Organization rdfs:label "PubChem Organization" .
+vocab:Patent rdfs:label "PubChem Patent" .
+vocab:PatentAssignee rdfs:label "PubChem PatentAssignee" .
+vocab:PatentInventor rdfs:label "PubChem PatentInventor" .
+vocab:Pathway rdfs:label "PubChem Pathway" .
+vocab:Protein rdfs:label "PubChem Protein" .
+vocab:Reference rdfs:label "PubChem Reference" .
+vocab:Source rdfs:label "PubChem Source" .
+vocab:Substance rdfs:label "PubChem Substance" .
+vocab:Synonym rdfs:label "PubChem Synonym" .
+vocab:Taxonomy rdfs:label "PubChem Taxonomy" .

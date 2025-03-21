@@ -63,7 +63,7 @@ class Pathway extends Updater
     {
         load("select id from pubchem.pathway_bases", oldPathways);
 
-        new QueryResultProcessor(patternQuery("?pathway rdf:type bp:Pathway"))
+        new QueryResultProcessor(patternQuery("?pathway rdf:type vocab:Pathway"))
         {
             @Override
             protected void parse() throws IOException

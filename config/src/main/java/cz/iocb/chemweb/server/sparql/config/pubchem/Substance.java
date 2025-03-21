@@ -2,6 +2,7 @@ package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.xsdDateM4;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Table;
@@ -28,6 +29,8 @@ public class Substance
             Table table = new Table(schema, "substance_bases");
             NodeMapping subject = config.createIriMapping("pubchem:substance", "id");
 
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Substance"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:available"),
                     config.createLiteralMapping(xsdDateM4, "available"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:source"),
@@ -36,6 +39,8 @@ public class Substance
                     config.createLiteralMapping(xsdDateM4, "modified"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:CHEMINF_000477"),
                     config.createIriMapping("pubchem:compound", "compound"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),
+                    config.createLiteralMapping(xsdString, "(id::varchar)"));
         }
 
         {
@@ -58,9 +63,9 @@ public class Substance
             Table table = new Table(schema, "substance_chembl_matches");
             NodeMapping subject = config.createIriMapping("pubchem:substance", "substance");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
-                    config.createIriMapping("linkedchemistry:chembl", "chembl"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("identifiers:chembl", "chembl"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("chembl:compound", "chembl"));
         }
 
@@ -68,8 +73,10 @@ public class Substance
             Table table = new Table(schema, "substance_glytoucan_matches");
             NodeMapping subject = config.createIriMapping("pubchem:substance", "substance");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:glytoucan", "glytoucan"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("glycoinfo:glycan", "glytoucan"));
         }
 
         {

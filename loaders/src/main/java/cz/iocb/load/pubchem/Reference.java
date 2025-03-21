@@ -773,6 +773,47 @@ class Reference extends Updater
     }
 
 
+    private static void loadIsbnNumbers() throws IOException, SQLException
+    {
+        IntStringSet keepIsbnNumbers = new IntStringSet();
+        IntStringSet newIsbnNumbers = new IntStringSet();
+        IntStringSet oldIsbnNumbers = new IntStringSet();
+
+        load("select reference,isbn from pubchem.reference_isbn_numbers", oldIsbnNumbers);
+
+        processFiles("pubchem/RDF/reference", "pc_reference_isbn_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/isbn"))
+                            throw new IOException();
+
+                        Integer referenceID = Reference.getReferenceID(subject.getURI());
+                        String isbn = getString(object);
+
+                        Pair<Integer, String> pair = Pair.getPair(referenceID, isbn);
+
+                        synchronized(newIsbnNumbers)
+                        {
+                            if(oldIsbnNumbers.remove(pair))
+                                keepIsbnNumbers.add(pair);
+                            else if(!keepIsbnNumbers.contains(pair))
+                                newIsbnNumbers.add(pair);
+                        }
+                    }
+                }.load(stream);
+            }
+        });
+
+        store("delete from pubchem.reference_isbn_numbers where reference=? and isbn=?", oldIsbnNumbers);
+        store("insert into pubchem.reference_isbn_numbers(reference,isbn) values(?,?)", newIsbnNumbers);
+    }
+
+
     private static void loadAuthor() throws IOException, SQLException
     {
         IntPairSet keepAuthors = new IntPairSet();
@@ -1211,6 +1252,28 @@ class Reference extends Updater
     }
 
 
+    private static void checkTypes() throws IOException, SQLException
+    {
+        try(InputStream stream = getTtlStream("pubchem/RDF/reference/pc_reference_type.ttl.gz"))
+        {
+            new TripleStreamProcessor()
+            {
+                @Override
+                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                {
+                    getStringID(subject, prefix);
+
+                    if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                        throw new IOException();
+
+                    if(!object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Reference"))
+                        throw new IOException();
+                }
+            }.load(stream);
+        }
+    }
+
+
     static void preload() throws IOException, SQLException
     {
         System.out.println("load references (bases) ...");
@@ -1240,6 +1303,7 @@ class Reference extends Updater
         loadPrimaryMeshheadings();
         loadContentTypes();
         loadIssnNumbers();
+        loadIsbnNumbers();
         loadAuthor();
         loadGrant();
         loadFundingAgency();
@@ -1247,6 +1311,7 @@ class Reference extends Updater
         loadJournalsAndBooks();
         loadIdentifiers();
         loadSources();
+        checkTypes();
 
         System.out.println();
     }

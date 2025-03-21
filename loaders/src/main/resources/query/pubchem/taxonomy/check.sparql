@@ -12,6 +12,7 @@ select distinct ?iri where
     union
     {
         ?S rdf:type ?iri .
+        filter(?iri != vocab:Taxonomy)
         filter(?iri != sio:SIO_010000)
     }
     union

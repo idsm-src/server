@@ -14,7 +14,7 @@ select distinct ?iri where
     union
     {
         ?S rdf:type ?iri .
-        filter(?iri != obo:CLO_0000031)
+        filter(?iri != vocab:Cell)
         filter(?iri != sio:SIO_010054)
     }
     union

@@ -3,6 +3,8 @@ package cz.iocb.load.pubchem;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.Model;
 import cz.iocb.load.common.Pair;
@@ -17,15 +19,31 @@ class Patent extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/patent/";
     static final int prefixLength = prefix.length();
 
+    static final String inventorPrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/patentinventor/MD5_";
+    static final int inventorPrefixLength = inventorPrefix.length();
+
+    static final String assigneePrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/patentassignee/MD5_";
+    static final int assigneePrefixLength = assigneePrefix.length();
+
     private static final StringIntMap keepPatents = new StringIntMap();
     private static final StringIntMap newPatents = new StringIntMap();
     private static final StringIntMap oldPatents = new StringIntMap();
     private static int nextPatentID;
 
+    private static final StringSet keepInventors = new StringSet();
+    private static final StringSet newInventors = new StringSet();
+    private static final StringSet oldInventors = new StringSet();
+
+    private static final StringSet keepAssignees = new StringSet();
+    private static final StringSet newAssignees = new StringSet();
+    private static final StringSet oldAssignees = new StringSet();
+
 
     private static void loadBases() throws IOException, SQLException
     {
         load("select iri,id from pubchem.patent_bases", oldPatents);
+        load("select id from pubchem.patentinventor_bases", oldInventors);
+        load("select id from pubchem.patentassignee_bases", oldAssignees);
 
         nextPatentID = oldPatents.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
@@ -40,27 +58,69 @@ class Patent extends Updater
                         if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                             throw new IOException();
 
-                        if(!object.getURI().equals("http://data.epo.org/linked-data/def/patent/Publication"))
-                            throw new IOException();
-
-                        String patent = getStringID(subject, prefix);
-
-                        synchronized(newPatents)
+                        switch(subject.getURI().replaceFirst("[^/_]*$", ""))
                         {
-                            Integer patentID = keepPatents.get(patent);
+                            case prefix ->
+                            {
+                                if(!object.getURI().equals("http://data.epo.org/linked-data/def/patent/Publication")
+                                        && !object.getURI()
+                                                .equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Patent"))
+                                    throw new IOException();
 
-                            if(patentID != null)
-                                return;
+                                String patent = getStringID(subject, prefix);
 
-                            patentID = newPatents.get(patent);
+                                synchronized(newPatents)
+                                {
+                                    Integer patentID = keepPatents.get(patent);
 
-                            if(patentID != null)
-                                return;
+                                    if(patentID != null)
+                                        return;
 
-                            if((patentID = oldPatents.remove(patent)) == null)
-                                newPatents.put(patent, nextPatentID++);
-                            else
-                                keepPatents.put(patent, patentID);
+                                    patentID = newPatents.get(patent);
+
+                                    if(patentID != null)
+                                        return;
+
+                                    if((patentID = oldPatents.remove(patent)) == null)
+                                        newPatents.put(patent, nextPatentID++);
+                                    else
+                                        keepPatents.put(patent, patentID);
+                                }
+                            }
+
+                            case inventorPrefix ->
+                            {
+                                if(!object.getURI()
+                                        .equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PatentInventor"))
+                                    throw new IOException();
+
+                                String inventorID = subject.getURI().substring(inventorPrefixLength);
+
+                                synchronized(newInventors)
+                                {
+                                    if(oldInventors.remove(inventorID))
+                                        keepInventors.add(inventorID);
+                                    else
+                                        newInventors.add(inventorID);
+                                }
+                            }
+
+                            case assigneePrefix ->
+                            {
+                                if(!object.getURI()
+                                        .equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PatentAssignee"))
+                                    throw new IOException();
+
+                                String assigneeID = subject.getURI().substring(assigneePrefixLength);
+
+                                synchronized(newAssignees)
+                                {
+                                    if(oldAssignees.remove(assigneeID))
+                                        keepAssignees.add(assigneeID);
+                                    else
+                                        newAssignees.add(assigneeID);
+                                }
+                            }
                         }
                     }
                 }.load(stream);
@@ -891,10 +951,9 @@ class Patent extends Updater
                             throw new IOException();
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String inventor = getStringID(object,
-                                "http://rdf.ncbi.nlm.nih.gov/pubchem/patentinventor/MD5_");
+                        String inventorID = getInventorID(object.getURI(), false);
 
-                        Pair<Integer, String> pair = Pair.getPair(patentID, inventor);
+                        Pair<Integer, String> pair = Pair.getPair(patentID, inventorID);
 
                         synchronized(newInventors)
                         {
@@ -933,10 +992,9 @@ class Patent extends Updater
                             throw new IOException();
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String applicant = getStringID(object,
-                                "http://rdf.ncbi.nlm.nih.gov/pubchem/patentassignee/MD5_");
+                        String assigneeID = getAssigneeID(object.getURI(), false);
 
-                        Pair<Integer, String> pair = Pair.getPair(patentID, applicant);
+                        Pair<Integer, String> pair = Pair.getPair(patentID, assigneeID);
 
                         synchronized(newApplicants)
                         {
@@ -957,16 +1015,73 @@ class Patent extends Updater
 
     private static void loadFormattedNames() throws IOException, SQLException
     {
-        StringPairSet keepInventorNames = new StringPairSet();
-        StringPairSet newInventorNames = new StringPairSet();
-        StringPairSet oldInventorNames = new StringPairSet();
+        StringStringMap keepInventorNames = new StringStringMap();
+        StringStringMap newInventorNames = new StringStringMap();
+        StringStringMap oldInventorNames = new StringStringMap();
 
-        StringPairSet keepApplicantNames = new StringPairSet();
-        StringPairSet newApplicantNames = new StringPairSet();
-        StringPairSet oldApplicantNames = new StringPairSet();
+        Map<String, String> wrongInventorNames = new HashMap<>();
+        wrongInventorNames.put("0e781a63b9176f4e6c51416487c314c4", "ANTHONY ALEXANDER MCKINNEY");
+        wrongInventorNames.put("30e549bef620b64bc8c05f85dd411cfd", "KIM JOON-SUPSAMSUNG SDI CO LTD");
+        wrongInventorNames.put("38c4570b8cde7f9c8f47dd66d69cc6de", "TANG JUN");
+        wrongInventorNames.put("673c0a88d4aabe27f2c177a25dee6fab", "JIAXIANG ZHANG");
+        wrongInventorNames.put("7f4416820080870124fba049cb1dd4c5", "KIM SUNG-SOOSAMSUNG SDI CO LTD");
+        wrongInventorNames.put("9772be7cf4a8d895df809b96678917d9", "ROŞCA FILIP");
+        wrongInventorNames.put("babd5d218104ca00aaca205318fec959", "WANG TAO");
+        wrongInventorNames.put("bffac44f7a159930083f3e1f3fc30f8f", "ZHANG LI");
+        wrongInventorNames.put("d3976196ddbdc88717d5e6316245df6c", "SAIFAOUI DENNOUN");
+        wrongInventorNames.put("f51a7bebf077b5ed9f6241cec8246988", "SUHARSCHI ILIE");
 
-        load("select inventor,formatted_name from pubchem.patent_inventor_names", oldInventorNames);
-        load("select applicant,formatted_name from pubchem.patent_applicant_names", oldApplicantNames);
+        Map<String, String> correctInventorNames = new HashMap<>();
+        correctInventorNames.put("0e781a63b9176f4e6c51416487c314c4", "Anthony Alexander MCKINNEY");
+        correctInventorNames.put("30e549bef620b64bc8c05f85dd411cfd", "KIM JOON-SUP");
+        correctInventorNames.put("38c4570b8cde7f9c8f47dd66d69cc6de", "TANG Jun");
+        correctInventorNames.put("673c0a88d4aabe27f2c177a25dee6fab", "Jiaxiang ZHANG");
+        correctInventorNames.put("7f4416820080870124fba049cb1dd4c5", "KIM SUNG-SOO");
+        correctInventorNames.put("9772be7cf4a8d895df809b96678917d9", "ROŞCA Filip");
+        correctInventorNames.put("babd5d218104ca00aaca205318fec959", "WANG Tao");
+        correctInventorNames.put("bffac44f7a159930083f3e1f3fc30f8f", "ZHANG LIN");
+        correctInventorNames.put("d3976196ddbdc88717d5e6316245df6c", "Saifaoui Dennoun");
+        correctInventorNames.put("f51a7bebf077b5ed9f6241cec8246988", "SUHARSCHI Ilie");
+
+        StringStringMap keepAssigneeNames = new StringStringMap();
+        StringStringMap newAssigneeNames = new StringStringMap();
+        StringStringMap oldAssigneeNames = new StringStringMap();
+
+        Map<String, String> wrongAssigneeNames = new HashMap<>();
+        wrongAssigneeNames.put("011c6bd49774028ba6535687adf22b82", "SAIFAOUI DENNOUN");
+        wrongAssigneeNames.put("132aa5ddba376cda52c2bedb26765245", "BAYER SCHERING PHARMA AG");
+        wrongAssigneeNames.put("14f4f2bbd967f64780f0ccdf5416df14", "CHYTIL PETER");
+        wrongAssigneeNames.put("173bc2c63b34988699010ba05e5b1376", "SYNGENTA PARTICIPATIONS AG");
+        wrongAssigneeNames.put("24ad6cfe4d7bded746239ffe8fb46433", "PURECIRCLE SDN BHD");
+        wrongAssigneeNames.put("38b435c9df65e2bf10aa8bb0a53985d9", "VADAKEKUTTU THANKAPAN");
+        wrongAssigneeNames.put("4a321a4c567938da6916b7b227837164", "BIOTIE THERAPIES GMBH");
+        wrongAssigneeNames.put("5d1596f64ec0b2dac5334b2cf05b88bb", "BAYER HEALTHCARE AG");
+        wrongAssigneeNames.put("8364b69d3fe3e78cd42d63bca57d6c98", "RESMED PTY LTD");
+        wrongAssigneeNames.put("b8201313e2b347eaab74c7f0ffa21d22", "SUHARSCHI ILIE");
+        wrongAssigneeNames.put("ba782d3b1fd168eab19dd7b0875942aa", "ALTANA PHARMA AG");
+        wrongAssigneeNames.put("eb602ec1e2215c29c35cd408d2799c89", "CELANESE ACETATE LLC");
+        wrongAssigneeNames.put("eccd894c99fea2d1c0c8735872bb2309", "MERCK PATENT GMBH");
+        wrongAssigneeNames.put("f7c35f3a3c112c482bcfa47356c4f80c", "BAYER CONSUMER CARE AG");
+
+        Map<String, String> correctAssigneeNames = new HashMap<>();
+        correctAssigneeNames.put("011c6bd49774028ba6535687adf22b82", "Saifaoui Dennoun");
+        correctAssigneeNames.put("132aa5ddba376cda52c2bedb26765245", "Bayer Schering Pharma AG");
+        correctAssigneeNames.put("14f4f2bbd967f64780f0ccdf5416df14", "Chytil Peter");
+        correctAssigneeNames.put("173bc2c63b34988699010ba05e5b1376", "Syngenta Participations AG");
+        correctAssigneeNames.put("24ad6cfe4d7bded746239ffe8fb46433", "PureCircle Sdn Bhd");
+        correctAssigneeNames.put("38b435c9df65e2bf10aa8bb0a53985d9", "VADAKEKUTTU Thankapan");
+        correctAssigneeNames.put("4a321a4c567938da6916b7b227837164", "Biotie Therapies GmbH");
+        correctAssigneeNames.put("5d1596f64ec0b2dac5334b2cf05b88bb", "Bayer HealthCare AG");
+        correctAssigneeNames.put("8364b69d3fe3e78cd42d63bca57d6c98", "ResMed Pty Ltd");
+        correctAssigneeNames.put("b8201313e2b347eaab74c7f0ffa21d22", "SUHARSCHI Ilie");
+        correctAssigneeNames.put("ba782d3b1fd168eab19dd7b0875942aa", "ALTANA Pharma AG");
+        correctAssigneeNames.put("eb602ec1e2215c29c35cd408d2799c89", "Celanese Acetate LLC");
+        correctAssigneeNames.put("eccd894c99fea2d1c0c8735872bb2309", "Merck Patent GmbH");
+        correctAssigneeNames.put("f7c35f3a3c112c482bcfa47356c4f80c", "Bayer Consumer Care AG");
+
+
+        load("select id,name from pubchem.patentinventor_bases where name is not null", oldInventorNames);
+        load("select id,name from pubchem.patentassignee_bases where name is not null", oldAssigneeNames);
 
         processFiles("pubchem/RDF/patent", "pc_patent2vc_fn_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -979,36 +1094,70 @@ class Patent extends Updater
                         if(!predicate.getURI().equals("http://www.w3.org/2006/vcard/ns#fn"))
                             throw new IOException();
 
-                        if(subject.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/patentinventor"))
+                        if(subject.getURI().startsWith(inventorPrefix))
                         {
-                            String inventor = getStringID(subject,
-                                    "http://rdf.ncbi.nlm.nih.gov/pubchem/patentinventor/MD5_");
-                            String formattedName = getString(object);
+                            String inventorID = getInventorID(subject.getURI(), true);
+                            String name = getString(object);
 
-                            Pair<String, String> pair = Pair.getPair(inventor, formattedName);
+                            if(name.equals(wrongInventorNames.get(inventorID)))
+                            {
+                                System.out.println("    change name of patentinventor MD5_" + inventorID);
+                                name = correctInventorNames.get(inventorID);
+                            }
 
                             synchronized(newInventorNames)
                             {
-                                if(oldInventorNames.remove(pair))
-                                    keepInventorNames.add(pair);
-                                else if(!keepInventorNames.contains(pair))
-                                    newInventorNames.add(pair);
+                                if(name.equals(oldInventorNames.remove(inventorID)))
+                                {
+                                    keepInventorNames.put(inventorID, name);
+                                }
+                                else
+                                {
+                                    String keep = keepInventorNames.get(inventorID);
+
+                                    if(name.equals(keep))
+                                        return;
+                                    else if(keep != null)
+                                        throw new IOException(inventorID);
+
+                                    String put = newInventorNames.put(inventorID, name);
+
+                                    if(put != null && !name.equals(put))
+                                        throw new IOException(inventorID);
+                                }
                             }
                         }
                         else
                         {
-                            String applicant = getStringID(subject,
-                                    "http://rdf.ncbi.nlm.nih.gov/pubchem/patentassignee/MD5_");
-                            String formattedName = getString(object);
+                            String assigneeID = getAssigneeID(subject.getURI(), true);
+                            String name = getString(object);
 
-                            Pair<String, String> pair = Pair.getPair(applicant, formattedName);
-
-                            synchronized(newApplicantNames)
+                            if(name.equals(wrongAssigneeNames.get(assigneeID)))
                             {
-                                if(oldApplicantNames.remove(pair))
-                                    keepApplicantNames.add(pair);
-                                else if(!keepApplicantNames.contains(pair))
-                                    newApplicantNames.add(pair);
+                                System.out.println("    change name of patentassignee MD5_" + assigneeID);
+                                name = correctAssigneeNames.get(assigneeID);
+                            }
+
+                            synchronized(newAssigneeNames)
+                            {
+                                if(name.equals(oldAssigneeNames.remove(assigneeID)))
+                                {
+                                    keepAssigneeNames.put(assigneeID, name);
+                                }
+                                else
+                                {
+                                    String keep = keepAssigneeNames.get(assigneeID);
+
+                                    if(name.equals(keep))
+                                        return;
+                                    else if(keep != null)
+                                        throw new IOException(assigneeID);
+
+                                    String put = newAssigneeNames.put(assigneeID, name);
+
+                                    if(put != null && !name.equals(put))
+                                        throw new IOException(assigneeID);
+                                }
                             }
                         }
                     }
@@ -1016,11 +1165,13 @@ class Patent extends Updater
             }
         });
 
-        store("delete from pubchem.patent_inventor_names where inventor=? and formatted_name=?", oldInventorNames);
-        store("insert into pubchem.patent_inventor_names(inventor,formatted_name) values(?,?)", newInventorNames);
+        store("update pubchem.patentinventor_bases set name=null where id=? and name=?", oldInventorNames);
+        store("insert into pubchem.patentinventor_bases(id,name) values(?,?) "
+                + "on conflict(id) do update set name=EXCLUDED.name", newInventorNames);
 
-        store("delete from pubchem.patent_applicant_names where applicant=? and formatted_name=?", oldApplicantNames);
-        store("insert into pubchem.patent_applicant_names(applicant,formatted_name) values(?,?)", newApplicantNames);
+        store("update pubchem.patentassignee_bases set name=null where id=? and name=?", oldAssigneeNames);
+        store("insert into pubchem.patentassignee_bases(id,name) values(?,?) "
+                + "on conflict(id) do update set name=EXCLUDED.name", newAssigneeNames);
     }
 
 
@@ -1056,6 +1207,12 @@ class Patent extends Updater
 
         store("delete from pubchem.patent_bases where iri=? and id=?", oldPatents);
         store("insert into pubchem.patent_bases(iri,id) values(?,?)", newPatents);
+
+        store("delete from pubchem.patentinventor_bases where id=?", oldInventors);
+        store("insert into pubchem.patentinventor_bases(id) values(?)", newInventors);
+
+        store("delete from pubchem.patentassignee_bases where id=?", oldAssignees);
+        store("insert into pubchem.patentassignee_bases(id) values(?)", newAssignees);
 
         System.out.println();
     }
@@ -1105,5 +1262,53 @@ class Patent extends Updater
 
             return patentID;
         }
+    }
+
+
+    private static String getInventorID(String value, boolean keepForce) throws IOException
+    {
+        if(!value.startsWith(inventorPrefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        String inventorID = value.substring(inventorPrefixLength);
+
+        synchronized(newInventors)
+        {
+            if(!keepInventors.contains(inventorID) && !newInventors.contains(inventorID))
+            {
+                System.out.println("    add missing patentinventor MD5_" + inventorID);
+
+                if(!oldInventors.remove(inventorID) && !keepForce)
+                    newInventors.add(inventorID);
+                else
+                    keepInventors.add(inventorID);
+            }
+        }
+
+        return inventorID;
+    }
+
+
+    private static String getAssigneeID(String value, boolean keepForce) throws IOException
+    {
+        if(!value.startsWith(assigneePrefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        String assigneeID = value.substring(assigneePrefixLength);
+
+        synchronized(newAssignees)
+        {
+            if(!keepAssignees.contains(assigneeID) && !newAssignees.contains(assigneeID))
+            {
+                System.out.println("    add missing patentassignee MD5_" + assigneeID);
+
+                if(!oldAssignees.remove(assigneeID) && !keepForce)
+                    newAssignees.add(assigneeID);
+                else
+                    keepAssignees.add(assigneeID);
+            }
+        }
+
+        return assigneeID;
     }
 }

@@ -27,6 +27,7 @@ select distinct ?iri where
     {
         ?S rdf:type ?iri .
         filter(strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID'))
+        filter(?iri != vocab:Gene)
         filter(?iri != sio:SIO_010035)
     }
     union

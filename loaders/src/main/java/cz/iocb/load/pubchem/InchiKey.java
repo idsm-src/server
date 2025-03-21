@@ -196,7 +196,8 @@ class InchiKey extends Updater
                         if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                             throw new IOException();
 
-                        if(!object.getURI().equals("http://semanticscience.org/resource/CHEMINF_000399"))
+                        if(!object.getURI().equals("http://semanticscience.org/resource/CHEMINF_000399")
+                                && !object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#InChIKey"))
                             throw new IOException();
                     }
                 }.load(stream);

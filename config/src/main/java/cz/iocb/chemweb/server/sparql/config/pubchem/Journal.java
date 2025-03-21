@@ -28,6 +28,8 @@ public class Journal
             NodeMapping subject = config.createIriMapping("pubchem:journal", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Journal"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("fabio:Journal"));
             config.addQuadMapping(table, graph, subject,
                     config.createIriMapping("fabio:hasNationalLibraryOfMedicineJournalId"),
