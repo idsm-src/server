@@ -1,7 +1,7 @@
 package cz.iocb.chemweb.shared.services.query;
 
 import java.io.Serializable;
-import java.util.Vector;
+import java.util.List;
 
 
 
@@ -9,8 +9,8 @@ public class QueryResult implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    private Vector<String> heads;
-    private Vector<DataGridNode[]> items;
+    private List<String> heads;
+    private List<DataGridNode[]> items;
     private boolean truncated;
 
 
@@ -19,7 +19,7 @@ public class QueryResult implements Serializable
     }
 
 
-    public QueryResult(Vector<String> heads, Vector<DataGridNode[]> items, boolean truncated)
+    public QueryResult(List<String> heads, List<DataGridNode[]> items, boolean truncated)
     {
         this.heads = heads;
         this.items = items;
@@ -27,13 +27,13 @@ public class QueryResult implements Serializable
     }
 
 
-    public Vector<String> getHeads()
+    public List<String> getHeads()
     {
         return heads;
     }
 
 
-    public Vector<DataGridNode[]> getItems()
+    public List<DataGridNode[]> getItems()
     {
         return items;
     }

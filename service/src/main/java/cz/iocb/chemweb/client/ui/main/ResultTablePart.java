@@ -428,10 +428,14 @@ public class ResultTablePart extends ResizeComposite
     private static PagerResourcesFactory pagerResourcesFactory = GWT.create(PagerResourcesFactory.class);
     private static Resources pagerIcons = pagerResourcesFactory.create();
 
-    @UiField TextBox searchTextBox;
-    @UiField ListBox searchListBox;
-    @UiField(provided = true) DataGrid<DataGridNode[]> resultsDataGrid;
-    @UiField(provided = true) SimplePager resultsPager;
+    @UiField
+    TextBox searchTextBox;
+    @UiField
+    ListBox searchListBox;
+    @UiField(provided = true)
+    DataGrid<DataGridNode[]> resultsDataGrid;
+    @UiField(provided = true)
+    SimplePager resultsPager;
 
     private final HandlerManager handlerManager = new HandlerManager(this);
     private final HasDataFilter hasDataFilter;
@@ -565,12 +569,6 @@ public class ResultTablePart extends ResizeComposite
 
     public void clear()
     {
-        //List<DataGridNode[]> empty = new Vector<DataGridNode[]>();
-        //resultsDataGrid.setPageSize(0);
-        //resultsDataGrid.setRowCount(0, true);
-        //resultsDataGrid.setRowData(0, empty);
-        //dataProvider.getList().clear();
-
         searchListBox.clear();
         searchListBox.addItem("in any column", "-1");
         searchTextBox.setValue("");

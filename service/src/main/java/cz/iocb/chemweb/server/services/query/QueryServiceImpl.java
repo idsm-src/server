@@ -4,13 +4,14 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -316,7 +317,7 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
             {
                 try(Result result = queryState.request.execute(query, offset, limit + 1, timeout))
                 {
-                    Vector<Future<DataGridNode[]>> futures = new Vector<Future<DataGridNode[]>>(limit + 1);
+                    List<Future<DataGridNode[]>> futures = new ArrayList<Future<DataGridNode[]>>(limit + 1);
 
                     while(result.next())
                     {
@@ -375,7 +376,7 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
                     }
 
 
-                    Vector<DataGridNode[]> items = new Vector<DataGridNode[]>(futures.size());
+                    List<DataGridNode[]> items = new ArrayList<DataGridNode[]>(futures.size());
 
                     for(Future<DataGridNode[]> future : futures)
                         items.add(future.get());
