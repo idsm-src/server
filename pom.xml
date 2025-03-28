@@ -11,4 +11,8 @@
     <module>config</module>
     <module>loaders</module>
   </modules>
+
+  <properties>
+    <maven.version.ignore>(?i).*-(alpha|beta|rc|b|m)([-.]?[0-9.]+)?</maven.version.ignore>
+  </properties>
 </project>

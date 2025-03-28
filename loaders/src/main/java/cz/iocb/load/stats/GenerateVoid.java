@@ -731,8 +731,8 @@ public class GenerateVoid extends Updater
             {
                 for(SqlIntercode sx : s.getValue())
                 {
-                    SqlIntercode iriPart = SqlJoin.join(sx, iriGraphs.getOrDefault(s.getKey(), empty));
-                    SqlIntercode litPart = SqlJoin.join(sx, litGraphs.getOrDefault(s.getKey(), empty));
+                    SqlIntercode iriPart = SqlJoin.join(request, sx, iriGraphs.getOrDefault(s.getKey(), empty));
+                    SqlIntercode litPart = SqlJoin.join(request, sx, litGraphs.getOrDefault(s.getKey(), empty));
 
                     sumbitTask(newClassPartitionStats, cache1, iriPart, litPart, List.of("SC"),
                             r -> new Resource(r.getShort(2), r.getInt(3)), t -> new ClassInGraph(s.getKey(), t), true);
@@ -741,8 +741,10 @@ public class GenerateVoid extends Updater
 
             for(Entry<ClassInGraph, SqlIntercode> s : subjectClasses.entrySet())
             {
-                SqlIntercode iriPart = SqlJoin.join(s.getValue(), iriGraphs.getOrDefault(s.getKey().graph(), empty));
-                SqlIntercode litPart = SqlJoin.join(s.getValue(), litGraphs.getOrDefault(s.getKey().graph(), empty));
+                SqlIntercode iriPart = SqlJoin.join(request, s.getValue(),
+                        iriGraphs.getOrDefault(s.getKey().graph(), empty));
+                SqlIntercode litPart = SqlJoin.join(request, s.getValue(),
+                        litGraphs.getOrDefault(s.getKey().graph(), empty));
 
                 sumbitTask(newClassPartitionStats, cache0, iriPart, litPart, s.getKey(), true);
             }
@@ -763,8 +765,8 @@ public class GenerateVoid extends Updater
                     for(Resource p : predicates.get(s.getKey()))
                     {
                         PropertyInGraph key = new PropertyInGraph(s.getKey(), p);
-                        SqlIntercode iriPart = SqlJoin.join(sx, iriProperties.getOrDefault(key, empty));
-                        SqlIntercode litPart = SqlJoin.join(sx, litProperties.getOrDefault(key, empty));
+                        SqlIntercode iriPart = SqlJoin.join(request, sx, iriProperties.getOrDefault(key, empty));
+                        SqlIntercode litPart = SqlJoin.join(request, sx, litProperties.getOrDefault(key, empty));
 
                         sumbitTask(newClassPropertyPartitionStats, cache1, iriPart, litPart, List.of("SC"),
                                 r -> new Resource(r.getShort(2), r.getInt(3)),
@@ -778,8 +780,8 @@ public class GenerateVoid extends Updater
                 for(Resource p : predicates.get(s.getKey().graph()))
                 {
                     PropertyInGraph key = new PropertyInGraph(s.getKey().graph(), p);
-                    SqlIntercode iriPart = SqlJoin.join(s.getValue(), iriProperties.getOrDefault(key, empty));
-                    SqlIntercode litPart = SqlJoin.join(s.getValue(), litProperties.getOrDefault(key, empty));
+                    SqlIntercode iriPart = SqlJoin.join(request, s.getValue(), iriProperties.getOrDefault(key, empty));
+                    SqlIntercode litPart = SqlJoin.join(request, s.getValue(), litProperties.getOrDefault(key, empty));
 
                     sumbitTask(newClassPropertyPartitionStats, cache0, iriPart, litPart,
                             new ClassAndPropertyInGraph(s.getKey().graph(), s.getKey().resource(), p), false);
@@ -823,7 +825,7 @@ public class GenerateVoid extends Updater
                     {
                         for(SqlIntercode sx : s.getValue())
                         {
-                            SqlIntercode sp = SqlJoin.join(sx, px.getValue());
+                            SqlIntercode sp = SqlJoin.join(request, sx, px.getValue());
 
                             sumbitTask(newDatatypeLinksetStats, cache1, empty, sp, List.of("SC"),
                                     r -> new Resource(r.getShort(2), r.getInt(3)),
@@ -841,7 +843,7 @@ public class GenerateVoid extends Updater
                 {
                     for(Entry<ClassInGraph, SqlIntercode> s : subjectClasses.entrySet())
                     {
-                        SqlIntercode sp = SqlJoin.join(s.getValue(), px.getValue());
+                        SqlIntercode sp = SqlJoin.join(request, s.getValue(), px.getValue());
 
                         sumbitTask(newDatatypeLinksetStats, cache0, empty, sp,
                                 new PropertyFromClassToDatatype(p.getKey(), s.getKey(), px.getKey()), false);
@@ -865,7 +867,7 @@ public class GenerateVoid extends Updater
                 {
                     for(SqlIntercode sx : s.getValue())
                     {
-                        SqlIntercode sp = SqlJoin.join(sx, p.getValue());
+                        SqlIntercode sp = SqlJoin.join(request, sx, p.getValue());
 
                         if(sp == SqlNoSolution.get())
                             continue;
@@ -874,7 +876,7 @@ public class GenerateVoid extends Updater
                         {
                             for(SqlIntercode ox : o.getValue())
                             {
-                                SqlIntercode spo = SqlJoin.join(sp, ox);
+                                SqlIntercode spo = SqlJoin.join(request, sp, ox);
 
                                 sumbitTask(newClassLinksetStats, cache2, spo, empty, List.of("SC", "OC"),
                                         r -> new ResourcePair(r.getShort(2), r.getInt(3), r.getShort(4), r.getInt(5)),
@@ -892,7 +894,7 @@ public class GenerateVoid extends Updater
             {
                 for(Entry<ClassInGraph, SqlIntercode> s : subjectClasses.entrySet())
                 {
-                    SqlIntercode sp = SqlJoin.join(s.getValue(), p.getValue());
+                    SqlIntercode sp = SqlJoin.join(request, s.getValue(), p.getValue());
 
                     if(sp == SqlNoSolution.get())
                         continue;
@@ -902,7 +904,7 @@ public class GenerateVoid extends Updater
                         for(SqlIntercode ox : o.getValue())
                         {
                             {
-                                SqlIntercode spo = SqlJoin.join(sp, ox);
+                                SqlIntercode spo = SqlJoin.join(request, sp, ox);
 
                                 sumbitTask(newClassLinksetStats, cache1, spo, empty, List.of("OC"),
                                         r -> new Resource(r.getShort(2), r.getInt(3)),
@@ -921,14 +923,14 @@ public class GenerateVoid extends Updater
                 {
                     for(SqlIntercode sx : s.getValue())
                     {
-                        SqlIntercode sp = SqlJoin.join(sx, p.getValue());
+                        SqlIntercode sp = SqlJoin.join(request, sx, p.getValue());
 
                         if(sp == SqlNoSolution.get())
                             continue;
 
                         for(Entry<ClassInGraph, SqlIntercode> o : objectClasses.entrySet())
                         {
-                            SqlIntercode spo = SqlJoin.join(sp, o.getValue());
+                            SqlIntercode spo = SqlJoin.join(request, sp, o.getValue());
 
                             sumbitTask(newClassLinksetStats, cache1, spo, empty, List.of("SC"),
                                     r -> new Resource(r.getShort(2), r.getInt(3)),
@@ -944,14 +946,14 @@ public class GenerateVoid extends Updater
             {
                 for(Entry<ClassInGraph, SqlIntercode> s : subjectClasses.entrySet())
                 {
-                    SqlIntercode sp = SqlJoin.join(s.getValue(), p.getValue());
+                    SqlIntercode sp = SqlJoin.join(request, s.getValue(), p.getValue());
 
                     if(sp == SqlNoSolution.get())
                         continue;
 
                     for(Entry<ClassInGraph, SqlIntercode> o : objectClasses.entrySet())
                     {
-                        SqlIntercode spo = SqlJoin.join(sp, o.getValue());
+                        SqlIntercode spo = SqlJoin.join(request, sp, o.getValue());
 
                         sumbitTask(newClassLinksetStats, cache0, spo, empty,
                                 new PropertyFromClassToClass(p.getKey(), s.getKey(), o.getKey()), false);
@@ -1083,7 +1085,7 @@ public class GenerateVoid extends Updater
     {
         try
         {
-            SqlIntercode imcode = SqlUnion.union(List.of(iriPart, litPart));
+            SqlIntercode imcode = SqlUnion.union(request, List.of(iriPart, litPart));
 
             FutureWrapper<HashMap<K, Long>> ftriples = computeCount(cache, imcode, v, fres, keyget);
 
@@ -1263,7 +1265,7 @@ public class GenerateVoid extends Updater
         }
 
         for(List<SqlIntercode> g : groups.values())
-            result.add(SqlUnion.union(g));
+            result.add(SqlUnion.union(request, g));
 
         return result;
     }

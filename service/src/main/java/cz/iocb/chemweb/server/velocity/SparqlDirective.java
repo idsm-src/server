@@ -17,6 +17,7 @@ import org.apache.velocity.runtime.parser.node.SimpleNode;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.error.TranslateExceptions;
 import cz.iocb.sparql.engine.request.Engine;
+import cz.iocb.sparql.engine.request.LimitExceedException;
 import cz.iocb.sparql.engine.request.Request;
 import cz.iocb.sparql.engine.request.Result;
 import cz.iocb.sparql.engine.translator.ServiceException;
@@ -87,7 +88,7 @@ public class SparqlDirective extends Directive
                 return true;
             }
         }
-        catch(TranslateExceptions | ServiceException | SQLException e)
+        catch(TranslateExceptions | LimitExceedException | SQLException | ServiceException e)
         {
             log.error("sparql directive: " + e.getMessage());
 

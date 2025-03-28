@@ -142,7 +142,7 @@ public class Dataset
                         Conditions conditions = Conditions.and(map.getConditions().get(i), condition);
                         SqlIntercode acess = SqlTableAccess.create(table, conditions, variables);
 
-                        result = SqlJoin.join(result, acess);
+                        result = SqlJoin.join(request, result, acess);
                     }
 
                     branches.add(result);
@@ -164,6 +164,6 @@ public class Dataset
         if(object != null)
             restrictions.add(object);
 
-        return SqlUnion.union(branches).optimize(request, restrictions, false);
+        return SqlUnion.union(request, branches).optimize(request, restrictions, false);
     }
 }

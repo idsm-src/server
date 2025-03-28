@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.sparql.engine.mapping.ConstantBlankNodeMapping;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.ConstantLiteralMapping;
@@ -52,6 +53,13 @@ public class Graph
 
 
         ConstantIriMapping predicateMapping = (ConstantIriMapping) map.getPredicate();
+
+        if(!(predicateMapping.getResourceClass() instanceof OntologyResource))
+        {
+            System.err.println("skip " + predicateMapping.getIRI().getValue());
+            return;
+        }
+
         Resource predicate = new Resource(predicateMapping.getColumns());
 
         if(map.getObject() instanceof ConstantLiteralMapping || map.getObject() instanceof ParametrisedLiteralMapping)
@@ -111,6 +119,12 @@ public class Graph
                     System.err.println("skip " + iri);
                     return Set.of();
                 }
+            }
+
+            if(!(cmap.getResourceClass() instanceof OntologyResource))
+            {
+                System.err.println("skip " + iri);
+                return Set.of();
             }
 
             Resource resource = new Resource(cmap.getColumns());

@@ -26,6 +26,7 @@ import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.QuadMapping;
 import cz.iocb.sparql.engine.parser.model.IRI;
 import cz.iocb.sparql.engine.request.Engine;
+import cz.iocb.sparql.engine.request.LimitExceedException;
 import cz.iocb.sparql.engine.request.RdfNode;
 import cz.iocb.sparql.engine.request.Request;
 import cz.iocb.sparql.engine.request.Result;
@@ -72,7 +73,7 @@ public class GenerateHints extends HttpServlet
                     hintsJS = generateHints(dbConfig);
                     hintsMap.put(resourceName, hintsJS);
                 }
-                catch(NamingException | TranslateExceptions | ServiceException | SQLException e)
+                catch(NamingException | TranslateExceptions | LimitExceedException | ServiceException | SQLException e)
                 {
                     throw new ServletException(e);
                 }
@@ -104,7 +105,7 @@ public class GenerateHints extends HttpServlet
 
 
     private static String generateHints(SparqlDatabaseConfiguration sparqlConfig)
-            throws TranslateExceptions, SQLException, ServiceException
+            throws TranslateExceptions, LimitExceedException, SQLException, ServiceException
     {
         Set<String> iris = new HashSet<String>();
 
