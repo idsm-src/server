@@ -116,6 +116,9 @@
     <servlet-name>IdsmEndpointServlet</servlet-name>
     <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>sparql:idsm</param-value></init-param>
+    <init-param><param-name>timeout</param-name><param-value>1000</param-value></init-param>
+    <init-param><param-name>max-timeout</param-name><param-value>9000</param-value></init-param>
+    <init-param><param-name>sql-query-size-limit</param-name><param-value>67108864</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>IdsmEndpointServlet</servlet-name>
@@ -454,6 +457,17 @@
     <filter-name>WikidataSachemEndpointMatomoFilter</filter-name>
     <url-pattern>/sachem/endpoint/wikidata</url-pattern>
     <url-pattern>/sparql/endpoint/wikidata</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>MonaSachemEndpointMatomoFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.matomo.MatomoFilter</filter-class>
+    <init-param><param-name>actionName</param-name><param-value>MoNA SPARQL Endpoint</param-value></init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>MonaSachemEndpointMatomoFilter</filter-name>
+    <url-pattern>/sachem/endpoint/mona</url-pattern>
+    <url-pattern>/sparql/endpoint/mona</url-pattern>
   </filter-mapping>
 
 </web-app>
