@@ -351,6 +351,14 @@ public class Void
             config.addQuadMapping(table, graph, config.createIriMapping("void:graph", "property_graph"),
                     config.createIriMapping("void:subset"), dataset);
 
+            config.addQuadMapping(table, graph, config.createIriMapping("void:property-partition", "property_graph",
+                    "property_unit", "property_id"), config.createIriMapping("void:subset"), dataset);
+
+            config.addQuadMapping(table, graph,
+                    config.createIriMapping("void:class-partition", "subject_graph", "subject_unit", "subject_id"),
+                    config.createIriMapping("void:subset"), dataset,
+                    config.createAreEqualCondition("subject_graph", "property_graph"));
+
             config.addQuadMapping(table, graph,
                     config.createIriMapping("void:class-property-partition", "property_graph", "subject_unit",
                             "subject_id", "property_unit", "property_id"),
