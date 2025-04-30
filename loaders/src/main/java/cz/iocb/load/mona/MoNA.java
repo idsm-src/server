@@ -1455,7 +1455,8 @@ public class MoNA extends Updater
         store("insert into mona.compound_bases(id,accession,updated) values(?,?,?::date) "
                 + "on conflict(id) do update set updated=EXCLUDED.updated", newUpdatedDates);
 
-        store("update mona.compound_bases set spectrum=null where id=? and spectrum=?::pgms.spectrum", oldSpectra);
+        store("update mona.compound_bases set spectrum=null where id=? and spectrum operator(pgms.=)?::pgms.spectrum",
+                oldSpectra);
         store("insert into mona.compound_bases(id,accession,spectrum) values(?,?,?::pgms.spectrum) "
                 + "on conflict(id) do update set spectrum=EXCLUDED.spectrum", newSpectra);
 
