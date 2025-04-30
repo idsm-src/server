@@ -4,6 +4,7 @@ import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdShort;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Table;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -78,7 +79,7 @@ public class CompoundDescriptor
             String field = "(id::varchar)";
 
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000140"));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(rdfLangStringEn, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdString, field));
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(rdfLangStringEn, field));
@@ -353,7 +354,7 @@ public class CompoundDescriptor
             NodeMapping subject = config.createIriMapping("pubchem:molecular_formula", "compound");
 
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000335"));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(rdfLangStringEn, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdString, field));
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(rdfLangStringEn, field));
@@ -365,7 +366,7 @@ public class CompoundDescriptor
             NodeMapping subject = config.createIriMapping("pubchem:isomeric_smiles", "compound");
 
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000379"));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(rdfLangStringEn, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdString, field));
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(rdfLangStringEn, field));
@@ -377,7 +378,7 @@ public class CompoundDescriptor
             NodeMapping subject = config.createIriMapping("pubchem:canonical_smiles", "compound");
 
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000376"));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(rdfLangStringEn, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdString, field));
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(rdfLangStringEn, field));
@@ -389,7 +390,7 @@ public class CompoundDescriptor
             NodeMapping subject = config.createIriMapping("pubchem:iupac_inchi", "compound");
 
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000396"));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(rdfLangStringEn, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdString, field));
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(rdfLangStringEn, field));
@@ -401,7 +402,7 @@ public class CompoundDescriptor
             NodeMapping subject = config.createIriMapping("pubchem:preferred_iupac_name", "compound");
 
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000382"));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(rdfLangStringEn, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdString, field));
 
             // deprecated
             config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(rdfLangStringEn, field));

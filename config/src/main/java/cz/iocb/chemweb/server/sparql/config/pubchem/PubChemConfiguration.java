@@ -234,7 +234,7 @@ public class PubChemConfiguration extends SparqlDatabaseConfiguration
         compoundSearch.addParameter(new ParameterDefinition(fulltext + "query", xsdString, null));
         compoundSearch.addResult(new ResultDefinition(fulltext + "compound", compound, "compound"));
         compoundSearch.addResult(new ResultDefinition(fulltext + "score", xsdFloat, "score"));
-        compoundSearch.addResult(new ResultDefinition(fulltext + "name", rdfLangStringEn, "name"));
+        compoundSearch.addResult(new ResultDefinition(fulltext + "name", xsdString, "name"));
         addProcedure(compoundSearch);
     }
 }
