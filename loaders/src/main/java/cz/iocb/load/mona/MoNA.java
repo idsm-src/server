@@ -336,6 +336,7 @@ public class MoNA extends Updater
 
         init();
 
+        String version = getReader("mona/version.txt.gz").readLine();
 
         ZipInputStream classyFiresStream = new ZipInputStream(getZipStream("mona/ChemOnt_2_1.obo.zip"));
         classyFiresStream.getNextEntry();
@@ -1615,6 +1616,7 @@ public class MoNA extends Updater
             statement.execute("refresh materialized view mona.compound_pubchem_compounds");
         }
 
+        setVersion("MassBank of North America (MoNA)", version);
 
         updateVersion();
         commit();

@@ -5,7 +5,8 @@ set -ueo pipefail
 source datasource.properties
 
 line=$(wget -q -O - https://mona.fiehnlab.ucdavis.edu/rest/downloads/predefined | sed 's|\("[^"]*Export"\)|\n\1|g'  | grep "MoNA-export-All_Spectra-json.zip")
-version=$(date -d @$(($(echo "$line" | sed 's|.*"date":\([0-9]*\),.*|\1|')/1000)) +"%Y-%m-%d")
+date=$(date -d @$(($(echo "$line" | sed 's|.*"date":\([0-9]*\),.*|\1|')/1000)) +"%Y-%m-%d")
+version="$date"
 id=$(echo "$line" | sed 's|.*"id":"\([^"]*\)".*|\1|')
 
 if [ -e "$base/mona-$version" ]; then
@@ -18,6 +19,8 @@ fi
 
 output="$base/mona-$version"
 mkdir "$output"
+
+echo "$date" | gzip > "$base/mona-$version/version.txt.gz"
 
 wget --progress=bar:force -P "$output" http://classyfire.wishartlab.com/system/downloads/1_0/chemont/ChemOnt_2_1.obo.zip
 wget --progress=bar:force -O "$output/MoNA-export-All_Spectra-json.zip" "https://mona.fiehnlab.ucdavis.edu/rest/downloads/retrieve/$id"
