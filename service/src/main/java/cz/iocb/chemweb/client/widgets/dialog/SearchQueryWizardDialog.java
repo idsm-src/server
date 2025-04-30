@@ -779,17 +779,7 @@ public class SearchQueryWizardDialog extends DialogBox
                 String pattern = participantTextBox.getValue().trim().replaceAll("'", "\\\\'");
                 query.append("\n  ?PARTICIPANT dcterms:title ?PARTICIPANT_TITLE.");
 
-                if(geneCheckBox.getValue() && !proteinCheckBox.getValue())
-                    query.append("\n  ?PARTICIPANT dcterms:description  ?PARTICIPANT_DESCRIPTION.");
-                else if(geneCheckBox.getValue() || !proteinCheckBox.getValue())
-                    query.append("\n  OPTIONAL { ?PARTICIPANT dcterms:description  ?PARTICIPANT_DESCRIPTION }");
-
-                query.append("\n  FILTER(fulltext:match(?PARTICIPANT_TITLE, '''" + pattern + "''')");
-
-                if(geneCheckBox.getValue() || !proteinCheckBox.getValue())
-                    query.append(" || fulltext:match(?PARTICIPANT_DESCRIPTION, '''galectin:*''')");
-
-                query.append(")");
+                query.append("\n  FILTER(fulltext:match(?PARTICIPANT_TITLE, '''" + pattern + "'''))");
             }
         }
 
