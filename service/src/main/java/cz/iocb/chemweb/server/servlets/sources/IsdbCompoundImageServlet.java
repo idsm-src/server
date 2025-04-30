@@ -26,20 +26,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 import javax.vecmath.Point2d;
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
-import org.openscience.cdk.geometry.cip.CIPTool;
 import org.openscience.cdk.graph.CycleFinder;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
-import org.openscience.cdk.interfaces.IBond;
-import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IDoubleBondStereochemistry;
 import org.openscience.cdk.interfaces.ISingleElectron;
 import org.openscience.cdk.interfaces.IStereoElement;
@@ -303,7 +299,6 @@ public class IsdbCompoundImageServlet extends HttpServlet
         aromaticity.apply(molecule);
 
 
-        CIPTool.label(molecule);
         removeNonChiralHydrogens(molecule);
 
 
@@ -319,24 +314,7 @@ public class IsdbCompoundImageServlet extends HttpServlet
         }
 
 
-        for(IAtom atom : molecule.atoms())
-            atom.setProperty(StandardGenerator.ANNOTATION_LABEL, getCipLabel(atom));
-        for(IBond bond : molecule.bonds())
-            bond.setProperty(StandardGenerator.ANNOTATION_LABEL, getCipLabel(bond));
-
-
         return molecule;
-    }
-
-
-    private static String getCipLabel(IChemObject chemObj)
-    {
-        String label = chemObj.getProperty(CDKConstants.CIP_DESCRIPTOR);
-
-        if(label == null || label.equals("NONE"))
-            return null;
-
-        return StandardGenerator.ITALIC_DISPLAY_PREFIX + label;
     }
 
 
