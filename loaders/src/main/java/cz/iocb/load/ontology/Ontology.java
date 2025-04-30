@@ -808,6 +808,9 @@ public class Ontology extends Updater
         builtinResources.put("http://rdfs.org/ns/void#linkPredicate", 429);
         builtinResources.put("http://ldf.fi/void-ext#datatypePartition", 430);
         builtinResources.put("http://ldf.fi/void-ext#datatype", 431);
+        builtinResources.put("http://www.w3.org/ns/shacl#namespace", 432);
+        builtinResources.put("http://www.w3.org/ns/shacl#prefix", 433);
+        builtinResources.put("http://www.w3.org/ns/shacl#select", 434);
 
         // classes
         builtinResources.put("http://data.epo.org/linked-data/def/patent/Publication", 512);
@@ -950,6 +953,7 @@ public class Ontology extends Updater
         builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Substance", 649);
         builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Synonym", 650);
         builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Taxonomy", 651);
+        builtinResources.put("http://www.w3.org/ns/shacl#SPARQLExecutable", 652);
 
         // datatypes
         builtinResources.put("http://www.w3.org/2001/XMLSchema#boolean", 900);

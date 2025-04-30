@@ -11,6 +11,7 @@ import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.chebi.ChebiConfiguration;
 import cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration;
 import cz.iocb.chemweb.server.sparql.config.drugbank.DrugBankConfiguration;
+import cz.iocb.chemweb.server.sparql.config.examples.ExamplesConfiguration;
 import cz.iocb.chemweb.server.sparql.config.isdb.IsdbConfiguration;
 import cz.iocb.chemweb.server.sparql.config.mesh.MeshConfiguration;
 import cz.iocb.chemweb.server.sparql.config.mona.MonaConfiguration;
@@ -209,6 +210,7 @@ public class IdsmConfiguration extends SparqlDatabaseConfiguration
         addService(new DrugBankConfiguration(null, connectionPool, getDatabaseSchema()), true);
         addService(new WikidataConfiguration(null, connectionPool, getDatabaseSchema()), true);
         addService(new VoidConfiguration(null, connectionPool, getDatabaseSchema()), true);
+        addService(new ExamplesConfiguration(null, connectionPool, getDatabaseSchema()), true);
 
         Map<ResourceClass, List<Column>> mapping = new HashMap<ResourceClass, List<Column>>();
         mapping.put(getIriClass("ontology:resource"), List.of(getColumn(Ontology.unitCHEBI), getColumn("chebi")));
