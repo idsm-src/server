@@ -61,7 +61,10 @@ public class PubChemRDF extends Updater
             Compound.load();
             InchiKey.load(); // require Compound
             Synonym.load(); // require Compound, Concept
-            Substance.load(); // require Compound, Source, Synonym
+
+            Patent.load(); // require Compound
+
+            Substance.load(); // require Compound, Patent, Source, Synonym
 
             Author.load();
             Book.load(); // require Author
@@ -70,16 +73,15 @@ public class PubChemRDF extends Updater
             Grant.load(); // require Organization
 
             Disease.load();
-            Taxonomy.load();
+            Taxonomy.load(); // require Patent
             ConservedDomain.load();
-            Anatomy.load();
+            Anatomy.load(); // require Patent
             Cell.load(); // require Anatomy, Taxonomy
-            Gene.load(); // require Taxonomy
-            Protein.load(); // require ConservedDomain, Gene, Taxonomy
+            Gene.load(); // require Patent, Taxonomy
+            Protein.load(); // require ConservedDomain, Gene, Patent, Taxonomy
             Pathway.load(); // require Compound, Gene, Protein, Source, Taxonomy
 
             Cooccurrence.load(); // require Compound, Disease, Gene, Protein
-            Patent.load(); // require Anatomy, Compound, Gene, Protein, Substance, Taxonomy
             Reference.load(); // require Author, Book, Compound, Disease, Journal, Gene, Grant, Organization, Protein
 
             Bioassay.load(); // require Patent, Source

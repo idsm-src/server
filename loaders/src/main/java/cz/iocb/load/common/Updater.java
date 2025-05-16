@@ -23,10 +23,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
+import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathException;
 import javax.xml.xpath.XPathExpressionException;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.mem2.GraphMem2Fast;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -791,11 +794,9 @@ public class Updater
     }
 
 
-    protected static Model getModel(String file, Lang lang) throws IOException
+    protected static Model getModel(String file, Lang lang, Model model) throws IOException
     {
         System.out.println("  load " + file);
-
-        Model model = ModelFactory.createDefaultModel();
 
         if(lang != Lang.TTL)
         {
@@ -821,6 +822,36 @@ public class Updater
         }
 
         return model;
+    }
+
+
+    protected static Model getModel(String file, Lang lang) throws IOException
+    {
+        return getModel(file, lang, ModelFactory.createModelForGraph(new GraphMem2Fast()));
+    }
+
+
+    protected static Model getModel(String file, Lang lang, Predicate<Triple> filter) throws IOException
+    {
+        Model model = ModelFactory.createModelForGraph(new GraphMem2Fast()
+        {
+            @Override
+            public void add(Triple t)
+            {
+                if(!filter.test(t))
+                    return;
+
+                super.add(t);
+            }
+        });
+
+        return getModel(file, lang, model);
+    }
+
+
+    protected static Model getModel(String file, Predicate<Triple> filter) throws IOException
+    {
+        return getModel(file, Lang.TTL, filter);
     }
 
 

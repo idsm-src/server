@@ -278,7 +278,11 @@ class Gene extends Updater
         IntPairSet newReferences = new IntPairSet();
         IntPairSet oldReferences = new IntPairSet();
 
+        IntPairSet newPatents = new IntPairSet();
+        IntPairSet oldPatents = new IntPairSet();
+
         load("select gene,reference from pubchem.gene_references", oldReferences);
+        load("select gene,patent from pubchem.patent_genes", oldPatents);
 
         new QueryResultProcessor(patternQuery("?gene cito:isDiscussedBy ?reference"))
         {
@@ -286,17 +290,33 @@ class Gene extends Updater
             protected void parse() throws IOException
             {
                 Integer geneID = getGeneID(getIRI("gene"));
-                Integer referenceID = Reference.getReferenceID(getIRI("reference"));
 
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, referenceID);
+                if(getIRI("reference").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                {
+                    Integer referenceID = Reference.getReferenceID(getIRI("reference"));
 
-                if(!oldReferences.remove(pair))
-                    newReferences.add(pair);
+                    Pair<Integer, Integer> pair = Pair.getPair(geneID, referenceID);
+
+                    if(!oldReferences.remove(pair))
+                        newReferences.add(pair);
+                }
+                else
+                {
+                    Integer patentID = Patent.getPatentID(getIRI("reference"));
+
+                    Pair<Integer, Integer> pair = Pair.getPair(geneID, patentID);
+
+                    if(!oldPatents.remove(pair))
+                        newPatents.add(pair);
+                }
             }
         }.load(model);
 
         store("delete from pubchem.gene_references where gene=? and reference=?", oldReferences);
         store("insert into pubchem.gene_references(gene,reference) values(?,?)", newReferences);
+
+        store("delete from pubchem.patent_genes where gene=? and patent=?", oldPatents);
+        store("insert into pubchem.patent_genes(gene,patent) values(?,?)", newPatents);
     }
 
 
@@ -884,7 +904,7 @@ class Gene extends Updater
     }
 
 
-    static Integer getGeneSymbolID(String value, boolean keepForce) throws IOException
+    static Integer getGeneSymbolID(String value, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(symbolPrefix))
             throw new IOException("unexpected IRI: " + value);
@@ -902,7 +922,7 @@ class Gene extends Updater
 
             if(geneSymbolID != null)
             {
-                if(keepForce)
+                if(forceKeep)
                 {
                     newGeneSymbols.remove(symbol);
                     keepGeneSymbols.put(symbol, geneSymbolID);
@@ -915,7 +935,7 @@ class Gene extends Updater
 
             if((geneSymbolID = oldGeneSymbols.remove(symbol)) != null)
                 keepGeneSymbols.put(symbol, geneSymbolID);
-            else if(keepForce)
+            else if(forceKeep)
                 keepGeneSymbols.put(symbol, geneSymbolID = nextGeneSymbolID++);
             else
                 newGeneSymbols.put(symbol, geneSymbolID = nextGeneSymbolID++);

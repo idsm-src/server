@@ -115,7 +115,11 @@ public class Taxonomy extends Updater
         IntPairSet newReferences = new IntPairSet();
         IntPairSet oldReferences = new IntPairSet();
 
+        IntPairSet newPatents = new IntPairSet();
+        IntPairSet oldPatents = new IntPairSet();
+
         load("select taxonomy,reference from pubchem.taxonomy_references", oldReferences);
+        load("select taxonomy,patent from pubchem.patent_taxonomies", oldPatents);
 
         new QueryResultProcessor(patternQuery("?taxonomy cito:isDiscussedBy ?reference"))
         {
@@ -123,17 +127,34 @@ public class Taxonomy extends Updater
             protected void parse() throws IOException
             {
                 Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"));
-                Integer referenceID = Reference.getReferenceID(getIRI("reference"));
 
-                Pair<Integer, Integer> pair = Pair.getPair(taxonomyID, referenceID);
+                if(getIRI("reference").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                {
+                    Integer referenceID = Reference.getReferenceID(getIRI("reference"));
 
-                if(!oldReferences.remove(pair))
-                    newReferences.add(pair);
+                    Pair<Integer, Integer> pair = Pair.getPair(taxonomyID, referenceID);
+
+                    if(!oldReferences.remove(pair))
+                        newReferences.add(pair);
+                }
+                else
+                {
+                    Integer patentID = Patent.getPatentID(getIRI("reference"));
+
+                    Pair<Integer, Integer> pair = Pair.getPair(taxonomyID, patentID);
+
+                    if(!oldPatents.remove(pair))
+                        newPatents.add(pair);
+                }
+
             }
         }.load(model);
 
         store("delete from pubchem.taxonomy_references where taxonomy=? and reference=?", oldReferences);
         store("insert into pubchem.taxonomy_references(taxonomy,reference) values(?,?)", newReferences);
+
+        store("delete from pubchem.patent_taxonomies where taxonomy=? and patent=?", oldPatents);
+        store("insert into pubchem.patent_taxonomies(taxonomy,patent) values(?,?)", newPatents);
     }
 
 

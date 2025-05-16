@@ -345,7 +345,7 @@ class Source extends Updater
     }
 
 
-    static Integer getSourceID(String value, boolean keepForce) throws IOException
+    static Integer getSourceID(String value, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
@@ -363,7 +363,7 @@ class Source extends Updater
 
             if(sourceID != null)
             {
-                if(keepForce)
+                if(forceKeep)
                 {
                     newSources.remove(source);
                     keepSources.put(source, sourceID);
@@ -376,7 +376,7 @@ class Source extends Updater
 
             if((sourceID = oldSources.remove(source)) != null)
                 keepSources.put(source, sourceID);
-            else if(keepForce)
+            else if(forceKeep)
                 keepSources.put(source, sourceID = nextSourceID++);
             else
                 newSources.put(source, sourceID = nextSourceID++);

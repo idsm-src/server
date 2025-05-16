@@ -6,6 +6,7 @@ select distinct ?iri where
         filter(?iri != skos:prefLabel)
         filter(?iri != skos:altLabel)
         filter(?iri != rdfs:seeAlso)
+        filter(?iri != cito:isDiscussedBy)
 	}
     union
     {

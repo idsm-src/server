@@ -459,7 +459,12 @@ class Substance extends Updater
         IntPairSet newReferences = new IntPairSet();
         IntPairSet oldReferences = new IntPairSet();
 
+        IntPairSet keepPatents = new IntPairSet();
+        IntPairSet newPatents = new IntPairSet();
+        IntPairSet oldPatents = new IntPairSet();
+
         load("select substance,reference from pubchem.substance_references", oldReferences);
+        load("select substance,patent from pubchem.patent_substances", oldPatents);
 
         try(InputStream stream = getTtlStream("pubchem/RDF/substance/pc_substance2reference.ttl.gz"))
         {
@@ -472,20 +477,38 @@ class Substance extends Updater
                         throw new IOException();
 
                     Integer substanceID = getSubstanceID(subject.getURI(), false, false);
-                    Integer referenceID = Reference.getReferenceID(object.getURI());
 
-                    Pair<Integer, Integer> pair = Pair.getPair(substanceID, referenceID);
+                    if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                    {
+                        Integer referenceID = Reference.getReferenceID(object.getURI());
 
-                    if(oldReferences.remove(pair))
-                        keepReferences.add(pair);
-                    else if(!keepReferences.contains(pair))
-                        newReferences.add(pair);
+                        Pair<Integer, Integer> pair = Pair.getPair(substanceID, referenceID);
+
+                        if(oldReferences.remove(pair))
+                            keepReferences.add(pair);
+                        else if(!keepReferences.contains(pair))
+                            newReferences.add(pair);
+                    }
+                    else
+                    {
+                        Integer patentID = Patent.getPatentID(object.getURI());
+
+                        Pair<Integer, Integer> pair = Pair.getPair(substanceID, patentID);
+
+                        if(oldPatents.remove(pair))
+                            keepPatents.add(pair);
+                        else if(!keepPatents.contains(pair))
+                            newPatents.add(pair);
+                    }
                 }
             }.load(stream);
         }
 
         store("delete from pubchem.substance_references where substance=? and reference=?", oldReferences);
         store("insert into pubchem.substance_references(substance,reference) values(?,?)", newReferences);
+
+        store("delete from pubchem.patent_substances where substance=? and patent=?", oldPatents);
+        store("insert into pubchem.patent_substances(substance,patent) values(?,?)", newPatents);
     }
 
 
@@ -639,7 +662,7 @@ class Substance extends Updater
     }
 
 
-    private static Integer getSubstanceID(String value, boolean verbose, boolean keepForce) throws IOException
+    private static Integer getSubstanceID(String value, boolean verbose, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
@@ -648,12 +671,20 @@ class Substance extends Updater
 
         synchronized(newSubstances)
         {
-            if(!keepSubstances.contains(substanceID) && !newSubstances.contains(substanceID))
+            if(newSubstances.contains(substanceID))
+            {
+                if(forceKeep)
+                {
+                    newSubstances.remove(substanceID);
+                    keepSubstances.add(substanceID);
+                }
+            }
+            else if(!keepSubstances.contains(substanceID))
             {
                 if(verbose)
                     System.out.println("    add missing substance SID" + substanceID);
 
-                if(!oldSubstances.remove(substanceID) && !keepForce)
+                if(!oldSubstances.remove(substanceID) && !forceKeep)
                     newSubstances.add(substanceID);
                 else
                     keepSubstances.add(substanceID);

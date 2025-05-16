@@ -3,12 +3,8 @@ package cz.iocb.load.pubchem;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.jena.graph.Node;
-import org.apache.jena.rdf.model.Model;
 import cz.iocb.load.common.Pair;
-import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -746,36 +742,11 @@ class Patent extends Updater
 
     private static void loadReferences() throws IOException, SQLException
     {
-        IntPairSet keepSubstances = new IntPairSet();
-        IntPairSet newSubstances = new IntPairSet();
-        IntPairSet oldSubstances = new IntPairSet();
-
         IntPairSet keepCompounds = new IntPairSet();
         IntPairSet newCompounds = new IntPairSet();
         IntPairSet oldCompounds = new IntPairSet();
 
-        IntPairSet keepGenes = new IntPairSet();
-        IntPairSet newGenes = new IntPairSet();
-        IntPairSet oldGenes = new IntPairSet();
-
-        IntPairSet keepProteins = new IntPairSet();
-        IntPairSet newProteins = new IntPairSet();
-        IntPairSet oldProteins = new IntPairSet();
-
-        IntPairSet keepTaxonomies = new IntPairSet();
-        IntPairSet newTaxonomies = new IntPairSet();
-        IntPairSet oldTaxonomies = new IntPairSet();
-
-        IntPairSet keepAnatomies = new IntPairSet();
-        IntPairSet newAnatomies = new IntPairSet();
-        IntPairSet oldAnatomies = new IntPairSet();
-
-        load("select patent,substance from pubchem.patent_substances", oldSubstances);
         load("select patent,compound from pubchem.patent_compounds", oldCompounds);
-        load("select patent,gene from pubchem.patent_genes", oldGenes);
-        load("select patent,protein from pubchem.patent_proteins", oldProteins);
-        load("select patent,taxonomy from pubchem.patent_taxonomies", oldTaxonomies);
-        load("select patent,anatomy from pubchem.patent_anatomies", oldAnatomies);
 
         processFiles("pubchem/RDF/patent", "pc_patent2isdiscussedby_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -788,146 +759,25 @@ class Patent extends Updater
                         if(!predicate.getURI().equals("http://purl.org/spar/cito/isDiscussedBy"))
                             throw new IOException();
 
-                        if(subject.getURI().startsWith(Substance.prefix))
+                        Integer patentID = getPatentID(object.getURI());
+                        Integer compoundID = Compound.getCompoundID(subject.getURI());
+
+                        Pair<Integer, Integer> pair = Pair.getPair(patentID, compoundID);
+
+                        synchronized(newCompounds)
                         {
-                            Integer patentID = getPatentID(object.getURI());
-                            Integer substanceID = Substance.getSubstanceID(subject.getURI());
-
-                            Pair<Integer, Integer> pair = Pair.getPair(patentID, substanceID);
-
-                            synchronized(newSubstances)
-                            {
-                                if(oldSubstances.remove(pair))
-                                    keepSubstances.add(pair);
-                                else if(!keepSubstances.contains(pair))
-                                    newSubstances.add(pair);
-                            }
-                        }
-                        else if(subject.getURI().startsWith(Compound.prefix))
-                        {
-                            Integer patentID = getPatentID(object.getURI());
-                            Integer compoundID = Compound.getCompoundID(subject.getURI());
-
-                            Pair<Integer, Integer> pair = Pair.getPair(patentID, compoundID);
-
-                            synchronized(newCompounds)
-                            {
-                                if(oldCompounds.remove(pair))
-                                    keepCompounds.add(pair);
-                                else if(!keepCompounds.contains(pair))
-                                    newCompounds.add(pair);
-                            }
-                        }
-                        else if(subject.getURI().startsWith(Gene.prefix))
-                        {
-                            Integer patentID = getPatentID(object.getURI());
-                            Integer geneID = Gene.getGeneID(subject.getURI());
-
-                            Pair<Integer, Integer> pair = Pair.getPair(patentID, geneID);
-
-                            synchronized(newGenes)
-                            {
-                                if(oldGenes.remove(pair))
-                                    keepGenes.add(pair);
-                                else if(!keepGenes.contains(pair))
-                                    newGenes.add(pair);
-                            }
-                        }
-                        else if(subject.getURI().startsWith(Protein.prefix))
-                        {
-                            Integer patentID = getPatentID(object.getURI());
-                            Integer proteinID = Protein.getProteinID(subject.getURI());
-
-                            Pair<Integer, Integer> pair = Pair.getPair(patentID, proteinID);
-
-                            synchronized(newProteins)
-                            {
-                                if(oldProteins.remove(pair))
-                                    keepProteins.add(pair);
-                                else if(!keepProteins.contains(pair))
-                                    newProteins.add(pair);
-                            }
-                        }
-                        else if(subject.getURI().startsWith(Taxonomy.prefix))
-                        {
-                            Integer patentID = getPatentID(object.getURI());
-                            Integer taxonomyID = Taxonomy.getTaxonomyID(subject.getURI());
-
-                            Pair<Integer, Integer> pair = Pair.getPair(patentID, taxonomyID);
-
-                            synchronized(newTaxonomies)
-                            {
-                                if(oldTaxonomies.remove(pair))
-                                    keepTaxonomies.add(pair);
-                                else if(!keepTaxonomies.contains(pair))
-                                    newTaxonomies.add(pair);
-                            }
-                        }
-                        else if(subject.getURI().startsWith(Anatomy.prefix))
-                        {
-                            Integer patentID = getPatentID(object.getURI());
-                            Integer anatomyID = Anatomy.getAnatomyID(subject.getURI());
-
-                            Pair<Integer, Integer> pair = Pair.getPair(patentID, anatomyID);
-
-                            synchronized(newAnatomies)
-                            {
-                                if(oldAnatomies.remove(pair))
-                                    keepAnatomies.add(pair);
-                                else if(!keepAnatomies.contains(pair))
-                                    newAnatomies.add(pair);
-                            }
-                        }
-                        else
-                        {
-                            throw new IOException();
+                            if(oldCompounds.remove(pair))
+                                keepCompounds.add(pair);
+                            else if(!keepCompounds.contains(pair))
+                                newCompounds.add(pair);
                         }
                     }
                 }.load(stream);
             }
         });
 
-
-        // additional references
-        Model model = getModel("pubchem/RDF/anatomy/pc_anatomy.ttl.gz");
-
-        new QueryResultProcessor(patternQuery("?anatomy cito:isDiscussedBy ?patent"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer anatomyID = Anatomy.getAnatomyID(getIRI("anatomy"));
-                Integer patentID = getPatentID(getIRI("patent"));
-
-                Pair<Integer, Integer> pair = Pair.getPair(patentID, anatomyID);
-
-                if(oldAnatomies.remove(pair))
-                    keepAnatomies.add(pair);
-                else if(!keepAnatomies.contains(pair))
-                    newAnatomies.add(pair);
-            }
-        }.load(model);
-
-        model.close();
-
-
-        store("delete from pubchem.patent_substances where patent=? and substance=?", oldSubstances);
-        store("insert into pubchem.patent_substances(patent,substance) values(?,?)", newSubstances);
-
         store("delete from pubchem.patent_compounds where patent=? and compound=?", oldCompounds);
         store("insert into pubchem.patent_compounds(patent,compound) values(?,?)", newCompounds);
-
-        store("delete from pubchem.patent_genes where patent=? and gene=?", oldGenes);
-        store("insert into pubchem.patent_genes(patent,gene) values(?,?)", newGenes);
-
-        store("delete from pubchem.patent_proteins where patent=? and protein=?", oldProteins);
-        store("insert into pubchem.patent_proteins(patent,protein) values(?,?)", newProteins);
-
-        store("delete from pubchem.patent_taxonomies where patent=? and taxonomy=?", oldTaxonomies);
-        store("insert into pubchem.patent_taxonomies(patent,taxonomy) values(?,?)", newTaxonomies);
-
-        store("delete from pubchem.patent_anatomies where patent=? and anatomy=?", oldAnatomies);
-        store("insert into pubchem.patent_anatomies(patent,anatomy) values(?,?)", newAnatomies);
     }
 
 
@@ -1019,65 +869,9 @@ class Patent extends Updater
         StringStringMap newInventorNames = new StringStringMap();
         StringStringMap oldInventorNames = new StringStringMap();
 
-        Map<String, String> wrongInventorNames = new HashMap<>();
-        wrongInventorNames.put("0e781a63b9176f4e6c51416487c314c4", "ANTHONY ALEXANDER MCKINNEY");
-        wrongInventorNames.put("30e549bef620b64bc8c05f85dd411cfd", "KIM JOON-SUPSAMSUNG SDI CO LTD");
-        wrongInventorNames.put("38c4570b8cde7f9c8f47dd66d69cc6de", "TANG JUN");
-        wrongInventorNames.put("673c0a88d4aabe27f2c177a25dee6fab", "JIAXIANG ZHANG");
-        wrongInventorNames.put("7f4416820080870124fba049cb1dd4c5", "KIM SUNG-SOOSAMSUNG SDI CO LTD");
-        wrongInventorNames.put("9772be7cf4a8d895df809b96678917d9", "ROŞCA FILIP");
-        wrongInventorNames.put("babd5d218104ca00aaca205318fec959", "WANG TAO");
-        wrongInventorNames.put("bffac44f7a159930083f3e1f3fc30f8f", "ZHANG LI");
-        wrongInventorNames.put("d3976196ddbdc88717d5e6316245df6c", "SAIFAOUI DENNOUN");
-        wrongInventorNames.put("f51a7bebf077b5ed9f6241cec8246988", "SUHARSCHI ILIE");
-
-        Map<String, String> correctInventorNames = new HashMap<>();
-        correctInventorNames.put("0e781a63b9176f4e6c51416487c314c4", "Anthony Alexander MCKINNEY");
-        correctInventorNames.put("30e549bef620b64bc8c05f85dd411cfd", "KIM JOON-SUP");
-        correctInventorNames.put("38c4570b8cde7f9c8f47dd66d69cc6de", "TANG Jun");
-        correctInventorNames.put("673c0a88d4aabe27f2c177a25dee6fab", "Jiaxiang ZHANG");
-        correctInventorNames.put("7f4416820080870124fba049cb1dd4c5", "KIM SUNG-SOO");
-        correctInventorNames.put("9772be7cf4a8d895df809b96678917d9", "ROŞCA Filip");
-        correctInventorNames.put("babd5d218104ca00aaca205318fec959", "WANG Tao");
-        correctInventorNames.put("bffac44f7a159930083f3e1f3fc30f8f", "ZHANG LIN");
-        correctInventorNames.put("d3976196ddbdc88717d5e6316245df6c", "Saifaoui Dennoun");
-        correctInventorNames.put("f51a7bebf077b5ed9f6241cec8246988", "SUHARSCHI Ilie");
-
         StringStringMap keepAssigneeNames = new StringStringMap();
         StringStringMap newAssigneeNames = new StringStringMap();
         StringStringMap oldAssigneeNames = new StringStringMap();
-
-        Map<String, String> wrongAssigneeNames = new HashMap<>();
-        wrongAssigneeNames.put("011c6bd49774028ba6535687adf22b82", "SAIFAOUI DENNOUN");
-        wrongAssigneeNames.put("132aa5ddba376cda52c2bedb26765245", "BAYER SCHERING PHARMA AG");
-        wrongAssigneeNames.put("14f4f2bbd967f64780f0ccdf5416df14", "CHYTIL PETER");
-        wrongAssigneeNames.put("173bc2c63b34988699010ba05e5b1376", "SYNGENTA PARTICIPATIONS AG");
-        wrongAssigneeNames.put("24ad6cfe4d7bded746239ffe8fb46433", "PURECIRCLE SDN BHD");
-        wrongAssigneeNames.put("38b435c9df65e2bf10aa8bb0a53985d9", "VADAKEKUTTU THANKAPAN");
-        wrongAssigneeNames.put("4a321a4c567938da6916b7b227837164", "BIOTIE THERAPIES GMBH");
-        wrongAssigneeNames.put("5d1596f64ec0b2dac5334b2cf05b88bb", "BAYER HEALTHCARE AG");
-        wrongAssigneeNames.put("8364b69d3fe3e78cd42d63bca57d6c98", "RESMED PTY LTD");
-        wrongAssigneeNames.put("b8201313e2b347eaab74c7f0ffa21d22", "SUHARSCHI ILIE");
-        wrongAssigneeNames.put("ba782d3b1fd168eab19dd7b0875942aa", "ALTANA PHARMA AG");
-        wrongAssigneeNames.put("eb602ec1e2215c29c35cd408d2799c89", "CELANESE ACETATE LLC");
-        wrongAssigneeNames.put("eccd894c99fea2d1c0c8735872bb2309", "MERCK PATENT GMBH");
-        wrongAssigneeNames.put("f7c35f3a3c112c482bcfa47356c4f80c", "BAYER CONSUMER CARE AG");
-
-        Map<String, String> correctAssigneeNames = new HashMap<>();
-        correctAssigneeNames.put("011c6bd49774028ba6535687adf22b82", "Saifaoui Dennoun");
-        correctAssigneeNames.put("132aa5ddba376cda52c2bedb26765245", "Bayer Schering Pharma AG");
-        correctAssigneeNames.put("14f4f2bbd967f64780f0ccdf5416df14", "Chytil Peter");
-        correctAssigneeNames.put("173bc2c63b34988699010ba05e5b1376", "Syngenta Participations AG");
-        correctAssigneeNames.put("24ad6cfe4d7bded746239ffe8fb46433", "PureCircle Sdn Bhd");
-        correctAssigneeNames.put("38b435c9df65e2bf10aa8bb0a53985d9", "VADAKEKUTTU Thankapan");
-        correctAssigneeNames.put("4a321a4c567938da6916b7b227837164", "Biotie Therapies GmbH");
-        correctAssigneeNames.put("5d1596f64ec0b2dac5334b2cf05b88bb", "Bayer HealthCare AG");
-        correctAssigneeNames.put("8364b69d3fe3e78cd42d63bca57d6c98", "ResMed Pty Ltd");
-        correctAssigneeNames.put("b8201313e2b347eaab74c7f0ffa21d22", "SUHARSCHI Ilie");
-        correctAssigneeNames.put("ba782d3b1fd168eab19dd7b0875942aa", "ALTANA Pharma AG");
-        correctAssigneeNames.put("eb602ec1e2215c29c35cd408d2799c89", "Celanese Acetate LLC");
-        correctAssigneeNames.put("eccd894c99fea2d1c0c8735872bb2309", "Merck Patent GmbH");
-        correctAssigneeNames.put("f7c35f3a3c112c482bcfa47356c4f80c", "Bayer Consumer Care AG");
 
 
         load("select id,name from pubchem.patentinventor_bases where name is not null", oldInventorNames);
@@ -1099,12 +893,6 @@ class Patent extends Updater
                             String inventorID = getInventorID(subject.getURI(), true);
                             String name = getString(object);
 
-                            if(name.equals(wrongInventorNames.get(inventorID)))
-                            {
-                                System.out.println("    change name of patentinventor MD5_" + inventorID);
-                                name = correctInventorNames.get(inventorID);
-                            }
-
                             synchronized(newInventorNames)
                             {
                                 if(name.equals(oldInventorNames.remove(inventorID)))
@@ -1117,13 +905,24 @@ class Patent extends Updater
 
                                     if(name.equals(keep))
                                         return;
-                                    else if(keep != null)
-                                        throw new IOException(inventorID);
+
+                                    if(keep != null)
+                                    {
+                                        if(!isNameBetter(name, keep))
+                                            return;
+
+                                        //throw new IOException(inventorID);
+                                    }
 
                                     String put = newInventorNames.put(inventorID, name);
 
                                     if(put != null && !name.equals(put))
-                                        throw new IOException(inventorID);
+                                    {
+                                        if(!isNameBetter(name, put))
+                                            newAssigneeNames.put(inventorID, put);
+
+                                        //throw new IOException(inventorID);
+                                    }
                                 }
                             }
                         }
@@ -1131,12 +930,6 @@ class Patent extends Updater
                         {
                             String assigneeID = getAssigneeID(subject.getURI(), true);
                             String name = getString(object);
-
-                            if(name.equals(wrongAssigneeNames.get(assigneeID)))
-                            {
-                                System.out.println("    change name of patentassignee MD5_" + assigneeID);
-                                name = correctAssigneeNames.get(assigneeID);
-                            }
 
                             synchronized(newAssigneeNames)
                             {
@@ -1150,13 +943,24 @@ class Patent extends Updater
 
                                     if(name.equals(keep))
                                         return;
-                                    else if(keep != null)
-                                        throw new IOException(assigneeID);
+
+                                    if(keep != null)
+                                    {
+                                        if(!isNameBetter(name, keep))
+                                            return;
+
+                                        //throw new IOException(assigneeID);
+                                    }
 
                                     String put = newAssigneeNames.put(assigneeID, name);
 
                                     if(put != null && !name.equals(put))
-                                        throw new IOException(assigneeID);
+                                    {
+                                        if(!isNameBetter(name, put))
+                                            newAssigneeNames.put(assigneeID, put);
+
+                                        //throw new IOException(assigneeID);
+                                    }
                                 }
                             }
                         }
@@ -1172,6 +976,36 @@ class Patent extends Updater
         store("update pubchem.patentassignee_bases set name=null where id=? and name=?", oldAssigneeNames);
         store("insert into pubchem.patentassignee_bases(id,name) values(?,?) "
                 + "on conflict(id) do update set name=EXCLUDED.name", newAssigneeNames);
+    }
+
+
+    private static boolean isNameBetter(String a, String b)
+    {
+        String ua = a.toUpperCase();
+        String ub = b.toUpperCase();
+
+        boolean result = false;
+
+        if(a.matches(".*[^ ]SAMSUNG SDI CO LTD") && !b.matches(".*[^ ]SAMSUNG SDI CO LTD"))
+            result = false;
+        else if(!a.matches(".*[^ ]SAMSUNG SDI CO LTD") && b.matches(".*[^ ]SAMSUNG SDI CO LTD"))
+            result = true;
+        else if(a.length() > b.length())
+            result = true;
+        else if(a.length() < b.length())
+            result = false;
+        else if(!a.equals(ua) && b.equals(ub))
+            result = true;
+        else if(a.equals(ua) && !b.equals(ub))
+            result = false;
+        else if(a.compareTo(b) < 0)
+            result = true;
+        else
+            result = false;
+
+        System.out.format("    prefere fn \"%s\"\n    instead of \"%s\"\n", result ? a : b, result ? b : a);
+
+        return result;
     }
 
 
@@ -1224,7 +1058,7 @@ class Patent extends Updater
     }
 
 
-    static Integer getPatentID(String value, boolean keepForce) throws IOException
+    static Integer getPatentID(String value, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
@@ -1242,7 +1076,7 @@ class Patent extends Updater
 
             if(patentID != null)
             {
-                if(keepForce)
+                if(forceKeep)
                 {
                     newPatents.remove(patent);
                     keepPatents.put(patent, patentID);
@@ -1255,7 +1089,7 @@ class Patent extends Updater
 
             if((patentID = oldPatents.remove(patent)) != null)
                 keepPatents.put(patent, patentID);
-            else if(keepForce)
+            else if(forceKeep)
                 keepPatents.put(patent, patentID = nextPatentID++);
             else
                 newPatents.put(patent, patentID = nextPatentID++);
@@ -1265,7 +1099,7 @@ class Patent extends Updater
     }
 
 
-    private static String getInventorID(String value, boolean keepForce) throws IOException
+    private static String getInventorID(String value, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(inventorPrefix))
             throw new IOException("unexpected IRI: " + value);
@@ -1274,11 +1108,19 @@ class Patent extends Updater
 
         synchronized(newInventors)
         {
-            if(!keepInventors.contains(inventorID) && !newInventors.contains(inventorID))
+            if(newInventors.contains(inventorID))
+            {
+                if(forceKeep)
+                {
+                    newInventors.remove(inventorID);
+                    keepInventors.add(inventorID);
+                }
+            }
+            else if(!keepInventors.contains(inventorID))
             {
                 System.out.println("    add missing patentinventor MD5_" + inventorID);
 
-                if(!oldInventors.remove(inventorID) && !keepForce)
+                if(!oldInventors.remove(inventorID) && !forceKeep)
                     newInventors.add(inventorID);
                 else
                     keepInventors.add(inventorID);
@@ -1289,7 +1131,7 @@ class Patent extends Updater
     }
 
 
-    private static String getAssigneeID(String value, boolean keepForce) throws IOException
+    private static String getAssigneeID(String value, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(assigneePrefix))
             throw new IOException("unexpected IRI: " + value);
@@ -1298,11 +1140,19 @@ class Patent extends Updater
 
         synchronized(newAssignees)
         {
-            if(!keepAssignees.contains(assigneeID) && !newAssignees.contains(assigneeID))
+            if(newAssignees.contains(assigneeID))
+            {
+                if(forceKeep)
+                {
+                    newAssignees.remove(assigneeID);
+                    keepAssignees.add(assigneeID);
+                }
+            }
+            else if(!keepAssignees.contains(assigneeID))
             {
                 System.out.println("    add missing patentassignee MD5_" + assigneeID);
 
-                if(!oldAssignees.remove(assigneeID) && !keepForce)
+                if(!oldAssignees.remove(assigneeID) && !forceKeep)
                     newAssignees.add(assigneeID);
                 else
                     keepAssignees.add(assigneeID);

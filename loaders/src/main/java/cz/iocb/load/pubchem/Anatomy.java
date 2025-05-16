@@ -168,6 +168,33 @@ public class Anatomy extends Updater
     }
 
 
+    private static void loadReferences(Model model) throws IOException, SQLException
+    {
+        IntPairSet newPatents = new IntPairSet();
+        IntPairSet oldPatents = new IntPairSet();
+
+        load("select anatomy,patent from pubchem.patent_anatomies", oldPatents);
+
+        new QueryResultProcessor(patternQuery("?anatomy cito:isDiscussedBy ?reference"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer anatomyID = getAnatomyID(getIRI("anatomy"));
+                Integer patentID = Patent.getPatentID(getIRI("reference"));
+
+                Pair<Integer, Integer> pair = Pair.getPair(anatomyID, patentID);
+
+                if(!oldPatents.remove(pair))
+                    newPatents.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.patent_anatomies where anatomy=? and patent=?", oldPatents);
+        store("insert into pubchem.patent_anatomies(anatomy,patent) values(?,?)", newPatents);
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load anatomys ...");
@@ -181,6 +208,7 @@ public class Anatomy extends Updater
         loadAlternatives(model);
         loadCloseMatches(model);
         loadMeshCloseMatches(model);
+        loadReferences(model);
 
         model.close();
         System.out.println();

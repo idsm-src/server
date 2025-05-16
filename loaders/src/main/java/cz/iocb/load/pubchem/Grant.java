@@ -179,7 +179,7 @@ public class Grant extends Updater
     }
 
 
-    static Integer getGrantID(String value, boolean keepForce) throws IOException
+    static Integer getGrantID(String value, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
@@ -197,7 +197,7 @@ public class Grant extends Updater
 
             if(grantID != null)
             {
-                if(keepForce)
+                if(forceKeep)
                 {
                     newGrants.remove(grant);
                     keepGrants.put(grant, grantID);
@@ -210,7 +210,7 @@ public class Grant extends Updater
 
             if((grantID = oldGrants.remove(grant)) != null)
                 keepGrants.put(grant, grantID);
-            else if(keepForce)
+            else if(forceKeep)
                 keepGrants.put(grant, grantID = nextGrantID++);
             else
                 newGrants.put(grant, grantID = nextGrantID++);

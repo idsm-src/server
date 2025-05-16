@@ -2,6 +2,8 @@ package cz.iocb.load.pubchem;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Set;
 import org.apache.jena.rdf.model.Model;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
@@ -1131,11 +1133,47 @@ class Protein extends Updater
     }
 
 
+    private static void loadPatents(Set<Pair<String, String>> patents) throws IOException, SQLException
+    {
+        IntPairSet newPatents = new IntPairSet();
+        IntPairSet oldPatents = new IntPairSet();
+
+        load("select protein,patent from pubchem.patent_proteins", oldPatents);
+
+        for(Pair<String, String> e : patents)
+        {
+            Integer proteinID = getProteinID(e.getOne());
+            Integer patentID = Patent.getPatentID(e.getTwo());
+
+            Pair<Integer, Integer> pair = Pair.getPair(proteinID, patentID);
+
+            if(!oldPatents.remove(pair))
+                newPatents.add(pair);
+        }
+
+        store("delete from pubchem.patent_proteins where protein=? and patent=?", oldPatents);
+        store("insert into pubchem.patent_proteins(protein,patent) values(?,?)", newPatents);
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load proteins ...");
 
-        Model model = getModel("pubchem/RDF/protein/pc_protein.ttl.gz");
+        Set<Pair<String, String>> patents = new HashSet<>();
+
+        Model model = getModel("pubchem/RDF/protein/pc_protein.ttl.gz", t -> {
+
+            if(!t.getPredicate().getURI().equals("http://purl.org/spar/cito/isDiscussedBy"))
+                return true;
+
+            if(!t.getObject().getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/patent/"))
+                return true;
+
+            patents.add(Pair.getPair(t.getSubject().getURI(), t.getObject().getURI()));
+
+            return false;
+        });
 
         check(model, "pubchem/protein/check.sparql");
 
@@ -1175,6 +1213,7 @@ class Protein extends Updater
         loadInterProFamilies(model);
         loadTypes(model);
         loadReferences(model);
+        loadPatents(patents);
 
         model.close();
         System.out.println();
@@ -1201,7 +1240,7 @@ class Protein extends Updater
     }
 
 
-    static Integer getEnzymeID(String value, boolean keepForce) throws IOException
+    static Integer getEnzymeID(String value, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(enzymePrefix))
             throw new IOException("unexpected IRI: " + value);
@@ -1219,7 +1258,7 @@ class Protein extends Updater
 
             if(enzymeID != null)
             {
-                if(keepForce)
+                if(forceKeep)
                 {
                     newEnzymes.remove(enzyme);
                     keepEnzymes.put(enzyme, enzymeID);
@@ -1232,7 +1271,7 @@ class Protein extends Updater
 
             if((enzymeID = oldEnzymes.remove(enzyme)) != null)
                 keepEnzymes.put(enzyme, enzymeID);
-            else if(keepForce)
+            else if(forceKeep)
                 keepEnzymes.put(enzyme, enzymeID = nextEnzymeID++);
             else
                 newEnzymes.put(enzyme, enzymeID = nextEnzymeID++);
@@ -1248,7 +1287,7 @@ class Protein extends Updater
     }
 
 
-    static Integer getProteinID(String value, boolean keepForce) throws IOException
+    static Integer getProteinID(String value, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
@@ -1266,7 +1305,7 @@ class Protein extends Updater
 
             if(proteinID != null)
             {
-                if(keepForce)
+                if(forceKeep)
                 {
                     newProteins.remove(protein);
                     keepProteins.put(protein, proteinID);
@@ -1279,7 +1318,7 @@ class Protein extends Updater
 
             if((proteinID = oldProteins.remove(protein)) != null)
                 keepProteins.put(protein, proteinID);
-            else if(keepForce)
+            else if(forceKeep)
                 keepProteins.put(protein, proteinID = nextProteinID++);
             else
                 newProteins.put(protein, proteinID = nextProteinID++);

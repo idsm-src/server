@@ -220,7 +220,7 @@ class Concept extends Updater
     }
 
 
-    static Integer getConceptID(String value, boolean keepForce) throws IOException
+    static Integer getConceptID(String value, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
@@ -238,7 +238,7 @@ class Concept extends Updater
 
             if(conceptID != null)
             {
-                if(keepForce)
+                if(forceKeep)
                 {
                     newConcepts.remove(concept);
                     keepConcepts.put(concept, conceptID);
@@ -251,7 +251,7 @@ class Concept extends Updater
 
             if((conceptID = oldConcepts.remove(concept)) != null)
                 keepConcepts.put(concept, conceptID);
-            else if(keepForce)
+            else if(forceKeep)
                 keepConcepts.put(concept, conceptID = nextConceptID++);
             else
                 newConcepts.put(concept, conceptID = nextConceptID++);

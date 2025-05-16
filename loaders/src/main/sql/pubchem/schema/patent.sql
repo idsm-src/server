@@ -120,7 +120,7 @@ create table pubchem.patent_applicants
 create table pubchem.patentinventor_bases
 (
     id                  varchar not null,
-    name                varchar not null,
+    name                varchar,
     primary key(id)
 );
 
