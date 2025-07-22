@@ -15,6 +15,12 @@ grant select on pubchem.taxonomy_references to sparql;
 
 --------------------------------------------------------------------------------
 
+create index taxonomy_patents__taxonomy on pubchem.taxonomy_patents(taxonomy);
+create index taxonomy_patents__patent on pubchem.taxonomy_patents(patent);
+grant select on pubchem.taxonomy_patents to sparql;
+
+--------------------------------------------------------------------------------
+
 create index taxonomy_matches__taxonomy on pubchem.taxonomy_matches(taxonomy);
 create index taxonomy_matches__match on pubchem.taxonomy_matches(match_unit, match_id);
 grant select on pubchem.taxonomy_matches to sparql;

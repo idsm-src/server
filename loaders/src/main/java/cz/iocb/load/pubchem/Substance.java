@@ -464,7 +464,7 @@ class Substance extends Updater
         IntPairSet oldPatents = new IntPairSet();
 
         load("select substance,reference from pubchem.substance_references", oldReferences);
-        load("select substance,patent from pubchem.patent_substances", oldPatents);
+        load("select substance,patent from pubchem.substance_patents", oldPatents);
 
         try(InputStream stream = getTtlStream("pubchem/RDF/substance/pc_substance2reference.ttl.gz"))
         {
@@ -507,8 +507,8 @@ class Substance extends Updater
         store("delete from pubchem.substance_references where substance=? and reference=?", oldReferences);
         store("insert into pubchem.substance_references(substance,reference) values(?,?)", newReferences);
 
-        store("delete from pubchem.patent_substances where substance=? and patent=?", oldPatents);
-        store("insert into pubchem.patent_substances(substance,patent) values(?,?)", newPatents);
+        store("delete from pubchem.substance_patents where substance=? and patent=?", oldPatents);
+        store("insert into pubchem.substance_patents(substance,patent) values(?,?)", newPatents);
     }
 
 

@@ -447,7 +447,7 @@ class Bioassay extends Updater
         IntPairSet newPatents = new IntPairSet();
         IntPairSet oldPatents = new IntPairSet();
 
-        load("select bioassay,patent from pubchem.bioassay_patent_references", oldPatents);
+        load("select bioassay,patent from pubchem.bioassay_patents", oldPatents);
 
         new QueryResultProcessor(patternQuery("?bioassay cito:isDiscussedBy ?patent"))
         {
@@ -466,8 +466,8 @@ class Bioassay extends Updater
             }
         }.load(model);
 
-        store("delete from pubchem.bioassay_patent_references where bioassay=? and patent=?", oldPatents);
-        store("insert into pubchem.bioassay_patent_references(bioassay,patent) values(?,?)", newPatents);
+        store("delete from pubchem.bioassay_patents where bioassay=? and patent=?", oldPatents);
+        store("insert into pubchem.bioassay_patents(bioassay,patent) values(?,?)", newPatents);
     }
 
 

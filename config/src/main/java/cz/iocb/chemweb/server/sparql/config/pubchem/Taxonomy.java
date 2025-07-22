@@ -63,6 +63,14 @@ public class Taxonomy
         }
 
         {
+            Table table = new Table(schema, "taxonomy_patents");
+            NodeMapping subject = config.createIriMapping("pubchem:taxonomy", "taxonomy");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
+                    config.createIriMapping("pubchem:patent", "patent"));
+        }
+
+        {
             Table table = new Table(schema, "taxonomy_matches");
             NodeMapping subject = config.createIriMapping("pubchem:taxonomy", "taxonomy");
 

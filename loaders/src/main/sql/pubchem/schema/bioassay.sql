@@ -64,7 +64,7 @@ create table pubchem.bioassay_chembl_mechanisms
 );
 
 
-create table pubchem.bioassay_patent_references
+create table pubchem.bioassay_patents
 (
     bioassay            integer not null,
     patent              integer not null,

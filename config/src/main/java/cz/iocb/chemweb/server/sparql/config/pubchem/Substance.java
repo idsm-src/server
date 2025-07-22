@@ -88,6 +88,14 @@ public class Substance
         }
 
         {
+            Table table = new Table(schema, "substance_patents");
+            NodeMapping subject = config.createIriMapping("pubchem:substance", "substance");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
+                    config.createIriMapping("pubchem:patent", "patent"));
+        }
+
+        {
             Table table = new Table(schema, "substance_pdblinks");
             NodeMapping subject = config.createIriMapping("pubchem:substance", "substance");
 

@@ -23,6 +23,12 @@ grant select on pubchem.gene_references to sparql;
 
 --------------------------------------------------------------------------------
 
+create index gene_patents__gene on pubchem.gene_patents(gene);
+create index gene_patents__patent on pubchem.gene_patents(patent);
+grant select on pubchem.gene_patents to sparql;
+
+--------------------------------------------------------------------------------
+
 create index gene_matches__gene on pubchem.gene_matches(gene);
 create index gene_matches__match on pubchem.gene_matches(match_unit, match_id);
 grant select on pubchem.gene_matches to sparql;

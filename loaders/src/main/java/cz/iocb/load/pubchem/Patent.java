@@ -746,7 +746,7 @@ class Patent extends Updater
         IntPairSet newCompounds = new IntPairSet();
         IntPairSet oldCompounds = new IntPairSet();
 
-        load("select patent,compound from pubchem.patent_compounds", oldCompounds);
+        load("select patent,compound from pubchem.compound_patents", oldCompounds);
 
         processFiles("pubchem/RDF/patent", "pc_patent2isdiscussedby_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -776,8 +776,8 @@ class Patent extends Updater
             }
         });
 
-        store("delete from pubchem.patent_compounds where patent=? and compound=?", oldCompounds);
-        store("insert into pubchem.patent_compounds(patent,compound) values(?,?)", newCompounds);
+        store("delete from pubchem.compound_patents where patent=? and compound=?", oldCompounds);
+        store("insert into pubchem.compound_patents(patent,compound) values(?,?)", newCompounds);
     }
 
 
@@ -868,10 +868,12 @@ class Patent extends Updater
         StringStringMap keepInventorNames = new StringStringMap();
         StringStringMap newInventorNames = new StringStringMap();
         StringStringMap oldInventorNames = new StringStringMap();
+        StringStringMap replacedInventorNames = new StringStringMap();
 
         StringStringMap keepAssigneeNames = new StringStringMap();
         StringStringMap newAssigneeNames = new StringStringMap();
         StringStringMap oldAssigneeNames = new StringStringMap();
+        StringStringMap replacedAssigneeNames = new StringStringMap();
 
 
         load("select id,name from pubchem.patentinventor_bases where name is not null", oldInventorNames);
@@ -895,12 +897,25 @@ class Patent extends Updater
 
                             synchronized(newInventorNames)
                             {
-                                if(name.equals(oldInventorNames.remove(inventorID)))
+                                String pre = oldInventorNames.remove(inventorID);
+
+                                if(name.equals(pre))
                                 {
                                     keepInventorNames.put(inventorID, name);
                                 }
                                 else
                                 {
+                                    if(pre != null)
+                                    {
+                                        replacedInventorNames.put(inventorID, pre);
+                                    }
+                                    else if(name.equals(replacedInventorNames.get(inventorID)))
+                                    {
+                                        keepInventorNames.put(inventorID, name);
+                                        newInventorNames.remove(inventorID);
+                                        return;
+                                    }
+
                                     String keep = keepInventorNames.get(inventorID);
 
                                     if(name.equals(keep))
@@ -933,12 +948,25 @@ class Patent extends Updater
 
                             synchronized(newAssigneeNames)
                             {
-                                if(name.equals(oldAssigneeNames.remove(assigneeID)))
+                                String pre = oldAssigneeNames.remove(assigneeID);
+
+                                if(name.equals(pre))
                                 {
                                     keepAssigneeNames.put(assigneeID, name);
                                 }
                                 else
                                 {
+                                    if(pre != null)
+                                    {
+                                        replacedAssigneeNames.put(assigneeID, pre);
+                                    }
+                                    else if(name.equals(replacedAssigneeNames.get(assigneeID)))
+                                    {
+                                        keepAssigneeNames.put(assigneeID, name);
+                                        newAssigneeNames.remove(assigneeID);
+                                        return;
+                                    }
+
                                     String keep = keepAssigneeNames.get(assigneeID);
 
                                     if(name.equals(keep))

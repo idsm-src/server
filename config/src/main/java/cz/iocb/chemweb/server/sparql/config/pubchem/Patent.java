@@ -100,54 +100,6 @@ public class Patent
         }
 
         {
-            Table table = new Table(schema, "patent_substances");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
-                    config.createIriMapping("pubchem:substance", "substance"));
-        }
-
-        {
-            Table table = new Table(schema, "patent_compounds");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
-                    config.createIriMapping("pubchem:compound", "compound"));
-        }
-
-        {
-            Table table = new Table(schema, "patent_genes");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
-                    config.createIriMapping("pubchem:gene", "gene"));
-        }
-
-        {
-            Table table = new Table(schema, "patent_proteins");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
-                    config.createIriMapping("pubchem:protein", "protein"));
-        }
-
-        {
-            Table table = new Table(schema, "patent_taxonomies");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
-                    config.createIriMapping("pubchem:taxonomy", "taxonomy"));
-        }
-
-        {
-            Table table = new Table(schema, "patent_anatomies");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
-                    config.createIriMapping("pubchem:anatomy", "anatomy"));
-        }
-
-        {
             Table table = new Table(schema, "patent_inventors");
             NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
 

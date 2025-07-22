@@ -173,7 +173,7 @@ public class Anatomy extends Updater
         IntPairSet newPatents = new IntPairSet();
         IntPairSet oldPatents = new IntPairSet();
 
-        load("select anatomy,patent from pubchem.patent_anatomies", oldPatents);
+        load("select anatomy,patent from pubchem.anatomy_patents", oldPatents);
 
         new QueryResultProcessor(patternQuery("?anatomy cito:isDiscussedBy ?reference"))
         {
@@ -190,8 +190,8 @@ public class Anatomy extends Updater
             }
         }.load(model);
 
-        store("delete from pubchem.patent_anatomies where anatomy=? and patent=?", oldPatents);
-        store("insert into pubchem.patent_anatomies(anatomy,patent) values(?,?)", newPatents);
+        store("delete from pubchem.anatomy_patents where anatomy=? and patent=?", oldPatents);
+        store("insert into pubchem.anatomy_patents(anatomy,patent) values(?,?)", newPatents);
     }
 
 

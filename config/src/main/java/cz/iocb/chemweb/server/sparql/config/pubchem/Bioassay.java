@@ -168,7 +168,7 @@ public class Bioassay
         }
 
         {
-            Table table = new Table(schema, "bioassay_patent_references");
+            Table table = new Table(schema, "bioassay_patents");
             NodeMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),

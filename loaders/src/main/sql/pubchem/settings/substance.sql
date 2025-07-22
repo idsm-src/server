@@ -29,6 +29,12 @@ grant select on pubchem.substance_references to sparql;
 
 --------------------------------------------------------------------------------
 
+create index substance_patents__substance on pubchem.substance_patents(substance);
+create index substance_patents__patent on pubchem.substance_patents(patent);
+grant select on pubchem.substance_patents to sparql;
+
+--------------------------------------------------------------------------------
+
 create index substance_pdblinks__substance on pubchem.substance_pdblinks(substance);
 create index substance_pdblinks__pdblink on pubchem.substance_pdblinks(pdblink);
 grant select on pubchem.substance_pdblinks to sparql;

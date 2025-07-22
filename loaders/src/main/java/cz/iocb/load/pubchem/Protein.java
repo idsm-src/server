@@ -1138,7 +1138,7 @@ class Protein extends Updater
         IntPairSet newPatents = new IntPairSet();
         IntPairSet oldPatents = new IntPairSet();
 
-        load("select protein,patent from pubchem.patent_proteins", oldPatents);
+        load("select protein,patent from pubchem.protein_patents", oldPatents);
 
         for(Pair<String, String> e : patents)
         {
@@ -1151,8 +1151,8 @@ class Protein extends Updater
                 newPatents.add(pair);
         }
 
-        store("delete from pubchem.patent_proteins where protein=? and patent=?", oldPatents);
-        store("insert into pubchem.patent_proteins(protein,patent) values(?,?)", newPatents);
+        store("delete from pubchem.protein_patents where protein=? and patent=?", oldPatents);
+        store("insert into pubchem.protein_patents(protein,patent) values(?,?)", newPatents);
     }
 
 

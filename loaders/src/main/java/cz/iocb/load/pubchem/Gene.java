@@ -282,7 +282,7 @@ class Gene extends Updater
         IntPairSet oldPatents = new IntPairSet();
 
         load("select gene,reference from pubchem.gene_references", oldReferences);
-        load("select gene,patent from pubchem.patent_genes", oldPatents);
+        load("select gene,patent from pubchem.gene_patents", oldPatents);
 
         new QueryResultProcessor(patternQuery("?gene cito:isDiscussedBy ?reference"))
         {
@@ -315,8 +315,8 @@ class Gene extends Updater
         store("delete from pubchem.gene_references where gene=? and reference=?", oldReferences);
         store("insert into pubchem.gene_references(gene,reference) values(?,?)", newReferences);
 
-        store("delete from pubchem.patent_genes where gene=? and patent=?", oldPatents);
-        store("insert into pubchem.patent_genes(gene,patent) values(?,?)", newPatents);
+        store("delete from pubchem.gene_patents where gene=? and patent=?", oldPatents);
+        store("insert into pubchem.gene_patents(gene,patent) values(?,?)", newPatents);
     }
 
 

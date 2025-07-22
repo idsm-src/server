@@ -119,7 +119,7 @@ public class Taxonomy extends Updater
         IntPairSet oldPatents = new IntPairSet();
 
         load("select taxonomy,reference from pubchem.taxonomy_references", oldReferences);
-        load("select taxonomy,patent from pubchem.patent_taxonomies", oldPatents);
+        load("select taxonomy,patent from pubchem.taxonomy_patents", oldPatents);
 
         new QueryResultProcessor(patternQuery("?taxonomy cito:isDiscussedBy ?reference"))
         {
@@ -153,8 +153,8 @@ public class Taxonomy extends Updater
         store("delete from pubchem.taxonomy_references where taxonomy=? and reference=?", oldReferences);
         store("insert into pubchem.taxonomy_references(taxonomy,reference) values(?,?)", newReferences);
 
-        store("delete from pubchem.patent_taxonomies where taxonomy=? and patent=?", oldPatents);
-        store("insert into pubchem.patent_taxonomies(taxonomy,patent) values(?,?)", newPatents);
+        store("delete from pubchem.taxonomy_patents where taxonomy=? and patent=?", oldPatents);
+        store("insert into pubchem.taxonomy_patents(taxonomy,patent) values(?,?)", newPatents);
     }
 
 

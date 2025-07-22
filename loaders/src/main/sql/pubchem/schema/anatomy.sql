@@ -29,3 +29,11 @@ create table pubchem.anatomy_mesh_matches
     match         varchar not null,
     primary key(anatomy, match)
 );
+
+
+create table pubchem.anatomy_patents
+(
+    anatomy             integer not null,
+    patent              integer not null,
+    primary key(anatomy, patent)
+);

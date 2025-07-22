@@ -251,3 +251,11 @@ create table pubchem.protein_references
     reference     integer not null,
     primary key(protein, reference)
 );
+
+
+create table pubchem.protein_patents
+(
+    protein             integer not null,
+    patent              integer not null,
+    primary key(protein, patent)
+);

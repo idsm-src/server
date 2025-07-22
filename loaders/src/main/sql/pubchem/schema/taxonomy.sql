@@ -22,6 +22,14 @@ create table pubchem.taxonomy_references
 );
 
 
+create table pubchem.taxonomy_patents
+(
+    taxonomy            integer not null,
+    patent              integer not null,
+    primary key(taxonomy, patent)
+);
+
+
 create table pubchem.taxonomy_matches
 (
     taxonomy      integer not null,

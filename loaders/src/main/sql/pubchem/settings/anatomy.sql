@@ -18,3 +18,9 @@ grant select on pubchem.anatomy_matches to sparql;
 create index anatomy_mesh_matches__anatomy on pubchem.anatomy_mesh_matches(anatomy);
 create index anatomy_mesh_matches__match on pubchem.anatomy_mesh_matches(match);
 grant select on pubchem.anatomy_mesh_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index anatomy_patents__anatomy on pubchem.anatomy_patents(anatomy);
+create index anatomy_patents__patent on pubchem.anatomy_patents(patent);
+grant select on pubchem.anatomy_patents to sparql;

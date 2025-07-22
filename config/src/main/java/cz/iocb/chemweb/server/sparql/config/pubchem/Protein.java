@@ -320,5 +320,13 @@ public class Protein
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
                     config.createIriMapping("pubchem:reference", "reference"));
         }
+
+        {
+            Table table = new Table(schema, "protein_patents");
+            NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
+                    config.createIriMapping("pubchem:patent", "patent"));
+        }
     }
 }

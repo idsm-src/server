@@ -95,6 +95,14 @@ public class Gene
         }
 
         {
+            Table table = new Table(schema, "gene_patents");
+            NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
+                    config.createIriMapping("pubchem:patent", "patent"));
+        }
+
+        {
             Table table = new Table(schema, "gene_matches");
             NodeMapping subject = config.createIriMapping("pubchem:gene", "gene");
 

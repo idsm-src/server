@@ -61,5 +61,13 @@ public class Anatomy
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:mesh", "match"));
         }
+
+        {
+            Table table = new Table(schema, "anatomy_patents");
+            NodeMapping subject = config.createIriMapping("pubchem:anatomy", "anatomy");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
+                    config.createIriMapping("pubchem:patent", "patent"));
+        }
     }
 }

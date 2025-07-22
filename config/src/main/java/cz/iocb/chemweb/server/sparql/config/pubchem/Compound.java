@@ -425,5 +425,13 @@ public class Compound
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("wikidata:entity", "match"));
         }
+
+        {
+            Table table = new Table(schema, "compound_patents");
+            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
+                    config.createIriMapping("pubchem:patent", "patent"));
+        }
     }
 }

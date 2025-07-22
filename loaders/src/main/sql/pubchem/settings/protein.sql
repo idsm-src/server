@@ -183,3 +183,9 @@ grant select on pubchem.protein_types to sparql;
 create index protein_references__protein on pubchem.protein_references(protein);
 create index protein_references__reference on pubchem.protein_references(reference);
 grant select on pubchem.protein_references to sparql;
+
+--------------------------------------------------------------------------------
+
+create index protein_patents__protein on pubchem.protein_patents(protein);
+create index protein_patents__patent on pubchem.protein_patents(patent);
+grant select on pubchem.protein_patents to sparql;

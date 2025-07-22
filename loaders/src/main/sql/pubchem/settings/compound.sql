@@ -63,6 +63,12 @@ grant select on pubchem.compound_wikidata_matches to sparql;
 
 --------------------------------------------------------------------------------
 
+create index compound_patents__compound on pubchem.compound_patents(compound);
+create index compound_patents__patent on pubchem.compound_patents(patent);
+grant select on pubchem.compound_patents to sparql;
+
+--------------------------------------------------------------------------------
+
 insert into pubchem.compound_bases(id, keep)
 select distinct id, false from molecules.pubchem where not exists (select id from pubchem.compound_bases where id = molecules.pubchem.id);
 

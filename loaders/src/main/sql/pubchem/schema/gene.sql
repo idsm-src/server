@@ -33,6 +33,14 @@ create table pubchem.gene_references
 );
 
 
+create table pubchem.gene_patents
+(
+    gene                integer not null,
+    patent              integer not null,
+    primary key(gene, patent)
+);
+
+
 create table pubchem.gene_matches
 (
     gene          integer not null,

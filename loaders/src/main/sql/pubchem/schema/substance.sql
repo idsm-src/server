@@ -41,6 +41,14 @@ create table pubchem.substance_references
 );
 
 
+create table pubchem.substance_patents
+(
+    substance           integer not null,
+    patent              integer not null,
+    primary key(substance, patent)
+);
+
+
 create table pubchem.substance_pdblinks
 (
     substance    integer not null,
