@@ -49,6 +49,7 @@ import cz.iocb.sparql.engine.request.Request;
 import cz.iocb.sparql.engine.translator.UsedVariables;
 import cz.iocb.sparql.engine.translator.imcode.SqlAggregation;
 import cz.iocb.sparql.engine.translator.imcode.SqlIntercode;
+import cz.iocb.sparql.engine.translator.imcode.SqlIntercode.Restrictions;
 import cz.iocb.sparql.engine.translator.imcode.SqlJoin;
 import cz.iocb.sparql.engine.translator.imcode.SqlNoSolution;
 import cz.iocb.sparql.engine.translator.imcode.SqlTableAccess;
@@ -1138,7 +1139,7 @@ public class GenerateVoid extends Updater
         vars.add("COUNT");
         vars.addAll(v);
 
-        imcode = imcode.optimize(request, groupBy, false);
+        imcode = imcode.optimize(request, new Restrictions(groupBy), false, false);
 
         if(imcode == SqlNoSolution.get())
             return () -> new HashMap<K, Long>();
@@ -1194,10 +1195,10 @@ public class GenerateVoid extends Updater
         vars.add("COUNT");
         vars.addAll(v);
 
-        HashSet<String> restrictions = new HashSet<String>(v);
+        Restrictions restrictions = new Restrictions(v);
         restrictions.add(what);
 
-        imcode = imcode.optimize(request, restrictions, true);
+        imcode = imcode.optimize(request, restrictions, true, false);
 
         if(imcode == SqlNoSolution.get())
             return (() -> new HashMap<K, Long>());
@@ -1348,10 +1349,10 @@ public class GenerateVoid extends Updater
 
         SqlIntercode agg = SqlAggregation.aggregate(request, groupVariables, aggregations, imcode);
 
-        HashSet<String> restriction = new HashSet<String>(gvars);
+        Restrictions restriction = new Restrictions(gvars);
         restriction.add("COUNT");
 
-        SqlIntercode result = agg.optimize(request, restriction, false);
+        SqlIntercode result = agg.optimize(request, restriction, false, false);
 
         UsedVariables vars = result.getVariables();
 

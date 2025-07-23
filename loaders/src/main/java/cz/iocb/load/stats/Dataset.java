@@ -2,7 +2,6 @@ package cz.iocb.load.stats;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.Condition;
@@ -22,6 +21,7 @@ import cz.iocb.sparql.engine.translator.UsedVariable;
 import cz.iocb.sparql.engine.translator.UsedVariables;
 import cz.iocb.sparql.engine.translator.imcode.SqlEmptySolution;
 import cz.iocb.sparql.engine.translator.imcode.SqlIntercode;
+import cz.iocb.sparql.engine.translator.imcode.SqlIntercode.Restrictions;
 import cz.iocb.sparql.engine.translator.imcode.SqlJoin;
 import cz.iocb.sparql.engine.translator.imcode.SqlTableAccess;
 import cz.iocb.sparql.engine.translator.imcode.SqlUnion;
@@ -156,7 +156,7 @@ public class Dataset
         }
 
 
-        HashSet<String> restrictions = new HashSet<String>();
+        Restrictions restrictions = new Restrictions();
 
         if(subject != null)
             restrictions.add(subject);
@@ -164,6 +164,6 @@ public class Dataset
         if(object != null)
             restrictions.add(object);
 
-        return SqlUnion.union(request, branches).optimize(request, restrictions, false);
+        return SqlUnion.union(request, branches).optimize(request, restrictions, false, false);
     }
 }
