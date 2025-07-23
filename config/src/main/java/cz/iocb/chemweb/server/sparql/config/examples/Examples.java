@@ -2,7 +2,6 @@ package cz.iocb.chemweb.server.sparql.config.examples;
 
 import static cz.iocb.chemweb.server.sparql.config.examples.ExamplesConfiguration.schema;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
-import java.util.Map.Entry;
 import cz.iocb.sparql.engine.database.Table;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.NodeMapping;
@@ -32,22 +31,6 @@ public class Examples
     {
         ConstantIriMapping graph = config
                 .createIriMapping(new IRI("https://idsm.elixir-czech.cz/.well-known/sparql-examples"));
-
-        {
-            for(Entry<String, String> entry : config.getPrefixes().entrySet())
-            {
-                String namespace = entry.getKey();
-                String prefix = entry.getValue();
-
-                NodeMapping subject = config
-                        .createIriMapping(new IRI("https://idsm.elixir-czech.cz/sparql-prefixes/" + namespace));
-
-                config.addQuadMapping(graph, subject, config.createIriMapping("sh:namespace"),
-                        config.createLiteralMapping(namespace));
-                config.addQuadMapping(graph, subject, config.createIriMapping("sh:prefix"),
-                        config.createLiteralMapping(prefix));
-            }
-        }
 
         {
             Table table = new Table(schema, "idsm_queries");

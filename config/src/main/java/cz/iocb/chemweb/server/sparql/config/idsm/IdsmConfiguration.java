@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.chebi.ChebiConfiguration;
 import cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration;
@@ -53,6 +54,8 @@ public class IdsmConfiguration extends SparqlDatabaseConfiguration
 
         addPrefixes();
         addServices();
+
+        addPrefixDefinitionMappings("https://idsm.elixir-czech.cz/.well-known/sparql-examples");
 
         detectIriResourceClasses();
     }
@@ -255,6 +258,25 @@ public class IdsmConfiguration extends SparqlDatabaseConfiguration
                 connectionPool, getDatabaseSchema()), false);
         addService(new PubChemSachemConfiguration("https://idsm.elixir-czech.cz/sachem/endpoint/pubchem",
                 connectionPool, getDatabaseSchema()), false);
+    }
+
+
+    private void addPrefixDefinitionMappings(String graphIri)
+    {
+        ConstantIriMapping graph = createIriMapping(new IRI(graphIri));
+        {
+            for(Entry<String, String> entry : getPrefixes().entrySet())
+            {
+                String namespace = entry.getValue();
+                String prefix = entry.getKey();
+
+                NodeMapping subject = createIriMapping(
+                        new IRI("https://idsm.elixir-czech.cz/sparql-prefixes/" + prefix));
+
+                addQuadMapping(graph, subject, createIriMapping("sh:namespace"), createLiteralMapping(namespace));
+                addQuadMapping(graph, subject, createIriMapping("sh:prefix"), createLiteralMapping(prefix));
+            }
+        }
     }
 
 
