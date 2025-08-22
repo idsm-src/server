@@ -11,10 +11,10 @@ import cz.iocb.chemweb.server.sparql.config.chembl.Mechanism;
 import cz.iocb.chemweb.server.sparql.config.chembl.Molecule;
 import cz.iocb.chemweb.server.sparql.config.chembl.Target;
 import cz.iocb.chemweb.server.sparql.config.common.Common;
+import cz.iocb.chemweb.server.sparql.config.common.SparqlDatabaseOptimisedConfiguration;
 import cz.iocb.chemweb.server.sparql.config.mesh.Mesh;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.chemweb.server.sparql.config.sachem.Sachem;
-import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
 import cz.iocb.sparql.engine.database.Function;
 import cz.iocb.sparql.engine.mapping.classes.DateConstantZoneClass;
@@ -26,7 +26,7 @@ import cz.iocb.sparql.engine.mapping.extension.ResultDefinition;
 
 
 
-public class PubChemConfiguration extends SparqlDatabaseConfiguration
+public class PubChemConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
     static final String schema = "pubchem";
 

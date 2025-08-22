@@ -3,14 +3,14 @@ package cz.iocb.chemweb.server.sparql.config.mesh;
 import java.sql.SQLException;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.Common;
+import cz.iocb.chemweb.server.sparql.config.common.SparqlDatabaseOptimisedConfiguration;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
-import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
 import cz.iocb.sparql.engine.mapping.classes.LangStringConstantTagClass;
 
 
 
-public class MeshConfiguration extends SparqlDatabaseConfiguration
+public class MeshConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
     static final String schema = "mesh";
 

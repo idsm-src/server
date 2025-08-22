@@ -3,12 +3,14 @@ package cz.iocb.chemweb.server.sparql.config.chebi;
 import static cz.iocb.chemweb.server.sparql.config.chebi.ChebiConfiguration.schema;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdBoolean;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
+import cz.iocb.chemweb.server.sparql.config.common.StringSubsetLiteralClass;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Table;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.NodeMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
+import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 
 
 
@@ -234,13 +236,14 @@ public class Chebi
         {
             Table table = new Table("molecules", "chebi");
             NodeMapping subject = config.createIriMapping("chebi:molfile", "id");
+            LiteralClass molfileLiteral = new StringSubsetLiteralClass("chebi-molfile");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_011120"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000011"),
                     config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
-                    config.createLiteralMapping(xsdString, "molfile"));
+                    config.createLiteralMapping(molfileLiteral, "molfile"));
 
             // extension
             config.addQuadMapping(table, graph, config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "id"),
@@ -250,7 +253,7 @@ public class Chebi
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:is-attribute-of"),
                     config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-value"),
-                    config.createLiteralMapping(xsdString, "molfile"));
+                    config.createLiteralMapping(molfileLiteral, "molfile"));
         }
     }
 }

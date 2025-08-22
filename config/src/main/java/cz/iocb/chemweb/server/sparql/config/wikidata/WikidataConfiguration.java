@@ -3,12 +3,12 @@ package cz.iocb.chemweb.server.sparql.config.wikidata;
 import java.sql.SQLException;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.Common;
-import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
+import cz.iocb.chemweb.server.sparql.config.common.SparqlDatabaseOptimisedConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
 
 
 
-public class WikidataConfiguration extends SparqlDatabaseConfiguration
+public class WikidataConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
     public WikidataConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {

@@ -4,24 +4,25 @@ import java.sql.SQLException;
 import java.util.List;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.Common;
-import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
+import cz.iocb.chemweb.server.sparql.config.common.SparqlDatabaseOptimisedConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
 import cz.iocb.sparql.engine.database.Table;
 import cz.iocb.sparql.engine.database.TableColumn;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
+import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 
 
 
-public class SachemConfiguration extends SparqlDatabaseConfiguration
+public class SachemConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
     public SachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema, String index,
-            String iriPrefix, int idLength) throws SQLException
+            String iriPrefix, int idLength, LiteralClass molfileLiteralClass) throws SQLException
     {
         super(service, connectionPool, schema);
 
         addPrefixes();
         addResourceClasses(index, iriPrefix, idLength);
-        addQuadMappings(index);
+        addQuadMappings(index, molfileLiteralClass);
         addProcedures(index);
     }
 
@@ -43,10 +44,10 @@ public class SachemConfiguration extends SparqlDatabaseConfiguration
     }
 
 
-    private void addQuadMappings(String index)
+    private void addQuadMappings(String index, LiteralClass molfileLiteralClass)
     {
         MolFiles.addQuadMappings(this, index + ":compound", index + ":molfile", new Table("molecules", index),
-                List.of(new TableColumn("id")));
+                List.of(new TableColumn("id")), molfileLiteralClass);
     }
 
 

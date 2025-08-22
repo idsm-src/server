@@ -1,11 +1,12 @@
 package cz.iocb.chemweb.server.sparql.config.sachem;
 
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import java.sql.SQLException;
 import java.util.List;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.Common;
+import cz.iocb.chemweb.server.sparql.config.common.SparqlDatabaseOptimisedConfiguration;
 import cz.iocb.chemweb.server.sparql.config.mona.Mona;
-import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
 import cz.iocb.sparql.engine.database.Table;
 import cz.iocb.sparql.engine.database.TableColumn;
@@ -14,7 +15,7 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
-public class MonaSachemConfiguration extends SparqlDatabaseConfiguration
+public class MonaSachemConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
     public MonaSachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
@@ -52,7 +53,7 @@ public class MonaSachemConfiguration extends SparqlDatabaseConfiguration
     private void addQuadMappings()
     {
         MolFiles.addQuadMappings(this, "mona:compound", "mona:molfile", new Table("mona", "compound_structures"),
-                List.of(new TableColumn("compound")), "compound", "structure");
+                List.of(new TableColumn("compound")), "compound", "structure", xsdString);
     }
 
 

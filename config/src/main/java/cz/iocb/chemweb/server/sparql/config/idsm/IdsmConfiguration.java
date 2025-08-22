@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.chebi.ChebiConfiguration;
 import cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration;
+import cz.iocb.chemweb.server.sparql.config.common.SparqlDatabaseOptimisedConfiguration;
 import cz.iocb.chemweb.server.sparql.config.drugbank.DrugBankConfiguration;
 import cz.iocb.chemweb.server.sparql.config.examples.ExamplesConfiguration;
 import cz.iocb.chemweb.server.sparql.config.isdb.IsdbConfiguration;
@@ -28,10 +29,11 @@ import cz.iocb.chemweb.server.sparql.config.sachem.Sachem;
 import cz.iocb.chemweb.server.sparql.config.sachem.WikidataSachemConfiguration;
 import cz.iocb.chemweb.server.sparql.config.stats.VoidConfiguration;
 import cz.iocb.chemweb.server.sparql.config.wikidata.WikidataConfiguration;
-import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.ConstantColumn;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
+import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.TableColumn;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.JoinTableQuadMapping;
 import cz.iocb.sparql.engine.mapping.NodeMapping;
@@ -45,12 +47,27 @@ import cz.iocb.sparql.engine.parser.model.IRI;
 
 
 
-public class IdsmConfiguration extends SparqlDatabaseConfiguration
+public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    public static class ExtendedDatabaseSchema extends DatabaseSchema
+    {
+        public ExtendedDatabaseSchema(DatabaseSchema schema)
+        {
+            super(schema);
+
+            primaryKeys.get(new Table("molecules", "drugbank")).add(List.of(new TableColumn("molfile")));
+            primaryKeys.get(new Table("molecules", "chebi")).add(List.of(new TableColumn("molfile")));
+            primaryKeys.get(new Table("molecules", "chembl")).add(List.of(new TableColumn("molfile")));
+            primaryKeys.get(new Table("molecules", "pubchem")).add(List.of(new TableColumn("molfile")));
+        }
+    }
+
+
     public IdsmConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
         super(service != null ? service : "https://idsm.elixir-czech.cz/sparql/endpoint/idsm",
-                service != null ? null : "https://idsm.elixir-czech.cz/.well-known/void", connectionPool, schema);
+                service != null ? null : "https://idsm.elixir-czech.cz/.well-known/void", connectionPool,
+                new ExtendedDatabaseSchema(schema));
 
         addPrefixes();
         addServices();

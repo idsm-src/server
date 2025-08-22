@@ -3,6 +3,7 @@ package cz.iocb.chemweb.server.sparql.config.sachem;
 import java.sql.SQLException;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.Common;
+import cz.iocb.chemweb.server.sparql.config.common.StringSubsetLiteralClass;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
@@ -48,7 +49,7 @@ public class ChebiOntologySachemConfiguration extends SparqlDatabaseConfiguratio
     private void addQuadMappings()
     {
         MolFiles.addQuadMappings(this, "ontology:resource", "chebi:molfile", new Table("molecules", "chebi"),
-                getColumns(Ontology.unitCHEBI, "id"));
+                getColumns(Ontology.unitCHEBI, "id"), new StringSubsetLiteralClass("chebi-molfile"));
     }
 
 

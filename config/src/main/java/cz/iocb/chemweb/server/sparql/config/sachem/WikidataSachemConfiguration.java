@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.util.List;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.Common;
-import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
+import cz.iocb.chemweb.server.sparql.config.common.SparqlDatabaseOptimisedConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
 import cz.iocb.sparql.engine.database.Table;
 import cz.iocb.sparql.engine.database.TableColumn;
@@ -14,7 +14,7 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
-public class WikidataSachemConfiguration extends SparqlDatabaseConfiguration
+public class WikidataSachemConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
     public WikidataSachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema)
             throws SQLException
