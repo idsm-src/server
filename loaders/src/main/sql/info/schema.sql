@@ -137,37 +137,42 @@ insert into info.idsm_counts values (4, 'ChEMBL Assays', 0);
 insert into info.idsm_counts values (5, 'ChEBI Entities', 0);
 
 
-insert into info.idsm_queries values (1, 'What protein targets does donepezil (CHEBI_53289) inhibit with an IC50 less than 10 µM?', 
+insert into info.idsm_queries(id, comment, query) values(1,'What protein targets does donepezil (CHEBI_53289) inhibit with an IC50 of 10 µM or lower?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX obo: <http://purl.obolibrary.org/obo/>
 PREFIX sio: <http://semanticscience.org/resource/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX bao: <http://www.bioassayontology.org/bao#>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
+PREFIX vocab: <http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#>
 
-SELECT DISTINCT ?protein ?title
+SELECT DISTINCT ?protein ?title ?qualifier ?value
 FROM pubchem:protein
 FROM pubchem:measuregroup
 FROM pubchem:endpoint
 FROM pubchem:substance
 WHERE {
   ?sub rdf:type obo:CHEBI_53289 ;
-       obo:RO_0000056 ?mg .
+    obo:RO_0000056 ?mg .
   ?mg obo:RO_0000057 ?protein ;
-      obo:OBI_0000299 ?ep .
+    obo:OBI_0000299 ?ep .
   ?protein rdf:type sio:SIO_010043 ;
-           skos:prefLabel ?title .
+    skos:prefLabel ?title .
   ?ep rdf:type bao:BAO_0000190 ;
-      obo:IAO_0000136 ?sub ;
-      sio:SIO_000300 ?value .
+    obo:IAO_0000136 ?sub ;
+    sio:SIO_000300 ?value .
   FILTER (?value < 10)
+  OPTIONAL {
+    ?ep vocab:hasQualifier ?qualifier .
+    FILTER( ?qualifier = "=" )
+  }
 }');
 
-insert into info.idsm_queries values (2, 'What pharmacological roles of SID46505803 are defined by CHEBI?', 
+insert into info.idsm_queries(id, comment, query) values(2,'What pharmacological roles of SID46505803 are defined by CHEBI?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
-PREFIX obov: <http://purl.obolibrary.org/obo/>
+PREFIX obo: <http://purl.obolibrary.org/obo/>
 PREFIX sio: <http://semanticscience.org/resource/>
 PREFIX ebi: <http://rdf.ebi.ac.uk/dataset/>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
@@ -182,18 +187,17 @@ WHERE {
   ?comp rdf:type ?chebi .
   ?chebi rdfs:subClassOf [
     a owl:Restriction ;
-    owl:onProperty obov:RO_0000087 ;
+    owl:onProperty obo:RO_0000087 ;
     owl:someValuesFrom ?role
   ] .
   ?role rdfs:label ?rolelabel .
 }');
 
-insert into info.idsm_queries values (3, 'What compounds have a pharmacological role of NSAID as defined by CHEBI and molecular weight less than 200 g/mol?', 
+insert into info.idsm_queries(id, comment, query) values(3,'What compounds have a pharmacological role of NSAID as defined by CHEBI and molecular weight less than 200 g/mol?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX obo: <http://purl.obolibrary.org/obo/>
-PREFIX obov: <http://purl.obolibrary.org/obo/>
 PREFIX sio: <http://semanticscience.org/resource/>
 PREFIX ebi: <http://rdf.ebi.ac.uk/dataset/>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
@@ -207,7 +211,7 @@ WHERE {
   ?compound rdf:type ?chebi .
   ?chebi rdfs:subClassOf [
     a owl:Restriction ;
-    owl:onProperty obov:RO_0000087 ;
+    owl:onProperty obo:RO_0000087 ;
     owl:someValuesFrom obo:CHEBI_35475
   ] .
   ?compound sio:SIO_000008 ?MW .
@@ -216,12 +220,11 @@ WHERE {
   FILTER (?MWValue < 200)
 }');
 
-insert into info.idsm_queries values (4, 'What substances have a pharmacological role of NSAID as defined by CHEBI and chemical vendor information?', 
+insert into info.idsm_queries(id, comment, query) values(4,'What substances have a pharmacological role of NSAID as defined by CHEBI and chemical vendor information?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX obo: <http://purl.obolibrary.org/obo/>
-PREFIX obov: <http://purl.obolibrary.org/obo/>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX ebi: <http://rdf.ebi.ac.uk/dataset/>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
@@ -237,17 +240,16 @@ WHERE {
   ?substance rdf:type ?chebi .
   ?chebi rdfs:subClassOf [
     a owl:Restriction ;
-    owl:onProperty obov:RO_0000087 ;
+    owl:onProperty obo:RO_0000087 ;
     owl:someValuesFrom obo:CHEBI_35475
   ] .
 }');
 
-insert into info.idsm_queries values (5, 'What protein targets are inhibited by substances with an IC50 less than 10 µM and have a pharmacological role of cholinesterase inhibitors as defined by CHEBI?', 
+insert into info.idsm_queries(id, comment, query) values(5,'What protein targets are inhibited by substances with an IC50 less than 10 µM and have a pharmacological role of cholinesterase inhibitors as defined by CHEBI?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX obo: <http://purl.obolibrary.org/obo/>
-PREFIX obov: <http://purl.obolibrary.org/obo/>
 PREFIX sio: <http://semanticscience.org/resource/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX bao: <http://www.bioassayontology.org/bao#>
@@ -263,22 +265,22 @@ FROM ebi:chebi
 WHERE {
   ?chebi rdfs:subClassOf [
     a owl:Restriction ;
-    owl:onProperty obov:RO_0000087 ;
+    owl:onProperty obo:RO_0000087 ;
     owl:someValuesFrom obo:CHEBI_37733
   ] .
   ?sub rdf:type ?chebi ;
-       obo:RO_0000056 ?mg .
+    obo:RO_0000056 ?mg .
   ?mg obo:RO_0000057 ?protein ;
-      obo:OBI_0000299 ?ep .
+    obo:OBI_0000299 ?ep .
   ?protein rdf:type sio:SIO_010043 ;
-           skos:prefLabel ?title .
+    skos:prefLabel ?title .
   ?ep rdf:type bao:BAO_0000190 ;
-      obo:IAO_0000136 ?sub ;
-      sio:SIO_000300 ?value .
+    obo:IAO_0000136 ?sub ;
+    sio:SIO_000300 ?value .
   FILTER (?value < 10)
 }');
 
-insert into info.idsm_queries values (6, 'Which substances inhibit protein targets similar to ACCP00533 and have the function domain PSSMID395614?', 
+insert into info.idsm_queries(id, comment, query) values(6,'Which substances inhibit protein targets similar to ACCP00533 and have the function domain PSSMID395614?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX obo: <http://purl.obolibrary.org/obo/>
 PREFIX sio: <http://semanticscience.org/resource/>
@@ -305,14 +307,14 @@ WHERE {
   ?endpoint sio:SIO_000300 ?value .
 }');
 
-insert into info.idsm_queries values (7, 'What protein targets are inhibited by substances with IC50 less than 10 µM and have the same standardized chemical structure (CID3152)?', 
+insert into info.idsm_queries(id, comment, query) values(7,'What protein targets are inhibited by substances with IC50 less than 10 µM and have the same standardized chemical structure (CID3152)?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX sio: <http://semanticscience.org/resource/>
-PREFIX compound: <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 PREFIX obo: <http://purl.obolibrary.org/obo/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX bao: <http://www.bioassayontology.org/bao#>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
+PREFIX compound: <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 
 SELECT DISTINCT ?sub ?protein ?title
 FROM pubchem:protein
@@ -321,18 +323,18 @@ FROM pubchem:endpoint
 FROM pubchem:substance
 WHERE {
   ?sub sio:CHEMINF_000477 compound:CID3152 ;
-       obo:RO_0000056 ?mg .
+    obo:RO_0000056 ?mg .
   ?mg obo:RO_0000057 ?protein ;
-      obo:OBI_0000299 ?ep .
+    obo:OBI_0000299 ?ep .
   ?protein rdf:type sio:SIO_010043 ;
-           skos:prefLabel ?title .
+    skos:prefLabel ?title .
   ?ep rdf:type bao:BAO_0000190 ;
-      obo:IAO_0000136 ?sub ;
-      sio:SIO_000300 ?value .
+    obo:IAO_0000136 ?sub ;
+    sio:SIO_000300 ?value .
   FILTER (?value < 10)
 }');
 
-insert into info.idsm_queries values (8, 'What substances inhibit the proteins involved in the same biological pathway: prostaglandin biosynthetic process (GO:0001516), with an IC 50 less than 10 µM?', 
+insert into info.idsm_queries(id, comment, query) values(8,'What substances inhibit the proteins involved in the same biological pathway: prostaglandin biosynthetic process (GO:0001516), with an IC 50 less than 10 µM?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX obo: <http://purl.obolibrary.org/obo/>
 PREFIX sio: <http://semanticscience.org/resource/>
@@ -361,7 +363,7 @@ WHERE {
   FILTER (?value < 10)
 }');
 
-insert into info.idsm_queries values (9, 'What the pharmacological roles defined by CHEBI are for the substances that inhibit protein target ACCQ12809 with an IC50 less than 10 µM?', 
+insert into info.idsm_queries(id, comment, query) values(9,'What the pharmacological roles defined by CHEBI are for the substances that inhibit protein target ACCQ12809 with an IC50 less than 10 µM?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -377,24 +379,24 @@ FROM pubchem:measuregroup
 FROM pubchem:endpoint
 FROM pubchem:substance
 FROM ebi:chebi
-FROM <http://purl.obolibrary.org/obo>
 WHERE {
   ?sub obo:RO_0000056 ?mg .
   ?mg obo:RO_0000057 protein:ACCQ12809 ;
-      obo:OBI_0000299 ?ep .
+    obo:OBI_0000299 ?ep .
   ?sub rdf:type ?chebi .
-  ?chebi rdfs:subClassOf _:I .
-  _:I a owl:Restriction ;
-      owl:onProperty obo:RO_0000087 ;
-      owl:someValuesFrom ?role .
+  ?chebi rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty obo:RO_0000087 ;
+    owl:someValuesFrom ?role
+  ] .
   ?role rdfs:label ?rolelabel .
   ?ep obo:IAO_0000136 ?sub ;
-      rdf:type bao:BAO_0000190 ;
-      sio:SIO_000300 ?value .
+    rdf:type bao:BAO_0000190 ;
+    sio:SIO_000300 ?value .
   FILTER (?value < 10)
 }');
 
-insert into info.idsm_queries values (10, 'Summarize the statistics about the total number of substances tested in the PubChem database against each protein target.', 
+insert into info.idsm_queries(id, comment, query) values(10,'Summarize the statistics about the total number of substances tested in the PubChem database against each protein target.',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX sio: <http://semanticscience.org/resource/>
 PREFIX obo: <http://purl.obolibrary.org/obo/>
@@ -412,13 +414,13 @@ WHERE {
   ?protein rdf:type sio:SIO_010043 .
   ?mg obo:OBI_0000299 ?ep .
   ?ep rdf:type bao:BAO_0000190 ;
-      obo:IAO_0000136 ?sub ;
-      sio:SIO_000300 ?value .
+    obo:IAO_0000136 ?sub ;
+    sio:SIO_000300 ?value .
 }
 GROUP BY ?protein
 ORDER BY ?subcnt');
 
-insert into info.idsm_queries values (11, 'What are the top five diseases commonly mentioned with indomethacin (CID3715)?', 
+insert into info.idsm_queries(id, comment, query) values(11,'What are the top five diseases commonly mentioned with indomethacin (CID3715)?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX sio: <http://semanticscience.org/resource/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -429,16 +431,16 @@ SELECT ?disease ?score ?disease_prefLabel
 FROM pubchem:cooccurrence
 FROM pubchem:disease
 WHERE {
-    ?cooccurrence rdf:subject compound:CID3715 .
-    ?cooccurrence rdf:object ?disease .
-    ?cooccurrence rdf:type sio:SIO_000993 .
-    ?cooccurrence sio:SIO_000300 ?score .
-    ?disease skos:prefLabel ?disease_prefLabel .
+  ?cooccurrence rdf:subject compound:CID3715 .
+  ?cooccurrence rdf:object ?disease .
+  ?cooccurrence rdf:type sio:SIO_000993 .
+  ?cooccurrence sio:SIO_000300 ?score .
+  ?disease skos:prefLabel ?disease_prefLabel .
 }
 ORDER BY DESC(?score)
 LIMIT 5');
 
-insert into info.idsm_queries values (12, 'What are the three most recent references that mention indomethacin (CID3715) and inflammation (DZID8173)?', 
+insert into info.idsm_queries(id, comment, query) values(12,'What are the three most recent references that mention indomethacin (CID3715) and inflammation (DZID8173)?',
 'PREFIX prism: <http://prismstandard.org/namespaces/basic/3.0/>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
@@ -458,11 +460,15 @@ WHERE {
 ORDER BY DESC(?date)
 LIMIT 3');
 
-insert into info.idsm_queries values (13, 'What are the top 20 genes co-mentioned with indomethacin (CID3715)?', 
+insert into info.idsm_queries(id, comment, query) values(13,'What are the top 20 genes co-mentioned with indomethacin (CID3715)?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX sio: <http://semanticscience.org/resource/>
+PREFIX bao: <http://www.bioassayontology.org/bao#>
+PREFIX up: <http://purl.uniprot.org/core/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
 PREFIX compound: <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+PREFIX taxonomy: <http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/>
 
 SELECT ?gene ?geneid ?prefLabel
 FROM pubchem:cooccurrence
@@ -472,14 +478,14 @@ WHERE {
   ?cooccurrence rdf:object ?gene .
   ?cooccurrence rdf:type sio:SIO_001257 .
   ?cooccurrence sio:SIO_000300 ?score .
-  ?geneid <http://www.bioassayontology.org/bao#BAO_0002870> ?gene .
-  ?geneid <http://purl.uniprot.org/core/organism> <http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID9606> .
-  ?geneid <http://www.w3.org/2004/02/skos/core#prefLabel> ?prefLabel .
+  ?geneid bao:BAO_0002870 ?gene .
+  ?geneid up:organism taxonomy:TAXID9606 .
+  ?geneid skos:prefLabel ?prefLabel .
 }
 ORDER BY DESC(?score)
 LIMIT 20');
 
-insert into info.idsm_queries values (14, 'What are the top ten diseases co-occurring with the gene most commonly mentioned with maribavir (CID471161)?', 
+insert into info.idsm_queries(id, comment, query) values(14,'What are the top ten diseases co-occurring with the gene most commonly mentioned with maribavir (CID471161)?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX sio: <http://semanticscience.org/resource/>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -510,7 +516,7 @@ WHERE {
 ORDER BY DESC(?score2)
 LIMIT 10');
 
-insert into info.idsm_queries values (15, 'What chemicals are commonly mentioned with the fibroblast growth factor receptor 1 gene (FGFR1)?', 
+insert into info.idsm_queries(id, comment, query) values(15,'What chemicals are commonly mentioned with the fibroblast growth factor receptor 1 gene (FGFR1)?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX sio: <http://semanticscience.org/resource/>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
@@ -522,13 +528,13 @@ FROM pubchem:gene
 WHERE {
   ?cooccurrence rdf:subject ?genesymbol .
   ?genesymbol rdf:type sio:SIO_001383 ;
-              sio:SIO_000300 "fgfr1" .
+    sio:SIO_000300 "fgfr1" .
   ?cooccurrence rdf:object ?compound .
   ?cooccurrence rdf:type sio:SIO_001257 .
   ?cooccurrence sio:SIO_000300 ?score .
 }');
 
-insert into info.idsm_queries values (16, 'What chemicals are co-mentioned with a set of three genes, i.e., kinase insert domain receptor (KDR), platelet derived growth factor receptor beta (PDGFRB), and fibroblast growth factor receptor 1 (FGFR1)?', 
+insert into info.idsm_queries(id, comment, query) values(16,'What chemicals are co-mentioned with a set of three genes, i.e., kinase insert domain receptor (KDR), platelet derived growth factor receptor beta (PDGFRB), and fibroblast growth factor receptor 1 (FGFR1)?',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX sio: <http://semanticscience.org/resource/>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
@@ -540,28 +546,44 @@ FROM pubchem:gene
 WHERE {
   ?cooccurrence1 rdf:subject ?genesymbol1 .
   ?genesymbol1 rdf:type sio:SIO_001383 ;
-               sio:SIO_000300 "kdr" .
+    sio:SIO_000300 "kdr" .
   ?cooccurrence1 rdf:object ?compound .
   ?cooccurrence1 rdf:type sio:SIO_001257 .
   ?cooccurrence1 sio:SIO_000300 ?score1 .
 
   ?cooccurrence2 rdf:subject ?genesymbol2 .
   ?genesymbol2 rdf:type sio:SIO_001383 ;
-               sio:SIO_000300 "pdgfrb" .
+    sio:SIO_000300 "pdgfrb" .
   ?cooccurrence2 rdf:object ?compound .
   ?cooccurrence2 rdf:type sio:SIO_001257 .
   ?cooccurrence2 sio:SIO_000300 ?score2 .
 
   ?cooccurrence3 rdf:subject ?genesymbol3 .
   ?genesymbol3 rdf:type sio:SIO_001383 ;
-               sio:SIO_000300 "fgfr1" .
+    sio:SIO_000300 "fgfr1" .
   ?cooccurrence3 rdf:object ?compound .
   ?cooccurrence3 rdf:type sio:SIO_001257 .
   ?cooccurrence3 sio:SIO_000300 ?score3 .
 }
 ORDER BY DESC(?score1) DESC(?score2) DESC(?score3)');
 
-insert into info.idsm_queries values (101, 'How can I retrieve all Rhea reactions that involve L-glutamate(1-) (CID 5460299)?', 
+insert into info.idsm_queries(id, comment, query) values(17,'What are the drug-likeness properties of Aspirin (CID2244) according to Lipinski''s Rule of Five?',
+'PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
+PREFIX vocab: <http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#>
+PREFIX compound: <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
+
+SELECT ?name ?MW ?HBD ?HBA ?LogP
+FROM pubchem:compound
+WHERE {
+  compound:CID2244 skos:prefLabel ?name;
+    vocab:molecular_weight ?MW ;
+    vocab:hydrogen_bond_donor_count ?HBD ;
+    vocab:hydrogen_bond_acceptor_count ?HBA ;
+    vocab:xlogp3 ?LogP .
+}');
+
+insert into info.idsm_queries(id, comment, query) values(101,'How can I retrieve all Rhea reactions that involve L-glutamate(1-) (CID 5460299)?',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rh: <http://rdf.rhea-db.org/>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
@@ -577,12 +599,12 @@ WHERE {
     ?rhea rdfs:subClassOf rh:Reaction .
     ?rhea rh:equation ?equation .
     ?rhea rh:side/rh:contains/rh:compound ?compound .
-    
+
     ?compound (rh:chebi|(rh:reactivePart/rh:chebi)|(rh:underlyingChebi/rh:chebi)) ?chebi .
   }
 }');
 
-insert into info.idsm_queries values (102, 'How can I retrieve all compounds involved in the given Rhea reaction (RHEA:10020)?', 
+insert into info.idsm_queries(id, comment, query) values(102,'How can I retrieve all compounds involved in the given Rhea reaction (RHEA:10020)?',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rh: <http://rdf.rhea-db.org/>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
@@ -604,7 +626,7 @@ WHERE {
   }
 }');
 
-insert into info.idsm_queries values (103, 'How can I retrieve the WURCS sequence from Glycosmos for the glycan structure (SID 252275760) in PubChem?', 
+insert into info.idsm_queries(id, comment, query) values(103,'How can I retrieve the WURCS sequence from Glycosmos for the glycan structure (SID 252275760) in PubChem?',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX glycan: <http://purl.jp/bio/12/glyco/glycan#>
@@ -619,13 +641,13 @@ WHERE {
 
   SERVICE <https://ts.glycosmos.org/sparql> {
     ?glycan dcterms:identifier ?gtcid ;
-            glycan:has_glycosequence ?gs .
+      glycan:has_glycosequence ?gs .
     ?gs glycan:in_carbohydrate_format glycan:carbohydrate_format_wurcs ;
-        glycan:has_sequence ?wurcs .
+      glycan:has_sequence ?wurcs .
   }
 }');
 
-insert into info.idsm_queries values (104, 'Which PubChem pathways include the genes associated with Keshan disease (DOID:0050083), as identified by Glycosmos?', 
+insert into info.idsm_queries(id, comment, query) values(104,'Which PubChem pathways include the genes associated with Keshan disease (DOID:0050083), as identified by Glycosmos?',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX glycan: <http://purl.jp/bio/12/glyco/glycan#>
@@ -640,63 +662,63 @@ WHERE {
     VALUES ?disease { <http://glycosmos.org/disease/DOID:0050083> }
 
     ?disease a glycan:Disease ;
-             sio:SIO_000255 [ sio:SIO_000001 ?glycogene ] .
+      sio:SIO_000255 [ sio:SIO_000001 ?glycogene ] .
   }
 
   GRAPH pubchem:gene {
     ?gene a sio:SIO_010035 ;
-          rdfs:seeAlso ?glycogene .
+      rdfs:seeAlso ?glycogene .
   }
 
   GRAPH pubchem:pathway {
     ?pathway a bp3:Pathway ;
-             obo:RO_0000057 ?gene ;
-             dcterms:title ?title .
+      obo:RO_0000057 ?gene ;
+      dcterms:title ?title .
   }
 }');
 
-insert into info.idsm_queries values (105, 'Which PDB structures with a resolution better than 2 Å that include Aspirin (CID 2244) and have associated bioactivity data in PubChem?', 
+insert into info.idsm_queries(id, comment, query) values(105,'Which PDB structures with a resolution better than 2 Å that include Aspirin (CID 2244) and have associated bioactivity data in PubChem?',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX up: <http://purl.uniprot.org/core/>
-PREFIX compound: <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 PREFIX pdbo: <http://rdf.wwpdb.org/schema/pdbx-v50.owl#>
 PREFIX cheminf: <http://semanticscience.org/resource/>
 PREFIX bao: <http://www.bioassayontology.org/bao#>
 PREFIX obo: <http://purl.obolibrary.org/obo/>
 PREFIX sio: <http://semanticscience.org/resource/>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
+PREFIX compound: <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
 
 SELECT ?structure ?resolution
 WHERE {
   GRAPH pubchem:substance {
     ?substance cheminf:CHEMINF_000477 compound:CID2244 ;
-               pdbo:link_to_pdb ?structure .
+      pdbo:link_to_pdb ?structure .
   }
 
   SERVICE <https://sparql.uniprot.org/sparql/> {
     ?structure a up:Structure_Resource ;
-               up:database <http://purl.uniprot.org/database/PDB> ;
-               up:resolution ?resolution .
+      up:database <http://purl.uniprot.org/database/PDB> ;
+      up:resolution ?resolution .
     FILTER (?resolution < 2)
 
     ?uniprot a up:Protein ;
-             rdfs:seeAlso ?structure .
+      rdfs:seeAlso ?structure .
   }
 
   GRAPH pubchem:protein {
     ?protein a sio:SIO_010043 ;
-             rdfs:seeAlso ?uniprot .
+      rdfs:seeAlso ?uniprot .
   }
 
   FILTER EXISTS {
     GRAPH pubchem:measuregroup {
       ?measuregroup a bao:BAO_0000040 ;
-                    obo:RO_0000057 ?protein .
+        obo:RO_0000057 ?protein .
     }
   }
 }');
 
-insert into info.idsm_queries values (106, 'How can I retrieve all compounds involved in PDB structures with a resolution better than 2 Å for the protein Basic phospholipase A2 VRV-PL-VIIIa (UniProt ID: P59071)?', 
+insert into info.idsm_queries(id, comment, query) values(106,'How can I retrieve all compounds involved in PDB structures with a resolution better than 2 Å for the protein Basic phospholipase A2 VRV-PL-VIIIa (UniProt ID: P59071)?',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX up: <http://purl.uniprot.org/core/>
 PREFIX pdbo: <http://rdf.wwpdb.org/schema/pdbx-v50.owl#>
@@ -709,21 +731,21 @@ WHERE {
     VALUES ?uniprot { <http://purl.uniprot.org/uniprot/P59071> }
 
     ?uniprot a up:Protein ;
-             rdfs:seeAlso ?pdb .
+      rdfs:seeAlso ?pdb .
 
     ?pdb a up:Structure_Resource ;
-         up:database <http://purl.uniprot.org/database/PDB> ;
-         up:resolution ?resolution .
+      up:database <http://purl.uniprot.org/database/PDB> ;
+      up:resolution ?resolution .
     FILTER (?resolution < 2)
   }
 
   GRAPH pubchem:substance {
     ?substance cheminf:CHEMINF_000477 ?compound ;
-               pdbo:link_to_pdb ?pdb .
+      pdbo:link_to_pdb ?pdb .
   }
 }');
 
-insert into info.idsm_queries values (107, 'How to retrieve the labels of Aspirin (CID 2244) in English and Spanish from Wikidata?', 
+insert into info.idsm_queries(id, comment, query) values(107,'How to retrieve the labels of Aspirin (CID 2244) in English and Spanish from Wikidata?',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
 PREFIX compound: <http://rdf.ncbi.nlm.nih.gov/pubchem/compound/>
@@ -740,7 +762,7 @@ WHERE {
   }
 }');
 
-insert into info.idsm_queries values (108, 'How to retrieve the preferred label from PubChem for the Wikidata entry (Q18216)?', 
+insert into info.idsm_queries(id, comment, query) values(108,'How to retrieve the preferred label from PubChem for the Wikidata entry (Q18216)?',
 'PREFIX wd: <http://www.wikidata.org/entity/>
 PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -757,11 +779,11 @@ WHERE {
 
   GRAPH pubchem:compound {
     ?compound dcterms:identifier ?cid ;
-              skos:prefLabel ?label .
+      skos:prefLabel ?label .
   }
 }');
 
-insert into info.idsm_queries values (109, 'How can I find the WikiPathways that include the compound dihydroflavine-adenine dinucleotide (CID 446013)?', 
+insert into info.idsm_queries(id, comment, query) values(109,'How can I find the WikiPathways that include the compound dihydroflavine-adenine dinucleotide (CID 446013)?',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX wp: <http://vocabularies.wikipathways.org/wp#>
@@ -775,8 +797,8 @@ SELECT DISTINCT ?wpid
 WHERE {
     GRAPH pubchem:pathway {
       ?pathway a bp3:Pathway ;
-                rdfs:seeAlso ?wp ;
-                obo:RO_0000057 compound:CID446013 .
+        rdfs:seeAlso ?wp ;
+        obo:RO_0000057 compound:CID446013 .
       FILTER (CONTAINS(STR(?wp), "wikipathways"))
     }
 
@@ -784,11 +806,11 @@ WHERE {
 
     SERVICE <https://sparql.wikipathways.org/sparql> {
       ?wikipathways a wp:Pathway ;
-                    dcterms:identifier ?wpid .
+        dcterms:identifier ?wpid .
     }
 }');
 
-insert into info.idsm_queries values (110, 'How can I retrieve the CID of compounds involved in the pathway Electron Transport Chain: OXPHOS system in mitochondria (Wikipathways:WP111)?', 
+insert into info.idsm_queries(id, comment, query) values(110,'How can I retrieve the CID of compounds involved in the pathway Electron Transport Chain: OXPHOS system in mitochondria (Wikipathways:WP111)?',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX wp: <http://vocabularies.wikipathways.org/wp#>
@@ -797,11 +819,11 @@ PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX obo: <http://purl.obolibrary.org/obo/>
 PREFIX pubchem: <http://rdf.ncbi.nlm.nih.gov/pubchem/>
 
-SELECT DISTINCT (STRAFTER(STR(?cmpd), "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID") AS ?cid)
+SELECT DISTINCT ?cid
 WHERE {
     SERVICE <https://sparql.wikipathways.org/sparql> {
       ?wikipathways a wp:Pathway ;
-                    dcterms:identifier "WP111" .
+        dcterms:identifier "WP111" .
     }
 
     SERVICE <https://sparql.api.identifiers.org/sparql> {
@@ -812,9 +834,11 @@ WHERE {
 
     GRAPH pubchem:pathway {
       ?pathway a bp3:Pathway ;
-               rdfs:seeAlso ?wp ;
-               obo:RO_0000057 ?cmpd .
-      FILTER (STRSTARTS(STR(?cmpd), "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/"))
+        rdfs:seeAlso ?wp ;
+        obo:RO_0000057 ?cmpd .
+    }
+
+    GRAPH pubchem:compound {
+      ?cmpd dcterms:identifier ?cid.
     }
 }');
-

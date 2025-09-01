@@ -52,7 +52,7 @@ public class SelectExampleDialog extends DialogBox
 
         public final String getCommentedCode()
         {
-            return "# " + getDescription().replaceAll("<[^>]+>", "").replaceAll("[\n ]+", " ") + "\n" + "\n"
+            return "# " + getDescription().replaceAll("<[^>]+>", "").replaceAll("[\n ]+", " ").trim() + "\n" + "\n"
                     + getCode();
         }
     }
@@ -70,9 +70,12 @@ public class SelectExampleDialog extends DialogBox
 
     private static ExamplesPageUiBinder uiBinder = GWT.create(ExamplesPageUiBinder.class);
 
-    @UiField(provided = true) DataGrid<Example> examplesDataGrid;
-    @UiField TextArea previewTextArea;
-    @UiField Button selectButton;
+    @UiField(provided = true)
+    DataGrid<Example> examplesDataGrid;
+    @UiField
+    TextArea previewTextArea;
+    @UiField
+    Button selectButton;
 
     private CodeMirror codemirror;
     private Callback callback;
