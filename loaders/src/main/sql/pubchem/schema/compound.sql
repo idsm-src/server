@@ -95,11 +95,3 @@ create table pubchem.compound_wikidata_matches
     match              integer not null,
     primary key(compound, match)
 );
-
-
-create table pubchem.compound_patents
-(
-    compound            integer not null,
-    patent              integer not null,
-    primary key(compound, patent)
-);

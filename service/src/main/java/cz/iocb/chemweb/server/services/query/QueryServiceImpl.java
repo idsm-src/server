@@ -112,7 +112,6 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
         addTemplate(pubchem + "descriptor/CID([0-9]+)_Preferred_IUPAC_Name", "pubchem/CompoundDescriptor.vm");
         addTemplate(pubchem + "descriptor/CID([0-9]+)_Rotatable_Bond_Count", "pubchem/CompoundDescriptor.vm");
         addTemplate(pubchem + "descriptor/CID([0-9]+)_Structure_Complexity", "pubchem/CompoundDescriptor.vm");
-        addTemplate(pubchem + "descriptor/CID([0-9]+)_Tautomer_Count", "pubchem/CompoundDescriptor.vm");
         addTemplate(pubchem + "descriptor/CID([0-9]+)_Total_Formal_Charge", "pubchem/CompoundDescriptor.vm");
         addTemplate(pubchem + "descriptor/CID([0-9]+)_TPSA", "pubchem/CompoundDescriptor.vm");
         addTemplate(pubchem + "descriptor/CID([0-9]+)_Undefined_Atom_Stereo_Count", "pubchem/CompoundDescriptor.vm");

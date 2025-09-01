@@ -44,7 +44,6 @@
       (sio:CHEMINF_000395 "XLogP3(-AA)")
       (sio:CHEMINF_000392 "TPSA")
       (sio:CHEMINF_000390 "structure complexity")
-      (sio:CHEMINF_000391 "tautomer count")
       (sio:CHEMINF_000388 "hydrogen bond acceptor count")
       (sio:CHEMINF_000370 "defined atom stereo count")
       (sio:CHEMINF_000371 "defined bond stereo count")

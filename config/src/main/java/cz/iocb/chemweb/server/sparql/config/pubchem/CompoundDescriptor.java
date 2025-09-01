@@ -23,7 +23,6 @@ public class CompoundDescriptor
                 new IntegerUserIriClass("pubchem:compound_identifier", "integer", prefix, "_Compound_Identifier"));
         config.addIriClass(new IntegerUserIriClass("pubchem:hydrogen_bond_acceptor_count", "integer", prefix,
                 "_Hydrogen_Bond_Acceptor_Count"));
-        config.addIriClass(new IntegerUserIriClass("pubchem:tautomer_count", "integer", prefix, "_Tautomer_Count"));
         config.addIriClass(new IntegerUserIriClass("pubchem:defined_atom_stereo_count", "integer", prefix,
                 "_Defined_Atom_Stereo_Count"));
         config.addIriClass(new IntegerUserIriClass("pubchem:defined_bond_stereo_count", "integer", prefix,
@@ -55,8 +54,9 @@ public class CompoundDescriptor
         config.addIriClass(new IntegerUserIriClass("pubchem:tpsa", "integer", prefix, "_TPSA"));
         config.addIriClass(
                 new IntegerUserIriClass("pubchem:molecular_formula", "integer", prefix, "_Molecular_Formula"));
-        config.addIriClass(new IntegerUserIriClass("pubchem:isomeric_smiles", "integer", prefix, "_Isomeric_SMILES"));
-        config.addIriClass(new IntegerUserIriClass("pubchem:canonical_smiles", "integer", prefix, "_Canonical_SMILES"));
+        config.addIriClass(new IntegerUserIriClass("pubchem:smiles", "integer", prefix, "_SMILES"));
+        config.addIriClass(
+                new IntegerUserIriClass("pubchem:connectivity_smiles", "integer", prefix, "_Connectivity_SMILES"));
         config.addIriClass(new IntegerUserIriClass("pubchem:iupac_inchi", "integer", prefix, "_IUPAC_InChI"));
         config.addIriClass(
                 new IntegerUserIriClass("pubchem:preferred_iupac_name", "integer", prefix, "_Preferred_IUPAC_Name"));
@@ -91,19 +91,6 @@ public class CompoundDescriptor
             NodeMapping subject = config.createIriMapping("pubchem:hydrogen_bond_acceptor_count", "compound");
 
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000388"),
-                    config.createIsNotNullCondition(field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
-
-            // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
-        }
-
-        {
-            Table table = new Table(schema, "descriptor_compound_bases");
-            String field = "tautomer_count";
-            NodeMapping subject = config.createIriMapping("pubchem:tautomer_count", "compound");
-
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000391"),
                     config.createIsNotNullCondition(field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
 
@@ -361,9 +348,9 @@ public class CompoundDescriptor
         }
 
         {
-            Table table = new Table(schema, "descriptor_compound_isomeric_smileses");
-            String field = "isomeric_smiles";
-            NodeMapping subject = config.createIriMapping("pubchem:isomeric_smiles", "compound");
+            Table table = new Table(schema, "descriptor_compound_smileses");
+            String field = "smiles";
+            NodeMapping subject = config.createIriMapping("pubchem:smiles", "compound");
 
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000379"));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdString, field));
@@ -373,9 +360,9 @@ public class CompoundDescriptor
         }
 
         {
-            Table table = new Table(schema, "descriptor_compound_canonical_smileses");
-            String field = "canonical_smiles";
-            NodeMapping subject = config.createIriMapping("pubchem:canonical_smiles", "compound");
+            Table table = new Table(schema, "descriptor_compound_connectivity_smileses");
+            String field = "connectivity_smiles";
+            NodeMapping subject = config.createIriMapping("pubchem:connectivity_smiles", "compound");
 
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000376"));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdString, field));

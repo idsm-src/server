@@ -416,7 +416,6 @@ class CompoundDescriptor extends Updater
         loadIntegerField("HeavyAtomCount", "_Non-hydrogen_Atom_Count", "non_hydrogen_atom_count");
         loadIntegerField("IsotopeAtomCount", "_Isotope_Atom_Count", "isotope_atom_count");
         loadIntegerField("RotatableBond", "_Rotatable_Bond_Count", "rotatable_bond_count");
-        loadIntegerField("TautomerCount", "_Tautomer_Count", "tautomer_count");
         loadIntegerField("UndefinedAtomStereoCount", "_Undefined_Atom_Stereo_Count", "undefined_atom_stereo_count");
         loadIntegerField("UndefinedBondStereoCount", "_Undefined_Bond_Stereo_Count", "undefined_bond_stereo_count");
 
@@ -429,8 +428,8 @@ class CompoundDescriptor extends Updater
         loadXLogP3Field("XLogP3");
 
         loadStringField("MolecularFormula", "_Molecular_Formula", "molecular_formulas", "molecular_formula");
-        loadStringField("isoSMILES", "_Isomeric_SMILES", "isomeric_smileses", "isomeric_smiles");
-        loadStringField("canSMILES", "_Canonical_SMILES", "canonical_smileses", "canonical_smiles");
+        loadStringField("SMILES", "_SMILES", "smileses", "smiles");
+        loadStringField("connSMILES", "_Connectivity_SMILES", "connectivity_smileses", "connectivity_smiles");
         loadStringField("InChI", "_IUPAC_InChI", "iupac_inchis", "iupac_inchi");
         loadStringField("IUPACName", "_Preferred_IUPAC_Name", "preferred_iupac_names", "preferred_iupac_name");
 
@@ -456,12 +455,11 @@ class CompoundDescriptor extends Updater
         checkType("MonoIsotopicWeight", "_Mono_Isotopic_Weight", "CHEMINF_000337");
         checkType("RotatableBond", "_Rotatable_Bond_Count", "CHEMINF_000389");
         checkType("TPSA", "_TPSA", "CHEMINF_000392");
-        checkType("TautomerCount", "_Tautomer_Count", "CHEMINF_000391");
         checkType("UndefinedAtomStereoCount", "_Undefined_Atom_Stereo_Count", "CHEMINF_000374");
         checkType("UndefinedBondStereoCount", "_Undefined_Bond_Stereo_Count", "CHEMINF_000375");
         checkXLogP3Type("XLogP3", "CHEMINF_000395");
-        checkType("canSMILES", "_Canonical_SMILES", "CHEMINF_000376");
-        checkType("isoSMILES", "_Isomeric_SMILES", "CHEMINF_000379");
+        checkType("connSMILES", "_Connectivity_SMILES", "CHEMINF_000376");
+        checkType("SMILES", "_SMILES", "CHEMINF_000379");
         checkType("InChI", "_IUPAC_InChI", "CHEMINF_000396");
         checkType("IUPACName", "_Preferred_IUPAC_Name", "CHEMINF_000382");
         checkType("Compound_Identifier", "_Compound_Identifier", "CHEMINF_000140");

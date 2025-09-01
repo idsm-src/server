@@ -1,3 +1,4 @@
+create index bioassay_bases__id__varchar on pubchem.bioassay_bases((id::varchar));
 create index bioassay_bases__source on pubchem.bioassay_bases(source);
 create index bioassay_bases__title on pubchem.bioassay_bases(title);
 create index bioassay_bases__title__english on pubchem.bioassay_bases using gin (to_tsvector('english', title));

@@ -1,18 +1,26 @@
+create index compound_bases__id__varchar on pubchem.compound_bases((id::varchar));
+grant select on pubchem.compound_bases to sparql;
+
+--------------------------------------------------------------------------------
+
 create index compound_components__compound on pubchem.compound_components(compound);
 create index compound_components__component on pubchem.compound_components(component);
 grant select on pubchem.compound_components to sparql;
 
 --------------------------------------------------------------------------------
+
 create index compound_isotopologues__compound on pubchem.compound_isotopologues(compound);
 create index compound_isotopologues__isotopologue on pubchem.compound_isotopologues(isotopologue);
 grant select on pubchem.compound_isotopologues to sparql;
 
 --------------------------------------------------------------------------------
+
 create index compound_parents__compound on pubchem.compound_parents(compound);
 create index compound_parents__parent on pubchem.compound_parents(parent);
 grant select on pubchem.compound_parents to sparql;
 
 --------------------------------------------------------------------------------
+
 create index compound_stereoisomers__compound on pubchem.compound_stereoisomers(compound);
 create index compound_stereoisomers__isomer on pubchem.compound_stereoisomers(isomer);
 grant select on pubchem.compound_stereoisomers to sparql;
@@ -60,12 +68,6 @@ grant select on pubchem.compound_matches to sparql;
 create index compound_wikidata_matches__compound on pubchem.compound_wikidata_matches(compound);
 create index compound_wikidata_matches__match on pubchem.compound_wikidata_matches(match);
 grant select on pubchem.compound_wikidata_matches to sparql;
-
---------------------------------------------------------------------------------
-
-create index compound_patents__compound on pubchem.compound_patents(compound);
-create index compound_patents__patent on pubchem.compound_patents(patent);
-grant select on pubchem.compound_patents to sparql;
 
 --------------------------------------------------------------------------------
 

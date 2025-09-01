@@ -1,3 +1,4 @@
+create index taxonomy_bases__id__varchar on pubchem.taxonomy_bases((id::varchar));
 create index taxonomy_bases__label on pubchem.taxonomy_bases(label);
 grant select on pubchem.taxonomy_bases to sparql;
 

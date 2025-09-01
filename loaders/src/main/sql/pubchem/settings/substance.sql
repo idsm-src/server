@@ -1,3 +1,4 @@
+create index substance_bases__id__varchar on pubchem.substance_bases((id::varchar));
 create index substance_bases__source on pubchem.substance_bases(source);
 create index substance_bases__available on pubchem.substance_bases(available);
 create index substance_bases__modified on pubchem.substance_bases(modified);

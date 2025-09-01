@@ -2,6 +2,7 @@ package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.xsdDateM4;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
@@ -133,6 +134,14 @@ public class Substance
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:substance_version", "substance"));
+        }
+
+        {
+            Table table = new Table(schema, "descriptor_substance_bases");
+            NodeMapping subject = config.createIriMapping("pubchem:substance", "substance");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:substance_version"),
+                    config.createLiteralMapping(xsdInt, "version"));
         }
     }
 }

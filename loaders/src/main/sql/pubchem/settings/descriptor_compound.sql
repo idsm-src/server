@@ -1,5 +1,4 @@
 create index descriptor_compound_bases__hydrogen_bond_acceptor_count on pubchem.descriptor_compound_bases(hydrogen_bond_acceptor_count);
-create index descriptor_compound_bases__tautomer_count on pubchem.descriptor_compound_bases(tautomer_count);
 create index descriptor_compound_bases__defined_atom_stereo_count on pubchem.descriptor_compound_bases(defined_atom_stereo_count);
 create index descriptor_compound_bases__defined_bond_stereo_count on pubchem.descriptor_compound_bases(defined_bond_stereo_count);
 create index descriptor_compound_bases__undefined_bond_stereo_count on pubchem.descriptor_compound_bases(undefined_bond_stereo_count);
@@ -26,13 +25,13 @@ grant select on pubchem.descriptor_compound_molecular_formulas to sparql;
 
 --------------------------------------------------------------------------------
 
-create index descriptor_compound_isomeric_smileses__isomeric_smiles on pubchem.descriptor_compound_isomeric_smileses using hash (isomeric_smiles);
-grant select on pubchem.descriptor_compound_isomeric_smileses to sparql;
+create index descriptor_compound_smileses__smiles on pubchem.descriptor_compound_smileses using hash (smiles);
+grant select on pubchem.descriptor_compound_smileses to sparql;
 
 --------------------------------------------------------------------------------
 
-create index descriptor_compound_canonical_smileses__canonical_smiles on pubchem.descriptor_compound_canonical_smileses using hash (canonical_smiles);
-grant select on pubchem.descriptor_compound_canonical_smileses to sparql;
+create index descriptor_compound_connectivity_smileses__connectivity_smiles on pubchem.descriptor_compound_connectivity_smileses using hash (connectivity_smiles);
+grant select on pubchem.descriptor_compound_connectivity_smileses to sparql;
 
 --------------------------------------------------------------------------------
 

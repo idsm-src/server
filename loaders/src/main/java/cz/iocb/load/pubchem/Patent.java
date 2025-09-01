@@ -740,47 +740,6 @@ class Patent extends Updater
     }
 
 
-    private static void loadReferences() throws IOException, SQLException
-    {
-        IntPairSet keepCompounds = new IntPairSet();
-        IntPairSet newCompounds = new IntPairSet();
-        IntPairSet oldCompounds = new IntPairSet();
-
-        load("select patent,compound from pubchem.compound_patents", oldCompounds);
-
-        processFiles("pubchem/RDF/patent", "pc_patent2isdiscussedby_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getTtlStream(file))
-            {
-                new TripleStreamProcessor()
-                {
-                    @Override
-                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
-                    {
-                        if(!predicate.getURI().equals("http://purl.org/spar/cito/isDiscussedBy"))
-                            throw new IOException();
-
-                        Integer patentID = getPatentID(object.getURI());
-                        Integer compoundID = Compound.getCompoundID(subject.getURI());
-
-                        Pair<Integer, Integer> pair = Pair.getPair(patentID, compoundID);
-
-                        synchronized(newCompounds)
-                        {
-                            if(oldCompounds.remove(pair))
-                                keepCompounds.add(pair);
-                            else if(!keepCompounds.contains(pair))
-                                newCompounds.add(pair);
-                        }
-                    }
-                }.load(stream);
-            }
-        });
-
-        store("delete from pubchem.compound_patents where patent=? and compound=?", oldCompounds);
-        store("insert into pubchem.compound_patents(patent,compound) values(?,?)", newCompounds);
-    }
-
-
     private static void loadInventors() throws IOException, SQLException
     {
         IntStringSet keepInventors = new IntStringSet();
@@ -1054,7 +1013,6 @@ class Patent extends Updater
         loadCpcInventiveClassifications();
         loadIpcAdditionalClassifications();
         loadIpcInventiveClassifications();
-        loadReferences();
         loadInventors();
         loadApplicants();
         loadFormattedNames();

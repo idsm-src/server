@@ -1,3 +1,4 @@
+create index gene_symbol_bases__id__varchar on pubchem.gene_symbol_bases((id::varchar));
 create index gene_symbol_bases__symbol on pubchem.gene_symbol_bases(symbol);
 grant select on pubchem.gene_symbol_bases to sparql;
 

@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -1162,17 +1163,31 @@ class Protein extends Updater
 
         Set<Pair<String, String>> patents = new HashSet<>();
 
-        Model model = getModel("pubchem/RDF/protein/pc_protein.ttl.gz", t -> {
+        Model model = ModelFactory.createDefaultModel();
 
-            if(!t.getPredicate().getURI().equals("http://purl.org/spar/cito/isDiscussedBy"))
-                return true;
+        processFiles("pubchem/RDF/protein", "pc_protein_[0-9]+\\.ttl\\.gz", file -> {
+            Model submodel = getModel(file, t -> {
 
-            if(!t.getObject().getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/patent/"))
-                return true;
+                if(!t.getPredicate().getURI().equals("http://purl.org/spar/cito/isDiscussedBy"))
+                    return true;
 
-            patents.add(Pair.getPair(t.getSubject().getURI(), t.getObject().getURI()));
+                if(!t.getObject().getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/patent/"))
+                    return true;
 
-            return false;
+                synchronized(patents)
+                {
+                    patents.add(Pair.getPair(t.getSubject().getURI(), t.getObject().getURI()));
+                }
+
+                return false;
+            });
+
+            synchronized(model)
+            {
+                model.add(submodel);
+            }
+
+            submodel.close();
         });
 
         check(model, "pubchem/protein/check.sparql");

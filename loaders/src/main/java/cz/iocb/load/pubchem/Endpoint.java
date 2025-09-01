@@ -268,48 +268,53 @@ class Endpoint extends Updater
         load("select substance,bioassay,measuregroup,value,endpoint_type_id from pubchem.endpoint_measurements "
                 + "where endpoint_type_id is not null", oldTypes);
 
-        try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint_type.ttl.gz"))
-        {
-            new TripleStreamProcessor()
+        processFiles("pubchem/RDF/endpoint", "pc_endpoint_type_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
             {
-                @Override
-                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                new TripleStreamProcessor()
                 {
-                    if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                        throw new IOException();
-
-                    if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Endpoint"))
-                        return;
-
-                    EndpointID endpoint = parseEndpoint(subject, false);
-                    Pair<Integer, Integer> type = Ontology.getId(object.getURI());
-
-                    if(type.getOne() != Ontology.unitBAO)
-                        throw new IOException();
-
-                    oldMeasurements.remove(endpoint);
-
-                    if(type.getTwo().equals(oldTypes.remove(endpoint)))
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        keepTypes.put(endpoint, type.getTwo());
-                    }
-                    else
-                    {
-                        Integer keep = keepTypes.get(endpoint);
+                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            throw new IOException();
 
-                        if(type.getTwo().equals(keep))
+                        if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Endpoint"))
                             return;
-                        else if(keep != null)
+
+                        EndpointID endpoint = parseEndpoint(subject, false);
+                        Pair<Integer, Integer> type = Ontology.getId(object.getURI());
+
+                        if(type.getOne() != Ontology.unitBAO)
                             throw new IOException();
 
-                        Integer put = newTypes.put(endpoint, type.getTwo());
+                        synchronized(newTypes)
+                        {
+                            oldMeasurements.remove(endpoint);
 
-                        if(put != null && !type.getTwo().equals(put))
-                            throw new IOException();
+                            if(type.getTwo().equals(oldTypes.remove(endpoint)))
+                            {
+                                keepTypes.put(endpoint, type.getTwo());
+                            }
+                            else
+                            {
+                                Integer keep = keepTypes.get(endpoint);
+
+                                if(type.getTwo().equals(keep))
+                                    return;
+                                else if(keep != null)
+                                    throw new IOException();
+
+                                Integer put = newTypes.put(endpoint, type.getTwo());
+
+                                if(put != null && !type.getTwo().equals(put))
+                                    throw new IOException();
+                            }
+                        }
                     }
-                }
-            }.load(stream);
-        }
+                }.load(stream);
+            }
+        });
 
         store("update pubchem.endpoint_measurements set endpoint_type_id=null "
                 + "where substance=? and bioassay=? and measuregroup=? and value=? and endpoint_type_id=?", oldTypes);
@@ -479,9 +484,14 @@ class Endpoint extends Updater
         IntQuaterpletIntSet newReferences = new IntQuaterpletIntSet();
         IntQuaterpletIntSet oldReferences = new IntQuaterpletIntSet();
 
-        load("select substance,bioassay,measuregroup,value,reference from pubchem.endpoint_references", oldReferences);
+        IntQuaterpletIntSet keepPatents = new IntQuaterpletIntSet();
+        IntQuaterpletIntSet newPatents = new IntQuaterpletIntSet();
+        IntQuaterpletIntSet oldPatents = new IntQuaterpletIntSet();
 
-        try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint2reference.ttl.gz"))
+        load("select substance,bioassay,measuregroup,value,reference from pubchem.endpoint_references", oldReferences);
+        load("select substance,bioassay,measuregroup,value,patent from pubchem.endpoint_patents", oldPatents);
+
+        try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint2cites_as_data_source.ttl.gz"))
         {
             new TripleStreamProcessor()
             {
@@ -491,15 +501,34 @@ class Endpoint extends Updater
                     if(!predicate.getURI().equals("http://purl.org/spar/cito/citesAsDataSource"))
                         throw new IOException();
 
-                    Integer referenceID = Reference.getReferenceID(object.getURI());
-                    EndpointID endpoint = parseEndpoint(subject, false);
+                    if(object.getURI().startsWith(Reference.prefix))
+                    {
+                        Integer referenceID = Reference.getReferenceID(object.getURI());
+                        EndpointID endpoint = parseEndpoint(subject, false);
 
-                    Pair<EndpointID, Integer> pair = Pair.getPair(endpoint, referenceID);
+                        Pair<EndpointID, Integer> pair = Pair.getPair(endpoint, referenceID);
 
-                    if(oldReferences.remove(pair))
-                        keepReferences.add(pair);
-                    else if(!keepReferences.contains(pair))
-                        newReferences.add(pair);
+                        if(oldReferences.remove(pair))
+                            keepReferences.add(pair);
+                        else if(!keepReferences.contains(pair))
+                            newReferences.add(pair);
+                    }
+                    else if(object.getURI().startsWith(Patent.prefix))
+                    {
+                        Integer patentID = Patent.getPatentID(object.getURI());
+                        EndpointID endpoint = parseEndpoint(subject, false);
+
+                        Pair<EndpointID, Integer> pair = Pair.getPair(endpoint, patentID);
+
+                        if(oldPatents.remove(pair))
+                            keepPatents.add(pair);
+                        else if(!keepPatents.contains(pair))
+                            newPatents.add(pair);
+                    }
+                    else
+                    {
+                        throw new IOException();
+                    }
                 }
             }.load(stream);
         }
@@ -508,6 +537,11 @@ class Endpoint extends Updater
                 + "where substance=? and bioassay=? and measuregroup=? and value=? and reference=?", oldReferences);
         store("insert into pubchem.endpoint_references(substance,bioassay,measuregroup,value,reference) "
                 + "values(?,?,?,?,?)", newReferences);
+
+        store("delete from pubchem.endpoint_patents "
+                + "where substance=? and bioassay=? and measuregroup=? and value=? and patent=?", oldPatents);
+        store("insert into pubchem.endpoint_patents(substance,bioassay,measuregroup,value,patent) "
+                + "values(?,?,?,?,?)", newPatents);
     }
 
 

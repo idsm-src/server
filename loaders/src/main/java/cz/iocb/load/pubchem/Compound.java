@@ -303,31 +303,36 @@ class Compound extends Updater
 
         load("select compound,type_unit,type_id from pubchem.compound_types", oldTypes);
 
-        try(InputStream stream = getTtlStream("pubchem/RDF/compound/general/pc_compound_type.ttl.gz"))
-        {
-            new TripleStreamProcessor()
+        processFiles("pubchem/RDF/compound/general", "pc_compound_type_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
             {
-                @Override
-                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                new TripleStreamProcessor()
                 {
-                    if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                        throw new IOException();
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            throw new IOException();
 
-                    if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Compound"))
-                        return;
+                        if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Compound"))
+                            return;
 
-                    Integer compoundID = getCompoundID(subject.getURI(), false);
-                    Pair<Integer, Integer> type = Ontology.getId(object.getURI());
+                        Integer compoundID = getCompoundID(subject.getURI(), false);
+                        Pair<Integer, Integer> type = Ontology.getId(object.getURI());
 
-                    Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(compoundID, type);
+                        Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(compoundID, type);
 
-                    if(oldTypes.remove(pair))
-                        keepTypes.add(pair);
-                    else if(!keepTypes.contains(pair))
-                        newTypes.add(pair);
-                }
-            }.load(stream);
-        }
+                        synchronized(newTypes)
+                        {
+                            if(oldTypes.remove(pair))
+                                keepTypes.add(pair);
+                            else if(!keepTypes.contains(pair))
+                                newTypes.add(pair);
+                        }
+                    }
+                }.load(stream);
+            }
+        });
 
         store("delete from pubchem.compound_types where compound=? and type_unit=? and type_id=?", oldTypes);
         store("insert into pubchem.compound_types(compound,type_unit,type_id) values(?,?,?)", newTypes);
@@ -342,40 +347,45 @@ class Compound extends Updater
 
         load("select compound,label from pubchem.compound_labels", oldLabels);
 
-        try(InputStream stream = getTtlStream("pubchem/RDF/compound/general/pc_compound_label.ttl.gz"))
-        {
-            new TripleStreamProcessor()
+        processFiles("pubchem/RDF/compound/general", "pc_compound_label_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
             {
-                @Override
-                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                new TripleStreamProcessor()
                 {
-                    if(!predicate.getURI().equals("http://www.w3.org/2004/02/skos/core#prefLabel"))
-                        throw new IOException();
-
-                    Integer compoundID = getCompoundID(subject.getURI(), false);
-                    String label = getString(object);
-
-                    if(label.equals(oldLabels.remove(compoundID)))
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        keepLabels.put(compoundID, label);
-                    }
-                    else
-                    {
-                        String keep = keepLabels.get(compoundID);
-
-                        if(label.equals(keep))
-                            return;
-                        else if(keep != null)
+                        if(!predicate.getURI().equals("http://www.w3.org/2004/02/skos/core#prefLabel"))
                             throw new IOException();
 
-                        String put = newLabels.put(compoundID, label);
+                        Integer compoundID = getCompoundID(subject.getURI(), false);
+                        String label = getString(object);
 
-                        if(put != null && !label.equals(put))
-                            throw new IOException();
+                        synchronized(newLabels)
+                        {
+                            if(label.equals(oldLabels.remove(compoundID)))
+                            {
+                                keepLabels.put(compoundID, label);
+                            }
+                            else
+                            {
+                                String keep = keepLabels.get(compoundID);
+
+                                if(label.equals(keep))
+                                    return;
+                                else if(keep != null)
+                                    throw new IOException();
+
+                                String put = newLabels.put(compoundID, label);
+
+                                if(put != null && !label.equals(put))
+                                    throw new IOException();
+                            }
+                        }
                     }
-                }
-            }.load(stream);
-        }
+                }.load(stream);
+            }
+        });
 
         store("delete from pubchem.compound_labels where compound=? and label=?", oldLabels);
         store("insert into pubchem.compound_labels(compound,label) values(?,?) "
@@ -474,23 +484,25 @@ class Compound extends Updater
 
     private static void checkIdentifiers() throws IOException, SQLException
     {
-        try(InputStream stream = getTtlStream("pubchem/RDF/compound/general/pc_compound_identifier.ttl.gz"))
-        {
-            new TripleStreamProcessor()
+        processFiles("pubchem/RDF/compound/general", "pc_compound_identifier_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
             {
-                @Override
-                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                new TripleStreamProcessor()
                 {
-                    Integer compoundID = getIntID(subject, prefix);
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        Integer compoundID = getIntID(subject, prefix);
 
-                    if(!predicate.getURI().equals("http://purl.org/dc/terms/identifier"))
-                        throw new IOException();
+                        if(!predicate.getURI().equals("http://purl.org/dc/terms/identifier"))
+                            throw new IOException();
 
-                    if(compoundID != Integer.parseInt(object.getLiteral().getLexicalForm()))
-                        throw new IOException();
-                }
-            }.load(stream);
-        }
+                        if(compoundID != Integer.parseInt(object.getLiteral().getLexicalForm()))
+                            throw new IOException();
+                    }
+                }.load(stream);
+            }
+        });
     }
 
 

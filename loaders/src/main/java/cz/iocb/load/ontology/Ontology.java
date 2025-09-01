@@ -443,7 +443,31 @@ public class Ontology extends Updater
         builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#inconclusive", 2);
         builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#unspecified", 3);
         builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#probe", 4);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#hasQualifier", 5);
         builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#FDAApprovedDrugs", 7);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#connectivity_smiles", 8);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#covalent_unit_count", 9);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#defined_atom_stereo_count", 10);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#defined_bond_stereo_count", 11);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#exact_mass", 12);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#hydrogen_bond_acceptor_count", 13);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#hydrogen_bond_donor_count", 14);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#inchikey", 15);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#isotope_atom_count", 16);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#iupac_inchi", 17);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#molecular_formula", 18);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#molecular_weight", 19);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#mono_isotopic_weight", 20);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#non_hydrogen_atom_count", 21);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#preferred_iupac_name", 22);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#rotatable_bond_count", 23);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#structure_complexity", 24);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#total_formal_charge", 25);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#tpsa", 26);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#undefined_atom_stereo_count", 27);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#undefined_bond_stereo_count", 28);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#xlogp3", 29);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#substance_version", 30);
 
         // MESH
         builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#AllowedDescriptorQualifierPair", 32);

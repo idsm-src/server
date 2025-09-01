@@ -55,6 +55,8 @@ public class Endpoint
                     config.createLiteralMapping(xsdString, "label"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
                     config.createLiteralMapping(xsdFloat, "measurement"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:hasQualifier"),
+                    config.createLiteralMapping(xsdString, "qualifier"));
 
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-unit"),

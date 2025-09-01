@@ -2,7 +2,6 @@ create table pubchem.descriptor_compound_bases
 (
     compound                        integer not null,
     hydrogen_bond_acceptor_count    smallint,
-    tautomer_count                  smallint,
     defined_atom_stereo_count       smallint,
     defined_bond_stereo_count       smallint,
     undefined_bond_stereo_count     smallint,
@@ -32,18 +31,18 @@ create table pubchem.descriptor_compound_molecular_formulas
 );
 
 
-create table pubchem.descriptor_compound_isomeric_smileses
+create table pubchem.descriptor_compound_smileses
 (
     compound           integer not null,
-    isomeric_smiles    varchar not null,
+    smiles             varchar not null,
     primary key(compound)
 );
 
 
-create table pubchem.descriptor_compound_canonical_smileses
+create table pubchem.descriptor_compound_connectivity_smileses
 (
     compound            integer not null,
-    canonical_smiles    varchar not null,
+    connectivity_smiles varchar not null,
     primary key(compound)
 );
 

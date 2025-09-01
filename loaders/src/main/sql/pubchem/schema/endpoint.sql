@@ -35,3 +35,14 @@ create table pubchem.endpoint_references
     reference       integer not null,
     primary key(substance, bioassay, measuregroup, value, reference)
 );
+
+
+create table pubchem.endpoint_patents
+(
+    substance       integer not null,
+    bioassay        integer not null,
+    measuregroup    integer not null,
+    value           integer not null,
+    patent          integer not null,
+    primary key(substance, bioassay, measuregroup, value, patent)
+);

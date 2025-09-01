@@ -23,3 +23,12 @@ create index endpoint_references__bioassay_measuregroup on pubchem.endpoint_refe
 create index endpoint_references__substance_bioassay_measuregroup_value on pubchem.endpoint_references(substance, bioassay, measuregroup, value);
 create index endpoint_references__reference on pubchem.endpoint_references(reference);
 grant select on pubchem.endpoint_references TO sparql;
+
+--------------------------------------------------------------------------------
+
+create index endpoint_patents__substance on pubchem.endpoint_patents(substance);
+create index endpoint_patents__bioassay on pubchem.endpoint_patents(bioassay);
+create index endpoint_patents__bioassay_measuregroup on pubchem.endpoint_patents(bioassay, measuregroup);
+create index endpoint_patents__substance_bioassay_measuregroup_value on pubchem.endpoint_patents(substance, bioassay, measuregroup, value);
+create index endpoint_patents__patent on pubchem.endpoint_patents(patent);
+grant select on pubchem.endpoint_patents TO sparql;

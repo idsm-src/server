@@ -108,57 +108,65 @@ class Substance extends Updater
 
         load("select substance,chebi from pubchem.substance_types", oldTypes);
 
-        try(InputStream stream = getTtlStream("pubchem/RDF/substance/pc_substance_type.ttl.gz"))
-        {
-            new TripleStreamProcessor()
+        processFiles("pubchem/RDF/substance", "pc_substance_type_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
             {
-                @Override
-                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                new TripleStreamProcessor()
                 {
-                    if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                        throw new IOException();
-
-                    if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Substance"))
-                        return;
-
-                    Integer substanceID = getSubstanceID(subject.getURI(), false, false);
-                    Integer chebiID = getIntID(object, "http://purl.obolibrary.org/obo/CHEBI_");
-
-                    Pair<Integer, Integer> pair = Pair.getPair(substanceID, chebiID);
-
-                    if(oldTypes.remove(pair))
-                        keepTypes.add(pair);
-                    else if(!keepTypes.contains(pair))
-                        newTypes.add(pair);
-
-
-                    // extension
-
-                    Integer compoundID = keepCompounds.get(substanceID);
-
-                    if(compoundID == null)
-                        compoundID = newCompounds.get(substanceID);
-
-                    if(compoundID != null)
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        List<Integer> substances = classes.get(compoundID);
+                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            throw new IOException();
 
-                        if(substances != null)
+                        if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Substance"))
+                            return;
+
+                        Integer substanceID = getSubstanceID(subject.getURI(), false, false);
+                        Integer chebiID = getIntID(object, "http://purl.obolibrary.org/obo/CHEBI_");
+
+                        Pair<Integer, Integer> pair = Pair.getPair(substanceID, chebiID);
+
+                        synchronized(newTypes)
                         {
-                            for(Integer s : substances)
-                            {
-                                Pair<Integer, Integer> p = Pair.getPair(s, chebiID);
+                            if(oldTypes.remove(pair))
+                                keepTypes.add(pair);
+                            else if(!keepTypes.contains(pair))
+                                newTypes.add(pair);
+                        }
 
-                                if(oldTypes.remove(p))
-                                    keepTypes.add(p);
-                                else if(!keepTypes.contains(p))
-                                    newTypes.add(p);
+
+                        // extension
+
+                        Integer compoundID = keepCompounds.get(substanceID);
+
+                        if(compoundID == null)
+                            compoundID = newCompounds.get(substanceID);
+
+                        if(compoundID != null)
+                        {
+                            List<Integer> substances = classes.get(compoundID);
+
+                            if(substances != null)
+                            {
+                                for(Integer s : substances)
+                                {
+                                    Pair<Integer, Integer> p = Pair.getPair(s, chebiID);
+
+                                    synchronized(newTypes)
+                                    {
+                                        if(oldTypes.remove(p))
+                                            keepTypes.add(p);
+                                        else if(!keepTypes.contains(p))
+                                            newTypes.add(p);
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }.load(stream);
-        }
+                }.load(stream);
+            }
+        });
 
         store("delete from pubchem.substance_types where substance=? and chebi=?", oldTypes);
         store("insert into pubchem.substance_types(substance,chebi) values(?,?)", newTypes);
@@ -466,43 +474,51 @@ class Substance extends Updater
         load("select substance,reference from pubchem.substance_references", oldReferences);
         load("select substance,patent from pubchem.substance_patents", oldPatents);
 
-        try(InputStream stream = getTtlStream("pubchem/RDF/substance/pc_substance2reference.ttl.gz"))
-        {
-            new TripleStreamProcessor()
+        processFiles("pubchem/RDF/substance", "pc_substance2reference_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
             {
-                @Override
-                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                new TripleStreamProcessor()
                 {
-                    if(!predicate.getURI().equals("http://purl.org/spar/cito/isDiscussedBy"))
-                        throw new IOException();
-
-                    Integer substanceID = getSubstanceID(subject.getURI(), false, false);
-
-                    if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        Integer referenceID = Reference.getReferenceID(object.getURI());
+                        if(!predicate.getURI().equals("http://purl.org/spar/cito/isDiscussedBy"))
+                            throw new IOException();
 
-                        Pair<Integer, Integer> pair = Pair.getPair(substanceID, referenceID);
+                        Integer substanceID = getSubstanceID(subject.getURI(), false, false);
 
-                        if(oldReferences.remove(pair))
-                            keepReferences.add(pair);
-                        else if(!keepReferences.contains(pair))
-                            newReferences.add(pair);
+                        if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        {
+                            synchronized(newReferences)
+                            {
+                                Integer referenceID = Reference.getReferenceID(object.getURI());
+
+                                Pair<Integer, Integer> pair = Pair.getPair(substanceID, referenceID);
+
+                                if(oldReferences.remove(pair))
+                                    keepReferences.add(pair);
+                                else if(!keepReferences.contains(pair))
+                                    newReferences.add(pair);
+                            }
+                        }
+                        else
+                        {
+                            synchronized(newPatents)
+                            {
+                                Integer patentID = Patent.getPatentID(object.getURI());
+
+                                Pair<Integer, Integer> pair = Pair.getPair(substanceID, patentID);
+
+                                if(oldPatents.remove(pair))
+                                    keepPatents.add(pair);
+                                else if(!keepPatents.contains(pair))
+                                    newPatents.add(pair);
+                            }
+                        }
                     }
-                    else
-                    {
-                        Integer patentID = Patent.getPatentID(object.getURI());
-
-                        Pair<Integer, Integer> pair = Pair.getPair(substanceID, patentID);
-
-                        if(oldPatents.remove(pair))
-                            keepPatents.add(pair);
-                        else if(!keepPatents.contains(pair))
-                            newPatents.add(pair);
-                    }
-                }
-            }.load(stream);
-        }
+                }.load(stream);
+            }
+        });
 
         store("delete from pubchem.substance_references where substance=? and reference=?", oldReferences);
         store("insert into pubchem.substance_references(substance,reference) values(?,?)", newReferences);
@@ -588,23 +604,25 @@ class Substance extends Updater
 
     private static void checkIdentifiers() throws IOException, SQLException
     {
-        try(InputStream stream = getTtlStream("pubchem/RDF/substance/pc_substance_identifier.ttl.gz"))
-        {
-            new TripleStreamProcessor()
+        processFiles("pubchem/RDF/substance", "pc_substance_identifier_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
             {
-                @Override
-                protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                new TripleStreamProcessor()
                 {
-                    Integer substanceID = getIntID(subject, prefix);
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        Integer substanceID = getIntID(subject, prefix);
 
-                    if(!predicate.getURI().equals("http://purl.org/dc/terms/identifier"))
-                        throw new IOException();
+                        if(!predicate.getURI().equals("http://purl.org/dc/terms/identifier"))
+                            throw new IOException();
 
-                    if(substanceID != Integer.parseInt(object.getLiteral().getLexicalForm()))
-                        throw new IOException();
-                }
-            }.load(stream);
-        }
+                        if(substanceID != Integer.parseInt(object.getLiteral().getLexicalForm()))
+                            throw new IOException();
+                    }
+                }.load(stream);
+            }
+        });
     }
 
 

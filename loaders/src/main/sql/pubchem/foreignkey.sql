@@ -67,8 +67,6 @@ alter table pubchem.compound_active_ingredients add foreign key (compound) refer
 alter table pubchem.compound_labels add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.compound_matches add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.compound_wikidata_matches add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
-alter table pubchem.compound_patents add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
-alter table pubchem.compound_patents add foreign key (patent) references pubchem.patent_bases(id) initially deferred;
 alter table molecules.pubchem add foreign key (id) references pubchem.compound_bases(id) initially deferred;
 
 
@@ -133,6 +131,11 @@ alter table pubchem.endpoint_references add foreign key (bioassay) references pu
 alter table pubchem.endpoint_references add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
 alter table pubchem.endpoint_references add foreign key (substance, bioassay, measuregroup, value) references pubchem.endpoint_bases(substance, bioassay, measuregroup, value) initially deferred;
 alter table pubchem.endpoint_references add foreign key (reference) references pubchem.reference_bases(id) initially deferred;
+alter table pubchem.endpoint_patents add foreign key (substance) references pubchem.substance_bases(id) initially deferred;
+alter table pubchem.endpoint_patents add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
+alter table pubchem.endpoint_patents add foreign key (bioassay, measuregroup) references pubchem.measuregroup_bases(bioassay, measuregroup) initially deferred;
+alter table pubchem.endpoint_patents add foreign key (substance, bioassay, measuregroup, value) references pubchem.endpoint_bases(substance, bioassay, measuregroup, value) initially deferred;
+alter table pubchem.endpoint_patents add foreign key (patent) references pubchem.patent_bases(id) initially deferred;
 
 
 -- gene
@@ -354,8 +357,8 @@ alter table pubchem.taxonomy_wikidata_matches add foreign key (taxonomy) referen
 -- descriptor-compound
 alter table pubchem.descriptor_compound_bases add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.descriptor_compound_molecular_formulas add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
-alter table pubchem.descriptor_compound_isomeric_smileses add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
-alter table pubchem.descriptor_compound_canonical_smileses add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
+alter table pubchem.descriptor_compound_smileses add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
+alter table pubchem.descriptor_compound_connectivity_smileses add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.descriptor_compound_iupac_inchis add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.descriptor_compound_preferred_iupac_names add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 
