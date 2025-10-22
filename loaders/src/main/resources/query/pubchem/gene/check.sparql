@@ -34,6 +34,7 @@ select distinct ?iri where
     {
         ?S rdf:type ?iri .
         filter(! strstarts(str(?S), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID'))
+        filter(?iri != vocab:GeneSymbol)
         filter(?iri != sio:SIO_001383)
     }
     union
@@ -50,7 +51,7 @@ select distinct ?iri where
         filter(! strstarts(str(?iri), 'https://enzyme.expasy.org/EC/'))
         filter(! strstarts(str(?iri), 'https://medlineplus.gov/genetics/gene/'))
         filter(! strstarts(str(?iri), 'https://www.alliancegenome.org/gene/'))
-        filter(! strstarts(str(?iri), 'http://www.wormbase.org/db/gene/gene?name=WBGene'))
+        filter(! strstarts(str(?iri), 'http://www.wormbase.org/db/gene/gene?class=Gene;name=WBGene'))
         filter(! strstarts(str(?iri), 'https://pharos.nih.gov/targets/'))
         filter(! strstarts(str(?iri), 'https://platform.opentargets.org/target/ENSG'))
         filter(! strstarts(str(?iri), 'https://search.thegencc.org/genes/HGNC:'))

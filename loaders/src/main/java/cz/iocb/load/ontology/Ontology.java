@@ -978,6 +978,7 @@ public class Ontology extends Updater
         builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Synonym", 650);
         builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Taxonomy", 651);
         builtinResources.put("http://www.w3.org/ns/shacl#SPARQLExecutable", 652);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#GeneSymbol", 653);
 
         // datatypes
         builtinResources.put("http://www.w3.org/2001/XMLSchema#boolean", 900);

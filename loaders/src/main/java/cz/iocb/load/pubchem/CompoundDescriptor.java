@@ -411,15 +411,15 @@ class CompoundDescriptor extends Updater
         loadIntegerField("DefinedAtomStereoCount", "_Defined_Atom_Stereo_Count", "defined_atom_stereo_count");
         loadIntegerField("DefinedBondStereoCount", "_Defined_Bond_Stereo_Count", "defined_bond_stereo_count");
         loadIntegerField("FormalCharge", "_Total_Formal_Charge", "total_formal_charge");
-        loadIntegerField("HBondAcceptor", "_Hydrogen_Bond_Acceptor_Count", "hydrogen_bond_acceptor_count");
-        loadIntegerField("HBondDonor", "_Hydrogen_Bond_Donor_Count", "hydrogen_bond_donor_count");
+        loadIntegerField("HydrogenBondAcceptorCount", "_Hydrogen_Bond_Acceptor_Count", "hydrogen_bond_acceptor_count");
+        loadIntegerField("HydrogenBondDonorCount", "_Hydrogen_Bond_Donor_Count", "hydrogen_bond_donor_count");
         loadIntegerField("HeavyAtomCount", "_Non-hydrogen_Atom_Count", "non_hydrogen_atom_count");
         loadIntegerField("IsotopeAtomCount", "_Isotope_Atom_Count", "isotope_atom_count");
         loadIntegerField("RotatableBond", "_Rotatable_Bond_Count", "rotatable_bond_count");
         loadIntegerField("UndefinedAtomStereoCount", "_Undefined_Atom_Stereo_Count", "undefined_atom_stereo_count");
         loadIntegerField("UndefinedBondStereoCount", "_Undefined_Bond_Stereo_Count", "undefined_bond_stereo_count");
 
-        loadFloatField("Complexity", "_Structure_Complexity", "structure_complexity");
+        loadFloatField("StructureComplexity", "_Structure_Complexity", "structure_complexity");
         loadFloatField("ExactMass", "_Exact_Mass", "exact_mass");
         loadFloatField("MolecularWeight", "_Molecular_Weight", "molecular_weight");
         loadFloatField("MonoIsotopicWeight", "_Mono_Isotopic_Weight", "mono_isotopic_weight");
@@ -429,9 +429,9 @@ class CompoundDescriptor extends Updater
 
         loadStringField("MolecularFormula", "_Molecular_Formula", "molecular_formulas", "molecular_formula");
         loadStringField("SMILES", "_SMILES", "smileses", "smiles");
-        loadStringField("connSMILES", "_Connectivity_SMILES", "connectivity_smileses", "connectivity_smiles");
-        loadStringField("InChI", "_IUPAC_InChI", "iupac_inchis", "iupac_inchi");
-        loadStringField("IUPACName", "_Preferred_IUPAC_Name", "preferred_iupac_names", "preferred_iupac_name");
+        loadStringField("ConnectivitySMILES", "_Connectivity_SMILES", "connectivity_smileses", "connectivity_smiles");
+        loadStringField("IUPACInChI", "_IUPAC_InChI", "iupac_inchis", "iupac_inchi");
+        loadStringField("PreferredIUPACName", "_Preferred_IUPAC_Name", "preferred_iupac_names", "preferred_iupac_name");
 
         checkUnit("ExactMass", "_Exact_Mass", "UO_0000055");
         checkUnit("MolecularWeight", "_Molecular_Weight", "UO_0000055");
@@ -440,14 +440,14 @@ class CompoundDescriptor extends Updater
 
         checkIdentifier("Compound_Identifier", "_Compound_Identifier");
 
-        checkType("Complexity", "_Structure_Complexity", "CHEMINF_000390");
+        checkType("StructureComplexity", "_Structure_Complexity", "CHEMINF_000390");
         checkType("CovalentUnitCount", "_Covalent_Unit_Count", "CHEMINF_000369");
         checkType("DefinedAtomStereoCount", "_Defined_Atom_Stereo_Count", "CHEMINF_000370");
         checkType("DefinedBondStereoCount", "_Defined_Bond_Stereo_Count", "CHEMINF_000371");
         checkType("ExactMass", "_Exact_Mass", "CHEMINF_000338");
         checkType("FormalCharge", "_Total_Formal_Charge", "CHEMINF_000336");
-        checkType("HBondAcceptor", "_Hydrogen_Bond_Acceptor_Count", "CHEMINF_000388");
-        checkType("HBondDonor", "_Hydrogen_Bond_Donor_Count", "CHEMINF_000387");
+        checkType("HydrogenBondAcceptorCount", "_Hydrogen_Bond_Acceptor_Count", "CHEMINF_000388");
+        checkType("HydrogenBondDonorCount", "_Hydrogen_Bond_Donor_Count", "CHEMINF_000387");
         checkType("HeavyAtomCount", "_Non-hydrogen_Atom_Count", "CHEMINF_000373");
         checkType("IsotopeAtomCount", "_Isotope_Atom_Count", "CHEMINF_000372");
         checkType("MolecularFormula", "_Molecular_Formula", "CHEMINF_000335");
@@ -458,10 +458,10 @@ class CompoundDescriptor extends Updater
         checkType("UndefinedAtomStereoCount", "_Undefined_Atom_Stereo_Count", "CHEMINF_000374");
         checkType("UndefinedBondStereoCount", "_Undefined_Bond_Stereo_Count", "CHEMINF_000375");
         checkXLogP3Type("XLogP3", "CHEMINF_000395");
-        checkType("connSMILES", "_Connectivity_SMILES", "CHEMINF_000376");
+        checkType("ConnectivitySMILES", "_Connectivity_SMILES", "CHEMINF_000376");
         checkType("SMILES", "_SMILES", "CHEMINF_000379");
-        checkType("InChI", "_IUPAC_InChI", "CHEMINF_000396");
-        checkType("IUPACName", "_Preferred_IUPAC_Name", "CHEMINF_000382");
+        checkType("IUPACInChI", "_IUPAC_InChI", "CHEMINF_000396");
+        checkType("PreferredIUPACName", "_Preferred_IUPAC_Name", "CHEMINF_000382");
         checkType("Compound_Identifier", "_Compound_Identifier", "CHEMINF_000140");
 
         System.out.println();
