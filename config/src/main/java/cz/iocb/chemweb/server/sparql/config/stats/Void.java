@@ -14,8 +14,6 @@ import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.NodeMapping;
 import cz.iocb.sparql.engine.mapping.classes.DateTimeConstantZoneClass;
 import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
-import cz.iocb.sparql.engine.mapping.extension.FunctionDefinition;
-import cz.iocb.sparql.engine.mapping.extension.ProcedureDefinition;
 import cz.iocb.sparql.engine.parser.model.IRI;
 
 
@@ -60,11 +58,21 @@ public class Void
     public static void addQuadMappings(VoidConfiguration config)
     {
         String endpoint = "https://idsm.elixir-czech.cz/sparql/endpoint/idsm";
-        ConstantIriMapping graph = config.createIriMapping(new IRI("https://idsm.elixir-czech.cz/.well-known/void"));
         ConstantIriMapping service = config.createIriMapping(new IRI(endpoint));
+        ConstantIriMapping graph = config.createIriMapping(new IRI("https://idsm.elixir-czech.cz/.well-known/void"));
         ConstantIriMapping defaultDataset = config.createIriMapping(new IRI(endpoint + "#default-dataset"));
         ConstantIriMapping availableGraphs = config.createIriMapping(new IRI(endpoint + "#available-graphs"));
         ConstantIriMapping defaultGraph = config.createIriMapping(new IRI("http://void/graph-00000000"));
+
+        {
+            config.addQuadMapping(graph, service, config.createIriMapping("sd:availableGraphs"), availableGraphs);
+            config.addQuadMapping(graph, availableGraphs, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("sd:GraphCollection"));
+
+            config.addQuadMapping(graph, service, config.createIriMapping("sd:defaultDataset"), defaultDataset);
+            config.addQuadMapping(graph, defaultDataset, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("sd:Dataset"));
+        }
 
         {
             Table table = new Table("info", "idsm_version");
@@ -80,70 +88,6 @@ public class Void
 
             config.addQuadMapping(table, graph, defaultGraph, config.createIriMapping("dcterms:issued"),
                     config.createLiteralMapping(xsdDateTimeM0, version));
-        }
-
-        {
-            config.addQuadMapping(graph, service, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("sd:Service"));
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:endpoint"),
-                    config.createIriMapping(new IRI(endpoint)));
-
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:feature"),
-                    config.createIriMapping("sd:BasicFederatedQuery"));
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:feature"),
-                    config.createIriMapping("sd:EmptyGraphs"));
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:feature"),
-                    config.createIriMapping("sd:UnionDefaultGraph"));
-
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:defaultEntailmentRegime"),
-                    config.createIriMapping("ent:Simple"));
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:supportedLanguage"),
-                    config.createIriMapping("sd:SPARQL11Query"));
-
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:resultFormat"),
-                    config.createIriMapping("format:SPARQL_Results_XML"));
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:resultFormat"),
-                    config.createIriMapping("format:SPARQL_Results_JSON"));
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:resultFormat"),
-                    config.createIriMapping("format:SPARQL_Results_CSV"));
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:resultFormat"),
-                    config.createIriMapping("format:SPARQL_Results_TSV"));
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:resultFormat"),
-                    config.createIriMapping("format:RDF_JSON"));
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:resultFormat"),
-                    config.createIriMapping("format:RDF_XML"));
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:resultFormat"),
-                    config.createIriMapping("format:Turtle"));
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:resultFormat"),
-                    config.createIriMapping("format:TriG"));
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:resultFormat"),
-                    config.createIriMapping("format:N-Triples"));
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:resultFormat"),
-                    config.createIriMapping("format:N-Quads"));
-
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:defaultDataset"), defaultDataset);
-            config.addQuadMapping(graph, defaultDataset, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("sd:Dataset"));
-
-            config.addQuadMapping(graph, service, config.createIriMapping("sd:availableGraphs"), availableGraphs);
-            config.addQuadMapping(graph, availableGraphs, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("sd:GraphCollection"));
-
-            for(FunctionDefinition def : config.getFunctions(config.getServiceIri()).values())
-            {
-                ConstantIriMapping function = config.createIriMapping(new IRI(def.getFunctionName()));
-                config.addQuadMapping(graph, service, config.createIriMapping("sd:extensionFunction"), function);
-                config.addQuadMapping(graph, function, config.createIriMapping("rdf:type"),
-                        config.createIriMapping("sd:Function"));
-            }
-
-            for(ProcedureDefinition def : config.getProcedures(config.getServiceIri()).values())
-            {
-                ConstantIriMapping procedure = config.createIriMapping(new IRI(def.getProcedureName()));
-                config.addQuadMapping(graph, service, config.createIriMapping("sd:propertyFeature"), procedure);
-                config.addQuadMapping(graph, procedure, config.createIriMapping("rdf:type"),
-                        config.createIriMapping("sd:Feature"));
-            }
         }
 
         {

@@ -72,8 +72,8 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         addPrefixes();
         addServices();
 
-        addPrefixDefinitionMappings("https://idsm.elixir-czech.cz/.well-known/sparql-examples");
-
+        addPrefixDefinitionMappings();
+        addBasicServiceDescription();
         detectIriResourceClasses();
     }
 
@@ -278,8 +278,10 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
-    private void addPrefixDefinitionMappings(String graphIri)
+    private void addPrefixDefinitionMappings()
     {
+        String graphIri = "https://idsm.elixir-czech.cz/.well-known/sparql-examples";
+
         ConstantIriMapping graph = createIriMapping(new IRI(graphIri));
         {
             for(Entry<String, String> entry : getPrefixes().entrySet())
