@@ -65,16 +65,17 @@ public class Dataset
     private static void processNodeMapping(DatabaseSchema schema, Table table, NodeMapping nodemap, String name,
             UsedVariables variables, Condition condition)
     {
-        if(name == null)
-            return;
-
-        ResourceClass resourceClass = nodemap.getResourceClass(null);
         List<Column> columns = nodemap.getColumns(null);
-        variables.add(new UsedVariable(name, resourceClass, columns, false));
 
         for(Column column : columns)
             if(schema.isNullableColumn(table, column))
                 condition.addIsNotNull(column);
+
+        if(name == null)
+            return;
+
+        ResourceClass resourceClass = nodemap.getResourceClass(null);
+        variables.add(new UsedVariable(name, resourceClass, columns, false));
     }
 
 

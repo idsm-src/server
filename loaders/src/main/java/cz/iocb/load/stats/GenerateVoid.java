@@ -3,6 +3,7 @@ package cz.iocb.load.stats;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.rdfLangString;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDate;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDateTime;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinDataTypes.rdfLangStringIri;
 import static java.util.stream.Collectors.joining;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -419,7 +420,7 @@ public class GenerateVoid extends Updater
             new Table("molecules", "chembl"), new Table("molecules", "drugbank"), new Table("molecules", "pubchem")));
 
     private static CompletionService<Boolean> taskService;
-    private static ExecutorService sqlService;
+    private static PriorityThreadPoolExecutor sqlService;
     private static Request request;
     private static int taskCount = 0;
     private static int planned = 0;
@@ -461,12 +462,33 @@ public class GenerateVoid extends Updater
 
             request = new Request(config);
 
-            sqlService = Executors.newFixedThreadPool(16);
+            sqlService = new PriorityThreadPoolExecutor(16);
 
 
             /*
              * process config
              */
+
+            List<Short> excludedClassCategories = new ArrayList<Short>();
+
+            try(Statement statement = connection.createStatement())
+            {
+                try(ResultSet rs = statement.executeQuery("""
+                        select unit_id from ontology.resource_categories__reftable where prefix like any (array[
+                            'http://purl.obolibrary.org/obo/PR_%',
+                            'http://purl.obolibrary.org/obo/CHEBI_%',
+                            'http://purl.obolibrary.org/obo/CHEMONTID_%',
+                            'http://purl.obolibrary.org/obo/UBERON_%',
+                            'http://purl.bioontology.org/ontology/SNOMEDCT/%',
+                            'http://purl.bioontology.org/ontology/NDFRT/%',
+                            'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#%'])
+                        """))
+                {
+                    while(rs.next())
+                        excludedClassCategories.add(rs.getShort(1));
+                }
+            }
+
 
             Map<IRI, Resource> datatypeMap = new HashMap<IRI, Resource>();
             UserIriClass rc = config.getIriClass("ontology:resource");
@@ -477,6 +499,9 @@ public class GenerateVoid extends Updater
                 List<Column> cols = rc.toColumns(request.getStatement(), iri);
                 datatypeMap.put(iri, new Resource(cols));
             }
+
+            List<Column> cols = rc.toColumns(request.getStatement(), rdfLangStringIri);
+            datatypeMap.put(rdfLangStringIri, new Resource(cols));
 
 
             Map<IRI, Graph> graphDefinitions = new HashMap<IRI, Graph>();
@@ -494,7 +519,7 @@ public class GenerateVoid extends Updater
                     graphDefinitions.put(iri, set);
                 }
 
-                set.add(request, map, datatypeMap);
+                set.add(request, map, datatypeMap, excludedClassCategories);
             }
 
 
@@ -571,6 +596,13 @@ public class GenerateVoid extends Updater
 
             load(getLoadSql("linksets", ClassLinksetStatsKeyCols, ClassLinksetStatsValueCols), oldClassLinksetStats);
 
+
+
+            Restrictions restrictions = new Restrictions();
+            restrictions.add("S");
+            restrictions.add("O");
+            restrictions.add("SC");
+            restrictions.add("OC");
 
 
             /*
@@ -824,6 +856,9 @@ public class GenerateVoid extends Updater
                 {
                     for(Entry<Integer, Set<SqlIntercode>> s : subjectDynamicClasses.entrySet())
                     {
+                        if(!p.getKey().graph.equals(s.getKey()))
+                            continue;
+
                         for(SqlIntercode sx : s.getValue())
                         {
                             SqlIntercode sp = SqlJoin.join(request, sx, px.getValue());
@@ -844,6 +879,9 @@ public class GenerateVoid extends Updater
                 {
                     for(Entry<ClassInGraph, SqlIntercode> s : subjectClasses.entrySet())
                     {
+                        if(!p.getKey().graph.equals(s.getKey().graph()))
+                            continue;
+
                         SqlIntercode sp = SqlJoin.join(request, s.getValue(), px.getValue());
 
                         sumbitTask(newDatatypeLinksetStats, cache0, empty, sp,
@@ -868,7 +906,8 @@ public class GenerateVoid extends Updater
                 {
                     for(SqlIntercode sx : s.getValue())
                     {
-                        SqlIntercode sp = SqlJoin.join(request, sx, p.getValue());
+                        SqlIntercode sp = SqlJoin.join(request, sx, p.getValue()).optimize(request, restrictions, false,
+                                false);
 
                         if(sp == SqlNoSolution.get())
                             continue;
@@ -895,7 +934,8 @@ public class GenerateVoid extends Updater
             {
                 for(Entry<ClassInGraph, SqlIntercode> s : subjectClasses.entrySet())
                 {
-                    SqlIntercode sp = SqlJoin.join(request, s.getValue(), p.getValue());
+                    SqlIntercode sp = SqlJoin.join(request, s.getValue(), p.getValue()).optimize(request, restrictions,
+                            false, false);
 
                     if(sp == SqlNoSolution.get())
                         continue;
@@ -924,7 +964,8 @@ public class GenerateVoid extends Updater
                 {
                     for(SqlIntercode sx : s.getValue())
                     {
-                        SqlIntercode sp = SqlJoin.join(request, sx, p.getValue());
+                        SqlIntercode sp = SqlJoin.join(request, sx, p.getValue()).optimize(request, restrictions, false,
+                                false);
 
                         if(sp == SqlNoSolution.get())
                             continue;
@@ -947,7 +988,8 @@ public class GenerateVoid extends Updater
             {
                 for(Entry<ClassInGraph, SqlIntercode> s : subjectClasses.entrySet())
                 {
-                    SqlIntercode sp = SqlJoin.join(request, s.getValue(), p.getValue());
+                    SqlIntercode sp = SqlJoin.join(request, s.getValue(), p.getValue()).optimize(request, restrictions,
+                            false, false);
 
                     if(sp == SqlNoSolution.get())
                         continue;
@@ -1088,16 +1130,17 @@ public class GenerateVoid extends Updater
         {
             SqlIntercode imcode = SqlUnion.union(request, List.of(iriPart, litPart));
 
-            FutureWrapper<HashMap<K, Long>> ftriples = computeCount(cache, imcode, v, fres, keyget);
+            FutureWrapper<HashMap<K, Long>> ftriples = computeCount(cache, imcode, v, fres, keyget, 3);
 
 
             if(asumeNotEmpty || !ftriples.get().isEmpty())
             {
-                FutureWrapper<HashMap<K, Long>> flitObjects = computeDistinctCount(cache, litPart, v, fres, keyget,
-                        "O");
-                FutureWrapper<HashMap<K, Long>> firiObjects = computeDistinctCount(cache, iriPart, v, fres, keyget,
-                        "O");
-                FutureWrapper<HashMap<K, Long>> fsubjects = computeDistinctCount(cache, imcode, v, fres, keyget, "S");
+                FutureWrapper<HashMap<K, Long>> flitObjects = computeDistinctCount(cache, litPart, v, fres, keyget, "O",
+                        0);
+                FutureWrapper<HashMap<K, Long>> firiObjects = computeDistinctCount(cache, iriPart, v, fres, keyget, "O",
+                        1);
+                FutureWrapper<HashMap<K, Long>> fsubjects = computeDistinctCount(cache, imcode, v, fres, keyget, "S",
+                        2);
 
                 HashMap<K, Long> litObjects = flitObjects.get();
                 HashMap<K, Long> iriObjects = firiObjects.get();
@@ -1108,7 +1151,7 @@ public class GenerateVoid extends Updater
                 {
                     for(Entry<K, Long> e : triples.entrySet())
                     {
-                        Stats stats = new Stats(0, 0, e.getValue(), subjects.get(e.getKey()),
+                        Stats stats = new Stats(0, 0, e.getValue(), subjects.getOrDefault(e.getKey(), 0l),
                                 iriObjects.getOrDefault(e.getKey(), 0l), litObjects.getOrDefault(e.getKey(), 0l));
 
                         Stats old = output.put(e.getKey(), stats);
@@ -1130,7 +1173,7 @@ public class GenerateVoid extends Updater
 
 
     private static <T, K> FutureWrapper<HashMap<K, Long>> computeCount(Map<String, Future<Map<T, Long>>> cache,
-            SqlIntercode imcode, List<String> v, ExtractFromResultSet<T> fres, Function<T, K> fkey)
+            SqlIntercode imcode, List<String> v, ExtractFromResultSet<T> fres, Function<T, K> fkey, int priority)
             throws SQLException, InterruptedException, ExecutionException
     {
         HashSet<String> groupBy = new HashSet<String>(v);
@@ -1150,7 +1193,9 @@ public class GenerateVoid extends Updater
         for(SqlIntercode branch : imcode instanceof SqlUnion union ? union.getChilds() : List.of(imcode))
         {
             String sql = getSqlQuery(branch, groupBy, null, vars);
-            futures.add(getCountMap(sql, cache, fres));
+
+            if(sql != null)
+                futures.add(getCountMap(sql, cache, fres, priority));
         }
 
         return new FutureWrapper<HashMap<K, Long>>()
@@ -1186,8 +1231,8 @@ public class GenerateVoid extends Updater
 
 
     private static <T, K> FutureWrapper<HashMap<K, Long>> computeDistinctCount(Map<String, Future<Map<T, Long>>> cache,
-            SqlIntercode imcode, List<String> v, ExtractFromResultSet<T> fres, Function<T, K> fkey, String what)
-            throws SQLException, InterruptedException, ExecutionException
+            SqlIntercode imcode, List<String> v, ExtractFromResultSet<T> fres, Function<T, K> fkey, String what,
+            int priority) throws SQLException, InterruptedException, ExecutionException
     {
         HashSet<String> groupBy = new HashSet<String>(v);
 
@@ -1209,7 +1254,9 @@ public class GenerateVoid extends Updater
         for(SqlIntercode branch : splitImCode(imcode, what))
         {
             String sql = getSqlQuery(branch, groupBy, what, vars);
-            futures.add(getCountMap(sql, cache, fres));
+
+            if(sql != null)
+                futures.add(getCountMap(sql, cache, fres, priority));
         }
 
         return new FutureWrapper<HashMap<K, Long>>()
@@ -1273,7 +1320,7 @@ public class GenerateVoid extends Updater
 
 
     private static <T> Future<Map<T, Long>> getCountMap(String sql, Map<String, Future<Map<T, Long>>> cache,
-            ExtractFromResultSet<T> fres) throws SQLException
+            ExtractFromResultSet<T> fres, int priority) throws SQLException
     {
         synchronized(cache)
         {
@@ -1294,6 +1341,8 @@ public class GenerateVoid extends Updater
 
                         try(Statement statement = connection.createStatement())
                         {
+                            statement.setFetchSize(0);
+
                             try(ResultSet rs = statement.executeQuery(sql))
                             {
                                 while(rs.next())
@@ -1314,14 +1363,14 @@ public class GenerateVoid extends Updater
 
                         long time = System.currentTimeMillis() - begin;
 
-                        if(time > 900_000)
-                            System.err.println("\n" + (time / 1000.0) + "\n" + sql + "\n");
+                        if(time > 300_000)
+                            System.err.println("\n" + (time / 1000.0) + " " + "\n" + sql + "\n");
                     }
 
                     return map;
                 };
 
-                result = sqlService.submit(task);
+                result = sqlService.submit(task, priority);
 
                 cache.put(sql, result);
             }
@@ -1333,6 +1382,9 @@ public class GenerateVoid extends Updater
 
     private static String getSqlQuery(SqlIntercode imcode, Set<String> gvars, String what, List<String> select)
     {
+        if(imcode == SqlNoSolution.get())
+            return null;
+
         HashSet<String> groupVariables = new HashSet<String>(gvars);
 
         LinkedHashMap<String, SqlExpressionIntercode> aggregations = new LinkedHashMap<>();
@@ -1353,6 +1405,9 @@ public class GenerateVoid extends Updater
         restriction.add("COUNT");
 
         SqlIntercode result = agg.optimize(request, restriction, false, false);
+
+        if(result == SqlNoSolution.get())
+            return null;
 
         UsedVariables vars = result.getVariables();
 
