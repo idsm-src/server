@@ -33,6 +33,8 @@ public class Endpoint
             NodeMapping subject = config.createIriMapping("pubchem:endpoint", "substance", "bioassay", "measuregroup",
                     "value");
 
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Endpoint"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:IAO_0000136"),
                     config.createIriMapping("pubchem:substance", "substance"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:PubChemAssayOutcome"),
@@ -47,8 +49,6 @@ public class Endpoint
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000221"),
                     config.createIriMapping("obo:UO_0000064"), condition);
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("vocab:Endpoint"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("ontology:resource", Ontology.unitBAO, "endpoint_type_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
