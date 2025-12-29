@@ -30,9 +30,8 @@ TABLES="\
 -t docs \
 -t drug_indication \
 -t drug_mechanism \
--t frac_classification \
--t hrac_classification \
--t irac_classification \
+-t pesticide_class_mapping \
+-t pesticide_classification \
 -t molecule_atc_classification \
 -t molecule_dictionary \
 -t molecule_frac_classification \

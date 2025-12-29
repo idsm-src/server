@@ -10,7 +10,7 @@ alter table chembl_tmp.assays drop column variant_id;
 alter table chembl_tmp.assays drop column aidx;
 
 alter table chembl_tmp.assays add primary key (id);
-create index assays__description on chembl_tmp.assays(description);
+create index assays__description on chembl_tmp.assays using hash (description);
 create index assays__assay_type on chembl_tmp.assays(assay_type);
 create index assays__assay_test_type on chembl_tmp.assays(assay_test_type);
 create index assays__assay_organism on chembl_tmp.assays(assay_organism);

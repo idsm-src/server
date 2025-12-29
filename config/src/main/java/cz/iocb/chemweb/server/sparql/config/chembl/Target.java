@@ -96,7 +96,7 @@ public class Target
                     config.createAreEqualCondition("target_type", "'ADMET'::varchar"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("cco:UnclassifiedTarget"),
-                    config.createAreEqualCondition("target_type", "'LIPID'::varchar"));
+                    config.createAreEqualCondition("target_type", "'LIPID'::varchar", "'3D CELL CULTURE'::varchar"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("cco:UnclassifiedTarget"),
                     config.createAreEqualCondition("target_type", "'UNCHECKED'::varchar"));

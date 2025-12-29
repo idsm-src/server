@@ -17,14 +17,12 @@ alter table chembl_tmp.molecule_dictionary drop column usan_stem;
 alter table chembl_tmp.molecule_dictionary drop column polymer_flag;
 alter table chembl_tmp.molecule_dictionary drop column usan_substem;
 alter table chembl_tmp.molecule_dictionary drop column usan_stem_definition;
-alter table chembl_tmp.molecule_dictionary drop column indication_class;
 alter table chembl_tmp.molecule_dictionary drop column withdrawn_flag;
 
 alter table chembl_tmp.molecule_dictionary add primary key (id);
 create index molecule_dictionary__pref_name on chembl_tmp.molecule_dictionary(pref_name);
 create index molecule_dictionary__chembl_id on chembl_tmp.molecule_dictionary(chembl_id);
 create index molecule_dictionary__max_phase on chembl_tmp.molecule_dictionary(max_phase);
-create index molecule_dictionary__chebi_par_id on chembl_tmp.molecule_dictionary(chebi_par_id);
 create index molecule_dictionary__molecule_type on chembl_tmp.molecule_dictionary(molecule_type);
 grant select on chembl_tmp.molecule_dictionary to sparql;
 
@@ -32,7 +30,6 @@ grant select on chembl_tmp.molecule_dictionary to sparql;
 
 alter table chembl_tmp.molecule_synonyms drop column molregno;
 alter table chembl_tmp.molecule_synonyms drop column syn_type;
-alter table chembl_tmp.molecule_synonyms drop column res_stem_id;
 
 alter table chembl_tmp.molecule_synonyms add primary key (molsyn_id);
 create index molecule_synonyms__synonyms on chembl_tmp.molecule_synonyms(synonyms);
@@ -68,75 +65,15 @@ grant select on chembl_tmp.biotherapeutic_components to sparql;
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.molecule_hrac_classification drop column molregno;
-
-alter table chembl_tmp.molecule_hrac_classification add primary key (mol_hrac_id);
-create index molecule_hrac_classification__hrac_class_id on chembl_tmp.molecule_hrac_classification(hrac_class_id);
-create index molecule_hrac_classification__molecule_id on chembl_tmp.molecule_hrac_classification(molecule_id);
 grant select on chembl_tmp.molecule_hrac_classification to sparql;
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.hrac_classification drop column active_ingredient;
-alter table chembl_tmp.hrac_classification drop column level1;
-alter table chembl_tmp.hrac_classification drop column level1_description;
-alter table chembl_tmp.hrac_classification drop column level2;
-alter table chembl_tmp.hrac_classification drop column level2_description;
-alter table chembl_tmp.hrac_classification drop column level3;
-
-alter table chembl_tmp.hrac_classification add primary key (hrac_class_id);
-create index hrac_classification__hrac_code on chembl_tmp.hrac_classification(hrac_code);
-grant select on chembl_tmp.hrac_classification to sparql;
-
---------------------------------------------------------------------------------
-
-alter table chembl_tmp.molecule_irac_classification drop column molregno;
-
-alter table chembl_tmp.molecule_irac_classification add primary key (mol_irac_id);
-create index molecule_irac_classification__irac_class_id on chembl_tmp.molecule_irac_classification(irac_class_id);
-create index molecule_irac_classification__molecule_id on chembl_tmp.molecule_irac_classification(molecule_id);
 grant select on chembl_tmp.molecule_irac_classification to sparql;
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.irac_classification drop column active_ingredient;
-alter table chembl_tmp.irac_classification drop column level1;
-alter table chembl_tmp.irac_classification drop column level1_description;
-alter table chembl_tmp.irac_classification drop column level2_description;
-alter table chembl_tmp.irac_classification drop column level3;
-alter table chembl_tmp.irac_classification drop column level3_description;
-alter table chembl_tmp.irac_classification drop column level4;
-alter table chembl_tmp.irac_classification drop column irac_code;
-
-alter table chembl_tmp.irac_classification add primary key (irac_class_id);
-create index irac_classification__level2 on chembl_tmp.irac_classification(level2);
-grant select on chembl_tmp.irac_classification to sparql;
-
---------------------------------------------------------------------------------
-
-alter table chembl_tmp.molecule_frac_classification drop column molregno;
-
-alter table chembl_tmp.molecule_frac_classification add primary key (mol_frac_id);
-create index molecule_frac_classification__frac_class_id on chembl_tmp.molecule_frac_classification(frac_class_id);
-create index molecule_frac_classification__molecule_id on chembl_tmp.molecule_frac_classification(molecule_id);
 grant select on chembl_tmp.molecule_frac_classification to sparql;
-
---------------------------------------------------------------------------------
-
-alter table chembl_tmp.frac_classification drop column active_ingredient;
-alter table chembl_tmp.frac_classification drop column level1;
-alter table chembl_tmp.frac_classification drop column level1_description;
-alter table chembl_tmp.frac_classification drop column level2_description;
-alter table chembl_tmp.frac_classification drop column level3;
-alter table chembl_tmp.frac_classification drop column level3_description;
-alter table chembl_tmp.frac_classification drop column level4;
-alter table chembl_tmp.frac_classification drop column level4_description;
-alter table chembl_tmp.frac_classification drop column level5;
-alter table chembl_tmp.frac_classification drop column frac_code;
-
-alter table chembl_tmp.frac_classification add primary key (frac_class_id);
-create index frac_classification__level2 on chembl_tmp.frac_classification(level2);
-grant select on chembl_tmp.frac_classification to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -156,9 +93,6 @@ grant select on chembl_tmp.compound_records to sparql;
 --------------------------------------------------------------------------------
 
 alter table chembl_tmp.compound_properties drop column molregno;
-alter table chembl_tmp.compound_properties drop column hba_lipinski;
-alter table chembl_tmp.compound_properties drop column hbd_lipinski;
-alter table chembl_tmp.compound_properties drop column num_lipinski_ro5_violations;
 alter table chembl_tmp.compound_properties drop column np_likeness_score;
 
 alter table chembl_tmp.compound_properties add primary key (molecule_id);
@@ -170,16 +104,10 @@ create index compound_properties__psa on chembl_tmp.compound_properties(psa);
 create index compound_properties__rtb on chembl_tmp.compound_properties(rtb);
 create index compound_properties__ro3_pass on chembl_tmp.compound_properties(ro3_pass);
 create index compound_properties__num_ro5_violations on chembl_tmp.compound_properties(num_ro5_violations);
-create index compound_properties__cx_most_apka on chembl_tmp.compound_properties(cx_most_apka);
-create index compound_properties__cx_most_bpka on chembl_tmp.compound_properties(cx_most_bpka);
-create index compound_properties__cx_logp on chembl_tmp.compound_properties(cx_logp);
-create index compound_properties__cx_logd on chembl_tmp.compound_properties(cx_logd);
-create index compound_properties__molecular_species on chembl_tmp.compound_properties(molecular_species);
 create index compound_properties__full_mwt on chembl_tmp.compound_properties(full_mwt);
 create index compound_properties__aromatic_rings on chembl_tmp.compound_properties(aromatic_rings);
 create index compound_properties__heavy_atoms on chembl_tmp.compound_properties(heavy_atoms);
 create index compound_properties__qed_weighted on chembl_tmp.compound_properties(qed_weighted);
-create index compound_properties__mw_monoisotopic on chembl_tmp.compound_properties(mw_monoisotopic);
 create index compound_properties__full_molformula on chembl_tmp.compound_properties(full_molformula);
 grant select on chembl_tmp.compound_properties to sparql;
 

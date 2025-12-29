@@ -2,7 +2,6 @@ alter table chembl_tmp.molecule_dictionary add column id integer not null defaul
 update chembl_tmp.molecule_dictionary set id = replace(chembl_id, 'CHEMBL', '')::integer;
 alter table chembl_tmp.molecule_dictionary alter column id drop default;
 
-alter table chembl_tmp.molecule_dictionary alter column chebi_par_id type integer;
 alter table chembl_tmp.molecule_dictionary alter column max_phase type float4;
 
 update chembl_tmp.molecule_dictionary set molecule_type = 'Unknown' where molecule_type is null;
@@ -43,42 +42,42 @@ alter table chembl_tmp.biotherapeutic_components alter column component_id type 
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.molecule_hrac_classification add column molecule_id integer not null default -1;
-update chembl_tmp.molecule_hrac_classification set molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.molecule_hrac_classification.molregno = chembl_tmp.molecule_dictionary.molregno;
-alter table chembl_tmp.molecule_hrac_classification alter column molecule_id drop default;
+create table chembl_tmp.molecule_hrac_classification
+(
+    molecule_id  integer not null,
+    primary key(molecule_id)
+);
 
-alter table chembl_tmp.molecule_hrac_classification alter column mol_hrac_id type integer;
-alter table chembl_tmp.molecule_hrac_classification alter column hrac_class_id type integer;
-
---------------------------------------------------------------------------------
-
-alter table chembl_tmp.hrac_classification alter column hrac_class_id type integer;
-
---------------------------------------------------------------------------------
-
-alter table chembl_tmp.molecule_irac_classification add column molecule_id integer not null default -1;
-update chembl_tmp.molecule_irac_classification set molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.molecule_irac_classification.molregno = chembl_tmp.molecule_dictionary.molregno;
-alter table chembl_tmp.molecule_irac_classification alter column molecule_id drop default;
-
-alter table chembl_tmp.molecule_irac_classification alter column mol_irac_id type integer;
-alter table chembl_tmp.molecule_irac_classification alter column irac_class_id type integer;
+insert into chembl_tmp.molecule_hrac_classification
+select replace(d.chembl_id, 'CHEMBL', '')::integer
+from chembl_tmp.molecule_dictionary d, chembl_tmp.pesticide_class_mapping m, chembl_tmp.pesticide_classification c
+where d.molregno = m.molregno and m.pest_class_id = c.pest_class_id and c.ref_type = 'HRAC';
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.irac_classification alter column irac_class_id type integer;
+create table chembl_tmp.molecule_irac_classification
+(
+    molecule_id  integer not null,
+    primary key(molecule_id)
+);
+
+insert into chembl_tmp.molecule_irac_classification
+select replace(d.chembl_id, 'CHEMBL', '')::integer
+from chembl_tmp.molecule_dictionary d, chembl_tmp.pesticide_class_mapping m, chembl_tmp.pesticide_classification c
+where d.molregno = m.molregno and m.pest_class_id = c.pest_class_id and c.ref_type = 'IHRAC';
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.molecule_frac_classification add column molecule_id integer not null default -1;
-update chembl_tmp.molecule_frac_classification set molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.molecule_frac_classification.molregno = chembl_tmp.molecule_dictionary.molregno;
-alter table chembl_tmp.molecule_frac_classification alter column molecule_id drop default;
+create table chembl_tmp.molecule_frac_classification
+(
+    molecule_id  integer not null,
+    primary key(molecule_id)
+);
 
-alter table chembl_tmp.molecule_frac_classification alter column mol_frac_id type integer;
-alter table chembl_tmp.molecule_frac_classification alter column frac_class_id type integer;
-
---------------------------------------------------------------------------------
-
-alter table chembl_tmp.frac_classification alter column frac_class_id type integer;
+insert into chembl_tmp.molecule_frac_classification
+select replace(d.chembl_id, 'CHEMBL', '')::integer
+from chembl_tmp.molecule_dictionary d, chembl_tmp.pesticide_class_mapping m, chembl_tmp.pesticide_classification c
+where d.molregno = m.molregno and m.pest_class_id = c.pest_class_id and c.ref_type = 'FRAC';
 
 --------------------------------------------------------------------------------
 
@@ -98,10 +97,6 @@ alter table chembl_tmp.compound_properties add column molecule_id integer not nu
 update chembl_tmp.compound_properties set molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.compound_properties.molregno = chembl_tmp.molecule_dictionary.molregno;
 alter table chembl_tmp.compound_properties alter column molecule_id drop default;
 
-alter table chembl_tmp.compound_properties alter column cx_most_apka type float8;
-alter table chembl_tmp.compound_properties alter column cx_most_bpka type float8;
-alter table chembl_tmp.compound_properties alter column cx_logd type float8;
-alter table chembl_tmp.compound_properties alter column cx_logp type float8;
 alter table chembl_tmp.compound_properties alter column alogp type float8;
 alter table chembl_tmp.compound_properties alter column aromatic_rings type float8;
 alter table chembl_tmp.compound_properties alter column hba type float8;
@@ -112,7 +107,6 @@ alter table chembl_tmp.compound_properties alter column psa type float8;
 alter table chembl_tmp.compound_properties alter column qed_weighted type float8;
 alter table chembl_tmp.compound_properties alter column rtb type float8;
 alter table chembl_tmp.compound_properties alter column mw_freebase type float8;
-alter table chembl_tmp.compound_properties alter column mw_monoisotopic type float8;
 alter table chembl_tmp.compound_properties alter column full_mwt type float8;
 
 alter table chembl_tmp.compound_properties alter column full_mwt set not null;
