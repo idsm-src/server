@@ -85,8 +85,8 @@ class SubstanceDescriptor extends Updater
                         if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                             throw new IOException();
 
-                        if(!object.getURI().equals("http://purl.obolibrary.org/obo/IAO_0000129")
-                                && !object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Descriptor"))
+                        if(!object.getURI().equals("http://purl.obolibrary.org/obo/IAO_0000129") && !object.getURI()
+                                .equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#SubstanceVersion"))
                             throw new IOException();
                     }
                 }.load(stream);

@@ -621,7 +621,7 @@ public class Cooccurrence extends Updater
     {
         Model model = ModelFactory.createDefaultModel();
 
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_chemical_and_chemical_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_chemical_chemical_[0-9]+\\.ttl\\.gz", file -> {
             Model submodel = getModel(file);
 
             synchronized(model)
@@ -644,7 +644,7 @@ public class Cooccurrence extends Updater
     {
         Model model = ModelFactory.createDefaultModel();
 
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_chemical_and_disease_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_chemical_disease_[0-9]+\\.ttl\\.gz", file -> {
             Model submodel = getModel(file);
 
             synchronized(model)
@@ -664,36 +664,11 @@ public class Cooccurrence extends Updater
     }
 
 
-    /*
-    private static void loadDiseaseToChemicalCooccurrences() throws IOException, SQLException
-    {
-        Model model = ModelFactory.createDefaultModel();
-
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_disease_and_chemical_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file);
-
-            synchronized(model)
-            {
-                model.add(submodel);
-            }
-
-            submodel.close();
-        });
-
-        check(model, "pubchem/cooccurrence/check-disease2chemical.sparql");
-
-        loadDiseaseToChemicalValues(model);
-
-        model.close();
-    }
-    */
-
-
     private static void loadDiseaseToDiseaseCooccurrences() throws IOException, SQLException
     {
         Model model = ModelFactory.createDefaultModel();
 
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_disease_and_disease_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_disease_disease_[0-9]+\\.ttl\\.gz", file -> {
             Model submodel = getModel(file);
 
             synchronized(model)
@@ -716,7 +691,7 @@ public class Cooccurrence extends Updater
     {
         Model model = ModelFactory.createDefaultModel();
 
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_chemical_and_gene_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_chemical_gene_[0-9]+\\.ttl\\.gz", file -> {
             Model submodel = getModel(file);
 
             synchronized(model)
@@ -736,61 +711,11 @@ public class Cooccurrence extends Updater
     }
 
 
-    /*
     private static void loadDiseaseToGeneCooccurrences() throws IOException, SQLException
     {
         Model model = ModelFactory.createDefaultModel();
 
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_disease_and_gene_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file);
-
-            synchronized(model)
-            {
-                model.add(submodel);
-            }
-
-            submodel.close();
-        });
-
-        check(model, "pubchem/cooccurrence/check-disease2gene.sparql");
-
-        loadDiseaseToGeneValues(model);
-
-        model.close();
-    }
-    */
-
-
-    /*
-    private static void loadGeneToChemicalCooccurrences() throws IOException, SQLException
-    {
-        Model model = ModelFactory.createDefaultModel();
-
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_gene_and_chemical_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file);
-
-            synchronized(model)
-            {
-                model.add(submodel);
-            }
-
-            submodel.close();
-        });
-
-        check(model, "pubchem/cooccurrence/check-gene2chemical.sparql");
-
-        loadGeneToChemicalValues(model);
-
-        model.close();
-    }
-    */
-
-
-    private static void loadGeneToDiseaseCooccurrences() throws IOException, SQLException
-    {
-        Model model = ModelFactory.createDefaultModel();
-
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_gene_and_disease_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_disease_gene_[0-9]+\\.ttl\\.gz", file -> {
             Model submodel = getModel(file);
 
             synchronized(model)
@@ -814,7 +739,7 @@ public class Cooccurrence extends Updater
     {
         Model model = ModelFactory.createDefaultModel();
 
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_gene_and_gene_[0-9]+\\.ttl\\.gz", file -> {
+        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_gene_gene_[0-9]+\\.ttl\\.gz", file -> {
             Model submodel = getModel(file);
 
             synchronized(model)
@@ -840,11 +765,8 @@ public class Cooccurrence extends Updater
         loadChemicalToChemicalCooccurrences();
         loadChemicalToDiseaseCooccurrences();
         loadChemicalToGeneCooccurrences();
-        //loadDiseaseToChemicalCooccurrences();
         loadDiseaseToDiseaseCooccurrences();
-        //loadDiseaseToGeneCooccurrences();
-        //loadGeneToChemicalCooccurrences();
-        loadGeneToDiseaseCooccurrences();
+        loadDiseaseToGeneCooccurrences();
         loadGeneToGeneCooccurrences();
     }
 }

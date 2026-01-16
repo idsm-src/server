@@ -30,7 +30,7 @@ public class SubstanceDescriptor
             NodeMapping subject = config.createIriMapping("pubchem:substance_version", "substance");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("vocab:Descriptor"));
+                    config.createIriMapping("vocab:SubstanceVersion"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:IAO_0000129"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),

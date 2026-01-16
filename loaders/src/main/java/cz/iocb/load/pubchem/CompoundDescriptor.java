@@ -345,9 +345,11 @@ class CompoundDescriptor extends Updater
     }
 
 
-    private static void checkType(String name, String suffix, String typeName) throws IOException, SQLException
+    private static void checkType(String name, String suffix, String typeName, String vocabName)
+            throws IOException, SQLException
     {
         final String type = "http://semanticscience.org/resource/" + typeName;
+        final String vocab = "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#" + vocabName;
 
         processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_type_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -362,8 +364,7 @@ class CompoundDescriptor extends Updater
                         if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                             throw new IOException();
 
-                        if(!object.getURI().equals(type)
-                                && !object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Descriptor"))
+                        if(!object.getURI().equals(type) && !object.getURI().equals(vocab))
                             throw new IOException();
                     }
                 }.load(stream);
@@ -372,9 +373,10 @@ class CompoundDescriptor extends Updater
     }
 
 
-    private static void checkXLogP3Type(String name, String typeName) throws IOException, SQLException
+    private static void checkXLogP3Type(String name, String typeName, String vocabName) throws IOException, SQLException
     {
         final String type = "http://semanticscience.org/resource/" + typeName;
+        final String vocab = "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#" + vocabName;
 
         processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_type_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -392,7 +394,7 @@ class CompoundDescriptor extends Updater
                         if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                             throw new IOException();
 
-                        if(!object.getURI().equals(type))
+                        if(!object.getURI().equals(type) && !object.getURI().equals(vocab))
                             throw new IOException();
                     }
                 }.load(stream);
@@ -410,12 +412,12 @@ class CompoundDescriptor extends Updater
         loadIntegerField("CovalentUnitCount", "_Covalent_Unit_Count", "covalent_unit_count");
         loadIntegerField("DefinedAtomStereoCount", "_Defined_Atom_Stereo_Count", "defined_atom_stereo_count");
         loadIntegerField("DefinedBondStereoCount", "_Defined_Bond_Stereo_Count", "defined_bond_stereo_count");
-        loadIntegerField("FormalCharge", "_Total_Formal_Charge", "total_formal_charge");
+        loadIntegerField("TotalFormalCharge", "_Total_Formal_Charge", "total_formal_charge");
         loadIntegerField("HydrogenBondAcceptorCount", "_Hydrogen_Bond_Acceptor_Count", "hydrogen_bond_acceptor_count");
         loadIntegerField("HydrogenBondDonorCount", "_Hydrogen_Bond_Donor_Count", "hydrogen_bond_donor_count");
-        loadIntegerField("HeavyAtomCount", "_Non-hydrogen_Atom_Count", "non_hydrogen_atom_count");
+        loadIntegerField("NonHydrogenAtomCount", "_Non-Hydrogen_Atom_Count", "non_hydrogen_atom_count");
         loadIntegerField("IsotopeAtomCount", "_Isotope_Atom_Count", "isotope_atom_count");
-        loadIntegerField("RotatableBond", "_Rotatable_Bond_Count", "rotatable_bond_count");
+        loadIntegerField("RotatableBondCount", "_Rotatable_Bond_Count", "rotatable_bond_count");
         loadIntegerField("UndefinedAtomStereoCount", "_Undefined_Atom_Stereo_Count", "undefined_atom_stereo_count");
         loadIntegerField("UndefinedBondStereoCount", "_Undefined_Bond_Stereo_Count", "undefined_bond_stereo_count");
 
@@ -438,31 +440,34 @@ class CompoundDescriptor extends Updater
         checkUnit("MonoIsotopicWeight", "_Mono_Isotopic_Weight", "UO_0000055");
         checkUnit("TPSA", "_TPSA", "UO_0000324");
 
-        checkIdentifier("Compound_Identifier", "_Compound_Identifier");
+        checkIdentifier("CompoundIdentifier", "_Compound_Identifier");
 
-        checkType("StructureComplexity", "_Structure_Complexity", "CHEMINF_000390");
-        checkType("CovalentUnitCount", "_Covalent_Unit_Count", "CHEMINF_000369");
-        checkType("DefinedAtomStereoCount", "_Defined_Atom_Stereo_Count", "CHEMINF_000370");
-        checkType("DefinedBondStereoCount", "_Defined_Bond_Stereo_Count", "CHEMINF_000371");
-        checkType("ExactMass", "_Exact_Mass", "CHEMINF_000338");
-        checkType("FormalCharge", "_Total_Formal_Charge", "CHEMINF_000336");
-        checkType("HydrogenBondAcceptorCount", "_Hydrogen_Bond_Acceptor_Count", "CHEMINF_000388");
-        checkType("HydrogenBondDonorCount", "_Hydrogen_Bond_Donor_Count", "CHEMINF_000387");
-        checkType("HeavyAtomCount", "_Non-hydrogen_Atom_Count", "CHEMINF_000373");
-        checkType("IsotopeAtomCount", "_Isotope_Atom_Count", "CHEMINF_000372");
-        checkType("MolecularFormula", "_Molecular_Formula", "CHEMINF_000335");
-        checkType("MolecularWeight", "_Molecular_Weight", "CHEMINF_000334");
-        checkType("MonoIsotopicWeight", "_Mono_Isotopic_Weight", "CHEMINF_000337");
-        checkType("RotatableBond", "_Rotatable_Bond_Count", "CHEMINF_000389");
-        checkType("TPSA", "_TPSA", "CHEMINF_000392");
-        checkType("UndefinedAtomStereoCount", "_Undefined_Atom_Stereo_Count", "CHEMINF_000374");
-        checkType("UndefinedBondStereoCount", "_Undefined_Bond_Stereo_Count", "CHEMINF_000375");
-        checkXLogP3Type("XLogP3", "CHEMINF_000395");
-        checkType("ConnectivitySMILES", "_Connectivity_SMILES", "CHEMINF_000376");
-        checkType("SMILES", "_SMILES", "CHEMINF_000379");
-        checkType("IUPACInChI", "_IUPAC_InChI", "CHEMINF_000396");
-        checkType("PreferredIUPACName", "_Preferred_IUPAC_Name", "CHEMINF_000382");
-        checkType("Compound_Identifier", "_Compound_Identifier", "CHEMINF_000140");
+        checkType("StructureComplexity", "_Structure_Complexity", "CHEMINF_000390", "StructureComplexity");
+        checkType("CovalentUnitCount", "_Covalent_Unit_Count", "CHEMINF_000369", "CovalentUnitCount");
+        checkType("DefinedAtomStereoCount", "_Defined_Atom_Stereo_Count", "CHEMINF_000370", "DefinedAtomStereoCount");
+        checkType("DefinedBondStereoCount", "_Defined_Bond_Stereo_Count", "CHEMINF_000371", "DefinedBondStereoCount");
+        checkType("ExactMass", "_Exact_Mass", "CHEMINF_000338", "ExactMass");
+        checkType("TotalFormalCharge", "_Total_Formal_Charge", "CHEMINF_000336", "TotalFormalCharge");
+        checkType("HydrogenBondAcceptorCount", "_Hydrogen_Bond_Acceptor_Count", "CHEMINF_000388",
+                "HydrogenBondAcceptorCount");
+        checkType("HydrogenBondDonorCount", "_Hydrogen_Bond_Donor_Count", "CHEMINF_000387", "HydrogenBondDonorCount");
+        checkType("NonHydrogenAtomCount", "_Non-Hydrogen_Atom_Count", "CHEMINF_000373", "NonHydrogenAtomCount");
+        checkType("IsotopeAtomCount", "_Isotope_Atom_Count", "CHEMINF_000372", "IsotopeAtomCount");
+        checkType("MolecularFormula", "_Molecular_Formula", "CHEMINF_000335", "MolecularFormula");
+        checkType("MolecularWeight", "_Molecular_Weight", "CHEMINF_000334", "MolecularWeight");
+        checkType("MonoIsotopicWeight", "_Mono_Isotopic_Weight", "CHEMINF_000337", "MonoIsotopicWeight");
+        checkType("RotatableBondCount", "_Rotatable_Bond_Count", "CHEMINF_000389", "RotatableBondCount");
+        checkType("TPSA", "_TPSA", "CHEMINF_000392", "TPSA");
+        checkType("UndefinedAtomStereoCount", "_Undefined_Atom_Stereo_Count", "CHEMINF_000374",
+                "UndefinedAtomStereoCount");
+        checkType("UndefinedBondStereoCount", "_Undefined_Bond_Stereo_Count", "CHEMINF_000375",
+                "UndefinedBondStereoCount");
+        checkXLogP3Type("XLogP3", "CHEMINF_000395", "XLogP3");
+        checkType("ConnectivitySMILES", "_Connectivity_SMILES", "CHEMINF_000376", "ConnectivitySMILES");
+        checkType("SMILES", "_SMILES", "CHEMINF_000379", "SMILES");
+        checkType("IUPACInChI", "_IUPAC_InChI", "CHEMINF_000396", "IUPACInChI");
+        checkType("PreferredIUPACName", "_Preferred_IUPAC_Name", "CHEMINF_000382", "PreferredIUPACName");
+        checkType("CompoundIdentifier", "_Compound_Identifier", "CHEMINF_000140", "CompoundIdentifier");
 
         System.out.println();
     }
