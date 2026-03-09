@@ -16,6 +16,7 @@ import cz.iocb.chemweb.server.sparql.config.drugbank.DrugBankConfiguration;
 import cz.iocb.chemweb.server.sparql.config.examples.ExamplesConfiguration;
 import cz.iocb.chemweb.server.sparql.config.isdb.IsdbConfiguration;
 import cz.iocb.chemweb.server.sparql.config.mesh.MeshConfiguration;
+import cz.iocb.chemweb.server.sparql.config.molmedb.MolmedbConfiguration;
 import cz.iocb.chemweb.server.sparql.config.mona.MonaConfiguration;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyConfiguration;
@@ -229,6 +230,7 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         addService(new IsdbConfiguration(null, connectionPool, getDatabaseSchema()), true);
         addService(new DrugBankConfiguration(null, connectionPool, getDatabaseSchema()), true);
         addService(new WikidataConfiguration(null, connectionPool, getDatabaseSchema()), true);
+        addService(new MolmedbConfiguration(null, connectionPool, getDatabaseSchema()), true);
         addService(new VoidConfiguration(null, connectionPool, getDatabaseSchema()), true);
         addService(new ExamplesConfiguration(null, connectionPool, getDatabaseSchema()), true);
 
@@ -240,6 +242,7 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         mapping.put(getIriClass("mona:compound"), List.of(getColumn("mona")));
         mapping.put(getIriClass("pubchem:compound"), List.of(getColumn("pubchem")));
         mapping.put(getIriClass("wikidata:entity"), List.of(getColumn("wikidata")));
+        mapping.put(getIriClass("molmedb:substance"), List.of(getColumn("molmedb")));
 
         Sachem.addResourceClasses(this);
         Sachem.addProcedures(this, "sachem", mapping);
@@ -249,6 +252,11 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         addService(new MonaSachemConfiguration("https://idsm.elixir-czech.cz/sparql/endpoint/mona", connectionPool,
                 getDatabaseSchema()), false);
         addService(new MonaSachemConfiguration("https://idsm.elixir-czech.cz/sachem/endpoint/mona", connectionPool,
+                getDatabaseSchema()), false);
+
+        addService(new MolmedbConfiguration("https://idsm.elixir-czech.cz/sparql/endpoint/molmedb", connectionPool,
+                getDatabaseSchema()), false);
+        addService(new MolmedbConfiguration("https://idsm.elixir-czech.cz/sachem/endpoint/molmedb", connectionPool,
                 getDatabaseSchema()), false);
 
         addService(new WikidataSachemConfiguration("https://idsm.elixir-czech.cz/sparql/endpoint/wikidata",

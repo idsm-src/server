@@ -980,6 +980,43 @@ public class Ontology extends Updater
         builtinResources.put("http://www.w3.org/ns/shacl#SPARQLExecutable", 652);
         builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#GeneSymbol", 653);
 
+        // MolMeDB
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#hasStDev", 700);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#AbsorptionWavelength", 701);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#AtomisticSimulation", 702);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#BiologyBasedMembraneModel", 703);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#BrainMembraneModel", 704);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#CellMembraneModel", 705);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#CoarseGrainedSimulation", 706);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#ContactAngle", 707);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#DepthOfMinima", 708);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#EyeMembraneModel", 709);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#FluorescenceLifetime", 710);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#FluorescenceWavelength", 711);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#GenericMembraneModel", 712);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#HybridResolutionSimulation", 713);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#InhibitionAssay", 714);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#IntestineMembraneModel", 715);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#LogK", 716);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#LogPerm", 717);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#MembraneModel", 718);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#MembranePermeabilityMethod", 719);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#MembranePositionMethod", 720);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#OralMembraneModel", 721);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#PenetrationBarrier", 722);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#PKm", 723);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#PositionOfMinima", 724);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#QuantumYield", 725);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#SkinMembraneModel", 726);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#SubstanceBasedMembraneModel", 727);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#SubstrateBindingAssay", 728);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#UnitedAtomsSimulation", 729);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#WaterMembranePartitioningMethod", 730);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#ProtonationMinPH", 731);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#ProtonationMaxPH", 732);
+        builtinResources.put("http://purl.org/dc/terms/BibliographicResource", 733);
+        builtinResources.put("https://w3id.org/reproduceme#hasExperimentalCondition", 734);
+
         // datatypes
         builtinResources.put("http://www.w3.org/2001/XMLSchema#boolean", 900);
         builtinResources.put("http://www.w3.org/2001/XMLSchema#short", 901);

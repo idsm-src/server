@@ -125,6 +125,18 @@
     <url-pattern>/sparql/endpoint/idsm</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>MolmedbEndpointServlet</servlet-name>
+    <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:molmedb</param-value></init-param>
+    <init-param><param-name>timeout</param-name><param-value>1000</param-value></init-param>
+    <init-param><param-name>max-timeout</param-name><param-value>18000</param-value></init-param>
+    <init-param><param-name>sql-query-size-limit</param-name><param-value>67108864</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MolmedbEndpointServlet</servlet-name>
+    <url-pattern>/sparql/endpoint/molmedb</url-pattern>
+  </servlet-mapping>
 
   <servlet>
     <servlet-name>SachemEndpointServlet</servlet-name>
@@ -200,6 +212,16 @@
     <servlet-name>MonaSachemEndpointServlet</servlet-name>
     <url-pattern>/sachem/endpoint/mona</url-pattern>
     <url-pattern>/sparql/endpoint/mona</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>MolmedbSachemEndpointServlet</servlet-name>
+    <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:sachem-molmedb</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MolmedbSachemEndpointServlet</servlet-name>
+    <url-pattern>/sachem/endpoint/molmedb</url-pattern>
   </servlet-mapping>
 
   <servlet>
@@ -294,6 +316,15 @@
     <url-pattern>/isdb/compound/image</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>MolmedbCompoundImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.MolmedbCompoundImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-molmedb</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MolmedbCompoundImage</servlet-name>
+    <url-pattern>/molmedb/compound/image</url-pattern>
+  </servlet-mapping>
 
   <servlet>
     <servlet-name>MonaSpectrumServlet</servlet-name>
@@ -468,6 +499,17 @@
     <filter-name>MonaSachemEndpointMatomoFilter</filter-name>
     <url-pattern>/sachem/endpoint/mona</url-pattern>
     <url-pattern>/sparql/endpoint/mona</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>MolmedbSachemEndpointMatomoFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.matomo.MatomoFilter</filter-class>
+    <init-param><param-name>actionName</param-name><param-value>MolMeDB SPARQL Endpoint</param-value></init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>MolmedbSachemEndpointMatomoFilter</filter-name>
+    <url-pattern>/sachem/endpoint/molmedb</url-pattern>
+    <url-pattern>/sparql/endpoint/molmedb</url-pattern>
   </filter-mapping>
 
 </web-app>

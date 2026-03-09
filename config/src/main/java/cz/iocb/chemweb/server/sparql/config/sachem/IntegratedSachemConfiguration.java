@@ -3,6 +3,7 @@ package cz.iocb.chemweb.server.sparql.config.sachem;
 import java.sql.SQLException;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.SparqlDatabaseOptimisedConfiguration;
+import cz.iocb.chemweb.server.sparql.config.molmedb.MolmedbConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
 
 
@@ -17,6 +18,11 @@ public class IntegratedSachemConfiguration extends SparqlDatabaseOptimisedConfig
         addService(new MonaSachemConfiguration("https://idsm.elixir-czech.cz/sparql/endpoint/mona", connectionPool,
                 schema), false);
         addService(new MonaSachemConfiguration("https://idsm.elixir-czech.cz/sachem/endpoint/mona", connectionPool,
+                schema), false);
+
+        addService(new MolmedbConfiguration("https://idsm.elixir-czech.cz/sparql/endpoint/molmedb", connectionPool,
+                schema), false);
+        addService(new MolmedbConfiguration("https://idsm.elixir-czech.cz/sachem/endpoint/molmedb", connectionPool,
                 schema), false);
 
         addService(new WikidataSachemConfiguration("https://idsm.elixir-czech.cz/sparql/endpoint/wikidata",

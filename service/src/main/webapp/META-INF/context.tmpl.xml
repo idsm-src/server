@@ -20,6 +20,14 @@
       maxWait="-1" testOnBorrow="true" validationQuery="SELECT 1"
       testWhileIdle="false" removeAbandoned="false" timeBetweenEvictionRunsMillis="0" />
 
+  <Resource name="jdbc:molmedb" auth="Container"
+      factory="org.apache.tomcat.jdbc.pool.DataSourceFactory" closeMethod="close"
+      type="javax.sql.DataSource" driverClassName="org.postgresql.Driver"
+      url="jdbc:postgresql://localhost:5432/idsm" username="sparql" password="%password%"
+      initialSize="25" maxActive="25" maxIdle="25" minIdle="25"
+      maxWait="-1" testOnBorrow="true" validationQuery="SELECT 1"
+      testWhileIdle="false" removeAbandoned="false" timeBetweenEvictionRunsMillis="0" />
+
 
   <Resource name="jdbc:sachem" auth="Container"
       factory="org.apache.tomcat.jdbc.pool.DataSourceFactory" closeMethod="close"
@@ -70,6 +78,14 @@
       testWhileIdle="false" removeAbandoned="false" timeBetweenEvictionRunsMillis="0" />
 
   <Resource name="jdbc:sachem-mona" auth="Container"
+      factory="org.apache.tomcat.jdbc.pool.DataSourceFactory" closeMethod="close"
+      type="javax.sql.DataSource" driverClassName="org.postgresql.Driver"
+      url="jdbc:postgresql://localhost:5432/idsm" username="sparql" password="%password%"
+      initialSize="5" maxActive="5" maxIdle="5" minIdle="5"
+      maxWait="-1" testOnBorrow="true" validationQuery="SELECT 1"
+      testWhileIdle="false" removeAbandoned="false" timeBetweenEvictionRunsMillis="0" />
+
+  <Resource name="jdbc:sachem-molmedb" auth="Container"
       factory="org.apache.tomcat.jdbc.pool.DataSourceFactory" closeMethod="close"
       type="javax.sql.DataSource" driverClassName="org.postgresql.Driver"
       url="jdbc:postgresql://localhost:5432/idsm" username="sparql" password="%password%"
@@ -134,6 +150,14 @@
       maxWait="-1" testOnBorrow="true" validationQuery="SELECT 1"
       testWhileIdle="false" removeAbandoned="false" timeBetweenEvictionRunsMillis="0" />
 
+  <Resource name="jdbc:images-molmedb" auth="Container"
+      factory="org.apache.tomcat.jdbc.pool.DataSourceFactory" closeMethod="close"
+      type="javax.sql.DataSource" driverClassName="org.postgresql.Driver"
+      url="jdbc:postgresql://localhost:5432/idsm" username="sparql" password="%password%"
+      initialSize="5" maxActive="5" maxIdle="5" minIdle="5"
+      maxWait="-1" testOnBorrow="true" validationQuery="SELECT 1"
+      testWhileIdle="false" removeAbandoned="false" timeBetweenEvictionRunsMillis="0" />
+
 
   <Resource name="jdbc:spectra-mona" auth="Container"
       factory="org.apache.tomcat.jdbc.pool.DataSourceFactory" closeMethod="close"
@@ -161,6 +185,11 @@
       type="cz.iocb.chemweb.server.sparql.config.idsm.IdsmConfiguration"
       factory="cz.iocb.sparql.endpoint.SparqlDatabaseConfigurationFactory"
       datasource="jdbc:idsm" singleton="true" />
+
+  <Resource name="sparql:molmedb" auth="Container"
+      type="cz.iocb.chemweb.server.sparql.config.molmedb.MolmedbConfiguration"
+      factory="cz.iocb.sparql.endpoint.SparqlDatabaseConfigurationFactory"
+      datasource="jdbc:molmedb" singleton="true" />
 
 
   <Resource name="sparql:sachem" auth="Container"
@@ -197,5 +226,10 @@
       type="cz.iocb.chemweb.server.sparql.config.sachem.MonaSachemConfiguration"
       factory="cz.iocb.sparql.endpoint.SparqlDatabaseConfigurationFactory"
       datasource="jdbc:sachem-mona" singleton="true" />
+
+  <Resource name="sparql:sachem-molmedb" auth="Container"
+      type="cz.iocb.chemweb.server.sparql.config.sachem.MolmedbSachemConfiguration"
+      factory="cz.iocb.sparql.endpoint.SparqlDatabaseConfigurationFactory"
+      datasource="jdbc:sachem-molmedb" singleton="true" />
 
 </Context>
