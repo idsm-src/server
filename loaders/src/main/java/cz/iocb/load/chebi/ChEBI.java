@@ -276,7 +276,7 @@ public class ChEBI extends Updater
             {
                 int chebiID = getEntityID(getIRI("chebi"));
                 Integer star = Integer.parseInt(
-                        getStringID("star", "http://purl.obolibrary.org/obo/chebi#").replaceFirst("_STAR", ""));
+                        getStringID("star", "http://purl.obolibrary.org/obo/chebi/").replaceFirst("_STAR", ""));
 
                 if(star.equals(oldStars.remove(chebiID)))
                 {
@@ -453,7 +453,7 @@ public class ChEBI extends Updater
 
                 if(getIRI("type") != null && type == null
                         || type != null && type.getOne() != Ontology.unitUncategorized)
-                    throw new IOException();
+                    throw new IOException(getIRI("type"));
 
                 Axiom axiom = new Axiom(chebiID, property.getOne(), property.getTwo(), target,
                         type == null ? null : type.getTwo(), reference, source);

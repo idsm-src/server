@@ -488,16 +488,16 @@ public class Ontology extends Updater
         builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Anatomy", 47);
 
         // ChEBI
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi#has_functional_parent", 64);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi#is_conjugate_base_of", 65);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi#is_conjugate_acid_of", 66);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi#is_enantiomer_of", 67);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi#is_tautomer_of", 68);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi#has_parent_hydride", 69);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi#is_substituent_group_from", 70);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi#BRAND_NAME", 71);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi#IUPAC_NAME", 72);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi#INN", 73);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/has_functional_parent", 64);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_conjugate_base_of", 65);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_conjugate_acid_of", 66);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_enantiomer_of", 67);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_tautomer_of", 68);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/has_parent_hydride", 69);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_substituent_group_from", 70);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/BRAND_NAME", 71);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/IUPAC_NAME", 72);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/INN", 73);
         builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasDbXref", 74);
         builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasExactSynonym", 75);
         builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym", 76);
