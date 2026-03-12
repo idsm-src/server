@@ -78,7 +78,7 @@
     <table style="width:100%;">
       <tr>
         <td align="center" style="text-align: center;">
-          <img src="compound/image?w=800&id=$entity.getValue().replaceFirst(".*/CID", "")" height="400" width="400">
+          <img src="pubchem/compound/image?w=800&id=$entity.getValue().replaceFirst(".*/CID", "")" height="400" width="400">
         </td>
       </tr>
     </table>

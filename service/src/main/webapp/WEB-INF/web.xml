@@ -4,12 +4,14 @@
          version="2.5" xmlns="http://java.sun.com/xml/ns/javaee">
 
   <!-- Default Page -->
+
   <welcome-file-list>
     <welcome-file>Chemweb.html</welcome-file>
   </welcome-file-list>
 
 
   <!-- ChemWeb Servlets -->
+
   <servlet>
     <servlet-name>CheckServiceServlet</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.services.check.CheckServiceImpl</servlet-class>
@@ -48,18 +50,6 @@
   <servlet-mapping>
     <servlet-name>InfoServiceServlet</servlet-name>
     <url-pattern>/chemweb/info</url-pattern>
-  </servlet-mapping>
-
-  <servlet>
-    <servlet-name>CompoundImage</servlet-name>
-    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundImageServlet</servlet-class>
-    <init-param><param-name>resource</param-name><param-value>jdbc:images-pubchem</param-value></init-param>
-    <init-param><param-name>schema</param-name><param-value>molecules</param-value></init-param>
-    <init-param><param-name>table</param-name><param-value>pubchem</param-value></init-param>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>CompoundImage</servlet-name>
-    <url-pattern>/compound/image</url-pattern>
   </servlet-mapping>
 
   <servlet>
@@ -102,6 +92,7 @@
 
 
   <!-- SPARQL Endpoint Servlets -->
+
   <servlet>
     <servlet-name>EmptyEndpointServlet</servlet-name>
     <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
@@ -234,106 +225,195 @@
   </servlet-mapping>
 
 
-  <!-- Sachem Image Servlets -->
+  <!-- Compound PNG Image Servlets -->
+
   <servlet>
-    <servlet-name>ChebiCompoundImage</servlet-name>
-    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundImageServlet</servlet-class>
+    <servlet-name>ChebiCompoundPngImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-chebi</param-value></init-param>
-    <init-param><param-name>schema</param-name><param-value>molecules</param-value></init-param>
-    <init-param><param-name>table</param-name><param-value>chebi</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from molecules.chebi where id = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
-    <servlet-name>ChebiCompoundImage</servlet-name>
+    <servlet-name>ChebiCompoundPngImage</servlet-name>
     <url-pattern>/chebi/compound/image</url-pattern>
   </servlet-mapping>
 
   <servlet>
-    <servlet-name>ChemblCompoundImage</servlet-name>
-    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundImageServlet</servlet-class>
+    <servlet-name>ChemblCompoundPngImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-chembl</param-value></init-param>
-    <init-param><param-name>schema</param-name><param-value>molecules</param-value></init-param>
-    <init-param><param-name>table</param-name><param-value>chembl</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from molecules.chembl where id = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
-    <servlet-name>ChemblCompoundImage</servlet-name>
+    <servlet-name>ChemblCompoundPngImage</servlet-name>
     <url-pattern>/chembl/compound/image</url-pattern>
   </servlet-mapping>
 
   <servlet>
-    <servlet-name>DrugbankCompoundImage</servlet-name>
-    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundImageServlet</servlet-class>
+    <servlet-name>DrugbankCompoundPngImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-drugbank</param-value></init-param>
-    <init-param><param-name>schema</param-name><param-value>molecules</param-value></init-param>
-    <init-param><param-name>table</param-name><param-value>drugbank</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from molecules.drugbank where id = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
-    <servlet-name>DrugbankCompoundImage</servlet-name>
+    <servlet-name>DrugbankCompoundPngImage</servlet-name>
     <url-pattern>/drugbank/compound/image</url-pattern>
   </servlet-mapping>
 
   <servlet>
-    <servlet-name>PubChemCompoundImage</servlet-name>
-    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundImageServlet</servlet-class>
+    <servlet-name>PubChemCompoundPngImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-pubchem</param-value></init-param>
-    <init-param><param-name>schema</param-name><param-value>molecules</param-value></init-param>
-    <init-param><param-name>table</param-name><param-value>pubchem</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from molecules.pubchem where id = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
-    <servlet-name>PubChemCompoundImage</servlet-name>
+    <servlet-name>PubChemCompoundPngImage</servlet-name>
     <url-pattern>/pubchem/compound/image</url-pattern>
   </servlet-mapping>
 
   <servlet>
-    <servlet-name>WikidataCompoundImage</servlet-name>
-    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundImageServlet</servlet-class>
+    <servlet-name>WikidataCompoundPngImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-wikidata</param-value></init-param>
-    <init-param><param-name>schema</param-name><param-value>molecules</param-value></init-param>
-    <init-param><param-name>table</param-name><param-value>wikidata</param-value></init-param>
-    <init-param><param-name>structure</param-name><param-value>smiles</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select smiles from molecules.wikidata where id = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
-    <servlet-name>WikidataCompoundImage</servlet-name>
+    <servlet-name>WikidataCompoundPngImage</servlet-name>
     <url-pattern>/wikidata/compound/image</url-pattern>
   </servlet-mapping>
 
   <servlet>
-    <servlet-name>MonaCompoundImage</servlet-name>
-    <servlet-class>cz.iocb.chemweb.server.servlets.sources.MonaCompoundImageServlet</servlet-class>
+    <servlet-name>MonaCompoundPngImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-mona</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select s.structure from mona.compound_structures s, mona.compound_bases b where b.id = s.compound and b.accession = ?</param-value></init-param>
   </servlet>
   <servlet-mapping>
-    <servlet-name>MonaCompoundImage</servlet-name>
+    <servlet-name>MonaCompoundPngImage</servlet-name>
     <url-pattern>/mona/compound/image</url-pattern>
   </servlet-mapping>
 
   <servlet>
-    <servlet-name>IsdbCompoundImage</servlet-name>
-    <servlet-class>cz.iocb.chemweb.server.servlets.sources.IsdbCompoundImageServlet</servlet-class>
+    <servlet-name>IsdbCompoundPngImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-isdb</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select smiles from isdb.compound_bases where accession = ?</param-value></init-param>
   </servlet>
   <servlet-mapping>
-    <servlet-name>IsdbCompoundImage</servlet-name>
+    <servlet-name>IsdbCompoundPngImage</servlet-name>
     <url-pattern>/isdb/compound/image</url-pattern>
   </servlet-mapping>
 
   <servlet>
-    <servlet-name>MolmedbCompoundImage</servlet-name>
-    <servlet-class>cz.iocb.chemweb.server.servlets.sources.MolmedbCompoundImageServlet</servlet-class>
+    <servlet-name>MolmedbCompoundPngImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-molmedb</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select canonical_smiles from molmedb.substance_bases where identifier = ? and canonical_smiles is not null</param-value></init-param>
   </servlet>
   <servlet-mapping>
-    <servlet-name>MolmedbCompoundImage</servlet-name>
+    <servlet-name>MolmedbCompoundPngImage</servlet-name>
     <url-pattern>/molmedb/compound/image</url-pattern>
   </servlet-mapping>
 
+
+  <!-- Compound SVG Image Servlets -->
+
+  <servlet>
+    <servlet-name>ChebiCompoundSvgImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-chebi</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from molecules.chebi where id = ?::integer</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ChebiCompoundSvgImage</servlet-name>
+    <url-pattern>/chebi/compound/svg</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>ChemblCompoundSvgImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-chembl</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from molecules.chembl where id = ?::integer</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ChemblCompoundSvgImage</servlet-name>
+    <url-pattern>/chembl/compound/svg</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>DrugbankCompoundSvgImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-drugbank</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from molecules.drugbank where id = ?::integer</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>DrugbankCompoundSvgImage</servlet-name>
+    <url-pattern>/drugbank/compound/svg</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>PubChemCompoundSvgImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-pubchem</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from molecules.pubchem where id = ?::integer</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>PubChemCompoundSvgImage</servlet-name>
+    <url-pattern>/pubchem/compound/svg</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>WikidataCompoundSvgImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-wikidata</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select smiles from molecules.wikidata where id = ?::integer</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>WikidataCompoundSvgImage</servlet-name>
+    <url-pattern>/wikidata/compound/svg</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>MonaCompoundSvgImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-mona</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select s.structure from mona.compound_structures s, mona.compound_bases b where b.id = s.compound and b.accession = ?</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MonaCompoundSvgImage</servlet-name>
+    <url-pattern>/mona/compound/svg</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>IsdbCompoundSvgImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-isdb</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select smiles from isdb.compound_bases where accession = ?</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>IsdbCompoundSvgImage</servlet-name>
+    <url-pattern>/isdb/compound/svg</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>MolmedbCompoundSvgImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-molmedb</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select canonical_smiles from molmedb.substance_bases where identifier = ? and canonical_smiles is not null</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MolmedbCompoundSvgImage</servlet-name>
+    <url-pattern>/molmedb/compound/svg</url-pattern>
+  </servlet-mapping>
+
+
+  <!-- Spectrum Servlets -->
+
   <servlet>
     <servlet-name>MonaSpectrumServlet</servlet-name>
-    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSpectrumServlet</servlet-class>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.SpectrumServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:spectra-mona</param-value></init-param>
-    <init-param><param-name>schema</param-name><param-value>mona</param-value></init-param>
-    <init-param><param-name>table</param-name><param-value>compound_bases</param-value></init-param>
-    <init-param><param-name>id</param-name><param-value>accession</param-value></init-param>
-    <init-param><param-name>spectrum</param-name><param-value>spectrum</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select spectrum from mona.compound_bases where accession = ?</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>MonaSpectrumServlet</servlet-name>
@@ -342,8 +422,9 @@
 
   <servlet>
     <servlet-name>IsdbSpectrumServlet</servlet-name>
-    <servlet-class>cz.iocb.chemweb.server.servlets.sources.IsdbCompoundSpectrumServlet</servlet-class>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.SpectrumServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:spectra-isdb</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>with p as (select ? as v) select s.spectrum from isdb.spectrum_bases s, isdb.compound_bases c, p where s.id = c.id and c.accession = substr(p.v, 1, 14) and s.ionmode = substr(p.v, 15, 1)::char</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>IsdbSpectrumServlet</servlet-name>
@@ -351,7 +432,8 @@
   </servlet-mapping>
 
 
-  <!-- Sachem Statistics Servlet -->
+  <!-- Statistics Servlet -->
+
   <servlet>
     <servlet-name>SachemEndpointStatisticsServlet</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.endpoint.SachemEndpointStatisticsServlet</servlet-class>
@@ -367,7 +449,8 @@
   </servlet-mapping>
 
 
-  <!-- Cache Filter -->
+  <!-- Special Filters -->
+
   <filter>
     <filter-name>CacheFilter</filter-name>
     <filter-class>cz.iocb.chemweb.server.filters.cache.CacheFilter</filter-class>
@@ -381,8 +464,6 @@
     <url-pattern>*</url-pattern>
   </filter-mapping>
 
-
-  <!-- Log Filter -->
   <filter>
     <filter-name>LogFilter</filter-name>
     <filter-class>cz.iocb.chemweb.server.filters.log.LogFilter</filter-class>
@@ -394,6 +475,7 @@
 
 
   <!-- Matomo Filters -->
+
   <filter>
     <filter-name>ChemwebMatomoFilter</filter-name>
     <filter-class>cz.iocb.chemweb.server.filters.matomo.MatomoFilter</filter-class>

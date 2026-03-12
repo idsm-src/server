@@ -24,7 +24,7 @@
         <table style="width:80px">
           <tbody>
             <tr>
-              <td><img loading='lazy' src="compound/image?w=160&id=$entity.getValue().replaceFirst(".*/CID", "")" height="80" width="80"></td>
+              <td><img loading='lazy' src="pubchem/compound/image?w=160&id=$entity.getValue().replaceFirst(".*/CID", "")" height="80" width="80"></td>
             </tr>
           </tbody>
         </table>

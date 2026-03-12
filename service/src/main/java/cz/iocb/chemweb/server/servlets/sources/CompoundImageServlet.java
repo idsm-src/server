@@ -1,10 +1,5 @@
 package cz.iocb.chemweb.server.servlets.sources;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.StringReader;
 import java.sql.Connection;
@@ -14,24 +9,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import javax.imageio.ImageIO;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
-import javax.vecmath.Point2d;
+import java.util.stream.StreamSupport;
 import org.openscience.cdk.aromaticity.Aromaticity;
-import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
-import org.openscience.cdk.graph.CycleFinder;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -44,15 +26,6 @@ import org.openscience.cdk.io.DefaultChemObjectReader;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV3000Reader;
 import org.openscience.cdk.layout.StructureDiagramGenerator;
-import org.openscience.cdk.renderer.AtomContainerRenderer;
-import org.openscience.cdk.renderer.RendererModel;
-import org.openscience.cdk.renderer.SymbolVisibility;
-import org.openscience.cdk.renderer.color.CDK2DAtomColors;
-import org.openscience.cdk.renderer.font.AWTFontManager;
-import org.openscience.cdk.renderer.generators.BasicSceneGenerator;
-import org.openscience.cdk.renderer.generators.IGenerator;
-import org.openscience.cdk.renderer.generators.standard.StandardGenerator;
-import org.openscience.cdk.renderer.visitor.AWTDrawVisitor;
 import org.openscience.cdk.silent.AtomContainer;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
@@ -64,207 +37,41 @@ import org.openscience.cdk.tools.manipulator.AtomTypeManipulator;
 
 
 @SuppressWarnings("serial")
-public class CompoundImageServlet extends HttpServlet
+public abstract class CompoundImageServlet extends SourceServlet
 {
-    private static final String V30_HEADER = "M  V30 BEGIN CTAB";
+    protected static final String V30_HEADER = "M  V30 BEGIN CTAB";
 
-    private DataSource connectionPool;
-    private String query;
-
-
-    @Override
-    public void init(ServletConfig config) throws ServletException
+    protected static final ThreadLocal<Aromaticity> aromaticity = new ThreadLocal<Aromaticity>()
     {
-        String resourceName = config.getInitParameter("resource");
-        String schema = config.getInitParameter("schema");
-        String table = config.getInitParameter("table");
-        String id = config.getInitParameter("id");
-        String structure = config.getInitParameter("structure");
-
-        if(resourceName == null || resourceName.isEmpty())
-            throw new ServletException("Resource name is not set");
-
-        if(id == null)
-            id = "id";
-
-        if(structure == null)
-            structure = "molfile";
-
-        query = "select \"" + structure.replace("\"", "\"\"") + "\" from \"" + schema.replace("\"", "\"\"") + "\".\""
-                + table.replace("\"", "\"\"") + "\" where \"" + id.replace("\"", "\"\"") + "\" = ?";
-
-        try
+        @Override
+        protected Aromaticity initialValue()
         {
-            Context context = (Context) (new InitialContext()).lookup("java:comp/env");
-            connectionPool = (DataSource) context.lookup(resourceName);
+            return new Aromaticity(Aromaticity.Model.Daylight, Cycles.or(Cycles.all(), Cycles.cdkAromaticSet()));
         }
-        catch(NamingException e)
-        {
-            throw new ServletException(e);
-        }
-    }
+    };
 
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
-    {
-        processRequest(req, res);
-    }
-
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
-    {
-        processRequest(req, res);
-    }
-
-
-    protected void processRequest(HttpServletRequest req, HttpServletResponse res) throws IOException
-    {
-        try
-        {
-            int id;
-            int size;
-            Color background = null;
-
-
-            try
-            {
-                id = Integer.parseInt(req.getParameter("id"));
-            }
-            catch(NullPointerException | NumberFormatException e)
-            {
-                throw new IllegalArgumentException("an invalid value of the 'id' argument");
-            }
-
-
-            try
-            {
-                size = Integer.parseInt(req.getParameter("w"));
-            }
-            catch(NullPointerException | NumberFormatException e)
-            {
-                throw new IllegalArgumentException("an invalid value of the 'w' argument");
-            }
-
-            if(size < 40 || size > 1600)
-                throw new IllegalArgumentException("an invalid value of the 'w' argument");
-
-
-            try
-            {
-                String backgroundParameter = req.getParameter("background");
-
-                if(backgroundParameter != null)
-                    background = new Color(Integer.parseInt(backgroundParameter, 16));
-                else
-                    background = new Color(0, 0, 0, 0);
-            }
-            catch(NumberFormatException e)
-            {
-                throw new IllegalArgumentException("an invalid value of the 'background' argument");
-            }
-
-
-            IAtomContainer molecule = getMolecule(id);
-
-            if(molecule == null)
-                throw new NoSuchElementException("invalid structure id");
-
-
-            BufferedImage bufferedImage = generateImage(molecule, size, size, background);
-
-
-            res.setContentType("image/png");
-
-            String filename = req.getParameter("filename");
-
-            if(filename != null)
-                res.setHeader("Content-Disposition", "attachment;filename=\"" + filename + "\"");
-
-            try(ServletOutputStream out = res.getOutputStream())
-            {
-                ImageIO.write(bufferedImage, "png", out);
-            }
-        }
-        catch(NoSuchElementException e)
-        {
-            res.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
-        }
-        catch(IllegalArgumentException e)
-        {
-            res.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-        }
-        catch(SQLException e)
-        {
-            res.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
-        }
-        catch(Throwable e)
-        {
-            res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-        }
-    }
-
-
-    @Override
-    public String getServletInfo()
-    {
-        return "Compound Image Servlet";
-    }
-
-
-    public static BufferedImage generateImage(IAtomContainer molecule, int hsize, int vsize, Color background)
-            throws IOException, CDKException
-    {
-        List<IGenerator<IAtomContainer>> generators;
-        generators = new ArrayList<IGenerator<IAtomContainer>>();
-        generators.add(new BasicSceneGenerator());
-        generators.add(new StandardGenerator(new Font("Verdana", Font.PLAIN, 18)));
-
-        AtomContainerRenderer renderer = new AtomContainerRenderer(generators, new AWTFontManager());
-        RendererModel model = renderer.getRenderer2DModel();
-
-        model.set(StandardGenerator.AtomColor.class, new CDK2DAtomColors());
-        model.set(StandardGenerator.AnnotationColor.class, new Color(0x455FFF));
-        model.set(BasicSceneGenerator.Scale.class, 0.5);
-        model.set(StandardGenerator.Visibility.class, SymbolVisibility.iupacRecommendationsWithoutTerminalCarbon());
-        model.set(StandardGenerator.Visibility.class, SymbolVisibility.iupacRecommendationsWithoutTerminalCarbon());
-
-        Rectangle2D bounds = new Rectangle2D.Double(0, 0, hsize, vsize);
-        BufferedImage bufferedImage = new BufferedImage(hsize, vsize, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D graphics = bufferedImage.createGraphics();
-        graphics.setBackground(background);
-        graphics.setColor(background);
-        graphics.fillRect(0, 0, hsize, hsize);
-
-        renderer.paint(molecule, new AWTDrawVisitor(graphics), bounds, true);
-        bufferedImage.flush();
-
-        return bufferedImage;
-    }
-
-
-    private IAtomContainer getMolecule(int id) throws SQLException, CDKException, IOException
+    protected IAtomContainer getMolecule(String id) throws SQLException, CDKException, IOException
     {
         try(Connection connection = connectionPool.getConnection())
         {
             connection.setAutoCommit(true);
 
-            try(PreparedStatement statement = connection.prepareStatement(query))
+            try(PreparedStatement statement = connection.prepareStatement(access))
             {
-                statement.setInt(1, id);
+                statement.setObject(1, id);
                 ResultSet result = statement.executeQuery();
 
                 if(result.next())
                     return crateAtomContainer(result.getString(1));
             }
 
-            return null;
+            throw new NoSuchElementException("invalid structure id");
         }
     }
 
 
-    private static IAtomContainer crateAtomContainer(String mol) throws CDKException, IOException
+    protected static IAtomContainer crateAtomContainer(String mol) throws CDKException, IOException
     {
         IAtomContainer molecule = null;
 
@@ -314,32 +121,19 @@ public class CompoundImageServlet extends HttpServlet
         }
 
 
-        ElectronDonation model = ElectronDonation.cdkAllowingExocyclic();
-        CycleFinder cycles = Cycles.cdkAromaticSet();
-        Aromaticity aromaticity = new Aromaticity(model, cycles);
-        aromaticity.apply(molecule);
-
+        aromaticity.get().apply(molecule);
 
         removeNonChiralHydrogens(molecule);
 
-
-        for(IAtom a : molecule.atoms())
-        {
-            if(a.getPoint2d() == null)
-            {
-                for(IAtom atom : molecule.atoms())
-                    atom.setPoint2d(new Point2d(atom.getPoint3d().x, atom.getPoint3d().y));
-
-                break;
-            }
-        }
+        if(StreamSupport.stream(molecule.atoms().spliterator(), false).allMatch(a -> a.getPoint2d() == null))
+            new StructureDiagramGenerator().generateCoordinates(molecule);
 
 
         return molecule;
     }
 
 
-    private static void removeNonChiralHydrogens(IAtomContainer molecule)
+    protected static void removeNonChiralHydrogens(IAtomContainer molecule)
     {
         List<IAtom> remove = new ArrayList<IAtom>();
 
