@@ -1167,7 +1167,7 @@ public class MoNA extends Updater
                             String time = a.value.replaceFirst(" \\((in paper|MSMS).*", "");
                             Pair<Float, Integer> value;
 
-                            if(time.matches("[0-9]*(\\.[0-9]+)? ?min(utes)?")) // obo:UO_0000031
+                            if(time.matches("[0-9]*(\\.[0-9]+)? ?min(ute)?s?")) // obo:UO_0000031
                                 value = Pair.getPair(Float.valueOf(time.replaceFirst(" ?m.*", "")), 31);
                             else if(time.matches("[0-9]*(\\.[0-9]+)? +s(ec)?")) // obo:UO_0000010
                                 value = Pair.getPair(Float.valueOf(time.replaceFirst(" .*", "")), 10);
