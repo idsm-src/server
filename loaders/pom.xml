@@ -444,6 +444,40 @@
             </configuration>
           </execution>
 
+          <!-- pdb -->
+          <execution>
+            <id>pdb-download</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/download-pdb.sh</executable>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pdb-dbinit</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/pdb/base.sql</argument>
+                <argument>src/main/sql/pdb/schema.sql</argument>
+                <argument>src/main/sql/pdb/settings.sql</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pdb-load</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>cz.iocb.load.pdb.PDB</mainClass>
+            </configuration>
+          </execution>
+
           <!-- stats -->
           <execution>
             <id>stats-dbinit</id>

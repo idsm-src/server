@@ -20,11 +20,13 @@ import cz.iocb.chemweb.server.sparql.config.molmedb.MolmedbConfiguration;
 import cz.iocb.chemweb.server.sparql.config.mona.MonaConfiguration;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyConfiguration;
+import cz.iocb.chemweb.server.sparql.config.pdb.PdbConfiguration;
 import cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration;
 import cz.iocb.chemweb.server.sparql.config.sachem.ChebiOntologySachemConfiguration;
 import cz.iocb.chemweb.server.sparql.config.sachem.ChemblSachemConfiguration;
 import cz.iocb.chemweb.server.sparql.config.sachem.DrugbankSachemConfiguration;
 import cz.iocb.chemweb.server.sparql.config.sachem.MonaSachemConfiguration;
+import cz.iocb.chemweb.server.sparql.config.sachem.PdbSachemConfiguration;
 import cz.iocb.chemweb.server.sparql.config.sachem.PubChemSachemConfiguration;
 import cz.iocb.chemweb.server.sparql.config.sachem.Sachem;
 import cz.iocb.chemweb.server.sparql.config.sachem.WikidataSachemConfiguration;
@@ -231,6 +233,7 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         addService(new DrugBankConfiguration(null, connectionPool, getDatabaseSchema()), true);
         addService(new WikidataConfiguration(null, connectionPool, getDatabaseSchema()), true);
         addService(new MolmedbConfiguration(null, connectionPool, getDatabaseSchema()), true);
+        addService(new PdbConfiguration(null, connectionPool, getDatabaseSchema()), true);
         addService(new VoidConfiguration(null, connectionPool, getDatabaseSchema()), true);
         addService(new ExamplesConfiguration(null, connectionPool, getDatabaseSchema()), true);
 
@@ -243,6 +246,7 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         mapping.put(getIriClass("pubchem:compound"), List.of(getColumn("pubchem")));
         mapping.put(getIriClass("wikidata:entity"), List.of(getColumn("wikidata")));
         mapping.put(getIriClass("molmedb:substance"), List.of(getColumn("molmedb")));
+        mapping.put(getIriClass("pdb:compound"), List.of(getColumn("pdb")));
 
         Sachem.addResourceClasses(this);
         Sachem.addProcedures(this, "sachem", mapping);
@@ -257,6 +261,11 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         addService(new MolmedbConfiguration("https://idsm.elixir-czech.cz/sparql/endpoint/molmedb", connectionPool,
                 getDatabaseSchema()), false);
         addService(new MolmedbConfiguration("https://idsm.elixir-czech.cz/sachem/endpoint/molmedb", connectionPool,
+                getDatabaseSchema()), false);
+
+        addService(new PdbSachemConfiguration("https://idsm.elixir-czech.cz/sparql/endpoint/pdb", connectionPool,
+                getDatabaseSchema()), false);
+        addService(new PdbSachemConfiguration("https://idsm.elixir-czech.cz/sachem/endpoint/pdb", connectionPool,
                 getDatabaseSchema()), false);
 
         addService(new WikidataSachemConfiguration("https://idsm.elixir-czech.cz/sparql/endpoint/wikidata",

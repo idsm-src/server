@@ -216,6 +216,16 @@
   </servlet-mapping>
 
   <servlet>
+    <servlet-name>PdbSachemEndpointServlet</servlet-name>
+    <servlet-class>cz.iocb.sparql.endpoint.EndpointServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>sparql:sachem-pdb</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>PdbSachemEndpointServlet</servlet-name>
+    <url-pattern>/sachem/endpoint/pdb</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
     <servlet-name>CorsProxyServlet</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.proxy.CorsProxyServlet</servlet-class>
   </servlet>
@@ -315,6 +325,17 @@
     <url-pattern>/molmedb/compound/image</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>PdbCompoundPngImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-pdb</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from pdb.compound_bases where name = ?</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>PdbCompoundPngImage</servlet-name>
+    <url-pattern>/pdb/compound/image</url-pattern>
+  </servlet-mapping>
+
 
   <!-- Compound SVG Image Servlets -->
 
@@ -404,6 +425,17 @@
   <servlet-mapping>
     <servlet-name>MolmedbCompoundSvgImage</servlet-name>
     <url-pattern>/molmedb/compound/svg</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>PdbCompoundSvgImage</servlet-name>
+    <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
+    <init-param><param-name>resource</param-name><param-value>jdbc:images-pdb</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from pdb.compound_bases where name = ?</param-value></init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>PdbCompoundSvgImage</servlet-name>
+    <url-pattern>/pdb/compound/svg</url-pattern>
   </servlet-mapping>
 
 
