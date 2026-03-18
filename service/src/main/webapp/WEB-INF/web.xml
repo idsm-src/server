@@ -484,6 +484,17 @@
   <!-- Special Filters -->
 
   <filter>
+    <filter-name>EndpointConcurrencyFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.concurrency.ConcurrencyFilter</filter-class>
+    <init-param><param-name>max-concurrent-per-ip</param-name><param-value>16</param-value></init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>EndpointConcurrencyFilter</filter-name>
+    <url-pattern>/sparql/endpoint/*</url-pattern>
+    <url-pattern>/sachem/endpoint/*</url-pattern>
+  </filter-mapping>
+
+  <filter>
     <filter-name>CacheFilter</filter-name>
     <filter-class>cz.iocb.chemweb.server.filters.cache.CacheFilter</filter-class>
     <init-param>
