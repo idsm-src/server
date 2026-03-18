@@ -54,7 +54,8 @@ public class Cooccurrence extends Updater
 
         store("delete from pubchem.chemical_chemical_cooccurrences where subject=? and object=? and value=?",
                 oldValues);
-        store("insert into pubchem.chemical_chemical_cooccurrences(subject,object,value) values(?,?,?)", newValues);
+        store("insert into pubchem.chemical_chemical_cooccurrences(subject,object,value) values(?,?,?) "
+                + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
     }
 
 
@@ -103,7 +104,8 @@ public class Cooccurrence extends Updater
         }.load(model);
 
         store("delete from pubchem.chemical_disease_cooccurrences where subject=? and object=? and value=?", oldValues);
-        store("insert into pubchem.chemical_disease_cooccurrences(subject,object,value) values(?,?,?)", newValues);
+        store("insert into pubchem.chemical_disease_cooccurrences(subject,object,value) values(?,?,?) "
+                + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
     }
 
 
@@ -152,7 +154,8 @@ public class Cooccurrence extends Updater
         }.load(model);
 
         store("delete from pubchem.disease_chemical_cooccurrences where subject=? and object=? and value=?", oldValues);
-        store("insert into pubchem.disease_chemical_cooccurrences(subject,object,value) values(?,?,?)", newValues);
+        store("insert into pubchem.disease_chemical_cooccurrences(subject,object,value) values(?,?,?) "
+                + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
     }
 
 
@@ -197,7 +200,8 @@ public class Cooccurrence extends Updater
         }.load(model);
 
         store("delete from pubchem.disease_disease_cooccurrences where subject=? and object=? and value=?", oldValues);
-        store("insert into pubchem.disease_disease_cooccurrences(subject,object,value) values(?,?,?)", newValues);
+        store("insert into pubchem.disease_disease_cooccurrences(subject,object,value) values(?,?,?) "
+                + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
     }
 
 
@@ -286,11 +290,13 @@ public class Cooccurrence extends Updater
 
         store("delete from pubchem.chemical_gene_cooccurrences where subject=? and object=? and value=?",
                 oldGeneValues);
-        store("insert into pubchem.chemical_gene_cooccurrences(subject,object,value) values(?,?,?)", newGeneValues);
+        store("insert into pubchem.chemical_gene_cooccurrences(subject,object,value) values(?,?,?) "
+                + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
 
         store("delete from pubchem.chemical_enzyme_cooccurrences where subject=? and object=? and value=?",
                 oldEnzymeValues);
-        store("insert into pubchem.chemical_enzyme_cooccurrences(subject,object,value) values(?,?,?)", newEnzymeValues);
+        store("insert into pubchem.chemical_enzyme_cooccurrences(subject,object,value) values(?,?,?) "
+                + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
     }
 
 
@@ -379,11 +385,13 @@ public class Cooccurrence extends Updater
 
 
         store("delete from pubchem.disease_gene_cooccurrences where subject=? and object=? and value=?", oldGeneValues);
-        store("insert into pubchem.disease_gene_cooccurrences(subject,object,value) values(?,?,?)", newGeneValues);
+        store("insert into pubchem.disease_gene_cooccurrences(subject,object,value) values(?,?,?) "
+                + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
 
         store("delete from pubchem.disease_enzyme_cooccurrences where subject=? and object=? and value=?",
                 oldEnzymeValues);
-        store("insert into pubchem.disease_enzyme_cooccurrences(subject,object,value) values(?,?,?)", newEnzymeValues);
+        store("insert into pubchem.disease_enzyme_cooccurrences(subject,object,value) values(?,?,?) "
+                + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
     }
 
 
@@ -472,11 +480,13 @@ public class Cooccurrence extends Updater
 
         store("delete from pubchem.gene_chemical_cooccurrences where subject=? and object=? and value=?",
                 oldGeneValues);
-        store("insert into pubchem.gene_chemical_cooccurrences(subject,object,value) values(?,?,?)", newGeneValues);
+        store("insert into pubchem.gene_chemical_cooccurrences(subject,object,value) values(?,?,?) "
+                + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
 
         store("delete from pubchem.enzyme_chemical_cooccurrences where subject=? and object=? and value=?",
                 oldEnzymeValues);
-        store("insert into pubchem.enzyme_chemical_cooccurrences(subject,object,value) values(?,?,?)", newEnzymeValues);
+        store("insert into pubchem.enzyme_chemical_cooccurrences(subject,object,value) values(?,?,?) "
+                + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
     }
 
 
@@ -564,11 +574,13 @@ public class Cooccurrence extends Updater
         }.load(model);
 
         store("delete from pubchem.gene_disease_cooccurrences where subject=? and object=? and value=?", oldGeneValues);
-        store("insert into pubchem.gene_disease_cooccurrences(subject,object,value) values(?,?,?)", newGeneValues);
+        store("insert into pubchem.gene_disease_cooccurrences(subject,object,value) values(?,?,?) "
+                + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
 
         store("delete from pubchem.enzyme_disease_cooccurrences where subject=? and object=? and value=?",
                 oldEnzymeValues);
-        store("insert into pubchem.enzyme_disease_cooccurrences(subject,object,value) values(?,?,?)", newEnzymeValues);
+        store("insert into pubchem.enzyme_disease_cooccurrences(subject,object,value) values(?,?,?) "
+                + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
     }
 
 
@@ -613,7 +625,8 @@ public class Cooccurrence extends Updater
         }.load(model);
 
         store("delete from pubchem.gene_gene_cooccurrences where subject=? and object=? and value=?", oldValues);
-        store("insert into pubchem.gene_gene_cooccurrences(subject,object,value) values(?,?,?)", newValues);
+        store("insert into pubchem.gene_gene_cooccurrences(subject,object,value) values(?,?,?) "
+                + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
     }
 
 
