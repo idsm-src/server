@@ -21,6 +21,7 @@ create table pubchem.reference_bases
 (
     id              integer not null,
     dcdate          date,
+    date            varchar,
     title           varchar,
     citation        varchar,
     publication     varchar,

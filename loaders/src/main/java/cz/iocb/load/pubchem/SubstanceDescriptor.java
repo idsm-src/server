@@ -99,7 +99,7 @@ class SubstanceDescriptor extends Updater
     {
         System.out.println("load substance descriptors ...");
 
-        loadSubstanceVersions();
+        //loadSubstanceVersions();
         checkSubstanceVersionTypes();
 
         System.out.println();

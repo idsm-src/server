@@ -179,6 +179,10 @@ public class Disease extends Updater
             @Override
             protected void parse() throws IOException
             {
+                //NOTE: workaround to prevent loading incorrect references
+                if(getIRI("match").matches("http://purl\\.obolibrary\\.org/obo/[0-9]+"))
+                    return;
+
                 Integer diseaseID = getDiseaseID(getIRI("disease"));
                 Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
 

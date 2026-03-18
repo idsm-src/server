@@ -1,4 +1,5 @@
 create index reference_bases__dcdate on pubchem.reference_bases(dcdate);
+create index reference_bases__date on pubchem.reference_bases(date);
 create index reference_bases__title on pubchem.reference_bases using hash (title);
 create index reference_bases__citation on pubchem.reference_bases using hash (citation);
 create index reference_bases__publication on pubchem.reference_bases(publication);

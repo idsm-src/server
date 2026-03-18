@@ -34,6 +34,8 @@ public class Reference
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:date"),
                     config.createLiteralMapping(xsdDateM4, "dcdate"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:date"),
+                    config.createLiteralMapping(xsdString, "date"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:bibliographicCitation"),
                     config.createLiteralMapping(xsdString, "citation"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("prism:publicationName"),

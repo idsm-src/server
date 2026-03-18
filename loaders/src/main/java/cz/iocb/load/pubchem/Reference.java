@@ -487,7 +487,12 @@ class Reference extends Updater
         IntStringMap newDates = new IntStringMap();
         IntStringMap oldDates = new IntStringMap();
 
+        IntStringMap keepStrDates = new IntStringMap();
+        IntStringMap newStrDates = new IntStringMap();
+        IntStringMap oldStrDates = new IntStringMap();
+
         load("select id,dcdate::varchar from pubchem.reference_bases where dcdate is not null", oldDates);
+        load("select id,date from pubchem.reference_bases where date is not null", oldStrDates);
 
         processFiles("pubchem/RDF/reference", "pc_reference_date\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -501,33 +506,64 @@ class Reference extends Updater
                             throw new IOException();
 
                         Integer referenceID = Reference.getReferenceID(subject.getURI(), true);
-                        String date = getString(object).replaceFirst("-0[45]:00$", "");
 
-                        // workaround
-                        if(date.length() == 4)
-                            date = date + "-01-01";
-                        else if(date.length() == 6)
-                            date = date.substring(0, 4) + "-" + date.substring(4) + "-01";
-
-                        synchronized(newDates)
+                        switch(object.getLiteral().getDatatype().getURI())
                         {
-                            if(date.equals(oldDates.remove(referenceID)))
+                            case "http://www.w3.org/2001/XMLSchema#date" ->
                             {
-                                keepDates.put(referenceID, date);
+                                String date = getString(object).replaceFirst("-0[45]:00$", "");
+
+                                synchronized(newDates)
+                                {
+                                    if(date.equals(oldDates.remove(referenceID)))
+                                    {
+                                        keepDates.put(referenceID, date);
+                                    }
+                                    else
+                                    {
+                                        String keep = keepDates.get(referenceID);
+
+                                        if(date.equals(keep))
+                                            return;
+                                        else if(keep != null)
+                                            throw new IOException();
+
+                                        String put = newDates.put(referenceID, date);
+
+                                        if(put != null && !date.equals(put))
+                                            throw new IOException();
+                                    }
+                                }
                             }
-                            else
+                            case "http://www.w3.org/2001/XMLSchema#string" ->
                             {
-                                String keep = keepDates.get(referenceID);
+                                String date = getString(object);
 
-                                if(date.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
+                                synchronized(newStrDates)
+                                {
+                                    if(date.equals(oldStrDates.remove(referenceID)))
+                                    {
+                                        keepStrDates.put(referenceID, date);
+                                    }
+                                    else
+                                    {
+                                        String keep = keepStrDates.get(referenceID);
 
-                                String put = newDates.put(referenceID, date);
+                                        if(date.equals(keep))
+                                            return;
+                                        else if(keep != null)
+                                            throw new IOException();
 
-                                if(put != null && !date.equals(put))
-                                    throw new IOException();
+                                        String put = newStrDates.put(referenceID, date);
+
+                                        if(put != null && !date.equals(put))
+                                            throw new IOException();
+                                    }
+                                }
+                            }
+                            default ->
+                            {
+                                throw new IOException();
                             }
                         }
                     }
@@ -538,6 +574,10 @@ class Reference extends Updater
         store("update pubchem.reference_bases set dcdate=null where id=? and dcdate=?::date", oldDates);
         store("insert into pubchem.reference_bases(id,dcdate) values(?,?::date) "
                 + "on conflict(id) do update set dcdate=EXCLUDED.dcdate", newDates);
+
+        store("update pubchem.reference_bases set date=null where id=? and date=?", oldStrDates);
+        store("insert into pubchem.reference_bases(id,date) values(?,?) "
+                + "on conflict(id) do update set date=EXCLUDED.date", newStrDates);
     }
 
 

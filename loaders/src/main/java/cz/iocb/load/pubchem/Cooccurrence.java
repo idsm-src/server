@@ -635,7 +635,17 @@ public class Cooccurrence extends Updater
         Model model = ModelFactory.createDefaultModel();
 
         processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_chemical_chemical_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file);
+            Model submodel = getModel(file, t -> {
+                //NOTE: workaround to prevent the loaded model from being too large
+
+                if(!t.getPredicate().getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                    return true;
+
+                if(!t.getObject().getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Cooccurrence"))
+                    return true;
+
+                return false;
+            });
 
             synchronized(model)
             {
