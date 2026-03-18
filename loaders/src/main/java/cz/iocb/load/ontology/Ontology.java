@@ -835,6 +835,9 @@ public class Ontology extends Updater
         builtinResources.put("http://www.w3.org/ns/shacl#namespace", 432);
         builtinResources.put("http://www.w3.org/ns/shacl#prefix", 433);
         builtinResources.put("http://www.w3.org/ns/shacl#select", 434);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#HRACClassification", 435);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#IRACClassification", 436);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#FRACClassification", 437);
 
         // classes
         builtinResources.put("http://data.epo.org/linked-data/def/patent/Publication", 512);
@@ -979,6 +982,30 @@ public class Ontology extends Updater
         builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Taxonomy", 651);
         builtinResources.put("http://www.w3.org/ns/shacl#SPARQLExecutable", 652);
         builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#GeneSymbol", 653);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#CompoundIdentifier", 654);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#ConnectivitySMILES", 655);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#CovalentUnitCount", 656);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#DefinedAtomStereoCount", 657);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#DefinedBondStereoCount", 658);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#ExactMass", 659);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#HydrogenBondAcceptorCount", 660);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#HydrogenBondDonorCount", 661);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#IsotopeAtomCount", 662);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#IUPACInChI", 663);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MolecularFormula", 664);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MolecularWeight", 665);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MonoIsotopicWeight", 666);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#NonHydrogenAtomCount", 667);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PreferredIUPACName", 668);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#RotatableBondCount", 669);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#SMILES", 670);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#StructureComplexity", 671);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#SubstanceVersion", 672);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#TotalFormalCharge", 673);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#TPSA", 674);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#UndefinedAtomStereoCount", 675);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#UndefinedBondStereoCount", 676);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#XLogP3", 677);
 
         // MolMeDB
         builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#hasStDev", 700);
