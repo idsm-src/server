@@ -112,11 +112,15 @@ grant select on chebi.inchikeys to sparql;
 
 --------------------------------------------------------------------------------
 
---create index inchies__inchi on chebi.inchies(inchi);
+create index inchies__inchi on chebi.inchies using hash(inchi);
 grant select on chebi.inchies to sparql;
 
 --------------------------------------------------------------------------------
 
+create index wurcs_representations__wurcs on chebi.wurcs_representations(wurcs);
+grant select on chebi.wurcs_representations to sparql;
+
+--------------------------------------------------------------------------------
 
 create index definitions__definition on chebi.definitions(definition);
 grant select on chebi.definitions to sparql;

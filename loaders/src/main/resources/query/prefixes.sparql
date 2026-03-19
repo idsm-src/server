@@ -73,6 +73,7 @@ prefix chembl:          <http://rdf.ebi.ac.uk/resource/chembl/>
 # ChEBI
 prefix chebi:           <http://purl.obolibrary.org/obo/chebi/>
 prefix oboInOwl:        <http://www.geneontology.org/formats/oboInOwl#>
+prefix chemrof:         <https://w3id.org/chemrof/>
 
 # MeSH
 prefix mesh:            <http://id.nlm.nih.gov/mesh/>

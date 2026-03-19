@@ -319,7 +319,7 @@ public class ChEBI extends Updater
             protected void parse() throws IOException
             {
                 int chebiID = getEntityID(getIRI("chebi"));
-                Integer replacementID = getEntityID(getIRI("replacement"));
+                Integer replacementID = getIntID("replacement", prefix);
 
                 if(replacementID.equals(oldReplacements.remove(chebiID)))
                 {
@@ -647,18 +647,20 @@ public class ChEBI extends Updater
             loadMultiStringValues(model, "oboInOwl:hasDbXref", "references", "reference");
             loadMultiStringValues(model, "oboInOwl:hasRelatedSynonym", "related_synonyms", "synonym");
             loadMultiStringValues(model, "oboInOwl:hasExactSynonym", "exact_synonyms", "synonym");
-            loadMultiStringValues(model, "chebi:formula", "formulas", "formula");
-            loadMultiStringValues(model, "chebi:mass", "masses", "mass");
-            loadMultiStringValues(model, "chebi:monoisotopicmass", "monoisotopic_masses", "mass");
+            loadMultiStringValues(model, "chemrof:generalized_empirical_formula", "formulas", "formula");
+            loadMultiStringValues(model, "chemrof:mass", "masses", "mass");
+            loadMultiStringValues(model, "chemrof:monoisotopic_mass", "monoisotopic_masses", "mass");
             loadMultiStringValues(model, "oboInOwl:hasAlternativeId", "alternative_identifiers", "identifier");
             loadStringValues(model, "rdfs:label", "labels", "label");
             loadStringValues(model, "oboInOwl:id", "identifiers", "identifier");
             loadStringValues(model, "oboInOwl:hasOBONamespace", "namespaces", "namespace");
-            loadStringValues(model, "chebi:charge", "charges", "charge");
-            loadStringValues(model, "chebi:smiles", "smiles_codes", "smiles");
-            loadStringValues(model, "chebi:inchikey", "inchikeys", "inchikey");
-            loadStringValues(model, "chebi:inchi", "inchies", "inchi");
+            loadStringValues(model, "chemrof:charge", "charges", "charge");
+            loadStringValues(model, "chemrof:smiles_string", "smiles_codes", "smiles");
+            loadStringValues(model, "chemrof:inchi_key_string", "inchikeys", "inchikey");
+            loadStringValues(model, "chemrof:inchi_string", "inchies", "inchi");
             loadStringValues(model, "obo:IAO_0000115", "definitions", "definition");
+            loadStringValues(model, "chemrof:wurcs_representation", "wurcs_representations", "wurcs");
+
             loadBooleanValues(model, "owl:deprecated", "deprecated_flags", "flag");
 
             finish();

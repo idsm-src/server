@@ -174,6 +174,14 @@ create table chebi.inchies
 );
 
 
+create table chebi.wurcs_representations
+(
+    chebi       integer not null,
+    wurcs       varchar not null,
+    primary key(chebi)
+);
+
+
 create table chebi.definitions
 (
     chebi       integer not null,

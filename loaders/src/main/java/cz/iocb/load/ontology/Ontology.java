@@ -412,6 +412,8 @@ public class Ontology extends Updater
         sources.add(new StaticSource("Situation Ontology", "1.1"));
         sources.add(new OwlSource("Mass Spectrometry Ontology (MS)", "http://purl.obolibrary.org/obo/ms.owl"));
         sources.add(new OwlSource("ClassyFire Ontology", "http://purl.obolibrary.org/obo/ChemOnt.owl"));
+        sources.add(new StaticSource("Chemical Entity Materials and Reactions Ontological Framework (ChEMROF)",
+                "2025-12-11"));
         sources.add(new StaticSource("OWL 2 Schema (OWL 2)", "2009-10-16"));
         sources.add(new StaticSource("RDF Schema (RDFS)", "1.1"));
         sources.add(new StaticSource("RDF Vocabulary Terms", "1.1"));
@@ -600,13 +602,6 @@ public class Ontology extends Updater
         builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/startingPage", 197);
         builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/subtitle", 198);
         builtinResources.put("http://purl.obolibrary.org/obo/has-role", 199);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/formula", 200);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/charge", 201);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/inchi", 202);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/inchikey", 203);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/mass", 204);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/monoisotopicmass", 205);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/smiles", 206);
         builtinResources.put("http://purl.org/cerif/frapo/hasFundingAgency", 207);
         builtinResources.put("http://purl.org/cerif/frapo/hasGrantNumber", 208);
         builtinResources.put("http://purl.org/cerif/frapo/isSupportedBy", 209);
@@ -838,6 +833,14 @@ public class Ontology extends Updater
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#HRACClassification", 435);
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#IRACClassification", 436);
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#FRACClassification", 437);
+        builtinResources.put("https://w3id.org/chemrof/generalized_empirical_formula", 438);
+        builtinResources.put("https://w3id.org/chemrof/charge", 439);
+        builtinResources.put("https://w3id.org/chemrof/inchi_key_string", 440);
+        builtinResources.put("https://w3id.org/chemrof/inchi_string", 441);
+        builtinResources.put("https://w3id.org/chemrof/mass", 442);
+        builtinResources.put("https://w3id.org/chemrof/monoisotopic_mass", 443);
+        builtinResources.put("https://w3id.org/chemrof/smiles_string", 444);
+        builtinResources.put("https://w3id.org/chemrof/wurcs_representation", 445);
 
         // classes
         builtinResources.put("http://data.epo.org/linked-data/def/patent/Publication", 512);

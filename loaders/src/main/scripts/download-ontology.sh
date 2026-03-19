@@ -246,6 +246,9 @@ http://www.ontologydesignpatterns.org/cp/owl/situation.owl
 # Mass Spectrometry Ontology (MS)
 https://purl.obolibrary.org/obo/ms.owl
 
+# Chemical Entity Materials and Reactions Ontological Framework (ChEMROF)
+https://raw.githubusercontent.com/chemkg/chemrof/main/schema/owl/chemrof.owl.ttl
+
 # OWL 2 Schema (OWL 2)
 http://www.w3.org/2002/07/owl.ttl
 
@@ -463,6 +466,7 @@ ea21388ea72fb98aaecec48b8f8a5765  $output/${downloaded[http://www.w3.org/TR/skos
 3990536d17244347bc22256c4d524dc4  $output/${downloaded[http://www.w3.org/2006/vcard/ns.ttl]}
 57d88c7d6a44220fd95189d0f995e51d  $output/${downloaded[http://vocab.deri.ie/void.ttl]}
 8ab3a314969cd6ab4094a9bb4213ebdb  $output/${downloaded[https://data.bioontology.org/ontologies/NDF-RT/submissions/1/download?apikey=8b5b7825-538d-40e0-9e9e-5ab9274a9aeb]}
+813c0afee7db4b7e4e86be4ed9be5026  $output/${downloaded[https://raw.githubusercontent.com/chemkg/chemrof/main/schema/owl/chemrof.owl.ttl]}
 EOF
 
 

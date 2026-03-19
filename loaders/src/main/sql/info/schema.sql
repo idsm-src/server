@@ -124,9 +124,10 @@ insert into info.idsm_sources values (67, 'Vocabulary of Interlinked Datasets (V
 insert into info.idsm_sources values (68, 'Situation Ontology', 'http://ontologydesignpatterns.org/wiki/Submissions:Situation', '');
 insert into info.idsm_sources values (69, 'Mass Spectrometry Ontology (MS)', 'http://www.psidev.info/groups/controlled-vocabularies', '');
 insert into info.idsm_sources values (70, 'ClassyFire Ontology', 'http://classyfire.wishartlab.com/', '');
-insert into info.idsm_sources values (71, 'OWL 2 Schema (OWL 2)', 'https://www.w3.org/TR/owl2-overview/', '');
-insert into info.idsm_sources values (72, 'RDF Schema (RDFS)', 'https://www.w3.org/TR/rdf-schema/', '');
-insert into info.idsm_sources values (73, 'RDF Vocabulary Terms', 'https://www.w3.org/TR/rdf11-concepts/', '');
+insert into info.idsm_sources values (71, 'Chemical Entity Materials and Reactions Ontological Framework (ChEMROF)', 'https://chemkg.github.io/chemrof/home/', '');
+insert into info.idsm_sources values (72, 'OWL 2 Schema (OWL 2)', 'https://www.w3.org/TR/owl2-overview/', '');
+insert into info.idsm_sources values (73, 'RDF Schema (RDFS)', 'https://www.w3.org/TR/rdf-schema/', '');
+insert into info.idsm_sources values (74, 'RDF Vocabulary Terms', 'https://www.w3.org/TR/rdf11-concepts/', '');
 
 
 insert into info.idsm_counts values (0, 'PubChem Substances', 0);

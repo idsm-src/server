@@ -132,7 +132,8 @@ public class Chebi
             Table table = new Table(schema, "formulas");
             NodeMapping subject = config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "chebi");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("chebi:formula"),
+            config.addQuadMapping(table, graph, subject,
+                    config.createIriMapping("chemrof:generalized_empirical_formula"),
                     config.createLiteralMapping(xsdString, "formula"));
         }
 
@@ -140,7 +141,7 @@ public class Chebi
             Table table = new Table(schema, "masses");
             NodeMapping subject = config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "chebi");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("chebi:mass"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:mass"),
                     config.createLiteralMapping(xsdString, "mass"));
         }
 
@@ -148,7 +149,7 @@ public class Chebi
             Table table = new Table(schema, "monoisotopic_masses");
             NodeMapping subject = config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "chebi");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("chebi:monoisotopicmass"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:monoisotopic_mass"),
                     config.createLiteralMapping(xsdString, "mass"));
         }
 
@@ -188,7 +189,7 @@ public class Chebi
             Table table = new Table(schema, "charges");
             NodeMapping subject = config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "chebi");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("chebi:charge"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:charge"),
                     config.createLiteralMapping(xsdString, "charge"));
         }
 
@@ -196,7 +197,7 @@ public class Chebi
             Table table = new Table(schema, "smiles_codes");
             NodeMapping subject = config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "chebi");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("chebi:smiles"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:smiles_string"),
                     config.createLiteralMapping(xsdString, "smiles"));
         }
 
@@ -204,7 +205,7 @@ public class Chebi
             Table table = new Table(schema, "inchikeys");
             NodeMapping subject = config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "chebi");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("chebi:inchikey"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:inchi_key_string"),
                     config.createLiteralMapping(xsdString, "inchikey"));
         }
 
@@ -212,8 +213,16 @@ public class Chebi
             Table table = new Table(schema, "inchies");
             NodeMapping subject = config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "chebi");
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("chebi:inchi"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:inchi_string"),
                     config.createLiteralMapping(xsdString, "inchi"));
+        }
+
+        {
+            Table table = new Table(schema, "wurcs_representations");
+            NodeMapping subject = config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "chebi");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:wurcs_representation"),
+                    config.createLiteralMapping(xsdString, "wurcs"));
         }
 
         {
