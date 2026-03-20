@@ -25,7 +25,7 @@ public class Mesh extends Updater
     private static final StringSet newMeshes = new StringSet();
     private static final StringSet oldMeshes = new StringSet();
 
-    @SuppressWarnings("serial")
+
     private static HashMap<String, Integer> zoneTable = new HashMap<String, Integer>()
     {
         {

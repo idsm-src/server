@@ -34,7 +34,6 @@ public abstract class Sachem
     }
 
 
-    @SuppressWarnings("serial")
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         String sachem = config.getPrefixes().get("sachem");

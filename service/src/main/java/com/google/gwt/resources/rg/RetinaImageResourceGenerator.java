@@ -187,6 +187,7 @@ public final class RetinaImageResourceGenerator extends AbstractResourceGenerato
    * This key is used to determine which DisplayedImage a given set of image
    * bytes should be associated with.
    */
+  @SuppressWarnings("serial")
   static class BundleKey extends StringKey {
     private static String key(ImageResourceDeclaration image, boolean isExternal) {
       if (isExternal) {
@@ -228,6 +229,7 @@ public final class RetinaImageResourceGenerator extends AbstractResourceGenerato
   /**
    * Associates an ImageRect and a LocalizedImage.
    */
+  @SuppressWarnings("serial")
   static class CannotBundleImageException extends Exception {
     private final ImageRect imageRect;
     private final LocalizedImage localized;
@@ -338,6 +340,7 @@ public final class RetinaImageResourceGenerator extends AbstractResourceGenerato
    * This represent how the user described the image in the original Java
    * source. Its identity is based on the ImageResource JMethod.
    */
+  @SuppressWarnings("serial")
   static class ImageResourceDeclaration extends StringKey {
     private static String key(JMethod method) {
       return method.getEnclosingType().getQualifiedSourceName() + "." + method.getName();
@@ -389,6 +392,7 @@ public final class RetinaImageResourceGenerator extends AbstractResourceGenerato
    * the content hash of the resolved data and any transformations that will be
    * applied to the data.
    */
+  @SuppressWarnings("serial")
   static class LocalizedImage extends StringKey {
     public static LocalizedImage create(TreeLogger logger,
         ResourceContext context, ImageResourceDeclaration image)
