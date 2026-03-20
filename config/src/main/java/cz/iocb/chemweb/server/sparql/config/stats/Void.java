@@ -33,7 +33,7 @@ public class Void
         config.addIriClass(new MapUserIriClass("sd:graph", "integer", new Table(schema, "graphs"),
                 new TableColumn("id"), new TableColumn("iri"), null));
 
-        config.addIriClass(new VoidResource("void:named-graph", "http://void/named-graph-", List.of("integer")));
+        //config.addIriClass(new VoidResource("void:named-graph", "http://void/named-graph-", List.of("integer")));
 
         config.addIriClass(new VoidResource("void:graph", "http://void/graph-", List.of("integer")));
 
@@ -93,7 +93,8 @@ public class Void
         {
             Table table = new Table(schema, "graphs");
 
-            NodeMapping named = config.createIriMapping("void:named-graph", "id");
+            NodeMapping named = config.createIriMapping("sd:graph" /*"void:named-graph"*/, "id");
+
             Conditions condition = config.createAreNotEqualCondition("id", "'0'::integer");
 
             config.addQuadMapping(graph, defaultDataset, config.createIriMapping("sd:defaultGraph"), defaultGraph);
