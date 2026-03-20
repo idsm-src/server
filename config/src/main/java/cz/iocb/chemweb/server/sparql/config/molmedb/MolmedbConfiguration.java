@@ -32,6 +32,7 @@ public class MolmedbConfiguration extends SparqlDatabaseConfiguration
     {
         Common.addPrefixes(this);
 
+        addPrefix("molmedb", "https://identifiers.org/molmedb/");
         addPrefix("mmdbvoc", "https://rdf.molmedb.upol.cz/vocabulary#");
 
         addPrefix("bao", "http://www.bioassayontology.org/bao#");

@@ -37,6 +37,7 @@ public class MolmedbSachemConfiguration extends SparqlDatabaseOptimisedConfigura
         Common.addPrefixes(this);
         Sachem.addPrefixes(this);
 
+        addPrefix("molmedb", "https://identifiers.org/molmedb/");
         addPrefix("sio", "http://semanticscience.org/resource/");
     }
 
