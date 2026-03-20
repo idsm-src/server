@@ -359,14 +359,14 @@ public class Ontology extends Updater
         sources.add(new OwlSource("Basic Formal Ontology (BFO)", "http://purl.obolibrary.org/obo/bfo.owl"));
         sources.add(new OwlSource("Food Ontology (FOODON)", "http://purl.obolibrary.org/obo/foodon.owl"));
         sources.add(new OwlSource("Evidence and Conclusion Ontology (ECO)", "http://purl.obolibrary.org/obo/eco.owl"));
-        sources.add(new StaticSource("Disease Drivers Ontology (DISDRIV)", "2023-12-15"));
+        sources.add(new OwlSource("Disease Drivers Ontology (DISDRIV)", "http://purl.obolibrary.org/obo/disdriv.owl"));
         sources.add(new OwlSource("Genotype Ontology (GENO)", "http://purl.obolibrary.org/obo/geno.owl"));
         sources.add(
                 new OwlSource("Common Anatomy Reference Ontology (CARO)", "http://purl.obolibrary.org/obo/caro.owl"));
         sources.add(new OwlSource("Environment Ontology (ENVO)", "http://purl.obolibrary.org/obo/envo.owl"));
         sources.add(new OwlSource("Ontology for General Medical Science (OGMS)",
                 "http://purl.obolibrary.org/obo/ogms.owl"));
-        sources.add(new StaticSource("Unified phenotype ontology (uPheno)", "2.0"));
+        sources.add(new OwlSource("Unified phenotype ontology (uPheno)", "http://purl.obolibrary.org/obo/upheno.owl"));
         sources.add(new OwlSource("OBO Metadata Ontology", "http://purl.obolibrary.org/obo/omo.owl"));
         sources.add(new StaticSource("Biological Pathway Exchange (BioPAX)", "1.0"));
         sources.add(new OwlSource("UniProt RDF schema ontology", "http://purl.uniprot.org/core/"));
