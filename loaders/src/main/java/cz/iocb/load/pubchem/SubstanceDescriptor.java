@@ -64,6 +64,48 @@ class SubstanceDescriptor extends Updater
             }
         });
 
+        processFiles("pubchem/RDF/substance", "pc_substance_version_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(!predicate.getURI()
+                                .equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#substance_version"))
+                            throw new IOException();
+
+                        Integer id = Substance.getSubstanceID(subject.getURI());
+                        Integer value = getIntFromInteger(object);
+
+                        synchronized(newValues)
+                        {
+                            if(value.equals(oldValues.remove(id)))
+                            {
+                                keepValues.put(id, value);
+                            }
+                            else
+                            {
+                                Integer keep = keepValues.get(id);
+
+
+                                if(value.equals(keep))
+                                    return;
+                                else if(keep != null)
+                                    throw new IOException();
+
+                                Integer put = newValues.put(id, value);
+
+                                if(put != null && !value.equals(put))
+                                    throw new IOException();
+                            }
+                        }
+                    }
+                }.load(stream);
+            }
+        });
+
         store("delete from pubchem.descriptor_substance_bases where substance=? and version=?", oldValues);
         store("insert into pubchem.descriptor_substance_bases(substance,version) values(?,?) "
                 + "on conflict(substance) do update set version=EXCLUDED.version", newValues);
@@ -99,7 +141,7 @@ class SubstanceDescriptor extends Updater
     {
         System.out.println("load substance descriptors ...");
 
-        //loadSubstanceVersions();
+        loadSubstanceVersions();
         checkSubstanceVersionTypes();
 
         System.out.println();

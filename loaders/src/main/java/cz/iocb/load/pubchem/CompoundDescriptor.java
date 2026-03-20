@@ -74,6 +74,29 @@ class CompoundDescriptor extends Updater
             }
         });
 
+        processFiles("pubchem/RDF/compound/general", "pc_compound2" + field + "_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    String property = "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#" + field;
+
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(!predicate.getURI().equals(property))
+                            throw new IOException();
+
+                        Integer id = Compound.getCompoundID(subject.getURI());
+                        Integer value = getIntFromInteger(object);
+
+                        if(!value.equals(keepValues.getOrDefault(id, newValues.get(id))))
+                            throw new IOException();
+                    }
+                }.load(stream);
+            }
+        });
+
         store("update pubchem.descriptor_compound_bases set " + field + "=null where compound=? and " + field + "=?",
                 oldValues);
         store("insert into pubchem.descriptor_compound_bases (compound," + field + ") values(?,?) "
@@ -127,6 +150,29 @@ class CompoundDescriptor extends Updater
                                     throw new IOException();
                             }
                         }
+                    }
+                }.load(stream);
+            }
+        });
+
+        processFiles("pubchem/RDF/compound/general", "pc_compound2" + field + "_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    String property = "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#" + field;
+
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(!predicate.getURI().equals(property))
+                            throw new IOException();
+
+                        Integer id = Compound.getCompoundID(subject.getURI());
+                        Float value = getFloatFromDecimal(object);
+
+                        if(!value.equals(keepValues.getOrDefault(id, newValues.get(id))))
+                            throw new IOException();
                     }
                 }.load(stream);
             }
@@ -227,6 +273,36 @@ class CompoundDescriptor extends Updater
             }
         });
 
+        processFiles("pubchem/RDF/compound/general", "pc_compound2xlogp3_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(!predicate.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#xlogp3"))
+                            throw new IOException();
+
+                        Integer id = Compound.getCompoundID(subject.getURI());
+                        Float value = getFloatFromDecimal(object);
+
+                        Float keepAA = keepAAValues.getOrDefault(id, newAAValues.get(id));
+                        Float keep = keepValues.getOrDefault(id, newValues.get(id));
+
+                        if(keepAA == null && keep == null)
+                            throw new IOException();
+
+                        if(keepAA != null && !value.equals(keepAA))
+                            throw new IOException();
+
+                        if(keep != null && !value.equals(keep))
+                            throw new IOException();
+                    }
+                }.load(stream);
+            }
+        });
+
         store("update pubchem.descriptor_compound_bases set xlogp3_aa=null where compound=? and xlogp3_aa=?",
                 oldAAValues);
         store("insert into pubchem.descriptor_compound_bases (compound,xlogp3_aa) values(?,?) "
@@ -282,6 +358,29 @@ class CompoundDescriptor extends Updater
                                     throw new IOException();
                             }
                         }
+                    }
+                }.load(stream);
+            }
+        });
+
+        processFiles("pubchem/RDF/compound/general", "pc_compound2" + field + "_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    String property = "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#" + field;
+
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(!predicate.getURI().equals(property))
+                            throw new IOException();
+
+                        Integer id = Compound.getCompoundID(subject.getURI());
+                        String value = getString(object);
+
+                        if(!value.equals(keepValues.getOrDefault(id, newValues.get(id))))
+                            throw new IOException();
                     }
                 }.load(stream);
             }
