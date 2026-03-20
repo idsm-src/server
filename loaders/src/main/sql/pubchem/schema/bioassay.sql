@@ -62,11 +62,3 @@ create table pubchem.bioassay_chembl_mechanisms
     chembl_mechanism    integer not null,
     primary key(bioassay)
 );
-
-
-create table pubchem.bioassay_patents
-(
-    bioassay            integer not null,
-    patent              integer not null,
-    primary key(bioassay, patent)
-);

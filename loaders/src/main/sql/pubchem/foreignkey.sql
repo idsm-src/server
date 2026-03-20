@@ -26,8 +26,6 @@ alter table pubchem.bioassay_summary_assays add foreign key (bioassay) reference
 alter table pubchem.bioassay_summary_assays add foreign key (summary_assay) references pubchem.bioassay_bases(id) initially deferred;
 alter table pubchem.bioassay_chembl_assays add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
 alter table pubchem.bioassay_chembl_mechanisms add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
-alter table pubchem.bioassay_patents add foreign key (bioassay) references pubchem.bioassay_bases(id) initially deferred;
-alter table pubchem.bioassay_patents add foreign key (patent) references pubchem.patent_bases(id) initially deferred;
 
 
 -- book

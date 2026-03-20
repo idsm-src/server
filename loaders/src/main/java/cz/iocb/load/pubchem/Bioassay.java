@@ -441,36 +441,6 @@ class Bioassay extends Updater
     }
 
 
-    private static void loadPatents(Model model) throws IOException, SQLException
-    {
-        IntPairSet keepPatents = new IntPairSet();
-        IntPairSet newPatents = new IntPairSet();
-        IntPairSet oldPatents = new IntPairSet();
-
-        load("select bioassay,patent from pubchem.bioassay_patents", oldPatents);
-
-        new QueryResultProcessor(patternQuery("?bioassay cito:isDiscussedBy ?patent"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer bioassayID = getBioassayID(getIRI("bioassay"));
-                Integer patentID = Patent.getPatentID(getIRI("patent"));
-
-                Pair<Integer, Integer> pair = Pair.getPair(bioassayID, patentID);
-
-                if(oldPatents.remove(pair))
-                    keepPatents.add(pair);
-                else if(!keepPatents.contains(pair))
-                    newPatents.add(pair);
-            }
-        }.load(model);
-
-        store("delete from pubchem.bioassay_patents where bioassay=? and patent=?", oldPatents);
-        store("insert into pubchem.bioassay_patents(bioassay,patent) values(?,?)", newPatents);
-    }
-
-
     static void load() throws XPathException, SQLException, IOException, ParserConfigurationException, SAXException
     {
         System.out.println("load bioassays ...");
@@ -485,7 +455,6 @@ class Bioassay extends Updater
         loadConfirmatoryAssays(model);
         loadPrimaryAssays(model);
         loadSummaryAssays(model);
-        loadPatents(model);
 
         model.close();
 
