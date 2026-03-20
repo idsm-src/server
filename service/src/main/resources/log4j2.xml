@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration name="Config" status="error" monitorInterval="60" shutdownHook="disable">
+  <Appenders>
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%highlight{%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36}}%msg%n"/>
+    </Console>
+    <Console name="SparqlQueryConsole" target="SYSTEM_OUT">
+    <PatternLayout>
+      <MarkerPatternSelector defaultPattern='%d{ISO8601} %X{remoteaddr} %X{request} "%msg"%n%style{%X{sparql}}{bold}%n%X{sql}%n'>
+        <PatternMatch  key="ERROR"  pattern='%d{ISO8601} %X{remoteaddr} %X{request} "%msg"%n%style{%X{sparql}}{bold}%n%X{sql}%n%throwable%n'/>
+      </MarkerPatternSelector>
+    </PatternLayout>
+    </Console>
+  </Appenders>
+  <Loggers>
+    <Root level="error">
+      <AppenderRef ref="Console"/>
+    </Root>
+    <Logger name="cz.iocb.sparql.engine.request.Request" level="info" additivity="false">
+      <AppenderRef ref="SparqlQueryConsole"/>
+    </Logger>
+  </Loggers>
+</Configuration>

@@ -16,7 +16,7 @@
       factory="org.apache.tomcat.jdbc.pool.DataSourceFactory" closeMethod="close"
       type="javax.sql.DataSource" driverClassName="org.postgresql.Driver"
       url="jdbc:postgresql://localhost:5432/idsm" username="sparql" password="%password%"
-      initialSize="25" maxActive="25" maxIdle="25" minIdle="25"
+      initialSize="64" maxActive="64" maxIdle="64" minIdle="64"
       maxWait="-1" testOnBorrow="true" validationQuery="SELECT 1"
       testWhileIdle="false" removeAbandoned="false" timeBetweenEvictionRunsMillis="0" />
 

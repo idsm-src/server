@@ -109,7 +109,7 @@
     <init-param><param-name>resource</param-name><param-value>sparql:idsm</param-value></init-param>
     <init-param><param-name>timeout</param-name><param-value>1000</param-value></init-param>
     <init-param><param-name>max-timeout</param-name><param-value>9000</param-value></init-param>
-    <init-param><param-name>sql-query-size-limit</param-name><param-value>67108864</param-value></init-param>
+    <init-param><param-name>sql-query-size-limit</param-name><param-value>134217728</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>IdsmEndpointServlet</servlet-name>
@@ -122,7 +122,7 @@
     <init-param><param-name>resource</param-name><param-value>sparql:molmedb</param-value></init-param>
     <init-param><param-name>timeout</param-name><param-value>1000</param-value></init-param>
     <init-param><param-name>max-timeout</param-name><param-value>18000</param-value></init-param>
-    <init-param><param-name>sql-query-size-limit</param-name><param-value>67108864</param-value></init-param>
+    <init-param><param-name>sql-query-size-limit</param-name><param-value>134217728</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>MolmedbEndpointServlet</servlet-name>
