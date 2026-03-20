@@ -64,7 +64,7 @@ create table chembl_tmp.molecule_irac_classification
 insert into chembl_tmp.molecule_irac_classification
 select replace(d.chembl_id, 'CHEMBL', '')::integer
 from chembl_tmp.molecule_dictionary d, chembl_tmp.pesticide_class_mapping m, chembl_tmp.pesticide_classification c
-where d.molregno = m.molregno and m.pest_class_id = c.pest_class_id and c.ref_type = 'IHRAC';
+where d.molregno = m.molregno and m.pest_class_id = c.pest_class_id and c.ref_type = 'IRAC';
 
 --------------------------------------------------------------------------------
 
