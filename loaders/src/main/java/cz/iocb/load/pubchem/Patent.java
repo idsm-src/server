@@ -893,7 +893,7 @@ class Patent extends Updater
                                     if(put != null && !name.equals(put))
                                     {
                                         if(!isNameBetter(name, put))
-                                            newAssigneeNames.put(inventorID, put);
+                                            newInventorNames.put(inventorID, put);
 
                                         //throw new IOException(inventorID);
                                     }
