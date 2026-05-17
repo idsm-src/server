@@ -143,7 +143,7 @@ create table ontology.resource_categories__reftable
 
 --============================================================================--
 
-insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (1, 'http://blank/ID_' , 17,  0, '^http://blank/ID_[1-9][0-9]*$');
+insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (1, 'http://blank/ID_' , 17,  0, '^http://blank/ID_(0|[1-9][0-9]*)$');
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (2, 'http://semanticscience.org/resource/SIO_' , 41,  6, '^http://semanticscience\.org/resource/SIO_[0-9]{6}$');
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (3, 'http://semanticscience.org/resource/CHEMINF_' , 45,  6, '^http://semanticscience\.org/resource/CHEMINF_[0-9]{6}$');
 insert into ontology.resource_categories__reftable(unit_id, prefix, value_offset, value_length, pattern) values (4, 'http://www.bioassayontology.org/bao#BAO_' , 41,  7, '^http://www\.bioassayontology\.org/bao#BAO_[0-9]{7}$');
