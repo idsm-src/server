@@ -1,43 +1,99 @@
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix sio: <http://semanticscience.org/resource/> .
-@prefix obo: <http://purl.obolibrary.org/obo/> .
-@prefix vocab: <http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#>
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix dcterms: <http://purl.org/dc/terms/>.
+@prefix sio: <http://semanticscience.org/resource/>.
+@prefix obo: <http://purl.obolibrary.org/obo/>.
+@prefix vocab: <http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#>.
 
-dcterms:Dataset rdf:type owl:Class .
-sio:is-attribute-of rdf:type rdf:Property ; rdfs:label "is attribute of" .
-sio:has-value rdf:type rdf:Property ; rdfs:label "has value" .
-sio:has-attribute rdf:type rdf:Property ; rdfs:label "has attribute" .
-sio:has-unit rdf:type rdf:Property ; rdfs:label "has unit" .
-obo:has-role rdf:type rdf:Property ; rdfs:label "has role" .
+dcterms:Dataset rdf:type owl:Class.
+sio:is-attribute-of rdf:type rdf:Property; rdfs:label "is attribute of".
+sio:has-value rdf:type rdf:Property; rdfs:label "has value".
+sio:has-attribute rdf:type rdf:Property; rdfs:label "has attribute".
+sio:has-unit rdf:type rdf:Property; rdfs:label "has unit".
+obo:has-role rdf:type rdf:Property; rdfs:label "has role".
 
-vocab:Anatomy rdfs:label "PubChem Anatomy" .
-vocab:Author rdfs:label "PubChem Author" .
-vocab:BioAssay rdfs:label "PubChem BioAssay" .
-vocab:Book rdfs:label "PubChem Book" .
-vocab:Cell rdfs:label "PubChem Cell" .
-vocab:Compound rdfs:label "PubChem Compound" .
-vocab:Concept rdfs:label "PubChem Concept" .
-vocab:ConservedDomain rdfs:label "PubChem ConservedDomain" .
-vocab:Cooccurrence rdfs:label "PubChem Cooccurrence" .
-vocab:Descriptor rdfs:label "PubChem Descriptor" .
-vocab:Disease rdfs:label "PubChem Disease" .
-vocab:Endpoint rdfs:label "PubChem Endpoint" .
-vocab:Gene rdfs:label "PubChem Gene" .
-vocab:Grant rdfs:label "PubChem Grant" .
-vocab:InChIKey rdfs:label "PubChem InChIKey" .
-vocab:Journal rdfs:label "PubChem Journal" .
-vocab:MeasureGroup rdfs:label "PubChem MeasureGroup" .
-vocab:Organization rdfs:label "PubChem Organization" .
-vocab:Patent rdfs:label "PubChem Patent" .
-vocab:PatentAssignee rdfs:label "PubChem PatentAssignee" .
-vocab:PatentInventor rdfs:label "PubChem PatentInventor" .
-vocab:Pathway rdfs:label "PubChem Pathway" .
-vocab:Protein rdfs:label "PubChem Protein" .
-vocab:Reference rdfs:label "PubChem Reference" .
-vocab:Source rdfs:label "PubChem Source" .
-vocab:Substance rdfs:label "PubChem Substance" .
-vocab:Synonym rdfs:label "PubChem Synonym" .
-vocab:Taxonomy rdfs:label "PubChem Taxonomy" .
+vocab:connectivity_smiles rdf:type rdf:Property; rdfs:label "connectivity smiles".
+vocab:covalent_unit_count rdf:type rdf:Property; rdfs:label "covalent unit count".
+vocab:defined_atom_stereo_count rdf:type rdf:Property; rdfs:label "defined atom stereo count".
+vocab:defined_bond_stereo_count rdf:type rdf:Property; rdfs:label "defined bond stereo count".
+vocab:exact_mass rdf:type rdf:Property; rdfs:label "exact mass".
+vocab:has_parent rdf:type rdf:Property; rdfs:label "has parent".
+vocab:hydrogen_bond_acceptor_count rdf:type rdf:Property; rdfs:label "hydrogen bond acceptor count".
+vocab:hydrogen_bond_donor_count rdf:type rdf:Property; rdfs:label "hydrogen bond donor count".
+vocab:inchikey rdf:type rdf:Property; rdfs:label "inchikey".
+vocab:is_active_ingredient_of rdf:type rdf:Property; rdfs:label "is active ingredient of".
+vocab:isotope_atom_count rdf:type rdf:Property; rdfs:label "isotope atom count".
+vocab:iupac_inchi rdf:type rdf:Property; rdfs:label "iupac inchi".
+vocab:molecular_formula rdf:type rdf:Property; rdfs:label "molecular formula".
+vocab:molecular_weight rdf:type rdf:Property; rdfs:label "molecular weight".
+vocab:mono_isotopic_weight rdf:type rdf:Property; rdfs:label "mono-isotopic weight".
+vocab:non_hydrogen_atom_count rdf:type rdf:Property; rdfs:label "non-hydrogen atom count".
+vocab:preferred_iupac_name rdf:type rdf:Property; rdfs:label "preferred iupac name".
+vocab:rotatable_bond_count rdf:type rdf:Property; rdfs:label "rotatable bond count".
+vocab:structure_complexity rdf:type rdf:Property; rdfs:label "structure complexity".
+vocab:substance_version rdf:type rdf:Property; rdfs:label "substance version".
+vocab:total_formal_charge rdf:type rdf:Property; rdfs:label "total formal charge".
+vocab:tpsa rdf:type rdf:Property; rdfs:label "tpsa".
+vocab:undefined_atom_stereo_count rdf:type rdf:Property; rdfs:label "undefined atom stereo count".
+vocab:undefined_bond_stereo_count rdf:type rdf:Property; rdfs:label "undefined bond stereo count".
+vocab:xlogp3 rdf:type rdf:Property; rdfs:label "xlogp3".
+
+vocab:hasQualifier rdf:type rdf:Property; rdfs:label "has qualifier".
+vocab:hasSimilarProtein rdf:type rdf:Property; rdfs:label "has similar protein".
+vocab:discussesAsDerivedByTextMining rdf:type rdf:Property; rdfs:label "discusses as derived by text mining".
+vocab:priorityDate rdf:type rdf:Property; rdfs:label "priority date".
+
+vocab:Anatomy rdf:type owl:Class; rdfs:label "Anatomy".
+vocab:Author rdf:type owl:Class; rdfs:label "Author".
+vocab:BioAssay rdf:type owl:Class; rdfs:label "BioAssay".
+vocab:Book rdf:type owl:Class; rdfs:label "Book".
+vocab:Cell rdf:type owl:Class; rdfs:label "Cell".
+vocab:Compound rdf:type owl:Class; rdfs:label "Compound".
+vocab:CompoundIdentifier rdf:type owl:Class; rdfs:label "Compound Identifier".
+vocab:Concept rdf:type owl:Class; rdfs:label "Concept".
+vocab:ConnectivitySMILES rdf:type owl:Class; rdfs:label "Connectivity SMILES".
+vocab:ConservedDomain rdf:type owl:Class; rdfs:label "Conserved Domain".
+vocab:Cooccurrence rdf:type owl:Class; rdfs:label "Cooccurrence".
+vocab:CovalentUnitCount rdf:type owl:Class; rdfs:label "Covalent Unit Count".
+vocab:DefinedAtomStereoCount rdf:type owl:Class; rdfs:label "Defined Atom Stereo Count".
+vocab:DefinedBondStereoCount rdf:type owl:Class; rdfs:label "Defined Bond Stereo Count".
+vocab:Disease rdf:type owl:Class; rdfs:label "Disease".
+vocab:Endpoint rdf:type owl:Class; rdfs:label "Endpoint".
+vocab:ExactMass rdf:type owl:Class; rdfs:label "Exact Mass".
+vocab:Gene rdf:type owl:Class; rdfs:label "Gene".
+vocab:GeneSymbol rdf:type owl:Class; rdfs:label "Gene Symbol".
+vocab:Grant rdf:type owl:Class; rdfs:label "Grant".
+vocab:HydrogenBondAcceptorCount rdf:type owl:Class; rdfs:label "Hydrogen Bond Acceptor Count".
+vocab:HydrogenBondDonorCount rdf:type owl:Class; rdfs:label "Hydrogen Bond Donor Count".
+vocab:InChIKey rdf:type owl:Class; rdfs:label "InChIKey".
+vocab:IsotopeAtomCount rdf:type owl:Class; rdfs:label "Isotope Atom Count".
+vocab:IUPACInChI rdf:type owl:Class; rdfs:label "IUPAC InChI".
+vocab:Journal rdf:type owl:Class; rdfs:label "Journal".
+vocab:MeasureGroup rdf:type owl:Class; rdfs:label "Measure Group".
+vocab:MolecularFormula rdf:type owl:Class; rdfs:label "Molecular Formula".
+vocab:MolecularWeight rdf:type owl:Class; rdfs:label "Molecular Weight".
+vocab:MonoIsotopicWeight rdf:type owl:Class; rdfs:label "Mono-Isotopic Weight".
+vocab:NonHydrogenAtomCount rdf:type owl:Class; rdfs:label "Non-Hydrogen Atom Count".
+vocab:Organization rdf:type owl:Class; rdfs:label "Organization".
+vocab:Patent rdf:type owl:Class; rdfs:label "Patent".
+vocab:PatentAssignee rdf:type owl:Class; rdfs:label "Patent Assignee".
+vocab:PatentInventor rdf:type owl:Class; rdfs:label "Patent Inventor".
+vocab:Pathway rdf:type owl:Class; rdfs:label "Pathway".
+vocab:PreferredIUPACName rdf:type owl:Class; rdfs:label "Preferred IUPAC Name".
+vocab:Protein rdf:type owl:Class; rdfs:label "Protein".
+vocab:PubChemAssayOutcome rdf:type owl:Class; rdfs:label "PubChem Assay Outcome".
+vocab:Reference rdf:type owl:Class; rdfs:label "Reference".
+vocab:RotatableBondCount rdf:type owl:Class; rdfs:label "Rotatable Bond Count".
+vocab:SMILES rdf:type owl:Class; rdfs:label "SMILES".
+vocab:Source rdf:type owl:Class; rdfs:label "Source".
+vocab:StructureComplexity rdf:type owl:Class; rdfs:label "Structure Complexity".
+vocab:Substance rdf:type owl:Class; rdfs:label "Substance".
+vocab:SubstanceVersion rdf:type owl:Class; rdfs:label "Substance Version".
+vocab:Synonym rdf:type owl:Class; rdfs:label "Synonym".
+vocab:Taxonomy rdf:type owl:Class; rdfs:label "Taxonomy".
+vocab:TotalFormalCharge rdf:type owl:Class; rdfs:label "Total Formal Charge".
+vocab:TPSA rdf:type owl:Class; rdfs:label "TPSA".
+vocab:UndefinedAtomStereoCount rdf:type owl:Class; rdfs:label "Undefined Atom Stereo Count".
+vocab:UndefinedBondStereoCount rdf:type owl:Class; rdfs:label "Undefined Bond Stereo Count".
+vocab:XLogP3 rdf:type owl:Class; rdfs:label "XLogP3".

@@ -320,12 +320,15 @@ public class Ontology extends Updater
     public static final int unitBAO = 4;
     public static final int unitGO = 5;
     public static final int unitPR = 6;
+    public static final int unitCHEBI = 7;
     public static final int unitThesaurus = 10;
     public static final int unitPR0 = 31;
     public static final int unitPR1 = 32;
     public static final int unitPR2 = 33;
     public static final int unitAT = 34;
     public static final int unitZDBGENE = 35;
+    public static final short unitPowo = 36;
+    public static final short unitIpni = 37;
     public static final int unitStar = 95;
     public static final int unitRareDiseases = 180;
     public static final int unitWormbaseGene = 244;
@@ -1113,6 +1116,10 @@ public class Ontology extends Updater
                     id = Integer.parseInt(tail.substring(0, 6));
                     id = id * 4000 + Integer.parseInt(tail.substring(7));
                 }
+                else if(unit.id == unitPowo || unit.id == unitIpni)
+                {
+                    id = Integer.parseInt(tail.replaceFirst("-", ""));
+                }
                 else if(unit.id == unitStar)
                 {
                     id = tail.charAt(0) - '0';
@@ -1342,6 +1349,9 @@ public class Ontology extends Updater
             {
                 Pair<Integer, Integer> classID = getId("class");
                 Pair<Integer, Integer> superclassID = getId("superclass");
+
+                if(classID.getOne() == unitCHEBI && superclassID.getOne() == unitCHEBI)
+                    return;
 
                 Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> pair = Pair.getPair(classID, superclassID);
 

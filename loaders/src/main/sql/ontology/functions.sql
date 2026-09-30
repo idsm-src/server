@@ -86,6 +86,8 @@ $$
     elsif unit = 35 then
       -- [0-9]{6}-([1-3])?[0-9]{1,3}$
       return rec.prefix || lpad(((id::bigint & x'FFFFFFFF'::bigint) / 4000)::varchar, 6, '0') || '-' || ((id::bigint & x'FFFFFFFF'::bigint) % 4000)::varchar;
+    elsif unit = 36 or unit = 37 then
+      return rec.prefix || id / 10 || '-' || id % 10;
     elsif unit = 95 then
       return rec.prefix || id || '_STAR';
     elsif unit = 180 then
@@ -128,6 +130,8 @@ $$
       return substring(tail, 1, 1)::integer;
     elsif rec.unit_id = 180 then
       return left(tail, -6)::integer;
+    elsif rec.unit_id = 36 or rec.unit_id = 37 then
+      return overlay(tail placing '' from length(tail) - 1 for 1)::integer;
     elsif rec.unit_id < 31 or rec.unit_id > 35 then
       return tail::integer;
     end if;

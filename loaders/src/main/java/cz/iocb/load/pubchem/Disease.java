@@ -130,8 +130,8 @@ public class Disease extends Updater
                 if(iri.matches("http://purl\\.obolibrary\\.org/obo/[0-9]*"))
                     return;
 
-                if(iri.equals("https://rarediseases.info.nih.gov/diseases/0025794/index"))
-                    iri = "https://rarediseases.info.nih.gov/diseases/25794/index";
+                // workaround
+                iri = iri.replaceFirst("^(https://rarediseases.info.nih.gov/diseases/)0*([0-9]*/index)$", "$1$2");
 
                 Integer diseaseID = getDiseaseID(getIRI("disease"));
                 Pair<Integer, Integer> match = Ontology.getId(iri);

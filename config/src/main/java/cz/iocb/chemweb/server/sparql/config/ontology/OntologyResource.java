@@ -38,6 +38,8 @@ public class OntologyResource extends GeneralUserIriClass
     private static final short unitPR2 = 33;
     private static final short unitAT = 34;
     private static final short unitZDBGENE = 35;
+    private static final short unitPowo = 36;
+    private static final short unitIpni = 37;
     private static final short unitStar = 95;
     private static final short unitRareDiseases = 180;
 
@@ -99,6 +101,10 @@ public class OntologyResource extends GeneralUserIriClass
                     // [0-9]{6}-([1-3])?[0-9]{1,3}$
                     id = Integer.parseInt(tail.substring(0, 6));
                     id = id * 4000 + Integer.parseInt(tail.substring(7));
+                }
+                else if(unit.id == unitPowo || unit.id == unitIpni)
+                {
+                    id = Integer.parseInt(tail.replaceFirst("-", ""));
                 }
                 else if(unit.id == unitStar)
                 {

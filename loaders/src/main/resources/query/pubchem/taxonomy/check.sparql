@@ -36,6 +36,9 @@ select distinct ?iri where
         filter(!strstarts(str(?iri), 'http://www.wikidata.org/entity/Q'))
         filter(!strstarts(str(?iri), 'https://eol.org/pages/'))
         filter(!strstarts(str(?iri), 'https://glyconnect.expasy.org/all/taxonomies/'))
+        filter(!strstarts(str(?iri), 'https://powo.science.kew.org/taxon/'))
+        filter(!strstarts(str(?iri), 'https://www.ipni.org/n/'))
+        filter(!strstarts(str(?iri), 'https://www.worldfloraonline.org/taxon/'))
     }
     union
     {
