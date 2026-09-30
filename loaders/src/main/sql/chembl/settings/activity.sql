@@ -11,6 +11,7 @@ alter table chembl_tmp.activities drop column standard_upper_value;
 alter table chembl_tmp.activities drop column src_id;
 alter table chembl_tmp.activities drop column text_value;
 alter table chembl_tmp.activities drop column standard_text_value;
+alter table chembl_tmp.activities drop column modality;
 
 alter table chembl_tmp.activities add primary key (id);
 create index activities__assay_id on chembl_tmp.activities(assay_id);

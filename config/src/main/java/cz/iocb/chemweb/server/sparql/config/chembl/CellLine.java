@@ -33,8 +33,6 @@ public class CellLine
                 config.createIriMapping("ontology:resource", Ontology.unitCLO, "clo_resource_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasEFO"),
                 config.createIriMapping("ontology:resource", Ontology.unitEFO, "efo_resource_id"));
-        config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:cellXref"),
-                config.createIriMapping("reference:life", "cl_lincs_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
                 config.createIriMapping("ontology:resource", Ontology.unitTaxonomy, "cell_source_tax_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
@@ -49,11 +47,6 @@ public class CellLine
                 config.createLiteralMapping(xsdString, "cell_source_organism"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:cellosaurusId"),
                 config.createLiteralMapping(xsdString, "cellosaurus_id"));
-        config.addQuadMapping(table, graph, config.createIriMapping("reference:life", "cl_lincs_id"),
-                config.createIriMapping("rdf:type"), config.createIriMapping("cco:LincsCellRef"));
-        config.addQuadMapping(table, graph, config.createIriMapping("reference:life", "cl_lincs_id"),
-                config.createIriMapping("rdfs:label"),
-                config.createLiteralMapping(xsdString, "(chembl_id || ' LINCS Project Reference: ' || cl_lincs_id)"));
 
         // extension
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),

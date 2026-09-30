@@ -1,24 +1,28 @@
 create type chembl_tmp.molecule_reference_type as enum
 (
-    'ACTOR',
-    'ATLAS',
+    'BINDING DB',
+    'BRENDA',
+    'CCDC',
+    'CHEBI',
+    'CLINICAL TRIALS',
+    'COMPTOX',
+    'DRUG CENTRAL',
     'DRUGBANK',
-    'EMOLECULES',
     'FDA SRS',
+    'FOO DB',
     'HMDB',
     'IUPHAR',
-    'KEGG LIGAND',
-    'LINCS',
-    'MCULE',
-    'NIKKAJI',
+    'LIPID MAPS',
+    'MOLPORT',
     'NMR SHIFT DB2',
     'PDBE',
-    'PHARM GKB',
-    'RECON',
-    'SELLECK',
+    'PROBES AND DRUGS',
+    'PUBCHEM',
+    'RCSB PDB',
+    'RHEA CHEBI',
+    'RHEA POLYMER',
     'SURE CHEMBL',
-    'WIKIPEDIA MOL',
-    'ZINC'
+    'SWISS LIPIDS'
 );
 
 
@@ -37,22 +41,6 @@ create table chembl_tmp.molecule_pubchem_references
     molecule_id     integer not null,
     compound_id     integer not null,
     primary key(molecule_id, compound_id)
-);
-
-
-create table chembl_tmp.molecule_pubchem_thom_pharm_references
-(
-    molecule_id     integer not null,
-    substance_id    integer not null,
-    primary key(molecule_id, substance_id)
-);
-
-
-create table chembl_tmp.molecule_pubchem_dotf_references
-(
-    molecule_id     integer not null,
-    substance_id    integer not null,
-    primary key(molecule_id, substance_id)
 );
 
 

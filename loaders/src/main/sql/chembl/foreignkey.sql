@@ -28,8 +28,6 @@ alter table chembl_tmp.drug_mechanism add foreign key (target_id) references che
 -- molecule_reference
 alter table chembl_tmp.molecule_references add foreign key (molecule_id) references chembl_tmp.molecule_dictionary(id) initially deferred;
 alter table chembl_tmp.molecule_pubchem_references add foreign key (molecule_id) references chembl_tmp.molecule_dictionary(id) initially deferred;
-alter table chembl_tmp.molecule_pubchem_thom_pharm_references add foreign key (molecule_id) references chembl_tmp.molecule_dictionary(id) initially deferred;
-alter table chembl_tmp.molecule_pubchem_dotf_references add foreign key (molecule_id) references chembl_tmp.molecule_dictionary(id) initially deferred;
 alter table chembl_tmp.molecule_chebi_references add foreign key (molecule_id) references chembl_tmp.molecule_dictionary(id) initially deferred;
 
 -- molecule

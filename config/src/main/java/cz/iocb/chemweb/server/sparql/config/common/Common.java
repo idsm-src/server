@@ -79,32 +79,37 @@ public class Common
         config.addIriClass(new IntegerUserIriClass("identifiers:taxonomy", "integer", "http://identifiers.org/taxonomy:"));
         config.addIriClass(new IntegerUserIriClass("identifiers:pubmed", "integer", "http://identifiers.org/pubmed/"));
 
-        config.addIriClass(new IntegerUserIriClass("reference:chebi", "integer", "http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI%3A"));
         config.addIriClass(new IntegerUserIriClass("reference:ncbi-taxonomy", "integer", "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id="));
         config.addIriClass(new IntegerUserIriClass("reference:pubchem-assay", "integer", "http://pubchem.ncbi.nlm.nih.gov/assay/assay.cgi?aid="));
-        config.addIriClass(new StringUserIriClass("reference:life", "http://life.ccs.miami.edu/life/summary?mode=CellLine&source=LINCS&input=", "LCL-[0-9]{4}"));
+
         config.addIriClass(new StringUserIriClass("reference:pharmgkb-gene", "http://www.pharmgkb.org/gene/", "PA[1-9][0-9]*"));
         config.addIriClass(new StringUserIriClass("reference:timbal", "http://mordred.bioc.cam.ac.uk/timbal/", "[A-Za-z0-9%()-]+"));
         config.addIriClass(new StringUserIriClass("reference:cgd", "http://research.nhgri.nih.gov/CGD/view/?g=", "[A-Z0-9-]+"));
-        config.addIriClass(new StringUserIriClass("reference:uniprot", "http://www.uniprot.org/uniprot/"));
-        config.addIriClass(new StringUserIriClass("reference:zinc", "http://zinc15.docking.org/substances/", "ZINC[0-9]{12}"));
-        config.addIriClass(new StringUserIriClass("reference:surechembl", "https://www.surechembl.org/chemical/", "SCHEMBL[0-9]+"));
-        config.addIriClass(new StringUserIriClass("reference:emolecules", "https://www.emolecules.com/cgi-bin/more?vid=", "[1-9][0-9]*"));
-        config.addIriClass(new StringUserIriClass("reference:mcule", "https://mcule.com/", "MCULE-[1-9][0-9]*"));
-        config.addIriClass(new StringUserIriClass("reference:nikkaji", "http://jglobal.jst.go.jp/en/redirect?Nikkaji_No=", "[A-Z0-9.]+"));
-        config.addIriClass(new StringUserIriClass("reference:actor", "http://actor.epa.gov/actor/chemical.xhtml?casrn=", "[1-9][0-9]*-[0-9]{2}-[0-9]"));
-        config.addIriClass(new StringUserIriClass("reference:pdbe", "http://www.ebi.ac.uk/pdbe-srv/pdbechem/chemicalCompound/show/", "[A-Z0-9]{1,3}"));
-        config.addIriClass(new StringUserIriClass("reference:nmrshiftdb2", "http://nmrshiftdb.org/molecule/", "[1-9][0-9]*"));
-        config.addIriClass(new StringUserIriClass("reference:kegg", "http://www.genome.jp/dbget-bin/www_bget?", "C[0-9]{5}"));
-        config.addIriClass(new StringUserIriClass("reference:drugbank", "http://www.drugbank.ca/drugs/", "DB[0-9]{5}"));
-        config.addIriClass(new StringUserIriClass("reference:hmdb", "http://www.hmdb.ca/metabolites/", "HMDB[0-9]{7}"));
-        config.addIriClass(new StringUserIriClass("reference:iuphar", "http://www.guidetopharmacology.org/GRAC/LigandDisplayForward?ligandId=", "[1-9][0-9]*"));
-        config.addIriClass(new StringUserIriClass("reference:selleck", "http://www.selleckchem.com/products/", "[^/]*", ".html"));
-        config.addIriClass(new StringUserIriClass("reference:pharmgkb-drug", "https://www.pharmgkb.org/drug/", "PA[1-9][0-9]*"));
-        config.addIriClass(new StringUserIriClass("reference:expression_atlas", "http://www.ebi.ac.uk/gxa/query?conditionQuery=", ".+"));
-        config.addIriClass(new StringUserIriClass("reference:recon", "https://www.vmh.life/#metabolite/", "[^/]+"));
-        config.addIriClass(new StringUserIriClass("reference:wikipedia", "http://en.wikipedia.org/wiki/", ".+"));
-        config.addIriClass(new StringUserIriClass("reference:fda_srs", "https://precision.fda.gov/uniisearch/srs/unii/", "[A-Z0-9]{10}"));
+
+        config.addIriClass(new StringUserIriClass("reference:bindingdb", "https://www.bindingdb.org/rwd/bind/chemsearch/marvin/SDFdownload.jsp?download_file=/rwd/bind/downloads/BindingDB_All_202601_tsv.zip", "[1-9][0-9]*"));
+        config.addIriClass(new StringUserIriClass("reference:brenda", "https://www.brenda-enzymes.org/ligand.php?brenda_ligand_id=", "[1-9][0-9]*"));
+        config.addIriClass(new StringUserIriClass("reference:ccdc", "https://www.ccdc.cam.ac.uk/structures/search?sid=UNICHEM&pid=csd:", "[A-Z]{6}(-UNICHEM-[1-9][0-9]*)?"));
+        config.addIriClass(new StringUserIriClass("reference:chebi", "https://www.ebi.ac.uk/chebi/CHEBI%3A", "[1-9][0-9]*"));
+        config.addIriClass(new StringUserIriClass("reference:clinicaltrials", "https://clinicaltrials.gov/study/NCT", "[0-9]{8}(-UNICHEM-[1-9][0-9]*)?"));
+        config.addIriClass(new StringUserIriClass("reference:comptox", "https://comptox.epa.gov/dashboard/chemical/details/DTXSID", "[0-9]+"));
+        config.addIriClass(new StringUserIriClass("reference:drugcentral", "https://drugcentral.org/drugcard/", "[A-Za-z0-9+%-]+"));
+        config.addIriClass(new StringUserIriClass("reference:drugbank", "https://go.drugbank.com/drugs/DB", "[0-9]{5}"));
+        config.addIriClass(new StringUserIriClass("reference:fdasrs", "https://d20b1koi85gdl2.cloudfront.net/uniisearch/srs/unii/", "[A-Z0-9]{10}"        ));
+        config.addIriClass(new StringUserIriClass("reference:foodb", "https://foodb.ca/compounds/FDB", "[0-9]{6}"));
+        config.addIriClass(new StringUserIriClass("reference:hmdb", "https://www.hmdb.ca/metabolites/HMDB", "[0-9]{7}"));
+        config.addIriClass(new StringUserIriClass("reference:iuphar", "https://www.guidetopharmacology.org/GRAC/LigandDisplayForward?ligandId=", "[1-9][0-9]*"));
+        config.addIriClass(new StringUserIriClass("reference:lipidmaps", "https://www.lipidmaps.org/data/LMSDRecord.php?LMID=LM", "[A-Z0-9]+"));
+        config.addIriClass(new StringUserIriClass("reference:molport", "https://www.molport.com/shop/compound/Molport-", "(-[0-9]{3}){3}"));
+        config.addIriClass(new StringUserIriClass("reference:nmrshiftdb2", "https://nmrshiftdb.nmr.uni-koeln.de/molecule/", "[1-9][0-9]*"));
+        config.addIriClass(new StringUserIriClass("reference:pdbe", "https://www.ebi.ac.uk/pdbe-srv/pdbechem/chemicalCompound/show/", "[A-Z0-9_]*\\+-\\+Ideal\\+conformer"));
+        config.addIriClass(new StringUserIriClass("reference:probesanddrugs", "https://www.probes-drugs.org/compounds/PD", "[0-9]{6}"));
+        config.addIriClass(new StringUserIriClass("reference:pubchem", "https://pubchem.ncbi.nlm.nih.gov/compound/", "[1-9][0-9]*"));
+        config.addIriClass(new StringUserIriClass("reference:rcsbpdb", "https://www.rcsb.org/ligand/", "[A-Z0-9]+"));
+        config.addIriClass(new StringUserIriClass("reference:rheachebi", "https://www.rhea-db.org/rhea?query=CHEBI%3A", "[1-9][0-9]*"));
+        config.addIriClass(new StringUserIriClass("reference:rheapolymer", "https://www.rhea-db.org/rhea?query=POLYMER%3A", "[1-9][0-9]*"));
+        config.addIriClass(new StringUserIriClass("reference:surechembl", "https://www.surechembl.org/chemical/", "[1-9][0-9]*"));
+        config.addIriClass(new StringUserIriClass("reference:swisslipids", "https://www.swisslipids.org/#/entity/SLM%3A", "[0-9]{9}"));
+
         config.addIriClass(new StringUserIriClass("reference:pathbank-pathway", "http://pathbank.org/view/", "SMP[0-9]{5,7}"));
         config.addIriClass(new StringUserIriClass("reference:plantcyc-pathway", "https://pmn.plantcyc.org/pathway?", "orgid=[A-Z0-9_]+&id=[-A-Z0-9]+"));
         config.addIriClass(new StringUserIriClass("reference:plantreactome-pathway", "https://plantreactome.gramene.org/content/detail/", "R-OSA-[0-9]{7}"));

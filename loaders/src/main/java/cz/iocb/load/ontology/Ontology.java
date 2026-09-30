@@ -662,7 +662,6 @@ public class Ontology extends Updater
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#atcClassification", 261);
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#bindingSiteName", 262);
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#cellosaurusId", 263);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#cellXref", 264);
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#classLevel", 265);
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#classPath", 266);
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#componentType", 267);
@@ -883,7 +882,6 @@ public class Ontology extends Updater
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#IupharRef", 546);
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Journal", 547);
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#KeggLigandRef", 548);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#LincsCellRef", 549);
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#LincsRef", 550);
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Macromolecule", 551);
         builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#MculeRef", 552);

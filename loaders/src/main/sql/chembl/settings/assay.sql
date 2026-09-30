@@ -1,7 +1,6 @@
 alter table chembl_tmp.assays drop column assay_id;
 alter table chembl_tmp.assays drop column doc_id;
 alter table chembl_tmp.assays drop column tid;
-alter table chembl_tmp.assays drop column curated_by;
 alter table chembl_tmp.assays drop column src_assay_id;
 alter table chembl_tmp.assays drop column cell_id;
 alter table chembl_tmp.assays drop column bao_format;
