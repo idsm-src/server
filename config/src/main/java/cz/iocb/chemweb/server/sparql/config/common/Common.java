@@ -142,6 +142,9 @@ public class Common
         config.addIriClass(new StringUserIriClass("interpro:protein", "https://www.ebi.ac.uk/interpro/protein/reviewed/"));
         config.addIriClass(new IntegerUserIriClass("interpro:entry", "integer", "https://www.ebi.ac.uk/interpro/entry/InterPro/IPR", 6));
 
+        config.addIriClass(new StringUserIriClass("stringdb:network", "https://string-db.org/network/"));
+        config.addIriClass(new StringUserIriClass("enzymedatabase:ec", "https://www.enzyme-database.org/query.php?ec="));
+
         // @formatter:on
     }
 

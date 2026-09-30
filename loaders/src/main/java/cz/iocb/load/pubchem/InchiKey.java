@@ -83,6 +83,11 @@ class InchiKey extends Updater
                         Integer inchikeyID = getKeyID(subject.getURI());
                         Integer compoundID = Compound.getCompoundID(object.getURI());
 
+                        // workaround
+                        if(compoundID == 24405717
+                                && subject.getURI().substring(prefixLength).equals("AOKQBPHIDSLJFA-UHFFFAOYSA-N"))
+                            return;
+
                         if(inchikeyID != null)
                         {
                             synchronized(newCompounds)

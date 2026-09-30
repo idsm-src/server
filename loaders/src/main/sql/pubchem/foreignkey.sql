@@ -262,6 +262,8 @@ alter table pubchem.protein_brenda_matches add foreign key (protein) references 
 alter table pubchem.protein_intact_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_interpro_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_nextprot_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_stringdb_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
+alter table pubchem.protein_enzymedatabase_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_chembl_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_wikidata_matches add foreign key (protein) references pubchem.protein_bases(id) initially deferred;
 alter table pubchem.protein_conserveddomains add foreign key (protein) references pubchem.protein_bases(id) initially deferred;

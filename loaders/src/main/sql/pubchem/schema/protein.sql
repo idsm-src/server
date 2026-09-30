@@ -188,6 +188,22 @@ create table pubchem.protein_nextprot_matches
 );
 
 
+create table pubchem.protein_stringdb_matches
+(
+    protein  integer not null,
+    match    varchar not null,
+    primary key(protein, match)
+);
+
+
+create table pubchem.protein_enzymedatabase_matches
+(
+    protein  integer not null,
+    match    varchar not null,
+    primary key(protein, match)
+);
+
+
 create table pubchem.protein_chembl_matches
 (
     protein  integer not null,

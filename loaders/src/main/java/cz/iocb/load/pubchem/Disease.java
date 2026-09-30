@@ -124,8 +124,17 @@ public class Disease extends Updater
             @Override
             protected void parse() throws IOException
             {
+                String iri = getIRI("match");
+
+                // workaround
+                if(iri.matches("http://purl\\.obolibrary\\.org/obo/[0-9]*"))
+                    return;
+
+                if(iri.equals("https://rarediseases.info.nih.gov/diseases/0025794/index"))
+                    iri = "https://rarediseases.info.nih.gov/diseases/25794/index";
+
                 Integer diseaseID = getDiseaseID(getIRI("disease"));
-                Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
+                Pair<Integer, Integer> match = Ontology.getId(iri);
 
                 Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(diseaseID, match);
 

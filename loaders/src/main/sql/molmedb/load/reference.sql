@@ -7,7 +7,7 @@ insert into molmedb.reference_bases
 )
 select
     id,
-    doi,
+    trim(doi),
     case identifier_source when 'MED' then identifier end,
     citation
 from molmedb_tmp.publications

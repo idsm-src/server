@@ -524,7 +524,9 @@ class Protein extends Updater
                         + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/target/'))"
                         + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/target/CHEMBL'))"
                         + "filter(!strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))"
-                        + "filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"))
+                        + "filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"
+                        + "filter(!strstarts(str(?match), 'https://string-db.org/network/'))"
+                        + "filter(!strstarts(str(?match), 'https://www.enzyme-database.org/query.php?ec='))"))
         {
             @Override
             protected void parse() throws IOException
@@ -911,6 +913,62 @@ class Protein extends Updater
     }
 
 
+    private static void loadStringDbCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select protein,match from pubchem.protein_stringdb_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery(
+                "?protein rdfs:seeAlso ?match. filter(strstarts(str(?match), 'https://string-db.org/network/'))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                String match = getStringID("match", "https://string-db.org/network/");
+
+                Pair<Integer, String> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_stringdb_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_stringdb_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
+    private static void loadEnzymeDatabaseCloseMatches(Model model) throws IOException, SQLException
+    {
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select protein,match from pubchem.protein_enzymedatabase_matches", oldMatches);
+
+        new QueryResultProcessor(patternQuery("?protein rdfs:seeAlso ?match. "
+                + "filter(strstarts(str(?match), 'https://www.enzyme-database.org/query.php?ec='))"))
+        {
+            @Override
+            protected void parse() throws IOException
+            {
+                Integer proteinID = getProteinID(getIRI("protein"));
+                String match = getStringID("match", "https://www.enzyme-database.org/query.php?ec=");
+
+                Pair<Integer, String> pair = Pair.getPair(proteinID, match);
+
+                if(!oldMatches.remove(pair))
+                    newMatches.add(pair);
+            }
+        }.load(model);
+
+        store("delete from pubchem.protein_enzymedatabase_matches where protein=? and match=?", oldMatches);
+        store("insert into pubchem.protein_enzymedatabase_matches(protein,match) values(?,?)", newMatches);
+    }
+
+
     private static void loadChemblCloseMatches(Model model) throws IOException, SQLException
     {
         IntPairSet newMatches = new IntPairSet();
@@ -1220,6 +1278,8 @@ class Protein extends Updater
         loadIntactCloseMatches(model);
         loadInterproProteinCloseMatches(model);
         loadNextprotCloseMatches(model);
+        loadStringDbCloseMatches(model);
+        loadEnzymeDatabaseCloseMatches(model);
         loadChemblCloseMatches(model);
         loadWikidataCloseMatches(model);
         loadConservedDomains(model);

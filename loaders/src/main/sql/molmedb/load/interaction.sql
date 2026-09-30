@@ -109,7 +109,7 @@ select
     membranes.id,
     categories.id,
     categories.parent_id,
-    membranes.name,
+    trim(membranes.name),
     nullif(membranes.abbreviation, membranes.name),
     nullif(membranes.description, '')
 from

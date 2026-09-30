@@ -138,6 +138,18 @@ grant select on pubchem.protein_nextprot_matches to sparql;
 
 --------------------------------------------------------------------------------
 
+create index protein_stringdb_matches__protein on pubchem.protein_stringdb_matches(protein);
+create index protein_stringdb_matches__match on pubchem.protein_stringdb_matches(match);
+grant select on pubchem.protein_stringdb_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index protein_enzymedatabase_matches__protein on pubchem.protein_enzymedatabase_matches(protein);
+create index protein_enzymedatabase_matches__match on pubchem.protein_enzymedatabase_matches(match);
+grant select on pubchem.protein_enzymedatabase_matches to sparql;
+
+--------------------------------------------------------------------------------
+
 create index protein_chembl_matches__protein on pubchem.protein_chembl_matches(protein);
 create index protein_chembl_matches__match on pubchem.protein_chembl_matches(match);
 grant select on pubchem.protein_chembl_matches to sparql;

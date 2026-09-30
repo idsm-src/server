@@ -258,6 +258,22 @@ public class Protein
         }
 
         {
+            Table table = new Table(schema, "protein_stringdb_matches");
+            NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("stringdb:network", "match"));
+        }
+
+        {
+            Table table = new Table(schema, "protein_enzymedatabase_matches");
+            NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("enzymedatabase:ec", "match"));
+        }
+
+        {
             Table table = new Table(schema, "protein_chembl_matches");
             NodeMapping subject = config.createIriMapping("pubchem:protein", "protein");
 

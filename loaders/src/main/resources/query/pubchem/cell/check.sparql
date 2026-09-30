@@ -41,6 +41,7 @@ select distinct ?iri where
         filter(!strstarts(str(?iri), 'http://rdf.ebi.ac.uk/resource/chembl/cell_line/CHEMBL'))
         filter(!strstarts(str(?iri), 'http://identifiers.org/cellosaurus:CVCL_'))
         filter(!strstarts(str(?iri), 'https://lincs.hms.harvard.edu/db/cells/'))
+        filter(!strstarts(str(?iri), 'https://glyconnect.expasy.org/all/cell_lines/'))
     }
     union
     {

@@ -77,10 +77,10 @@ public class Transporter
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000209"), // has measure group
                     config.createIriMapping("molmedb:transporter_measure_group", "id"));
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:source"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("prov:wasQuotedFrom"),
                     config.createIriMapping("molmedb:reference", "model_publication_id"));
 
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:references"),
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("prov:hadPrimarySource"),
                     config.createIriMapping("molmedb:reference", "publication_id"));
         }
 

@@ -49,6 +49,7 @@ public class MolmedbConfiguration extends SparqlDatabaseConfiguration
         addPrefix("cito", "http://purl.org/spar/cito/");
         addPrefix("dcmitypes", "http://purl.org/dc/dcmitype/");
         addPrefix("efo", "http://www.ebi.ac.uk/efo/");
+        addPrefix("prov", "http://www.w3.org/ns/prov#");
 
         Sachem.addPrefixes(this);
     }
