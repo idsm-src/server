@@ -9,9 +9,9 @@ import java.util.List;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
 import javax.sql.DataSource;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
 import cz.iocb.chemweb.server.services.GWTRemoteServiceServlet;
 import cz.iocb.chemweb.shared.services.DatabaseException;
 import cz.iocb.chemweb.shared.services.info.CountItem;
@@ -52,7 +52,7 @@ public class InfoServiceImpl extends GWTRemoteServiceServlet implements InfoServ
     @Override
     public List<CountItem> getCounts() throws DatabaseException
     {
-        List<CountItem> list = new ArrayList<CountItem>();
+        List<CountItem> list = new ArrayList<>();
 
         try(Connection connection = connectionPool.getConnection())
         {
@@ -79,7 +79,7 @@ public class InfoServiceImpl extends GWTRemoteServiceServlet implements InfoServ
     @Override
     public List<SourceItem> getSources() throws DatabaseException
     {
-        List<SourceItem> list = new ArrayList<SourceItem>();
+        List<SourceItem> list = new ArrayList<>();
 
         try(Connection connection = connectionPool.getConnection())
         {

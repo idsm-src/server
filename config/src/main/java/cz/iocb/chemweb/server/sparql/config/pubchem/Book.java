@@ -1,11 +1,12 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
@@ -15,7 +16,7 @@ public class Book
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
-                new IntegerUserIriClass("pubchem:book", "integer", "http://rdf.ncbi.nlm.nih.gov/pubchem/book/NBK"));
+                new IntegerUserIriClass("pubchem:book", INT4, "http://rdf.ncbi.nlm.nih.gov/pubchem/book/NBK"));
     }
 
 
@@ -24,8 +25,8 @@ public class Book
         ConstantIriMapping graph = config.createIriMapping("pubchem:book");
 
         {
-            Table table = new Table(schema, "book_bases");
-            NodeMapping subject = config.createIriMapping("pubchem:book", "id");
+            DatabaseTable table = new DatabaseTable(schema, "book_bases");
+            TermMapping subject = config.createIriMapping("pubchem:book", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Book"));
@@ -48,8 +49,8 @@ public class Book
         }
 
         {
-            Table table = new Table(schema, "book_authors");
-            NodeMapping subject = config.createIriMapping("pubchem:book", "book");
+            DatabaseTable table = new DatabaseTable(schema, "book_authors");
+            TermMapping subject = config.createIriMapping("pubchem:book", "book");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:creator"),
                     config.createIriMapping("pubchem:author", "author"));

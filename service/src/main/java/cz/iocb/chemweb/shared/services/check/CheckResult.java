@@ -10,5 +10,5 @@ public class CheckResult implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    public List<CheckerWarning> warnings = new ArrayList<CheckerWarning>();
+    public List<CheckerWarning> warnings = new ArrayList<>();
 }

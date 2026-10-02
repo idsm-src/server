@@ -4,20 +4,17 @@ import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
 import java.util.List;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Function;
-import cz.iocb.sparql.engine.mapping.classes.DataType;
 import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
-import cz.iocb.sparql.engine.mapping.classes.UserLiteralClass;
+import cz.iocb.sparql.engine.mapping.datatypes.UserDatatype;
 import cz.iocb.sparql.engine.mapping.extension.FunctionDefinition;
-import cz.iocb.sparql.engine.parser.model.IRI;
 
 
 
 public abstract class Matchms
 {
     public static final String ms = "http://bioinfo.uochb.cas.cz/rdf/v1.0/ms#";
-    public static final LiteralClass spectrum = UserLiteralClass.get("pgms.spectrum", "operator(pgms.=)",
-            "operator(pgms.!=)", new IRI(ms + "spectrum"));
-    public static final DataType spectrumType = new DataType(spectrum, Spectrum::valueOf);
+    public static final UserDatatype spectrumType = new SpectrumDatatype();
+    public static final LiteralClass spectrum = spectrumType.getCanonicalLiteralClass();
 
 
     public static void addPrefixes(SparqlDatabaseConfiguration config)
@@ -28,7 +25,7 @@ public abstract class Matchms
 
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addDataType(spectrumType);
+        config.addDatatype(spectrumType);
     }
 
 

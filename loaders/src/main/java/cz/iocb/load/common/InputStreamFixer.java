@@ -19,7 +19,7 @@ public class InputStreamFixer extends InputStream
     private final InputStream in;
     private State state = State.OUTSIDE;
     private boolean backslash = false;
-    private ArrayList<Byte> iri = new ArrayList<Byte>();
+    private ArrayList<Byte> iri = new ArrayList<>();
     private boolean hasSharp = false;
     private boolean bug = false;
 

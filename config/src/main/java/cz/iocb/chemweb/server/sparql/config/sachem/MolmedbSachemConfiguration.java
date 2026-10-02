@@ -1,16 +1,17 @@
 package cz.iocb.chemweb.server.sparql.config.sachem;
 
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
+import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import java.sql.SQLException;
-import java.util.List;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.Common;
 import cz.iocb.chemweb.server.sparql.config.common.SparqlDatabaseOptimisedConfiguration;
 import cz.iocb.sparql.engine.database.Conditions;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.TableColumn;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
@@ -48,22 +49,23 @@ public class MolmedbSachemConfiguration extends SparqlDatabaseOptimisedConfigura
 
         String prefix = "https://rdf.molmedb.upol.cz/substance/";
 
-        addIriClass(new MapUserIriClass("molmedb:substance", "integer", new Table(schema, "substance_bases"),
-                new TableColumn("id"), new TableColumn("identifier"), "https://identifiers.org/molmedb/", "MM[0-9.]+"));
+        addIriClass(new MapUserIriClass("molmedb:substance", INT4, new DatabaseTable(schema, "substance_bases"),
+                new TableColumn("id", INT4), new TableColumn("identifier", VARCHAR), "https://identifiers.org/molmedb/",
+                "MM[0-9.]+"));
 
-        addIriClass(new MapUserIriClass("molmedb:smiles", "integer", new Table(schema, "substance_bases"),
-                new TableColumn("id"), new TableColumn("identifier"), prefix, "MM[0-9.]+", "_SMILES"));
+        addIriClass(new MapUserIriClass("molmedb:smiles", INT4, new DatabaseTable(schema, "substance_bases"),
+                new TableColumn("id", INT4), new TableColumn("identifier", VARCHAR), prefix, "MM[0-9.]+", "_SMILES"));
     }
 
 
     private void addQuadMappings()
     {
-        Table table = new Table(schema, "substance_bases");
-        NodeMapping subject = createIriMapping("molmedb:smiles", "id");
-        Conditions cnd = createIsNotNullCondition("canonical_smiles");
+        DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+        TermMapping subject = createIriMapping("molmedb:smiles", "id");
+        Conditions cnd = createIsNotNullCondition(table, "canonical_smiles");
 
         addQuadMapping(table, null, createIriMapping("molmedb:substance", "id"), createIriMapping("sio:SIO_000008"),
-                subject, createIsNotNullCondition("canonical_smiles"));
+                subject, createIsNotNullCondition(table, "canonical_smiles"));
 
         addQuadMapping(table, null, subject, createIriMapping("rdf:type"), createIriMapping("sio:CHEMINF_000018"), cnd);
 
@@ -74,6 +76,7 @@ public class MolmedbSachemConfiguration extends SparqlDatabaseOptimisedConfigura
 
     private void addProcedures()
     {
-        Sachem.addProcedures(this, "molmedb", "molmedb:substance", List.of(new TableColumn("compound")));
+        Sachem.addProcedures(this, "molmedb", "molmedb:substance",
+                getColumns(getIriClass("molmedb:substance"), "compound"));
     }
 }

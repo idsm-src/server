@@ -1,11 +1,12 @@
 package cz.iocb.chemweb.server.sparql.config.chembl;
 
 import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
@@ -14,7 +15,7 @@ public class ProteinClassification
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("chembl:protclass", "integer",
+        config.addIriClass(new IntegerUserIriClass("chembl:protclass", INT4,
                 "http://rdf.ebi.ac.uk/resource/chembl/protclass/CHEMBL_PC_"));
     }
 
@@ -24,8 +25,8 @@ public class ProteinClassification
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
         {
-            Table table = new Table(schema, "protein_classification");
-            NodeMapping subject = config.createIriMapping("chembl:protclass", "id");
+            DatabaseTable table = new DatabaseTable(schema, "protein_classification");
+            TermMapping subject = config.createIriMapping("chembl:protclass", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("cco:ProteinClassification"));
@@ -46,8 +47,8 @@ public class ProteinClassification
         }
 
         {
-            Table table = new Table(schema, "protein_classification_paths");
-            NodeMapping subject = config.createIriMapping("chembl:protclass", "protein_class_id");
+            DatabaseTable table = new DatabaseTable(schema, "protein_classification_paths");
+            TermMapping subject = config.createIriMapping("chembl:protclass", "protein_class_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:classPath"),
                     config.createLiteralMapping(xsdString, "path"));
@@ -55,8 +56,8 @@ public class ProteinClassification
 
 
         {
-            Table table = new Table(schema, "component_classes");
-            NodeMapping subject = config.createIriMapping("chembl:protclass", "protein_class_id");
+            DatabaseTable table = new DatabaseTable(schema, "component_classes");
+            TermMapping subject = config.createIriMapping("chembl:protclass", "protein_class_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasTargetComponentDescendant"),
                     config.createIriMapping("chembl:targetcomponent", "component_id"));
@@ -65,8 +66,8 @@ public class ProteinClassification
         }
 
         {
-            Table table = new Table(schema, "target_classes");
-            NodeMapping subject = config.createIriMapping("chembl:protclass", "protein_class_id");
+            DatabaseTable table = new DatabaseTable(schema, "target_classes");
+            TermMapping subject = config.createIriMapping("chembl:protclass", "protein_class_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasTargetDescendant"),
                     config.createIriMapping("chembl:target", "target_id"));

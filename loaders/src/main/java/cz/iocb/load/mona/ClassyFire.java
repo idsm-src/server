@@ -8,8 +8,8 @@ import java.util.Set;
 public class ClassyFire
 {
     int id;
-    Set<Integer> chebi = new HashSet<Integer>();
-    Set<String> mesh = new HashSet<String>();
+    Set<Integer> chebi = new HashSet<>();
+    Set<String> mesh = new HashSet<>();
 
     public ClassyFire(int id)
     {

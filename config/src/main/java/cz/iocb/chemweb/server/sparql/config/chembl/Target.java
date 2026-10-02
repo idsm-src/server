@@ -1,12 +1,13 @@
 package cz.iocb.chemweb.server.sparql.config.chembl;
 
 import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
@@ -18,8 +19,8 @@ public class Target
 
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("chembl:target", "integer",
-                "http://rdf.ebi.ac.uk/resource/chembl/target/CHEMBL"));
+        config.addIriClass(
+                new IntegerUserIriClass("chembl:target", INT4, "http://rdf.ebi.ac.uk/resource/chembl/target/CHEMBL"));
     }
 
 
@@ -28,8 +29,8 @@ public class Target
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
         {
-            Table table = new Table(schema, "target_dictionary");
-            NodeMapping subject = config.createIriMapping("chembl:target", "id");
+            DatabaseTable table = new DatabaseTable(schema, "target_dictionary");
+            TermMapping subject = config.createIriMapping("chembl:target", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("cco:SingleProtein"),
@@ -133,8 +134,8 @@ public class Target
         }
 
         {
-            Table table = new Table(schema, "target_relations");
-            NodeMapping subject = config.createIriMapping("chembl:target", "target_id");
+            DatabaseTable table = new DatabaseTable(schema, "target_relations");
+            TermMapping subject = config.createIriMapping("chembl:target", "target_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:relOverlapsWith"),
                     config.createIriMapping("chembl:target", "related_target_id"),
@@ -151,8 +152,8 @@ public class Target
         }
 
         {
-            Table table = new Table(schema, "target_components");
-            NodeMapping subject = config.createIriMapping("chembl:target", "target_id");
+            DatabaseTable table = new DatabaseTable(schema, "target_components");
+            TermMapping subject = config.createIriMapping("chembl:target", "target_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasTargetComponent"),
                     config.createIriMapping("chembl:targetcomponent", "component_id"));

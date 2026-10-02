@@ -58,7 +58,7 @@ public class FilteredListDataProvider<Type> extends ListDataProvider<Type>
                 int realStart = curStart < start ? start : curStart;
                 int realEnd = curEnd > end ? end : curEnd;
                 int realLength = realEnd - realStart;
-                List<Type> resulted = new ArrayList<Type>(realLength);
+                List<Type> resulted = new ArrayList<>(realLength);
                 for(int i = realStart - start; i < realStart - start + realLength; i++)
                 {
                     if(filter.isValid(values.get(i)))

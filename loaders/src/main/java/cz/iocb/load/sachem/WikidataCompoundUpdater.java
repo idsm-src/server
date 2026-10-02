@@ -143,15 +143,18 @@ public class WikidataCompoundUpdater extends Updater
             {
                 statement.execute("select sachem.cleanup('wikidata')");
 
-                statement.execute("delete from molecules.wikidata where "
-                        + "not exists (select 1 from wikidata.isomeric_smiles where compound = id) and "
-                        + "not exists (select 1 from wikidata.canonical_smiles where compound = id)");
+                statement.execute("""
+                        delete from molecules.wikidata where \
+                        not exists (select 1 from wikidata.isomeric_smiles where compound = id) and \
+                        not exists (select 1 from wikidata.canonical_smiles where compound = id)""");
 
-                statement.execute("insert into molecules.wikidata select distinct on (compound) compound, smiles from ("
-                        + "select compound, smiles, 1 as v from wikidata.isomeric_smiles union "
-                        + "select compound, smiles, 2 as v from wikidata.canonical_smiles) "
-                        + "order by compound, v, smiles " + "on conflict (id) do update set smiles=EXCLUDED.smiles "
-                        + "where molecules.wikidata.smiles != EXCLUDED.smiles;");
+                statement.execute("""
+                        insert into molecules.wikidata select distinct on (compound) compound, smiles from (\
+                        select compound, smiles, 1 as v from wikidata.isomeric_smiles union \
+                        select compound, smiles, 2 as v from wikidata.canonical_smiles) \
+                        order by compound, v, smiles \
+                        on conflict (id) do update set smiles=EXCLUDED.smiles \
+                        where molecules.wikidata.smiles != EXCLUDED.smiles;""");
 
                 statement.execute("select sachem.sync_data('wikidata', false, true)");
             }

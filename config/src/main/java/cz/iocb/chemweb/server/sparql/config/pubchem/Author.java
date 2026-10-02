@@ -1,12 +1,14 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
+import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.TableColumn;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
@@ -15,8 +17,9 @@ public class Author
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pubchem:author", "integer", new Table(schema, "author_bases"),
-                new TableColumn("id"), new TableColumn("iri"), "http://rdf.ncbi.nlm.nih.gov/pubchem/author/"));
+        config.addIriClass(new MapUserIriClass("pubchem:author", INT4, new DatabaseTable(schema, "author_bases"),
+                new TableColumn("id", INT4), new TableColumn("iri", VARCHAR),
+                "http://rdf.ncbi.nlm.nih.gov/pubchem/author/"));
     }
 
 
@@ -25,48 +28,48 @@ public class Author
         ConstantIriMapping graph = config.createIriMapping("pubchem:author");
 
         {
-            Table table = new Table(schema, "author_bases");
-            NodeMapping subject = config.createIriMapping("pubchem:author", "id");
+            DatabaseTable table = new DatabaseTable(schema, "author_bases");
+            TermMapping subject = config.createIriMapping("pubchem:author", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Author"));
         }
 
         {
-            Table table = new Table(schema, "author_given_names");
-            NodeMapping subject = config.createIriMapping("pubchem:author", "author");
+            DatabaseTable table = new DatabaseTable(schema, "author_given_names");
+            TermMapping subject = config.createIriMapping("pubchem:author", "author");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vcard:given-name"),
                     config.createLiteralMapping(xsdString, "name"));
         }
 
         {
-            Table table = new Table(schema, "author_family_names");
-            NodeMapping subject = config.createIriMapping("pubchem:author", "author");
+            DatabaseTable table = new DatabaseTable(schema, "author_family_names");
+            TermMapping subject = config.createIriMapping("pubchem:author", "author");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vcard:family-name"),
                     config.createLiteralMapping(xsdString, "name"));
         }
 
         {
-            Table table = new Table(schema, "author_formatted_names");
-            NodeMapping subject = config.createIriMapping("pubchem:author", "author");
+            DatabaseTable table = new DatabaseTable(schema, "author_formatted_names");
+            TermMapping subject = config.createIriMapping("pubchem:author", "author");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vcard:fn"),
                     config.createLiteralMapping(xsdString, "name"));
         }
 
         {
-            Table table = new Table(schema, "author_organizations");
-            NodeMapping subject = config.createIriMapping("pubchem:author", "author");
+            DatabaseTable table = new DatabaseTable(schema, "author_organizations");
+            TermMapping subject = config.createIriMapping("pubchem:author", "author");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vcard:organization-name"),
                     config.createLiteralMapping(xsdString, "organization"));
         }
 
         {
-            Table table = new Table(schema, "author_orcids");
-            NodeMapping subject = config.createIriMapping("pubchem:author", "author");
+            DatabaseTable table = new DatabaseTable(schema, "author_orcids");
+            TermMapping subject = config.createIriMapping("pubchem:author", "author");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:source"),
                     config.createIriMapping("<https://orcid.org>"));

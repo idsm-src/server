@@ -76,6 +76,7 @@ public class RetinaImageResourcePrototype implements RetinaImageResource {
     return top;
   }
 
+  @Deprecated
   public String getURL() {
     return url.asString();
   }

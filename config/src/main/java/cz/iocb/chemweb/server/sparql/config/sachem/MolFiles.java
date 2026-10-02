@@ -3,8 +3,8 @@ package cz.iocb.chemweb.server.sparql.config.sachem;
 import java.util.List;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Column;
-import cz.iocb.sparql.engine.database.Table;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.database.DatabaseTable;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 
 
@@ -18,9 +18,10 @@ public class MolFiles
 
 
     public static void addQuadMappings(SparqlDatabaseConfiguration config, String compoundClass, String molfileClass,
-            Table table, List<Column> compoundFields, String id, String molfile, LiteralClass molfileLiteralClass)
+            DatabaseTable table, List<Column> compoundFields, String id, String molfile,
+            LiteralClass molfileLiteralClass)
     {
-        NodeMapping subject = config.createIriMapping(molfileClass, id);
+        TermMapping subject = config.createIriMapping(molfileClass, id);
 
         config.addQuadMapping(table, null, subject, config.createIriMapping("rdf:type"),
                 config.createIriMapping("sio:SIO_011120"));
@@ -42,7 +43,7 @@ public class MolFiles
 
 
     public static void addQuadMappings(SparqlDatabaseConfiguration config, String compoundClass, String molfileClass,
-            Table table, List<Column> compoundFields, LiteralClass molfileLiteralClass)
+            DatabaseTable table, List<Column> compoundFields, LiteralClass molfileLiteralClass)
     {
         addQuadMappings(config, compoundClass, molfileClass, table, compoundFields, "id", "molfile",
                 molfileLiteralClass);

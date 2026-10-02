@@ -300,11 +300,11 @@ public class Ontology extends Updater
     }
 
 
-    private static final List<Source> sources = new ArrayList<Source>();
+    private static final List<Source> sources = new ArrayList<>();
 
-    private static final List<Unit> units = new ArrayList<Unit>();
-    private static final HashMap<String, Integer> blankNodes = new HashMap<String, Integer>();
-    private static final HashMap<String, Integer> builtinResources = new HashMap<String, Integer>();
+    private static final List<Unit> units = new ArrayList<>();
+    private static final HashMap<String, Integer> blankNodes = new HashMap<>();
+    private static final HashMap<String, Integer> builtinResources = new HashMap<>();
 
     private static int nextResourceID;
     private static int maxBuiltinResourceID;
@@ -1520,10 +1520,11 @@ public class Ontology extends Updater
         store("delete from ontology.somevaluesfrom_restrictions "
                 + "where restriction_id=? and property_unit=? and property_id=? and class_unit=? and class_id=?",
                 oldRestrictions);
-        store("insert into ontology.somevaluesfrom_restrictions"
-                + "(restriction_id,property_unit,property_id,class_unit,class_id) values(?,?,?,?,?)"
-                + "on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, "
-                + "property_id=EXCLUDED.property_id, class_unit=EXCLUDED.class_unit, class_id=EXCLUDED.class_id",
+        store("""
+                insert into ontology.somevaluesfrom_restrictions\
+                (restriction_id,property_unit,property_id,class_unit,class_id) values(?,?,?,?,?)\
+                on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, \
+                property_id=EXCLUDED.property_id, class_unit=EXCLUDED.class_unit, class_id=EXCLUDED.class_id""",
                 newRestrictions);
     }
 
@@ -1576,10 +1577,11 @@ public class Ontology extends Updater
         store("delete from ontology.allvaluesfrom_restrictions "
                 + "where restriction_id=? and property_unit=? and property_id=? and class_unit=? and class_id=?",
                 oldRestrictions);
-        store("insert into ontology.allvaluesfrom_restrictions "
-                + "(restriction_id,property_unit,property_id,class_unit,class_id) values(?,?,?,?,?)"
-                + "on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, "
-                + "property_id=EXCLUDED.property_id, class_unit=EXCLUDED.class_unit, class_id=EXCLUDED.class_id",
+        store("""
+                insert into ontology.allvaluesfrom_restrictions \
+                (restriction_id,property_unit,property_id,class_unit,class_id) values(?,?,?,?,?)\
+                on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, \
+                property_id=EXCLUDED.property_id, class_unit=EXCLUDED.class_unit, class_id=EXCLUDED.class_id""",
                 newRestrictions);
     }
 
@@ -1631,9 +1633,10 @@ public class Ontology extends Updater
 
         store("delete from ontology.cardinality_restrictions "
                 + "where restriction_id=? and property_unit=? and property_id=? and cardinality=?", oldRestrictions);
-        store("insert into ontology.cardinality_restrictions (restriction_id,property_unit,property_id,cardinality) "
-                + "values(?,?,?,?) on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, "
-                + "property_id=EXCLUDED.property_id, cardinality=EXCLUDED.cardinality", newRestrictions);
+        store("""
+                insert into ontology.cardinality_restrictions (restriction_id,property_unit,property_id,cardinality) \
+                values(?,?,?,?) on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, \
+                property_id=EXCLUDED.property_id, cardinality=EXCLUDED.cardinality""", newRestrictions);
     }
 
 
@@ -1684,9 +1687,10 @@ public class Ontology extends Updater
 
         store("delete from ontology.mincardinality_restrictions "
                 + "where restriction_id=? and property_unit=? and property_id=? and cardinality=?", oldRestrictions);
-        store("insert into ontology.mincardinality_restrictions(restriction_id,property_unit,property_id,cardinality) "
-                + "values(?,?,?,?) on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, "
-                + "property_id=EXCLUDED.property_id, cardinality=EXCLUDED.cardinality", newRestrictions);
+        store("""
+                insert into ontology.mincardinality_restrictions(restriction_id,property_unit,property_id,cardinality) \
+                values(?,?,?,?) on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, \
+                property_id=EXCLUDED.property_id, cardinality=EXCLUDED.cardinality""", newRestrictions);
     }
 
 
@@ -1737,9 +1741,10 @@ public class Ontology extends Updater
 
         store("delete from ontology.maxcardinality_restrictions "
                 + "where restriction_id=? and property_unit=? and property_id=? and cardinality=?", oldRestrictions);
-        store("insert into ontology.maxcardinality_restrictions(restriction_id,property_unit,property_id,cardinality) "
-                + "values(?,?,?,?) on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, "
-                + "property_id=EXCLUDED.property_id, cardinality=EXCLUDED.cardinality", newRestrictions);
+        store("""
+                insert into ontology.maxcardinality_restrictions(restriction_id,property_unit,property_id,cardinality) \
+                values(?,?,?,?) on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, \
+                property_id=EXCLUDED.property_id, cardinality=EXCLUDED.cardinality""", newRestrictions);
     }
 
 

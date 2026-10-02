@@ -1,13 +1,15 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
+import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.TableColumn;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
@@ -16,8 +18,9 @@ public class Synonym
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pubchem:synonym", "integer", new Table(schema, "synonym_bases"),
-                new TableColumn("id"), new TableColumn("md5"), "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
+        config.addIriClass(new MapUserIriClass("pubchem:synonym", INT4, new DatabaseTable(schema, "synonym_bases"),
+                new TableColumn("id", INT4), new TableColumn("md5", VARCHAR),
+                "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
     }
 
 
@@ -26,8 +29,8 @@ public class Synonym
         ConstantIriMapping graph = config.createIriMapping("pubchem:synonym");
 
         {
-            Table table = new Table(schema, "synonym_values");
-            NodeMapping subject = config.createIriMapping("pubchem:synonym", "synonym");
+            DatabaseTable table = new DatabaseTable(schema, "synonym_values");
+            TermMapping subject = config.createIriMapping("pubchem:synonym", "synonym");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Synonym"));
@@ -40,16 +43,16 @@ public class Synonym
         }
 
         {
-            Table table = new Table(schema, "synonym_types");
-            NodeMapping subject = config.createIriMapping("pubchem:synonym", "synonym");
+            DatabaseTable table = new DatabaseTable(schema, "synonym_types");
+            TermMapping subject = config.createIriMapping("pubchem:synonym", "synonym");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("ontology:resource", Ontology.unitCHEMINF, "type_id"));
         }
 
         {
-            Table table = new Table(schema, "synonym_compounds");
-            NodeMapping subject = config.createIriMapping("pubchem:synonym", "synonym");
+            DatabaseTable table = new DatabaseTable(schema, "synonym_compounds");
+            TermMapping subject = config.createIriMapping("pubchem:synonym", "synonym");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000011"),
                     config.createIriMapping("pubchem:compound", "compound"));
@@ -64,16 +67,16 @@ public class Synonym
         }
 
         {
-            Table table = new Table(schema, "synonym_mesh_subjects");
-            NodeMapping subject = config.createIriMapping("pubchem:synonym", "synonym");
+            DatabaseTable table = new DatabaseTable(schema, "synonym_mesh_subjects");
+            TermMapping subject = config.createIriMapping("pubchem:synonym", "synonym");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:subject"),
                     config.createIriMapping("mesh:heading", "subject"));
         }
 
         {
-            Table table = new Table(schema, "synonym_concept_subjects");
-            NodeMapping subject = config.createIriMapping("pubchem:synonym", "synonym");
+            DatabaseTable table = new DatabaseTable(schema, "synonym_concept_subjects");
+            TermMapping subject = config.createIriMapping("pubchem:synonym", "synonym");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:subject"),
                     config.createIriMapping("pubchem:concept", "concept"));

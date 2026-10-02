@@ -61,7 +61,7 @@ public class ResultTablePart extends ResizeComposite
 
     public static class StatusChangeEvent extends GwtEvent<StatusChangeEventHandler>
     {
-        public static Type<StatusChangeEventHandler> TYPE = new Type<StatusChangeEventHandler>();
+        public static Type<StatusChangeEventHandler> TYPE = new Type<>();
 
         private final Status status;
 
@@ -97,7 +97,7 @@ public class ResultTablePart extends ResizeComposite
 
     public static class VisitItemEvent extends GwtEvent<VisitItemEventHandler>
     {
-        public static Type<VisitItemEventHandler> TYPE = new Type<VisitItemEventHandler>();
+        public static Type<VisitItemEventHandler> TYPE = new Type<>();
 
         private final String iri;
 
@@ -141,7 +141,7 @@ public class ResultTablePart extends ResizeComposite
 
         DataGrid<DataGridNode[]> dataGrid;
         IFilter filter = null;
-        List<? extends DataGridNode[]> values = new ArrayList<DataGridNode[]>();
+        List<? extends DataGridNode[]> values = new ArrayList<>();
 
         private final HandlerManager handlerManager = new HandlerManager(this);
         private boolean exact = false;
@@ -162,7 +162,7 @@ public class ResultTablePart extends ResizeComposite
 
             if(filter != null)
             {
-                results = new ArrayList<DataGridNode[]>(values.size());
+                results = new ArrayList<>(values.size());
 
                 for(DataGridNode[] item : values)
                     if(filter.isValid(item))
@@ -317,7 +317,7 @@ public class ResultTablePart extends ResizeComposite
         private int maxRows = 0;
         private boolean truncated = true;
         private QueryServiceStub.Query runningQuery = null;
-        List<DataGridNode[]> emptyData = new LinkedList<DataGridNode[]>();
+        List<DataGridNode[]> emptyData = new LinkedList<>();
 
 
         void setQuery(String query)
@@ -444,7 +444,7 @@ public class ResultTablePart extends ResizeComposite
 
     public ResultTablePart()
     {
-        resultsDataGrid = new DataGrid<DataGridNode[]>(1, DataGridBundle.INSTANCE)
+        resultsDataGrid = new DataGrid<>(1, DataGridBundle.INSTANCE)
         {
             // https://code.google.com/p/google-web-toolkit/issues/detail?id=6865
             @Override
@@ -601,7 +601,7 @@ public class ResultTablePart extends ResizeComposite
             }
         };
 
-        Column<DataGridNode[], DataGridNode> column = new Column<DataGridNode[], DataGridNode>(cell)
+        Column<DataGridNode[], DataGridNode> column = new Column<>(cell)
         {
             @Override
             public DataGridNode getValue(DataGridNode[] object)

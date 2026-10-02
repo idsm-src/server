@@ -12,8 +12,8 @@ import java.util.regex.Pattern;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -25,7 +25,7 @@ import cz.iocb.chemweb.server.velocity.SparqlDirective;
 import cz.iocb.chemweb.server.velocity.UrlDirective;
 import cz.iocb.chemweb.shared.services.details.DetailsPageService;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.request.IriNode;
+import cz.iocb.sparql.engine.rdf.Iri;
 
 
 
@@ -33,7 +33,7 @@ public class DetailsPageServiceImpl extends GWTRemoteServiceServlet implements D
 {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(DetailsPageServiceImpl.class);
-    private static final Map<Pattern, String> templates = new HashMap<Pattern, String>();
+    private static final Map<Pattern, String> templates = new HashMap<>();
 
     private SparqlDatabaseConfiguration dbConfig;
     private VelocityEngine ve;
@@ -101,11 +101,11 @@ public class DetailsPageServiceImpl extends GWTRemoteServiceServlet implements D
         Properties properties = new Properties();
         properties.put("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.NullLogChute");
         properties.put("file.resource.loader.path", config.getServletContext().getRealPath("/templates"));
-        properties.put("userdirective",
-                "cz.iocb.chemweb.server.velocity.SparqlDirective,"
-                        + "cz.iocb.chemweb.server.velocity.EscapeHtmlDirective,"
-                        + "cz.iocb.chemweb.server.velocity.EscapeIriDirective,"
-                        + "cz.iocb.chemweb.server.velocity.UrlDirective");
+        properties.put("userdirective", """
+                cz.iocb.chemweb.server.velocity.SparqlDirective,\
+                cz.iocb.chemweb.server.velocity.EscapeHtmlDirective,\
+                cz.iocb.chemweb.server.velocity.EscapeIriDirective,\
+                cz.iocb.chemweb.server.velocity.UrlDirective""");
 
         ve = new VelocityEngine(properties);
         ve.setApplicationAttribute(SparqlDirective.SPARQL_CONFIG, dbConfig);
@@ -130,7 +130,7 @@ public class DetailsPageServiceImpl extends GWTRemoteServiceServlet implements D
 
             VelocityContext context = new VelocityContext();
             context.put("urlContext", UrlDirective.Context.DETAILS);
-            context.put("entity", new IriNode(uri.toString()));
+            context.put("entity", new Iri(uri.toString()));
 
             template.merge(context, writer);
             writer.close();

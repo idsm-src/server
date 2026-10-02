@@ -47,10 +47,14 @@ public class AboutPart extends Composite
     private static InfoServiceAsync infoService = (InfoServiceAsync) GWT.create(InfoService.class);
     private static final SourceTemplate sourceTemplate = GWT.create(SourceTemplate.class);
 
-    @UiField FlexTable statisticsTable;
-    @UiField DivElement statisticsLoading;
-    @UiField UListElement sourcesList;
-    @UiField DivElement sourcesLoading;
+    @UiField
+    FlexTable statisticsTable;
+    @UiField
+    DivElement statisticsLoading;
+    @UiField
+    UListElement sourcesList;
+    @UiField
+    DivElement sourcesLoading;
 
 
     public AboutPart()

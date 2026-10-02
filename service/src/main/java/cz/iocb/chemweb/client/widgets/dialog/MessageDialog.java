@@ -20,7 +20,8 @@ public class MessageDialog extends DialogBox
     {
     }
 
-    @UiField HTML html;
+    @UiField
+    HTML html;
 
 
     public MessageDialog(String caption, String messages)

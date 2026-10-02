@@ -1,13 +1,14 @@
 package cz.iocb.chemweb.server.sparql.config.chembl;
 
 import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDouble;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
@@ -16,7 +17,7 @@ public class Activity
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("chembl:activity", "integer",
+        config.addIriClass(new IntegerUserIriClass("chembl:activity", INT4,
                 "http://rdf.ebi.ac.uk/resource/chembl/activity/CHEMBL_ACT_"));
     }
 
@@ -25,8 +26,8 @@ public class Activity
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
-        Table table = new Table(schema, "activities");
-        NodeMapping subject = config.createIriMapping("chembl:activity", "id");
+        DatabaseTable table = new DatabaseTable(schema, "activities");
+        TermMapping subject = config.createIriMapping("chembl:activity", "id");
 
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                 config.createIriMapping("cco:Activity"));
@@ -41,7 +42,7 @@ public class Activity
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasDocument"),
                 config.createIriMapping("chembl:document", "document_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:dataValidityIssue"),
-                config.createLiteralMapping(true), config.createIsNotNullCondition("data_validity_comment"));
+                config.createLiteralMapping(true), config.createIsNotNullCondition(table, "data_validity_comment"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:potentialDuplicate"),
                 config.createLiteralMapping(true),
                 config.createAreEqualCondition("potential_duplicate", "'true'::boolean"));

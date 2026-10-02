@@ -111,7 +111,7 @@ public class CodeMirror
 
         if(validator != null)
             validator.validate(code, callbackFunction, options, cm);
-    };
+    }
 
 
     private native static JavaScriptObject getHints(JavaScriptObject cm, JavaScriptObject cb, JavaScriptObject options)

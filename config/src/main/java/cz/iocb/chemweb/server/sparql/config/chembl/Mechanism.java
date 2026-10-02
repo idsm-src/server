@@ -1,11 +1,12 @@
 package cz.iocb.chemweb.server.sparql.config.chembl;
 
 import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
@@ -14,7 +15,7 @@ public class Mechanism
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("chembl:mechanism", "integer",
+        config.addIriClass(new IntegerUserIriClass("chembl:mechanism", INT4,
                 "http://rdf.ebi.ac.uk/resource/chembl/drug_mechanism/CHEMBL_MEC_"));
     }
 
@@ -23,8 +24,8 @@ public class Mechanism
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
-        Table table = new Table(schema, "drug_mechanism");
-        NodeMapping subject = config.createIriMapping("chembl:mechanism", "id");
+        DatabaseTable table = new DatabaseTable(schema, "drug_mechanism");
+        TermMapping subject = config.createIriMapping("chembl:mechanism", "id");
 
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                 config.createIriMapping("cco:Mechanism"));

@@ -84,14 +84,14 @@ class Substance extends Updater
                 + "on conflict(id) do update set compound=EXCLUDED.compound", newCompounds);
 
 
-        Map<Integer, List<Integer>> classes = new HashMap<Integer, List<Integer>>();
+        Map<Integer, List<Integer>> classes = new HashMap<>();
 
         BiConsumer<Integer, Integer> consumer = (substance, compound) -> {
             List<Integer> list = classes.get(compound);
 
             if(list == null)
             {
-                list = new ArrayList<Integer>();
+                list = new ArrayList<>();
                 classes.put(compound, list);
             }
 

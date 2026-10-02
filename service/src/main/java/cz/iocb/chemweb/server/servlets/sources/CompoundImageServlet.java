@@ -41,7 +41,7 @@ public abstract class CompoundImageServlet extends SourceServlet
 {
     protected static final String V30_HEADER = "M  V30 BEGIN CTAB";
 
-    protected static final ThreadLocal<Aromaticity> aromaticity = new ThreadLocal<Aromaticity>()
+    protected static final ThreadLocal<Aromaticity> aromaticity = new ThreadLocal<>()
     {
         @Override
         protected Aromaticity initialValue()
@@ -135,7 +135,7 @@ public abstract class CompoundImageServlet extends SourceServlet
 
     protected static void removeNonChiralHydrogens(IAtomContainer molecule)
     {
-        List<IAtom> remove = new ArrayList<IAtom>();
+        List<IAtom> remove = new ArrayList<>();
 
         for(IAtom atom : molecule.atoms())
         {

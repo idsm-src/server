@@ -106,7 +106,7 @@ public class MoNA extends Updater
 
     private static Map<String, ClassyFire> loadClassyFires(InputStream stream) throws FileNotFoundException, IOException
     {
-        Map<String, ClassyFire> classyFires = new HashMap<String, ClassyFire>();
+        Map<String, ClassyFire> classyFires = new HashMap<>();
 
         try(BufferedReader reader = new BufferedReader(new InputStreamReader(stream)))
         {

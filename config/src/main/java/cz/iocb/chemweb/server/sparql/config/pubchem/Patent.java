@@ -2,12 +2,14 @@ package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.xsdDateM4;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
+import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.TableColumn;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
 
@@ -17,8 +19,9 @@ public class Patent
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pubchem:patent", "integer", new Table(schema, "patent_bases"),
-                new TableColumn("id"), new TableColumn("iri"), "http://rdf.ncbi.nlm.nih.gov/pubchem/patent/"));
+        config.addIriClass(new MapUserIriClass("pubchem:patent", INT4, new DatabaseTable(schema, "patent_bases"),
+                new TableColumn("id", INT4), new TableColumn("iri", VARCHAR),
+                "http://rdf.ncbi.nlm.nih.gov/pubchem/patent/"));
         config.addIriClass(
                 new StringUserIriClass("pubchem:inventor", "http://rdf.ncbi.nlm.nih.gov/pubchem/patentinventor/MD5_"));
         config.addIriClass(
@@ -35,8 +38,8 @@ public class Patent
         ConstantIriMapping graph = config.createIriMapping("pubchem:patent");
 
         {
-            Table table = new Table(schema, "patent_bases");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "id");
+            DatabaseTable table = new DatabaseTable(schema, "patent_bases");
+            TermMapping subject = config.createIriMapping("pubchem:patent", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Patent"));
@@ -59,24 +62,24 @@ public class Patent
         }
 
         {
-            Table table = new Table(schema, "patent_citations");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
+            DatabaseTable table = new DatabaseTable(schema, "patent_citations");
+            TermMapping subject = config.createIriMapping("pubchem:patent", "patent");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isCitedBy"),
                     config.createIriMapping("pubchem:patent", "citation"));
         }
 
         {
-            Table table = new Table(schema, "patent_cpc_additional_classifications");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
+            DatabaseTable table = new DatabaseTable(schema, "patent_cpc_additional_classifications");
+            TermMapping subject = config.createIriMapping("pubchem:patent", "patent");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("epo:classificationCPCAdditional"),
                     config.createIriMapping("pubchem:patentcpc", "classification"));
         }
 
         {
-            Table table = new Table(schema, "patent_cpc_inventive_classifications");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
+            DatabaseTable table = new DatabaseTable(schema, "patent_cpc_inventive_classifications");
+            TermMapping subject = config.createIriMapping("pubchem:patent", "patent");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("epo:classificationCPCInventive"),
                     config.createIriMapping("pubchem:patentcpc", "classification"));
@@ -84,40 +87,40 @@ public class Patent
 
 
         {
-            Table table = new Table(schema, "patent_ipc_additional_classifications");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
+            DatabaseTable table = new DatabaseTable(schema, "patent_ipc_additional_classifications");
+            TermMapping subject = config.createIriMapping("pubchem:patent", "patent");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("epo:classificationIPCAdditional"),
                     config.createIriMapping("pubchem:patentcpc", "classification"));
         }
 
         {
-            Table table = new Table(schema, "patent_ipc_inventive_classifications");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
+            DatabaseTable table = new DatabaseTable(schema, "patent_ipc_inventive_classifications");
+            TermMapping subject = config.createIriMapping("pubchem:patent", "patent");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("epo:classificationIPCInventive"),
                     config.createIriMapping("pubchem:patentcpc", "classification"));
         }
 
         {
-            Table table = new Table(schema, "patent_inventors");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
+            DatabaseTable table = new DatabaseTable(schema, "patent_inventors");
+            TermMapping subject = config.createIriMapping("pubchem:patent", "patent");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("epo:inventorVC"),
                     config.createIriMapping("pubchem:inventor", "inventor"));
         }
 
         {
-            Table table = new Table(schema, "patent_applicants");
-            NodeMapping subject = config.createIriMapping("pubchem:patent", "patent");
+            DatabaseTable table = new DatabaseTable(schema, "patent_applicants");
+            TermMapping subject = config.createIriMapping("pubchem:patent", "patent");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("epo:applicantVC"),
                     config.createIriMapping("pubchem:applicant", "applicant"));
         }
 
         {
-            Table table = new Table(schema, "patentinventor_bases");
-            NodeMapping subject = config.createIriMapping("pubchem:inventor", "id");
+            DatabaseTable table = new DatabaseTable(schema, "patentinventor_bases");
+            TermMapping subject = config.createIriMapping("pubchem:inventor", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:PatentInventor"));
@@ -126,8 +129,8 @@ public class Patent
         }
 
         {
-            Table table = new Table(schema, "patentassignee_bases");
-            NodeMapping subject = config.createIriMapping("pubchem:applicant", "id");
+            DatabaseTable table = new DatabaseTable(schema, "patentassignee_bases");
+            TermMapping subject = config.createIriMapping("pubchem:applicant", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:PatentAssignee"));

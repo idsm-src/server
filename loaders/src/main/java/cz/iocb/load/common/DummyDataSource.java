@@ -370,7 +370,7 @@ public class DummyDataSource implements DataSource
     @Override
     public Connection getConnection() throws SQLException
     {
-        if(isClosed == false)
+        if(!isClosed)
             throw new UnsupportedOperationException();
 
         isClosed = false;

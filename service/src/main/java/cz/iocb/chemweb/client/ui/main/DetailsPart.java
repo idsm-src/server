@@ -42,14 +42,22 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
     private static DetailsPageServiceAsync detailsService = (DetailsPageServiceAsync) GWT
             .create(DetailsPageService.class);
 
-    @UiField(provided = true) Icons res = iconsClientBundleFactory.create();
-    @UiField ImageButton prevButton;
-    @UiField ImageButton nextButton;
-    @UiField ImageButton reloadButton;
-    @UiField ImageButton stopButton;
-    @UiField TextBox iriTextBox;
-    @UiField ScrollPanel pageScrollPanel;
-    @UiField HTML pageHTML;
+    @UiField(provided = true)
+    Icons res = iconsClientBundleFactory.create();
+    @UiField
+    ImageButton prevButton;
+    @UiField
+    ImageButton nextButton;
+    @UiField
+    ImageButton reloadButton;
+    @UiField
+    ImageButton stopButton;
+    @UiField
+    TextBox iriTextBox;
+    @UiField
+    ScrollPanel pageScrollPanel;
+    @UiField
+    HTML pageHTML;
 
     private final HandlerManager handlerManager = new HandlerManager(this);
     private final VisitingHistory history;
@@ -157,7 +165,7 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
         showDetails(iri);
 
         if(emitEvent)
-            handlerManager.fireEvent(new SelectionEvent<String>(iri)
+            handlerManager.fireEvent(new SelectionEvent<>(iri)
             {
             });
     }

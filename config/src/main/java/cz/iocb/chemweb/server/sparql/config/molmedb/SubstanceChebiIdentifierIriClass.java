@@ -1,15 +1,16 @@
 package cz.iocb.chemweb.server.sparql.config.molmedb;
 
+import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
+import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.string;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 import cz.iocb.sparql.engine.database.Column;
-import cz.iocb.sparql.engine.database.ConstantColumn;
 import cz.iocb.sparql.engine.database.ExpressionColumn;
 import cz.iocb.sparql.engine.database.SQLRuntimeException;
-import cz.iocb.sparql.engine.parser.model.IRI;
-import cz.iocb.sparql.engine.parser.model.triple.Node;
+import cz.iocb.sparql.engine.database.ValueColumn;
+import cz.iocb.sparql.engine.rdf.Iri;
+import cz.iocb.sparql.engine.request.Request;
 
 
 
@@ -31,7 +32,7 @@ public class SubstanceChebiIdentifierIriClass extends SubstanceIdentifierIriClas
         String code = String.format("'%s' || \"@to\" || '%s' || right(%s, -6)", pref, delim, cols.get(1));
         String expr = String.format("(SELECT (%s)::varchar FROM %s WHERE \"@from\" = %s)", code, access, cols.get(0));
 
-        return new ExpressionColumn(expr);
+        return new ExpressionColumn(expr, VARCHAR);
     }
 
 
@@ -64,23 +65,22 @@ public class SubstanceChebiIdentifierIriClass extends SubstanceIdentifierIriClas
         if(check)
             builder.append(" END");
 
-        return new ExpressionColumn(builder.toString());
+        return new ExpressionColumn(builder.toString(), VARCHAR);
     }
 
 
 
 
     @Override
-    public List<Column> toColumns(Statement statement, Node node)
+    public List<Column> toColumns(Request request, Iri iri)
     {
-        IRI iri = (IRI) node;
-        assert match(statement, iri);
+        assert match(request, iri);
 
         try
         {
-            String sql = sqlQuery.replaceAll("\\?", sanitizeString(iri.getValue()));
+            String sql = sqlQuery.replaceAll("\\?", string(iri.getValue()));
 
-            try(ResultSet result = statement.executeQuery(sql))
+            try(ResultSet result = request.getStatement().executeQuery(sql))
             {
                 if(result.next())
                 {
@@ -88,8 +88,7 @@ public class SubstanceChebiIdentifierIriClass extends SubstanceIdentifierIriClas
                     String col1 = "CHEBI:"
                             + iri.getValue().substring(iri.getValue().indexOf(delimiter) + delimiter.length());
 
-                    return List.of(new ConstantColumn(col0, sqlTypes.get(0)),
-                            new ConstantColumn(col1, sqlTypes.get(1)));
+                    return List.of(new ValueColumn(col0, sqlTypes.get(0)), new ValueColumn(col1, sqlTypes.get(1)));
                 }
                 else
                 {

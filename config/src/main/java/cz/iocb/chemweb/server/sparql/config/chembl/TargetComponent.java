@@ -1,12 +1,13 @@
 package cz.iocb.chemweb.server.sparql.config.chembl;
 
 import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
@@ -15,7 +16,7 @@ public class TargetComponent
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("chembl:targetcomponent", "integer",
+        config.addIriClass(new IntegerUserIriClass("chembl:targetcomponent", INT4,
                 "http://rdf.ebi.ac.uk/resource/chembl/targetcomponent/CHEMBL_TC_"));
     }
 
@@ -25,8 +26,8 @@ public class TargetComponent
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
         {
-            Table table = new Table(schema, "component_sequences");
-            NodeMapping subject = config.createIriMapping("chembl:targetcomponent", "id");
+            DatabaseTable table = new DatabaseTable(schema, "component_sequences");
+            TermMapping subject = config.createIriMapping("chembl:targetcomponent", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("cco:TargetComponent"));
@@ -55,8 +56,8 @@ public class TargetComponent
         }
 
         {
-            Table table = new Table(schema, "component_synonyms");
-            NodeMapping subject = config.createIriMapping("chembl:targetcomponent", "component_id");
+            DatabaseTable table = new DatabaseTable(schema, "component_synonyms");
+            TermMapping subject = config.createIriMapping("chembl:targetcomponent", "component_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:altLabel"),
                     config.createLiteralMapping(xsdString, "component_synonym"));

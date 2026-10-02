@@ -1,11 +1,13 @@
 package cz.iocb.chemweb.server.sparql.config.pdb;
 
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
+import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
 import cz.iocb.chemweb.server.sparql.config.common.StringSubsetLiteralClass;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.TableColumn;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
@@ -15,12 +17,13 @@ public class Pdb
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pdb:compound", "integer", new Table("pdb", "compound_bases"),
-                new TableColumn("id"), new TableColumn("name"), "https://identifiers.org/pdb-ccd/", ".*"));
+        config.addIriClass(new MapUserIriClass("pdb:compound", INT4, new DatabaseTable("pdb", "compound_bases"),
+                new TableColumn("id", INT4), new TableColumn("name", VARCHAR), "https://identifiers.org/pdb-ccd/",
+                ".*"));
 
-        config.addIriClass(
-                new MapUserIriClass("pdb:molfile", "integer", new Table("pdb", "compound_bases"), new TableColumn("id"),
-                        new TableColumn("name"), "https://idsm.elixir-czech.cz/rdf/pdb-ccd/", ".*", "_molfile"));
+        config.addIriClass(new MapUserIriClass("pdb:molfile", INT4, new DatabaseTable("pdb", "compound_bases"),
+                new TableColumn("id", INT4), new TableColumn("name", VARCHAR),
+                "https://idsm.elixir-czech.cz/rdf/pdb-ccd/", ".*", "_molfile"));
     }
 
 
@@ -29,8 +32,8 @@ public class Pdb
         ConstantIriMapping graph = config.createIriMapping("pdb-ccd:");
 
         {
-            Table table = new Table("pdb", "compound_bases");
-            NodeMapping subject = config.createIriMapping("pdb:molfile", "id");
+            DatabaseTable table = new DatabaseTable("pdb", "compound_bases");
+            TermMapping subject = config.createIriMapping("pdb:molfile", "id");
             LiteralClass molfileLiteral = new StringSubsetLiteralClass("pdb-molfile");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

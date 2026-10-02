@@ -27,7 +27,7 @@ public class TargetComponentReference extends Updater
     }
 
 
-    private static HashMap<String, Description> descriptions = new HashMap<String, Description>();
+    private static HashMap<String, Description> descriptions = new HashMap<>();
     private static int id = 0;
 
 

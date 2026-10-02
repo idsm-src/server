@@ -84,9 +84,9 @@ public class SelectExampleDialog extends DialogBox
 
     public SelectExampleDialog()
     {
-        examplesDataGrid = new DataGrid<Example>(1, DataGridBundle.INSTANCE);
+        examplesDataGrid = new DataGrid<>(1, DataGridBundle.INSTANCE);
 
-        AbstractCell<String> cell = new AbstractCell<String>()
+        AbstractCell<String> cell = new AbstractCell<>()
         {
             @Override
             public void render(Context context, String value, SafeHtmlBuilder sb)
@@ -96,7 +96,7 @@ public class SelectExampleDialog extends DialogBox
             }
         };
 
-        Column<Example, String> column = new Column<Example, String>(cell)
+        Column<Example, String> column = new Column<>(cell)
         {
             @Override
             public String getValue(Example value)
@@ -107,7 +107,7 @@ public class SelectExampleDialog extends DialogBox
 
         examplesDataGrid.addColumn(column, "Example");
 
-        selectionModel = new SingleSelectionModel<Example>();
+        selectionModel = new SingleSelectionModel<>();
 
         selectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler()
         {
@@ -177,7 +177,7 @@ public class SelectExampleDialog extends DialogBox
             {
                 JsArray<Example> data = getData();
 
-                LinkedList<Example> list = new LinkedList<Example>();
+                LinkedList<Example> list = new LinkedList<>();
 
                 for(int i = 0; i < data.length(); ++i)
                     list.add(data.get(i));

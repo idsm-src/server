@@ -26,7 +26,7 @@ public class Mesh extends Updater
     private static final StringSet oldMeshes = new StringSet();
 
 
-    private static HashMap<String, Integer> zoneTable = new HashMap<String, Integer>()
+    private static HashMap<String, Integer> zoneTable = new HashMap<>()
     {
         {
             put("", -2147483648);

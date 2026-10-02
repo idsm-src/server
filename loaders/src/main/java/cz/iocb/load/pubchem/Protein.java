@@ -504,29 +504,30 @@ class Protein extends Updater
 
         load("select protein,match_unit,match_id from pubchem.protein_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?protein rdfs:seeAlso ?match. " + "filter(!strstarts(str(?match), 'http://identifiers.org/refseq:'))"
-                        + "filter(!strstarts(str(?match), 'http://purl.uniprot.org/uniprot/'))"
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/uniprot:'))"
-                        + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/nextprot:NX_'))"
-                        + "filter(!strstarts(str(?match), 'https://glygen.org/protein/'))"
-                        + "filter(!strstarts(str(?match), 'https://glycosmos.org/glycoproteins/'))"
-                        + "filter(!strstarts(str(?match), 'https://alphafold.ebi.ac.uk/entry/'))"
-                        + "filter(!strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/PR:'))"
-                        + "filter(!strstarts(str(?match), 'https://wormbase.org/db/seq/protein?name='))"
-                        + "filter(!strstarts(str(?match), 'https://www.brenda-enzymes.org/enzyme.php?ecno='))"
-                        + "filter(!strstarts(str(?match), 'https://www.ebi.ac.uk/intact/search?query='))"
-                        + "filter(!strstarts(str(?match), 'https://www.ebi.ac.uk/interpro/protein/reviewed/'))"
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/ncbiprotein:'))"
-                        + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/target/'))"
-                        + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/target/CHEMBL'))"
-                        + "filter(!strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))"
-                        + "filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"
-                        + "filter(!strstarts(str(?match), 'https://string-db.org/network/'))"
-                        + "filter(!strstarts(str(?match), 'https://www.enzyme-database.org/query.php?ec='))"))
+        new QueryResultProcessor(patternQuery("""
+                ?protein rdfs:seeAlso ?match. \
+                filter(!strstarts(str(?match), 'http://identifiers.org/refseq:'))\
+                filter(!strstarts(str(?match), 'http://purl.uniprot.org/uniprot/'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/uniprot:'))\
+                filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/nextprot:NX_'))\
+                filter(!strstarts(str(?match), 'https://glygen.org/protein/'))\
+                filter(!strstarts(str(?match), 'https://glycosmos.org/glycoproteins/'))\
+                filter(!strstarts(str(?match), 'https://alphafold.ebi.ac.uk/entry/'))\
+                filter(!strstarts(str(?match), 'https://pharos.nih.gov/targets/'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/PR:'))\
+                filter(!strstarts(str(?match), 'https://wormbase.org/db/seq/protein?name='))\
+                filter(!strstarts(str(?match), 'https://www.brenda-enzymes.org/enzyme.php?ecno='))\
+                filter(!strstarts(str(?match), 'https://www.ebi.ac.uk/intact/search?query='))\
+                filter(!strstarts(str(?match), 'https://www.ebi.ac.uk/interpro/protein/reviewed/'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/ncbiprotein:'))\
+                filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/target/'))\
+                filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/target/CHEMBL'))\
+                filter(!strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))\
+                filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))\
+                filter(!strstarts(str(?match), 'https://string-db.org/network/'))\
+                filter(!strstarts(str(?match), 'https://www.enzyme-database.org/query.php?ec='))"""))
         {
             @Override
             protected void parse() throws IOException

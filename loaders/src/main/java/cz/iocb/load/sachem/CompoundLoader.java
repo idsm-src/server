@@ -142,7 +142,7 @@ public class CompoundLoader
         });
 
 
-        List<Integer> oldIds = new ArrayList<Integer>();
+        List<Integer> oldIds = new ArrayList<>();
 
         if(removeOld)
         {

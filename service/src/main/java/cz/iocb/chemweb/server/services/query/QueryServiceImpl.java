@@ -19,9 +19,9 @@ import java.util.regex.Pattern;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpSession;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -40,12 +40,13 @@ import cz.iocb.chemweb.shared.services.query.QueryResult;
 import cz.iocb.chemweb.shared.services.query.QueryService;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.error.TranslateExceptions;
-import cz.iocb.sparql.engine.request.BNode;
+import cz.iocb.sparql.engine.rdf.BlankNode;
+import cz.iocb.sparql.engine.rdf.Iri;
+import cz.iocb.sparql.engine.rdf.Literal;
+import cz.iocb.sparql.engine.rdf.RdfTerm;
+import cz.iocb.sparql.engine.rdf.Variable;
 import cz.iocb.sparql.engine.request.Engine;
-import cz.iocb.sparql.engine.request.IriNode;
 import cz.iocb.sparql.engine.request.LimitExceedException;
-import cz.iocb.sparql.engine.request.LiteralNode;
-import cz.iocb.sparql.engine.request.RdfNode;
 import cz.iocb.sparql.engine.request.Request;
 import cz.iocb.sparql.engine.request.Result;
 import cz.iocb.sparql.engine.translator.ServiceException;
@@ -65,13 +66,13 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
 
     private static final long serialVersionUID = 1L;
     private static final long timeout = 15 * 60 * 1000000000l; // 15 minutes
-    private static final SessionData<QueryState> sessionData = new SessionData<QueryState>("QuerySessionStorage");
+    private static final SessionData<QueryState> sessionData = new SessionData<>("QuerySessionStorage");
     private static final Logger logger = LoggerFactory.getLogger(QueryServiceImpl.class);
     private static final int cacheSize = 1000000;
-    private static final Map<String, Map<RdfNode, String>> nodeHashMaps = new HashMap<String, Map<RdfNode, String>>();
-    private static final Map<Pattern, String> templates = new HashMap<Pattern, String>();
+    private static final Map<String, Map<RdfTerm, String>> nodeHashMaps = new HashMap<>();
+    private static final Map<Pattern, String> templates = new HashMap<>();
 
-    private Map<RdfNode, String> nodeHashMap;
+    private Map<RdfTerm, String> nodeHashMap;
     private SparqlDatabaseConfiguration sparqlConfig;
     private Engine engine;
     private VelocityEngine ve;
@@ -236,11 +237,11 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
 
             Properties properties = new Properties();
             properties.put("file.resource.loader.path", config.getServletContext().getRealPath("/templates"));
-            properties.put("userdirective",
-                    "cz.iocb.chemweb.server.velocity.SparqlDirective,"
-                            + "cz.iocb.chemweb.server.velocity.EscapeHtmlDirective,"
-                            + "cz.iocb.chemweb.server.velocity.EscapeIriDirective,"
-                            + "cz.iocb.chemweb.server.velocity.UrlDirective");
+            properties.put("userdirective", """
+                    cz.iocb.chemweb.server.velocity.SparqlDirective,\
+                    cz.iocb.chemweb.server.velocity.EscapeHtmlDirective,\
+                    cz.iocb.chemweb.server.velocity.EscapeIriDirective,\
+                    cz.iocb.chemweb.server.velocity.UrlDirective""");
 
             ve = new VelocityEngine(properties);
             ve.setApplicationAttribute(SparqlDirective.SPARQL_CONFIG, sparqlConfig);
@@ -258,12 +259,12 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
 
             if(nodeHashMap == null)
             {
-                nodeHashMap = Collections.synchronizedMap(new LinkedHashMap<RdfNode, String>(cacheSize, 0.75f, true)
+                nodeHashMap = Collections.synchronizedMap(new LinkedHashMap<RdfTerm, String>(cacheSize, 0.75f, true)
                 {
                     private static final long serialVersionUID = 1L;
 
                     @Override
-                    protected boolean removeEldestEntry(Map.Entry<RdfNode, String> eldest)
+                    protected boolean removeEldestEntry(Map.Entry<RdfTerm, String> eldest)
                     {
                         return size() > cacheSize;
                     }
@@ -317,11 +318,11 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
             {
                 try(Result result = queryState.request.execute(query, offset, limit + 1, timeout))
                 {
-                    List<Future<DataGridNode[]>> futures = new ArrayList<Future<DataGridNode[]>>(limit + 1);
+                    List<Future<DataGridNode[]>> futures = new ArrayList<>(limit + 1);
 
                     while(result.next())
                     {
-                        final RdfNode[] row = result.getRow();
+                        final RdfTerm[] row = result.getRow();
 
                         futures.add(executorService.submit(() -> {
                             DataGridNode[] stringRow = new DataGridNode[row.length];
@@ -330,8 +331,8 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
                             {
                                 stringRow[i] = new DataGridNode();
 
-                                if(row[i] != null && row[i].isIri())
-                                    stringRow[i].ref = row[i].getValue();
+                                if(row[i] instanceof Iri iri)
+                                    stringRow[i].ref = iri.getValue();
 
 
                                 String html = nodeHashMap.get(row[i]);
@@ -376,7 +377,7 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
                     }
 
 
-                    List<DataGridNode[]> items = new ArrayList<DataGridNode[]>(futures.size());
+                    List<DataGridNode[]> items = new ArrayList<>(futures.size());
 
                     for(Future<DataGridNode[]> future : futures)
                         items.add(future.get());
@@ -391,7 +392,9 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
                     }
 
 
-                    queryState.result = new QueryResult(result.getHeads(), items, truncated);
+                    List<String> heads = result.getHeads().stream().map(Variable::getName).toList();
+
+                    queryState.result = new QueryResult(heads, items, truncated);
                 }
                 catch(Throwable e)
                 {
@@ -495,7 +498,7 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
                 if(result.getHeads().size() != 1)
                     throw new DatabaseException();
 
-                return Integer.parseInt(result.get(0).getValue());
+                return Integer.parseInt(((Literal) result.get(0)).getValue());
             }
         }
         catch(URISyntaxException | TranslateExceptions | LimitExceedException | ServiceException | SQLException e)
@@ -511,7 +514,7 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
     }
 
 
-    private static String getTempleteFileName(RdfNode node)
+    private static String getTempleteFileName(RdfTerm node)
     {
         switch(node)
         {
@@ -519,7 +522,7 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
             {
                 return null;
             }
-            case IriNode iri ->
+            case Iri iri ->
             {
                 String value = iri.getValue();
 
@@ -529,11 +532,11 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
 
                 return "item/unknown.vm";
             }
-            case LiteralNode literal ->
+            case Literal literal ->
             {
                 return "item/literal.vm";
             }
-            case BNode bn ->
+            case BlankNode bn ->
             {
                 return "item/blanknode.vm";
             }

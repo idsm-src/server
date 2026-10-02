@@ -1,13 +1,14 @@
 package cz.iocb.chemweb.server.sparql.config.chembl;
 
 import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Conditions;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
@@ -16,7 +17,7 @@ public class Document
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("chembl:document", "integer",
+        config.addIriClass(new IntegerUserIriClass("chembl:document", INT4,
                 "http://rdf.ebi.ac.uk/resource/chembl/document/CHEMBL"));
     }
 
@@ -24,12 +25,12 @@ public class Document
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
+        DatabaseTable table = new DatabaseTable(schema, "docs");
 
         Conditions valueCondition = config.createAreNotEqualCondition("id", "'1158643'::integer");
-        Conditions isNullCondition = config.createIsNullCondition("journal_id");
+        Conditions isNullCondition = config.createIsNullCondition(table, "journal_id");
 
-        Table table = new Table(schema, "docs");
-        NodeMapping subject = config.createIriMapping("chembl:document", "id");
+        TermMapping subject = config.createIriMapping("chembl:document", "id");
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                 config.createIriMapping("cco:Document"), valueCondition);
         config.addQuadMapping(table, graph, subject, config.createIriMapping("bibo:pmid"),

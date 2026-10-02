@@ -43,14 +43,22 @@ public class MainPage extends ResizeComposite implements HasSelectionHandlers<St
 
     private static MainPageUiBinder uiBinder = GWT.create(MainPageUiBinder.class);
 
-    @UiField TabLayoutPanel queryTabPanel;
-    @UiField(provided = true) SplitLayoutPanel mainSplitLayoutPanel;
-    @UiField TabLayoutPanel resultTabPanel;
-    @UiField TabLayoutPanel infoTabPanel;
-    @UiField(provided = true) QueryPart queryPart;
-    @UiField ResultTablePart resultTablePart;
-    @UiField(provided = true) DetailsPart detailsPart;
-    @UiField(provided = true) PropertiesPart propertiesPart;
+    @UiField
+    TabLayoutPanel queryTabPanel;
+    @UiField(provided = true)
+    SplitLayoutPanel mainSplitLayoutPanel;
+    @UiField
+    TabLayoutPanel resultTabPanel;
+    @UiField
+    TabLayoutPanel infoTabPanel;
+    @UiField(provided = true)
+    QueryPart queryPart;
+    @UiField
+    ResultTablePart resultTablePart;
+    @UiField(provided = true)
+    DetailsPart detailsPart;
+    @UiField(provided = true)
+    PropertiesPart propertiesPart;
 
     private final int minCentralWidth = 300;
     private final Element styleOfSelected;
@@ -148,7 +156,7 @@ public class MainPage extends ResizeComposite implements HasSelectionHandlers<St
         });
 
 
-        SelectionHandler<String> selectionHandler = new SelectionHandler<String>()
+        SelectionHandler<String> selectionHandler = new SelectionHandler<>()
         {
             @Override
             public void onSelection(SelectionEvent<String> event)
@@ -210,7 +218,7 @@ public class MainPage extends ResizeComposite implements HasSelectionHandlers<St
 
         history.visit(iri);
 
-        handlerManager.fireEvent(new SelectionEvent<String>(iri)
+        handlerManager.fireEvent(new SelectionEvent<>(iri)
         {
         });
 

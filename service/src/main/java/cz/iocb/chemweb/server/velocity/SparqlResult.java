@@ -1,7 +1,7 @@
 package cz.iocb.chemweb.server.velocity;
 
 import java.util.ArrayList;
-import cz.iocb.sparql.engine.request.RdfNode;
+import cz.iocb.sparql.engine.rdf.RdfTerm;
 
 
 
@@ -14,7 +14,7 @@ public class SparqlResult extends ArrayList<SparqlRow>
     }
 
 
-    public RdfNode get(String name)
+    public RdfTerm get(String name)
     {
         if(size() == 0)
             return null;

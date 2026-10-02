@@ -1,10 +1,11 @@
 package cz.iocb.chemweb.server.sparql.config.drugbank;
 
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import cz.iocb.chemweb.server.sparql.config.common.StringSubsetLiteralClass;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 
@@ -14,10 +15,10 @@ public class DrugBank
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("drugbank:compound", "integer",
+        config.addIriClass(new IntegerUserIriClass("drugbank:compound", INT4,
                 "http://wifo5-04.informatik.uni-mannheim.de/drugbank/resource/drugs/DB", 5));
 
-        config.addIriClass(new IntegerUserIriClass("drugbank:molfile", "integer",
+        config.addIriClass(new IntegerUserIriClass("drugbank:molfile", INT4,
                 "http://wifo5-04.informatik.uni-mannheim.de/drugbank/resource/drugs/DB", 5, "_Molfile"));
     }
 
@@ -27,8 +28,8 @@ public class DrugBank
         ConstantIriMapping graph = config.createIriMapping("drugbank:");
 
         {
-            Table table = new Table("molecules", "drugbank");
-            NodeMapping subject = config.createIriMapping("drugbank:molfile", "id");
+            DatabaseTable table = new DatabaseTable("molecules", "drugbank");
+            TermMapping subject = config.createIriMapping("drugbank:molfile", "id");
             LiteralClass molfileLiteral = new StringSubsetLiteralClass("drugbank-molfile");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

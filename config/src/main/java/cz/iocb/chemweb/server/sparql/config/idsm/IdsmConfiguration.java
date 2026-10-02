@@ -1,8 +1,6 @@
 package cz.iocb.chemweb.server.sparql.config.idsm;
 
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -33,20 +31,17 @@ import cz.iocb.chemweb.server.sparql.config.sachem.WikidataSachemConfiguration;
 import cz.iocb.chemweb.server.sparql.config.stats.VoidConfiguration;
 import cz.iocb.chemweb.server.sparql.config.wikidata.WikidataConfiguration;
 import cz.iocb.sparql.engine.database.Column;
-import cz.iocb.sparql.engine.database.ConstantColumn;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
-import cz.iocb.sparql.engine.database.Table;
-import cz.iocb.sparql.engine.database.TableColumn;
+import cz.iocb.sparql.engine.database.DatabaseTable;
+import cz.iocb.sparql.engine.database.ValueColumn;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.JoinTableQuadMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
 import cz.iocb.sparql.engine.mapping.QuadMapping;
 import cz.iocb.sparql.engine.mapping.SingleTableQuadMapping;
-import cz.iocb.sparql.engine.mapping.classes.BuiltinClasses;
-import cz.iocb.sparql.engine.mapping.classes.IriClass;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
-import cz.iocb.sparql.engine.mapping.classes.UserIriClass;
-import cz.iocb.sparql.engine.parser.model.IRI;
+import cz.iocb.sparql.engine.rdf.Iri;
+import cz.iocb.sparql.engine.request.Request;
 
 
 
@@ -58,10 +53,11 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         {
             super(schema);
 
-            primaryKeys.get(new Table("molecules", "drugbank")).add(List.of(new TableColumn("molfile")));
-            primaryKeys.get(new Table("molecules", "chebi")).add(List.of(new TableColumn("molfile")));
-            primaryKeys.get(new Table("molecules", "chembl")).add(List.of(new TableColumn("molfile")));
-            primaryKeys.get(new Table("molecules", "pubchem")).add(List.of(new TableColumn("molfile")));
+            for(String name : List.of("drugbank", "chebi", "chembl", "pubchem"))
+            {
+                DatabaseTable table = new DatabaseTable("molecules", name);
+                primaryKeys.get(table).add(List.of(getColumn(table, "molfile")));
+            }
         }
     }
 
@@ -83,41 +79,38 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
 
     private void detectIriResourceClasses() throws SQLException
     {
-        try(Connection connection = connectionPool.getConnection())
+        try(Request request = new Request(this))
         {
-            connection.setAutoCommit(true);
-
-            try(Statement stmt = connection.createStatement())
+            for(List<QuadMapping> m : mappings.values())
             {
-                for(List<QuadMapping> m : mappings.values())
+                ListIterator<QuadMapping> it = m.listIterator();
+
+                while(it.hasNext())
                 {
-                    ListIterator<QuadMapping> it = m.listIterator();
+                    QuadMapping original = it.next();
 
-                    while(it.hasNext())
+                    if(original instanceof SingleTableQuadMapping map)
                     {
-                        QuadMapping original = it.next();
+                        SingleTableQuadMapping mapping = new SingleTableQuadMapping(map.getTable(),
+                                remap(request, map.getGraph()), remap(request, map.getSubject()),
+                                remap(request, map.getPredicate()), remap(request, map.getObject()),
+                                map.getConditions(), map.isDistinct());
 
-                        if(original instanceof SingleTableQuadMapping map)
-                        {
-                            SingleTableQuadMapping mapping = new SingleTableQuadMapping(map.getTable(),
-                                    remap(stmt, map.getGraph()), remap(stmt, map.getSubject()),
-                                    remap(stmt, map.getPredicate()), remap(stmt, map.getObject()), map.getConditions());
+                        it.set(mapping);
+                    }
+                    else if(original instanceof JoinTableQuadMapping map)
+                    {
+                        JoinTableQuadMapping mapping = new JoinTableQuadMapping(map.getTables(),
+                                map.getJoinColumnsPairs(), remap(request, map.getGraph()),
+                                remap(request, map.getSubject()),
+                                (ConstantIriMapping) remap(request, map.getPredicate()),
+                                remap(request, map.getObject()), map.getConditions(), map.getDistinct());
 
-                            it.set(mapping);
-                        }
-                        else if(original instanceof JoinTableQuadMapping map)
-                        {
-                            JoinTableQuadMapping mapping = new JoinTableQuadMapping(map.getTables(),
-                                    map.getJoinColumnsPairs(), remap(stmt, map.getGraph()),
-                                    remap(stmt, map.getSubject()), (ConstantIriMapping) remap(stmt, map.getPredicate()),
-                                    remap(stmt, map.getObject()), map.getConditions());
-
-                            it.set(mapping);
-                        }
-                        else
-                        {
-                            throw new IllegalArgumentException();
-                        }
+                        it.set(mapping);
+                    }
+                    else
+                    {
+                        throw new IllegalArgumentException();
                     }
                 }
             }
@@ -126,25 +119,25 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
 
 
     @SuppressWarnings("unchecked")
-    private <T extends NodeMapping> T remap(Statement statement, T mapping)
+    private <T extends TermMapping> T remap(Request request, T mapping)
     {
         if(mapping instanceof ConstantIriMapping original)
         {
             if(original.getResourceClass() != null && original.getColumns() != null)
                 return mapping;
 
-            IRI iri = original.getIRI();
-            IriClass iriClass = iriCache.getIriClass(iri);
-            List<Column> columns = iriCache.getIriColumns(iri);
+            Iri iri = original.getIri();
+            ResourceClass iriClass = iriCache.getIriClass(iri);
+            List<Column> columns = iriClass == null ? null : iriCache.getIriColumns(iri, iriClass);
 
             if(iriClass == null || columns == null)
             {
-                iriClass = detectIriClass(statement, iri);
-                columns = iriClass.toColumns(statement, iri);
+                iriClass = request.getIriClass(iri);
+                columns = request.getColumns(iriClass, iri);
                 iriCache.storeToCache(iri, iriClass, columns);
 
                 if(shouldBeReported(iriClass, columns))
-                    System.err.println("detect " + iri + " as '" + iriClass.getName() + "' " + columns);
+                    System.err.println("detect " + iri + " as '" + iriClass.getResourceName() + "' " + columns);
             }
 
             return (T) new ConstantIriMapping(iri, iriClass, columns);
@@ -154,14 +147,14 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
-    private boolean shouldBeReported(IriClass iriClass, List<Column> columns)
+    private boolean shouldBeReported(ResourceClass iriClass, List<Column> columns)
     {
-        if(iriClass.getName().equals("unsupported"))
+        if(iriClass.getResourceName().equals("unsupported"))
             return true;
 
-        if(iriClass.getName().equals("ontology:resource"))
+        if(iriClass.getResourceName().equals("ontology:resource"))
         {
-            if(columns.get(0) instanceof ConstantColumn col0 && columns.get(1) instanceof ConstantColumn col1)
+            if(columns.get(0) instanceof ValueColumn col0 && columns.get(1) instanceof ValueColumn col1)
             {
                 if(!col0.getValue().equals("0"))
                     return false;
@@ -172,16 +165,6 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         }
 
         return false;
-    }
-
-
-    private IriClass detectIriClass(Statement statement, IRI value)
-    {
-        for(UserIriClass iriClass : getIriClasses())
-            if(iriClass.match(statement, value))
-                return iriClass;
-
-        return BuiltinClasses.unsupportedIri;
     }
 
 
@@ -237,16 +220,17 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         addService(new VoidConfiguration(null, connectionPool, getDatabaseSchema()), true);
         addService(new ExamplesConfiguration(null, connectionPool, getDatabaseSchema()), true);
 
-        Map<ResourceClass, List<Column>> mapping = new HashMap<ResourceClass, List<Column>>();
-        mapping.put(getIriClass("ontology:resource"), List.of(getColumn(Ontology.unitCHEBI), getColumn("chebi")));
-        mapping.put(getIriClass("chembl:compound"), List.of(getColumn("chembl")));
-        mapping.put(getIriClass("drugbank:compound"), List.of(getColumn("drugbank")));
-        mapping.put(getIriClass("isdb:compound"), List.of(getColumn("isdb")));
-        mapping.put(getIriClass("mona:compound"), List.of(getColumn("mona")));
-        mapping.put(getIriClass("pubchem:compound"), List.of(getColumn("pubchem")));
-        mapping.put(getIriClass("wikidata:entity"), List.of(getColumn("wikidata")));
-        mapping.put(getIriClass("molmedb:substance"), List.of(getColumn("molmedb")));
-        mapping.put(getIriClass("pdb:compound"), List.of(getColumn("pdb")));
+        Map<ResourceClass, List<Column>> mapping = new HashMap<>();
+        mapping.put(getIriClass("ontology:resource"),
+                getColumns(getIriClass("ontology:resource"), Ontology.unitCHEBI, "chebi"));
+        mapping.put(getIriClass("chembl:compound"), getColumns(getIriClass("chembl:compound"), "chembl"));
+        mapping.put(getIriClass("drugbank:compound"), getColumns(getIriClass("drugbank:compound"), "drugbank"));
+        mapping.put(getIriClass("isdb:compound"), getColumns(getIriClass("isdb:compound"), "isdb"));
+        mapping.put(getIriClass("mona:compound"), getColumns(getIriClass("mona:compound"), "mona"));
+        mapping.put(getIriClass("pubchem:compound"), getColumns(getIriClass("pubchem:compound"), "pubchem"));
+        mapping.put(getIriClass("wikidata:entity"), getColumns(getIriClass("wikidata:entity"), "wikidata"));
+        mapping.put(getIriClass("molmedb:substance"), getColumns(getIriClass("molmedb:substance"), "molmedb"));
+        mapping.put(getIriClass("pdb:compound"), getColumns(getIriClass("pdb:compound"), "pdb"));
 
         Sachem.addResourceClasses(this);
         Sachem.addProcedures(this, "sachem", mapping);
@@ -299,15 +283,15 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
     {
         String graphIri = "https://idsm.elixir-czech.cz/.well-known/sparql-examples";
 
-        ConstantIriMapping graph = createIriMapping(new IRI(graphIri));
+        ConstantIriMapping graph = createIriMapping(new Iri(graphIri));
         {
             for(Entry<String, String> entry : getPrefixes().entrySet())
             {
                 String namespace = entry.getValue();
                 String prefix = entry.getKey();
 
-                NodeMapping subject = createIriMapping(
-                        new IRI("https://idsm.elixir-czech.cz/sparql-prefixes/" + prefix));
+                TermMapping subject = createIriMapping(
+                        new Iri("https://idsm.elixir-czech.cz/sparql-prefixes/" + prefix));
 
                 addQuadMapping(graph, subject, createIriMapping("sh:namespace"), createLiteralMapping(namespace));
                 addQuadMapping(graph, subject, createIriMapping("sh:prefix"), createLiteralMapping(prefix));

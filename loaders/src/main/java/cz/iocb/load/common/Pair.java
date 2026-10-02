@@ -17,7 +17,7 @@ public final class Pair<T1, T2>
 
     public static <T1, T2> Pair<T1, T2> getPair(T1 one, T2 two)
     {
-        return new Pair<T1, T2>(one, two);
+        return new Pair<>(one, two);
     }
 
 

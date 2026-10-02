@@ -6,7 +6,7 @@ import cz.iocb.chemweb.server.sparql.config.common.Common;
 import cz.iocb.chemweb.server.sparql.config.common.SparqlDatabaseOptimisedConfiguration;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
-import cz.iocb.sparql.engine.mapping.classes.LangStringConstantTagClass;
+import cz.iocb.sparql.engine.mapping.classes.LangStringWithTagClass;
 
 
 
@@ -14,7 +14,7 @@ public class MeshConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
     static final String schema = "mesh";
 
-    static final LangStringConstantTagClass rdfLangStringEn = LangStringConstantTagClass.get("en");
+    static final LangStringWithTagClass rdfLangStringEn = LangStringWithTagClass.get("en");
 
 
     public MeshConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException

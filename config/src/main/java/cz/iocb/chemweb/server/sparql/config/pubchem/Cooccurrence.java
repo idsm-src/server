@@ -1,14 +1,15 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
 import java.util.List;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
-import cz.iocb.sparql.engine.mapping.classes.GeneralUserIriClass;
-import cz.iocb.sparql.engine.mapping.classes.GeneralUserIriClass.SqlCheck;
+import cz.iocb.sparql.engine.mapping.TermMapping;
+import cz.iocb.sparql.engine.mapping.classes.GenericUserIriClass;
+import cz.iocb.sparql.engine.mapping.classes.GenericUserIriClass.SqlCheck;
 
 
 
@@ -18,56 +19,48 @@ public class Cooccurrence
     {
         final String prefix = "http://rdf\\.ncbi\\.nlm\\.nih\\.gov/pubchem/cooccurrence/";
 
-        config.addIriClass(new GeneralUserIriClass("pubchem:chemical_chemical_cooccurrence", schema,
-                "chemical_chemical_cooccurrence", List.of("integer", "integer"),
-                prefix + "CID[1-9][0-9]*_CID[1-9][0-9]*"));
+        config.addIriClass(new GenericUserIriClass("pubchem:chemical_chemical_cooccurrence", schema,
+                "chemical_chemical_cooccurrence", List.of(INT4, INT4), prefix + "CID[1-9][0-9]*_CID[1-9][0-9]*"));
 
-        config.addIriClass(new GeneralUserIriClass("pubchem:chemical_disease_cooccurrence", schema,
-                "chemical_disease_cooccurrence", List.of("integer", "integer"),
-                prefix + "CID[1-9][0-9]*_DZID[1-9][0-9]*"));
+        config.addIriClass(new GenericUserIriClass("pubchem:chemical_disease_cooccurrence", schema,
+                "chemical_disease_cooccurrence", List.of(INT4, INT4), prefix + "CID[1-9][0-9]*_DZID[1-9][0-9]*"));
 
-        config.addIriClass(
-                new GeneralUserIriClass("pubchem:chemical_gene_cooccurrence", schema, "chemical_gene_cooccurrence",
-                        List.of("integer", "integer"), prefix + "CID[1-9][0-9]*_.*", SqlCheck.IF_MATCH));
+        config.addIriClass(new GenericUserIriClass("pubchem:chemical_gene_cooccurrence", schema,
+                "chemical_gene_cooccurrence", List.of(INT4, INT4), prefix + "CID[1-9][0-9]*_.*", SqlCheck.IF_MATCH));
 
         config.addIriClass(
-                new GeneralUserIriClass("pubchem:chemical_enzyme_cooccurrence", schema, "chemical_enzyme_cooccurrence",
-                        List.of("integer", "integer"), prefix + "CID[1-9][0-9]*_EC_.*", SqlCheck.IF_MATCH));
+                new GenericUserIriClass("pubchem:chemical_enzyme_cooccurrence", schema, "chemical_enzyme_cooccurrence",
+                        List.of(INT4, INT4), prefix + "CID[1-9][0-9]*_EC_.*", SqlCheck.IF_MATCH));
 
-        config.addIriClass(new GeneralUserIriClass("pubchem:disease_chemical_cooccurrence", schema,
-                "disease_chemical_cooccurrence", List.of("integer", "integer"),
-                prefix + "DZID[1-9][0-9]*_CID[1-9][0-9]*"));
+        config.addIriClass(new GenericUserIriClass("pubchem:disease_chemical_cooccurrence", schema,
+                "disease_chemical_cooccurrence", List.of(INT4, INT4), prefix + "DZID[1-9][0-9]*_CID[1-9][0-9]*"));
 
-        config.addIriClass(
-                new GeneralUserIriClass("pubchem:disease_disease_cooccurrence", schema, "disease_disease_cooccurrence",
-                        List.of("integer", "integer"), prefix + "DZID[1-9][0-9]*_DZID[1-9][0-9]*"));
+        config.addIriClass(new GenericUserIriClass("pubchem:disease_disease_cooccurrence", schema,
+                "disease_disease_cooccurrence", List.of(INT4, INT4), prefix + "DZID[1-9][0-9]*_DZID[1-9][0-9]*"));
 
-        config.addIriClass(
-                new GeneralUserIriClass("pubchem:disease_gene_cooccurrence", schema, "disease_gene_cooccurrence",
-                        List.of("integer", "integer"), prefix + "DZID[1-9][0-9]*_.*", SqlCheck.IF_MATCH));
+        config.addIriClass(new GenericUserIriClass("pubchem:disease_gene_cooccurrence", schema,
+                "disease_gene_cooccurrence", List.of(INT4, INT4), prefix + "DZID[1-9][0-9]*_.*", SqlCheck.IF_MATCH));
 
         config.addIriClass(
-                new GeneralUserIriClass("pubchem:disease_enzyme_cooccurrence", schema, "disease_enzyme_cooccurrence",
-                        List.of("integer", "integer"), prefix + "DZID[1-9][0-9]*_EC_.*", SqlCheck.IF_MATCH));
+                new GenericUserIriClass("pubchem:disease_enzyme_cooccurrence", schema, "disease_enzyme_cooccurrence",
+                        List.of(INT4, INT4), prefix + "DZID[1-9][0-9]*_EC_.*", SqlCheck.IF_MATCH));
+
+        config.addIriClass(new GenericUserIriClass("pubchem:gene_chemical_cooccurrence", schema,
+                "gene_chemical_cooccurrence", List.of(INT4, INT4), prefix + ".*_CID[1-9][0-9]*", SqlCheck.IF_MATCH));
 
         config.addIriClass(
-                new GeneralUserIriClass("pubchem:gene_chemical_cooccurrence", schema, "gene_chemical_cooccurrence",
-                        List.of("integer", "integer"), prefix + ".*_CID[1-9][0-9]*", SqlCheck.IF_MATCH));
+                new GenericUserIriClass("pubchem:enzyme_chemical_cooccurrence", schema, "enzyme_chemical_cooccurrence",
+                        List.of(INT4, INT4), prefix + "EC_.*_CID[1-9][0-9]*", SqlCheck.IF_MATCH));
+
+        config.addIriClass(new GenericUserIriClass("pubchem:gene_disease_cooccurrence", schema,
+                "gene_disease_cooccurrence", List.of(INT4, INT4), prefix + ".*_DZID[1-9][0-9]*", SqlCheck.IF_MATCH));
 
         config.addIriClass(
-                new GeneralUserIriClass("pubchem:enzyme_chemical_cooccurrence", schema, "enzyme_chemical_cooccurrence",
-                        List.of("integer", "integer"), prefix + "EC_.*_CID[1-9][0-9]*", SqlCheck.IF_MATCH));
+                new GenericUserIriClass("pubchem:enzyme_disease_cooccurrence", schema, "enzyme_disease_cooccurrence",
+                        List.of(INT4, INT4), prefix + "EC_.*_DZID[1-9][0-9]*", SqlCheck.IF_MATCH));
 
-        config.addIriClass(
-                new GeneralUserIriClass("pubchem:gene_disease_cooccurrence", schema, "gene_disease_cooccurrence",
-                        List.of("integer", "integer"), prefix + ".*_DZID[1-9][0-9]*", SqlCheck.IF_MATCH));
-
-        config.addIriClass(
-                new GeneralUserIriClass("pubchem:enzyme_disease_cooccurrence", schema, "enzyme_disease_cooccurrence",
-                        List.of("integer", "integer"), prefix + "EC_.*_DZID[1-9][0-9]*", SqlCheck.IF_MATCH));
-
-        config.addIriClass(new GeneralUserIriClass("pubchem:gene_gene_cooccurrence", schema, "gene_gene_cooccurrence",
-                List.of("integer", "integer"), prefix + ".*_.*", SqlCheck.IF_MATCH));
+        config.addIriClass(new GenericUserIriClass("pubchem:gene_gene_cooccurrence", schema, "gene_gene_cooccurrence",
+                List.of(INT4, INT4), prefix + ".*_.*", SqlCheck.IF_MATCH));
     }
 
 
@@ -75,8 +68,8 @@ public class Cooccurrence
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:cooccurrence");
         {
-            Table table = new Table(schema, "chemical_chemical_cooccurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:chemical_chemical_cooccurrence", "subject",
+            DatabaseTable table = new DatabaseTable(schema, "chemical_chemical_cooccurrences");
+            TermMapping subject = config.createIriMapping("pubchem:chemical_chemical_cooccurrence", "subject",
                     "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -94,8 +87,8 @@ public class Cooccurrence
         }
 
         {
-            Table table = new Table(schema, "chemical_disease_cooccurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:chemical_disease_cooccurrence", "subject", "object");
+            DatabaseTable table = new DatabaseTable(schema, "chemical_disease_cooccurrences");
+            TermMapping subject = config.createIriMapping("pubchem:chemical_disease_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Cooccurrence"));
@@ -112,8 +105,8 @@ public class Cooccurrence
         }
 
         {
-            Table table = new Table(schema, "chemical_gene_cooccurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:chemical_gene_cooccurrence", "subject", "object");
+            DatabaseTable table = new DatabaseTable(schema, "chemical_gene_cooccurrences");
+            TermMapping subject = config.createIriMapping("pubchem:chemical_gene_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Cooccurrence"));
@@ -130,8 +123,8 @@ public class Cooccurrence
         }
 
         {
-            Table table = new Table(schema, "chemical_enzyme_cooccurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:chemical_enzyme_cooccurrence", "subject", "object");
+            DatabaseTable table = new DatabaseTable(schema, "chemical_enzyme_cooccurrences");
+            TermMapping subject = config.createIriMapping("pubchem:chemical_enzyme_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Cooccurrence"));
@@ -148,8 +141,8 @@ public class Cooccurrence
         }
 
         {
-            Table table = new Table(schema, "disease_chemical_cooccurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:disease_chemical_cooccurrence", "subject", "object");
+            DatabaseTable table = new DatabaseTable(schema, "disease_chemical_cooccurrences");
+            TermMapping subject = config.createIriMapping("pubchem:disease_chemical_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Cooccurrence"));
@@ -166,8 +159,8 @@ public class Cooccurrence
         }
 
         {
-            Table table = new Table(schema, "disease_disease_cooccurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:disease_disease_cooccurrence", "subject", "object");
+            DatabaseTable table = new DatabaseTable(schema, "disease_disease_cooccurrences");
+            TermMapping subject = config.createIriMapping("pubchem:disease_disease_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Cooccurrence"));
@@ -184,8 +177,8 @@ public class Cooccurrence
         }
 
         {
-            Table table = new Table(schema, "disease_gene_cooccurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:disease_gene_cooccurrence", "subject", "object");
+            DatabaseTable table = new DatabaseTable(schema, "disease_gene_cooccurrences");
+            TermMapping subject = config.createIriMapping("pubchem:disease_gene_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Cooccurrence"));
@@ -202,8 +195,8 @@ public class Cooccurrence
         }
 
         {
-            Table table = new Table(schema, "disease_enzyme_cooccurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:disease_enzyme_cooccurrence", "subject", "object");
+            DatabaseTable table = new DatabaseTable(schema, "disease_enzyme_cooccurrences");
+            TermMapping subject = config.createIriMapping("pubchem:disease_enzyme_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Cooccurrence"));
@@ -220,8 +213,8 @@ public class Cooccurrence
         }
 
         {
-            Table table = new Table(schema, "gene_chemical_cooccurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:gene_chemical_cooccurrence", "subject", "object");
+            DatabaseTable table = new DatabaseTable(schema, "gene_chemical_cooccurrences");
+            TermMapping subject = config.createIriMapping("pubchem:gene_chemical_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Cooccurrence"));
@@ -238,8 +231,8 @@ public class Cooccurrence
         }
 
         {
-            Table table = new Table(schema, "enzyme_chemical_cooccurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:enzyme_chemical_cooccurrence", "subject", "object");
+            DatabaseTable table = new DatabaseTable(schema, "enzyme_chemical_cooccurrences");
+            TermMapping subject = config.createIriMapping("pubchem:enzyme_chemical_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Cooccurrence"));
@@ -256,8 +249,8 @@ public class Cooccurrence
         }
 
         {
-            Table table = new Table(schema, "gene_disease_cooccurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:gene_disease_cooccurrence", "subject", "object");
+            DatabaseTable table = new DatabaseTable(schema, "gene_disease_cooccurrences");
+            TermMapping subject = config.createIriMapping("pubchem:gene_disease_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Cooccurrence"));
@@ -274,8 +267,8 @@ public class Cooccurrence
         }
 
         {
-            Table table = new Table(schema, "enzyme_disease_cooccurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:enzyme_disease_cooccurrence", "subject", "object");
+            DatabaseTable table = new DatabaseTable(schema, "enzyme_disease_cooccurrences");
+            TermMapping subject = config.createIriMapping("pubchem:enzyme_disease_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Cooccurrence"));
@@ -292,8 +285,8 @@ public class Cooccurrence
         }
 
         {
-            Table table = new Table(schema, "gene_gene_cooccurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:gene_gene_cooccurrence", "subject", "object");
+            DatabaseTable table = new DatabaseTable(schema, "gene_gene_cooccurrences");
+            TermMapping subject = config.createIriMapping("pubchem:gene_gene_cooccurrence", "subject", "object");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Cooccurrence"));

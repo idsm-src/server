@@ -1,31 +1,39 @@
 package cz.iocb.chemweb.server.sparql.config.molmedb;
 
 import static cz.iocb.chemweb.server.sparql.config.molmedb.MolmedbConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
+import static cz.iocb.sparql.engine.database.SqlType.RDFBOX;
+import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.box;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.iri;
+import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.expression;
+import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.string;
+import static cz.iocb.sparql.engine.mapping.classes.DerivedClass.subtract;
+import static cz.iocb.sparql.engine.mapping.classes.DerivedClass.unionize;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import cz.iocb.sparql.engine.database.Column;
-import cz.iocb.sparql.engine.database.ConstantColumn;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.ExpressionColumn;
 import cz.iocb.sparql.engine.database.SQLRuntimeException;
-import cz.iocb.sparql.engine.database.Table;
 import cz.iocb.sparql.engine.database.TableColumn;
-import cz.iocb.sparql.engine.mapping.classes.ResultTag;
+import cz.iocb.sparql.engine.database.ValueColumn;
+import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
 import cz.iocb.sparql.engine.mapping.classes.UserIriClass;
-import cz.iocb.sparql.engine.parser.model.IRI;
-import cz.iocb.sparql.engine.parser.model.VariableOrBlankNode;
-import cz.iocb.sparql.engine.parser.model.triple.Node;
+import cz.iocb.sparql.engine.rdf.Iri;
+import cz.iocb.sparql.engine.request.Request;
 
 
 
 public class SubstanceIdentifierIriClass extends UserIriClass
 {
-    protected final Table table = new Table(schema, "substance_bases");
-    protected final TableColumn from = new TableColumn("id");
-    protected final TableColumn to = new TableColumn("identifier");
+    protected final DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+    protected final TableColumn from = new TableColumn("id", INT4);
+    protected final TableColumn to = new TableColumn("identifier", VARCHAR);
 
     protected final String prefix = "https://rdf.molmedb.upol.cz/substance/";
     protected final String delimiter;
@@ -36,7 +44,7 @@ public class SubstanceIdentifierIriClass extends UserIriClass
 
     protected SubstanceIdentifierIriClass(String name, String delimiter, String pattern)
     {
-        super(name, List.of("integer", "varchar"), List.of(ResultTag.IRI));
+        super(name, List.of(INT4, VARCHAR), Set.of(iri, box));
 
         String delim = delimiter.replaceAll("'", "''");
         String code = String.format("right(split_part(?::varchar,'%s',1), -%d)", delim, prefix.length());
@@ -57,7 +65,7 @@ public class SubstanceIdentifierIriClass extends UserIriClass
         String code = String.format("'%s' || \"@to\" || '%s' || (%s)", pref, delim, cols.get(1));
         String expr = String.format("(SELECT (%s)::varchar FROM %s WHERE \"@from\" = %s)", code, access, cols.get(0));
 
-        return new ExpressionColumn(expr);
+        return new ExpressionColumn(expr, VARCHAR);
     }
 
 
@@ -85,7 +93,7 @@ public class SubstanceIdentifierIriClass extends UserIriClass
         if(check)
             builder.append(" END");
 
-        return new ExpressionColumn(builder.toString());
+        return new ExpressionColumn(builder.toString(), sqlTypes.get(0));
     }
 
 
@@ -117,12 +125,12 @@ public class SubstanceIdentifierIriClass extends UserIriClass
         if(check)
             builder.append(" END");
 
-        return new ExpressionColumn(builder.toString());
+        return new ExpressionColumn(builder.toString(), VARCHAR);
     }
 
 
     @Override
-    public boolean match(Statement statement, IRI iri)
+    public boolean match(Request request, Iri iri)
     {
         Matcher matcher = pattern.matcher(iri.getValue());
 
@@ -131,9 +139,9 @@ public class SubstanceIdentifierIriClass extends UserIriClass
 
         try
         {
-            String sql = sqlQuery.replaceAll("\\?", sanitizeString(iri.getValue()));
+            String sql = sqlQuery.replaceAll("\\?", string(iri.getValue()));
 
-            try(ResultSet result = statement.executeQuery(sql))
+            try(ResultSet result = request.getStatement().executeQuery(sql))
             {
                 return result.next();
             }
@@ -146,24 +154,22 @@ public class SubstanceIdentifierIriClass extends UserIriClass
 
 
     @Override
-    public List<Column> toColumns(Statement statement, Node node)
+    public List<Column> toColumns(Request request, Iri iri)
     {
-        IRI iri = (IRI) node;
-        assert match(statement, iri);
+        assert match(request, iri);
 
         try
         {
-            String sql = sqlQuery.replaceAll("\\?", sanitizeString(iri.getValue()));
+            String sql = sqlQuery.replaceAll("\\?", string(iri.getValue()));
 
-            try(ResultSet result = statement.executeQuery(sql))
+            try(ResultSet result = request.getStatement().executeQuery(sql))
             {
                 if(result.next())
                 {
                     String col0 = result.getString(1);
                     String col1 = iri.getValue().substring(iri.getValue().indexOf(delimiter) + delimiter.length());
 
-                    return List.of(new ConstantColumn(col0, sqlTypes.get(0)),
-                            new ConstantColumn(col1, sqlTypes.get(1)));
+                    return List.of(new ValueColumn(col0, sqlTypes.get(0)), new ValueColumn(col1, sqlTypes.get(1)));
                 }
                 else
                 {
@@ -193,63 +199,44 @@ public class SubstanceIdentifierIriClass extends UserIriClass
 
 
     @Override
-    public List<Column> fromGeneralClass(List<Column> columns)
+    public List<Column> toGeneralClass(ResourceClass superClass, List<Column> columns, boolean canBeNull)
     {
-        return List.of(generateInverseFunction1(columns.get(0), true), generateInverseFunction2(columns.get(0), true));
+        assert isSubclassOf(superClass);
+
+        ResourceClass targetClass = superClass.getEffectiveClass();
+
+        if(targetClass.equals(this))
+            return columns;
+
+        if(targetClass.equals(box))
+            return List.of(expression(RDFBOX, "sparql.rdfbox_create_from_iri(%s)", generateFunction(columns)));
+
+        if(targetClass.equals(iri))
+            return List.of(generateFunction(columns));
+
+        throw new IllegalArgumentException();
     }
 
 
     @Override
-    public List<Column> toGeneralClass(List<Column> columns, boolean check)
+    public List<Column> fromGeneralClass(ResourceClass superClass, List<Column> columns, boolean checkOptional)
     {
-        return List.of(generateFunction(columns));
-    }
+        if(superClass.equals(this))
+            return columns;
 
+        ResourceClass sourceClass = superClass.getEffectiveClass();
 
-    @Override
-    public List<Column> fromExpression(Column column)
-    {
-        return List.of(generateInverseFunction1(column, true), generateInverseFunction2(column, true));
-    }
+        assert isSubclassOf(sourceClass);
 
+        // the check is needless when every IRI of the superclass belongs to this class
+        boolean check = !checkOptional && !superClass.isSubclassOf(unionize(this, subtract(box, iri)));
+        Column value = columns.get(0);
 
-    @Override
-    public Column toExpression(List<Column> columns)
-    {
-        return generateFunction(columns);
-    }
+        if(sourceClass.equals(box))
+            value = expression(VARCHAR, "sparql.rdfbox_get_iri(%s)", value);
+        else if(!sourceClass.equals(iri))
+            throw new IllegalArgumentException();
 
-
-    @Override
-    public List<Column> fromBoxedExpression(Column column, boolean check)
-    {
-        return List.of(generateInverseFunction1(new ExpressionColumn("sparql.rdfbox_get_iri(" + column + ")"), check),
-                generateInverseFunction2(new ExpressionColumn("sparql.rdfbox_get_iri(" + column + ")"), check));
-    }
-
-
-    @Override
-    public Column toBoxedExpression(List<Column> columns)
-    {
-        return new ExpressionColumn("sparql.rdfbox_create_from_iri(" + generateFunction(columns) + ")");
-    }
-
-
-    @Override
-    public List<Column> toResult(List<Column> columns)
-    {
-        return List.of(generateFunction(columns));
-    }
-
-
-    @Override
-    public boolean match(Statement statement, Node node)
-    {
-        return switch(node)
-        {
-            case VariableOrBlankNode var -> true;
-            case IRI iri -> match(statement, iri);
-            default -> false;
-        };
+        return List.of(generateInverseFunction1(value, check), generateInverseFunction2(value, check));
     }
 }

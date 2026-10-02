@@ -14,20 +14,22 @@ import java.util.Set;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import cz.iocb.chemweb.server.servlets.hints.NormalizeIRI.PrefixedName;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.error.TranslateExceptions;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.QuadMapping;
-import cz.iocb.sparql.engine.parser.model.IRI;
+import cz.iocb.sparql.engine.rdf.Iri;
+import cz.iocb.sparql.engine.rdf.Literal;
+import cz.iocb.sparql.engine.rdf.RdfTerm;
+import cz.iocb.sparql.engine.rdf.Variable;
 import cz.iocb.sparql.engine.request.Engine;
 import cz.iocb.sparql.engine.request.LimitExceedException;
-import cz.iocb.sparql.engine.request.RdfNode;
 import cz.iocb.sparql.engine.request.Request;
 import cz.iocb.sparql.engine.request.Result;
 import cz.iocb.sparql.engine.translator.ServiceException;
@@ -36,6 +38,11 @@ import cz.iocb.sparql.engine.translator.ServiceException;
 
 public class GenerateHints extends HttpServlet
 {
+    private static final Variable varH = new Variable("H");
+    private static final Variable varT = new Variable("T");
+    private static final Variable varL = new Variable("L");
+
+
     private static class Item
     {
         String type;
@@ -45,7 +52,7 @@ public class GenerateHints extends HttpServlet
 
 
     private static final long serialVersionUID = 1L;
-    private static HashMap<String, String> hintsMap = new HashMap<String, String>();
+    private static HashMap<String, String> hintsMap = new HashMap<>();
 
     private String hintsJS;
 
@@ -107,21 +114,21 @@ public class GenerateHints extends HttpServlet
     private static String generateHints(SparqlDatabaseConfiguration sparqlConfig)
             throws TranslateExceptions, LimitExceedException, SQLException, ServiceException
     {
-        Set<String> iris = new HashSet<String>();
+        Set<String> iris = new HashSet<>();
 
         for(QuadMapping mapping : sparqlConfig.getMappings(sparqlConfig.getServiceIri()))
         {
-            if(mapping.getGraph() instanceof ConstantIriMapping)
-                iris.add(((IRI) (mapping.getGraph().getValue())).getValue());
+            if(mapping.getGraph() instanceof ConstantIriMapping graph)
+                iris.add(graph.getIri().getValue());
 
-            if(mapping.getSubject() instanceof ConstantIriMapping)
-                iris.add(((IRI) (((ConstantIriMapping) mapping.getSubject()).getValue())).getValue());
+            if(mapping.getSubject() instanceof ConstantIriMapping subject)
+                iris.add(subject.getIri().getValue());
 
-            if(mapping.getPredicate() instanceof ConstantIriMapping)
-                iris.add(((IRI) (((ConstantIriMapping) mapping.getPredicate()).getValue())).getValue());
+            if(mapping.getPredicate() instanceof ConstantIriMapping predicate)
+                iris.add(predicate.getIri().getValue());
 
-            if(mapping.getObject() instanceof ConstantIriMapping)
-                iris.add(((IRI) (((ConstantIriMapping) mapping.getObject()).getValue())).getValue());
+            if(mapping.getObject() instanceof ConstantIriMapping object)
+                iris.add(object.getIri().getValue());
         }
 
 
@@ -148,7 +155,7 @@ public class GenerateHints extends HttpServlet
         StringWriter stringWriter = new StringWriter();
         PrintWriter out = new PrintWriter(stringWriter);
 
-        LinkedHashMap<String, ArrayList<Item>> hints = new LinkedHashMap<String, ArrayList<Item>>();
+        LinkedHashMap<String, ArrayList<Item>> hints = new LinkedHashMap<>();
         Engine engine = new Engine(sparqlConfig);
 
         try(Request request = engine.getRequest())
@@ -157,9 +164,9 @@ public class GenerateHints extends HttpServlet
             {
                 while(result.next())
                 {
-                    RdfNode text = result.get("H");
-                    RdfNode type = result.get("T");
-                    RdfNode label = result.get("L");
+                    Iri text = (Iri) result.get(varH);
+                    Iri type = (Iri) result.get(varT);
+                    RdfTerm label = result.get(varL);
 
                     PrefixedName iri = NormalizeIRI.decompose(sparqlConfig, text.getValue());
 
@@ -170,7 +177,7 @@ public class GenerateHints extends HttpServlet
 
                     if(list == null)
                     {
-                        list = new ArrayList<Item>();
+                        list = new ArrayList<>();
                         hints.put(iri.prefix.toLowerCase(), list);
                     }
 
@@ -199,8 +206,8 @@ public class GenerateHints extends HttpServlet
                     item.type = typeCode;
                     item.name = iri.name;
 
-                    if(label != null)
-                        item.info = label.getValue().replaceAll("\"", "\\\"");
+                    if(label instanceof Literal literal)
+                        item.info = literal.getValue().replaceAll("\"", "\\\"");
 
                     list.add(item);
                 }

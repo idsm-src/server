@@ -1,26 +1,27 @@
 package cz.iocb.chemweb.server.velocity;
 
-import java.util.HashMap;
-import cz.iocb.sparql.engine.request.RdfNode;
+import java.util.Map;
+import cz.iocb.sparql.engine.rdf.RdfTerm;
+import cz.iocb.sparql.engine.rdf.Variable;
 
 
 
 public class SparqlRow
 {
-    private final HashMap<String, Integer> varNames;
-    private final RdfNode[] rowData;
+    private final Map<Variable, Integer> varNames;
+    private final RdfTerm[] rowData;
 
 
-    public SparqlRow(HashMap<String, Integer> varNames, RdfNode[] rowData)
+    public SparqlRow(Map<Variable, Integer> varNames, RdfTerm[] rowData)
     {
         this.varNames = varNames;
         this.rowData = rowData;
     }
 
 
-    public RdfNode get(String name)
+    public RdfTerm get(String name)
     {
-        Integer idx = varNames.get(name);
+        Integer idx = varNames.get(new Variable(name));
 
         if(idx == null)
             return null;

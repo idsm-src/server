@@ -327,22 +327,23 @@ class Gene extends Updater
 
         load("select gene,match_unit,match_id from pubchem.gene_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?gene rdfs:seeAlso ?match. "
-                + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/ensembl/'))"
-                + "filter(!strstarts(str(?match), 'http://identifiers.org/ensembl:'))"
-                + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
-                + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"
-                + "filter(!strstarts(str(?match), 'http://identifiers.org/kegg.genes:'))"
-                + "filter(!strstarts(str(?match), 'http://identifiers.org/bgee.gene:'))"
-                + "filter(!strstarts(str(?match), 'http://identifiers.org/pombase:'))"
-                + "filter(!strstarts(str(?match), 'http://identifiers.org/zfin:ZDB-'))"
-                + "filter(!strstarts(str(?match), 'https://enzyme.expasy.org/EC/'))"
-                + "filter(!strstarts(str(?match), 'https://medlineplus.gov/genetics/gene/'))"
-                + "filter(!strstarts(str(?match), 'https://www.alliancegenome.org/gene/'))"
-                + "filter(!strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"
-                + "filter(!strstarts(str(?match), 'https://www.veupathdb.org/gene/'))"
-                + "filter(!strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))"
-                + "filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"))
+        new QueryResultProcessor(patternQuery("""
+                ?gene rdfs:seeAlso ?match. \
+                filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/ensembl/'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/ensembl:'))\
+                filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/kegg.genes:'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/bgee.gene:'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/pombase:'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/zfin:ZDB-'))\
+                filter(!strstarts(str(?match), 'https://enzyme.expasy.org/EC/'))\
+                filter(!strstarts(str(?match), 'https://medlineplus.gov/genetics/gene/'))\
+                filter(!strstarts(str(?match), 'https://www.alliancegenome.org/gene/'))\
+                filter(!strstarts(str(?match), 'https://pharos.nih.gov/targets/'))\
+                filter(!strstarts(str(?match), 'https://www.veupathdb.org/gene/'))\
+                filter(!strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))\
+                filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"""))
         {
             @Override
             protected void parse() throws IOException

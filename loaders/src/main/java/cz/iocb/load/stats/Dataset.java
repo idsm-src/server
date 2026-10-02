@@ -2,35 +2,38 @@ package cz.iocb.load.stats;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.Condition;
 import cz.iocb.sparql.engine.database.Conditions;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.SourceTable;
+import cz.iocb.sparql.engine.imcode.SqlEmptySolution;
+import cz.iocb.sparql.engine.imcode.SqlIntercode;
+import cz.iocb.sparql.engine.imcode.SqlIntercode.Restrictions;
+import cz.iocb.sparql.engine.imcode.SqlJoin;
+import cz.iocb.sparql.engine.imcode.SqlTableAccess;
+import cz.iocb.sparql.engine.imcode.SqlUnion;
 import cz.iocb.sparql.engine.mapping.InternalNodeMapping;
 import cz.iocb.sparql.engine.mapping.JoinTableQuadMapping;
 import cz.iocb.sparql.engine.mapping.JoinTableQuadMapping.JoinColumns;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
 import cz.iocb.sparql.engine.mapping.QuadMapping;
 import cz.iocb.sparql.engine.mapping.SingleTableQuadMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.InternalResourceClass;
 import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
+import cz.iocb.sparql.engine.rdf.Variable;
 import cz.iocb.sparql.engine.request.Request;
-import cz.iocb.sparql.engine.translator.UsedVariable;
-import cz.iocb.sparql.engine.translator.UsedVariables;
-import cz.iocb.sparql.engine.translator.imcode.SqlEmptySolution;
-import cz.iocb.sparql.engine.translator.imcode.SqlIntercode;
-import cz.iocb.sparql.engine.translator.imcode.SqlIntercode.Restrictions;
-import cz.iocb.sparql.engine.translator.imcode.SqlJoin;
-import cz.iocb.sparql.engine.translator.imcode.SqlTableAccess;
-import cz.iocb.sparql.engine.translator.imcode.SqlUnion;
+import cz.iocb.sparql.engine.translator.VariableBinding;
+import cz.iocb.sparql.engine.translator.VariableBindings;
 
 
 
 public class Dataset
 {
-    private Collection<QuadMapping> mappings = new ArrayList<QuadMapping>();
+    private Collection<QuadMapping> mappings = new ArrayList<>();
 
 
     public Dataset()
@@ -62,8 +65,8 @@ public class Dataset
     }
 
 
-    private static void processNodeMapping(DatabaseSchema schema, Table table, NodeMapping nodemap, String name,
-            UsedVariables variables, Condition condition)
+    private static void processNodeMapping(DatabaseSchema schema, SourceTable table, TermMapping nodemap, Variable name,
+            VariableBindings bindings, Condition condition)
     {
         List<Column> columns = nodemap.getColumns(null);
 
@@ -75,15 +78,28 @@ public class Dataset
             return;
 
         ResourceClass resourceClass = nodemap.getResourceClass(null);
-        variables.add(new UsedVariable(name, resourceClass, columns, false));
+        bindings.add(new VariableBinding(name, resourceClass, columns, false));
     }
 
 
-    public SqlIntercode translate(Request request, String subject, String object)
+    private static Set<Column> distinctColumns(boolean distinct, VariableBindings bindings, Condition condition)
+    {
+        if(!distinct)
+            return Set.of();
+
+        // all table columns touched by the mapped terms, including those bound to constants by the pattern
+        Set<Column> columns = new HashSet<>(bindings.getNonConstantColumns());
+        columns.addAll(condition.getNonConstantColumns());
+
+        return columns;
+    }
+
+
+    public SqlIntercode translate(Request request, Variable subject, Variable object)
     {
         DatabaseSchema schema = request.getConfiguration().getDatabaseSchema();
 
-        List<SqlIntercode> branches = new ArrayList<SqlIntercode>();
+        List<SqlIntercode> branches = new ArrayList<>();
 
         for(QuadMapping mapping : mappings)
         {
@@ -91,57 +107,60 @@ public class Dataset
             {
                 case SingleTableQuadMapping map ->
                 {
-                    Table table = map.getTable();
+                    SourceTable table = map.getTable();
                     Condition condition = new Condition();
-                    UsedVariables variables = new UsedVariables();
+                    VariableBindings bindings = new VariableBindings();
 
-                    processNodeMapping(schema, table, map.getSubject(), subject, variables, condition);
-                    processNodeMapping(schema, table, map.getObject(), object, variables, condition);
+                    processNodeMapping(schema, table, map.getSubject(), subject, bindings, condition);
+                    processNodeMapping(schema, table, map.getObject(), object, bindings, condition);
 
                     Conditions conditions = Conditions.and(map.getConditions(), condition);
-                    branches.add(SqlTableAccess.create(table, conditions, variables));
+
+                    branches.add(SqlTableAccess.create(request, table, conditions, bindings, false,
+                            distinctColumns(map.isDistinct(), bindings, condition)));
                 }
 
                 case JoinTableQuadMapping map ->
                 {
-                    List<Table> tables = map.getTables();
+                    List<SourceTable> tables = map.getTables();
                     List<JoinColumns> joinColumnsPairs = map.getJoinColumnsPairs();
 
                     ResourceClass resourceClass = null;
-                    String node = null;
+                    Variable node = null;
 
                     SqlIntercode result = SqlEmptySolution.get();
 
                     for(int i = 0; i < tables.size(); i++)
                     {
-                        Table table = tables.get(i);
+                        SourceTable table = tables.get(i);
                         Condition condition = new Condition();
-                        UsedVariables variables = new UsedVariables();
+                        VariableBindings bindings = new VariableBindings();
 
                         if(i == map.getSubjectTableIdx())
-                            processNodeMapping(schema, table, map.getSubject(), subject, variables, condition);
+                            processNodeMapping(schema, table, map.getSubject(), subject, bindings, condition);
 
                         if(i == map.getObjectTableIdx())
-                            processNodeMapping(schema, table, map.getObject(), object, variables, condition);
+                            processNodeMapping(schema, table, map.getObject(), object, bindings, condition);
 
                         if(i > 0)
                         {
                             List<Column> columns = joinColumnsPairs.get(i - 1).getRightColumns();
-                            NodeMapping nodeMapping = new InternalNodeMapping(resourceClass, columns);
-                            processNodeMapping(schema, table, nodeMapping, node, variables, condition);
+                            TermMapping nodeMapping = new InternalNodeMapping(resourceClass, columns);
+                            processNodeMapping(schema, table, nodeMapping, node, bindings, condition);
                         }
 
                         if(i < tables.size() - 1)
                         {
-                            resourceClass = new InternalResourceClass(joinColumnsPairs.get(i).getLeftColumns().size());
                             List<Column> columns = joinColumnsPairs.get(i).getLeftColumns();
-                            NodeMapping nodeMapping = new InternalNodeMapping(resourceClass, columns);
-                            node = "@var" + i;
-                            processNodeMapping(schema, table, nodeMapping, node, variables, condition);
+                            resourceClass = new InternalResourceClass(columns.stream().map(Column::getType).toList());
+                            TermMapping nodeMapping = new InternalNodeMapping(resourceClass, columns);
+                            node = new Variable("@var" + i);
+                            processNodeMapping(schema, table, nodeMapping, node, bindings, condition);
                         }
 
                         Conditions conditions = Conditions.and(map.getConditions().get(i), condition);
-                        SqlIntercode acess = SqlTableAccess.create(table, conditions, variables);
+                        SqlIntercode acess = SqlTableAccess.create(request, table, conditions, bindings, false,
+                                distinctColumns(map.getDistinct().get(i), bindings, condition));
 
                         result = SqlJoin.join(request, result, acess);
                     }

@@ -109,8 +109,8 @@ public class PubChemCompoundUpdater
             }
 
 
-            LinkedList<String> updateList = new LinkedList<String>();
-            LinkedList<String> downloadList = new LinkedList<String>();
+            LinkedList<String> updateList = new LinkedList<>();
+            LinkedList<String> downloadList = new LinkedList<>();
             String finalVersion = null;
             FTPClient ftpClient = new FTPClient();
 
@@ -125,8 +125,8 @@ public class PubChemCompoundUpdater
                 finalVersion = lastVersion;
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
-                LinkedList<String> dailyList = new LinkedList<String>();
-                LinkedList<String> weeklyList = new LinkedList<String>();
+                LinkedList<String> dailyList = new LinkedList<>();
+                LinkedList<String> weeklyList = new LinkedList<>();
 
 
                 FTPFile[] dailyUpdates = ftpClient.listFiles(ftpPath + "/Daily");

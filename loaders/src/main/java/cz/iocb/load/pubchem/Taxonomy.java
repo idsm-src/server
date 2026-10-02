@@ -165,12 +165,13 @@ public class Taxonomy extends Updater
 
         load("select taxonomy,match_unit,match_id from pubchem.taxonomy_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?taxonomy rdfs:seeAlso ?match. " + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/taxonomy:'))"
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/col:'))"
-                        + "filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"))
+        new QueryResultProcessor(patternQuery("""
+                ?taxonomy rdfs:seeAlso ?match. \
+                filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/taxonomy:'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/col:'))\
+                filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"""))
         {
             @Override
             protected void parse() throws IOException

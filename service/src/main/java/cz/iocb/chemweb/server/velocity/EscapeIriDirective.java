@@ -11,8 +11,8 @@ import org.apache.velocity.exception.TemplateInitException;
 import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.runtime.directive.Directive;
 import org.apache.velocity.runtime.parser.node.Node;
-import cz.iocb.sparql.engine.parser.model.IRI;
-import cz.iocb.sparql.engine.request.IriNode;
+import cz.iocb.sparql.engine.model.IriNode;
+import cz.iocb.sparql.engine.rdf.Iri;
 
 
 
@@ -61,7 +61,7 @@ public class EscapeIriDirective extends Directive
 
         switch(value)
         {
-            case IriNode iri -> writer.write(escape(iri.getValue()));
+            case Iri iri -> writer.write(escape(iri.getValue()));
             case Object obj -> writer.write(escape(obj.toString()));
         }
 
@@ -71,7 +71,7 @@ public class EscapeIriDirective extends Directive
 
     private String escape(String value)
     {
-        String iri = IRI.toPrefixedIRI(value, prefixes);
+        String iri = IriNode.toPrefixedIri(value, prefixes);
         return iri != null ? iri : value;
     }
 }

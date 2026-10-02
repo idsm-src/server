@@ -1,8 +1,8 @@
 package cz.iocb.chemweb.server.services;
 
-import javax.servlet.http.HttpServletRequest;
-import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import jakarta.servlet.http.HttpServletRequest;
 import com.google.gwt.user.server.rpc.SerializationPolicy;
+import com.google.gwt.user.server.rpc.jakarta.RemoteServiceServlet;
 
 
 

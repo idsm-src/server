@@ -20,7 +20,7 @@ class Reference extends Updater
     private static final IntSet newReferences = new IntSet();
     private static final IntSet oldReferences = new IntSet();
 
-    private static HashMap<String, String> sources = new HashMap<String, String>();
+    private static HashMap<String, String> sources = new HashMap<>();
 
 
     static

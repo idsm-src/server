@@ -1,15 +1,14 @@
 package cz.iocb.chemweb.server.sparql.config.sachem;
 
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import java.sql.SQLException;
-import java.util.List;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.Common;
 import cz.iocb.chemweb.server.sparql.config.common.SparqlDatabaseOptimisedConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
-import cz.iocb.sparql.engine.database.Table;
-import cz.iocb.sparql.engine.database.TableColumn;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.database.DatabaseTable;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
@@ -42,23 +41,23 @@ public class WikidataSachemConfiguration extends SparqlDatabaseOptimisedConfigur
     {
         Sachem.addResourceClasses(this);
 
-        addIriClass(new IntegerUserIriClass("wikidata:entity", "integer", "http://www.wikidata.org/entity/Q"));
+        addIriClass(new IntegerUserIriClass("wikidata:entity", INT4, "http://www.wikidata.org/entity/Q"));
     }
 
 
     private void addQuadMappings()
     {
         {
-            Table table = new Table("wikidata", "canonical_smiles");
-            NodeMapping subject = createIriMapping("wikidata:entity", "compound");
+            DatabaseTable table = new DatabaseTable("wikidata", "canonical_smiles");
+            TermMapping subject = createIriMapping("wikidata:entity", "compound");
 
             addQuadMapping(table, null, subject, createIriMapping("wdt:P233"),
                     createLiteralMapping(xsdString, "smiles"));
         }
 
         {
-            Table table = new Table("wikidata", "isomeric_smiles");
-            NodeMapping subject = createIriMapping("wikidata:entity", "compound");
+            DatabaseTable table = new DatabaseTable("wikidata", "isomeric_smiles");
+            TermMapping subject = createIriMapping("wikidata:entity", "compound");
 
             addQuadMapping(table, null, subject, createIriMapping("wdt:P2017"),
                     createLiteralMapping(xsdString, "smiles"));
@@ -68,6 +67,7 @@ public class WikidataSachemConfiguration extends SparqlDatabaseOptimisedConfigur
 
     private void addProcedures()
     {
-        Sachem.addProcedures(this, "wikidata", "wikidata:entity", List.of(new TableColumn("compound")));
+        Sachem.addProcedures(this, "wikidata", "wikidata:entity",
+                getColumns(getIriClass("wikidata:entity"), "compound"));
     }
 }

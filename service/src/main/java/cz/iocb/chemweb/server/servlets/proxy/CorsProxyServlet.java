@@ -10,11 +10,11 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 
 
@@ -22,7 +22,7 @@ import org.apache.commons.io.IOUtils;
 @SuppressWarnings("serial")
 public class CorsProxyServlet extends HttpServlet
 {
-    private static final List<String> specialParameters = new ArrayList<String>(
+    private static final List<String> specialParameters = new ArrayList<>(
             List.of("endpoint", "requestMethod", "method"));
 
     private String origin = null;

@@ -1,13 +1,14 @@
 package cz.iocb.chemweb.server.sparql.config.molmedb;
 
 import static cz.iocb.chemweb.server.sparql.config.molmedb.MolmedbConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Conditions;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
 
@@ -17,34 +18,34 @@ public class Transporter
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("molmedb:transporter", "integer",
-                "https://rdf.molmedb.upol.cz/transporter/tra"));
+        config.addIriClass(
+                new IntegerUserIriClass("molmedb:transporter", INT4, "https://rdf.molmedb.upol.cz/transporter/tra"));
 
-        config.addIriClass(new IntegerUserIriClass("molmedb:transporter_measure_group", "integer",
+        config.addIriClass(new IntegerUserIriClass("molmedb:transporter_measure_group", INT4,
                 "https://rdf.molmedb.upol.cz/transporter/measure_group_tra"));
 
-        config.addIriClass(new IntegerUserIriClass("molmedb:endpoint_substrate", "integer",
+        config.addIriClass(new IntegerUserIriClass("molmedb:endpoint_substrate", INT4,
                 "https://rdf.molmedb.upol.cz/transporter/endpoint_substrate_tra"));
 
-        config.addIriClass(new IntegerUserIriClass("molmedb:endpoint_inhibitor", "integer",
+        config.addIriClass(new IntegerUserIriClass("molmedb:endpoint_inhibitor", INT4,
                 "https://rdf.molmedb.upol.cz/transporter/endpoint_inhibitor_tra"));
 
-        config.addIriClass(new IntegerUserIriClass("molmedb:endpoint_pkm", "integer",
+        config.addIriClass(new IntegerUserIriClass("molmedb:endpoint_pkm", INT4,
                 "https://rdf.molmedb.upol.cz/transporter/endpoint_pKm_tra"));
 
-        config.addIriClass(new IntegerUserIriClass("molmedb:endpoint_pec50", "integer",
+        config.addIriClass(new IntegerUserIriClass("molmedb:endpoint_pec50", INT4,
                 "https://rdf.molmedb.upol.cz/transporter/endpoint_pEC50_tra"));
 
-        config.addIriClass(new IntegerUserIriClass("molmedb:endpoint_pki", "integer",
+        config.addIriClass(new IntegerUserIriClass("molmedb:endpoint_pki", INT4,
                 "https://rdf.molmedb.upol.cz/transporter/endpoint_pKi_tra"));
 
-        config.addIriClass(new IntegerUserIriClass("molmedb:endpoint_pic50", "integer",
+        config.addIriClass(new IntegerUserIriClass("molmedb:endpoint_pic50", INT4,
                 "https://rdf.molmedb.upol.cz/transporter/endpoint_pIC50_tra"));
 
         config.addIriClass(
-                new IntegerUserIriClass("molmedb:target", "integer", "https://rdf.molmedb.upol.cz/transporter/target"));
+                new IntegerUserIriClass("molmedb:target", INT4, "https://rdf.molmedb.upol.cz/transporter/target"));
 
-        config.addIriClass(new IntegerUserIriClass("molmedb:target_uniprot", "integer",
+        config.addIriClass(new IntegerUserIriClass("molmedb:target_uniprot", INT4,
                 "https://rdf.molmedb.upol.cz/transporter/target", "_UniProt"));
 
         config.addIriClass(new StringUserIriClass("purl:uniprot", "http://purl.uniprot.org/uniprot/"));
@@ -62,8 +63,8 @@ public class Transporter
 
         // triples map #1
         {
-            Table table = new Table(schema, "transporter_bases");
-            NodeMapping subject = config.createIriMapping("molmedb:transporter", "id");
+            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            TermMapping subject = config.createIriMapping("molmedb:transporter", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0003008")); // transporter assay
@@ -91,23 +92,27 @@ public class Transporter
 
         // triples map #2
         {
-            Table table = new Table(schema, "transporter_bases");
-            NodeMapping subject = config.createIriMapping("molmedb:transporter_measure_group", "id");
+            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            TermMapping subject = config.createIriMapping("molmedb:transporter_measure_group", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0000040")); // measure group
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000208"), // has endpoint
-                    config.createIriMapping("molmedb:endpoint_pkm", "id"), config.createIsNotNullCondition("km"));
+                    config.createIriMapping("molmedb:endpoint_pkm", "id"),
+                    config.createIsNotNullCondition(table, "km"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000208"), // has endpoint
-                    config.createIriMapping("molmedb:endpoint_pec50", "id"), config.createIsNotNullCondition("ec50"));
+                    config.createIriMapping("molmedb:endpoint_pec50", "id"),
+                    config.createIsNotNullCondition(table, "ec50"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000208"), // has endpoint
-                    config.createIriMapping("molmedb:endpoint_pki", "id"), config.createIsNotNullCondition("ki"));
+                    config.createIriMapping("molmedb:endpoint_pki", "id"),
+                    config.createIsNotNullCondition(table, "ki"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000208"), // has endpoint
-                    config.createIriMapping("molmedb:endpoint_pic50", "id"), config.createIsNotNullCondition("ic50"));
+                    config.createIriMapping("molmedb:endpoint_pic50", "id"),
+                    config.createIsNotNullCondition(table, "ic50"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090012"), // has participant
                     config.createIriMapping("molmedb:substance", "substance_id"));
@@ -129,8 +134,8 @@ public class Transporter
 
         // triples map #3
         {
-            Table table = new Table(schema, "protein_bases");
-            NodeMapping subject = config.createIriMapping("molmedb:target", "id");
+            DatabaseTable table = new DatabaseTable(schema, "protein_bases");
+            TermMapping subject = config.createIriMapping("molmedb:target", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0000283")); // transporter
@@ -147,8 +152,8 @@ public class Transporter
 
         // triples map #4
         {
-            Table table = new Table(schema, "protein_bases");
-            NodeMapping subject = config.createIriMapping("molmedb:target_uniprot", "id");
+            DatabaseTable table = new DatabaseTable(schema, "protein_bases");
+            TermMapping subject = config.createIriMapping("molmedb:target_uniprot", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("edam:data_2291")); // UniProt ID //FIXME
@@ -164,9 +169,9 @@ public class Transporter
 
         // triples map #5
         {
-            Table table = new Table(schema, "transporter_bases");
+            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
             Conditions cnd = config.createAreEqualCondition("category", "'512'::integer", "'513'::integer");
-            NodeMapping subject = config.createIriMapping("molmedb:endpoint_substrate", "id");
+            TermMapping subject = config.createIriMapping("molmedb:endpoint_substrate", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("mmdbvoc:SubstrateBindingAssay"), cnd);
@@ -181,18 +186,18 @@ public class Transporter
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0095000"), // is derived from
                     config.createIriMapping("molmedb:endpoint_pec50", "id"),
-                    Conditions.and(cnd, config.createIsNotNullCondition("ec50")));
+                    Conditions.and(cnd, config.createIsNotNullCondition(table, "ec50")));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0095000"), // is derived from
                     config.createIriMapping("molmedb:endpoint_pkm", "id"),
-                    Conditions.and(cnd, config.createIsNotNullCondition("km")));
+                    Conditions.and(cnd, config.createIsNotNullCondition(table, "km")));
         }
 
         // triples map #6
         {
-            Table table = new Table(schema, "transporter_bases");
+            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
             Conditions cnd = config.createAreEqualCondition("category", "'514'::integer", "'515'::integer");
-            NodeMapping subject = config.createIriMapping("molmedb:endpoint_inhibitor", "id");
+            TermMapping subject = config.createIriMapping("molmedb:endpoint_inhibitor", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("mmdbvoc:InhibitionAssay"), cnd);
@@ -207,18 +212,18 @@ public class Transporter
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0095000"), // is derived from
                     config.createIriMapping("molmedb:endpoint_pic50", "id"),
-                    Conditions.and(cnd, config.createIsNotNullCondition("ic50")));
+                    Conditions.and(cnd, config.createIsNotNullCondition(table, "ic50")));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0095000"), // is derived from
                     config.createIriMapping("molmedb:endpoint_pki", "id"),
-                    Conditions.and(cnd, config.createIsNotNullCondition("ki")));
+                    Conditions.and(cnd, config.createIsNotNullCondition(table, "ki")));
         }
 
         // triples map #7
         {
-            Table table = new Table(schema, "transporter_bases");
-            Conditions cnd = config.createIsNotNullCondition("km");
-            NodeMapping subject = config.createIriMapping("molmedb:endpoint_pkm", "id");
+            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            Conditions cnd = config.createIsNotNullCondition(table, "km");
+            TermMapping subject = config.createIriMapping("molmedb:endpoint_pkm", "id");
 
             //TODO: check in more detail
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -239,9 +244,9 @@ public class Transporter
 
         // triples map #8
         {
-            Table table = new Table(schema, "transporter_bases");
-            Conditions cnd = config.createIsNotNullCondition("ec50");
-            NodeMapping subject = config.createIriMapping("molmedb:endpoint_pec50", "id");
+            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            Conditions cnd = config.createIsNotNullCondition(table, "ec50");
+            TermMapping subject = config.createIriMapping("molmedb:endpoint_pec50", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0002583"), cnd); // pEC50
@@ -261,9 +266,9 @@ public class Transporter
 
         // triples map #9
         {
-            Table table = new Table(schema, "transporter_bases");
-            Conditions cnd = config.createIsNotNullCondition("ki");
-            NodeMapping subject = config.createIriMapping("molmedb:endpoint_pki", "id");
+            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            Conditions cnd = config.createIsNotNullCondition(table, "ki");
+            TermMapping subject = config.createIriMapping("molmedb:endpoint_pki", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0190004"), cnd); // pKi
@@ -283,9 +288,9 @@ public class Transporter
 
         // triples map #10
         {
-            Table table = new Table(schema, "transporter_bases");
-            Conditions cnd = config.createIsNotNullCondition("ic50");
-            NodeMapping subject = config.createIriMapping("molmedb:endpoint_pic50", "id");
+            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            Conditions cnd = config.createIsNotNullCondition(table, "ic50");
+            TermMapping subject = config.createIriMapping("molmedb:endpoint_pic50", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0000199"), cnd); // pIC50

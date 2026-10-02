@@ -117,9 +117,10 @@ public class Anatomy extends Updater
 
         load("select anatomy,match_unit,match_id from pubchem.anatomy_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?anatomy rdfs:seeAlso ?match. " + "filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"))
+        new QueryResultProcessor(patternQuery("""
+                ?anatomy rdfs:seeAlso ?match. \
+                filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"""))
         {
             @Override
             protected void parse() throws IOException

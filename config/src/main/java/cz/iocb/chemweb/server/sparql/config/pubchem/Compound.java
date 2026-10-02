@@ -1,15 +1,16 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdShort;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.common.StringSubsetLiteralClass;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 
@@ -21,8 +22,8 @@ public class Compound
     {
         String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID";
 
-        config.addIriClass(new IntegerUserIriClass("pubchem:compound", "integer", prefix));
-        config.addIriClass(new IntegerUserIriClass("pubchem:molfile", "integer", prefix, "_Molfile"));
+        config.addIriClass(new IntegerUserIriClass("pubchem:compound", INT4, prefix));
+        config.addIriClass(new IntegerUserIriClass("pubchem:molfile", INT4, prefix, "_Molfile"));
     }
 
 
@@ -31,8 +32,8 @@ public class Compound
         ConstantIriMapping graph = config.createIriMapping("pubchem:compound");
 
         {
-            Table table = new Table(schema, "compound_bases");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "id");
+            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Compound"));
@@ -40,7 +41,7 @@ public class Compound
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:compound_identifier", "id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),
-                    config.createLiteralMapping(xsdString, "(id::varchar)"));
+                    config.createLiteralMapping(xsdString, "(id)::varchar"));
 
             // extension
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:compound_identifier", "id"),
@@ -54,8 +55,8 @@ public class Compound
         }
 
         {
-            Table table = new Table("molecules", "pubchem");
-            NodeMapping subject = config.createIriMapping("pubchem:molfile", "id");
+            DatabaseTable table = new DatabaseTable("molecules", "pubchem");
+            TermMapping subject = config.createIriMapping("pubchem:molfile", "id");
             LiteralClass molfileLiteral = new StringSubsetLiteralClass("pubchem-molfile");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -77,8 +78,8 @@ public class Compound
         }
 
         {
-            Table table = new Table(schema, "compound_labels");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "compound_labels");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
                     config.createLiteralMapping(xsdString, "label"));
@@ -89,48 +90,48 @@ public class Compound
         }
 
         {
-            Table table = new Table(schema, "compound_components");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "compound_components");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:CHEMINF_000480"),
                     config.createIriMapping("pubchem:compound", "component"));
         }
 
         {
-            Table table = new Table(schema, "compound_isotopologues");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "compound_isotopologues");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:CHEMINF_000455"),
                     config.createIriMapping("pubchem:compound", "isotopologue"));
         }
 
         {
-            Table table = new Table(schema, "compound_parents");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "compound_parents");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:has_parent"),
                     config.createIriMapping("pubchem:compound", "parent"));
         }
 
         {
-            Table table = new Table(schema, "compound_stereoisomers");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "compound_stereoisomers");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:CHEMINF_000461"),
                     config.createIriMapping("pubchem:compound", "isomer"));
         }
 
         {
-            Table table = new Table(schema, "compound_same_connectivities");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "compound_same_connectivities");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:CHEMINF_000462"),
                     config.createIriMapping("pubchem:compound", "isomer"));
         }
 
         {
-            Table table = new Table(schema, "compound_roles");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "compound_roles");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:RO_0000087"),
                     config.createIriMapping("ontology:resource", Ontology.unitUncategorized, "role_id"));
@@ -141,194 +142,201 @@ public class Compound
         }
 
         {
-            Table table = new Table(schema, "compound_types");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "compound_types");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("ontology:resource", "type_unit", "type_id"));
         }
 
         {
-            Table table = new Table(schema, "compound_active_ingredients");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "compound_active_ingredients");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:is_active_ingredient_of"),
                     config.createIriMapping("ontology:resource", "ingredient_unit", "ingredient_id"));
         }
 
         {
-            Table table = new Table(schema, "descriptor_compound_bases");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:hydrogen_bond_acceptor_count", "compound"),
-                    config.createIsNotNullCondition("hydrogen_bond_acceptor_count"));
+                    config.createIsNotNullCondition(table, "hydrogen_bond_acceptor_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:defined_atom_stereo_count", "compound"),
-                    config.createIsNotNullCondition("defined_atom_stereo_count"));
+                    config.createIsNotNullCondition(table, "defined_atom_stereo_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:defined_bond_stereo_count", "compound"),
-                    config.createIsNotNullCondition("defined_bond_stereo_count"));
+                    config.createIsNotNullCondition(table, "defined_bond_stereo_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:undefined_bond_stereo_count", "compound"),
-                    config.createIsNotNullCondition("undefined_bond_stereo_count"));
+                    config.createIsNotNullCondition(table, "undefined_bond_stereo_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:isotope_atom_count", "compound"),
-                    config.createIsNotNullCondition("isotope_atom_count"));
+                    config.createIsNotNullCondition(table, "isotope_atom_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:covalent_unit_count", "compound"),
-                    config.createIsNotNullCondition("covalent_unit_count"));
+                    config.createIsNotNullCondition(table, "covalent_unit_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:hydrogen_bond_donor_count", "compound"),
-                    config.createIsNotNullCondition("hydrogen_bond_donor_count"));
+                    config.createIsNotNullCondition(table, "hydrogen_bond_donor_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:non_hydrogen_atom_count", "compound"),
-                    config.createIsNotNullCondition("non_hydrogen_atom_count"));
+                    config.createIsNotNullCondition(table, "non_hydrogen_atom_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:rotatable_bond_count", "compound"),
-                    config.createIsNotNullCondition("rotatable_bond_count"));
+                    config.createIsNotNullCondition(table, "rotatable_bond_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:undefined_atom_stereo_count", "compound"),
-                    config.createIsNotNullCondition("undefined_atom_stereo_count"));
+                    config.createIsNotNullCondition(table, "undefined_atom_stereo_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:total_formal_charge", "compound"),
-                    config.createIsNotNullCondition("total_formal_charge"));
+                    config.createIsNotNullCondition(table, "total_formal_charge"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:structure_complexity", "compound"),
-                    config.createIsNotNullCondition("structure_complexity"));
+                    config.createIsNotNullCondition(table, "structure_complexity"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:mono_isotopic_weight", "compound"),
-                    config.createIsNotNullCondition("mono_isotopic_weight"));
+                    config.createIsNotNullCondition(table, "mono_isotopic_weight"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:xlogp3_aa", "compound"),
-                    config.createIsNotNullCondition("xlogp3_aa"));
+                    config.createIsNotNullCondition(table, "xlogp3_aa"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
-                    config.createIriMapping("pubchem:xlogp3", "compound"), config.createIsNotNullCondition("xlogp3"));
+                    config.createIriMapping("pubchem:xlogp3", "compound"),
+                    config.createIsNotNullCondition(table, "xlogp3"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:exact_mass", "compound"),
-                    config.createIsNotNullCondition("exact_mass"));
+                    config.createIsNotNullCondition(table, "exact_mass"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:molecular_weight", "compound"),
-                    config.createIsNotNullCondition("molecular_weight"));
+                    config.createIsNotNullCondition(table, "molecular_weight"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
-                    config.createIriMapping("pubchem:tpsa", "compound"), config.createIsNotNullCondition("tpsa"));
+                    config.createIriMapping("pubchem:tpsa", "compound"),
+                    config.createIsNotNullCondition(table, "tpsa"));
 
             // extension
             config.addQuadMapping(table, graph,
                     config.createIriMapping("pubchem:hydrogen_bond_acceptor_count", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("hydrogen_bond_acceptor_count"));
+                    config.createIsNotNullCondition(table, "hydrogen_bond_acceptor_count"));
             config.addQuadMapping(table, graph,
                     config.createIriMapping("pubchem:defined_atom_stereo_count", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("defined_atom_stereo_count"));
+                    config.createIsNotNullCondition(table, "defined_atom_stereo_count"));
             config.addQuadMapping(table, graph,
                     config.createIriMapping("pubchem:defined_bond_stereo_count", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("defined_bond_stereo_count"));
+                    config.createIsNotNullCondition(table, "defined_bond_stereo_count"));
             config.addQuadMapping(table, graph,
                     config.createIriMapping("pubchem:undefined_bond_stereo_count", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("undefined_bond_stereo_count"));
+                    config.createIsNotNullCondition(table, "undefined_bond_stereo_count"));
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:isotope_atom_count", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("isotope_atom_count"));
+                    config.createIsNotNullCondition(table, "isotope_atom_count"));
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:covalent_unit_count", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("covalent_unit_count"));
+                    config.createIsNotNullCondition(table, "covalent_unit_count"));
             config.addQuadMapping(table, graph,
                     config.createIriMapping("pubchem:hydrogen_bond_donor_count", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("hydrogen_bond_donor_count"));
+                    config.createIsNotNullCondition(table, "hydrogen_bond_donor_count"));
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:non_hydrogen_atom_count", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("non_hydrogen_atom_count"));
+                    config.createIsNotNullCondition(table, "non_hydrogen_atom_count"));
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:rotatable_bond_count", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("rotatable_bond_count"));
+                    config.createIsNotNullCondition(table, "rotatable_bond_count"));
             config.addQuadMapping(table, graph,
                     config.createIriMapping("pubchem:undefined_atom_stereo_count", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("undefined_atom_stereo_count"));
+                    config.createIsNotNullCondition(table, "undefined_atom_stereo_count"));
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:total_formal_charge", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("total_formal_charge"));
+                    config.createIsNotNullCondition(table, "total_formal_charge"));
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:structure_complexity", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("structure_complexity"));
+                    config.createIsNotNullCondition(table, "structure_complexity"));
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:mono_isotopic_weight", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("mono_isotopic_weight"));
+                    config.createIsNotNullCondition(table, "mono_isotopic_weight"));
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:xlogp3_aa", "compound"),
-                    config.createIriMapping("sio:SIO_000011"), subject, config.createIsNotNullCondition("xlogp3_aa"));
+                    config.createIriMapping("sio:SIO_000011"), subject,
+                    config.createIsNotNullCondition(table, "xlogp3_aa"));
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:xlogp3", "compound"),
-                    config.createIriMapping("sio:SIO_000011"), subject, config.createIsNotNullCondition("xlogp3"));
+                    config.createIriMapping("sio:SIO_000011"), subject,
+                    config.createIsNotNullCondition(table, "xlogp3"));
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:exact_mass", "compound"),
-                    config.createIriMapping("sio:SIO_000011"), subject, config.createIsNotNullCondition("exact_mass"));
+                    config.createIriMapping("sio:SIO_000011"), subject,
+                    config.createIsNotNullCondition(table, "exact_mass"));
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:molecular_weight", "compound"),
                     config.createIriMapping("sio:SIO_000011"), subject,
-                    config.createIsNotNullCondition("molecular_weight"));
+                    config.createIsNotNullCondition(table, "molecular_weight"));
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:tpsa", "compound"),
-                    config.createIriMapping("sio:SIO_000011"), subject, config.createIsNotNullCondition("tpsa"));
+                    config.createIriMapping("sio:SIO_000011"), subject, config.createIsNotNullCondition(table, "tpsa"));
 
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:hydrogen_bond_acceptor_count", "compound"),
-                    config.createIsNotNullCondition("hydrogen_bond_acceptor_count"));
+                    config.createIsNotNullCondition(table, "hydrogen_bond_acceptor_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:defined_atom_stereo_count", "compound"),
-                    config.createIsNotNullCondition("defined_atom_stereo_count"));
+                    config.createIsNotNullCondition(table, "defined_atom_stereo_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:defined_bond_stereo_count", "compound"),
-                    config.createIsNotNullCondition("defined_bond_stereo_count"));
+                    config.createIsNotNullCondition(table, "defined_bond_stereo_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:undefined_bond_stereo_count", "compound"),
-                    config.createIsNotNullCondition("undefined_bond_stereo_count"));
+                    config.createIsNotNullCondition(table, "undefined_bond_stereo_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:isotope_atom_count", "compound"),
-                    config.createIsNotNullCondition("isotope_atom_count"));
+                    config.createIsNotNullCondition(table, "isotope_atom_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:covalent_unit_count", "compound"),
-                    config.createIsNotNullCondition("covalent_unit_count"));
+                    config.createIsNotNullCondition(table, "covalent_unit_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:hydrogen_bond_donor_count", "compound"),
-                    config.createIsNotNullCondition("hydrogen_bond_donor_count"));
+                    config.createIsNotNullCondition(table, "hydrogen_bond_donor_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:non_hydrogen_atom_count", "compound"),
-                    config.createIsNotNullCondition("non_hydrogen_atom_count"));
+                    config.createIsNotNullCondition(table, "non_hydrogen_atom_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:rotatable_bond_count", "compound"),
-                    config.createIsNotNullCondition("rotatable_bond_count"));
+                    config.createIsNotNullCondition(table, "rotatable_bond_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:undefined_atom_stereo_count", "compound"),
-                    config.createIsNotNullCondition("undefined_atom_stereo_count"));
+                    config.createIsNotNullCondition(table, "undefined_atom_stereo_count"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:total_formal_charge", "compound"),
-                    config.createIsNotNullCondition("total_formal_charge"));
+                    config.createIsNotNullCondition(table, "total_formal_charge"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:structure_complexity", "compound"),
-                    config.createIsNotNullCondition("structure_complexity"));
+                    config.createIsNotNullCondition(table, "structure_complexity"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:mono_isotopic_weight", "compound"),
-                    config.createIsNotNullCondition("mono_isotopic_weight"));
+                    config.createIsNotNullCondition(table, "mono_isotopic_weight"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:xlogp3_aa", "compound"),
-                    config.createIsNotNullCondition("xlogp3_aa"));
+                    config.createIsNotNullCondition(table, "xlogp3_aa"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
-                    config.createIriMapping("pubchem:xlogp3", "compound"), config.createIsNotNullCondition("xlogp3"));
+                    config.createIriMapping("pubchem:xlogp3", "compound"),
+                    config.createIsNotNullCondition(table, "xlogp3"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:exact_mass", "compound"),
-                    config.createIsNotNullCondition("exact_mass"));
+                    config.createIsNotNullCondition(table, "exact_mass"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
                     config.createIriMapping("pubchem:molecular_weight", "compound"),
-                    config.createIsNotNullCondition("molecular_weight"));
+                    config.createIsNotNullCondition(table, "molecular_weight"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-attribute"),
-                    config.createIriMapping("pubchem:tpsa", "compound"), config.createIsNotNullCondition("tpsa"));
+                    config.createIriMapping("pubchem:tpsa", "compound"),
+                    config.createIsNotNullCondition(table, "tpsa"));
         }
 
         {
-            Table table = new Table(schema, "descriptor_compound_molecular_formulas");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_molecular_formulas");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:molecular_formula", "compound"));
@@ -343,8 +351,8 @@ public class Compound
         }
 
         {
-            Table table = new Table(schema, "descriptor_compound_smileses");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_smileses");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:smiles", "compound"));
@@ -359,8 +367,8 @@ public class Compound
         }
 
         {
-            Table table = new Table(schema, "descriptor_compound_connectivity_smileses");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_connectivity_smileses");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:connectivity_smiles", "compound"));
@@ -375,8 +383,8 @@ public class Compound
         }
 
         {
-            Table table = new Table(schema, "descriptor_compound_iupac_inchis");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_iupac_inchis");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:iupac_inchi", "compound"));
@@ -391,8 +399,8 @@ public class Compound
         }
 
         {
-            Table table = new Table(schema, "descriptor_compound_preferred_iupac_names");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_preferred_iupac_names");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("pubchem:preferred_iupac_name", "compound"));
@@ -407,24 +415,24 @@ public class Compound
         }
 
         {
-            Table table = new Table(schema, "compound_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "compound_matches");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("ontology:resource", "match_unit", "match_id"));
         }
 
         {
-            Table table = new Table(schema, "compound_wikidata_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "compound_wikidata_matches");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("wikidata:entity", "match"));
         }
 
         {
-            Table table = new Table(schema, "descriptor_compound_bases");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:hydrogen_bond_acceptor_count"),
                     config.createLiteralMapping(xsdShort, "hydrogen_bond_acceptor_count"));
@@ -482,43 +490,43 @@ public class Compound
         }
 
         {
-            Table table = new Table(schema, "descriptor_compound_molecular_formulas");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_molecular_formulas");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:molecular_formula"),
                     config.createLiteralMapping(xsdString, "molecular_formula"));
         }
 
         {
-            Table table = new Table(schema, "descriptor_compound_connectivity_smileses");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_connectivity_smileses");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:connectivity_smiles"),
                     config.createLiteralMapping(xsdString, "connectivity_smiles"));
         }
 
         {
-            Table table = new Table(schema, "descriptor_compound_iupac_inchis");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_iupac_inchis");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:iupac_inchi"),
                     config.createLiteralMapping(xsdString, "iupac_inchi"));
         }
 
         {
-            Table table = new Table(schema, "descriptor_compound_preferred_iupac_names");
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_preferred_iupac_names");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:preferred_iupac_name"),
                     config.createLiteralMapping(xsdString, "preferred_iupac_name"));
         }
 
         {
-            NodeMapping subject = config.createIriMapping("pubchem:compound", "compound");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
-            config.addQuadMapping(new Table(schema, "inchikey_compounds"), new Table(schema, "inchikey_bases"),
-                    "inchikey", "id", graph, subject, config.createIriMapping("vocab:inchikey"),
-                    config.createLiteralMapping(xsdString, "inchikey"));
+            config.addQuadMapping(new DatabaseTable(schema, "inchikey_compounds"),
+                    new DatabaseTable(schema, "inchikey_bases"), "inchikey", "id", graph, subject,
+                    config.createIriMapping("vocab:inchikey"), config.createLiteralMapping(xsdString, "inchikey"));
         }
     }
 }

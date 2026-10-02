@@ -17,8 +17,8 @@ import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.chemweb.server.sparql.config.sachem.Sachem;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
 import cz.iocb.sparql.engine.database.Function;
-import cz.iocb.sparql.engine.mapping.classes.DateConstantZoneClass;
-import cz.iocb.sparql.engine.mapping.classes.LangStringConstantTagClass;
+import cz.iocb.sparql.engine.mapping.classes.DateInZoneClass;
+import cz.iocb.sparql.engine.mapping.classes.LangStringWithTagClass;
 import cz.iocb.sparql.engine.mapping.classes.UserIriClass;
 import cz.iocb.sparql.engine.mapping.extension.ParameterDefinition;
 import cz.iocb.sparql.engine.mapping.extension.ProcedureDefinition;
@@ -30,8 +30,8 @@ public class PubChemConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
     static final String schema = "pubchem";
 
-    public static final LangStringConstantTagClass rdfLangStringEn = LangStringConstantTagClass.get("en");
-    public static final DateConstantZoneClass xsdDateM4 = DateConstantZoneClass.get(-4 * 60 * 60);
+    public static final LangStringWithTagClass rdfLangStringEn = LangStringWithTagClass.get("en");
+    public static final DateInZoneClass xsdDateM4 = DateInZoneClass.get(-4 * 60 * 60);
 
 
     public PubChemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException

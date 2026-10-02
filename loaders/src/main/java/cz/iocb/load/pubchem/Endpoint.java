@@ -318,9 +318,10 @@ class Endpoint extends Updater
 
         store("update pubchem.endpoint_measurements set endpoint_type_id=null "
                 + "where substance=? and bioassay=? and measuregroup=? and value=? and endpoint_type_id=?", oldTypes);
-        store("insert into pubchem.endpoint_measurements(substance,bioassay,measuregroup,value,endpoint_type_id) "
-                + "values(?,?,?,?,?) "
-                + "on conflict(substance,bioassay,measuregroup,value) do update set endpoint_type_id=EXCLUDED.endpoint_type_id",
+        store("""
+                insert into pubchem.endpoint_measurements(substance,bioassay,measuregroup,value,endpoint_type_id) \
+                values(?,?,?,?,?) \
+                on conflict(substance,bioassay,measuregroup,value) do update set endpoint_type_id=EXCLUDED.endpoint_type_id""",
                 newTypes);
     }
 
@@ -373,9 +374,10 @@ class Endpoint extends Updater
 
         store("update pubchem.endpoint_measurements set label=null "
                 + "where substance=? and bioassay=? and measuregroup=? and value=? and label=?", oldLabels);
-        store("insert into pubchem.endpoint_measurements(substance,bioassay,measuregroup,value,label) "
-                + "values(?,?,?,?,?) "
-                + "on conflict(substance,bioassay,measuregroup,value) do update set label=EXCLUDED.label", newLabels);
+        store("""
+                insert into pubchem.endpoint_measurements(substance,bioassay,measuregroup,value,label) \
+                values(?,?,?,?,?) \
+                on conflict(substance,bioassay,measuregroup,value) do update set label=EXCLUDED.label""", newLabels);
     }
 
 

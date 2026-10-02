@@ -3,7 +3,7 @@ package cz.iocb.chemweb.server.services;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 
 
@@ -28,7 +28,7 @@ public class SessionData<Data>
 
             if(sessionStorage == null)
             {
-                sessionStorage = new HashMap<Long, Data>();
+                sessionStorage = new HashMap<>();
                 session.setAttribute(storageName, sessionStorage);
             }
 

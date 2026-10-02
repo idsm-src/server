@@ -1,5 +1,13 @@
 package cz.iocb.chemweb.server.sparql.config.ontology;
 
+import static cz.iocb.sparql.engine.database.SqlType.INT2;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
+import static cz.iocb.sparql.engine.database.SqlType.RDFBOX;
+import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.box;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.iri;
+import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.constant;
+import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.string;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,16 +19,17 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Column;
-import cz.iocb.sparql.engine.database.ConstantColumn;
 import cz.iocb.sparql.engine.database.ExpressionColumn;
 import cz.iocb.sparql.engine.database.SQLRuntimeException;
-import cz.iocb.sparql.engine.mapping.classes.GeneralUserIriClass;
-import cz.iocb.sparql.engine.parser.model.IRI;
-import cz.iocb.sparql.engine.parser.model.triple.Node;
+import cz.iocb.sparql.engine.database.ValueColumn;
+import cz.iocb.sparql.engine.mapping.classes.GenericUserIriClass;
+import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
+import cz.iocb.sparql.engine.rdf.Iri;
+import cz.iocb.sparql.engine.request.Request;
 
 
 
-public class OntologyResource extends GeneralUserIriClass
+public class OntologyResource extends GenericUserIriClass
 {
     private static record Unit(short id, String prefix, int valueOffset, int valueLength, String pattern)
     {
@@ -29,8 +38,8 @@ public class OntologyResource extends GeneralUserIriClass
 
     private static final String sqlQuery = "select resource_id from ontology.resources__reftable where iri = ?";
     private static OntologyResource instance;
-    private static List<Unit> units = new ArrayList<Unit>();
-    private static Map<Column, Unit> unitMap = new HashMap<Column, Unit>();
+    private static List<Unit> units = new ArrayList<>();
+    private static Map<Column, Unit> unitMap = new HashMap<>();
 
     private static final short unitUncategorized = 0;
     private static final short unitPR0 = 31;
@@ -46,19 +55,18 @@ public class OntologyResource extends GeneralUserIriClass
 
     private OntologyResource()
     {
-        super("ontology:resource", "ontology", "ontology_resource", List.of("smallint", "integer"),
+        super("ontology:resource", "ontology", "ontology_resource", List.of(INT2, INT4),
                 units.stream().map(c -> c.pattern).collect(Collectors.joining("|")),
-                GeneralUserIriClass.SqlCheck.IF_NOT_MATCH);
+                GenericUserIriClass.SqlCheck.IF_NOT_MATCH);
     }
 
 
     @Override
-    public List<Column> toColumns(Statement statement, Node node)
+    public List<Column> toColumns(Request request, Iri iri)
     {
-        IRI iri = (IRI) node;
-        String val = (iri).getValue();
+        String val = iri.getValue();
 
-        assert match(statement, iri);
+        assert match(request, iri);
 
         for(Unit unit : units)
         {
@@ -119,9 +127,9 @@ public class OntologyResource extends GeneralUserIriClass
                     id = Integer.parseInt(tail);
                 }
 
-                List<Column> columns = new ArrayList<Column>();
-                columns.add(new ConstantColumn(unit.id, "smallint"));
-                columns.add(new ConstantColumn(id, "integer"));
+                List<Column> columns = new ArrayList<>();
+                columns.add(constant(unit.id, INT2));
+                columns.add(constant(id, INT4));
 
                 return columns;
             }
@@ -129,14 +137,13 @@ public class OntologyResource extends GeneralUserIriClass
 
         try
         {
-            String sql = sqlQuery.replaceAll("\\?", sanitizeString(val));
+            String sql = sqlQuery.replaceAll("\\?", string(val));
 
-            try(ResultSet result = statement.executeQuery(sql))
+            try(ResultSet result = request.getStatement().executeQuery(sql))
             {
                 result.next();
 
-                return List.of(new ConstantColumn(unitUncategorized, "smallint"),
-                        new ConstantColumn(result.getInt(1), "integer"));
+                return List.of(constant(unitUncategorized, INT2), constant(result.getInt(1), INT4));
             }
         }
         catch(SQLException e)
@@ -147,36 +154,20 @@ public class OntologyResource extends GeneralUserIriClass
 
 
     @Override
-    public List<Column> toGeneralClass(List<Column> columns, boolean check)
+    public List<Column> toGeneralClass(ResourceClass superClass, List<Column> columns, boolean canBeNull)
     {
-        return List.of(new ExpressionColumn(getInverseCode(columns)));
-    }
+        if(superClass.equals(this))
+            return columns;
 
+        String code = getInverseCode(columns);
 
-    @Override
-    public Column toExpression(List<Column> columns)
-    {
-        return new ExpressionColumn(getInverseCode(columns));
-    }
+        if(superClass.equals(box))
+            return List.of(new ExpressionColumn("sparql.rdfbox_create_from_iri(" + code + ")", RDFBOX));
 
+        if(superClass.equals(iri))
+            return List.of(new ExpressionColumn(code, VARCHAR));
 
-    @Override
-    public Column toBoxedExpression(List<Column> columns)
-    {
-        StringBuilder builder = new StringBuilder();
-
-        builder.append("sparql.rdfbox_create_from_iri(");
-        builder.append(getInverseCode(columns));
-        builder.append(")");
-
-        return new ExpressionColumn(builder.toString());
-    }
-
-
-    @Override
-    public List<Column> toResult(List<Column> columns)
-    {
-        return List.of(new ExpressionColumn(getInverseCode(columns)));
+        throw new IllegalArgumentException();
     }
 
 
@@ -205,7 +196,7 @@ public class OntologyResource extends GeneralUserIriClass
             builder.append(columns.get(1));
             builder.append(")::varchar");
 
-            return List.of(new ExpressionColumn(builder.toString()));
+            return List.of(new ExpressionColumn(builder.toString(), VARCHAR));
         }
         else
         {
@@ -217,7 +208,7 @@ public class OntologyResource extends GeneralUserIriClass
             builder.append(unit.valueLength);
             builder.append(", '0')::varchar)");
 
-            return List.of(new ExpressionColumn(builder.toString()));
+            return List.of(new ExpressionColumn(builder.toString(), VARCHAR));
         }
     }
 
@@ -235,9 +226,9 @@ public class OntologyResource extends GeneralUserIriClass
 
 
     @Override
-    public boolean match(Statement statement, IRI iri)
+    public boolean match(Request request, Iri iri)
     {
-        String val = (iri).getValue();
+        String val = iri.getValue();
 
         for(Unit unit : units)
             if(val.matches(unit.pattern))
@@ -245,9 +236,9 @@ public class OntologyResource extends GeneralUserIriClass
 
         try
         {
-            String sql = sqlQuery.replaceAll("\\?", sanitizeString(val));
+            String sql = sqlQuery.replaceAll("\\?", string(val));
 
-            try(ResultSet result = statement.executeQuery(sql))
+            try(ResultSet result = request.getStatement().executeQuery(sql))
             {
                 return result.next();
             }
@@ -342,7 +333,7 @@ public class OntologyResource extends GeneralUserIriClass
                     {
                         Unit unit = new Unit(r.getShort(1), r.getString(2), r.getInt(3), r.getInt(4), r.getString(5));
                         units.add(unit);
-                        unitMap.put(new ConstantColumn(Short.toString(unit.id), "smallint"), unit);
+                        unitMap.put(new ValueColumn(Short.toString(unit.id), INT2), unit);
                     }
                 }
             }

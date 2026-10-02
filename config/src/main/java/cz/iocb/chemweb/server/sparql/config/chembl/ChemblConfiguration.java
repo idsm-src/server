@@ -16,7 +16,7 @@ import cz.iocb.sparql.engine.database.DatabaseSchema;
 
 public class ChemblConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
-    static final String schema = "chembl";
+    static final String schema = "chembl_37_old";
 
 
     public ChemblConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException

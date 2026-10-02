@@ -218,12 +218,12 @@ public class Cell extends Updater
 
         load("select cell,match_unit,match_id from pubchem.cell_matches", oldMatches);
 
-        new QueryResultProcessor(
-                patternQuery("?cell rdfs:seeAlso ?match. filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"
-                        + "filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"
-                        + "filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/cell_line/CHEMBL'))"
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/cellosaurus:CVCL_'))"))
+        new QueryResultProcessor(patternQuery("""
+                ?cell rdfs:seeAlso ?match. filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))\
+                filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))\
+                filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/chembl/cell_line/CHEMBL'))\
+                filter(!strstarts(str(?match), 'http://identifiers.org/cellosaurus:CVCL_'))"""))
         {
             @Override
             protected void parse() throws IOException

@@ -29,7 +29,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathException;
 import javax.xml.xpath.XPathExpressionException;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.mem2.GraphMem2Fast;
+import org.apache.jena.mem.GraphMemFast;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -827,13 +827,13 @@ public class Updater
 
     protected static Model getModel(String file, Lang lang) throws IOException
     {
-        return getModel(file, lang, ModelFactory.createModelForGraph(new GraphMem2Fast()));
+        return getModel(file, lang, ModelFactory.createModelForGraph(new GraphMemFast()));
     }
 
 
     protected static Model getModel(String file, Lang lang, Predicate<Triple> filter) throws IOException
     {
-        Model model = ModelFactory.createModelForGraph(new GraphMem2Fast()
+        Model model = ModelFactory.createModelForGraph(new GraphMemFast()
         {
             @Override
             public void add(Triple t)

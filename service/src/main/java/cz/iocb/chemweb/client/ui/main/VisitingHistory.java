@@ -6,8 +6,8 @@ import java.util.Stack;
 
 public class VisitingHistory
 {
-    private final Stack<String> prevStack = new Stack<String>();
-    private final Stack<String> nextStack = new Stack<String>();
+    private final Stack<String> prevStack = new Stack<>();
+    private final Stack<String> nextStack = new Stack<>();
     private String currentIri;
 
 

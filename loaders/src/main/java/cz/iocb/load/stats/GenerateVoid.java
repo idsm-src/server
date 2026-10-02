@@ -3,7 +3,7 @@ package cz.iocb.load.stats;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.rdfLangString;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDate;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDateTime;
-import static cz.iocb.sparql.engine.mapping.classes.BuiltinDataTypes.rdfLangStringIri;
+import static cz.iocb.sparql.engine.mapping.datatypes.BuiltinDatatypes.rdfLangStringIri;
 import static java.util.stream.Collectors.joining;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -38,26 +38,29 @@ import cz.iocb.chemweb.server.sparql.config.idsm.IdsmConfiguration;
 import cz.iocb.load.common.Updater;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
+import cz.iocb.sparql.engine.database.SourceTable;
+import cz.iocb.sparql.engine.imcode.SqlAggregation;
+import cz.iocb.sparql.engine.imcode.SqlIntercode;
+import cz.iocb.sparql.engine.imcode.SqlIntercode.Restrictions;
+import cz.iocb.sparql.engine.imcode.SqlJoin;
+import cz.iocb.sparql.engine.imcode.SqlNoSolution;
+import cz.iocb.sparql.engine.imcode.SqlTableAccess;
+import cz.iocb.sparql.engine.imcode.SqlUnion;
+import cz.iocb.sparql.engine.imcode.expression.SqlBuiltinCall;
+import cz.iocb.sparql.engine.imcode.expression.SqlExpressionIntercode;
+import cz.iocb.sparql.engine.imcode.expression.SqlVariable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.QuadMapping;
-import cz.iocb.sparql.engine.mapping.classes.DataType;
 import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
 import cz.iocb.sparql.engine.mapping.classes.UserIriClass;
-import cz.iocb.sparql.engine.parser.model.IRI;
+import cz.iocb.sparql.engine.mapping.datatypes.Datatype;
+import cz.iocb.sparql.engine.rdf.Iri;
+import cz.iocb.sparql.engine.rdf.Variable;
 import cz.iocb.sparql.engine.request.Request;
-import cz.iocb.sparql.engine.translator.UsedVariables;
-import cz.iocb.sparql.engine.translator.imcode.SqlAggregation;
-import cz.iocb.sparql.engine.translator.imcode.SqlIntercode;
-import cz.iocb.sparql.engine.translator.imcode.SqlIntercode.Restrictions;
-import cz.iocb.sparql.engine.translator.imcode.SqlJoin;
-import cz.iocb.sparql.engine.translator.imcode.SqlNoSolution;
-import cz.iocb.sparql.engine.translator.imcode.SqlTableAccess;
-import cz.iocb.sparql.engine.translator.imcode.SqlUnion;
-import cz.iocb.sparql.engine.translator.imcode.expression.SqlBuiltinCall;
-import cz.iocb.sparql.engine.translator.imcode.expression.SqlExpressionIntercode;
-import cz.iocb.sparql.engine.translator.imcode.expression.SqlVariable;
+import cz.iocb.sparql.engine.translator.VariableBinding;
+import cz.iocb.sparql.engine.translator.VariableBindings;
 
 
 
@@ -65,7 +68,7 @@ public class GenerateVoid extends Updater
 {
     private static record GraphIRI(Integer id, String iri)
     {
-        public GraphIRI(Integer id, IRI iri)
+        public GraphIRI(Integer id, Iri iri)
         {
             this(id, iri == null ? "" : iri.getValue());
         }
@@ -416,8 +419,15 @@ public class GenerateVoid extends Updater
     }
 
 
-    private static final HashSet<Table> uniques = new HashSet<Table>(Set.of(new Table("molecules", "chebi"),
-            new Table("molecules", "chembl"), new Table("molecules", "drugbank"), new Table("molecules", "pubchem")));
+    private static final HashSet<SourceTable> uniques = new HashSet<>(
+            Set.of(new DatabaseTable("molecules", "chebi"), new DatabaseTable("molecules", "chembl"),
+                    new DatabaseTable("molecules", "drugbank"), new DatabaseTable("molecules", "pubchem")));
+
+    private static final Variable varS = new Variable("S");
+    private static final Variable varO = new Variable("O");
+    private static final Variable varSC = new Variable("SC");
+    private static final Variable varOC = new Variable("OC");
+    private static final Variable varCount = new Variable("COUNT");
 
     private static CompletionService<Boolean> taskService;
     private static PriorityThreadPoolExecutor sqlService;
@@ -469,7 +479,7 @@ public class GenerateVoid extends Updater
              * process config
              */
 
-            List<Short> excludedClassCategories = new ArrayList<Short>();
+            List<Short> excludedClassCategories = new ArrayList<>();
 
             try(Statement statement = connection.createStatement())
             {
@@ -490,26 +500,26 @@ public class GenerateVoid extends Updater
             }
 
 
-            Map<IRI, Resource> datatypeMap = new HashMap<IRI, Resource>();
+            Map<Iri, Resource> datatypeMap = new HashMap<>();
             UserIriClass rc = config.getIriClass("ontology:resource");
 
-            for(DataType datatype : config.getDataTypes())
+            for(Datatype datatype : config.getDatatypes())
             {
-                IRI iri = datatype.getTypeIri();
-                List<Column> cols = rc.toColumns(request.getStatement(), iri);
+                Iri iri = datatype.getTypeIri();
+                List<Column> cols = rc.toColumns(request, iri);
                 datatypeMap.put(iri, new Resource(cols));
             }
 
-            List<Column> cols = rc.toColumns(request.getStatement(), rdfLangStringIri);
+            List<Column> cols = rc.toColumns(request, rdfLangStringIri);
             datatypeMap.put(rdfLangStringIri, new Resource(cols));
 
 
-            Map<IRI, Graph> graphDefinitions = new HashMap<IRI, Graph>();
+            Map<Iri, Graph> graphDefinitions = new HashMap<>();
 
             for(QuadMapping map : config.getMappings(config.getServiceIri()))
             {
-                ConstantIriMapping graphMapping = map.getGraph();
-                IRI iri = graphMapping != null ? graphMapping.getIRI() : null;
+                ConstantIriMapping graphMapping = (ConstantIriMapping) map.getGraph();
+                Iri iri = graphMapping != null ? graphMapping.getIri() : null;
 
                 Graph set = graphDefinitions.get(iri);
 
@@ -599,22 +609,22 @@ public class GenerateVoid extends Updater
 
 
             Restrictions restrictions = new Restrictions();
-            restrictions.add("S");
-            restrictions.add("O");
-            restrictions.add("SC");
-            restrictions.add("OC");
+            restrictions.add(varS);
+            restrictions.add(varO);
+            restrictions.add(varSC);
+            restrictions.add(varOC);
 
 
             /*
              * translate parts
              */
 
-            Map<IRI, Integer> revGraphs = new HashMap<>();
+            Map<Iri, Integer> revGraphs = new HashMap<>();
             int nextGraphID = 0;
 
             for(GraphIRI k : oldGraphStats.keySet())
             {
-                revGraphs.put(k.iri().isEmpty() ? null : new IRI(k.iri()), k.id());
+                revGraphs.put(k.iri().isEmpty() ? null : new Iri(k.iri()), k.id());
 
                 if(k.id() > nextGraphID)
                     nextGraphID = k.id();
@@ -627,7 +637,7 @@ public class GenerateVoid extends Updater
 
 
 
-            Map<Integer, IRI> graphs = new HashMap<>();
+            Map<Integer, Iri> graphs = new HashMap<>();
             Map<Integer, Set<Resource>> predicates = new HashMap<>();
 
             Map<Integer, SqlIntercode> iriGraphs = new HashMap<>();
@@ -642,7 +652,7 @@ public class GenerateVoid extends Updater
             Map<Integer, Set<SqlIntercode>> subjectDynamicClasses = new HashMap<>();
             Map<Integer, Set<SqlIntercode>> objectDynamicClasses = new HashMap<>();
 
-            for(Entry<IRI, Graph> g : graphDefinitions.entrySet())
+            for(Entry<Iri, Graph> g : graphDefinitions.entrySet())
             {
                 Integer graphID = revGraphs.get(g.getKey());
 
@@ -652,21 +662,21 @@ public class GenerateVoid extends Updater
                 graphs.put(graphID, g.getKey());
 
 
-                Set<Resource> predicatesSet = new HashSet<Resource>();
+                Set<Resource> predicatesSet = new HashSet<>();
                 predicates.put(graphID, predicatesSet);
 
-                iriGraphs.put(graphID, g.getValue().getIriDataset().translate(request, "S", "O"));
-                litGraphs.put(graphID, g.getValue().getLitDataset().translate(request, "S", "O"));
+                iriGraphs.put(graphID, g.getValue().getIriDataset().translate(request, varS, varO));
+                litGraphs.put(graphID, g.getValue().getLitDataset().translate(request, varS, varO));
 
-                HashSet<SqlIntercode> graphSubjectDynClasses = new HashSet<SqlIntercode>();
-                HashSet<SqlIntercode> graphObjectDynClasses = new HashSet<SqlIntercode>();
+                HashSet<SqlIntercode> graphSubjectDynClasses = new HashSet<>();
+                HashSet<SqlIntercode> graphObjectDynClasses = new HashSet<>();
 
                 for(Entry<Set<Resource>, Dataset> s : g.getValue().getClasses().entrySet())
                 {
                     if(s.getKey().size() > 1)
                     {
-                        graphSubjectDynClasses.add(s.getValue().translate(request, "S", "SC"));
-                        graphObjectDynClasses.add(s.getValue().translate(request, "O", "OC"));
+                        graphSubjectDynClasses.add(s.getValue().translate(request, varS, varSC));
+                        graphObjectDynClasses.add(s.getValue().translate(request, varO, varOC));
                     }
                 }
 
@@ -683,8 +693,8 @@ public class GenerateVoid extends Updater
                         Resource classID = d.getKey().iterator().next();
                         Dataset dataset = d.getValue();
 
-                        subjectClasses.put(new ClassInGraph(graphID, classID), dataset.translate(request, "S", null));
-                        objectClasses.put(new ClassInGraph(graphID, classID), dataset.translate(request, "O", null));
+                        subjectClasses.put(new ClassInGraph(graphID, classID), dataset.translate(request, varS, null));
+                        objectClasses.put(new ClassInGraph(graphID, classID), dataset.translate(request, varO, null));
                     }
                 }
 
@@ -694,7 +704,7 @@ public class GenerateVoid extends Updater
                     Dataset dataset = d.getValue();
 
                     predicatesSet.add(propertyID);
-                    iriProperties.put(new PropertyInGraph(graphID, propertyID), dataset.translate(request, "S", "O"));
+                    iriProperties.put(new PropertyInGraph(graphID, propertyID), dataset.translate(request, varS, varO));
                 }
 
 
@@ -704,7 +714,7 @@ public class GenerateVoid extends Updater
                     Dataset dataset = d.getValue();
 
                     predicatesSet.add(propertyID);
-                    litProperties.put(new PropertyInGraph(graphID, propertyID), dataset.translate(request, "S", "O"));
+                    litProperties.put(new PropertyInGraph(graphID, propertyID), dataset.translate(request, varS, varO));
                 }
 
 
@@ -712,11 +722,11 @@ public class GenerateVoid extends Updater
                 {
                     Resource propertyID = d.getKey();
 
-                    Map<Resource, SqlIntercode> fres = new HashMap<Resource, SqlIntercode>();
+                    Map<Resource, SqlIntercode> fres = new HashMap<>();
                     datatypes.put(new PropertyInGraph(graphID, propertyID), fres);
 
                     for(Entry<Resource, Dataset> x : d.getValue().entrySet())
-                        fres.put(x.getKey(), x.getValue().translate(request, "S", "O"));
+                        fres.put(x.getKey(), x.getValue().translate(request, varS, varO));
                 }
             }
 
@@ -726,12 +736,12 @@ public class GenerateVoid extends Updater
              */
 
             ExecutorService execututor = Executors.newFixedThreadPool(64);
-            taskService = new ExecutorCompletionService<Boolean>(execututor);
+            taskService = new ExecutorCompletionService<>(execututor);
             SqlNoSolution empty = SqlNoSolution.get();
 
-            Map<String, Future<Map<Void, Long>>> cache0 = new HashMap<String, Future<Map<Void, Long>>>();
-            Map<String, Future<Map<Resource, Long>>> cache1 = new HashMap<String, Future<Map<Resource, Long>>>();
-            Map<String, Future<Map<ResourcePair, Long>>> cache2 = new HashMap<String, Future<Map<ResourcePair, Long>>>();
+            Map<String, Future<Map<Void, Long>>> cache0 = new HashMap<>();
+            Map<String, Future<Map<Resource, Long>>> cache1 = new HashMap<>();
+            Map<String, Future<Map<ResourcePair, Long>>> cache2 = new HashMap<>();
 
 
             /**********************************************************************************************************/
@@ -742,7 +752,7 @@ public class GenerateVoid extends Updater
              *  graph <g1> { ?S ?P ?O }
              */
 
-            for(Entry<Integer, IRI> g : graphs.entrySet())
+            for(Entry<Integer, Iri> g : graphs.entrySet())
             {
                 SqlIntercode iriPart = iriGraphs.get(g.getKey());
                 SqlIntercode litPart = litGraphs.get(g.getKey());
@@ -767,7 +777,7 @@ public class GenerateVoid extends Updater
                     SqlIntercode iriPart = SqlJoin.join(request, sx, iriGraphs.getOrDefault(s.getKey(), empty));
                     SqlIntercode litPart = SqlJoin.join(request, sx, litGraphs.getOrDefault(s.getKey(), empty));
 
-                    sumbitTask(newClassPartitionStats, cache1, iriPart, litPart, List.of("SC"),
+                    sumbitTask(newClassPartitionStats, cache1, iriPart, litPart, List.of(varSC),
                             r -> new Resource(r.getShort(2), r.getInt(3)), t -> new ClassInGraph(s.getKey(), t), true);
                 }
             }
@@ -801,7 +811,7 @@ public class GenerateVoid extends Updater
                         SqlIntercode iriPart = SqlJoin.join(request, sx, iriProperties.getOrDefault(key, empty));
                         SqlIntercode litPart = SqlJoin.join(request, sx, litProperties.getOrDefault(key, empty));
 
-                        sumbitTask(newClassPropertyPartitionStats, cache1, iriPart, litPart, List.of("SC"),
+                        sumbitTask(newClassPropertyPartitionStats, cache1, iriPart, litPart, List.of(varSC),
                                 r -> new Resource(r.getShort(2), r.getInt(3)),
                                 t -> new ClassAndPropertyInGraph(s.getKey(), t, p), false);
                     }
@@ -863,7 +873,7 @@ public class GenerateVoid extends Updater
                         {
                             SqlIntercode sp = SqlJoin.join(request, sx, px.getValue());
 
-                            sumbitTask(newDatatypeLinksetStats, cache1, empty, sp, List.of("SC"),
+                            sumbitTask(newDatatypeLinksetStats, cache1, empty, sp, List.of(varSC),
                                     r -> new Resource(r.getShort(2), r.getInt(3)),
                                     t -> new PropertyFromClassToDatatype(p.getKey(), new ClassInGraph(s.getKey(), t),
                                             px.getKey()),
@@ -918,7 +928,7 @@ public class GenerateVoid extends Updater
                             {
                                 SqlIntercode spo = SqlJoin.join(request, sp, ox);
 
-                                sumbitTask(newClassLinksetStats, cache2, spo, empty, List.of("SC", "OC"),
+                                sumbitTask(newClassLinksetStats, cache2, spo, empty, List.of(varSC, varOC),
                                         r -> new ResourcePair(r.getShort(2), r.getInt(3), r.getShort(4), r.getInt(5)),
                                         t -> new PropertyFromClassToClass(p.getKey(),
                                                 new ClassInGraph(s.getKey(), t.r1()),
@@ -947,7 +957,7 @@ public class GenerateVoid extends Updater
                             {
                                 SqlIntercode spo = SqlJoin.join(request, sp, ox);
 
-                                sumbitTask(newClassLinksetStats, cache1, spo, empty, List.of("OC"),
+                                sumbitTask(newClassLinksetStats, cache1, spo, empty, List.of(varOC),
                                         r -> new Resource(r.getShort(2), r.getInt(3)),
                                         t -> new PropertyFromClassToClass(p.getKey(), s.getKey(),
                                                 new ClassInGraph(o.getKey(), t)),
@@ -974,7 +984,7 @@ public class GenerateVoid extends Updater
                         {
                             SqlIntercode spo = SqlJoin.join(request, sp, o.getValue());
 
-                            sumbitTask(newClassLinksetStats, cache1, spo, empty, List.of("SC"),
+                            sumbitTask(newClassLinksetStats, cache1, spo, empty, List.of(varSC),
                                     r -> new Resource(r.getShort(2), r.getInt(3)),
                                     t -> new PropertyFromClassToClass(p.getKey(), new ClassInGraph(s.getKey(), t),
                                             o.getKey()),
@@ -1098,7 +1108,7 @@ public class GenerateVoid extends Updater
 
 
     private static <T, K> void sumbitTask(Map<K, Stats> output, Map<String, Future<Map<T, Long>>> cache,
-            SqlIntercode iriImcode, SqlIntercode litImcode, List<String> v, ExtractFromResultSet<T> fres,
+            SqlIntercode iriImcode, SqlIntercode litImcode, List<Variable> v, ExtractFromResultSet<T> fres,
             Function<T, K> keyget, boolean asumeNotEmpty)
     {
         taskService.submit(() -> computeStats(output, cache, iriImcode, litImcode, v, fres, keyget, asumeNotEmpty));
@@ -1123,7 +1133,7 @@ public class GenerateVoid extends Updater
 
 
     private static <T, K> boolean computeStats(Map<K, Stats> output, Map<String, Future<Map<T, Long>>> cache,
-            SqlIntercode iriPart, SqlIntercode litPart, List<String> v, ExtractFromResultSet<T> fres,
+            SqlIntercode iriPart, SqlIntercode litPart, List<Variable> v, ExtractFromResultSet<T> fres,
             Function<T, K> keyget, boolean asumeNotEmpty) throws SQLException, InterruptedException, ExecutionException
     {
         try
@@ -1135,11 +1145,11 @@ public class GenerateVoid extends Updater
 
             if(asumeNotEmpty || !ftriples.get().isEmpty())
             {
-                FutureWrapper<HashMap<K, Long>> flitObjects = computeDistinctCount(cache, litPart, v, fres, keyget, "O",
-                        0);
-                FutureWrapper<HashMap<K, Long>> firiObjects = computeDistinctCount(cache, iriPart, v, fres, keyget, "O",
-                        1);
-                FutureWrapper<HashMap<K, Long>> fsubjects = computeDistinctCount(cache, imcode, v, fres, keyget, "S",
+                FutureWrapper<HashMap<K, Long>> flitObjects = computeDistinctCount(cache, litPart, v, fres, keyget,
+                        varO, 0);
+                FutureWrapper<HashMap<K, Long>> firiObjects = computeDistinctCount(cache, iriPart, v, fres, keyget,
+                        varO, 1);
+                FutureWrapper<HashMap<K, Long>> fsubjects = computeDistinctCount(cache, imcode, v, fres, keyget, varS,
                         2);
 
                 HashMap<K, Long> litObjects = flitObjects.get();
@@ -1173,19 +1183,19 @@ public class GenerateVoid extends Updater
 
 
     private static <T, K> FutureWrapper<HashMap<K, Long>> computeCount(Map<String, Future<Map<T, Long>>> cache,
-            SqlIntercode imcode, List<String> v, ExtractFromResultSet<T> fres, Function<T, K> fkey, int priority)
+            SqlIntercode imcode, List<Variable> v, ExtractFromResultSet<T> fres, Function<T, K> fkey, int priority)
             throws SQLException, InterruptedException, ExecutionException
     {
-        HashSet<String> groupBy = new HashSet<String>(v);
+        HashSet<Variable> groupBy = new HashSet<>(v);
 
-        ArrayList<String> vars = new ArrayList<String>();
-        vars.add("COUNT");
+        ArrayList<Variable> vars = new ArrayList<>();
+        vars.add(varCount);
         vars.addAll(v);
 
         imcode = imcode.optimize(request, new Restrictions(groupBy), false, false);
 
         if(imcode == SqlNoSolution.get())
-            return () -> new HashMap<K, Long>();
+            return () -> new HashMap<>();
 
 
         List<Future<Map<T, Long>>> futures = new ArrayList<>();
@@ -1198,10 +1208,10 @@ public class GenerateVoid extends Updater
                 futures.add(getCountMap(sql, cache, fres, priority));
         }
 
-        return new FutureWrapper<HashMap<K, Long>>()
+        return new FutureWrapper<>()
         {
             boolean isFinished = false;
-            HashMap<K, Long> triples = new HashMap<K, Long>();
+            HashMap<K, Long> triples = new HashMap<>();
 
             @Override
             public HashMap<K, Long> get()
@@ -1231,13 +1241,13 @@ public class GenerateVoid extends Updater
 
 
     private static <T, K> FutureWrapper<HashMap<K, Long>> computeDistinctCount(Map<String, Future<Map<T, Long>>> cache,
-            SqlIntercode imcode, List<String> v, ExtractFromResultSet<T> fres, Function<T, K> fkey, String what,
+            SqlIntercode imcode, List<Variable> v, ExtractFromResultSet<T> fres, Function<T, K> fkey, Variable what,
             int priority) throws SQLException, InterruptedException, ExecutionException
     {
-        HashSet<String> groupBy = new HashSet<String>(v);
+        HashSet<Variable> groupBy = new HashSet<>(v);
 
-        ArrayList<String> vars = new ArrayList<String>();
-        vars.add("COUNT");
+        ArrayList<Variable> vars = new ArrayList<>();
+        vars.add(varCount);
         vars.addAll(v);
 
         Restrictions restrictions = new Restrictions(v);
@@ -1246,7 +1256,7 @@ public class GenerateVoid extends Updater
         imcode = imcode.optimize(request, restrictions, true, false);
 
         if(imcode == SqlNoSolution.get())
-            return (() -> new HashMap<K, Long>());
+            return (() -> new HashMap<>());
 
 
         List<Future<Map<T, Long>>> futures = new ArrayList<>();
@@ -1259,10 +1269,10 @@ public class GenerateVoid extends Updater
                 futures.add(getCountMap(sql, cache, fres, priority));
         }
 
-        return new FutureWrapper<HashMap<K, Long>>()
+        return new FutureWrapper<>()
         {
             boolean isFinished = false;
-            HashMap<K, Long> triples = new HashMap<K, Long>();
+            HashMap<K, Long> triples = new HashMap<>();
 
             @Override
             public HashMap<K, Long> get()
@@ -1291,16 +1301,16 @@ public class GenerateVoid extends Updater
     }
 
 
-    private static List<SqlIntercode> splitImCode(SqlIntercode imcode, String what)
+    private static List<SqlIntercode> splitImCode(SqlIntercode imcode, Variable what)
     {
-        Map<ResourceClass, List<SqlIntercode>> groups = new HashMap<ResourceClass, List<SqlIntercode>>();
+        Map<ResourceClass, List<SqlIntercode>> groups = new HashMap<>();
 
-        List<SqlIntercode> result = new ArrayList<SqlIntercode>();
+        List<SqlIntercode> result = new ArrayList<>();
 
         for(SqlIntercode branch : imcode instanceof SqlUnion union ? union.getChilds() : List.of(imcode))
         {
-            ResourceClass rc = branch.getVariable(what).getResourceClass();
-            ResourceClass gc = rc.getGeneralClass();
+            ResourceClass rc = Graph.getResourceClass(branch.getVariable(what));
+            ResourceClass gc = rc.getResultResourceClass();
 
             // FIXME
             if(gc == xsdDateTime || gc == xsdDate || gc == rdfLangString)
@@ -1333,7 +1343,7 @@ public class GenerateVoid extends Updater
                 executed++;
 
                 Callable<Map<T, Long>> task = () -> {
-                    HashMap<T, Long> map = new HashMap<T, Long>();
+                    HashMap<T, Long> map = new HashMap<>();
 
                     try(Connection connection = request.getConfiguration().getConnectionPool().getConnection())
                     {
@@ -1380,45 +1390,51 @@ public class GenerateVoid extends Updater
     }
 
 
-    private static String getSqlQuery(SqlIntercode imcode, Set<String> gvars, String what, List<String> select)
+    private static String getSqlQuery(SqlIntercode imcode, Set<Variable> gvars, Variable what, List<Variable> select)
     {
         if(imcode == SqlNoSolution.get())
             return null;
 
-        HashSet<String> groupVariables = new HashSet<String>(gvars);
+        HashSet<Variable> groupVariables = new HashSet<>(gvars);
 
-        LinkedHashMap<String, SqlExpressionIntercode> aggregations = new LinkedHashMap<>();
+        LinkedHashMap<Variable, SqlExpressionIntercode> aggregations = new LinkedHashMap<>();
 
         if(what == null || imcode instanceof SqlTableAccess a && uniques.contains(a.getTable()))
         {
-            aggregations.put("COUNT", SqlBuiltinCall.create(request, "card", false, List.of()));
+            aggregations.put(varCount, SqlBuiltinCall.create(request, "card", false, List.of()));
         }
         else
         {
-            SqlExpressionIntercode var = SqlVariable.create(what, imcode.getVariables());
-            aggregations.put("COUNT", SqlBuiltinCall.create(request, "count", true, List.of(var)));
+            SqlExpressionIntercode var = SqlVariable.create(request.getConfiguration(), imcode.getVariable(what));
+            aggregations.put(varCount, SqlBuiltinCall.create(request, "count", true, List.of(var)));
         }
 
         SqlIntercode agg = SqlAggregation.aggregate(request, groupVariables, aggregations, imcode);
 
         Restrictions restriction = new Restrictions(gvars);
-        restriction.add("COUNT");
+        restriction.add(varCount);
 
         SqlIntercode result = agg.optimize(request, restriction, false, false);
 
         if(result == SqlNoSolution.get())
             return null;
 
-        UsedVariables vars = result.getVariables();
+        VariableBindings vars = result.getVariableBindings();
 
-        return "SELECT " + select.stream().flatMap(n -> vars.get(n).getMapping().stream()).map(e -> e.toString())
+        return "SELECT " + select.stream().flatMap(n -> getMapping(vars.get(n)).stream()).map(e -> e.toString())
                 .collect(Collectors.joining(", ")) + " FROM (" + result.translate(request) + ") as tab";
+    }
+
+
+    private static List<Column> getMapping(VariableBinding binding)
+    {
+        return binding.getMapping(Graph.getResourceClass(binding));
     }
 
 
     private static String getLoadSql(String table, List<String> key, List<String> value)
     {
-        List<String> cols = new ArrayList<String>();
+        List<String> cols = new ArrayList<>();
         cols.addAll(key);
         cols.addAll(value);
 
@@ -1428,7 +1444,7 @@ public class GenerateVoid extends Updater
 
     private static String getDeleteSql(String table, List<String> key, List<String> value)
     {
-        List<String> cols = new ArrayList<String>();
+        List<String> cols = new ArrayList<>();
         cols.addAll(key);
         cols.addAll(value);
 
@@ -1438,7 +1454,7 @@ public class GenerateVoid extends Updater
 
     private static String getUpdateSql(String table, List<String> key, List<String> value)
     {
-        List<String> cols = new ArrayList<String>();
+        List<String> cols = new ArrayList<>();
         cols.addAll(key);
         cols.addAll(value);
 

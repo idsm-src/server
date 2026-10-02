@@ -1,21 +1,30 @@
 package cz.iocb.chemweb.server.sparql.config.isdb;
 
+import static cz.iocb.sparql.engine.database.SqlType.CHAR;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
+import static cz.iocb.sparql.engine.database.SqlType.RDFBOX;
+import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.box;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.iri;
+import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.expression;
+import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.string;
+import static cz.iocb.sparql.engine.mapping.classes.DerivedClass.subtract;
+import static cz.iocb.sparql.engine.mapping.classes.DerivedClass.unionize;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import cz.iocb.sparql.engine.database.Column;
-import cz.iocb.sparql.engine.database.ConstantColumn;
 import cz.iocb.sparql.engine.database.ExpressionColumn;
 import cz.iocb.sparql.engine.database.SQLRuntimeException;
-import cz.iocb.sparql.engine.mapping.classes.ResultTag;
+import cz.iocb.sparql.engine.database.ValueColumn;
+import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
 import cz.iocb.sparql.engine.mapping.classes.UserIriClass;
-import cz.iocb.sparql.engine.parser.model.IRI;
-import cz.iocb.sparql.engine.parser.model.VariableOrBlankNode;
-import cz.iocb.sparql.engine.parser.model.triple.Node;
+import cz.iocb.sparql.engine.rdf.Iri;
+import cz.iocb.sparql.engine.request.Request;
 
 
 
@@ -32,7 +41,7 @@ public class IsdbUserIriClass extends UserIriClass
 
     public IsdbUserIriClass(String name, String prefix, String suffix)
     {
-        super(name, List.of("integer", "char"), List.of(ResultTag.IRI));
+        super(name, List.of(INT4, CHAR), Set.of(iri, box));
 
         this.prefix = prefix;
         this.suffix = suffix;
@@ -53,22 +62,20 @@ public class IsdbUserIriClass extends UserIriClass
 
 
     @Override
-    public List<Column> toColumns(Statement statement, Node node)
+    public List<Column> toColumns(Request request, Iri iri)
     {
-        IRI iri = (IRI) node;
-        assert match(statement, iri);
+        assert match(request, iri);
 
         try
         {
-            String sql = sqlQuery.replaceAll("\\?",
-                    sanitizeString(iri.getValue().substring(prefixLen, prefixLen + 14)));
+            String sql = sqlQuery.replaceAll("\\?", string(iri.getValue().substring(prefixLen, prefixLen + 14)));
 
-            try(ResultSet result = statement.executeQuery(sql))
+            try(ResultSet result = request.getStatement().executeQuery(sql))
             {
                 if(result.next())
                 {
-                    return List.of(new ConstantColumn(result.getString(1), "integer"),
-                            new ConstantColumn(iri.getValue().substring(prefix.length() + 15), "char"));
+                    return List.of(new ValueColumn(result.getString(1), INT4),
+                            new ValueColumn(iri.getValue().substring(prefix.length() + 15), CHAR));
                 }
                 else
                 {
@@ -84,7 +91,7 @@ public class IsdbUserIriClass extends UserIriClass
 
 
     @Override
-    public boolean match(Statement statement, IRI iri)
+    public boolean match(Request request, Iri iri)
     {
         Matcher matcher = pattern.matcher(iri.getValue());
 
@@ -93,10 +100,9 @@ public class IsdbUserIriClass extends UserIriClass
 
         try
         {
-            String sql = sqlQuery.replaceAll("\\?",
-                    sanitizeString(iri.getValue().substring(prefixLen, prefixLen + 14)));
+            String sql = sqlQuery.replaceAll("\\?", string(iri.getValue().substring(prefixLen, prefixLen + 14)));
 
-            try(ResultSet result = statement.executeQuery(sql))
+            try(ResultSet result = request.getStatement().executeQuery(sql))
             {
                 return result.next();
             }
@@ -126,7 +132,7 @@ public class IsdbUserIriClass extends UserIriClass
 
         code = String.format("(SELECT (%s)::varchar FROM %s WHERE \"@from\" = %s)", code, access, columns.get(0));
 
-        return new ExpressionColumn(code);
+        return new ExpressionColumn(code, VARCHAR);
     }
 
 
@@ -152,61 +158,55 @@ public class IsdbUserIriClass extends UserIriClass
             col2 = builder.toString() + col2 + " END";
         }
 
-        List<Column> result = new ArrayList<Column>(getColumnCount());
+        List<Column> result = new ArrayList<>(getColumnCount());
 
-        result.add(new ExpressionColumn(col1));
-        result.add(new ExpressionColumn(col2));
+        result.add(new ExpressionColumn(col1, sqlTypes.get(0)));
+        result.add(new ExpressionColumn(col2, sqlTypes.get(1)));
 
         return result;
     }
 
 
     @Override
-    public List<Column> fromGeneralClass(List<Column> columns)
+    public List<Column> toGeneralClass(ResourceClass superClass, List<Column> columns, boolean canBeNull)
     {
-        return generateInverseFunctions(columns.get(0), true);
+        assert isSubclassOf(superClass);
+
+        ResourceClass targetClass = superClass.getEffectiveClass();
+
+        if(targetClass.equals(this))
+            return columns;
+
+        if(targetClass.equals(box))
+            return List.of(expression(RDFBOX, "sparql.rdfbox_create_from_iri(%s)", generateFunction(columns)));
+
+        if(targetClass.equals(iri))
+            return List.of(generateFunction(columns));
+
+        throw new IllegalArgumentException();
     }
 
 
     @Override
-    public List<Column> toGeneralClass(List<Column> columns, boolean check)
+    public List<Column> fromGeneralClass(ResourceClass superClass, List<Column> columns, boolean checkOptional)
     {
-        return List.of(generateFunction(columns));
-    }
+        if(superClass.equals(this))
+            return columns;
 
+        ResourceClass sourceClass = superClass.getEffectiveClass();
 
-    @Override
-    public List<Column> fromExpression(Column column)
-    {
-        return generateInverseFunctions(column, true);
-    }
+        assert isSubclassOf(sourceClass);
 
+        // the check is needless when every IRI of the superclass belongs to this class
+        boolean check = !checkOptional && !superClass.isSubclassOf(unionize(this, subtract(box, iri)));
 
-    @Override
-    public Column toExpression(List<Column> columns)
-    {
-        return generateFunction(columns);
-    }
+        if(sourceClass.equals(box))
+            return generateInverseFunctions(expression(VARCHAR, "sparql.rdfbox_get_iri(%s)", columns.get(0)), check);
 
+        if(sourceClass.equals(iri))
+            return generateInverseFunctions(columns.get(0), check);
 
-    @Override
-    public List<Column> fromBoxedExpression(Column column, boolean check)
-    {
-        return generateInverseFunctions(new ExpressionColumn("sparql.rdfbox_get_iri(" + column + ")"), check);
-    }
-
-
-    @Override
-    public Column toBoxedExpression(List<Column> columns)
-    {
-        return new ExpressionColumn("sparql.rdfbox_create_from_iri(" + generateFunction(columns) + ")");
-    }
-
-
-    @Override
-    public List<Column> toResult(List<Column> columns)
-    {
-        return List.of(generateFunction(columns));
+        throw new IllegalArgumentException();
     }
 
 
@@ -214,7 +214,7 @@ public class IsdbUserIriClass extends UserIriClass
     public List<Column> toOrderColumns(List<Column> columns)
     {
         String code = String.format("(SELECT accession FROM isdb.compound_bases WHERE id = %s)", columns.get(0));
-        return List.of(new ExpressionColumn(code), columns.get(1));
+        return List.of(new ExpressionColumn(code, VARCHAR), columns.get(1));
     }
 
 
@@ -222,19 +222,6 @@ public class IsdbUserIriClass extends UserIriClass
     public String getPrefix(List<Column> columns)
     {
         return prefix;
-    }
-
-
-    @Override
-    public boolean match(Statement statement, Node node)
-    {
-        if(node instanceof VariableOrBlankNode)
-            return true;
-
-        if(!(node instanceof IRI))
-            return false;
-
-        return match(statement, (IRI) node);
     }
 
 

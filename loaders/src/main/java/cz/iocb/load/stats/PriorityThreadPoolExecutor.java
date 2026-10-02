@@ -103,7 +103,7 @@ public class PriorityThreadPoolExecutor extends ThreadPoolExecutor
 
     public PriorityThreadPoolExecutor(int threads)
     {
-        super(threads, threads, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<Runnable>());
+        super(threads, threads, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>());
         prestartAllCoreThreads();
     }
 

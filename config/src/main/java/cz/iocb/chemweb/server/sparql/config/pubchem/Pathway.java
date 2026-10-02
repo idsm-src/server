@@ -1,12 +1,13 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
 
@@ -16,8 +17,8 @@ public class Pathway
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("pubchem:pathway", "integer",
-                "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID"));
+        config.addIriClass(
+                new IntegerUserIriClass("pubchem:pathway", INT4, "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID"));
         config.addIriClass(new StringUserIriClass("pubchem:reaction", "http://rdf.ncbi.nlm.nih.gov/pubchem/reaction/"));
     }
 
@@ -27,8 +28,8 @@ public class Pathway
         ConstantIriMapping graph = config.createIriMapping("pubchem:pathway");
 
         {
-            Table table = new Table(schema, "pathway_bases");
-            NodeMapping subject = config.createIriMapping("pubchem:pathway", "id");
+            DatabaseTable table = new DatabaseTable(schema, "pathway_bases");
+            TermMapping subject = config.createIriMapping("pubchem:pathway", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Pathway"));
@@ -91,48 +92,48 @@ public class Pathway
         }
 
         {
-            Table table = new Table(schema, "pathway_compounds");
-            NodeMapping subject = config.createIriMapping("pubchem:pathway", "pathway");
+            DatabaseTable table = new DatabaseTable(schema, "pathway_compounds");
+            TermMapping subject = config.createIriMapping("pubchem:pathway", "pathway");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:RO_0000057"),
                     config.createIriMapping("pubchem:compound", "compound"));
         }
 
         {
-            Table table = new Table(schema, "pathway_proteins");
-            NodeMapping subject = config.createIriMapping("pubchem:pathway", "pathway");
+            DatabaseTable table = new DatabaseTable(schema, "pathway_proteins");
+            TermMapping subject = config.createIriMapping("pubchem:pathway", "pathway");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:RO_0000057"),
                     config.createIriMapping("pubchem:protein", "protein"));
         }
 
         {
-            Table table = new Table(schema, "pathway_genes");
-            NodeMapping subject = config.createIriMapping("pubchem:pathway", "pathway");
+            DatabaseTable table = new DatabaseTable(schema, "pathway_genes");
+            TermMapping subject = config.createIriMapping("pubchem:pathway", "pathway");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:RO_0000057"),
                     config.createIriMapping("pubchem:gene", "gene"));
         }
 
         {
-            Table table = new Table(schema, "pathway_components");
-            NodeMapping subject = config.createIriMapping("pubchem:pathway", "pathway");
+            DatabaseTable table = new DatabaseTable(schema, "pathway_components");
+            TermMapping subject = config.createIriMapping("pubchem:pathway", "pathway");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bp:pathwayComponent"),
                     config.createIriMapping("pubchem:pathway", "component"));
         }
 
         {
-            Table table = new Table(schema, "pathway_references");
-            NodeMapping subject = config.createIriMapping("pubchem:pathway", "pathway");
+            DatabaseTable table = new DatabaseTable(schema, "pathway_references");
+            TermMapping subject = config.createIriMapping("pubchem:pathway", "pathway");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
                     config.createIriMapping("pubchem:reference", "reference"));
         }
 
         {
-            Table table = new Table(schema, "pathway_related_pathways");
-            NodeMapping subject = config.createIriMapping("pubchem:pathway", "pathway");
+            DatabaseTable table = new DatabaseTable(schema, "pathway_related_pathways");
+            TermMapping subject = config.createIriMapping("pubchem:pathway", "pathway");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:related"),
                     config.createIriMapping("pubchem:pathway", "related"));

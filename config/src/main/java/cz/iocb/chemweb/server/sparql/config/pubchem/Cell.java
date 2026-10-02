@@ -1,11 +1,12 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
@@ -15,7 +16,7 @@ public class Cell
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
-                new IntegerUserIriClass("pubchem:cell", "integer", "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID"));
+                new IntegerUserIriClass("pubchem:cell", INT4, "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID"));
     }
 
 
@@ -24,8 +25,8 @@ public class Cell
         ConstantIriMapping graph = config.createIriMapping("pubchem:cell");
 
         {
-            Table table = new Table(schema, "cell_bases");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "id");
+            DatabaseTable table = new DatabaseTable(schema, "cell_bases");
+            TermMapping subject = config.createIriMapping("pubchem:cell", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Cell"));
@@ -38,40 +39,40 @@ public class Cell
         }
 
         {
-            Table table = new Table(schema, "cell_alternatives");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
+            DatabaseTable table = new DatabaseTable(schema, "cell_alternatives");
+            TermMapping subject = config.createIriMapping("pubchem:cell", "cell");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:altLabel"),
                     config.createLiteralMapping(xsdString, "alternative"));
         }
 
         {
-            Table table = new Table(schema, "cell_occurrences");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
+            DatabaseTable table = new DatabaseTable(schema, "cell_occurrences");
+            TermMapping subject = config.createIriMapping("pubchem:cell", "cell");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:BFO_0000050"),
                     config.createLiteralMapping(xsdString, "occurrence"));
         }
 
         {
-            Table table = new Table(schema, "cell_references");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
+            DatabaseTable table = new DatabaseTable(schema, "cell_references");
+            TermMapping subject = config.createIriMapping("pubchem:cell", "cell");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
                     config.createIriMapping("pubchem:reference", "reference"));
         }
 
         {
-            Table table = new Table(schema, "cell_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
+            DatabaseTable table = new DatabaseTable(schema, "cell_matches");
+            TermMapping subject = config.createIriMapping("pubchem:cell", "cell");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("ontology:resource", "match_unit", "match_id"));
         }
 
         {
-            Table table = new Table(schema, "cell_mesh_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
+            DatabaseTable table = new DatabaseTable(schema, "cell_mesh_matches");
+            TermMapping subject = config.createIriMapping("pubchem:cell", "cell");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("mesh:heading", "match"));
@@ -81,32 +82,32 @@ public class Cell
         }
 
         {
-            Table table = new Table(schema, "cell_wikidata_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
+            DatabaseTable table = new DatabaseTable(schema, "cell_wikidata_matches");
+            TermMapping subject = config.createIriMapping("pubchem:cell", "cell");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("wikidata:entity", "match"));
         }
 
         {
-            Table table = new Table(schema, "cell_cellosaurus_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
+            DatabaseTable table = new DatabaseTable(schema, "cell_cellosaurus_matches");
+            TermMapping subject = config.createIriMapping("pubchem:cell", "cell");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:cellosaurus", "match"));
         }
 
         {
-            Table table = new Table(schema, "cell_chembl_card_matches");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
+            DatabaseTable table = new DatabaseTable(schema, "cell_chembl_card_matches");
+            TermMapping subject = config.createIriMapping("pubchem:cell", "cell");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("chembl:cell_line", "match"));
         }
 
         {
-            Table table = new Table(schema, "cell_anatomies");
-            NodeMapping subject = config.createIriMapping("pubchem:cell", "cell");
+            DatabaseTable table = new DatabaseTable(schema, "cell_anatomies");
+            TermMapping subject = config.createIriMapping("pubchem:cell", "cell");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:RO_0001000"),
                     config.createIriMapping("pubchem:anatomy", "anatomy"));

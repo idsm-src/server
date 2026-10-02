@@ -10,13 +10,13 @@ import java.util.TimeZone;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 
 
@@ -179,9 +179,10 @@ public class SachemEndpointStatisticsServlet extends HttpServlet
 
             try(Statement statement = connection.createStatement())
             {
-                try(ResultSet result = statement.executeQuery("select f.name, sachem.index_size('chembl'), s.checkdate "
-                        + "from info.sachem_stats s, info.sachem_sources f "
-                        + "where s.index = 'chembl' and f.index = 'chembl'"))
+                try(ResultSet result = statement.executeQuery("""
+                        select f.name, sachem.index_size('chembl'), s.checkdate \
+                        from info.sachem_stats s, info.sachem_sources f \
+                        where s.index = 'chembl' and f.index = 'chembl'"""))
                 {
                     result.next();
 
@@ -208,10 +209,10 @@ public class SachemEndpointStatisticsServlet extends HttpServlet
 
             try(Statement statement = connection.createStatement())
             {
-                try(ResultSet result = statement
-                        .executeQuery("select f.timestamp, sachem.index_size('chebi'), s.checkdate "
-                                + "from info.sachem_stats s, info.sachem_sources f "
-                                + "where s.index = 'chebi' and f.index = 'chebi'"))
+                try(ResultSet result = statement.executeQuery("""
+                        select f.timestamp, sachem.index_size('chebi'), s.checkdate \
+                        from info.sachem_stats s, info.sachem_sources f \
+                        where s.index = 'chebi' and f.index = 'chebi'"""))
                 {
                     result.next();
 

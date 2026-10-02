@@ -68,7 +68,7 @@ public class ChEMBLCompoundUpdater
         String path = workdir + "/" + new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
         File directory = new File(path);
 
-        LinkedList<FTPFile> sdfFiles = new LinkedList<FTPFile>();
+        LinkedList<FTPFile> sdfFiles = new LinkedList<>();
         boolean hasNewItem = false;
 
 

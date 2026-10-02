@@ -55,7 +55,7 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
         private int asyncPropertiesCounter = 0;
         private String propertiesIri = null;
         private QueryServiceStub.Query runningQuery = null;
-        List<DataGridNode[]> emptyData = new LinkedList<DataGridNode[]>();
+        List<DataGridNode[]> emptyData = new LinkedList<>();
 
 
         void setPropertiesIri(String iri)
@@ -136,14 +136,22 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
     private static IconsClientBundleFactory iconsClientBundleFactory = GWT.create(IconsClientBundleFactory.class);
     private static Resources pagerIcons = pagerResourcesFactory.create();
 
-    @UiField(provided = true) Icons res = iconsClientBundleFactory.create();
-    @UiField ImageButton prevButton;
-    @UiField ImageButton nextButton;
-    @UiField ImageButton reloadButton;
-    @UiField ImageButton stopButton;
-    @UiField TextBox iriTextBox;
-    @UiField(provided = true) DataGrid<DataGridNode[]> propertiesDataGrid;
-    @UiField(provided = true) SimplePager pager;
+    @UiField(provided = true)
+    Icons res = iconsClientBundleFactory.create();
+    @UiField
+    ImageButton prevButton;
+    @UiField
+    ImageButton nextButton;
+    @UiField
+    ImageButton reloadButton;
+    @UiField
+    ImageButton stopButton;
+    @UiField
+    TextBox iriTextBox;
+    @UiField(provided = true)
+    DataGrid<DataGridNode[]> propertiesDataGrid;
+    @UiField(provided = true)
+    SimplePager pager;
 
     private final AsyncPropertiesProvider propertiesAsyncProvider = new AsyncPropertiesProvider();
     private final HandlerManager handlerManager = new HandlerManager(this);
@@ -154,7 +162,7 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
 
     public PropertiesPart(VisitingHistory visitingHistory)
     {
-        propertiesDataGrid = new DataGrid<DataGridNode[]>(1, DataGridBundle.INSTANCE)
+        propertiesDataGrid = new DataGrid<>(1, DataGridBundle.INSTANCE)
         {
             // https://code.google.com/p/google-web-toolkit/issues/detail?id=6865
             @Override
@@ -296,7 +304,7 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
         showProperties(iri);
 
         if(emitEvent)
-            handlerManager.fireEvent(new SelectionEvent<String>(iri)
+            handlerManager.fireEvent(new SelectionEvent<>(iri)
             {
             });
     }
@@ -387,7 +395,7 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
             }
         };
 
-        Column<DataGridNode[], DataGridNode> column = new Column<DataGridNode[], DataGridNode>(cell)
+        Column<DataGridNode[], DataGridNode> column = new Column<>(cell)
         {
             @Override
             public DataGridNode getValue(DataGridNode[] object)

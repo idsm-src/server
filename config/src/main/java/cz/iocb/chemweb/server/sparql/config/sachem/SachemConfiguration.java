@@ -1,13 +1,12 @@
 package cz.iocb.chemweb.server.sparql.config.sachem;
 
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import java.sql.SQLException;
-import java.util.List;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.Common;
 import cz.iocb.chemweb.server.sparql.config.common.SparqlDatabaseOptimisedConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
-import cz.iocb.sparql.engine.database.Table;
-import cz.iocb.sparql.engine.database.TableColumn;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 
@@ -39,20 +38,21 @@ public class SachemConfiguration extends SparqlDatabaseOptimisedConfiguration
     {
         Sachem.addResourceClasses(this);
 
-        addIriClass(new IntegerUserIriClass(index + ":compound", "integer", iriPrefix, idLength));
-        addIriClass(new IntegerUserIriClass(index + ":molfile", "integer", iriPrefix, idLength, "_Molfile"));
+        addIriClass(new IntegerUserIriClass(index + ":compound", INT4, iriPrefix, idLength));
+        addIriClass(new IntegerUserIriClass(index + ":molfile", INT4, iriPrefix, idLength, "_Molfile"));
     }
 
 
     private void addQuadMappings(String index, LiteralClass molfileLiteralClass)
     {
-        MolFiles.addQuadMappings(this, index + ":compound", index + ":molfile", new Table("molecules", index),
-                List.of(new TableColumn("id")), molfileLiteralClass);
+        MolFiles.addQuadMappings(this, index + ":compound", index + ":molfile", new DatabaseTable("molecules", index),
+                getColumns(getIriClass(index + ":compound"), "id"), molfileLiteralClass);
     }
 
 
     private void addProcedures(String index)
     {
-        Sachem.addProcedures(this, index, index + ":compound", List.of(new TableColumn("compound")));
+        Sachem.addProcedures(this, index, index + ":compound",
+                getColumns(getIriClass(index + ":compound"), "compound"));
     }
 }

@@ -3,9 +3,9 @@ package cz.iocb.chemweb.server.sparql.config.chembl;
 import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.schema;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 
 
 
@@ -24,8 +24,8 @@ public class TargetComponentReference
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
         {
-            Table table = new Table(schema, "component_references");
-            NodeMapping subject = config.createIriMapping("chembl:targetcomponent", "component_id");
+            DatabaseTable table = new DatabaseTable(schema, "component_references");
+            TermMapping subject = config.createIriMapping("chembl:targetcomponent", "component_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
                     config.createIriMapping("identifiers:obo.go", "reference"),
@@ -33,7 +33,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:obo.go", "reference"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
-                            "('CHEMBL_TC_' || component_id || ' GO Function Process: ' || reference)"),
+                            "('CHEMBL_TC_' || component_id || ' GO Function Process: ' || reference)::varchar"),
                     config.createAreEqualCondition("reference_type", "'GO PROCESS'::" + componentReferenceType));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
@@ -42,7 +42,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:obo.go", "reference"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
-                            "('CHEMBL_TC_' || component_id || ' GO Function Reference: ' || reference)"),
+                            "('CHEMBL_TC_' || component_id || ' GO Function Reference: ' || reference)::varchar"),
                     config.createAreEqualCondition("reference_type", "'GO FUNCTION'::" + componentReferenceType));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
@@ -51,7 +51,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:obo.go", "reference"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
-                            "('CHEMBL_TC_' || component_id || ' GO Component Reference: ' || reference)"),
+                            "('CHEMBL_TC_' || component_id || ' GO Component Reference: ' || reference)::varchar"),
                     config.createAreEqualCondition("reference_type", "'GO COMPONENT'::" + componentReferenceType));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
@@ -60,7 +60,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:pdb", "reference"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
-                            "('CHEMBL_TC_' || component_id || ' PDBe Reference: ' || reference)"),
+                            "('CHEMBL_TC_' || component_id || ' PDBe Reference: ' || reference)::varchar"),
                     config.createAreEqualCondition("reference_type", "'PDB'::" + componentReferenceType));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
@@ -69,7 +69,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:interpro", "reference"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
-                            "('CHEMBL_TC_' || component_id || ' InterPro Reference: ' || reference)"),
+                            "('CHEMBL_TC_' || component_id || ' InterPro Reference: ' || reference)::varchar"),
                     config.createAreEqualCondition("reference_type", "'INTERPRO'::" + componentReferenceType));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
@@ -78,7 +78,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:reactome_old", "reference"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
-                            "('CHEMBL_TC_' || component_id || ' Reactome Reference: ' || reference)"),
+                            "('CHEMBL_TC_' || component_id || ' Reactome Reference: ' || reference)::varchar"),
                     config.createAreEqualCondition("reference_type", "'REACTOME'::" + componentReferenceType));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
@@ -87,7 +87,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:pfam", "reference"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
-                            "('CHEMBL_TC_' || component_id || ' Pfam Reference: ' || reference)"),
+                            "('CHEMBL_TC_' || component_id || ' Pfam Reference: ' || reference)::varchar"),
                     config.createAreEqualCondition("reference_type", "'PFAM'::" + componentReferenceType));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
@@ -96,7 +96,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:ec-code", "reference"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
-                            "('CHEMBL_TC_' || component_id || ' EC Reference: ' || reference)"),
+                            "('CHEMBL_TC_' || component_id || ' EC Reference: ' || reference)::varchar"),
                     config.createAreEqualCondition("reference_type", "'ENZYME CLASS'::" + componentReferenceType));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
@@ -105,7 +105,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:intact", "reference"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
-                            "('CHEMBL_TC_' || component_id || ' IntAct Reference: ' || reference)"),
+                            "('CHEMBL_TC_' || component_id || ' IntAct Reference: ' || reference)::varchar"),
                     config.createAreEqualCondition("reference_type", "'INTACT'::" + componentReferenceType));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
@@ -114,7 +114,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("purl:uniprot", "reference"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
-                            "('CHEMBL_TC_' || component_id || ' UniProt Reference: ' || reference)"),
+                            "('CHEMBL_TC_' || component_id || ' UniProt Reference: ' || reference)::varchar"),
                     config.createAreEqualCondition("reference_type", "'UNIPROT'::" + componentReferenceType));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
@@ -123,7 +123,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("reference:pharmgkb-gene", "reference"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
-                            "('CHEMBL_TC_' || component_id || ' PharmGKB Reference: ' || reference)"),
+                            "('CHEMBL_TC_' || component_id || ' PharmGKB Reference: ' || reference)::varchar"),
                     config.createAreEqualCondition("reference_type", "'PHARMGKB'::" + componentReferenceType));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
@@ -132,7 +132,7 @@ public class TargetComponentReference
             config.addQuadMapping(table, graph, config.createIriMapping("reference:timbal", "reference"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
-                            "('CHEMBL_TC_' || component_id || ' TIMBAL Reference: ' || reference)"),
+                            "('CHEMBL_TC_' || component_id || ' TIMBAL Reference: ' || reference)::varchar"),
                     config.createAreEqualCondition("reference_type", "'TIMBAL'::" + componentReferenceType));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
@@ -140,7 +140,8 @@ public class TargetComponentReference
                     config.createAreEqualCondition("reference_type", "'CGD'::" + componentReferenceType));
             config.addQuadMapping(table, graph, config.createIriMapping("reference:cgd", "reference"),
                     config.createIriMapping("rdfs:label"),
-                    config.createLiteralMapping(xsdString, "('CHEMBL_TC_' || component_id || ' CGD: ' || reference)"),
+                    config.createLiteralMapping(xsdString,
+                            "('CHEMBL_TC_' || component_id || ' CGD: ' || reference)::varchar"),
                     config.createAreEqualCondition("reference_type", "'CGD'::" + componentReferenceType));
 
             // extension
@@ -150,7 +151,7 @@ public class TargetComponentReference
         }
 
         {
-            Table table = new Table(schema, "component_reference_types");
+            DatabaseTable table = new DatabaseTable(schema, "component_reference_types");
 
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:obo.go", "reference"),
                     config.createIriMapping("rdf:type"), config.createIriMapping("cco:GoProcessRef"),

@@ -1,13 +1,14 @@
 package cz.iocb.chemweb.server.sparql.config.chembl;
 
 import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.schema;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
@@ -16,8 +17,8 @@ public class Assay
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("chembl:assay", "integer",
-                "http://rdf.ebi.ac.uk/resource/chembl/assay/CHEMBL"));
+        config.addIriClass(
+                new IntegerUserIriClass("chembl:assay", INT4, "http://rdf.ebi.ac.uk/resource/chembl/assay/CHEMBL"));
     }
 
 
@@ -26,8 +27,8 @@ public class Assay
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
         {
-            Table table = new Table(schema, "assays");
-            NodeMapping subject = config.createIriMapping("chembl:assay", "id");
+            DatabaseTable table = new DatabaseTable(schema, "assays");
+            TermMapping subject = config.createIriMapping("chembl:assay", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("cco:Assay"));
@@ -72,12 +73,13 @@ public class Assay
                     config.createLiteralMapping(xsdString, "assay_subcellular_fraction"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:assayCategory"),
                     config.createLiteralMapping(xsdString, "assay_category"));
-            config.addQuadMapping(table, new Table(schema, "assay_type"), "assay_type", "assay_type", graph, subject,
-                    config.createIriMapping("cco:assayType"), config.createLiteralMapping(xsdString, "assay_desc"));
-            config.addQuadMapping(table, new Table(schema, "relationship_type"), "relationship_type",
+            config.addQuadMapping(table, new DatabaseTable(schema, "assay_type"), "assay_type", "assay_type", graph,
+                    subject, config.createIriMapping("cco:assayType"),
+                    config.createLiteralMapping(xsdString, "assay_desc"));
+            config.addQuadMapping(table, new DatabaseTable(schema, "relationship_type"), "relationship_type",
                     "relationship_type", graph, subject, config.createIriMapping("cco:targetRelDesc"),
                     config.createLiteralMapping(xsdString, "relationship_desc"));
-            config.addQuadMapping(table, new Table(schema, "confidence_score_lookup"), "confidence_score",
+            config.addQuadMapping(table, new DatabaseTable(schema, "confidence_score_lookup"), "confidence_score",
                     "confidence_score", graph, subject, config.createIriMapping("cco:targetConfDesc"),
                     config.createLiteralMapping(xsdString, "description"));
             config.addQuadMapping(table, graph, config.createIriMapping("chembl:cell_line", "cell_line_id"),
@@ -91,8 +93,8 @@ public class Assay
             config.addQuadMapping(table, graph, config.createIriMapping("reference:pubchem-assay", "pubchem_assay_id"),
                     config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString,
-                            "(chembl_id || ' PubChem BioAssay Reference: ' || pubchem_assay_id)"),
-                    config.createIsNotNullCondition("pubchem_assay_id"));
+                            "(chembl_id || ' PubChem BioAssay Reference: ' || pubchem_assay_id)::varchar"),
+                    config.createIsNotNullCondition(table, "pubchem_assay_id"));
 
             // extension
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
@@ -102,16 +104,16 @@ public class Assay
         }
 
         {
-            Table table = new Table(schema, "pubchem_assays");
-            NodeMapping subject = config.createIriMapping("reference:pubchem-assay", "pubchem_assay_id");
+            DatabaseTable table = new DatabaseTable(schema, "pubchem_assays");
+            TermMapping subject = config.createIriMapping("reference:pubchem-assay", "pubchem_assay_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("cco:PubchemBioassayRef"));
         }
 
         {
-            Table table = new Table(schema, "activities");
-            NodeMapping subject = config.createIriMapping("chembl:assay", "assay_id");
+            DatabaseTable table = new DatabaseTable(schema, "activities");
+            TermMapping subject = config.createIriMapping("chembl:assay", "assay_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasActivity"),
                     config.createIriMapping("chembl:activity", "id"));

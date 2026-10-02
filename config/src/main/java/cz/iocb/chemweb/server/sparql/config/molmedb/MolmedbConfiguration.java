@@ -80,6 +80,7 @@ public class MolmedbConfiguration extends SparqlDatabaseConfiguration
 
     private void addProcedures()
     {
-        Sachem.addProcedures(this, "molmedb", "molmedb:substance", getColumns("compound"));
+        Sachem.addProcedures(this, "molmedb", "molmedb:substance",
+                getColumns(getIriClass("molmedb:substance"), "compound"));
     }
 }

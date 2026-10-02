@@ -239,9 +239,10 @@ public class ChEBI extends Updater
 
         load("select chebi,parent from chebi.parents", oldParents);
 
-        new QueryResultProcessor(patternQuery("?chebi rdfs:subClassOf ?parent."
-                + "filter(strstarts(str(?chebi), 'http://purl.obolibrary.org/obo/CHEBI_'))"
-                + "filter(strstarts(str(?parent), 'http://purl.obolibrary.org/obo/CHEBI_'))"))
+        new QueryResultProcessor(patternQuery("""
+                ?chebi rdfs:subClassOf ?parent.\
+                filter(strstarts(str(?chebi), 'http://purl.obolibrary.org/obo/CHEBI_'))\
+                filter(strstarts(str(?parent), 'http://purl.obolibrary.org/obo/CHEBI_'))"""))
         {
             @Override
             protected void parse() throws IOException
@@ -434,10 +435,11 @@ public class ChEBI extends Updater
 
         load("select chebi,property_unit,property_id,target,type_id,reference,source,id from chebi.axioms", oldAxioms);
 
-        new QueryResultProcessor(patternQuery("?axiom rdf:type owl:Axiom; owl:annotatedProperty ?property;"
-                + "owl:annotatedSource ?chebi; owl:annotatedTarget ?target."
-                + "optional { ?axiom oboInOwl:hasSynonymType ?type } optional { ?axiom oboInOwl:hasDbXref ?reference }"
-                + "optional { ?axiom oboInOwl:source ?source }"))
+        new QueryResultProcessor(patternQuery("""
+                ?axiom rdf:type owl:Axiom; owl:annotatedProperty ?property;\
+                owl:annotatedSource ?chebi; owl:annotatedTarget ?target.\
+                optional { ?axiom oboInOwl:hasSynonymType ?type } optional { ?axiom oboInOwl:hasDbXref ?reference }\
+                optional { ?axiom oboInOwl:source ?source }"""))
         {
             int nextAxiomID = oldAxioms.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
@@ -463,9 +465,10 @@ public class ChEBI extends Updater
             }
         }.load(model);
 
-        store("delete from chebi.axioms where chebi=? and property_unit=? and property_id=? and target=? and "
-                + "coalesce(type_id,-1)=coalesce(?,-1) and coalesce(reference,'')=coalesce(?,'') and "
-                + "coalesce(source,'')=coalesce(?,'') and id=?", oldAxioms);
+        store("""
+                delete from chebi.axioms where chebi=? and property_unit=? and property_id=? and target=? and \
+                coalesce(type_id,-1)=coalesce(?,-1) and coalesce(reference,'')=coalesce(?,'') and \
+                coalesce(source,'')=coalesce(?,'') and id=?""", oldAxioms);
         store("insert into chebi.axioms(chebi,property_unit,property_id,target,type_id,reference,source,id) "
                 + "values(?,?,?,?,?,?,?,?)", newAxioms);
     }

@@ -20,12 +20,13 @@ public class Journal extends Updater
                         + "values(?,?,?,?,?,?)"))
         {
             // @formatter:off
-            new QueryResultProcessor(patternQuery("?journal rdf:type cco:Journal. "
-                    + "optional { ?journal rdfs:label ?label }"
-                    + "optional { ?journal dcterms:title ?title }"
-                    + "optional { ?journal bibo:shortTitle ?shortTitle }"
-                    + "optional { ?journal bibo:issn ?issn }"
-                    + "optional { ?journal bibo:eissn ?eissn }"))
+            new QueryResultProcessor(patternQuery("""
+                ?journal rdf:type cco:Journal. \
+                optional { ?journal rdfs:label ?label }\
+                optional { ?journal dcterms:title ?title }\
+                optional { ?journal bibo:shortTitle ?shortTitle }\
+                optional { ?journal bibo:issn ?issn }\
+                optional { ?journal bibo:eissn ?eissn }"""))
             // @formatter:on
             {
                 @Override

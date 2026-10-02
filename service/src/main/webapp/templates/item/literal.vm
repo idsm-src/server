@@ -3,13 +3,13 @@
     <tr><td>
       <div style="white-space: pre-wrap;">#escapeHTML($entity)</div>
     </td></tr>
-    #if($entity.getLanguage())
+    #if($entity.getTag())
     <tr><td>
-      <small style="color:gray">Lang: $entity.getLanguage()</small>
+      <small style="color:gray">Lang: $entity.getTag()</small>
     </td></tr>
-    #elseif($entity.getDatatype())
+    #elseif($entity.getType())
     <tr><td>
-      <small style="color:gray">Datatype: #escapeIRI($entity.getDatatype())</small>
+      <small style="color:gray">Datatype: #escapeIRI($entity.getType())</small>
     </td></tr>
     #end
   </tbody>

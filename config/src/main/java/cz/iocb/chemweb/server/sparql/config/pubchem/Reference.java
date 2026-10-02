@@ -2,11 +2,12 @@ package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.xsdDateM4;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
+import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
@@ -15,8 +16,8 @@ public class Reference
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("pubchem:reference", "integer",
-                "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"));
+        config.addIriClass(
+                new IntegerUserIriClass("pubchem:reference", INT4, "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"));
     }
 
 
@@ -25,8 +26,8 @@ public class Reference
         ConstantIriMapping graph = config.createIriMapping("pubchem:reference");
 
         {
-            Table table = new Table(schema, "reference_bases");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "id");
+            DatabaseTable table = new DatabaseTable(schema, "reference_bases");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Reference"));
@@ -53,120 +54,120 @@ public class Reference
         }
 
         {
-            Table table = new Table(schema, "reference_discusses");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_discusses");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:discusses"),
                     config.createIriMapping("mesh:heading", "statement"));
         }
 
         {
-            Table table = new Table(schema, "reference_subjects");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_subjects");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("fabio:hasSubjectTerm"),
                     config.createIriMapping("mesh:heading", "subject"));
         }
 
         {
-            Table table = new Table(schema, "reference_anzsrc_subjects");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_anzsrc_subjects");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("fabio:hasSubjectTerm"),
                     config.createIriMapping("anzsrc:term", "subject"));
         }
 
         {
-            Table table = new Table(schema, "reference_primary_subjects");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_primary_subjects");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("fabio:hasPrimarySubjectTerm"),
                     config.createIriMapping("mesh:heading", "subject"));
         }
 
         {
-            Table table = new Table(schema, "reference_content_types");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_content_types");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("prism:contentType"),
                     config.createLiteralMapping(xsdString, "type"));
         }
 
         {
-            Table table = new Table(schema, "reference_issn_numbers");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_issn_numbers");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("prism:issn"),
                     config.createLiteralMapping(xsdString, "issn"));
         }
 
         {
-            Table table = new Table(schema, "reference_isbn_numbers");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_isbn_numbers");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("prism:isbn"),
                     config.createLiteralMapping(xsdString, "isbn"));
         }
 
         {
-            Table table = new Table(schema, "reference_authors");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_authors");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:creator"),
                     config.createIriMapping("pubchem:author", "author"));
         }
 
         {
-            Table table = new Table(schema, "reference_grants");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_grants");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("frapo:isSupportedBy"),
                     config.createIriMapping("pubchem:grant", "grantid"));
         }
 
         {
-            Table table = new Table(schema, "reference_organizations");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_organizations");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("frapo:hasFundingAgency"),
                     config.createIriMapping("pubchem:organization", "organization"));
         }
 
         {
-            Table table = new Table(schema, "reference_journals");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_journals");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:isPartOf"),
                     config.createIriMapping("pubchem:journal", "journal"));
         }
 
         {
-            Table table = new Table(schema, "reference_books");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_books");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:isPartOf"),
                     config.createIriMapping("pubchem:book", "book"));
         }
 
         {
-            Table table = new Table(schema, "reference_isbn_books");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_isbn_books");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:isPartOf"),
                     config.createIriMapping("identifier:isbn", "isbn"));
         }
 
         {
-            Table table = new Table(schema, "reference_issn_journals");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_issn_journals");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:isPartOf"),
                     config.createIriMapping("identifier:issn", "issn"));
         }
 
         {
-            Table table = new Table(schema, "reference_mined_compounds");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_mined_compounds");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject,
                     config.createIriMapping("vocab:discussesAsDerivedByTextMining"),
@@ -174,8 +175,8 @@ public class Reference
         }
 
         {
-            Table table = new Table(schema, "reference_mined_diseases");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_mined_diseases");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject,
                     config.createIriMapping("vocab:discussesAsDerivedByTextMining"),
@@ -183,8 +184,8 @@ public class Reference
         }
 
         {
-            Table table = new Table(schema, "reference_mined_genes");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_mined_genes");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject,
                     config.createIriMapping("vocab:discussesAsDerivedByTextMining"),
@@ -192,8 +193,8 @@ public class Reference
         }
 
         {
-            Table table = new Table(schema, "reference_mined_enzymes");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_mined_enzymes");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject,
                     config.createIriMapping("vocab:discussesAsDerivedByTextMining"),
@@ -201,16 +202,16 @@ public class Reference
         }
 
         {
-            Table table = new Table(schema, "reference_identifiers");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_identifiers");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),
                     config.createLiteralMapping(xsdString, "identifier"));
         }
 
         {
-            Table table = new Table(schema, "reference_sources");
-            NodeMapping subject = config.createIriMapping("pubchem:reference", "reference");
+            DatabaseTable table = new DatabaseTable(schema, "reference_sources");
+            TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:source"),
                     config.createIriMapping("<https://www.drugbank.ca/>"),

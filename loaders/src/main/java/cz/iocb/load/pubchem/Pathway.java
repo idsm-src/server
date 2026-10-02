@@ -27,7 +27,7 @@ class Pathway extends Updater
     }
 
 
-    private static ArrayList<Description> descriptions = new ArrayList<Description>();
+    private static ArrayList<Description> descriptions = new ArrayList<>();
 
 
     static
@@ -220,9 +220,10 @@ class Pathway extends Updater
 
         store("update pubchem.pathway_bases set reference_type=null,reference=null "
                 + "where id=? and reference_type=?::pubchem.pathway_reference_type and reference=?", oldReferences);
-        store("insert into pubchem.pathway_bases(id,reference_type,reference) "
-                + "values(?,?::pubchem.pathway_reference_type,?) "
-                + "on conflict(id) do update set reference_type=EXCLUDED.reference_type, reference=EXCLUDED.reference",
+        store("""
+                insert into pubchem.pathway_bases(id,reference_type,reference) \
+                values(?,?::pubchem.pathway_reference_type,?) \
+                on conflict(id) do update set reference_type=EXCLUDED.reference_type, reference=EXCLUDED.reference""",
                 newReferences);
     }
 

@@ -11,8 +11,7 @@ import org.apache.velocity.exception.TemplateInitException;
 import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.runtime.directive.Directive;
 import org.apache.velocity.runtime.parser.node.Node;
-import cz.iocb.sparql.engine.request.LanguageTaggedLiteral;
-import cz.iocb.sparql.engine.request.TypedLiteral;
+import cz.iocb.sparql.engine.rdf.Literal;
 
 
 
@@ -53,8 +52,7 @@ public class EscapeHtmlDirective extends Directive
 
         switch(value)
         {
-            case TypedLiteral literal -> writer.write(escape(literal.getValue()));
-            case LanguageTaggedLiteral literal -> writer.write(escape(literal.getValue()));
+            case Literal literal -> writer.write(escape(literal.getValue()));
             case Object obj -> writer.write(escape(obj.toString()));
         }
 

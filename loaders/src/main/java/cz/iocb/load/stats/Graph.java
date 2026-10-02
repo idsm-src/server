@@ -1,8 +1,11 @@
 package cz.iocb.load.stats;
 
+import static cz.iocb.sparql.engine.database.SqlType.INT2;
+import static cz.iocb.sparql.engine.database.SqlType.INT8;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.rdfLangString;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdLong;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
-import static cz.iocb.sparql.engine.mapping.classes.BuiltinDataTypes.xsdLongType;
+import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.constant;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,41 +22,44 @@ import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.Condition;
 import cz.iocb.sparql.engine.database.Conditions;
-import cz.iocb.sparql.engine.database.ConstantColumn;
 import cz.iocb.sparql.engine.database.ExpressionColumn;
-import cz.iocb.sparql.engine.database.Table;
+import cz.iocb.sparql.engine.database.SourceTable;
+import cz.iocb.sparql.engine.database.ValueColumn;
+import cz.iocb.sparql.engine.imcode.SqlIntercode;
 import cz.iocb.sparql.engine.mapping.ConstantBlankNodeMapping;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.ConstantLiteralMapping;
 import cz.iocb.sparql.engine.mapping.JoinTableQuadMapping;
-import cz.iocb.sparql.engine.mapping.NodeMapping;
 import cz.iocb.sparql.engine.mapping.ParametrisedBlankNodeMapping;
 import cz.iocb.sparql.engine.mapping.ParametrisedIriMapping;
 import cz.iocb.sparql.engine.mapping.ParametrisedLiteralMapping;
 import cz.iocb.sparql.engine.mapping.QuadMapping;
 import cz.iocb.sparql.engine.mapping.SingleTableQuadMapping;
-import cz.iocb.sparql.engine.mapping.classes.LangStringConstantTagClass;
+import cz.iocb.sparql.engine.mapping.TermMapping;
+import cz.iocb.sparql.engine.mapping.classes.LangStringWithTagClass;
 import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
-import cz.iocb.sparql.engine.mapping.classes.ResultTag;
-import cz.iocb.sparql.engine.mapping.classes.SimpleLiteralClass;
-import cz.iocb.sparql.engine.parser.model.IRI;
-import cz.iocb.sparql.engine.parser.model.expression.Literal;
+import cz.iocb.sparql.engine.mapping.classes.SubsetLiteralClass;
+import cz.iocb.sparql.engine.rdf.Iri;
+import cz.iocb.sparql.engine.rdf.Literal;
+import cz.iocb.sparql.engine.rdf.TypedLiteral;
+import cz.iocb.sparql.engine.rdf.Variable;
 import cz.iocb.sparql.engine.request.Request;
-import cz.iocb.sparql.engine.translator.UsedVariable;
-import cz.iocb.sparql.engine.translator.imcode.SqlIntercode;;
+import cz.iocb.sparql.engine.translator.VariableBinding;
 
 
 
 public class Graph
 {
-    public static class HashString extends SimpleLiteralClass
+    public static class HashString extends SubsetLiteralClass
     {
         public HashString(String name)
         {
-            super(name + "-hash", ResultTag.LONG, "bigint", new IRI("http://localhost/" + name));
+            super(name + "-hash", xsdLong);
         }
     }
+
+    private static final Variable varO = new Variable("O");
 
     private final HashString hashString = new HashString("string");
     private final HashString hashEnString = new HashString("tagstring");
@@ -71,14 +77,14 @@ public class Graph
     {
         this.iriDataset = new Dataset();
         this.litDataset = new Dataset();
-        this.iriPredicates = new HashMap<Resource, Dataset>();
-        this.litPredicates = new HashMap<Resource, Dataset>();
-        this.datatypePredicates = new HashMap<Resource, Map<Resource, Dataset>>();
-        this.classes = new HashMap<Set<Resource>, Dataset>();
+        this.iriPredicates = new HashMap<>();
+        this.litPredicates = new HashMap<>();
+        this.datatypePredicates = new HashMap<>();
+        this.classes = new HashMap<>();
     }
 
 
-    void add(Request request, QuadMapping map, Map<IRI, Resource> datatypes, List<Short> excluded) throws SQLException
+    void add(Request request, QuadMapping map, Map<Iri, Resource> datatypes, List<Short> excluded) throws SQLException
     {
         if(map.getSubject() instanceof ConstantBlankNodeMapping
                 || map.getSubject() instanceof ParametrisedBlankNodeMapping
@@ -91,7 +97,7 @@ public class Graph
 
         if(!(predicateMapping.getResourceClass() instanceof OntologyResource))
         {
-            System.err.println("skip " + predicateMapping.getIRI().getValue());
+            System.err.println("skip " + predicateMapping.getIri().getValue());
             return;
         }
 
@@ -105,9 +111,9 @@ public class Graph
             if(datatype == null)
                 throw new RuntimeException("unexpected datatype " + rc.getTypeIri().toString());
 
-            if(rc.getGeneralClass() == xsdString && rc.getName().equals("string-others"))
+            if(rc.getResultResourceClass() == xsdString && rc.getResourceName().equals("string-others"))
                 map = hashObject(request, map, hashString);
-            else if(rc.getGeneralClass() == rdfLangString && rc == LangStringConstantTagClass.get("en"))
+            else if(rc.getResultResourceClass() == rdfLangString && rc == LangStringWithTagClass.get("en"))
                 map = hashObject(request, map, hashEnString);
 
             addMapping(datatypePredicates, predicate, datatype, map);
@@ -120,14 +126,14 @@ public class Graph
             iriDataset.add(map);
         }
 
-        if(predicateMapping.getIRI().getValue().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+        if(predicateMapping.getIri().getValue().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
         {
             QuadMapping fmap = addClassFilter(request, map, excluded);
             Set<Resource> set = getClasses(request, fmap);
 
             if(!set.isEmpty())
             {
-                Set<Resource> key = new HashSet<Resource>(set);
+                Set<Resource> key = new HashSet<>(set);
                 Dataset dataset = new Dataset(fmap);
 
                 Iterator<Entry<Set<Resource>, Dataset>> it = classes.entrySet().iterator();
@@ -136,7 +142,7 @@ public class Graph
                 {
                     Entry<Set<Resource>, Dataset> entry = it.next();
 
-                    Set<Resource> intersection = new HashSet<Resource>(entry.getKey());
+                    Set<Resource> intersection = new HashSet<>(entry.getKey());
                     intersection.retainAll(set);
 
                     if(!intersection.isEmpty())
@@ -158,15 +164,15 @@ public class Graph
         if(map instanceof SingleTableQuadMapping m)
         {
             return new SingleTableQuadMapping(m.getTable(), m.getGraph(), m.getSubject(), m.getPredicate(),
-                    hashObject(request, m.getTable(), m.getObject(), hashClass), m.getConditions());
+                    hashObject(request, m.getTable(), m.getObject(), hashClass), m.getConditions(), m.isDistinct());
         }
         else if(map instanceof JoinTableQuadMapping m)
         {
-            return new JoinTableQuadMapping(m.getTables(), m.getJoinColumnsPairs(), m.getGraph(),
+            return new JoinTableQuadMapping(m.getTables(), m.getJoinColumnsPairs(), m.getGraphTableIdx(), m.getGraph(),
                     m.getSubjectTableIdx(), m.getSubject(), m.getPredicateTableIdx(), m.getPredicate(),
                     m.getObjectTableIdx(),
                     hashObject(request, m.getTables().get(m.getObjectTableIdx()), m.getObject(), hashClass),
-                    m.getConditions());
+                    m.getConditions(), m.getDistinct());
         }
         else
         {
@@ -175,7 +181,7 @@ public class Graph
     }
 
 
-    private NodeMapping hashObject(Request request, Table table, NodeMapping map, HashString hashClass)
+    private TermMapping hashObject(Request request, SourceTable table, TermMapping map, HashString hashClass)
             throws SQLException
     {
         Column col = map.getColumns(request).get(0);
@@ -187,7 +193,7 @@ public class Graph
                 r.next();
                 long value = r.getLong(1);
 
-                Literal literal = new Literal(Long.toString(value), xsdLongType, hashClass.getTypeIri());
+                Literal literal = new TypedLiteral(Long.toString(value), hashClass.getTypeIri());
 
                 return new ConstantLiteralMapping(hashClass, literal);
             }
@@ -197,7 +203,7 @@ public class Graph
             boolean canBeNull = request.getConfiguration().getDatabaseSchema().isNullableColumn(table, col);
 
             List<Column> cols = List
-                    .of((Column) new ExpressionColumn("(hashtextextended(" + col + ",0)::int8)", canBeNull));
+                    .of((Column) new ExpressionColumn("(hashtextextended(" + col + ",0)::int8)", INT8, canBeNull));
             return new ParametrisedLiteralMapping(hashClass, cols);
         }
         else
@@ -211,10 +217,10 @@ public class Graph
     {
         ConstantIriMapping predicateMapping = (ConstantIriMapping) map.getPredicate();
 
-        if(!predicateMapping.getIRI().getValue().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+        if(!predicateMapping.getIri().getValue().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
             return map;
 
-        NodeMapping objectMapping = map.getObject();
+        TermMapping objectMapping = map.getObject();
 
         ResourceClass resClass = objectMapping.getResourceClass(request);
 
@@ -227,21 +233,21 @@ public class Graph
 
         for(short s : excluded)
         {
-            Column x = new ConstantColumn(s, "smallint");
+            Column x = constant(s, INT2);
             Column y = cols.get(0);
 
-            if(!(y instanceof ConstantColumn) || x.equals(y))
-                condition.addAreNotEqual(cols.get(0), new ConstantColumn(s, "smallint"));
+            if(!(y instanceof ValueColumn) || x.equals(y))
+                condition.addAreNotEqual(cols.get(0), constant(s, INT2));
         }
 
         if(map instanceof SingleTableQuadMapping m)
         {
             return new SingleTableQuadMapping(m.getTable(), m.getGraph(), m.getSubject(), m.getPredicate(),
-                    m.getObject(), Conditions.and(m.getConditions(), new Conditions(condition)));
+                    m.getObject(), Conditions.and(m.getConditions(), new Conditions(condition)), m.isDistinct());
         }
         else if(map instanceof JoinTableQuadMapping m)
         {
-            List<Conditions> conditions = new ArrayList<Conditions>();
+            List<Conditions> conditions = new ArrayList<>();
 
             for(int i = 0; i < m.getConditions().size(); i++)
             {
@@ -251,9 +257,9 @@ public class Graph
                     conditions.add(Conditions.and(m.getConditions().get(i), new Conditions(condition)));
             }
 
-            return new JoinTableQuadMapping(m.getTables(), m.getJoinColumnsPairs(), m.getGraph(),
+            return new JoinTableQuadMapping(m.getTables(), m.getJoinColumnsPairs(), m.getGraphTableIdx(), m.getGraph(),
                     m.getSubjectTableIdx(), m.getSubject(), m.getPredicateTableIdx(), m.getPredicate(),
-                    m.getObjectTableIdx(), m.getObject(), conditions);
+                    m.getObjectTableIdx(), m.getObject(), conditions, m.getDistinct());
         }
         else
         {
@@ -264,17 +270,25 @@ public class Graph
 
     private static Set<Resource> getClasses(Request request, QuadMapping map) throws SQLException
     {
-        SqlIntercode ic = (new Dataset(map)).translate(request, null, "O");
+        SqlIntercode ic = (new Dataset(map)).translate(request, null, varO);
 
-        UsedVariable ovar = ic.getVariables().get("O");
+        VariableBinding ovar = ic.getVariableBindings().get(varO);
 
         if(ovar == null)
             return Set.of();
 
-        List<Column> o = ovar.getMapping();
+        ResourceClass resourceClass = getResourceClass(ovar);
+        List<Column> o = ovar.getMapping(resourceClass);
+
+        if(!(resourceClass instanceof OntologyResource))
+        {
+            System.err.println("skip " + resourceClass.getResourceName() + " class");
+            return Set.of();
+        }
+
         String sql = "SELECT DISTINCT " + o.get(0) + ", " + o.get(1) + " FROM (" + ic.translate(request) + ") as t";
 
-        Set<Resource> result = new HashSet<Resource>();
+        Set<Resource> result = new HashSet<>();
 
         try(Connection connection = request.getConfiguration().getConnectionPool().getConnection())
         {
@@ -289,6 +303,17 @@ public class Graph
         }
 
         return result;
+    }
+
+
+    static ResourceClass getResourceClass(VariableBinding binding)
+    {
+        Set<ResourceClass> classes = binding.getClasses();
+
+        if(classes.size() != 1)
+            throw new IllegalArgumentException();
+
+        return classes.iterator().next();
     }
 
 
@@ -313,7 +338,7 @@ public class Graph
 
         if(m == null)
         {
-            m = new HashMap<Resource, Dataset>();
+            m = new HashMap<>();
             map.put(major, m);
         }
 

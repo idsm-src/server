@@ -1,5 +1,7 @@
 package cz.iocb.chemweb.server.sparql.config.common;
 
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.stringLiteral;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdBoolean;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import java.util.List;
@@ -32,16 +34,16 @@ public class Common
     {
         // @formatter:off
 
-        config.addIriClass(new IntegerUserIriClass("ncbi:book", "integer", "https://www.ncbi.nlm.nih.gov/books/NBK"));
-        config.addIriClass(new IntegerUserIriClass("ncbi:taxonomy", "integer", "https://www.ncbi.nlm.nih.gov/taxonomy/"));
-        config.addIriClass(new IntegerUserIriClass("ncbi:pubchem-compound", "integer", "http://pubchem.ncbi.nlm.nih.gov/compound/"));
-        config.addIriClass(new IntegerUserIriClass("ncbi:pubchem-substance", "integer", "http://pubchem.ncbi.nlm.nih.gov/substance/"));
-        config.addIriClass(new IntegerUserIriClass("ncbi:conserveddomain", "integer", "https://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid="));
+        config.addIriClass(new IntegerUserIriClass("ncbi:book", INT4, "https://www.ncbi.nlm.nih.gov/books/NBK"));
+        config.addIriClass(new IntegerUserIriClass("ncbi:taxonomy", INT4, "https://www.ncbi.nlm.nih.gov/taxonomy/"));
+        config.addIriClass(new IntegerUserIriClass("ncbi:pubchem-compound", INT4, "http://pubchem.ncbi.nlm.nih.gov/compound/"));
+        config.addIriClass(new IntegerUserIriClass("ncbi:pubchem-substance", INT4, "http://pubchem.ncbi.nlm.nih.gov/substance/"));
+        config.addIriClass(new IntegerUserIriClass("ncbi:conserveddomain", INT4, "https://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid="));
         config.addIriClass(new StringUserIriClass("ncbi:journal", "https://www.ncbi.nlm.nih.gov/nlmcatalog/"));
         config.addIriClass(new StringUserIriClass("purl:uniprot", "http://purl.uniprot.org/uniprot/"));
         config.addIriClass(new StringUserIriClass("purl:enzyme", "http://purl.uniprot.org/enzyme/"));
 
-        config.addIriClass(new IntegerUserIriClass("identifiers:chembl", "integer", "http://identifiers.org/chembl.compound:CHEMBL"));
+        config.addIriClass(new IntegerUserIriClass("identifiers:chembl", INT4, "http://identifiers.org/chembl.compound:CHEMBL"));
 
         config.addIriClass(new StringUserIriClass("rdf:wwpdb", "http://rdf.wwpdb.org/pdb/", 4));
         config.addIriClass(new StringUserIriClass("rdf:ensembl", "http://rdf.ebi.ac.uk/resource/ensembl/"));
@@ -75,12 +77,12 @@ public class Common
         config.addIriClass(new StringUserIriClass("identifiers:biocyc", "http://identifiers.org/biocyc:", ".*CYC:.*"));
         config.addIriClass(new StringUserIriClass("identifiers:pid.pathway", "http://identifiers.org/pid.pathway:"));
         config.addIriClass(new StringUserIriClass("identifiers:ncbiprotein", "http://identifiers.org/ncbiprotein:"));
-        config.addIriClass(new IntegerUserIriClass("identifiers:wikidata", "integer", "http://identifiers.org/wikidata:Q"));
-        config.addIriClass(new IntegerUserIriClass("identifiers:taxonomy", "integer", "http://identifiers.org/taxonomy:"));
-        config.addIriClass(new IntegerUserIriClass("identifiers:pubmed", "integer", "http://identifiers.org/pubmed/"));
+        config.addIriClass(new IntegerUserIriClass("identifiers:wikidata", INT4, "http://identifiers.org/wikidata:Q"));
+        config.addIriClass(new IntegerUserIriClass("identifiers:taxonomy", INT4, "http://identifiers.org/taxonomy:"));
+        config.addIriClass(new IntegerUserIriClass("identifiers:pubmed", INT4, "http://identifiers.org/pubmed/"));
 
-        config.addIriClass(new IntegerUserIriClass("reference:ncbi-taxonomy", "integer", "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id="));
-        config.addIriClass(new IntegerUserIriClass("reference:pubchem-assay", "integer", "http://pubchem.ncbi.nlm.nih.gov/assay/assay.cgi?aid="));
+        config.addIriClass(new IntegerUserIriClass("reference:ncbi-taxonomy", INT4, "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id="));
+        config.addIriClass(new IntegerUserIriClass("reference:pubchem-assay", INT4, "http://pubchem.ncbi.nlm.nih.gov/assay/assay.cgi?aid="));
 
         config.addIriClass(new StringUserIriClass("reference:pharmgkb-gene", "http://www.pharmgkb.org/gene/", "PA[1-9][0-9]*"));
         config.addIriClass(new StringUserIriClass("reference:timbal", "http://mordred.bioc.cam.ac.uk/timbal/", "[A-Za-z0-9%()-]+"));
@@ -114,7 +116,7 @@ public class Common
         config.addIriClass(new StringUserIriClass("reference:plantcyc-pathway", "https://pmn.plantcyc.org/pathway?", "orgid=[A-Z0-9_]+&id=[-A-Z0-9]+"));
         config.addIriClass(new StringUserIriClass("reference:plantreactome-pathway", "https://plantreactome.gramene.org/content/detail/", "R-OSA-[0-9]{7}"));
         config.addIriClass(new StringUserIriClass("reference:fairdomhub-model", "https://fairdomhub.org/models/", "[0-9]+"));
-        config.addIriClass(new StringUserIriClass("reference:lipidmaps-pathway", "https://www.lipidmaps.org/data/IntegratedPathwaysData/SetupIntegratedPathways.pl?imgsize=730&Mode=BMDMATPS11&DataType=", ".*"));
+        config.addIriClass(new StringUserIriClass("reference:lipidmaps-pathway", "https://www.lipidmaps.org/data/IntegratedPathwaysData/SetupIntegratedPathways.pl?imgsize=730&Mode=BMDMATPS11&Datatype=", ".*"));
 
         config.addIriClass(new StringUserIriClass("expasy:enzyme", "https://enzyme.expasy.org/EC/"));
         config.addIriClass(new StringUserIriClass("medlineplus:gene", "https://medlineplus.gov/genetics/gene/"));
@@ -124,7 +126,7 @@ public class Common
         config.addIriClass(new StringUserIriClass("glycosmos:glycoproteins", "https://glycosmos.org/glycoproteins/"));
         config.addIriClass(new StringUserIriClass("alphafold:entry", "https://alphafold.ebi.ac.uk/entry/"));
 
-        config.addIriClass(new IntegerUserIriClass("pfam:family", "integer", "https://pfam.xfam.org/family/PF"));
+        config.addIriClass(new IntegerUserIriClass("pfam:family", INT4, "https://pfam.xfam.org/family/PF"));
 
         config.addIriClass(new StringUserIriClass("orcid:author", "https://orcid.org/"));
         config.addIriClass(new StringUserIriClass("crossref:funder", "https://data.crossref.org/fundingdata/funder/"));
@@ -135,8 +137,8 @@ public class Common
         config.addIriClass(new StringUserIriClass("identifier:isbn", "https://isbnsearch.org/isbn"));
         config.addIriClass(new StringUserIriClass("identifier:issn", "https://portal.issn.org/resource/ISSN"));
 
-        config.addIriClass(new IntegerUserIriClass("wikidata:wiki", "integer", "https://www.wikidata.org/wiki/Q"));
-        config.addIriClass(new IntegerUserIriClass("wikidata:entity", "integer", "http://www.wikidata.org/entity/Q"));
+        config.addIriClass(new IntegerUserIriClass("wikidata:wiki", INT4, "https://www.wikidata.org/wiki/Q"));
+        config.addIriClass(new IntegerUserIriClass("wikidata:entity", INT4, "http://www.wikidata.org/entity/Q"));
 
         config.addIriClass(new StringUserIriClass("pharos:target", "https://pharos.nih.gov/targets/"));
         config.addIriClass(new StringUserIriClass("veupathdb:gene", "https://www.veupathdb.org/gene/"));
@@ -145,7 +147,7 @@ public class Common
         config.addIriClass(new StringUserIriClass("brenda:enzyme", "https://www.brenda-enzymes.org/enzyme.php?ecno="));
         config.addIriClass(new StringUserIriClass("intact:interactor", "https://www.ebi.ac.uk/intact/search?query="));
         config.addIriClass(new StringUserIriClass("interpro:protein", "https://www.ebi.ac.uk/interpro/protein/reviewed/"));
-        config.addIriClass(new IntegerUserIriClass("interpro:entry", "integer", "https://www.ebi.ac.uk/interpro/entry/InterPro/IPR", 6));
+        config.addIriClass(new IntegerUserIriClass("interpro:entry", INT4, "https://www.ebi.ac.uk/interpro/entry/InterPro/IPR", 6));
 
         config.addIriClass(new StringUserIriClass("stringdb:network", "https://string-db.org/network/"));
         config.addIriClass(new StringUserIriClass("enzymedatabase:ec", "https://www.enzyme-database.org/query.php?ec="));
@@ -159,7 +161,7 @@ public class Common
         String fulltext = config.getPrefixes().get("fulltext");
 
         FunctionDefinition match = new FunctionDefinition(fulltext + "match", new Function("common", "fulltext_match"),
-                xsdBoolean, List.of(FunctionDefinition.stringLiteral, xsdString), false, true);
+                xsdBoolean, List.of(stringLiteral, xsdString), false, true);
 
         config.addFunction(match);
     }

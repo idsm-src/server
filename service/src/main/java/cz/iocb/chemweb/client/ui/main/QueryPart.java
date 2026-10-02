@@ -44,7 +44,7 @@ public class QueryPart extends ResizeComposite implements HasHandlers
 
     public static class QuerySubmitEvent extends GwtEvent<QuerySubmitEventHandler>
     {
-        public static Type<QuerySubmitEventHandler> TYPE = new Type<QuerySubmitEventHandler>();
+        public static Type<QuerySubmitEventHandler> TYPE = new Type<>();
 
         private final String query;
 
@@ -80,7 +80,7 @@ public class QueryPart extends ResizeComposite implements HasHandlers
 
     public static class QueryCancelEvent extends GwtEvent<QueryCancelEventHandler>
     {
-        public static Type<QueryCancelEventHandler> TYPE = new Type<QueryCancelEventHandler>();
+        public static Type<QueryCancelEventHandler> TYPE = new Type<>();
 
         @Override
         public Type<QueryCancelEventHandler> getAssociatedType()
@@ -107,14 +107,22 @@ public class QueryPart extends ResizeComposite implements HasHandlers
     private static CheckServiceAsync checkService = (CheckServiceAsync) GWT.create(CheckService.class);
     private static FileDownloader fileDownloader = GWT.create(FileDownloader.class);
 
-    @UiField(provided = true) Icons res = iconsClientBundleFactory.create();
-    @UiField FileUploadImageButton openButton;
-    @UiField ImageButton examplesButton;
-    @UiField ImageButton wizardButton;
-    @UiField ImageButton saveButton;
-    @UiField ImageButton runButton;
-    @UiField ImageButton cancelButton;
-    @UiField TextArea queryTextArea;
+    @UiField(provided = true)
+    Icons res = iconsClientBundleFactory.create();
+    @UiField
+    FileUploadImageButton openButton;
+    @UiField
+    ImageButton examplesButton;
+    @UiField
+    ImageButton wizardButton;
+    @UiField
+    ImageButton saveButton;
+    @UiField
+    ImageButton runButton;
+    @UiField
+    ImageButton cancelButton;
+    @UiField
+    TextArea queryTextArea;
 
     private CodeMirror codemirror;
     private final HandlerManager handlerManager = new HandlerManager(this);
