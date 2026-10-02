@@ -98,11 +98,11 @@ public class Substance
                     builder.append("CASE WHEN sparql.regex_string(");
                     builder.append(parameter);
                     builder.append(", '^(");
-                    builder.append("https://rdf\\.wwpdb\\.org/cc/([A-Z0-9]{3})/chem_comp/\\1");
+                    builder.append("http://rdf\\.wwpdb\\.org/cc/([A-Z0-9]{3})/chem_comp/\\1");
                     builder.append(")$', '') THEN ");
                 }
 
-                builder.append(String.format("substring(%s, 40, 3)::", parameter));
+                builder.append(String.format("substring(%s, 39, 3)::varchar", parameter));
 
                 if(check)
                     builder.append(" END");
