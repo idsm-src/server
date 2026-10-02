@@ -29,6 +29,10 @@ alter table chembl_tmp.assays alter column confidence_score set not null;
 
 --------------------------------------------------------------------------------
 
+alter table chembl_tmp.confidence_score_lookup alter column confidence_score type integer;
+
+--------------------------------------------------------------------------------
+
 alter table chembl_tmp.assay_type alter column assay_desc set not null;
 
 --------------------------------------------------------------------------------
