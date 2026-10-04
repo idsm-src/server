@@ -616,12 +616,16 @@ public class Updater
     protected static Connection connection;
     protected static String prefixes = null;
     private static int count;
+    private static final boolean dryRun = false;
 
 
     public static <T> void load(String query, SqlSet<T> set) throws SQLException
     {
         long time = System.currentTimeMillis();
         System.out.print("  " + query);
+
+        if(dryRun)
+            return;
 
         try(PreparedStatement statement = connection.prepareStatement(query))
         {
@@ -644,6 +648,9 @@ public class Updater
         long time = System.currentTimeMillis();
         System.out.print("  " + query);
 
+        if(dryRun)
+            return;
+
         try(PreparedStatement statement = connection.prepareStatement(query))
         {
             statement.setFetchSize(1000000);
@@ -663,6 +670,9 @@ public class Updater
     protected static <T> void store(String command, SqlSet<T> set) throws SQLException
     {
         System.out.println("  " + command + " -> count: " + set.size());
+
+        if(dryRun)
+            return;
 
         try(PreparedStatement statement = connection.prepareStatement(command))
         {
@@ -700,6 +710,9 @@ public class Updater
     protected static <K, V> void store(String command, SqlMap<K, V> set) throws SQLException
     {
         System.out.println("  " + command + " -> count: " + set.size());
+
+        if(dryRun)
+            return;
 
         try(PreparedStatement statement = connection.prepareStatement(command))
         {
@@ -904,6 +917,9 @@ public class Updater
     {
         String[] files = new File(baseDirectory + path).list((dir, file) -> file.matches(name));
 
+        if(files.length == 0)
+            System.out.println("  warning: file list " + name + " in " + path + " is empty");
+
         try
         {
             Arrays.asList(files).parallelStream().forEach(file -> {
@@ -933,6 +949,9 @@ public class Updater
             throws IOException, XPathException, ParserConfigurationException, SAXException, SQLException
     {
         String[] files = new File(baseDirectory + path).list((dir, file) -> file.matches(name));
+
+        if(files.length == 0)
+            throw new IOException("file list is empty");
 
         try
         {
@@ -965,6 +984,9 @@ public class Updater
 
     protected static void setCount(String name, int count) throws SQLException
     {
+        if(dryRun)
+            return;
+
         DatabaseMetaData databaseMetaData = connection.getMetaData();
 
         try(ResultSet info = databaseMetaData.getTables(null, "info", "idsm_counts", new String[] { "TABLE" }))
@@ -987,6 +1009,9 @@ public class Updater
 
     protected static void setVersion(String name, String version) throws SQLException
     {
+        if(dryRun)
+            return;
+
         DatabaseMetaData databaseMetaData = connection.getMetaData();
 
         try(ResultSet info = databaseMetaData.getTables(null, "info", "idsm_sources", new String[] { "TABLE" }))
@@ -1009,6 +1034,9 @@ public class Updater
 
     public static void updateVersion(Connection connection) throws SQLException
     {
+        if(dryRun)
+            return;
+
         DatabaseMetaData databaseMetaData = connection.getMetaData();
 
         try(ResultSet info = databaseMetaData.getTables(null, "info", "idsm_version", new String[] { "TABLE" }))
@@ -1034,6 +1062,9 @@ public class Updater
 
     protected static void commit() throws SQLException
     {
+        if(dryRun)
+            return;
+
         if(!connection.getAutoCommit())
             connection.commit();
 
@@ -1043,6 +1074,9 @@ public class Updater
 
     protected static void rollback() throws SQLException
     {
+        if(dryRun)
+            return;
+
         if(connection != null && !connection.getAutoCommit())
             connection.rollback();
 
