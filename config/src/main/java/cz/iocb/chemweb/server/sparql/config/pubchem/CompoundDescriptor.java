@@ -75,7 +75,7 @@ public class CompoundDescriptor
         {
             DatabaseTable table = new DatabaseTable(schema, "compound_bases");
             TermMapping subject = config.createIriMapping("pubchem:compound_identifier", "id");
-            String field = "(id::varchar)";
+            String field = "(id)::varchar";
 
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:CompoundIdentifier"));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000140"));
