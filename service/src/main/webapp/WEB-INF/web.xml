@@ -499,7 +499,7 @@
     <filter-class>cz.iocb.chemweb.server.filters.cache.CacheFilter</filter-class>
     <init-param>
       <param-name>excludedUrls</param-name>
-      <param-value>/ms.html /css/st.css /js/st.js /js/d3.v3.min.js /js/jquery-3.5.1.min.js</param-value>
+      <param-value>/ms.html /css/st.css /js/st.js /js/d3.v3.min.js /js/jquery-3.5.1.min.js /sachem/endpoint/drugbank /sachem/endpoint/chebi /sachem/endpoint/chembl /sachem/endpoint/integrated /sachem/endpoint/molmedb /sachem/endpoint/mona /sachem/endpoint/pdb /sachem/endpoint/pubchem /sachem/endpoint/wikidata /sparql/endpoint/drugbank /sparql/endpoint/empty /sparql/endpoint/chebi /sparql/endpoint/chembl /sparql/endpoint/idsm /sparql/endpoint/molmedb /sparql/endpoint/mona /sparql/endpoint/proxy /sparql/endpoint/pubchem /sparql/endpoint/wikidata</param-value>
     </init-param>
   </filter>
   <filter-mapping>
