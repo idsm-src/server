@@ -3,7 +3,6 @@ package cz.iocb.chemweb.server.sparql.config.chembl;
 import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
-import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -31,7 +30,7 @@ public class BioComponent
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                 config.createIriMapping("cco:BioComponent"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                config.createIriMapping("ontology:resource", Ontology.unitTaxonomy, "tax_id"));
+                config.createIriMapping("ontology:taxonomy", "tax_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
                 config.createIriMapping("reference:ncbi-taxonomy", "tax_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:chemblId"),
@@ -49,6 +48,6 @@ public class BioComponent
 
         // extension
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                config.createIriMapping("ontology:resource", Ontology.unitNCBITaxon, "tax_id"));
+                config.createIriMapping("ontology:ncbitaxon", "tax_id"));
     }
 }

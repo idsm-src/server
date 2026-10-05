@@ -9,7 +9,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
+import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.sparql.engine.database.Conditions;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.TableColumn;
@@ -23,6 +23,10 @@ import cz.iocb.sparql.engine.rdf.Iri;
 
 public class Void
 {
+    private static final String unitCHEBI = "'" + OntologyResource.unitCHEBI + "'::smallint";
+    private static final String unitTaxonomy = "'" + OntologyResource.unitTaxonomy + "'::smallint";
+
+
     public static void addPrefixes(VoidConfiguration config)
     {
         config.addPrefix("void", "http://rdfs.org/ns/void#");
@@ -154,7 +158,7 @@ public class Void
 
         {
             DatabaseTable table = new DatabaseTable(schema, "class_partitions");
-            Conditions cnd = config.createAreNotEqualCondition("class_unit", Ontology.unitCHEBI, Ontology.unitTaxonomy);
+            Conditions cnd = config.createAreNotEqualCondition("class_unit", unitCHEBI, unitTaxonomy);
 
             TermMapping dataset = config.createIriMapping("void:class-partition", "graph", "class_unit", "class_id");
 
@@ -238,7 +242,7 @@ public class Void
 
         {
             DatabaseTable table = new DatabaseTable(schema, "class_property_partitions");
-            Conditions cnd = config.createAreNotEqualCondition("class_unit", Ontology.unitCHEBI, Ontology.unitTaxonomy);
+            Conditions cnd = config.createAreNotEqualCondition("class_unit", unitCHEBI, unitTaxonomy);
 
             TermMapping dataset = config.createIriMapping("void:class-property-partition", "graph", "class_unit",
                     "class_id", "property_unit", "property_id");
@@ -287,10 +291,8 @@ public class Void
 
         {
             DatabaseTable table = new DatabaseTable(schema, "linksets");
-            Conditions cnds = config.createAreNotEqualCondition("subject_unit", Ontology.unitCHEBI,
-                    Ontology.unitTaxonomy);
-            Conditions cndo = config.createAreNotEqualCondition("object_unit", Ontology.unitCHEBI,
-                    Ontology.unitTaxonomy);
+            Conditions cnds = config.createAreNotEqualCondition("subject_unit", unitCHEBI, unitTaxonomy);
+            Conditions cndo = config.createAreNotEqualCondition("object_unit", unitCHEBI, unitTaxonomy);
             Conditions cnd = Conditions.and(cnds, cndo);
 
             TermMapping dataset = config.createIriMapping("void:linkset", "property_graph", "property_unit",
@@ -363,8 +365,7 @@ public class Void
 
         {
             DatabaseTable table = new DatabaseTable(schema, "literal_linksets");
-            Conditions cnd = Conditions.and(
-                    config.createAreNotEqualCondition("subject_unit", Ontology.unitCHEBI, Ontology.unitTaxonomy),
+            Conditions cnd = Conditions.and(config.createAreNotEqualCondition("subject_unit", unitCHEBI, unitTaxonomy),
                     config.createAreEqualCondition(table, "subject_graph", "property_graph"));
 
             TermMapping dataset = config.createIriMapping("void:class-property-datatype-partition", "subject_graph",

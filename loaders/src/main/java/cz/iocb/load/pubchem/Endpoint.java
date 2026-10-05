@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
+import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
@@ -222,7 +223,7 @@ class Endpoint extends Updater
                         EndpointID endpoint = parseEndpoint(subject, true);
                         Pair<Integer, Integer> outcome = Ontology.getId(object.getURI());
 
-                        if(outcome.getOne() != Ontology.unitUncategorized)
+                        if(outcome.getOne() != OntologyResource.unitUncategorized)
                             throw new IOException();
 
                         synchronized(newOutcomes)
@@ -285,7 +286,7 @@ class Endpoint extends Updater
                         EndpointID endpoint = parseEndpoint(subject, false);
                         Pair<Integer, Integer> type = Ontology.getId(object.getURI());
 
-                        if(type.getOne() != Ontology.unitBAO)
+                        if(type.getOne() != OntologyResource.unitBAO)
                             throw new IOException();
 
                         synchronized(newTypes)

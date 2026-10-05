@@ -4,7 +4,6 @@ import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.sc
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDouble;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
-import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -32,11 +31,11 @@ public class Activity
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                 config.createIriMapping("cco:Activity"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000208"),
-                config.createIriMapping("ontology:resource", Ontology.unitBAO, "bao_endpoint_id"));
+                config.createIriMapping("ontology:bao", "bao_endpoint_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasUnitOnto"),
-                config.createIriMapping("ontology:resource", Ontology.unitUO, "uo_unit_id"));
+                config.createIriMapping("ontology:uo", "uo_unit_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasQUDT"),
-                config.createIriMapping("ontology:resource", Ontology.unitUncategorized, "qudt_id"));
+                config.createIriMapping("ontology:uncategorized", "qudt_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasMolecule"),
                 config.createIriMapping("chembl:compound", "molecule_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasDocument"),

@@ -130,6 +130,8 @@ $$
       return substring(tail, 1, 1)::integer;
     elsif rec.unit_id = 180 then
       return left(tail, -6)::integer;
+    elsif rec.unit_id = 244 then
+      return left(tail, 8)::integer;
     elsif rec.unit_id = 36 or rec.unit_id = 37 then
       return overlay(tail placing '' from length(tail) - 1 for 1)::integer;
     elsif rec.unit_id < 31 or rec.unit_id > 35 then

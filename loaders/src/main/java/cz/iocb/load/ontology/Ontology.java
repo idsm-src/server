@@ -1,5 +1,8 @@
 package cz.iocb.load.ontology;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBlank;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCHEBI;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
 import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,6 +19,7 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.Lang;
+import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -312,26 +316,6 @@ public class Ontology extends Updater
     private static final StringIntMap keepResources = new StringIntMap();
     private static final StringIntMap newResources = new StringIntMap();
     private static final StringIntMap oldResources = new StringIntMap();
-
-    public static final int unitUncategorized = 0;
-    public static final int unitBlank = 1;
-    public static final int unitSIO = 2;
-    public static final int unitCHEMINF = 3;
-    public static final int unitBAO = 4;
-    public static final int unitGO = 5;
-    public static final int unitPR = 6;
-    public static final int unitCHEBI = 7;
-    public static final int unitThesaurus = 10;
-    public static final int unitPR0 = 31;
-    public static final int unitPR1 = 32;
-    public static final int unitPR2 = 33;
-    public static final int unitAT = 34;
-    public static final int unitZDBGENE = 35;
-    public static final short unitPowo = 36;
-    public static final short unitIpni = 37;
-    public static final int unitStar = 95;
-    public static final int unitRareDiseases = 180;
-    public static final int unitWormbaseGene = 244;
 
 
     private static void initSourceList()
@@ -1073,85 +1057,15 @@ public class Ontology extends Updater
             return null;
 
         for(Unit unit : units)
-        {
             if(iri.matches(unit.pattern))
-            {
-                String tail = iri.substring(unit.valueOffset);
-                int id = 0;
-
-                if(unit.id == unitPR0)
-                {
-                    // [0-9][A-Z0-9][0-9][A-Z0-9]{3}[0-9]
-                    id = tail.charAt(0) - '0';
-                    id = id * 36 + code(tail.charAt(1));
-                    id = id * 10 + tail.charAt(2) - '0';
-                    id = id * 36 + code(tail.charAt(3));
-                    id = id * 36 + code(tail.charAt(4));
-                    id = id * 36 + code(tail.charAt(5));
-                    id = id * 10 + tail.charAt(6) - '0';
-                }
-                else if(unit.id == unitPR1 || unit.id == unitPR2)
-                {
-                    // [A-Z][0-9][A-Z0-9]{3}[0-9](-([12])?[0-9])?
-                    id = tail.charAt(0) - 'A';
-                    id = id * 10 + tail.charAt(1) - '0';
-                    id = id * 36 + code(tail.charAt(2));
-                    id = id * 36 + code(tail.charAt(3));
-                    id = id * 36 + code(tail.charAt(4));
-                    id = id * 10 + tail.charAt(5) - '0';
-
-                    if(unit.id == unitPR1)
-                        id = id * 30 + Integer.parseInt(tail.substring(7));
-                }
-                else if(unit.id == unitAT)
-                {
-                    // [A-Z0-9]G[0-9]{5}
-                    id = code(tail.charAt(0)) * 100000 + Integer.parseInt(tail.substring(2));
-                }
-                else if(unit.id == unitZDBGENE)
-                {
-                    // [0-9]{6}-([1-3])?[0-9]{1,3}$
-                    id = Integer.parseInt(tail.substring(0, 6));
-                    id = id * 4000 + Integer.parseInt(tail.substring(7));
-                }
-                else if(unit.id == unitPowo || unit.id == unitIpni)
-                {
-                    id = Integer.parseInt(tail.replaceFirst("-", ""));
-                }
-                else if(unit.id == unitStar)
-                {
-                    id = tail.charAt(0) - '0';
-                }
-                else if(unit.id == unitRareDiseases)
-                {
-                    id = Integer.parseInt(tail.substring(0, tail.length() - 6));
-                }
-
-                else if(unit.id == unitWormbaseGene)
-                {
-                    id = Integer.parseInt(tail.substring(0, 8));
-                }
-                else
-                {
-                    id = Integer.parseInt(tail);
-                }
-
-                return Pair.getPair(unit.id, id);
-            }
-        }
+                return Pair.getPair(unit.id, OntologyResource.parseId(unit.id, iri.substring(unit.valueOffset)));
 
         Integer resourceID = builtinResources.get(iri);
 
         if(resourceID == null)
             return null;
 
-        return Pair.getPair(unitUncategorized, resourceID);
-    }
-
-
-    private static int code(char value)
-    {
-        return value > '9' ? 10 + value - 'A' : value - '0';
+        return Pair.getPair((int) unitUncategorized, resourceID);
     }
 
 
@@ -1165,7 +1079,7 @@ public class Ontology extends Updater
             if(blanknodeID == null)
                 blankNodes.put(blanknode, blanknodeID = blankNodes.size());
 
-            return Pair.getPair(unitBlank, blanknodeID);
+            return Pair.getPair((int) unitBlank, blanknodeID);
         }
         else
         {
@@ -1178,12 +1092,12 @@ public class Ontology extends Updater
             Integer resourceID = keepResources.get(iri);
 
             if(resourceID != null)
-                return Pair.getPair(unitUncategorized, resourceID);
+                return Pair.getPair((int) unitUncategorized, resourceID);
 
             resourceID = newResources.get(iri);
 
             if(resourceID != null)
-                return Pair.getPair(unitUncategorized, resourceID);
+                return Pair.getPair((int) unitUncategorized, resourceID);
 
             resourceID = oldResources.get(iri);
 
@@ -1192,7 +1106,7 @@ public class Ontology extends Updater
             else
                 keepResources.put(iri, oldResources.remove(iri));
 
-            return Pair.getPair(unitUncategorized, resourceID);
+            return Pair.getPair((int) unitUncategorized, resourceID);
         }
     }
 
@@ -1493,7 +1407,7 @@ public class Ontology extends Updater
 
                 ValueRestriction restriction = new ValueRestriction(propertyID, classID);
 
-                if(restrictionID.getOne() != Ontology.unitBlank)
+                if(restrictionID.getOne() != unitBlank)
                     throw new IOException();
 
                 if(restriction.equals(oldRestrictions.remove(restrictionID.getTwo())))
@@ -1550,7 +1464,7 @@ public class Ontology extends Updater
 
                 ValueRestriction restriction = new ValueRestriction(propertyID, classID);
 
-                if(restrictionID.getOne() != Ontology.unitBlank)
+                if(restrictionID.getOne() != unitBlank)
                     throw new IOException();
 
                 if(restriction.equals(oldRestrictions.remove(restrictionID.getTwo())))
@@ -1607,7 +1521,7 @@ public class Ontology extends Updater
 
                 CardinalityRestriction restriction = new CardinalityRestriction(propertyID, classID);
 
-                if(restrictionID.getOne() != Ontology.unitBlank)
+                if(restrictionID.getOne() != unitBlank)
                     throw new IOException();
 
                 if(restriction.equals(oldRestrictions.remove(restrictionID.getTwo())))
@@ -1661,7 +1575,7 @@ public class Ontology extends Updater
 
                 CardinalityRestriction restriction = new CardinalityRestriction(propertyID, classID);
 
-                if(restrictionID.getOne() != Ontology.unitBlank)
+                if(restrictionID.getOne() != unitBlank)
                     throw new IOException();
 
                 if(restriction.equals(oldRestrictions.remove(restrictionID.getTwo())))
@@ -1715,7 +1629,7 @@ public class Ontology extends Updater
 
                 CardinalityRestriction restriction = new CardinalityRestriction(propertyID, classID);
 
-                if(restrictionID.getOne() != Ontology.unitBlank)
+                if(restrictionID.getOne() != unitBlank)
                     throw new IOException();
 
                 if(restriction.equals(oldRestrictions.remove(restrictionID.getTwo())))

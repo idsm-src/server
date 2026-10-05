@@ -5,7 +5,6 @@ import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
-import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -50,7 +49,7 @@ public class Substance
             TermMapping subject = config.createIriMapping("pubchem:substance", "substance");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "chebi"));
+                    config.createIriMapping("ontology:chebi", "chebi"));
         }
 
         {

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
+import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
@@ -277,7 +278,7 @@ class Compound extends Updater
 
                     Pair<Integer, Integer> role = Ontology.getId(object.getURI());
 
-                    if(role.getOne() != Ontology.unitUncategorized)
+                    if(role.getOne() != OntologyResource.unitUncategorized)
                         throw new IOException();
 
                     Pair<Integer, Integer> pair = Pair.getPair(compoundID, role.getTwo());

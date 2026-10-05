@@ -4,7 +4,6 @@ import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.sc
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
-import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -33,11 +32,11 @@ public class Assay
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("cco:Assay"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                    config.createIriMapping("ontology:resource", Ontology.unitTaxonomy, "assay_tax_id"));
+                    config.createIriMapping("ontology:taxonomy", "assay_tax_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
                     config.createIriMapping("reference:ncbi-taxonomy", "assay_tax_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000205"),
-                    config.createIriMapping("ontology:resource", Ontology.unitBAO, "bao_format_id"));
+                    config.createIriMapping("ontology:bao", "bao_format_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasSource"),
                     config.createIriMapping("chembl:chembl_source", "src_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:assayXref"),
@@ -100,7 +99,7 @@ public class Assay
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
                     config.createIriMapping("pubchem:bioassay", "pubchem_assay_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                    config.createIriMapping("ontology:resource", Ontology.unitNCBITaxon, "assay_tax_id"));
+                    config.createIriMapping("ontology:ncbitaxon", "assay_tax_id"));
         }
 
         {

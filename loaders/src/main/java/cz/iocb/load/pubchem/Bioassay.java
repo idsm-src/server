@@ -20,6 +20,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -319,7 +320,7 @@ class Bioassay extends Updater
                 Integer bioassayID = getBioassayID(getIRI("bioassay"));
                 Pair<Integer, Integer> stage = Ontology.getId(getIRI("stage"));
 
-                if(stage.getOne() != Ontology.unitBAO)
+                if(stage.getOne() != OntologyResource.unitBAO)
                     throw new IOException();
 
                 if(stage.getTwo().equals(oldStages.remove(bioassayID)))

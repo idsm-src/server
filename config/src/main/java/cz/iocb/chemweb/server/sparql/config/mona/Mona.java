@@ -319,7 +319,7 @@ public class Mona
             TermMapping subject = config.createIriMapping("mona:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("ontology:resource", Ontology.unitClassyFire, "class"));
+                    config.createIriMapping("ontology:classyfire", "class"));
         }
 
         {
@@ -327,7 +327,7 @@ public class Mona
             TermMapping subject = config.createIriMapping("mona:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "chebi"));
+                    config.createIriMapping("ontology:chebi", "chebi"));
         }
 
         {
@@ -481,7 +481,7 @@ public class Mona
                     config.createLiteralMapping(xsdString, "('CHEBI:' || chebi)::varchar"));
 
             config.addQuadMapping(table, graph, compound, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "chebi"));
+                    config.createIriMapping("ontology:chebi", "chebi"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000672"), // is identifier for
                     compound);

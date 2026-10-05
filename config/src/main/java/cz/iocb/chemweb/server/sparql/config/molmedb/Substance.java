@@ -8,7 +8,6 @@ import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInteger;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import static java.util.Arrays.asList;
 import java.util.List;
-import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.Conditions;
@@ -257,7 +256,7 @@ public class Substance
                     config.createAreEqualCondition("type", "'4'::smallint"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "value"),
+                    config.createIriMapping("ontology:chebi", "value"),
                     config.createAreEqualCondition("type", "'6'::smallint"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),

@@ -3,7 +3,6 @@ package cz.iocb.chemweb.server.sparql.config.pubchem;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
-import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Conditions;
 import cz.iocb.sparql.engine.database.DatabaseTable;
@@ -55,7 +54,7 @@ public class Bioassay
             TermMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000210"),
-                    config.createIriMapping("ontology:resource", Ontology.unitBAO, "stage"));
+                    config.createIriMapping("ontology:bao", "stage"));
         }
 
         {

@@ -9,6 +9,7 @@ import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.Lang;
+import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -454,7 +455,7 @@ public class ChEBI extends Updater
                 String source = getString("source");
 
                 if(getIRI("type") != null && type == null
-                        || type != null && type.getOne() != Ontology.unitUncategorized)
+                        || type != null && type.getOne() != OntologyResource.unitUncategorized)
                     throw new IOException(getIRI("type"));
 
                 Axiom axiom = new Axiom(chebiID, property.getOne(), property.getTwo(), target,

@@ -3,7 +3,6 @@ package cz.iocb.chemweb.server.sparql.config.chembl;
 import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
-import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -31,11 +30,11 @@ public class CellLine
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                 config.createIriMapping("cco:CellLine"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasCLO"),
-                config.createIriMapping("ontology:resource", Ontology.unitCLO, "clo_resource_id"));
+                config.createIriMapping("ontology:clo", "clo_resource_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasEFO"),
-                config.createIriMapping("ontology:resource", Ontology.unitEFO, "efo_resource_id"));
+                config.createIriMapping("ontology:efo", "efo_resource_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                config.createIriMapping("ontology:resource", Ontology.unitTaxonomy, "cell_source_tax_id"));
+                config.createIriMapping("ontology:taxonomy", "cell_source_tax_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
                 config.createIriMapping("reference:ncbi-taxonomy", "cell_source_tax_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:chemblId"),
@@ -51,6 +50,6 @@ public class CellLine
 
         // extension
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                config.createIriMapping("ontology:resource", Ontology.unitNCBITaxon, "cell_source_tax_id"));
+                config.createIriMapping("ontology:ncbitaxon", "cell_source_tax_id"));
     }
 }

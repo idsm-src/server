@@ -4,7 +4,6 @@ import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
-import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.TableColumn;
@@ -72,11 +71,11 @@ public class Gene
 
             // extension
             config.addQuadMapping(table, graph, subject, config.createIriMapping("up:organism"),
-                    config.createIriMapping("ontology:resource", Ontology.unitNCBITaxon, "organism"));
+                    config.createIriMapping("ontology:ncbitaxon", "organism"));
 
             // deprecated extension
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bp:organism"),
-                    config.createIriMapping("ontology:resource", Ontology.unitNCBITaxon, "organism"));
+                    config.createIriMapping("ontology:ncbitaxon", "organism"));
         }
 
         {
@@ -230,7 +229,7 @@ public class Gene
             TermMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:RO_0000056"),
-                    config.createIriMapping("ontology:resource", Ontology.unitGO, "process_id"));
+                    config.createIriMapping("ontology:go", "process_id"));
         }
 
         {
@@ -238,7 +237,7 @@ public class Gene
             TermMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:RO_0000085"),
-                    config.createIriMapping("ontology:resource", Ontology.unitGO, "function_id"));
+                    config.createIriMapping("ontology:go", "function_id"));
         }
 
         {
@@ -246,7 +245,7 @@ public class Gene
             TermMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:RO_0001025"),
-                    config.createIriMapping("ontology:resource", Ontology.unitGO, "location_id"));
+                    config.createIriMapping("ontology:go", "location_id"));
         }
 
         {

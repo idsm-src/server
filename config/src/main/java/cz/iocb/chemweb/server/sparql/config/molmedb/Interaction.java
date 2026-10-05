@@ -4,7 +4,6 @@ import static cz.iocb.chemweb.server.sparql.config.molmedb.MolmedbConfiguration.
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
-import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Conditions;
 import cz.iocb.sparql.engine.database.DatabaseTable;
@@ -748,7 +747,7 @@ public class Interaction
             TermMapping subject = config.createIriMapping("molmedb:membrane", "membrane_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090004"), // has part
-                    config.createIriMapping("ontology:resource", Ontology.unitCHEBI, "chebi_id"));
+                    config.createIriMapping("ontology:chebi", "chebi_id"));
         }
     }
 }

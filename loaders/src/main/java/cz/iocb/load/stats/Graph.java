@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
+import cz.iocb.chemweb.server.sparql.config.ontology.OntologyUnitResource;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.Condition;
 import cz.iocb.sparql.engine.database.Conditions;
@@ -92,6 +93,8 @@ public class Graph
                 || map.getObject() instanceof ParametrisedBlankNodeMapping)
             throw new UnsupportedOperationException();
 
+        map = generalize(map);
+
 
         ConstantIriMapping predicateMapping = (ConstantIriMapping) map.getPredicate();
 
@@ -156,6 +159,48 @@ public class Graph
                 classes.put(key, dataset);
             }
         }
+    }
+
+
+    private static QuadMapping generalize(QuadMapping map)
+    {
+        TermMapping subject = generalize(map.getSubject());
+        TermMapping predicate = generalize(map.getPredicate());
+        TermMapping object = generalize(map.getObject());
+
+        if(subject == map.getSubject() && predicate == map.getPredicate() && object == map.getObject())
+        {
+            return map;
+        }
+        else if(map instanceof SingleTableQuadMapping m)
+        {
+            return new SingleTableQuadMapping(m.getTable(), m.getGraph(), subject, predicate, object, m.getConditions(),
+                    m.isDistinct());
+        }
+        else if(map instanceof JoinTableQuadMapping m)
+        {
+            return new JoinTableQuadMapping(m.getTables(), m.getJoinColumnsPairs(), m.getGraphTableIdx(), m.getGraph(),
+                    m.getSubjectTableIdx(), subject, m.getPredicateTableIdx(), predicate, m.getObjectTableIdx(), object,
+                    m.getConditions(), m.getDistinct());
+        }
+        else
+        {
+            throw new IllegalArgumentException();
+        }
+    }
+
+
+    private static TermMapping generalize(TermMapping map)
+    {
+        if(map instanceof ConstantIriMapping m && m.getResourceClass() instanceof OntologyUnitResource c)
+            return new ConstantIriMapping(m.getIri(), c.getResource(),
+                    c.toGeneralClass(c.getResource(), m.getColumns(), false));
+
+        if(map instanceof ParametrisedIriMapping m && m.getResourceClass() instanceof OntologyUnitResource c)
+            return new ParametrisedIriMapping(c.getResource(),
+                    c.toGeneralClass(c.getResource(), m.getColumns(), false));
+
+        return map;
     }
 
 

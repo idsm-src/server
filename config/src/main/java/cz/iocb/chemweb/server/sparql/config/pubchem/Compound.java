@@ -6,7 +6,6 @@ import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdShort;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.common.StringSubsetLiteralClass;
-import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -134,11 +133,11 @@ public class Compound
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:RO_0000087"),
-                    config.createIriMapping("ontology:resource", Ontology.unitUncategorized, "role_id"));
+                    config.createIriMapping("ontology:uncategorized", "role_id"));
 
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:has-role"),
-                    config.createIriMapping("ontology:resource", Ontology.unitUncategorized, "role_id"));
+                    config.createIriMapping("ontology:uncategorized", "role_id"));
         }
 
         {

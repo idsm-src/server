@@ -16,7 +16,6 @@ import cz.iocb.chemweb.server.sparql.config.isdb.IsdbConfiguration;
 import cz.iocb.chemweb.server.sparql.config.mesh.MeshConfiguration;
 import cz.iocb.chemweb.server.sparql.config.molmedb.MolmedbConfiguration;
 import cz.iocb.chemweb.server.sparql.config.mona.MonaConfiguration;
-import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyConfiguration;
 import cz.iocb.chemweb.server.sparql.config.pdb.PdbConfiguration;
 import cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration;
@@ -152,16 +151,10 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         if(iriClass.getResourceName().equals("unsupported"))
             return true;
 
-        if(iriClass.getResourceName().equals("ontology:resource"))
+        if(iriClass.getResourceName().equals("ontology:uncategorized"))
         {
-            if(columns.get(0) instanceof ValueColumn col0 && columns.get(1) instanceof ValueColumn col1)
-            {
-                if(!col0.getValue().equals("0"))
-                    return false;
-
-                if(col1.getValue().length() > 3)
-                    return true;
-            }
+            if(columns.get(0) instanceof ValueColumn col && col.getValue().length() > 3)
+                return true;
         }
 
         return false;
@@ -221,8 +214,7 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         addService(new ExamplesConfiguration(null, connectionPool, getDatabaseSchema()), true);
 
         Map<ResourceClass, List<Column>> mapping = new HashMap<>();
-        mapping.put(getIriClass("ontology:resource"),
-                getColumns(getIriClass("ontology:resource"), Ontology.unitCHEBI, "chebi"));
+        mapping.put(getIriClass("ontology:chebi"), getColumns(getIriClass("ontology:chebi"), "chebi"));
         mapping.put(getIriClass("chembl:compound"), getColumns(getIriClass("chembl:compound"), "chembl"));
         mapping.put(getIriClass("drugbank:compound"), getColumns(getIriClass("drugbank:compound"), "drugbank"));
         mapping.put(getIriClass("isdb:compound"), getColumns(getIriClass("isdb:compound"), "isdb"));

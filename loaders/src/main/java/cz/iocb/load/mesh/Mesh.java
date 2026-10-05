@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -73,7 +74,7 @@ public class Mesh extends Updater
                 String meshID = getStringID("mesh", prefix);
                 Pair<Integer, Integer> type = Ontology.getId(getIRI("type"));
 
-                if(type == null || type.getOne() != Ontology.unitUncategorized)
+                if(type == null || type.getOne() != OntologyResource.unitUncategorized)
                     throw new IOException(getIRI("type"));
 
                 oldMeshes.remove(meshID);

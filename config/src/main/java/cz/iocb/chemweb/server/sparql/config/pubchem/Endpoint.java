@@ -5,7 +5,6 @@ import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import java.util.List;
-import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Conditions;
 import cz.iocb.sparql.engine.database.DatabaseTable;
@@ -39,7 +38,7 @@ public class Endpoint
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:IAO_0000136"),
                     config.createIriMapping("pubchem:substance", "substance"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:PubChemAssayOutcome"),
-                    config.createIriMapping("ontology:resource", Ontology.unitUncategorized, "outcome_id"));
+                    config.createIriMapping("ontology:uncategorized", "outcome_id"));
         }
 
         {
@@ -51,7 +50,7 @@ public class Endpoint
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000221"),
                     config.createIriMapping("obo:UO_0000064"), condition);
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("ontology:resource", Ontology.unitBAO, "endpoint_type_id"));
+                    config.createIriMapping("ontology:bao", "endpoint_type_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString, "label"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),

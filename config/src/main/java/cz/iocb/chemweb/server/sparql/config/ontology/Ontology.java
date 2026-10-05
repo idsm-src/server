@@ -2,6 +2,26 @@ package cz.iocb.chemweb.server.sparql.config.ontology;
 
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyConfiguration.rdfLangStringEn;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyConfiguration.schema;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBAO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBlank;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCHEBI;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCHEMINF;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCL;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCLO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitClassyFire;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitEFO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIAO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitNCBITaxon;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitNCIT;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitPR;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitSIO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitStar;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitTaxonomy;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitThesaurus;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUberon;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
 import java.sql.SQLException;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
@@ -13,31 +33,32 @@ import cz.iocb.sparql.engine.mapping.TermMapping;
 
 public class Ontology
 {
-    public static final String unitUncategorized = "'0'::smallint";
-    public static final String unitBlank = "'1'::smallint";
-    public static final String unitSIO = "'2'::smallint";
-    public static final String unitCHEMINF = "'3'::smallint";
-    public static final String unitBAO = "'4'::smallint";
-    public static final String unitGO = "'5'::smallint";
-    public static final String unitPR = "'6'::smallint";
-    public static final String unitCHEBI = "'7'::smallint";
-    public static final String unitThesaurus = "'10'::smallint";
-    public static final String unitTaxonomy = "'11'::smallint";
-    public static final String unitClassyFire = "'12'::smallint";
-    public static final String unitNCBITaxon = "'64'::smallint";
-    public static final String unitUberon = "'65'::smallint";
-    public static final String unitCL = "'71'::smallint";
-    public static final String unitUO = "'74'::smallint";
-    public static final String unitIAO = "'75'::smallint";
-    public static final String unitCLO = "'77'::smallint";
-    public static final String unitEFO = "'92'::smallint";
-    public static final String unitStar = "'95'::smallint";
-    public static final String unitNCIT = "'100'::smallint";
-
-
     public static void addResourceClasses(SparqlDatabaseConfiguration config) throws SQLException
     {
-        config.addIriClass(OntologyResource.get(config));
+        OntologyResource resource = OntologyResource.get(config);
+
+        // registered before the whole class, so that an uncategorized resource is detected by a single lookup
+        config.addIriClass(new OntologyUnitResource("ontology:uncategorized", resource, unitUncategorized));
+        config.addIriClass(new OntologyUnitResource("ontology:blank", resource, unitBlank));
+        config.addIriClass(new OntologyUnitResource("ontology:sio", resource, unitSIO));
+        config.addIriClass(new OntologyUnitResource("ontology:cheminf", resource, unitCHEMINF));
+        config.addIriClass(new OntologyUnitResource("ontology:bao", resource, unitBAO));
+        config.addIriClass(new OntologyUnitResource("ontology:go", resource, unitGO));
+        config.addIriClass(new OntologyUnitResource("ontology:pr", resource, unitPR));
+        config.addIriClass(new OntologyUnitResource("ontology:chebi", resource, unitCHEBI));
+        config.addIriClass(new OntologyUnitResource("ontology:thesaurus", resource, unitThesaurus));
+        config.addIriClass(new OntologyUnitResource("ontology:taxonomy", resource, unitTaxonomy));
+        config.addIriClass(new OntologyUnitResource("ontology:classyfire", resource, unitClassyFire));
+        config.addIriClass(new OntologyUnitResource("ontology:ncbitaxon", resource, unitNCBITaxon));
+        config.addIriClass(new OntologyUnitResource("ontology:uberon", resource, unitUberon));
+        config.addIriClass(new OntologyUnitResource("ontology:cl", resource, unitCL));
+        config.addIriClass(new OntologyUnitResource("ontology:uo", resource, unitUO));
+        config.addIriClass(new OntologyUnitResource("ontology:iao", resource, unitIAO));
+        config.addIriClass(new OntologyUnitResource("ontology:clo", resource, unitCLO));
+        config.addIriClass(new OntologyUnitResource("ontology:efo", resource, unitEFO));
+        config.addIriClass(new OntologyUnitResource("ontology:star", resource, unitStar));
+        config.addIriClass(new OntologyUnitResource("ontology:ncit", resource, unitNCIT));
+        config.addIriClass(resource);
     }
 
 
@@ -112,7 +133,7 @@ public class Ontology
 
         {
             DatabaseTable table = new DatabaseTable(schema, "somevaluesfrom_restrictions");
-            TermMapping subject = config.createIriMapping("ontology:resource", unitBlank, "restriction_id");
+            TermMapping subject = config.createIriMapping("ontology:blank", "restriction_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Restriction"));
@@ -124,7 +145,7 @@ public class Ontology
 
         {
             DatabaseTable table = new DatabaseTable(schema, "allvaluesfrom_restrictions");
-            TermMapping subject = config.createIriMapping("ontology:resource", unitBlank, "restriction_id");
+            TermMapping subject = config.createIriMapping("ontology:blank", "restriction_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Restriction"));
@@ -136,7 +157,7 @@ public class Ontology
 
         {
             DatabaseTable table = new DatabaseTable(schema, "cardinality_restrictions");
-            TermMapping subject = config.createIriMapping("ontology:resource", unitBlank, "restriction_id");
+            TermMapping subject = config.createIriMapping("ontology:blank", "restriction_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Restriction"));
@@ -148,7 +169,7 @@ public class Ontology
 
         {
             DatabaseTable table = new DatabaseTable(schema, "mincardinality_restrictions");
-            TermMapping subject = config.createIriMapping("ontology:resource", unitBlank, "restriction_id");
+            TermMapping subject = config.createIriMapping("ontology:blank", "restriction_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Restriction"));
@@ -160,7 +181,7 @@ public class Ontology
 
         {
             DatabaseTable table = new DatabaseTable(schema, "maxcardinality_restrictions");
-            TermMapping subject = config.createIriMapping("ontology:resource", unitBlank, "restriction_id");
+            TermMapping subject = config.createIriMapping("ontology:blank", "restriction_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Restriction"));

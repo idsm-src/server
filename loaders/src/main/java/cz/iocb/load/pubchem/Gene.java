@@ -3,6 +3,7 @@ package cz.iocb.load.pubchem;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -743,7 +744,7 @@ class Gene extends Updater
                 Integer geneID = getGeneID(getIRI("gene"));
                 Pair<Integer, Integer> process = Ontology.getId(getIRI("process"));
 
-                if(process.getOne() != Ontology.unitGO)
+                if(process.getOne() != OntologyResource.unitGO)
                     throw new IOException();
 
                 Pair<Integer, Integer> pair = Pair.getPair(geneID, process.getTwo());
@@ -773,7 +774,7 @@ class Gene extends Updater
                 Integer geneID = getGeneID(getIRI("gene"));
                 Pair<Integer, Integer> function = Ontology.getId(getIRI("function"));
 
-                if(function.getOne() != Ontology.unitGO)
+                if(function.getOne() != OntologyResource.unitGO)
                     throw new IOException();
 
                 Pair<Integer, Integer> pair = Pair.getPair(geneID, function.getTwo());
@@ -803,7 +804,7 @@ class Gene extends Updater
                 Integer geneID = getGeneID(getIRI("gene"));
                 Pair<Integer, Integer> location = Ontology.getId(getIRI("location"));
 
-                if(location.getOne() != Ontology.unitGO)
+                if(location.getOne() != OntologyResource.unitGO)
                     throw new IOException();
 
                 Pair<Integer, Integer> pair = Pair.getPair(geneID, location.getTwo());
