@@ -401,7 +401,7 @@ public class Ontology extends Updater
         sources.add(new OwlSource("Mass Spectrometry Ontology (MS)", "http://purl.obolibrary.org/obo/ms.owl"));
         sources.add(new OwlSource("ClassyFire Ontology", "http://purl.obolibrary.org/obo/ChemOnt.owl"));
         sources.add(new StaticSource("Chemical Entity Materials and Reactions Ontological Framework (ChEMROF)",
-                "2025-12-11"));
+                "2026-10-03"));
         sources.add(new StaticSource("OWL 2 Schema (OWL 2)", "2009-10-16"));
         sources.add(new StaticSource("RDF Schema (RDFS)", "1.1"));
         sources.add(new StaticSource("RDF Vocabulary Terms", "1.1"));

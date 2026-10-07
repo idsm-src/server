@@ -177,7 +177,7 @@ https://evs.nci.nih.gov/ftp1/NCI_Thesaurus/Thesaurus.OWL.zip
 http://www.ebi.ac.uk/efo/efo.owl
 
 # Funding, Research Administration and Projects Ontology (FRAPO)
-https://sparontologies.github.io/frapo/current/frapo.owl
+http://purl.org/cerif/frapo.ttl
 
 # Patent Ontology (EPO)
 https://data.epo.org/linked-data/api/datasets/download?path=vocabularies\&fileName=patent.ttl
@@ -199,7 +199,7 @@ http://www.w3.org/ns/prov-o-inverses.ttl
 http://www.loc.gov/standards/mads/rdf/v1.rdf
 
 # Citation Typing Ontology (CiTO)
-https://sparontologies.github.io/cito/current/cito.owl
+http://purl.org/cerif/cito.ttl
 
 # Ontology for vCard
 http://www.w3.org/2006/vcard/ns.ttl
@@ -238,7 +238,7 @@ http://pav-ontology.github.io/pav/pav.rdf
 http://www.w3.org/2003/06/sw-vocab-status/ns.rdf
 
 # Vocabulary of Interlinked Datasets (VoID)
-http://vocab.deri.ie/void.ttl
+https://raw.githubusercontent.com/cygri/void/master/rdfs/void.ttl
 
 # Situation Ontology
 http://www.ontologydesignpatterns.org/cp/owl/situation.owl
@@ -462,9 +462,9 @@ a1622ae5bd5e23c4bda44c70f3781071  $output/${downloaded[http://www.w3.org/2000/01
 ea21388ea72fb98aaecec48b8f8a5765  $output/${downloaded[http://www.w3.org/TR/skos-reference/skos.rdf]}
 4eda1eb9c5e33f0e31e5130b03112e6e  $output/${downloaded[http://www.w3.org/2003/06/sw-vocab-status/ns.rdf]}
 e505717212e838566383ecc5317cbdc2  $output/${downloaded[http://www.w3.org/2006/vcard/ns.ttl]}
-57d88c7d6a44220fd95189d0f995e51d  $output/${downloaded[http://vocab.deri.ie/void.ttl]}
+9698109cfb8ae31c9c096e494efa524d  $output/${downloaded[https://raw.githubusercontent.com/cygri/void/master/rdfs/void.ttl]}
 8ab3a314969cd6ab4094a9bb4213ebdb  $output/${downloaded[https://data.bioontology.org/ontologies/NDF-RT/submissions/1/download?apikey=8b5b7825-538d-40e0-9e9e-5ab9274a9aeb]}
-813c0afee7db4b7e4e86be4ed9be5026  $output/${downloaded[https://raw.githubusercontent.com/chemkg/chemrof/main/schema/owl/chemrof.owl.ttl]}
+1a8af4f4399e08c3c4729a8cc337fd52  $output/${downloaded[https://raw.githubusercontent.com/chemkg/chemrof/main/schema/owl/chemrof.owl.ttl]}
 EOF
 
 
