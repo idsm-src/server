@@ -56,6 +56,7 @@ import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
 import cz.iocb.sparql.engine.mapping.classes.UserIriClass;
 import cz.iocb.sparql.engine.mapping.datatypes.Datatype;
+import cz.iocb.sparql.engine.parser.Rdf;
 import cz.iocb.sparql.engine.rdf.Iri;
 import cz.iocb.sparql.engine.rdf.Variable;
 import cz.iocb.sparql.engine.request.Request;
@@ -512,6 +513,8 @@ public class GenerateVoid extends Updater
 
             List<Column> cols = rc.toColumns(request, rdfLangStringIri);
             datatypeMap.put(rdfLangStringIri, new Resource(cols));
+
+            Resource rdfType = new Resource(rc.toColumns(request, new Iri(Rdf.TYPE)));
 
 
             Map<Iri, Graph> graphDefinitions = new HashMap<>();
@@ -1039,8 +1042,9 @@ public class GenerateVoid extends Updater
 
             for(Entry<ClassInGraph, Stats> e : newClassPartitionStats.entrySet())
                 e.getValue()
-                        .setClasses(newClassPropertyPartitionStats.get(new ClassAndPropertyInGraph(e.getKey().graph(),
-                                e.getKey().resource(), new Resource((short) 0, 374))).iriObjects());
+                        .setClasses(newClassPropertyPartitionStats
+                                .get(new ClassAndPropertyInGraph(e.getKey().graph(), e.getKey().resource(), rdfType))
+                                .iriObjects());
 
 
 

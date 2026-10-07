@@ -7,15 +7,15 @@ alter table chembl_tmp.drug_indication alter column molecule_id drop default;
 
 alter table chembl_tmp.drug_indication add column efo_resource_unit smallint;
 update chembl_tmp.drug_indication set efo_resource_unit = case
-    when efo_id ~ '^GO:[0-9]{7}$' then '96'::smallint
-    when efo_id ~ '^HP:[0-9]{7}$' then '66'::smallint
-    when efo_id ~ '^DOID:[1-9][0-9]*$' then '97'::smallint
-    when efo_id ~ '^EFO:[0-9]{7}$' then '92'::smallint
-    when efo_id ~ '^Orphanet:[1-9][0-9]*$' then '93'::smallint
-    when efo_id ~ '^MP:[0-9]{7}$' then '94'::smallint
-    when efo_id ~ '^MONDO:[0-9]{7}$' then '98'::smallint
-    when efo_id ~ '^UBERON:[0-9]{7}$' then '254'::smallint
-    when efo_id ~ '^CHEBI:[1-9][0-9]*$' then '255'::smallint end;
+    when efo_id ~ '^GO:[0-9]{7}$' then '603'::smallint
+    when efo_id ~ '^HP:[0-9]{7}$' then '235'::smallint
+    when efo_id ~ '^DOID:[1-9][0-9]*$' then '601'::smallint
+    when efo_id ~ '^EFO:[0-9]{7}$' then '602'::smallint
+    when efo_id ~ '^Orphanet:[1-9][0-9]*$' then '2000'::smallint
+    when efo_id ~ '^MP:[0-9]{7}$' then '607'::smallint
+    when efo_id ~ '^MONDO:[0-9]{7}$' then '604'::smallint
+    when efo_id ~ '^UBERON:[0-9]{7}$' then '606'::smallint
+    when efo_id ~ '^CHEBI:[1-9][0-9]*$' then '600'::smallint end;
 
 alter table chembl_tmp.drug_indication add column efo_resource_id integer;
 

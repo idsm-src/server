@@ -1,5 +1,6 @@
 package cz.iocb.chemweb.server.sparql.config.idsm;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.builtinResourceLimit;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -153,7 +154,7 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
 
         if(iriClass.getResourceName().equals("ontology:uncategorized"))
         {
-            if(columns.get(0) instanceof ValueColumn col && col.getValue().length() > 3)
+            if(columns.get(0) instanceof ValueColumn col && Integer.parseInt(col.getValue()) >= builtinResourceLimit)
                 return true;
         }
 

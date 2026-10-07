@@ -1,5 +1,6 @@
 package cz.iocb.load.ontology;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.builtinResourceLimit;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBlank;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCHEBI;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
@@ -161,6 +162,7 @@ public class Ontology extends Updater
     {
         int id;
         int valueOffset;
+        String suffix;
         String pattern;
     }
 
@@ -311,7 +313,6 @@ public class Ontology extends Updater
     private static final HashMap<String, Integer> builtinResources = new HashMap<>();
 
     private static int nextResourceID;
-    private static int maxBuiltinResourceID;
 
     private static final StringIntMap keepResources = new StringIntMap();
     private static final StringIntMap newResources = new StringIntMap();
@@ -412,642 +413,738 @@ public class Ontology extends Updater
         try(Statement statement = connection.createStatement())
         {
             try(ResultSet result = statement.executeQuery(
-                    "select unit_id, value_offset - 1, pattern from ontology.resource_categories__reftable"))
+                    "select unit_id, value_offset - 1, suffix, pattern from ontology.resource_categories__reftable"))
             {
                 while(result.next())
                 {
                     Unit unit = new Unit();
                     unit.id = result.getShort(1);
                     unit.valueOffset = result.getInt(2);
-                    unit.pattern = result.getString(3);
+                    unit.suffix = result.getString(3);
+                    unit.pattern = result.getString(4);
 
                     units.add(unit);
                 }
             }
         }
 
-        // PubChem
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#active", 0);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#inactive", 1);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#inconclusive", 2);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#unspecified", 3);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#probe", 4);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#hasQualifier", 5);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#FDAApprovedDrugs", 7);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#connectivity_smiles", 8);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#covalent_unit_count", 9);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#defined_atom_stereo_count", 10);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#defined_bond_stereo_count", 11);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#exact_mass", 12);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#hydrogen_bond_acceptor_count", 13);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#hydrogen_bond_donor_count", 14);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#inchikey", 15);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#isotope_atom_count", 16);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#iupac_inchi", 17);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#molecular_formula", 18);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#molecular_weight", 19);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#mono_isotopic_weight", 20);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#non_hydrogen_atom_count", 21);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#preferred_iupac_name", 22);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#rotatable_bond_count", 23);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#structure_complexity", 24);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#total_formal_charge", 25);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#tpsa", 26);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#undefined_atom_stereo_count", 27);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#undefined_bond_stereo_count", 28);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#xlogp3", 29);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#substance_version", 30);
 
-        // MESH
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#AllowedDescriptorQualifierPair", 32);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#Concept", 33);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#DisallowedDescriptorQualifierPair", 34);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#GeographicalDescriptor", 35);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#CheckTag", 36);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#PublicationType", 37);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#Qualifier", 38);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Disease", 39);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Chemical", 40);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Organism", 41);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Population", 42);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Protocol", 43);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#Term", 44);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#TopicalDescriptor", 45);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#TreeNumber", 46);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Anatomy", 47);
 
-        // ChEBI
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/has_functional_parent", 64);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_conjugate_base_of", 65);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_conjugate_acid_of", 66);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_enantiomer_of", 67);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_tautomer_of", 68);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/has_parent_hydride", 69);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_substituent_group_from", 70);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/BRAND_NAME", 71);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/IUPAC_NAME", 72);
-        builtinResources.put("http://purl.obolibrary.org/obo/chebi/INN", 73);
-        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasDbXref", 74);
-        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasExactSynonym", 75);
-        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym", 76);
-
-        // units
-        builtinResources.put("http://qudt.org/vocab/unit#Centimeter", 80);
-        builtinResources.put("http://qudt.org/vocab/unit#Day", 81);
-        builtinResources.put("http://qudt.org/vocab/unit#DegreeCelsius", 82);
-        builtinResources.put("http://qudt.org/vocab/unit#Gram", 83);
-        builtinResources.put("http://qudt.org/vocab/unit#Hour", 84);
-        builtinResources.put("http://qudt.org/vocab/unit#InternationalUnitPerLiter", 85);
-        builtinResources.put("http://qudt.org/vocab/unit#Kilogram", 86);
-        builtinResources.put("http://qudt.org/vocab/unit#Liter", 87);
-        builtinResources.put("http://qudt.org/vocab/unit#Micrometer", 88);
-        builtinResources.put("http://qudt.org/vocab/unit#Millimeter", 89);
-        builtinResources.put("http://qudt.org/vocab/unit#MilliSecond", 90);
-        builtinResources.put("http://qudt.org/vocab/unit#MinuteTime", 91);
-        builtinResources.put("http://qudt.org/vocab/unit#Percent", 92);
-        builtinResources.put("http://qudt.org/vocab/unit#SecondTime", 93);
-        builtinResources.put("http://www.openphacts.org/units/GramPerLiter", 94);
-        builtinResources.put("http://www.openphacts.org/units/MicrogramPerMilliliter", 95);
-        builtinResources.put("http://www.openphacts.org/units/Micromolar", 96);
-        builtinResources.put("http://www.openphacts.org/units/MilligramPerDeciliter", 97);
-        builtinResources.put("http://www.openphacts.org/units/MilligramPerMilliliter", 98);
-        builtinResources.put("http://www.openphacts.org/units/Millimolar", 99);
-        builtinResources.put("http://www.openphacts.org/units/Molar", 100);
-        builtinResources.put("http://www.openphacts.org/units/NanogramPerMilliliter", 101);
-        builtinResources.put("http://www.openphacts.org/units/Nanomolar", 102);
-        builtinResources.put("http://www.openphacts.org/units/PicogramPerMilliliter", 103);
-        builtinResources.put("http://www.openphacts.org/units/Picomolar", 104);
+        /*
+         * sparql engine resources
+         */
 
         // predicates
-        builtinResources.put("http://data.epo.org/linked-data/def/patent/applicantVC", 130);
-        builtinResources.put("http://data.epo.org/linked-data/def/patent/classificationCPCAdditional", 131);
-        builtinResources.put("http://data.epo.org/linked-data/def/patent/classificationCPCInventive", 132);
-        builtinResources.put("http://data.epo.org/linked-data/def/patent/classificationIPCAdditional", 133);
-        builtinResources.put("http://data.epo.org/linked-data/def/patent/classificationIPCInventive", 134);
-        builtinResources.put("http://data.epo.org/linked-data/def/patent/filingDate", 135);
-        builtinResources.put("http://data.epo.org/linked-data/def/patent/grantDate", 136);
-        builtinResources.put("http://data.epo.org/linked-data/def/patent/inventorVC", 137);
-        builtinResources.put("http://data.epo.org/linked-data/def/patent/publicationDate", 138);
-        builtinResources.put("http://data.epo.org/linked-data/def/patent/publicationNumber", 139);
-        builtinResources.put("http://data.epo.org/linked-data/def/patent/titleOfInvention", 140);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#abbreviation", 141);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#active", 142);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#allowableQualifier", 143);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#altLabel", 144);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#annotation", 145);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#broaderConcept", 146);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#broaderDescriptor", 147);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#broaderQualifier", 148);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#casn1_label", 149);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#concept", 150);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#considerAlso", 151);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#dateCreated", 152);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#dateEstablished", 153);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#dateRevised", 154);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#entryVersion", 155);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#frequency", 156);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#hasDescriptor", 157);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#hasQualifier", 158);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#historyNote", 159);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#identifier", 160);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#indexerConsiderAlso", 161);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#lastActiveYear", 162);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#lexicalTag", 163);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#mappedTo", 164);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#narrowerConcept", 165);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#nlmClassificationNumber", 166);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#note", 167);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#onlineNote", 168);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#parentTreeNumber", 169);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#pharmacologicalAction", 170);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#preferredConcept", 171);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#preferredMappedTo", 172);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#preferredTerm", 173);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#prefLabel", 174);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#previousIndexing", 175);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#publicMeSHNote", 176);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#registryNumber", 177);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#relatedConcept", 178);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#relatedRegistryNumber", 179);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#scopeNote", 180);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#seeAlso", 181);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#sortVersion", 182);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#source", 183);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#term", 184);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#thesaurusID", 185);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#treeNumber", 186);
-        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#useInstead", 187);
-        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/contentType", 188);
-        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/eissn", 189);
-        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/endingPage", 190);
-        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/isbn", 191);
-        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/issn", 192);
-        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/issueIdentifier", 193);
-        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/location", 194);
-        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/pageRange", 195);
-        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/publicationName", 196);
-        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/startingPage", 197);
-        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/subtitle", 198);
-        builtinResources.put("http://purl.obolibrary.org/obo/has-role", 199);
-        builtinResources.put("http://purl.org/cerif/frapo/hasFundingAgency", 207);
-        builtinResources.put("http://purl.org/cerif/frapo/hasGrantNumber", 208);
-        builtinResources.put("http://purl.org/cerif/frapo/isSupportedBy", 209);
-        builtinResources.put("http://purl.org/dc/elements/1.1/identifier", 210);
-        builtinResources.put("http://purl.org/dc/terms/abstract", 211);
-        builtinResources.put("http://purl.org/dc/terms/alternative", 212);
-        builtinResources.put("http://purl.org/dc/terms/available", 213);
-        builtinResources.put("http://purl.org/dc/terms/bibliographicCitation", 214);
-        builtinResources.put("http://purl.org/dc/terms/created", 215);
-        builtinResources.put("http://purl.org/dc/terms/creator", 216);
-        builtinResources.put("http://purl.org/dc/terms/date", 217);
-        builtinResources.put("http://purl.org/dc/terms/dateAccepted", 218);
-        builtinResources.put("http://purl.org/dc/terms/description", 219);
-        builtinResources.put("http://purl.org/dc/terms/identifier", 220);
-        builtinResources.put("http://purl.org/dc/terms/isPartOf", 221);
-        builtinResources.put("http://purl.org/dc/terms/issued", 222);
-        builtinResources.put("http://purl.org/dc/terms/language", 223);
-        builtinResources.put("http://purl.org/dc/terms/license", 224);
-        builtinResources.put("http://purl.org/dc/terms/modified", 225);
-        builtinResources.put("http://purl.org/dc/terms/publisher", 226);
-        builtinResources.put("http://purl.org/dc/terms/rights", 227);
-        builtinResources.put("http://purl.org/dc/terms/source", 228);
-        builtinResources.put("http://purl.org/dc/terms/subject", 229);
-        builtinResources.put("http://purl.org/dc/terms/title", 230);
-        builtinResources.put("http://purl.org/ontology/bibo/doi", 231);
-        builtinResources.put("http://purl.org/ontology/bibo/eissn", 232);
-        builtinResources.put("http://purl.org/ontology/bibo/issn", 233);
-        builtinResources.put("http://purl.org/ontology/bibo/issue", 234);
-        builtinResources.put("http://purl.org/ontology/bibo/pageEnd", 235);
-        builtinResources.put("http://purl.org/ontology/bibo/pageStart", 236);
-        builtinResources.put("http://purl.org/ontology/bibo/pmid", 237);
-        builtinResources.put("http://purl.org/ontology/bibo/shortTitle", 238);
-        builtinResources.put("http://purl.org/ontology/bibo/volume", 239);
-        builtinResources.put("http://purl.org/pav/importedFrom", 240);
-        builtinResources.put("http://purl.org/spar/cito/citesAsDataSource", 241);
-        builtinResources.put("http://purl.org/spar/cito/discusses", 242);
-        builtinResources.put("http://purl.org/spar/cito/isCitedBy", 243);
-        builtinResources.put("http://purl.org/spar/cito/isDiscussedBy", 244);
-        builtinResources.put("http://purl.org/spar/fabio/hasNationalLibraryOfMedicineJournalId", 245);
-        builtinResources.put("http://purl.org/spar/fabio/hasNLMJournalTitleAbbreviation", 246);
-        builtinResources.put("http://purl.org/spar/fabio/hasPrimarySubjectTerm", 247);
-        builtinResources.put("http://purl.org/spar/fabio/hasSubjectTerm", 248);
-        builtinResources.put("http://purl.uniprot.org/core/encodedBy", 249);
-        builtinResources.put("http://purl.uniprot.org/core/enzyme", 250);
-        builtinResources.put("http://purl.uniprot.org/core/organism", 251);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#activityComment", 252);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayCategory", 253);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayCellType", 254);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayStrain", 255);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assaySubCellFrac", 256);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayTestType", 257);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayTissue", 258);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayType", 259);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayXref", 260);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#atcClassification", 261);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#bindingSiteName", 262);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#cellosaurusId", 263);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#classLevel", 265);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#classPath", 266);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#componentType", 267);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#dataValidityComment", 268);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#dataValidityIssue", 269);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#documentType", 270);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#fracClassification", 271);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasActivity", 272);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasAssay", 273);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasBindingSite", 274);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasBioComponent", 275);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasCellLine", 276);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasCLO", 277);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasDocument", 278);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasDrugIndication", 279);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasEFO", 280);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasEFOName", 281);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasChildMolecule", 282);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasJournal", 283);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasMechanism", 284);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasMesh", 285);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasMeshHeading", 286);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasMolecule", 287);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasParentMolecule", 288);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasProteinClassification", 289);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasQUDT", 290);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasSource", 291);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasTarget", 292);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasTargetComponent", 293);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasTargetComponentDescendant", 294);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasTargetDescendant", 295);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasUnitOnto", 296);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#helmNotation", 297);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#highestDevelopmentPhase", 298);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hracClassification", 299);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#chemblId", 300);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#iracClassification", 301);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isBindingSiteForMechanism", 302);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isBiotherapeutic", 303);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isCellLineForAssay", 304);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isCellLineForTarget", 305);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isSpeciesGroup", 306);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isTargetForCellLine", 307);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isTargetForMechanism", 308);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#mechanismActionType", 309);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#mechanismDescription", 310);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#moleculeXref", 311);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#organismName", 312);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#pChembl", 313);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#potentialDuplicate", 314);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#proteinSequence", 315);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#relation", 316);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#relEquivalentTo", 317);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#relHasSubset", 318);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#relOverlapsWith", 319);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#relSubsetOf", 320);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#standardRelation", 321);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#standardType", 322);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#standardUnits", 323);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#standardValue", 324);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#substanceType", 325);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#targetCmptXref", 326);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#targetConfDesc", 327);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#targetConfScore", 328);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#targetRelDesc", 329);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#targetRelType", 330);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#targetType", 331);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#taxonomy", 332);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#type", 333);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#units", 334);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#value", 335);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#discussesAsDerivedByTextMining", 336);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#has_parent", 337);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#hasSimilarProtein", 338);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#is_active_ingredient_of", 339);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#priorityDate", 340);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PubChemAssayOutcome", 341);
-        builtinResources.put("http://rdf.wwpdb.org/schema/pdbx-v40.owl#link_to_pdb", 342);
-        builtinResources.put("http://rdf.wwpdb.org/schema/pdbx-v50.owl#link_to_pdb", 343);
-        builtinResources.put("http://semanticscience.org/resource/gene-symbol", 344);
-        builtinResources.put("http://semanticscience.org/resource/has-attribute", 345);
-        builtinResources.put("http://semanticscience.org/resource/has-unit", 346);
-        builtinResources.put("http://semanticscience.org/resource/has-value", 347);
-        builtinResources.put("http://semanticscience.org/resource/is-attribute-of", 348);
-        builtinResources.put("http://www.biopax.org/release/biopax-level3.owl#organism", 349);
-        builtinResources.put("http://www.biopax.org/release/biopax-level3.owl#pathwayComponent", 350);
-        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasAlternativeId", 351);
-        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasOBONamespace", 352);
-        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasSynonymType", 353);
-        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#id", 354);
-        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#inSubset", 355);
-        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#source", 356);
-        builtinResources.put("http://www.wikidata.org/prop/direct/P2017", 357);
-        builtinResources.put("http://www.wikidata.org/prop/direct/P233", 358);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#defaultDataset", 359);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#defaultEntailmentRegime", 360);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#defaultGraph", 361);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#endpoint", 362);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#entailmentRegime", 363);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#extensionFunction", 364);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#feature", 365);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#graph", 366);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#namedGraph", 367);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#propertyFeature", 368);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#resultFormat", 369);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#supportedLanguage", 370);
-        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#name", 371);
-        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#object", 372);
-        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#subject", 373);
-        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", 374);
-        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#domain", 375);
-        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#label", 376);
-        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#range", 377);
-        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#subClassOf", 378);
-        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#subPropertyOf", 379);
-        builtinResources.put("http://www.w3.org/2002/07/owl#allValuesFrom", 380);
-        builtinResources.put("http://www.w3.org/2002/07/owl#annotatedProperty", 381);
-        builtinResources.put("http://www.w3.org/2002/07/owl#annotatedSource", 382);
-        builtinResources.put("http://www.w3.org/2002/07/owl#annotatedTarget", 383);
-        builtinResources.put("http://www.w3.org/2002/07/owl#cardinality", 384);
-        builtinResources.put("http://www.w3.org/2002/07/owl#deprecated", 385);
-        builtinResources.put("http://www.w3.org/2002/07/owl#maxCardinality", 386);
-        builtinResources.put("http://www.w3.org/2002/07/owl#minCardinality", 387);
-        builtinResources.put("http://www.w3.org/2002/07/owl#onProperty", 388);
-        builtinResources.put("http://www.w3.org/2002/07/owl#sameAs", 389);
-        builtinResources.put("http://www.w3.org/2002/07/owl#someValuesFrom", 390);
-        builtinResources.put("http://www.w3.org/2004/02/skos/core#altLabel", 391);
-        builtinResources.put("http://www.w3.org/2004/02/skos/core#broader", 392);
-        builtinResources.put("http://www.w3.org/2004/02/skos/core#closeMatch", 393);
-        builtinResources.put("http://www.w3.org/2004/02/skos/core#exactMatch", 394);
-        builtinResources.put("http://www.w3.org/2004/02/skos/core#inScheme", 395);
-        builtinResources.put("http://www.w3.org/2004/02/skos/core#narrower", 396);
-        builtinResources.put("http://www.w3.org/2004/02/skos/core#prefLabel", 397);
-        builtinResources.put("http://www.w3.org/2004/02/skos/core#related", 398);
-        builtinResources.put("http://www.w3.org/2004/02/skos/core#relatedMatch", 399);
-        builtinResources.put("http://www.w3.org/2004/02/skos/core#sameAs", 400);
-        builtinResources.put("http://www.w3.org/2006/vcard/ns#country-name", 401);
-        builtinResources.put("http://www.w3.org/2006/vcard/ns#family-name", 402);
-        builtinResources.put("http://www.w3.org/2006/vcard/ns#fn", 403);
-        builtinResources.put("http://www.w3.org/2006/vcard/ns#given-name", 404);
-        builtinResources.put("http://www.w3.org/2006/vcard/ns#hasEmail", 405);
-        builtinResources.put("http://www.w3.org/2006/vcard/ns#hasUID", 406);
-        builtinResources.put("http://www.w3.org/2006/vcard/ns#organization-name", 407);
-        builtinResources.put("http://xmlns.com/foaf/0.1/depiction", 408);
-        builtinResources.put("http://xmlns.com/foaf/0.1/homepage", 409);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#name", 410);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#availableGraphs", 411);
-        builtinResources.put("http://rdfs.org/ns/void#triples", 412);
-        builtinResources.put("http://rdfs.org/ns/void#classes", 413);
-        builtinResources.put("http://rdfs.org/ns/void#properties", 414);
-        builtinResources.put("http://rdfs.org/ns/void#distinctSubjects", 415);
-        builtinResources.put("http://rdfs.org/ns/void#distinctObjects", 416);
-        builtinResources.put("http://rdfs.org/ns/void#subset", 417);
-        builtinResources.put("http://rdfs.org/ns/void#classPartition", 418);
-        builtinResources.put("http://rdfs.org/ns/void#class", 419);
-        builtinResources.put("http://rdfs.org/ns/void#propertyPartition", 420);
-        builtinResources.put("http://rdfs.org/ns/void#property", 421);
-        builtinResources.put("http://rdfs.org/ns/void#target", 422);
-        builtinResources.put("http://rdfs.org/ns/void#subjectsTarget", 423);
-        builtinResources.put("http://rdfs.org/ns/void#objectsTarget", 424);
-        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#seeAlso", 425);
-        builtinResources.put("http://ldf.fi/void-ext#distinctIRIReferenceSubjects", 426);
-        builtinResources.put("http://ldf.fi/void-ext#distinctIRIReferenceObjects", 427);
-        builtinResources.put("http://ldf.fi/void-ext#distinctLiterals", 428);
-        builtinResources.put("http://rdfs.org/ns/void#linkPredicate", 429);
-        builtinResources.put("http://ldf.fi/void-ext#datatypePartition", 430);
-        builtinResources.put("http://ldf.fi/void-ext#datatype", 431);
-        builtinResources.put("http://www.w3.org/ns/shacl#namespace", 432);
-        builtinResources.put("http://www.w3.org/ns/shacl#prefix", 433);
-        builtinResources.put("http://www.w3.org/ns/shacl#select", 434);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#HRACClassification", 435);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#IRACClassification", 436);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#FRACClassification", 437);
-        builtinResources.put("https://w3id.org/chemrof/generalized_empirical_formula", 438);
-        builtinResources.put("https://w3id.org/chemrof/charge", 439);
-        builtinResources.put("https://w3id.org/chemrof/inchi_key_string", 440);
-        builtinResources.put("https://w3id.org/chemrof/inchi_string", 441);
-        builtinResources.put("https://w3id.org/chemrof/mass", 442);
-        builtinResources.put("https://w3id.org/chemrof/monoisotopic_mass", 443);
-        builtinResources.put("https://w3id.org/chemrof/smiles_string", 444);
-        builtinResources.put("https://w3id.org/chemrof/wurcs_representation", 445);
-
-        // classes
-        builtinResources.put("http://data.epo.org/linked-data/def/patent/Publication", 512);
-        builtinResources.put("http://purl.org/cerif/frapo/FundingAgency", 513);
-        builtinResources.put("http://purl.org/cerif/frapo/Grant", 514);
-        builtinResources.put("http://purl.org/dc/terms/Dataset", 515);
-        builtinResources.put("http://purl.org/spar/fabio/Book", 516);
-        builtinResources.put("http://purl.org/spar/fabio/Journal", 517);
-        builtinResources.put("http://purl.uniprot.org/core/Enzyme", 518);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Activity", 519);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ActorRef", 520);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ADMET", 521);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Antibody", 522);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Assay", 523);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#AtlasRef", 524);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#BindingSite", 525);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#BioComponent", 526);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#CellLine", 527);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#CellLineTarget", 528);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#CellTherapy", 529);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#CGDRef", 530);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Document", 531);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#DrugbankRef", 532);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#DrugIndication", 533);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#EmoleculesRef", 534);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Enzyme", 535);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#EnzymeClassRef", 536);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#FdaSrsRef", 537);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#GoComponentRef", 538);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#GoFunctionRef", 539);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#GoProcessRef", 540);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#HmdbRef", 541);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ChebiRef", 542);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ChimericProtein", 543);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#IntactRef", 544);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#InterproRef", 545);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#IupharRef", 546);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Journal", 547);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#KeggLigandRef", 548);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#LincsRef", 550);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Macromolecule", 551);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#MculeRef", 552);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Mechanism", 553);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Metal", 554);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#NikkajiRef", 555);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#NmrShiftDb2Ref", 556);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#NonMolecular", 557);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#NucleicAcid", 558);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Oligonucleotide", 559);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Oligosaccharide", 560);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#OligosaccharideTarget", 561);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Organism", 562);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#PdbeRef", 563);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#PfamRef", 564);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#PharmgkbRef", 565);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#PharmGkbRef", 566);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Phenotype", 567);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinClassification", 568);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinComplex", 569);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinComplexGroup", 570);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinDataBankRef", 571);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinFamily", 572);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinMolecule", 573);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinNucleicAcidComplex", 574);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinProteinInteraction", 575);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinSelectivityGroup", 576);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#PubchemBioassayRef", 577);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#PubchemDotfRef", 578);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#PubchemRef", 579);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#PubchemThomPharmRef", 580);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ReactomeRef", 581);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ReconRef", 582);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#SelleckRef", 583);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#SingleProtein", 584);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#SmallMolecule", 585);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#SmallMoleculeTarget", 586);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Source", 587);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#SubCellular", 588);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Substance", 589);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#SureChemblRef", 590);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Target", 591);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#TargetComponent", 592);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#TimbalRef", 593);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Tissue", 594);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#UnclassifiedMolecule", 595);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#UnclassifiedTarget", 596);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#UniprotRef", 597);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#UnknownSubstance", 598);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#UnknownTarget", 599);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#WikipediaMolRef", 600);
-        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ZincRef", 601);
-        builtinResources.put("http://www.biopax.org/release/biopax-level3.owl#Gene", 602);
-        builtinResources.put("http://www.biopax.org/release/biopax-level3.owl#Pathway", 603);
-        builtinResources.put("http://www.biopax.org/release/biopax-level3.owl#Protein", 604);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#Dataset", 605);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#Feature", 606);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#Function", 607);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#Graph", 608);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#NamedGraph", 609);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#Service", 610);
-        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property", 611);
-        builtinResources.put("http://www.w3.org/2002/07/owl#Axiom", 612);
-        builtinResources.put("http://www.w3.org/2002/07/owl#Class", 613);
-        builtinResources.put("http://www.w3.org/2002/07/owl#NamedIndividual", 614);
-        builtinResources.put("http://www.w3.org/2002/07/owl#Restriction", 615);
-        builtinResources.put("http://www.w3.org/2004/02/skos/core#Concept", 616);
-        builtinResources.put("http://www.w3.org/2004/02/skos/core#ConceptScheme", 617);
-        builtinResources.put("http://www.w3.org/2006/vcard/ns#Individual", 618);
-        builtinResources.put("http://www.w3.org/2006/vcard/ns#Organization", 619);
-        builtinResources.put("http://xmlns.com/foaf/0.1/Image", 620);
-        builtinResources.put("http://www.w3.org/ns/sparql-service-description#GraphCollection", 621);
-        builtinResources.put("http://rdfs.org/ns/void#Dataset", 622);
-        builtinResources.put("http://rdfs.org/ns/void#Linkset", 623);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Anatomy", 624);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Author", 625);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#BioAssay", 626);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Book", 627);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Cell", 628);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Compound", 629);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Concept", 630);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#ConservedDomain", 631);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Cooccurrence", 632);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Descriptor", 633);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Disease", 634);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Endpoint", 635);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Gene", 636);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Grant", 637);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#InChIKey", 638);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Journal", 639);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MeasureGroup", 640);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Organization", 641);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Patent", 642);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PatentAssignee", 643);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PatentInventor", 644);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Pathway", 645);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Protein", 646);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Reference", 647);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Source", 648);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Substance", 649);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Synonym", 650);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Taxonomy", 651);
-        builtinResources.put("http://www.w3.org/ns/shacl#SPARQLExecutable", 652);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#GeneSymbol", 653);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#CompoundIdentifier", 654);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#ConnectivitySMILES", 655);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#CovalentUnitCount", 656);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#DefinedAtomStereoCount", 657);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#DefinedBondStereoCount", 658);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#ExactMass", 659);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#HydrogenBondAcceptorCount", 660);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#HydrogenBondDonorCount", 661);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#IsotopeAtomCount", 662);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#IUPACInChI", 663);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MolecularFormula", 664);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MolecularWeight", 665);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MonoIsotopicWeight", 666);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#NonHydrogenAtomCount", 667);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PreferredIUPACName", 668);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#RotatableBondCount", 669);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#SMILES", 670);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#StructureComplexity", 671);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#SubstanceVersion", 672);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#TotalFormalCharge", 673);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#TPSA", 674);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#UndefinedAtomStereoCount", 675);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#UndefinedBondStereoCount", 676);
-        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#XLogP3", 677);
-
-        // MolMeDB
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#hasStDev", 700);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#AbsorptionWavelength", 701);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#AtomisticSimulation", 702);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#BiologyBasedMembraneModel", 703);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#BrainMembraneModel", 704);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#CellMembraneModel", 705);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#CoarseGrainedSimulation", 706);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#ContactAngle", 707);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#DepthOfMinima", 708);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#EyeMembraneModel", 709);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#FluorescenceLifetime", 710);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#FluorescenceWavelength", 711);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#GenericMembraneModel", 712);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#HybridResolutionSimulation", 713);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#InhibitionAssay", 714);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#IntestineMembraneModel", 715);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#LogK", 716);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#LogPerm", 717);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#MembraneModel", 718);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#MembranePermeabilityMethod", 719);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#MembranePositionMethod", 720);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#OralMembraneModel", 721);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#PenetrationBarrier", 722);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#PKm", 723);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#PositionOfMinima", 724);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#QuantumYield", 725);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#SkinMembraneModel", 726);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#SubstanceBasedMembraneModel", 727);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#SubstrateBindingAssay", 728);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#UnitedAtomsSimulation", 729);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#WaterMembranePartitioningMethod", 730);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#ProtonationMinPH", 731);
-        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#ProtonationMaxPH", 732);
-        builtinResources.put("http://purl.org/dc/terms/BibliographicResource", 733);
-        builtinResources.put("https://w3id.org/reproduceme#hasExperimentalCondition", 734);
+        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", 0);
 
         // datatypes
-        builtinResources.put("http://www.w3.org/2001/XMLSchema#boolean", 900);
-        builtinResources.put("http://www.w3.org/2001/XMLSchema#short", 901);
-        builtinResources.put("http://www.w3.org/2001/XMLSchema#int", 902);
-        builtinResources.put("http://www.w3.org/2001/XMLSchema#long", 903);
-        builtinResources.put("http://www.w3.org/2001/XMLSchema#integer", 904);
-        builtinResources.put("http://www.w3.org/2001/XMLSchema#decimal", 905);
-        builtinResources.put("http://www.w3.org/2001/XMLSchema#float", 906);
-        builtinResources.put("http://www.w3.org/2001/XMLSchema#double", 907);
-        builtinResources.put("http://www.w3.org/2001/XMLSchema#date", 908);
-        builtinResources.put("http://www.w3.org/2001/XMLSchema#dateTime", 909);
-        builtinResources.put("http://www.w3.org/2001/XMLSchema#dayTimeDuration", 910);
-        builtinResources.put("http://www.w3.org/2001/XMLSchema#string", 911);
-        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", 912);
-        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#HTML", 913);
-        builtinResources.put("http://bioinfo.uochb.cas.cz/rdf/v1.0/ms#spectrum", 914);
+        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#dirLangString", 400);
+        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", 401);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#boolean", 402);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#byte", 403);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#date", 404);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#dateTime", 405);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#dayTimeDuration", 406);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#decimal", 407);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#double", 408);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#float", 409);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#int", 410);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#integer", 411);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#long", 412);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#negativeInteger", 413);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#nonNegativeInteger", 414);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#nonPositiveInteger", 415);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#positiveInteger", 416);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#short", 417);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#string", 418);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#unsignedByte", 419);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#unsignedInt", 420);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#unsignedLong", 421);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#unsignedShort", 422);
+
+
+
+        /*
+         * service description resources
+         */
+
+        // classes
+        builtinResources.put("http://rdfs.org/ns/void#Dataset", 2000);
+        builtinResources.put("http://rdfs.org/ns/void#Linkset", 2001);
+        builtinResources.put("http://www.w3.org/ns/shacl#PrefixDeclaration", 2002);
+        builtinResources.put("http://www.w3.org/ns/shacl#SPARQLAskExecutable", 2003);
+        builtinResources.put("http://www.w3.org/ns/shacl#SPARQLConstructExecutable", 2004);
+        builtinResources.put("http://www.w3.org/ns/shacl#SPARQLDescribeExecutable", 2005);
+        builtinResources.put("http://www.w3.org/ns/shacl#SPARQLExecutable", 2006);
+        builtinResources.put("http://www.w3.org/ns/shacl#SPARQLSelectExecutable", 2007);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#Dataset", 2008);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#Feature", 2009);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#Function", 2010);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#Graph", 2011);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#GraphCollection", 2012);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#Service", 2013);
+
+        // predicates
+        builtinResources.put("http://ldf.fi/void-ext#datatype", 2400);
+        builtinResources.put("http://ldf.fi/void-ext#datatypePartition", 2401);
+        builtinResources.put("http://ldf.fi/void-ext#distinctIRIReferenceObjects", 2402);
+        builtinResources.put("http://ldf.fi/void-ext#distinctIRIReferenceSubjects", 2403);
+        builtinResources.put("http://ldf.fi/void-ext#distinctLiterals", 2404);
+        builtinResources.put("http://purl.org/dc/terms/issued", 2405);
+        builtinResources.put("http://rdfs.org/ns/void#class", 2406);
+        builtinResources.put("http://rdfs.org/ns/void#classes", 2407);
+        builtinResources.put("http://rdfs.org/ns/void#classPartition", 2408);
+        builtinResources.put("http://rdfs.org/ns/void#distinctObjects", 2409);
+        builtinResources.put("http://rdfs.org/ns/void#distinctSubjects", 2410);
+        builtinResources.put("http://rdfs.org/ns/void#linkPredicate", 2411);
+        builtinResources.put("http://rdfs.org/ns/void#objectsTarget", 2412);
+        builtinResources.put("http://rdfs.org/ns/void#properties", 2413);
+        builtinResources.put("http://rdfs.org/ns/void#property", 2414);
+        builtinResources.put("http://rdfs.org/ns/void#propertyPartition", 2415);
+        builtinResources.put("http://rdfs.org/ns/void#subjectsTarget", 2416);
+        builtinResources.put("http://rdfs.org/ns/void#subset", 2417);
+        builtinResources.put("http://rdfs.org/ns/void#target", 2418);
+        builtinResources.put("http://rdfs.org/ns/void#triples", 2419);
+        builtinResources.put("http://www.w3.org/ns/shacl#ask", 2420);
+        builtinResources.put("http://www.w3.org/ns/shacl#construct", 2421);
+        builtinResources.put("http://www.w3.org/ns/shacl#declare", 2422);
+        builtinResources.put("http://www.w3.org/ns/shacl#describe", 2423);
+        builtinResources.put("http://www.w3.org/ns/shacl#namespace", 2424);
+        builtinResources.put("http://www.w3.org/ns/shacl#prefix", 2425);
+        builtinResources.put("http://www.w3.org/ns/shacl#prefixes", 2426);
+        builtinResources.put("http://www.w3.org/ns/shacl#select", 2427);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#availableGraphs", 2428);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#defaultDataset", 2429);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#defaultEntailmentRegime", 2430);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#defaultGraph", 2431);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#endpoint", 2432);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#extensionFunction", 2433);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#feature", 2434);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#graph", 2435);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#name", 2436);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#namedGraph", 2437);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#propertyFeature", 2438);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#resultFormat", 2439);
+        builtinResources.put("http://www.w3.org/ns/sparql-service-description#supportedLanguage", 2440);
+        builtinResources.put("https://purl.expasy.org/sparql-examples/ontology#federatesWith", 2441);
+        builtinResources.put("https://schema.org/target", 2442);
+
+
+
+        /*
+         * shared resources
+         */
+
+        // predicates
+        builtinResources.put("http://purl.org/dc/terms/bibliographicCitation", 4000);
+        builtinResources.put("http://purl.org/dc/terms/date", 4001);
+        builtinResources.put("http://purl.org/dc/terms/description", 4002);
+        builtinResources.put("http://purl.org/dc/terms/modified", 4003);
+        builtinResources.put("http://purl.org/dc/terms/subject", 4004);
+        builtinResources.put("http://purl.org/dc/terms/title", 4005);
+        builtinResources.put("http://purl.org/ontology/bibo/doi", 4006);
+        builtinResources.put("http://purl.org/ontology/bibo/pmid", 4007);
+        builtinResources.put("http://rdf.wwpdb.org/schema/pdbx-v50.owl#link_to_pdb", 4008);
+        builtinResources.put("http://semanticscience.org/resource/has-value", 4009);
+        builtinResources.put("http://semanticscience.org/resource/is-attribute-of", 4010);
+        builtinResources.put("http://www.w3.org/2004/02/skos/core#altLabel", 4011);
+        builtinResources.put("http://www.w3.org/2004/02/skos/core#broader", 4012);
+        builtinResources.put("http://www.w3.org/2004/02/skos/core#closeMatch", 4013);
+        builtinResources.put("http://www.w3.org/2004/02/skos/core#exactMatch", 4014);
+        builtinResources.put("http://www.w3.org/2004/02/skos/core#prefLabel", 4015);
+        builtinResources.put("http://www.w3.org/2004/02/skos/core#relatedMatch", 4016);
+        builtinResources.put("http://www.w3.org/2006/vcard/ns#family-name", 4017);
+        builtinResources.put("http://www.w3.org/2006/vcard/ns#given-name", 4018);
+        builtinResources.put("http://www.w3.org/2006/vcard/ns#organization-name", 4019);
+
+
+
+        /*
+         * ontology resources
+         */
+
+        // classes
+        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property", 6000);
+        builtinResources.put("http://www.w3.org/2002/07/owl#Class", 6001);
+        builtinResources.put("http://www.w3.org/2002/07/owl#NamedIndividual", 6002);
+        builtinResources.put("http://www.w3.org/2002/07/owl#Restriction", 6003);
+
+        // predicates
+        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#domain", 6400);
+        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#label", 6401);
+        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#range", 6402);
+        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#seeAlso", 6403);
+        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#subClassOf", 6404);
+        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#subPropertyOf", 6405);
+        builtinResources.put("http://www.w3.org/2002/07/owl#allValuesFrom", 6406);
+        builtinResources.put("http://www.w3.org/2002/07/owl#cardinality", 6407);
+        builtinResources.put("http://www.w3.org/2002/07/owl#maxCardinality", 6408);
+        builtinResources.put("http://www.w3.org/2002/07/owl#minCardinality", 6409);
+        builtinResources.put("http://www.w3.org/2002/07/owl#onProperty", 6410);
+        builtinResources.put("http://www.w3.org/2002/07/owl#someValuesFrom", 6411);
+
+
+
+        /*
+         * Wikidata resources
+         */
+
+        // predicates
+        builtinResources.put("http://www.wikidata.org/prop/direct/P2017", 8000);
+        builtinResources.put("http://www.wikidata.org/prop/direct/P233", 8001);
+
+
+
+        /*
+         * MoNA and ISDB resources
+         */
+
+        // classes
+        builtinResources.put("http://www.w3.org/2006/vcard/ns#Individual", 10000);
+
+        // predicates
+        builtinResources.put("http://purl.org/dc/terms/created", 10400);
+        builtinResources.put("http://purl.org/dc/terms/dateAccepted", 10401);
+        builtinResources.put("http://www.w3.org/2006/vcard/ns#hasEmail", 10402);
+
+        // datatypes
+        builtinResources.put("http://bioinfo.uochb.cas.cz/rdf/v1.0/ms#spectrum", 10800);
+
+
+
+        /*
+         * MeSH resources
+         */
+
+        // classes
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#AllowedDescriptorQualifierPair", 12000);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#CheckTag", 12001);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#Concept", 12002);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#DisallowedDescriptorQualifierPair", 12003);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#GeographicalDescriptor", 12004);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#PublicationType", 12005);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#Qualifier", 12006);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Anatomy", 12007);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Chemical", 12008);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Disease", 12009);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Organism", 12010);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Population", 12011);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#SCR_Protocol", 12012);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#Term", 12013);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#TopicalDescriptor", 12014);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#TreeNumber", 12015);
+
+        // predicates
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#abbreviation", 12400);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#active", 12401);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#allowableQualifier", 12402);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#altLabel", 12403);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#annotation", 12404);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#broaderConcept", 12405);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#broaderDescriptor", 12406);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#broaderQualifier", 12407);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#casn1_label", 12408);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#concept", 12409);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#considerAlso", 12410);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#dateCreated", 12411);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#dateEstablished", 12412);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#dateRevised", 12413);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#entryVersion", 12414);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#frequency", 12415);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#hasDescriptor", 12416);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#hasQualifier", 12417);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#historyNote", 12418);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#identifier", 12419);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#indexerConsiderAlso", 12420);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#lastActiveYear", 12421);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#lexicalTag", 12422);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#mappedTo", 12423);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#narrowerConcept", 12424);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#nlmClassificationNumber", 12425);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#note", 12426);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#onlineNote", 12427);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#parentTreeNumber", 12428);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#pharmacologicalAction", 12429);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#preferredConcept", 12430);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#preferredMappedTo", 12431);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#preferredTerm", 12432);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#prefLabel", 12433);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#previousIndexing", 12434);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#publicMeSHNote", 12435);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#registryNumber", 12436);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#relatedConcept", 12437);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#relatedRegistryNumber", 12438);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#scopeNote", 12439);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#seeAlso", 12440);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#sortVersion", 12441);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#source", 12442);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#term", 12443);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#thesaurusID", 12444);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#treeNumber", 12445);
+        builtinResources.put("http://id.nlm.nih.gov/mesh/vocab#useInstead", 12446);
+
+
+
+        /*
+         * MolMeDB resources
+         */
+
+        // classes
+        builtinResources.put("http://purl.org/dc/terms/BibliographicResource", 14000);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#AbsorptionWavelength", 14001);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#AtomisticSimulation", 14002);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#BiologyBasedMembraneModel", 14003);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#BrainMembraneModel", 14004);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#CellMembraneModel", 14005);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#CoarseGrainedSimulation", 14006);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#ContactAngle", 14007);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#DepthOfMinima", 14008);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#EyeMembraneModel", 14009);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#FluorescenceLifetime", 14010);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#FluorescenceWavelength", 14011);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#GenericMembraneModel", 14012);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#HybridResolutionSimulation", 14013);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#InhibitionAssay", 14014);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#IntestineMembraneModel", 14015);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#LogK", 14016);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#LogPerm", 14017);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#MembraneModel", 14018);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#MembranePermeabilityMethod", 14019);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#MembranePositionMethod", 14020);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#OralMembraneModel", 14021);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#PenetrationBarrier", 14022);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#PKm", 14023);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#PositionOfMinima", 14024);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#ProtonationMaxPH", 14025);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#ProtonationMinPH", 14026);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#QuantumYield", 14027);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#SkinMembraneModel", 14028);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#SubstanceBasedMembraneModel", 14029);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#SubstrateBindingAssay", 14030);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#UnitedAtomsSimulation", 14031);
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#WaterMembranePartitioningMethod", 14032);
+
+        // predicates
+        builtinResources.put("https://rdf.molmedb.upol.cz/vocabulary#hasStDev", 14400);
+        builtinResources.put("https://w3id.org/reproduceme#hasExperimentalCondition", 14401);
+
+
+
+        /*
+         * ChEBI resources
+         */
+
+        // classes
+        builtinResources.put("http://www.w3.org/2002/07/owl#Axiom", 16000);
+
+        // predicates
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/has_functional_parent", 16400);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/has_parent_hydride", 16401);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_conjugate_acid_of", 16402);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_conjugate_base_of", 16403);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_enantiomer_of", 16404);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_substituent_group_from", 16405);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/is_tautomer_of", 16406);
+        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasAlternativeId", 16407);
+        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasDbXref", 16408);
+        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasExactSynonym", 16409);
+        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasOBONamespace", 16410);
+        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym", 16411);
+        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasSynonymType", 16412);
+        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#id", 16413);
+        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#inSubset", 16414);
+        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#source", 16415);
+        builtinResources.put("http://www.w3.org/2002/07/owl#annotatedProperty", 16416);
+        builtinResources.put("http://www.w3.org/2002/07/owl#annotatedSource", 16417);
+        builtinResources.put("http://www.w3.org/2002/07/owl#annotatedTarget", 16418);
+        builtinResources.put("http://www.w3.org/2002/07/owl#deprecated", 16419);
+        builtinResources.put("https://w3id.org/chemrof/charge", 16420);
+        builtinResources.put("https://w3id.org/chemrof/generalized_empirical_formula", 16421);
+        builtinResources.put("https://w3id.org/chemrof/inchi_key_string", 16422);
+        builtinResources.put("https://w3id.org/chemrof/inchi_string", 16423);
+        builtinResources.put("https://w3id.org/chemrof/mass", 16424);
+        builtinResources.put("https://w3id.org/chemrof/monoisotopic_mass", 16425);
+        builtinResources.put("https://w3id.org/chemrof/smiles_string", 16426);
+        builtinResources.put("https://w3id.org/chemrof/wurcs_representation", 16427);
+
+        // individuals
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/BRAND_NAME", 16800);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/INN", 16801);
+        builtinResources.put("http://purl.obolibrary.org/obo/chebi/IUPAC_NAME", 16802);
+
+
+
+        /*
+         * ChEMBL resources
+         */
+
+        // classes
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Activity", 18000);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ADMET", 18001);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Antibody", 18002);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Assay", 18003);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#BindingSite", 18004);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#BioComponent", 18005);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#CellLine", 18006);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#CellLineTarget", 18007);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#CellTherapy", 18008);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#CGDRef", 18009);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ChebiRef", 18010);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ChimericProtein", 18011);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Document", 18012);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#DrugbankRef", 18013);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#DrugIndication", 18014);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Enzyme", 18015);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#EnzymeClassRef", 18016);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#FdaSrsRef", 18017);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#GoComponentRef", 18018);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#GoFunctionRef", 18019);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#GoProcessRef", 18020);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#HmdbRef", 18021);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#IntactRef", 18022);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#InterproRef", 18023);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#IupharRef", 18024);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Journal", 18025);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Macromolecule", 18026);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Mechanism", 18027);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Metal", 18028);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#NmrShiftDb2Ref", 18029);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#NonMolecular", 18030);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#NucleicAcid", 18031);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Oligonucleotide", 18032);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Oligosaccharide", 18033);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#OligosaccharideTarget", 18034);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Organism", 18035);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#PdbeRef", 18036);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#PfamRef", 18037);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#PharmgkbRef", 18038);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Phenotype", 18039);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinClassification", 18040);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinComplex", 18041);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinComplexGroup", 18042);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinDataBankRef", 18043);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinFamily", 18044);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinMolecule", 18045);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinNucleicAcidComplex", 18046);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinProteinInteraction", 18047);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ProteinSelectivityGroup", 18048);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#PubchemBioassayRef", 18049);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#PubchemRef", 18050);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#ReactomeRef", 18051);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#SingleProtein", 18052);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#SmallMolecule", 18053);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#SmallMoleculeTarget", 18054);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Source", 18055);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#SubCellular", 18056);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Substance", 18057);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#SureChemblRef", 18058);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Target", 18059);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#TargetComponent", 18060);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#TimbalRef", 18061);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#Tissue", 18062);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#UnclassifiedMolecule", 18063);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#UnclassifiedTarget", 18064);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#UniprotRef", 18065);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#UnknownSubstance", 18066);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#UnknownTarget", 18067);
+        builtinResources.put("http://xmlns.com/foaf/0.1/Image", 18068);
+
+        // predicates
+        builtinResources.put("http://purl.org/dc/elements/1.1/identifier", 18400);
+        builtinResources.put("http://purl.org/ontology/bibo/eissn", 18401);
+        builtinResources.put("http://purl.org/ontology/bibo/issn", 18402);
+        builtinResources.put("http://purl.org/ontology/bibo/issue", 18403);
+        builtinResources.put("http://purl.org/ontology/bibo/pageEnd", 18404);
+        builtinResources.put("http://purl.org/ontology/bibo/pageStart", 18405);
+        builtinResources.put("http://purl.org/ontology/bibo/shortTitle", 18406);
+        builtinResources.put("http://purl.org/ontology/bibo/volume", 18407);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#activityComment", 18408);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayCategory", 18409);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayCellType", 18410);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayStrain", 18411);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assaySubCellFrac", 18412);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayTestType", 18413);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayTissue", 18414);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayType", 18415);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#assayXref", 18416);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#atcClassification", 18417);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#bindingSiteName", 18418);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#cellosaurusId", 18419);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#chemblId", 18420);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#classLevel", 18421);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#classPath", 18422);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#componentType", 18423);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#dataValidityComment", 18424);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#dataValidityIssue", 18425);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#documentType", 18426);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#FRACClassification", 18427);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasActivity", 18428);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasAssay", 18429);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasBindingSite", 18430);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasBioComponent", 18431);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasCellLine", 18432);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasChildMolecule", 18433);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasCLO", 18434);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasDocument", 18435);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasDrugIndication", 18436);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasEFO", 18437);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasEFOName", 18438);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasJournal", 18439);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasMechanism", 18440);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasMesh", 18441);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasMeshHeading", 18442);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasMolecule", 18443);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasParentMolecule", 18444);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasProteinClassification", 18445);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasQUDT", 18446);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasSource", 18447);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasTarget", 18448);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasTargetComponent", 18449);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasTargetComponentDescendant", 18450);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasTargetDescendant", 18451);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#hasUnitOnto", 18452);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#helmNotation", 18453);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#highestDevelopmentPhase", 18454);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#HRACClassification", 18455);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#IRACClassification", 18456);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isBindingSiteForMechanism", 18457);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isBiotherapeutic", 18458);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isCellLineForAssay", 18459);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isCellLineForTarget", 18460);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isSpeciesGroup", 18461);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isTargetForCellLine", 18462);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#isTargetForMechanism", 18463);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#mechanismActionType", 18464);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#mechanismDescription", 18465);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#moleculeXref", 18466);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#organismName", 18467);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#pChembl", 18468);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#potentialDuplicate", 18469);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#proteinSequence", 18470);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#relation", 18471);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#relEquivalentTo", 18472);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#relHasSubset", 18473);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#relOverlapsWith", 18474);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#relSubsetOf", 18475);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#standardRelation", 18476);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#standardType", 18477);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#standardUnits", 18478);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#standardValue", 18479);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#substanceType", 18480);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#targetCmptXref", 18481);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#targetConfDesc", 18482);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#targetConfScore", 18483);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#targetRelDesc", 18484);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#targetRelType", 18485);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#targetType", 18486);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#taxonomy", 18487);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#type", 18488);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#units", 18489);
+        builtinResources.put("http://rdf.ebi.ac.uk/terms/chembl#value", 18490);
+        builtinResources.put("http://www.w3.org/2004/02/skos/core#narrower", 18491);
+        builtinResources.put("http://xmlns.com/foaf/0.1/depiction", 18492);
+
+        // individuals
+        builtinResources.put("http://qudt.org/vocab/unit#Centimeter", 18800);
+        builtinResources.put("http://qudt.org/vocab/unit#Day", 18801);
+        builtinResources.put("http://qudt.org/vocab/unit#DegreeCelsius", 18802);
+        builtinResources.put("http://qudt.org/vocab/unit#Gram", 18803);
+        builtinResources.put("http://qudt.org/vocab/unit#Hour", 18804);
+        builtinResources.put("http://qudt.org/vocab/unit#InternationalUnitPerLiter", 18805);
+        builtinResources.put("http://qudt.org/vocab/unit#Kilogram", 18806);
+        builtinResources.put("http://qudt.org/vocab/unit#Liter", 18807);
+        builtinResources.put("http://qudt.org/vocab/unit#Micrometer", 18808);
+        builtinResources.put("http://qudt.org/vocab/unit#Millimeter", 18809);
+        builtinResources.put("http://qudt.org/vocab/unit#MilliSecond", 18810);
+        builtinResources.put("http://qudt.org/vocab/unit#MinuteTime", 18811);
+        builtinResources.put("http://qudt.org/vocab/unit#Percent", 18812);
+        builtinResources.put("http://qudt.org/vocab/unit#SecondTime", 18813);
+        builtinResources.put("http://www.openphacts.org/units/GramPerLiter", 18814);
+        builtinResources.put("http://www.openphacts.org/units/MicrogramPerMilliliter", 18815);
+        builtinResources.put("http://www.openphacts.org/units/Micromolar", 18816);
+        builtinResources.put("http://www.openphacts.org/units/MilligramPerDeciliter", 18817);
+        builtinResources.put("http://www.openphacts.org/units/MilligramPerMilliliter", 18818);
+        builtinResources.put("http://www.openphacts.org/units/Millimolar", 18819);
+        builtinResources.put("http://www.openphacts.org/units/Molar", 18820);
+        builtinResources.put("http://www.openphacts.org/units/NanogramPerMilliliter", 18821);
+        builtinResources.put("http://www.openphacts.org/units/Nanomolar", 18822);
+        builtinResources.put("http://www.openphacts.org/units/PicogramPerMilliliter", 18823);
+        builtinResources.put("http://www.openphacts.org/units/Picomolar", 18824);
+
+
+
+        /*
+         * PubChem resources
+         */
+
+        // classes
+        builtinResources.put("http://data.epo.org/linked-data/def/patent/Publication", 20000);
+        builtinResources.put("http://purl.org/cerif/frapo/FundingAgency", 20001);
+        builtinResources.put("http://purl.org/cerif/frapo/Grant", 20002);
+        builtinResources.put("http://purl.org/dc/terms/Dataset", 20003);
+        builtinResources.put("http://purl.org/spar/fabio/Book", 20004);
+        builtinResources.put("http://purl.org/spar/fabio/Journal", 20005);
+        builtinResources.put("http://purl.uniprot.org/core/Enzyme", 20006);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Anatomy", 20007);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Author", 20008);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#BioAssay", 20009);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Book", 20010);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Cell", 20011);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Compound", 20012);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#CompoundIdentifier", 20013);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Concept", 20014);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#ConnectivitySMILES", 20015);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#ConservedDomain", 20016);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Cooccurrence", 20017);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#CovalentUnitCount", 20018);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#DefinedAtomStereoCount", 20019);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#DefinedBondStereoCount", 20020);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Disease", 20021);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Endpoint", 20022);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#ExactMass", 20023);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Gene", 20024);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#GeneSymbol", 20025);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Grant", 20026);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#HydrogenBondAcceptorCount", 20027);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#HydrogenBondDonorCount", 20028);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#InChIKey", 20029);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#IsotopeAtomCount", 20030);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#IUPACInChI", 20031);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Journal", 20032);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MeasureGroup", 20033);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MolecularFormula", 20034);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MolecularWeight", 20035);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MonoIsotopicWeight", 20036);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#NonHydrogenAtomCount", 20037);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Organization", 20038);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Patent", 20039);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PatentAssignee", 20040);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PatentInventor", 20041);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Pathway", 20042);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PreferredIUPACName", 20043);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Protein", 20044);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Reference", 20045);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#RotatableBondCount", 20046);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#SMILES", 20047);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Source", 20048);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#StructureComplexity", 20049);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Substance", 20050);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#SubstanceVersion", 20051);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Synonym", 20052);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Taxonomy", 20053);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#TotalFormalCharge", 20054);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#TPSA", 20055);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#UndefinedAtomStereoCount", 20056);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#UndefinedBondStereoCount", 20057);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#XLogP3", 20058);
+        builtinResources.put("http://www.biopax.org/release/biopax-level3.owl#Gene", 20059);
+        builtinResources.put("http://www.biopax.org/release/biopax-level3.owl#Pathway", 20060);
+        builtinResources.put("http://www.biopax.org/release/biopax-level3.owl#Protein", 20061);
+        builtinResources.put("http://www.w3.org/2004/02/skos/core#Concept", 20062);
+        builtinResources.put("http://www.w3.org/2004/02/skos/core#ConceptScheme", 20063);
+        builtinResources.put("http://www.w3.org/2006/vcard/ns#Organization", 20064);
+
+        // predicates
+        builtinResources.put("http://data.epo.org/linked-data/def/patent/applicantVC", 20400);
+        builtinResources.put("http://data.epo.org/linked-data/def/patent/classificationCPCAdditional", 20401);
+        builtinResources.put("http://data.epo.org/linked-data/def/patent/classificationCPCInventive", 20402);
+        builtinResources.put("http://data.epo.org/linked-data/def/patent/classificationIPCAdditional", 20403);
+        builtinResources.put("http://data.epo.org/linked-data/def/patent/classificationIPCInventive", 20404);
+        builtinResources.put("http://data.epo.org/linked-data/def/patent/filingDate", 20405);
+        builtinResources.put("http://data.epo.org/linked-data/def/patent/grantDate", 20406);
+        builtinResources.put("http://data.epo.org/linked-data/def/patent/inventorVC", 20407);
+        builtinResources.put("http://data.epo.org/linked-data/def/patent/publicationDate", 20408);
+        builtinResources.put("http://data.epo.org/linked-data/def/patent/publicationNumber", 20409);
+        builtinResources.put("http://data.epo.org/linked-data/def/patent/titleOfInvention", 20410);
+        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/contentType", 20411);
+        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/eissn", 20412);
+        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/endingPage", 20413);
+        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/isbn", 20414);
+        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/issn", 20415);
+        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/issueIdentifier", 20416);
+        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/location", 20417);
+        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/pageRange", 20418);
+        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/publicationName", 20419);
+        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/startingPage", 20420);
+        builtinResources.put("http://prismstandard.org/namespaces/basic/3.0/subtitle", 20421);
+        builtinResources.put("http://purl.obolibrary.org/obo/has-role", 20422);
+        builtinResources.put("http://purl.org/cerif/frapo/hasFundingAgency", 20423);
+        builtinResources.put("http://purl.org/cerif/frapo/hasGrantNumber", 20424);
+        builtinResources.put("http://purl.org/cerif/frapo/isSupportedBy", 20425);
+        builtinResources.put("http://purl.org/dc/terms/abstract", 20426);
+        builtinResources.put("http://purl.org/dc/terms/alternative", 20427);
+        builtinResources.put("http://purl.org/dc/terms/available", 20428);
+        builtinResources.put("http://purl.org/dc/terms/creator", 20429);
+        builtinResources.put("http://purl.org/dc/terms/identifier", 20430);
+        builtinResources.put("http://purl.org/dc/terms/isPartOf", 20431);
+        builtinResources.put("http://purl.org/dc/terms/language", 20432);
+        builtinResources.put("http://purl.org/dc/terms/license", 20433);
+        builtinResources.put("http://purl.org/dc/terms/publisher", 20434);
+        builtinResources.put("http://purl.org/dc/terms/rights", 20435);
+        builtinResources.put("http://purl.org/dc/terms/source", 20436);
+        builtinResources.put("http://purl.org/pav/importedFrom", 20437);
+        builtinResources.put("http://purl.org/spar/cito/citesAsDataSource", 20438);
+        builtinResources.put("http://purl.org/spar/cito/discusses", 20439);
+        builtinResources.put("http://purl.org/spar/cito/isCitedBy", 20440);
+        builtinResources.put("http://purl.org/spar/cito/isDiscussedBy", 20441);
+        builtinResources.put("http://purl.org/spar/fabio/hasNationalLibraryOfMedicineJournalId", 20442);
+        builtinResources.put("http://purl.org/spar/fabio/hasNLMJournalTitleAbbreviation", 20443);
+        builtinResources.put("http://purl.org/spar/fabio/hasPrimarySubjectTerm", 20444);
+        builtinResources.put("http://purl.org/spar/fabio/hasSubjectTerm", 20445);
+        builtinResources.put("http://purl.uniprot.org/core/encodedBy", 20446);
+        builtinResources.put("http://purl.uniprot.org/core/enzyme", 20447);
+        builtinResources.put("http://purl.uniprot.org/core/organism", 20448);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#connectivity_smiles", 20449);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#covalent_unit_count", 20450);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#defined_atom_stereo_count", 20451);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#defined_bond_stereo_count", 20452);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#discussesAsDerivedByTextMining", 20453);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#exact_mass", 20454);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#has_parent", 20455);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#hasQualifier", 20456);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#hasSimilarProtein", 20457);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#hydrogen_bond_acceptor_count", 20458);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#hydrogen_bond_donor_count", 20459);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#inchikey", 20460);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#is_active_ingredient_of", 20461);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#isotope_atom_count", 20462);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#iupac_inchi", 20463);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#molecular_formula", 20464);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#molecular_weight", 20465);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#mono_isotopic_weight", 20466);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#non_hydrogen_atom_count", 20467);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#preferred_iupac_name", 20468);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#priorityDate", 20469);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PubChemAssayOutcome", 20470);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#rotatable_bond_count", 20471);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#structure_complexity", 20472);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#substance_version", 20473);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#total_formal_charge", 20474);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#tpsa", 20475);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#undefined_atom_stereo_count", 20476);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#undefined_bond_stereo_count", 20477);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#xlogp3", 20478);
+        builtinResources.put("http://semanticscience.org/resource/gene-symbol", 20479);
+        builtinResources.put("http://semanticscience.org/resource/has-attribute", 20480);
+        builtinResources.put("http://semanticscience.org/resource/has-unit", 20481);
+        builtinResources.put("http://www.biopax.org/release/biopax-level3.owl#organism", 20482);
+        builtinResources.put("http://www.biopax.org/release/biopax-level3.owl#pathwayComponent", 20483);
+        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#object", 20484);
+        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#subject", 20485);
+        builtinResources.put("http://www.w3.org/2004/02/skos/core#inScheme", 20486);
+        builtinResources.put("http://www.w3.org/2004/02/skos/core#related", 20487);
+        builtinResources.put("http://www.w3.org/2006/vcard/ns#country-name", 20488);
+        builtinResources.put("http://www.w3.org/2006/vcard/ns#fn", 20489);
+        builtinResources.put("http://www.w3.org/2006/vcard/ns#hasUID", 20490);
+        builtinResources.put("http://xmlns.com/foaf/0.1/homepage", 20491);
+
+        // individuals
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#active", 20800);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#FDAApprovedDrugs", 20801);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#inactive", 20802);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#inconclusive", 20803);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#probe", 20804);
+        builtinResources.put("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#unspecified", 20805);
     }
 
 
@@ -1058,7 +1155,8 @@ public class Ontology extends Updater
 
         for(Unit unit : units)
             if(iri.matches(unit.pattern))
-                return Pair.getPair(unit.id, OntologyResource.parseId(unit.id, iri.substring(unit.valueOffset)));
+                return Pair.getPair(unit.id, OntologyResource.parseId(unit.id,
+                        iri.substring(unit.valueOffset, iri.length() - unit.suffix.length())));
 
         Integer resourceID = builtinResources.get(iri);
 
@@ -1101,7 +1199,7 @@ public class Ontology extends Updater
 
             resourceID = oldResources.get(iri);
 
-            if(resourceID == null || resourceID <= maxBuiltinResourceID)
+            if(resourceID == null || resourceID <= builtinResourceLimit - 1)
                 newResources.put(iri, resourceID = nextResourceID++);
             else
                 keepResources.put(iri, oldResources.remove(iri));
@@ -1115,10 +1213,8 @@ public class Ontology extends Updater
     {
         load("select iri,resource_id from ontology.resources__reftable", oldResources);
 
-        maxBuiltinResourceID = Math.max(builtinResources.values().stream().max(Integer::compare).orElse(-1).intValue(),
-                999);
-        nextResourceID = Math.max(oldResources.values().stream().max(Integer::compare).orElse(-1).intValue(),
-                maxBuiltinResourceID) + 1;
+        nextResourceID = Math.max(oldResources.values().stream().max(Integer::compare).orElse(-1).intValue() + 1,
+                builtinResourceLimit);
 
         builtinResources.forEach((iri, id) -> {
             Integer old = oldResources.get(iri);
