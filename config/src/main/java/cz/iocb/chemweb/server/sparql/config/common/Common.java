@@ -103,7 +103,7 @@ public class Common
         config.addIriClass(new StringUserIriClass("reference:lipidmaps", "https://www.lipidmaps.org/data/LMSDRecord.php?LMID=LM", "[A-Z0-9]+"));
         config.addIriClass(new StringUserIriClass("reference:molport", "https://www.molport.com/shop/compound/Molport-", "(-[0-9]{3}){3}"));
         config.addIriClass(new StringUserIriClass("reference:nmrshiftdb2", "https://nmrshiftdb.nmr.uni-koeln.de/molecule/", "[1-9][0-9]*"));
-        config.addIriClass(new StringUserIriClass("reference:pdbe", "https://www.ebi.ac.uk/pdbe-srv/pdbechem/chemicalCompound/show/", "[A-Z0-9_]*\\+-\\+Ideal\\+conformer"));
+        config.addIriClass(new StringUserIriClass("reference:pdbe", "https://www.ebi.ac.uk/pdbe-srv/pdbechem/chemicalCompound/show/", "[A-Z0-9_]*", "+-+Ideal+conformer"));
         config.addIriClass(new StringUserIriClass("reference:probesanddrugs", "https://www.probes-drugs.org/compounds/PD", "[0-9]{6}"));
         config.addIriClass(new StringUserIriClass("reference:pubchem", "https://pubchem.ncbi.nlm.nih.gov/compound/", "[1-9][0-9]*"));
         config.addIriClass(new StringUserIriClass("reference:rcsbpdb", "https://www.rcsb.org/ligand/", "[A-Z0-9]+"));
