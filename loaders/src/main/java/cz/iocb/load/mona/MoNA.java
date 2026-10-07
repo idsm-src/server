@@ -1614,6 +1614,12 @@ public class MoNA extends Updater
             statement.execute("select sachem.cleanup('mona')");
             statement.execute("select sachem.sync_data('mona', false, true)");
             statement.execute("refresh materialized view mona.compound_pubchem_compounds");
+
+            try(ResultSet result = statement.executeQuery("select count(*) from mona.compound_bases"))
+            {
+                if(result.next())
+                    setCount("MoNA Mass Spectra", result.getInt(1));
+            }
         }
 
         setVersion("MassBank of North America (MoNA)", version);

@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -86,6 +87,12 @@ public final class PDB extends Updater
             {
                 statement.execute("select sachem.cleanup('pdb')");
                 statement.execute("select sachem.sync_data('pdb', false, true)");
+
+                try(ResultSet result = statement.executeQuery("select count(*) from pdb.compound_bases"))
+                {
+                    if(result.next())
+                        setCount("PDB Chemical Components", result.getInt(1));
+                }
             }
 
             updateVersion();

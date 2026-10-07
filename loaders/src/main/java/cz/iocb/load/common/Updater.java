@@ -989,12 +989,12 @@ public class Updater
 
         DatabaseMetaData databaseMetaData = connection.getMetaData();
 
-        try(ResultSet info = databaseMetaData.getTables(null, "info", "idsm_counts", new String[] { "TABLE" }))
+        try(ResultSet info = databaseMetaData.getTables(null, "info", "idsm_stats", new String[] { "TABLE" }))
         {
             if(info.next())
             {
                 try(PreparedStatement statement = connection
-                        .prepareStatement("update info.idsm_counts set count=? where name=?"))
+                        .prepareStatement("update info.idsm_stats set count=? where name=?"))
                 {
                     statement.setInt(1, count);
                     statement.setString(2, name);

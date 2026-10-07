@@ -59,5 +59,17 @@ refresh materialized view isdb.compound_pubchem_compounds;
 refresh materialized view isdb.compound_wikidata_compounds;
 select sachem.sync_data('isdb');
 
+do \$\$
+begin
+  if to_regclass('info.idsm_stats') is not null then
+    update info.idsm_stats set count = (select count(*) from isdb.spectrum_bases) where name = 'ISDB Mass Spectra';
+
+    if not found then
+      raise warning 'number of ''ISDB Mass Spectra'' was not set';
+    end if;
+  end if;
+end
+\$\$;
+
 commit;
 EOF

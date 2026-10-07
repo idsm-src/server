@@ -11,6 +11,7 @@ import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -157,6 +158,12 @@ public class WikidataCompoundUpdater extends Updater
                         where molecules.wikidata.smiles != EXCLUDED.smiles;""");
 
                 statement.execute("select sachem.sync_data('wikidata', false, true)");
+
+                try(ResultSet result = statement.executeQuery("select count(*) from molecules.wikidata"))
+                {
+                    if(result.next())
+                        setCount("Wikidata Chemical Entities", result.getInt(1));
+                }
             }
 
             try(PreparedStatement statement = connection

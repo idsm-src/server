@@ -75,7 +75,10 @@
               <arguments>
                 <argument>src/main/sql/info/base.sql</argument>
                 <argument>src/main/sql/info/schema.sql</argument>
+                <argument>src/main/sql/info/examples.sql</argument>
+                <argument>src/main/sql/info/federated.sql</argument>
                 <argument>src/main/sql/info/settings.sql</argument>
+                <argument>src/main/sql/info/foreignkey.sql</argument>
               </arguments>
             </configuration>
           </execution>
