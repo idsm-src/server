@@ -270,6 +270,7 @@ public class EntityTable<K> extends Updater
     private Set<K> absentStubs;
     private boolean stored;
     private int storedCount;
+    private MissingEntities<K> missing;
 
 
     /*
@@ -560,12 +561,21 @@ public class EntityTable<K> extends Updater
     }
 
 
-    private void printMissing(String entity)
+    /*
+     * Counts the entities that have got their rows only because they are referenced; the summary shows them under the
+     * name of the entity.
+     */
+    private void countMissing(String entity)
     {
-        if(described != null)
-            for(Entry<K, Object[]> entry : rows.entrySet())
-                if(entry.getValue()[described] == null)
-                    System.out.println("    add missing " + entity + " " + entry.getKey());
+        if(described == null)
+            return;
+
+        if(missing == null)
+            missing = new MissingEntities<>(entity, false);
+
+        for(Entry<K, Object[]> entry : rows.entrySet())
+            if(entry.getValue()[described] == null)
+                missing.referenced(entry.getKey());
     }
 
 
@@ -648,7 +658,7 @@ public class EntityTable<K> extends Updater
             throw new IllegalStateException(table + " has already been flushed");
 
         storedCount = size();
-        printMissing(entity);
+        countMissing(entity);
 
         flushed = key.createSet();
         flushed.addAll(rows.keySet());
@@ -684,7 +694,7 @@ public class EntityTable<K> extends Updater
         checkUnstored();
 
         storedCount = size();
-        printMissing(entity);
+        countMissing(entity);
 
         KeySet deleted = new KeySet();
 

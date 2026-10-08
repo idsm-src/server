@@ -4,11 +4,19 @@ import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.EntityTable.varchar;
+import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleDispatcher.text;
+import static cz.iocb.load.common.TripleStreamProcessor.getString;
+import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
+import static cz.iocb.load.pubchem.PubChemRDF.rdf;
+import static cz.iocb.load.pubchem.PubChemRDF.skos;
+import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
-import org.apache.jena.rdf.model.Model;
+import java.util.Set;
 import cz.iocb.load.common.EntityTable;
-import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.MissingEntities;
+import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 
 
@@ -21,78 +29,78 @@ class Concept extends Updater
     private static final EntityTable<Integer> concepts = new EntityTable<>("pubchem.concept_bases", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), varchar("label"), integer("scheme"), integer("broader"));
     private static final StringIntMap conceptIDs = new StringIntMap();
+    private static final MissingEntities<String> missingConcepts = new MissingEntities<>("concept", true);
     private static int nextConceptID;
 
 
-    private static void loadBases(Model model) throws IOException, SQLException
+    private static void check(TripleDispatcher dispatcher)
+    {
+        dispatcher.checkPredicates(all(), "http://purl.org/pav/importedFrom", skos + "broader", skos + "inScheme",
+                skos + "prefLabel", rdf + "type");
+        dispatcher.checkTypes(all(), vocab + "Concept", skos + "ConceptScheme", skos + "Concept", skos + "concept");
+        dispatcher.checkValues("http://purl.org/pav/importedFrom", Source.prefix + "ID11950");
+
+        Set<String> schemes = Set.of(prefix + "ATC", prefix + "SubstanceCategorization");
+
+        dispatcher.onType(skos + "ConceptScheme", (subject, object) -> {
+            if(!(subject.isURI() && schemes.contains(subject.getURI())))
+                dispatcher.missing(text(subject));
+        });
+    }
+
+
+    private static void loadBases(TripleDispatcher dispatcher) throws SQLException
     {
         load("select iri,id from pubchem.concept_bases", conceptIDs);
 
         nextConceptID = conceptIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
-        new QueryResultProcessor(patternQuery("?concept rdf:type vocab:Concept"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                addConcept(getStringID("concept", prefix));
-            }
-        }.load(model);
+        dispatcher.onType(vocab + "Concept", (subject, object) -> {
+            String concept = getStringID(subject, prefix);
+
+            addConcept(concept);
+            missingConcepts.described(concept);
+        });
     }
 
 
-    private static void loadLabels(Model model) throws IOException, SQLException
+    private static void loadLabels(TripleDispatcher dispatcher)
     {
-        new QueryResultProcessor(patternQuery("?concept skos:prefLabel ?label"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer conceptID = getConceptID(getIRI("concept"));
-                String label = getString("label");
+        dispatcher.on(skos + "prefLabel", (subject, object) -> {
+            Integer conceptID = getConceptID(subject.getURI());
+            String label = getString(object);
 
-                concepts.set(conceptID, "label", label);
-            }
-        }.load(model);
+            concepts.set(conceptID, "label", label);
+        });
     }
 
 
-    private static void loadScheme(Model model) throws IOException, SQLException
+    private static void loadScheme(TripleDispatcher dispatcher)
     {
-        new QueryResultProcessor(patternQuery("?concept skos:inScheme ?scheme"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer conceptID = getConceptID(getIRI("concept"));
-                Integer schemeID = getConceptID(getIRI("scheme"));
+        dispatcher.on(skos + "inScheme", (subject, object) -> {
+            Integer conceptID = getConceptID(subject.getURI());
+            Integer schemeID = getConceptID(object.getURI());
 
-                concepts.set(conceptID, "scheme", schemeID);
-            }
-        }.load(model);
+            concepts.set(conceptID, "scheme", schemeID);
+        });
     }
 
 
-    private static void loadBroader(Model model) throws IOException, SQLException
+    private static void loadBroader(TripleDispatcher dispatcher)
     {
-        new QueryResultProcessor(patternQuery("?concept skos:broader ?broader"))
-        {
-            @Override
-            protected void parse() throws IOException
+        dispatcher.on(skos + "broader", (subject, object) -> {
+            Integer conceptID = getConceptID(subject.getURI());
+            Integer broaderID = getConceptID(object.getURI());
+
+            // workaround
+            if(conceptID == broaderID)
             {
-                Integer conceptID = getConceptID(getIRI("concept"));
-                Integer broaderID = getConceptID(getIRI("broader"));
-
-                // workaround
-                if(conceptID == broaderID)
-                {
-                    System.out.println("    ignore " + getStringID("concept", prefix) + " for skos:broader");
-                    return;
-                }
-
-                concepts.set(conceptID, "broader", broaderID);
+                System.out.println("    ignore " + getStringID(subject, prefix) + " for skos:broader");
+                return;
             }
-        }.load(model);
+
+            concepts.set(conceptID, "broader", broaderID);
+        });
     }
 
 
@@ -100,16 +108,17 @@ class Concept extends Updater
     {
         System.out.println("load concepts ...");
 
-        Model model = getModel("pubchem/RDF/concept/pc_concept.ttl.gz");
+        TripleDispatcher dispatcher = new TripleDispatcher();
 
-        check(model, "pubchem/concept/check.sparql");
+        check(dispatcher);
+        loadBases(dispatcher);
+        loadLabels(dispatcher);
+        loadScheme(dispatcher);
+        loadBroader(dispatcher);
 
-        loadBases(model);
-        loadLabels(model);
-        loadScheme(model);
-        loadBroader(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/concept/pc_concept.ttl.gz");
+        missingConcepts.settle();
+        dispatcher.finish();
 
         concepts.flush();
 
@@ -141,7 +150,7 @@ class Concept extends Updater
             if(conceptID != null && concepts.contains(conceptID))
                 return conceptID;
 
-            System.out.println("    add missing concept " + concept);
+            missingConcepts.referenced(concept);
 
             return addConcept(concept);
         }

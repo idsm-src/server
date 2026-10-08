@@ -1,11 +1,18 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleStreamProcessor.getString;
+import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
+import static cz.iocb.load.pubchem.PubChemRDF.frapo;
+import static cz.iocb.load.pubchem.PubChemRDF.rdf;
+import static cz.iocb.load.pubchem.PubChemRDF.skos;
+import static cz.iocb.load.pubchem.PubChemRDF.vcard;
+import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
-import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 
 
@@ -18,110 +25,110 @@ public class Organization extends Updater
     private static final StringIntMap keepOrganizations = new StringIntMap();
     private static final StringIntMap newOrganizations = new StringIntMap();
     private static final StringIntMap oldOrganizations = new StringIntMap();
+    private static final MissingEntities<String> missingOrganizations = new MissingEntities<>("organization", true);
     private static int nextOrganizationID;
 
 
-    private static void loadBases(Model model) throws IOException, SQLException
+    private static void check(TripleDispatcher dispatcher)
+    {
+        dispatcher.checkPredicates(all(), rdf + "type", vcard + "country-name", vcard + "fn", skos + "closeMatch");
+        dispatcher.checkTypes(all(), vocab + "Organization", frapo + "FundingAgency", vcard + "Organization");
+    }
+
+
+    private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         load("select iri,id from pubchem.organization_bases", oldOrganizations);
 
         nextOrganizationID = oldOrganizations.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
-        new QueryResultProcessor(patternQuery("?organization rdf:type vcard:Organization"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                String organization = getStringID("organization", prefix);
-                Integer organizationID;
+        dispatcher.onType(vcard + "Organization", (subject, object) -> {
+            String organization = getStringID(subject, prefix);
 
-                if((organizationID = oldOrganizations.remove(organization)) == null)
-                    newOrganizations.put(organization, nextOrganizationID++);
-                else
-                    keepOrganizations.put(organization, organizationID);
-            }
-        }.load(model);
+            addOrganization(organization);
+            missingOrganizations.described(organization);
+        });
     }
 
 
-    private static void loadCountryNames(Model model) throws IOException, SQLException
+    private static void loadCountryNames(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepNames = new IntStringSet();
         IntStringSet newNames = new IntStringSet();
         IntStringSet oldNames = new IntStringSet();
 
         load("select organization,name from pubchem.organization_country_names", oldNames);
 
-        new QueryResultProcessor(patternQuery("?organization vcard:country-name ?name"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer organizationID = getOrganizationID(getIRI("organization"));
-                String name = getString("name");
+        dispatcher.on(vcard + "country-name", (subject, object) -> {
+            Integer organizationID = getOrganizationID(subject.getURI());
+            String name = getString(object);
 
-                Pair<Integer, String> pair = Pair.getPair(organizationID, name);
+            Pair<Integer, String> pair = Pair.getPair(organizationID, name);
 
-                if(!oldNames.remove(pair))
-                    newNames.add(pair);
-            }
-        }.load(model);
+            if(oldNames.remove(pair))
+                keepNames.add(pair);
+            else if(!keepNames.contains(pair))
+                newNames.add(pair);
+        });
 
-        store("delete from pubchem.organization_country_names where organization=? and name=?", oldNames);
-        store("insert into pubchem.organization_country_names(organization,name) values(?,?)", newNames);
+        dispatcher.after(() -> {
+            store("delete from pubchem.organization_country_names where organization=? and name=?", oldNames);
+            store("insert into pubchem.organization_country_names(organization,name) values(?,?)", newNames);
+        });
     }
 
 
-    private static void loadFormattedNames(Model model) throws IOException, SQLException
+    private static void loadFormattedNames(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepNames = new IntStringSet();
         IntStringSet newNames = new IntStringSet();
         IntStringSet oldNames = new IntStringSet();
 
         load("select organization,name from pubchem.organization_formatted_names", oldNames);
 
-        new QueryResultProcessor(patternQuery("?organization vcard:fn ?name"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer organizationID = getOrganizationID(getIRI("organization"));
-                String name = getString("name");
+        dispatcher.on(vcard + "fn", (subject, object) -> {
+            Integer organizationID = getOrganizationID(subject.getURI());
+            String name = getString(object);
 
-                Pair<Integer, String> pair = Pair.getPair(organizationID, name);
+            Pair<Integer, String> pair = Pair.getPair(organizationID, name);
 
-                if(!oldNames.remove(pair))
-                    newNames.add(pair);
-            }
-        }.load(model);
+            if(oldNames.remove(pair))
+                keepNames.add(pair);
+            else if(!keepNames.contains(pair))
+                newNames.add(pair);
+        });
 
-        store("delete from pubchem.organization_formatted_names where organization=? and name=?", oldNames);
-        store("insert into pubchem.organization_formatted_names(organization,name) values(?,?)", newNames);
+        dispatcher.after(() -> {
+            store("delete from pubchem.organization_formatted_names where organization=? and name=?", oldNames);
+            store("insert into pubchem.organization_formatted_names(organization,name) values(?,?)", newNames);
+        });
     }
 
 
-    private static void loadCloseMatches(Model model) throws IOException, SQLException
+    private static void loadCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepNames = new IntStringSet();
         IntStringSet newNames = new IntStringSet();
         IntStringSet oldNames = new IntStringSet();
 
         load("select organization,crossref from pubchem.organization_crossref_matches", oldNames);
 
-        new QueryResultProcessor(patternQuery("?organization skos:closeMatch ?crossref"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer organizationID = getOrganizationID(getIRI("organization"));
-                String crossref = getStringID("crossref", "https://data.crossref.org/fundingdata/funder/");
+        dispatcher.on(skos + "closeMatch", (subject, object) -> {
+            Integer organizationID = getOrganizationID(subject.getURI());
+            String crossref = getStringID(object, "https://data.crossref.org/fundingdata/funder/");
 
-                Pair<Integer, String> pair = Pair.getPair(organizationID, crossref);
+            Pair<Integer, String> pair = Pair.getPair(organizationID, crossref);
 
-                if(!oldNames.remove(pair))
-                    newNames.add(pair);
-            }
-        }.load(model);
+            if(oldNames.remove(pair))
+                keepNames.add(pair);
+            else if(!keepNames.contains(pair))
+                newNames.add(pair);
+        });
 
-        store("delete from pubchem.organization_crossref_matches where organization=? and crossref=?", oldNames);
-        store("insert into pubchem.organization_crossref_matches(organization,crossref) values(?,?)", newNames);
+        dispatcher.after(() -> {
+            store("delete from pubchem.organization_crossref_matches where organization=? and crossref=?", oldNames);
+            store("insert into pubchem.organization_crossref_matches(organization,crossref) values(?,?)", newNames);
+        });
     }
 
 
@@ -129,27 +136,18 @@ public class Organization extends Updater
     {
         System.out.println("load organizations ...");
 
-        Model model = ModelFactory.createDefaultModel();
+        TripleDispatcher dispatcher = new TripleDispatcher();
 
-        processFiles("pubchem/RDF/organization", "pc_organization_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file);
+        check(dispatcher);
+        loadBases(dispatcher);
+        loadCountryNames(dispatcher);
+        loadFormattedNames(dispatcher);
+        loadCloseMatches(dispatcher);
 
-            synchronized(model)
-            {
-                model.add(submodel);
-            }
+        dispatcher.load("pubchem/RDF/organization", "pc_organization_[0-9]+\\.ttl\\.gz");
+        missingOrganizations.settle();
+        dispatcher.finish();
 
-            submodel.close();
-        });
-
-        check(model, "pubchem/organization/check.sparql");
-
-        loadBases(model);
-        loadCountryNames(model);
-        loadFormattedNames(model);
-        loadCloseMatches(model);
-
-        model.close();
         System.out.println();
     }
 
@@ -184,7 +182,27 @@ public class Organization extends Updater
             if(organizationID != null)
                 return organizationID;
 
-            System.out.println("    add missing organization " + organization);
+            missingOrganizations.referenced(organization);
+
+            return addOrganization(organization);
+        }
+    }
+
+
+    /*
+     * Classifies an organization as kept or new unless it has been classified already.
+     */
+    private static Integer addOrganization(String organization)
+    {
+        synchronized(newOrganizations)
+        {
+            Integer organizationID = keepOrganizations.get(organization);
+
+            if(organizationID == null)
+                organizationID = newOrganizations.get(organization);
+
+            if(organizationID != null)
+                return organizationID;
 
             if((organizationID = oldOrganizations.remove(organization)) == null)
                 newOrganizations.put(organization, organizationID = nextOrganizationID++);

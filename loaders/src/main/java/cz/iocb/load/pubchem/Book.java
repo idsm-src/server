@@ -3,13 +3,21 @@ package cz.iocb.load.pubchem;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.EntityTable.varchar;
+import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
+import static cz.iocb.load.common.TripleStreamProcessor.getString;
+import static cz.iocb.load.pubchem.PubChemRDF.dcterms;
+import static cz.iocb.load.pubchem.PubChemRDF.fabio;
+import static cz.iocb.load.pubchem.PubChemRDF.prism;
+import static cz.iocb.load.pubchem.PubChemRDF.rdf;
+import static cz.iocb.load.pubchem.PubChemRDF.skos;
+import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
-import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 
 
@@ -22,143 +30,120 @@ public class Book extends Updater
     private static final EntityTable<Integer> books = new EntityTable<>("pubchem.book_bases", intKey("id"), null,
             uniqueVarchar("title"), varchar("publisher"), varchar("location"), uniqueVarchar("subtitle"),
             varchar("date"), uniqueVarchar("isbn"));
+    private static final MissingEntities<Integer> missingBooks = new MissingEntities<>("book", true);
 
 
-    private static void loadBases(Model model) throws IOException, SQLException
+    private static void check(TripleDispatcher dispatcher)
     {
-        new QueryResultProcessor(patternQuery("?book rdf:type fabio:Book"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer bookID = getIntID("book", prefix);
-
-                books.reference(bookID);
-            }
-        }.load(model);
+        dispatcher.checkPredicates(all(), rdf + "type", dcterms + "creator", dcterms + "title", dcterms + "publisher",
+                dcterms + "date", prism + "location", prism + "isbn", prism + "subtitle", skos + "exactMatch");
+        dispatcher.checkTypes(all(), vocab + "Book", fabio + "Book");
+        dispatcher.checkLink(all(), skos + "exactMatch", all(), "http://rdf.ncbi.nlm.nih.gov/pubchem/book/",
+                "https://www.ncbi.nlm.nih.gov/books/");
     }
 
 
-    private static void loadTitles(Model model) throws IOException, SQLException
+    private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?book dcterms:title ?title"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer bookID = getBookID(getIRI("book"));
-                String title = getString("title");
+        dispatcher.onType(fabio + "Book", (subject, object) -> {
+            Integer bookID = getIntID(subject, prefix);
 
-                books.set(bookID, "title", title);
-            }
-        }.load(model);
+            books.reference(bookID);
+            missingBooks.described(bookID);
+        });
     }
 
 
-    private static void loadPublishers(Model model) throws IOException, SQLException
+    private static void loadTitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?book dcterms:publisher ?publisher"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer bookID = getBookID(getIRI("book"));
-                String publisher = getString("publisher");
+        dispatcher.on(dcterms + "title", (subject, object) -> {
+            Integer bookID = getBookID(subject.getURI());
+            String title = getString(object);
 
-                books.set(bookID, "publisher", publisher);
-            }
-        }.load(model);
+            books.set(bookID, "title", title);
+        });
     }
 
 
-    private static void loadLocations(Model model) throws IOException, SQLException
+    private static void loadPublishers(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?book prism:location ?location"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer bookID = getBookID(getIRI("book"));
-                String location = getString("location");
+        dispatcher.on(dcterms + "publisher", (subject, object) -> {
+            Integer bookID = getBookID(subject.getURI());
+            String publisher = getString(object);
 
-                books.set(bookID, "location", location);
-            }
-        }.load(model);
+            books.set(bookID, "publisher", publisher);
+        });
     }
 
 
-    private static void loadSubtitles(Model model) throws IOException, SQLException
+    private static void loadLocations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?book prism:subtitle ?subtitle"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer bookID = getBookID(getIRI("book"));
-                String subtitle = getString("subtitle");
+        dispatcher.on(prism + "location", (subject, object) -> {
+            Integer bookID = getBookID(subject.getURI());
+            String location = getString(object);
 
-                books.set(bookID, "subtitle", subtitle);
-            }
-        }.load(model);
+            books.set(bookID, "location", location);
+        });
     }
 
 
-    private static void loadDates(Model model) throws IOException, SQLException
+    private static void loadSubtitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?book dcterms:date ?date"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer bookID = getBookID(getIRI("book"));
-                String date = getString("date");
+        dispatcher.on(prism + "subtitle", (subject, object) -> {
+            Integer bookID = getBookID(subject.getURI());
+            String subtitle = getString(object);
 
-                books.set(bookID, "date", date);
-            }
-        }.load(model);
+            books.set(bookID, "subtitle", subtitle);
+        });
     }
 
 
-    private static void loadIsbns(Model model) throws IOException, SQLException
+    private static void loadDates(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?book prism:isbn ?isbn"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer bookID = getBookID(getIRI("book"));
-                String isbn = getString("isbn");
+        dispatcher.on(dcterms + "date", (subject, object) -> {
+            Integer bookID = getBookID(subject.getURI());
+            String date = getString(object);
 
-                books.set(bookID, "isbn", isbn);
-            }
-        }.load(model);
+            books.set(bookID, "date", date);
+        });
     }
 
 
-    private static void loadAuthors(Model model) throws IOException, SQLException
+    private static void loadIsbns(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        dispatcher.on(prism + "isbn", (subject, object) -> {
+            Integer bookID = getBookID(subject.getURI());
+            String isbn = getString(object);
+
+            books.set(bookID, "isbn", isbn);
+        });
+    }
+
+
+    private static void loadAuthors(TripleDispatcher dispatcher) throws IOException, SQLException
+    {
+        IntPairSet keepAuthors = new IntPairSet();
         IntPairSet newAuthors = new IntPairSet();
         IntPairSet oldAuthors = new IntPairSet();
 
         load("select book,author from pubchem.book_authors", oldAuthors);
 
-        new QueryResultProcessor(patternQuery("?book dcterms:creator ?author"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer bookID = getBookID(getIRI("book"));
-                Integer authorID = Author.getAuthorID(getIRI("author"));
+        dispatcher.on(dcterms + "creator", (subject, object) -> {
+            Integer bookID = getBookID(subject.getURI());
+            Integer authorID = Author.getAuthorID(object.getURI());
 
-                Pair<Integer, Integer> pair = Pair.getPair(bookID, authorID);
+            Pair<Integer, Integer> pair = Pair.getPair(bookID, authorID);
 
-                if(!oldAuthors.remove(pair))
-                    newAuthors.add(pair);
-            }
-        }.load(model);
+            if(oldAuthors.remove(pair))
+                keepAuthors.add(pair);
+            else if(!keepAuthors.contains(pair))
+                newAuthors.add(pair);
+        });
 
-        store("delete from pubchem.book_authors where book=? and author=?", oldAuthors);
-        store("insert into pubchem.book_authors(book,author) values(?,?)", newAuthors);
+        dispatcher.after(() -> {
+            store("delete from pubchem.book_authors where book=? and author=?", oldAuthors);
+            store("insert into pubchem.book_authors(book,author) values(?,?)", newAuthors);
+        });
     }
 
 
@@ -166,31 +151,21 @@ public class Book extends Updater
     {
         System.out.println("load books ...");
 
-        Model model = ModelFactory.createDefaultModel();
+        TripleDispatcher dispatcher = new TripleDispatcher();
 
-        processFiles("pubchem/RDF/book", "pc_book_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file);
+        check(dispatcher);
+        loadBases(dispatcher);
+        loadTitles(dispatcher);
+        loadPublishers(dispatcher);
+        loadLocations(dispatcher);
+        loadSubtitles(dispatcher);
+        loadDates(dispatcher);
+        loadIsbns(dispatcher);
+        loadAuthors(dispatcher);
 
-            synchronized(model)
-            {
-                model.add(submodel);
-            }
-
-            submodel.close();
-        });
-
-        check(model, "pubchem/book/check.sparql");
-
-        loadBases(model);
-        loadTitles(model);
-        loadPublishers(model);
-        loadLocations(model);
-        loadSubtitles(model);
-        loadDates(model);
-        loadIsbns(model);
-        loadAuthors(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/book", "pc_book_[0-9]+\\.ttl\\.gz");
+        missingBooks.settle();
+        dispatcher.finish();
 
         books.flush();
 
@@ -216,7 +191,7 @@ public class Book extends Updater
         Integer bookID = Integer.parseInt(value.substring(prefixLength));
 
         if(books.reference(bookID))
-            System.out.println("    add missing book NBK" + bookID);
+            missingBooks.referenced(bookID);
 
         return bookID;
     }

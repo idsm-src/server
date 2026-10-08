@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
@@ -39,6 +40,9 @@ class Patent extends Updater
     private static final StringSet keepAssignees = new StringSet();
     private static final StringSet newAssignees = new StringSet();
     private static final StringSet oldAssignees = new StringSet();
+    private static final MissingEntities<String> missingPatents = new MissingEntities<>("patent", false);
+    private static final MissingEntities<String> missingInventors = new MissingEntities<>("patent inventor", false);
+    private static final MissingEntities<String> missingAssignees = new MissingEntities<>("patent assignee", false);
 
 
     private static void loadBases() throws IOException, SQLException
@@ -812,7 +816,7 @@ class Patent extends Updater
             if(patentID != null && patents.contains(patentID))
                 return patentID;
 
-            System.out.println("    add missing patent " + patent);
+            missingPatents.referenced(patent);
 
             return addPatent(patent);
         }
@@ -857,7 +861,7 @@ class Patent extends Updater
             }
             else if(!keepInventors.contains(inventorID))
             {
-                System.out.println("    add missing patentinventor MD5_" + inventorID);
+                missingInventors.referenced(inventorID);
 
                 if(!oldInventors.remove(inventorID) && !forceKeep)
                     newInventors.add(inventorID);
@@ -889,7 +893,7 @@ class Patent extends Updater
             }
             else if(!keepAssignees.contains(assigneeID))
             {
-                System.out.println("    add missing patentassignee MD5_" + assigneeID);
+                missingAssignees.referenced(assigneeID);
 
                 if(!oldAssignees.remove(assigneeID) && !forceKeep)
                     newAssignees.add(assigneeID);

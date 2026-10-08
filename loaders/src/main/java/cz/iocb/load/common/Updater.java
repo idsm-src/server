@@ -1,6 +1,5 @@
 package cz.iocb.load.common;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,23 +22,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
-import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathException;
 import javax.xml.xpath.XPathExpressionException;
-import org.apache.jena.graph.Triple;
-import org.apache.jena.mem.GraphMemFast;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QueryFactory;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
 import org.xml.sax.SAXException;
 
 
@@ -614,7 +600,6 @@ public class Updater
     protected static final int batchSize = 100000;
     protected static String baseDirectory = null;
     protected static Connection connection;
-    protected static String prefixes = null;
     private static int count;
     private static final boolean dryRun = false;
 
@@ -753,8 +738,6 @@ public class Updater
 
     protected static void init() throws SQLException, IOException
     {
-        prefixes = new String(Updater.class.getResourceAsStream("/query/prefixes.sparql").readAllBytes(), UTF_8);
-
         Properties properties = new Properties();
 
         try(FileInputStream in = new FileInputStream("datasource.properties"))
@@ -808,111 +791,6 @@ public class Updater
         GZIPInputStream gis = new GZIPInputStream(fis, 65536);
         InputStreamReader isr = new InputStreamReader(gis, Charset.forName("UTF-8"));
         return new BufferedReader(isr);
-    }
-
-
-    protected static Model getModel(String file, Lang lang, Model model) throws IOException
-    {
-        System.out.println("  load " + file);
-
-        if(lang != Lang.TTL)
-        {
-            try(InputStream input = new FileInputStream(baseDirectory + file))
-            {
-                RDFDataMgr.read(model, input, lang);
-            }
-        }
-        else if(file.endsWith(".gz"))
-        {
-            try(InputStream input = new InputStreamFixer(
-                    new GZIPInputStream(new FileInputStream(baseDirectory + file), 65536)))
-            {
-                RDFDataMgr.read(model, input, lang);
-            }
-        }
-        else
-        {
-            try(InputStream input = new InputStreamFixer(new FileInputStream(baseDirectory + file)))
-            {
-                RDFDataMgr.read(model, input, lang);
-            }
-        }
-
-        return model;
-    }
-
-
-    protected static Model getModel(String file, Lang lang) throws IOException
-    {
-        return getModel(file, lang, ModelFactory.createModelForGraph(new GraphMemFast()));
-    }
-
-
-    protected static Model getModel(String file, Lang lang, Predicate<Triple> filter) throws IOException
-    {
-        Model model = ModelFactory.createModelForGraph(new GraphMemFast()
-        {
-            @Override
-            public void add(Triple t)
-            {
-                if(!filter.test(t))
-                    return;
-
-                super.add(t);
-            }
-        });
-
-        return getModel(file, lang, model);
-    }
-
-
-    protected static Model getModel(String file, Predicate<Triple> filter) throws IOException
-    {
-        return getModel(file, Lang.TTL, filter);
-    }
-
-
-    protected static Model getModel(String file) throws IOException
-    {
-        return getModel(file, Lang.TTL);
-    }
-
-
-    protected static String loadQuery(String path) throws IOException
-    {
-        byte[] encoded = Updater.class.getResourceAsStream("/query/" + path).readAllBytes();
-        return new String(encoded, UTF_8);
-    }
-
-
-    protected static String patternQuery(String pattern)
-    {
-        return "select * where { " + pattern + " }";
-    }
-
-
-    protected static String distinctPatternQuery(String pattern)
-    {
-        return "select distinct * where { " + pattern + " }";
-    }
-
-
-    protected static void check(Model model, String file) throws IOException, SQLException
-    {
-        String sparql = loadQuery(file);
-        Query query = QueryFactory.create(prefixes + sparql);
-
-        try(QueryExecution qexec = QueryExecutionFactory.create(query, model))
-        {
-            org.apache.jena.query.ResultSet results = qexec.execSelect();
-            while(results.hasNext())
-            {
-                QuerySolution solution = results.nextSolution();
-                Resource iri = solution.getResource("iri");
-
-                System.out.println("    missing " + iri);
-            }
-        }
     }
 
 

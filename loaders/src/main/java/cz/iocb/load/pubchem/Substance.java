@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
@@ -27,6 +28,7 @@ class Substance extends Updater
 
     private static final EntityTable<Integer> substances = new EntityTable<>("pubchem.substance_bases", intKey("id"),
             null, integer("source"), date("available"), date("modified"), integer("compound"));
+    private static final MissingEntities<Integer> missingSubstances = new MissingEntities<>("substance", false);
 
 
     private static void loadCompoundsAndTypes() throws IOException, SQLException
@@ -537,7 +539,7 @@ class Substance extends Updater
     static void addSubstanceID(Integer substanceID) throws IOException
     {
         if(substances.reference(substanceID))
-            System.out.println("    add missing substance SID" + substanceID);
+            missingSubstances.referenced(substanceID);
     }
 
 
@@ -555,7 +557,7 @@ class Substance extends Updater
         Integer substanceID = Integer.parseInt(value.substring(prefixLength));
 
         if(substances.reference(substanceID) && verbose)
-            System.out.println("    add missing substance SID" + substanceID);
+            missingSubstances.referenced(substanceID);
 
         return substanceID;
     }

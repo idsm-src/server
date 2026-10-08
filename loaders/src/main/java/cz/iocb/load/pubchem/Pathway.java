@@ -5,13 +5,26 @@ import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.typed;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.EntityTable.varchar;
+import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleDispatcher.startsWith;
+import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
+import static cz.iocb.load.common.TripleStreamProcessor.getString;
+import static cz.iocb.load.pubchem.PubChemRDF.bp;
+import static cz.iocb.load.pubchem.PubChemRDF.cito;
+import static cz.iocb.load.pubchem.PubChemRDF.dcterms;
+import static cz.iocb.load.pubchem.PubChemRDF.obo;
+import static cz.iocb.load.pubchem.PubChemRDF.rdf;
+import static cz.iocb.load.pubchem.PubChemRDF.rdfs;
+import static cz.iocb.load.pubchem.PubChemRDF.skos;
+import static cz.iocb.load.pubchem.PubChemRDF.up;
+import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import org.apache.jena.rdf.model.Model;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
-import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 
 
@@ -63,267 +76,262 @@ class Pathway extends Updater
     private static final EntityTable<Integer> pathways = new EntityTable<>("pubchem.pathway_bases", intKey("id"), null,
             integer("source"), uniqueVarchar("title"), typed("reference_type", "pubchem.pathway_reference_type"),
             varchar("reference"), integer("organism"));
+    private static final MissingEntities<Integer> missingPathways = new MissingEntities<>("pathway", true);
 
 
-    private static void loadBases(Model model) throws IOException, SQLException
+    private static void check(TripleDispatcher dispatcher)
     {
-        new QueryResultProcessor(patternQuery("?pathway rdf:type vocab:Pathway"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer pathwayID = getIntID("pathway", prefix);
-
-                pathways.reference(pathwayID);
-            }
-        }.load(model);
+        dispatcher.checkPredicates(all(), dcterms + "title", dcterms + "source", up + "organism",
+                bp + "pathwayComponent", cito + "isDiscussedBy", rdfs + "seeAlso", skos + "related", obo + "RO_0000057",
+                rdf + "type");
+        dispatcher.checkTypes(all(), vocab + "Pathway", bp + "Pathway");
+        dispatcher.checkPrefixes(all(), obo + "RO_0000057", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID",
+                "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/");
+        // the values of rdfs:seeAlso are not checked
     }
 
 
-    private static void loadTitles(Model model) throws IOException, SQLException
+    private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?pathway dcterms:title ?title"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer pathwayID = getPathwayID(getIRI("pathway"));
-                String title = getString("title");
+        dispatcher.onType(vocab + "Pathway", (subject, object) -> {
+            Integer pathwayID = getIntID(subject, prefix);
 
-                pathways.set(pathwayID, "title", title);
-            }
-        }.load(model);
+            pathways.reference(pathwayID);
+            missingPathways.described(pathwayID);
+        });
     }
 
 
-    private static void loadSources(Model model) throws IOException, SQLException
+    private static void loadTitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?pathway dcterms:source ?source"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer pathwayID = getPathwayID(getIRI("pathway"));
-                Integer sourceID = Source.getSourceID(getIRI("source"));
+        dispatcher.on(dcterms + "title", (subject, object) -> {
+            Integer pathwayID = getPathwayID(subject.getURI());
+            String title = getString(object);
 
-                pathways.set(pathwayID, "source", sourceID);
-            }
-        }.load(model);
+            pathways.set(pathwayID, "title", title);
+        });
     }
 
 
-    private static void loadSameAsReferences(Model model) throws IOException, SQLException
+    private static void loadSources(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?pathway rdfs:seeAlso ?match"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer pathwayID = getPathwayID(getIRI("pathway"));
-                String iri = getIRI("match");
+        dispatcher.on(dcterms + "source", (subject, object) -> {
+            Integer pathwayID = getPathwayID(subject.getURI());
+            Integer sourceID = Source.getSourceID(object.getURI());
 
-                // workaround
-                if(iri.startsWith("https://glycosmos.org/pathways/"))
-                    iri = iri.replaceFirst("^https://glycosmos\\.org/pathways/", "http://identifiers.org/reactome:");
-
-                Description description = null;
-
-                for(Description test : descriptions)
-                    if(iri.matches(test.pattern))
-                        description = test;
-
-                if(description == null)
-                    throw new IOException(iri);
-
-                pathways.set(pathwayID, "reference_type", description.name);
-                pathways.set(pathwayID, "reference", iri.substring(description.prefix.length()));
-            }
-        }.load(model);
+            pathways.set(pathwayID, "source", sourceID);
+        });
     }
 
 
-    private static void loadOrganisms(Model model) throws IOException, SQLException
+    private static void loadSameAsReferences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?pathway up:organism ?organism"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                // workaround
-                if(getIRI("organism").equals(Taxonomy.prefix))
-                    return;
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            Integer pathwayID = getPathwayID(subject.getURI());
+            String iri = object.getURI();
 
-                Integer pathwayID = getPathwayID(getIRI("pathway"));
-                Integer organismID = Taxonomy.getTaxonomyID(getIRI("organism"));
+            // workaround
+            if(iri.startsWith("https://glycosmos.org/pathways/"))
+                iri = iri.replaceFirst("^https://glycosmos\\.org/pathways/", "http://identifiers.org/reactome:");
 
-                pathways.set(pathwayID, "organism", organismID);
-            }
-        }.load(model);
+            Description description = null;
+
+            for(Description test : descriptions)
+                if(iri.matches(test.pattern))
+                    description = test;
+
+            if(description == null)
+                throw new IOException(iri);
+
+            pathways.set(pathwayID, "reference_type", description.name);
+            pathways.set(pathwayID, "reference", iri.substring(description.prefix.length()));
+        });
     }
 
 
-    private static void loadCompounds(Model model) throws IOException, SQLException
+    private static void loadOrganisms(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        dispatcher.on(up + "organism", (subject, object) -> {
+            // workaround
+            if(object.getURI().equals(Taxonomy.prefix))
+                return;
+
+            Integer pathwayID = getPathwayID(subject.getURI());
+            Integer organismID = Taxonomy.getTaxonomyID(object.getURI());
+
+            pathways.set(pathwayID, "organism", organismID);
+        });
+    }
+
+
+    private static void loadCompounds(TripleDispatcher dispatcher) throws IOException, SQLException
+    {
+        IntPairSet keepCompounds = new IntPairSet();
         IntPairSet newCompounds = new IntPairSet();
         IntPairSet oldCompounds = new IntPairSet();
 
         load("select pathway,compound from pubchem.pathway_compounds", oldCompounds);
 
-        new QueryResultProcessor(patternQuery("?pathway obo:RO_0000057 ?compound "
-                + "filter(strstarts(str(?compound), 'http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer pathwayID = getPathwayID(getIRI("pathway"));
-                Integer compoundID = Compound.getCompoundID(getIRI("compound"));
+        dispatcher.on(obo + "RO_0000057", (subject, object) -> {
+            if(!startsWith(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID"))
+                return;
 
-                Pair<Integer, Integer> pair = Pair.getPair(pathwayID, compoundID);
+            Integer pathwayID = getPathwayID(subject.getURI());
+            Integer compoundID = Compound.getCompoundID(object.getURI());
 
-                if(!oldCompounds.remove(pair))
-                    newCompounds.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, Integer> pair = Pair.getPair(pathwayID, compoundID);
 
-        store("delete from pubchem.pathway_compounds where pathway=? and compound=?", oldCompounds);
-        store("insert into pubchem.pathway_compounds(pathway,compound) values(?,?)", newCompounds);
+            if(oldCompounds.remove(pair))
+                keepCompounds.add(pair);
+            else if(!keepCompounds.contains(pair))
+                newCompounds.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.pathway_compounds where pathway=? and compound=?", oldCompounds);
+            store("insert into pubchem.pathway_compounds(pathway,compound) values(?,?)", newCompounds);
+        });
     }
 
 
-    private static void loadProteins(Model model) throws IOException, SQLException
+    private static void loadProteins(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepProteins = new IntPairSet();
         IntPairSet newProteins = new IntPairSet();
         IntPairSet oldProteins = new IntPairSet();
 
         load("select pathway,protein from pubchem.pathway_proteins", oldProteins);
 
-        new QueryResultProcessor(patternQuery("?pathway obo:RO_0000057 ?protein "
-                + "filter(strstarts(str(?protein), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer pathwayID = getPathwayID(getIRI("pathway"));
-                Integer proteinID = Protein.getProteinID(getIRI("protein"));
+        dispatcher.on(obo + "RO_0000057", (subject, object) -> {
+            if(!startsWith(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"))
+                return;
 
-                Pair<Integer, Integer> pair = Pair.getPair(pathwayID, proteinID);
+            Integer pathwayID = getPathwayID(subject.getURI());
+            Integer proteinID = Protein.getProteinID(object.getURI());
 
-                if(!oldProteins.remove(pair))
-                    newProteins.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, Integer> pair = Pair.getPair(pathwayID, proteinID);
 
-        store("delete from pubchem.pathway_proteins where pathway=? and protein=?", oldProteins);
-        store("insert into pubchem.pathway_proteins(pathway,protein) values(?,?)", newProteins);
+            if(oldProteins.remove(pair))
+                keepProteins.add(pair);
+            else if(!keepProteins.contains(pair))
+                newProteins.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.pathway_proteins where pathway=? and protein=?", oldProteins);
+            store("insert into pubchem.pathway_proteins(pathway,protein) values(?,?)", newProteins);
+        });
     }
 
 
-    private static void loadGenes(Model model) throws IOException, SQLException
+    private static void loadGenes(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepGenes = new IntPairSet();
         IntPairSet newGenes = new IntPairSet();
         IntPairSet oldGenes = new IntPairSet();
 
         load("select pathway,gene from pubchem.pathway_genes", oldGenes);
 
-        new QueryResultProcessor(patternQuery("?pathway obo:RO_0000057 ?gene "
-                + "filter(strstarts(str(?gene), 'http://rdf.ncbi.nlm.nih.gov/pubchem/gene/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer pathwayID = getPathwayID(getIRI("pathway"));
-                Integer geneID = Gene.getGeneID(getIRI("gene"));
+        dispatcher.on(obo + "RO_0000057", (subject, object) -> {
+            if(!startsWith(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"))
+                return;
 
-                Pair<Integer, Integer> pair = Pair.getPair(pathwayID, geneID);
+            Integer pathwayID = getPathwayID(subject.getURI());
+            Integer geneID = Gene.getGeneID(object.getURI());
 
-                if(!oldGenes.remove(pair))
-                    newGenes.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, Integer> pair = Pair.getPair(pathwayID, geneID);
 
-        store("delete from pubchem.pathway_genes where pathway=? and gene=?", oldGenes);
-        store("insert into pubchem.pathway_genes(pathway,gene) values(?,?)", newGenes);
+            if(oldGenes.remove(pair))
+                keepGenes.add(pair);
+            else if(!keepGenes.contains(pair))
+                newGenes.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.pathway_genes where pathway=? and gene=?", oldGenes);
+            store("insert into pubchem.pathway_genes(pathway,gene) values(?,?)", newGenes);
+        });
     }
 
 
-    private static void loadComponents(Model model) throws IOException, SQLException
+    private static void loadComponents(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepComponents = new IntPairSet();
         IntPairSet newComponents = new IntPairSet();
         IntPairSet oldComponents = new IntPairSet();
 
         load("select pathway,component from pubchem.pathway_components", oldComponents);
 
-        new QueryResultProcessor(patternQuery("?pathway bp:pathwayComponent ?component"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer pathwayID = getPathwayID(getIRI("pathway"));
-                Integer componentID = getPathwayID(getIRI("component"));
+        dispatcher.on(bp + "pathwayComponent", (subject, object) -> {
+            Integer pathwayID = getPathwayID(subject.getURI());
+            Integer componentID = getPathwayID(object.getURI());
 
-                Pair<Integer, Integer> pair = Pair.getPair(pathwayID, componentID);
+            Pair<Integer, Integer> pair = Pair.getPair(pathwayID, componentID);
 
-                if(!oldComponents.remove(pair))
-                    newComponents.add(pair);
-            }
-        }.load(model);
+            if(oldComponents.remove(pair))
+                keepComponents.add(pair);
+            else if(!keepComponents.contains(pair))
+                newComponents.add(pair);
+        });
 
-        store("delete from pubchem.pathway_components where pathway=? and component=?", oldComponents);
-        store("insert into pubchem.pathway_components(pathway,component) values(?,?)", newComponents);
+        dispatcher.after(() -> {
+            store("delete from pubchem.pathway_components where pathway=? and component=?", oldComponents);
+            store("insert into pubchem.pathway_components(pathway,component) values(?,?)", newComponents);
+        });
     }
 
 
-    private static void loadReferences(Model model) throws IOException, SQLException
+    private static void loadReferences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepReferences = new IntPairSet();
         IntPairSet newReferences = new IntPairSet();
         IntPairSet oldReferences = new IntPairSet();
 
         load("select pathway,reference from pubchem.pathway_references", oldReferences);
 
-        new QueryResultProcessor(patternQuery("?pathway cito:isDiscussedBy ?reference"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer pathwayID = getPathwayID(getIRI("pathway"));
-                Integer referenceID = Reference.getReferenceID(getIRI("reference"));
+        dispatcher.on(cito + "isDiscussedBy", (subject, object) -> {
+            Integer pathwayID = getPathwayID(subject.getURI());
+            Integer referenceID = Reference.getReferenceID(object.getURI());
 
-                Pair<Integer, Integer> pair = Pair.getPair(pathwayID, referenceID);
+            Pair<Integer, Integer> pair = Pair.getPair(pathwayID, referenceID);
 
-                if(!oldReferences.remove(pair))
-                    newReferences.add(pair);
-            }
-        }.load(model);
+            if(oldReferences.remove(pair))
+                keepReferences.add(pair);
+            else if(!keepReferences.contains(pair))
+                newReferences.add(pair);
+        });
 
-        store("delete from pubchem.pathway_references where pathway=? and reference=?", oldReferences);
-        store("insert into pubchem.pathway_references(pathway,reference) values(?,?)", newReferences);
+        dispatcher.after(() -> {
+            store("delete from pubchem.pathway_references where pathway=? and reference=?", oldReferences);
+            store("insert into pubchem.pathway_references(pathway,reference) values(?,?)", newReferences);
+        });
     }
 
 
-    private static void loadRelatedPathways(Model model) throws IOException, SQLException
+    private static void loadRelatedPathways(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepRelations = new IntPairSet();
         IntPairSet newRelations = new IntPairSet();
         IntPairSet oldRelations = new IntPairSet();
 
         load("select pathway,related from pubchem.pathway_related_pathways", oldRelations);
 
-        new QueryResultProcessor(patternQuery("?pathway skos:related ?related"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer pathwayID = getPathwayID(getIRI("pathway"));
-                Integer relatedID = getPathwayID(getIRI("related"));
+        dispatcher.on(skos + "related", (subject, object) -> {
+            Integer pathwayID = getPathwayID(subject.getURI());
+            Integer relatedID = getPathwayID(object.getURI());
 
-                Pair<Integer, Integer> pair = Pair.getPair(pathwayID, relatedID);
+            Pair<Integer, Integer> pair = Pair.getPair(pathwayID, relatedID);
 
-                if(!oldRelations.remove(pair))
-                    newRelations.add(pair);
-            }
-        }.load(model);
+            if(oldRelations.remove(pair))
+                keepRelations.add(pair);
+            else if(!keepRelations.contains(pair))
+                newRelations.add(pair);
+        });
 
-        store("delete from pubchem.pathway_related_pathways where pathway=? and related=?", oldRelations);
-        store("insert into pubchem.pathway_related_pathways(pathway,related) values(?,?)", newRelations);
+        dispatcher.after(() -> {
+            store("delete from pubchem.pathway_related_pathways where pathway=? and related=?", oldRelations);
+            store("insert into pubchem.pathway_related_pathways(pathway,related) values(?,?)", newRelations);
+        });
     }
 
 
@@ -331,23 +339,24 @@ class Pathway extends Updater
     {
         System.out.println("load pathways ...");
 
-        Model model = getModel("pubchem/RDF/pathway/pc_pathway.ttl.gz");
+        TripleDispatcher dispatcher = new TripleDispatcher();
 
-        check(model, "pubchem/pathway/check.sparql");
+        check(dispatcher);
+        loadBases(dispatcher);
+        loadTitles(dispatcher);
+        loadSources(dispatcher);
+        loadSameAsReferences(dispatcher);
+        loadOrganisms(dispatcher);
+        loadCompounds(dispatcher);
+        loadProteins(dispatcher);
+        loadGenes(dispatcher);
+        loadComponents(dispatcher);
+        loadReferences(dispatcher);
+        loadRelatedPathways(dispatcher);
 
-        loadBases(model);
-        loadTitles(model);
-        loadSources(model);
-        loadSameAsReferences(model);
-        loadOrganisms(model);
-        loadCompounds(model);
-        loadProteins(model);
-        loadGenes(model);
-        loadComponents(model);
-        loadReferences(model);
-        loadRelatedPathways(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/pathway/pc_pathway.ttl.gz");
+        missingPathways.settle();
+        dispatcher.finish();
 
         pathways.flush();
 
@@ -373,7 +382,7 @@ class Pathway extends Updater
         Integer pathwayID = Integer.parseInt(value.substring(prefixLength));
 
         if(pathways.reference(pathwayID))
-            System.out.println("    add missing patwway PWID" + pathwayID);
+            missingPathways.referenced(pathwayID);
 
         return pathwayID;
     }

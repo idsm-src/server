@@ -3,6 +3,12 @@ package cz.iocb.load.pubchem;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
+import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.pubchem.PubChemRDF.bao;
+import static cz.iocb.load.pubchem.PubChemRDF.dcterms;
+import static cz.iocb.load.pubchem.PubChemRDF.rdf;
+import static cz.iocb.load.pubchem.PubChemRDF.rdfs;
+import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,15 +24,15 @@ import javax.xml.xpath.XPathException;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-import org.apache.jena.rdf.model.Model;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
-import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
 
@@ -59,6 +65,7 @@ class Bioassay extends Updater
 
     private static final EntityTable<Integer> bioassays = new EntityTable<>("pubchem.bioassay_bases", intKey("id"),
             null, integer("source"), uniqueVarchar("title"));
+    private static final MissingEntities<Integer> missingBioassays = new MissingEntities<>("bioassay", false);
 
 
     private static String getMultiNodeValue(XPathExpression path, Node node) throws XPathExpressionException
@@ -278,7 +285,19 @@ class Bioassay extends Updater
     }
 
 
-    private static void loadStages(Model model) throws IOException, SQLException
+    private static void check(TripleDispatcher dispatcher)
+    {
+        dispatcher.checkPredicates(all(), dcterms + "title", dcterms + "source", bao + "BAO_0000209",
+                bao + "BAO_0000540", bao + "BAO_0000210", bao + "BAO_0001067", bao + "BAO_0001094", rdf + "type",
+                rdfs + "seeAlso", dcterms + "identifier");
+        dispatcher.checkTypes(all(), vocab + "BioAssay", bao + "BAO_0000015");
+        dispatcher.checkIdentifier(dcterms + "identifier", "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID");
+        dispatcher.checkPrefixes(all(), rdfs + "seeAlso", "http://rdf.ebi.ac.uk/resource/chembl/assay/CHEMBL",
+                "http://rdf.ebi.ac.uk/resource/chembl/assay/drug_mech_");
+    }
+
+
+    private static void loadStages(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntIntMap keepStages = new IntIntMap();
         IntIntMap newStages = new IntIntMap();
@@ -286,45 +305,42 @@ class Bioassay extends Updater
 
         load("select bioassay,stage from pubchem.bioassay_stages", oldStages);
 
-        new QueryResultProcessor(patternQuery("?bioassay bao:BAO_0000210 ?stage"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer bioassayID = getBioassayID(getIRI("bioassay"));
-                Pair<Integer, Integer> stage = Ontology.getId(getIRI("stage"));
+        dispatcher.on(bao + "BAO_0000210", (subject, object) -> {
+            Integer bioassayID = getBioassayID(subject.getURI());
+            Pair<Integer, Integer> stage = Ontology.getId(object.getURI());
 
-                if(stage.getOne() != OntologyResource.unitBAO)
+            if(stage.getOne() != OntologyResource.unitBAO)
+                throw new IOException();
+
+            if(stage.getTwo().equals(oldStages.remove(bioassayID)))
+            {
+                keepStages.put(bioassayID, stage.getTwo());
+            }
+            else
+            {
+                Integer keep = keepStages.get(bioassayID);
+
+                if(stage.getTwo().equals(keep))
+                    return;
+                else if(keep != null)
                     throw new IOException();
 
-                if(stage.getTwo().equals(oldStages.remove(bioassayID)))
-                {
-                    keepStages.put(bioassayID, stage.getTwo());
-                }
-                else
-                {
-                    Integer keep = keepStages.get(bioassayID);
+                Integer put = newStages.put(bioassayID, stage.getTwo());
 
-                    if(stage.getTwo().equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Integer put = newStages.put(bioassayID, stage.getTwo());
-
-                    if(put != null && !stage.getTwo().equals(put))
-                        throw new IOException();
-                }
+                if(put != null && !stage.getTwo().equals(put))
+                    throw new IOException();
             }
-        }.load(model);
+        });
 
-        store("delete from pubchem.bioassay_stages where bioassay=? and stage=?", oldStages);
-        store("insert into pubchem.bioassay_stages(bioassay,stage) values(?,?) "
-                + "on conflict(bioassay) do update set stage=EXCLUDED.stage", newStages);
+        dispatcher.after(() -> {
+            store("delete from pubchem.bioassay_stages where bioassay=? and stage=?", oldStages);
+            store("insert into pubchem.bioassay_stages(bioassay,stage) values(?,?) "
+                    + "on conflict(bioassay) do update set stage=EXCLUDED.stage", newStages);
+        });
     }
 
 
-    private static void loadConfirmatoryAssays(Model model) throws IOException, SQLException
+    private static void loadConfirmatoryAssays(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepRelations = new IntPairSet();
         IntPairSet newRelations = new IntPairSet();
@@ -332,31 +348,28 @@ class Bioassay extends Updater
 
         load("select bioassay,confirmatory_assay from pubchem.bioassay_confirmatory_assays", oldRelations);
 
-        new QueryResultProcessor(patternQuery("?confirmatory bao:BAO_0000540 ?bioassay"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer bioassayID = getBioassayID(getIRI("bioassay"));
-                Integer confirmatoryID = getBioassayID(getIRI("confirmatory"));
+        dispatcher.on(bao + "BAO_0000540", (subject, object) -> {
+            Integer bioassayID = getBioassayID(object.getURI());
+            Integer confirmatoryID = getBioassayID(subject.getURI());
 
-                Pair<Integer, Integer> pair = Pair.getPair(bioassayID, confirmatoryID);
+            Pair<Integer, Integer> pair = Pair.getPair(bioassayID, confirmatoryID);
 
-                if(oldRelations.remove(pair))
-                    keepRelations.add(pair);
-                else if(!keepRelations.contains(pair))
-                    newRelations.add(pair);
-            }
-        }.load(model);
+            if(oldRelations.remove(pair))
+                keepRelations.add(pair);
+            else if(!keepRelations.contains(pair))
+                newRelations.add(pair);
+        });
 
-        store("delete from pubchem.bioassay_confirmatory_assays where bioassay=? and confirmatory_assay=?",
-                oldRelations);
-        store("insert into pubchem.bioassay_confirmatory_assays(bioassay,confirmatory_assay) values(?,?)",
-                newRelations);
+        dispatcher.after(() -> {
+            store("delete from pubchem.bioassay_confirmatory_assays where bioassay=? and confirmatory_assay=?",
+                    oldRelations);
+            store("insert into pubchem.bioassay_confirmatory_assays(bioassay,confirmatory_assay) values(?,?)",
+                    newRelations);
+        });
     }
 
 
-    private static void loadPrimaryAssays(Model model) throws IOException, SQLException
+    private static void loadPrimaryAssays(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepRelations = new IntPairSet();
         IntPairSet newRelations = new IntPairSet();
@@ -364,29 +377,26 @@ class Bioassay extends Updater
 
         load("select bioassay,primary_assay from pubchem.bioassay_primary_assays", oldRelations);
 
-        new QueryResultProcessor(patternQuery("?primary bao:BAO_0001067 ?bioassay"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer bioassayID = getBioassayID(getIRI("bioassay"));
-                Integer primaryID = getBioassayID(getIRI("primary"));
+        dispatcher.on(bao + "BAO_0001067", (subject, object) -> {
+            Integer bioassayID = getBioassayID(object.getURI());
+            Integer primaryID = getBioassayID(subject.getURI());
 
-                Pair<Integer, Integer> pair = Pair.getPair(bioassayID, primaryID);
+            Pair<Integer, Integer> pair = Pair.getPair(bioassayID, primaryID);
 
-                if(oldRelations.remove(pair))
-                    keepRelations.add(pair);
-                else if(!keepRelations.contains(pair))
-                    newRelations.add(pair);
-            }
-        }.load(model);
+            if(oldRelations.remove(pair))
+                keepRelations.add(pair);
+            else if(!keepRelations.contains(pair))
+                newRelations.add(pair);
+        });
 
-        store("delete from pubchem.bioassay_primary_assays where bioassay=? and primary_assay=?", oldRelations);
-        store("insert into pubchem.bioassay_primary_assays(bioassay,primary_assay) values(?,?)", newRelations);
+        dispatcher.after(() -> {
+            store("delete from pubchem.bioassay_primary_assays where bioassay=? and primary_assay=?", oldRelations);
+            store("insert into pubchem.bioassay_primary_assays(bioassay,primary_assay) values(?,?)", newRelations);
+        });
     }
 
 
-    private static void loadSummaryAssays(Model model) throws IOException, SQLException
+    private static void loadSummaryAssays(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepRelations = new IntPairSet();
         IntPairSet newRelations = new IntPairSet();
@@ -394,25 +404,22 @@ class Bioassay extends Updater
 
         load("select bioassay,summary_assay from pubchem.bioassay_summary_assays", oldRelations);
 
-        new QueryResultProcessor(patternQuery("?summary bao:BAO_0001094 ?bioassay"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer bioassayID = getBioassayID(getIRI("bioassay"));
-                Integer summaryID = getBioassayID(getIRI("summary"));
+        dispatcher.on(bao + "BAO_0001094", (subject, object) -> {
+            Integer bioassayID = getBioassayID(object.getURI());
+            Integer summaryID = getBioassayID(subject.getURI());
 
-                Pair<Integer, Integer> pair = Pair.getPair(bioassayID, summaryID);
+            Pair<Integer, Integer> pair = Pair.getPair(bioassayID, summaryID);
 
-                if(oldRelations.remove(pair))
-                    keepRelations.add(pair);
-                else if(!keepRelations.contains(pair))
-                    newRelations.add(pair);
-            }
-        }.load(model);
+            if(oldRelations.remove(pair))
+                keepRelations.add(pair);
+            else if(!keepRelations.contains(pair))
+                newRelations.add(pair);
+        });
 
-        store("delete from pubchem.bioassay_summary_assays where bioassay=? and summary_assay=?", oldRelations);
-        store("insert into pubchem.bioassay_summary_assays(bioassay,summary_assay) values(?,?)", newRelations);
+        dispatcher.after(() -> {
+            store("delete from pubchem.bioassay_summary_assays where bioassay=? and summary_assay=?", oldRelations);
+            store("insert into pubchem.bioassay_summary_assays(bioassay,summary_assay) values(?,?)", newRelations);
+        });
     }
 
 
@@ -422,16 +429,16 @@ class Bioassay extends Updater
 
         loadBioassays();
 
-        Model model = getModel("pubchem/RDF/bioassay/pc_bioassay.ttl.gz");
+        TripleDispatcher dispatcher = new TripleDispatcher();
 
-        check(model, "pubchem/bioassay/check.sparql");
+        check(dispatcher);
+        loadStages(dispatcher);
+        loadConfirmatoryAssays(dispatcher);
+        loadPrimaryAssays(dispatcher);
+        loadSummaryAssays(dispatcher);
 
-        loadStages(model);
-        loadConfirmatoryAssays(model);
-        loadPrimaryAssays(model);
-        loadSummaryAssays(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/bioassay/pc_bioassay.ttl.gz");
+        dispatcher.finish();
 
         bioassays.flush();
 
@@ -452,7 +459,7 @@ class Bioassay extends Updater
     static void addBioassayID(Integer bioassayID)
     {
         if(bioassays.reference(bioassayID))
-            System.out.println("    add missing bioassay AID" + bioassayID);
+            missingBioassays.referenced(bioassayID);
     }
 
 

@@ -1,18 +1,192 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleStreamProcessor.getIntFromInteger;
+import static cz.iocb.load.pubchem.PubChemRDF.edam;
+import static cz.iocb.load.pubchem.PubChemRDF.rdf;
+import static cz.iocb.load.pubchem.PubChemRDF.sio;
+import static cz.iocb.load.pubchem.PubChemRDF.vocab;
+import static cz.iocb.load.pubchem.PubChemRDF.xsd;
 import java.io.IOException;
 import java.sql.SQLException;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import org.apache.jena.graph.Node;
 import cz.iocb.load.common.Pair;
-import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.TripleDispatcher;
+import cz.iocb.load.common.TripleDispatcher.Action;
 import cz.iocb.load.common.Updater;
 
 
 
 public class Cooccurrence extends Updater
 {
-    private static void loadChemicalToChemicalValues(Model model) throws IOException, SQLException
+    /*
+     * Assembles the cooccurrences from their rdf:subject, rdf:object and sio:SIO_000300 triples, which the files hold
+     * far apart, and passes every complete cooccurrence to the handlers. Until then the compounds and diseases are kept
+     * as numbers, to save memory; a cooccurrence that never gets all its parts is ignored, as a join would ignore it.
+     */
+    private static class Statements
+    {
+        @FunctionalInterface
+        static interface Handler
+        {
+            void handle(String subjectIri, String objectIri, Integer value) throws IOException, SQLException;
+        }
+
+
+        private static final String statementPrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/";
+        private static final String[] numberedPrefixes = { Compound.prefix, Disease.prefix };
+
+        private final HashMap<String, Object[]> parts = new HashMap<>();
+        private final List<Handler> handlers = new ArrayList<>();
+        private final TripleDispatcher dispatcher;
+
+
+        Statements(TripleDispatcher dispatcher)
+        {
+            this.dispatcher = dispatcher;
+
+            dispatcher.on(rdf + "subject", (subject, object) -> add(subject, 0, encode(object.getURI())));
+            dispatcher.on(rdf + "object", (subject, object) -> add(subject, 1, encode(object.getURI())));
+            dispatcher.on(sio + "SIO_000300", (subject, object) -> add(subject, 2, getIntFromInteger(object)));
+
+            dispatcher.after(() -> {
+                if(!parts.isEmpty())
+                    System.out.println("    ignore " + parts.size() + " incomplete cooccurrences");
+            });
+        }
+
+
+        void on(Handler handler)
+        {
+            handlers.add(handler);
+        }
+
+
+        void after(Action action)
+        {
+            dispatcher.after(action);
+        }
+
+
+        /*
+         * Keeps the IRI of a compound or a disease as the index of its prefix and its number.
+         */
+        private static Object encode(String iri)
+        {
+            for(int i = 0; i < numberedPrefixes.length; i++)
+            {
+                if(iri.startsWith(numberedPrefixes[i]))
+                {
+                    String number = iri.substring(numberedPrefixes[i].length());
+
+                    if(number.matches("[1-9][0-9]{0,8}"))
+                        return (long) i << 32 | Integer.parseInt(number);
+                }
+            }
+
+            return iri;
+        }
+
+
+        private static String decode(Object value)
+        {
+            if(value instanceof Long number)
+                return numberedPrefixes[(int) (number >> 32)] + (int) (long) number;
+
+            return (String) value;
+        }
+
+
+        private void add(Node statement, int index, Object value) throws IOException, SQLException
+        {
+            String key = statement.isURI() && statement.getURI().startsWith(statementPrefix) ?
+                    statement.getURI().substring(statementPrefix.length()) : statement.toString();
+
+            Object[] row = parts.computeIfAbsent(key, k -> new Object[3]);
+
+            if(row[index] != null && !row[index].equals(value))
+                throw new IOException("multiple values of a part of cooccurrence " + statement);
+
+            row[index] = value;
+
+            if(row[0] == null || row[1] == null || row[2] == null)
+                return;
+
+            parts.remove(key);
+
+            for(Handler handler : handlers)
+                handler.handle(decode(row[0]), decode(row[1]), (Integer) row[2]);
+        }
+    }
+
+
+    private static void checkChemicalToChemical(TripleDispatcher dispatcher)
+    {
+        dispatcher.checkPredicates(all(), rdf + "type", rdf + "subject", rdf + "object", sio + "SIO_000300",
+                sio + "SIO_001157");
+        dispatcher.checkTypes(all(), vocab + "Cooccurrence", sio + "SIO_001435");
+        dispatcher.checkValues(sio + "SIO_001157", edam + "operation_0306");
+        dispatcher.checkDatatype(sio + "SIO_000300", xsd + "integer");
+    }
+
+
+    @SuppressWarnings("unused")
+    private static void checkChemicalToDisease(TripleDispatcher dispatcher)
+    {
+        dispatcher.checkPredicates(all(), rdf + "type", rdf + "subject", rdf + "object", sio + "SIO_000300",
+                sio + "SIO_001157");
+        dispatcher.checkTypes(all(), vocab + "Cooccurrence", sio + "SIO_000993");
+        dispatcher.checkValues(sio + "SIO_001157", edam + "operation_0306");
+        dispatcher.checkDatatype(sio + "SIO_000300", xsd + "integer");
+    }
+
+
+    private static void checkDiseaseToDisease(TripleDispatcher dispatcher)
+    {
+        dispatcher.checkPredicates(all(), rdf + "type", rdf + "subject", rdf + "object", sio + "SIO_000300",
+                sio + "SIO_001157");
+        dispatcher.checkTypes(all(), vocab + "Cooccurrence", sio + "SIO_001436");
+        dispatcher.checkValues(sio + "SIO_001157", edam + "operation_0306");
+        dispatcher.checkDatatype(sio + "SIO_000300", xsd + "integer");
+    }
+
+
+    @SuppressWarnings("unused")
+    private static void checkChemicalToGene(TripleDispatcher dispatcher)
+    {
+        dispatcher.checkPredicates(all(), rdf + "type", rdf + "subject", rdf + "object", sio + "SIO_000300",
+                sio + "SIO_001157");
+        dispatcher.checkTypes(all(), vocab + "Cooccurrence", sio + "SIO_001257");
+        dispatcher.checkValues(sio + "SIO_001157", edam + "operation_0306");
+        dispatcher.checkDatatype(sio + "SIO_000300", xsd + "integer");
+    }
+
+
+    @SuppressWarnings("unused")
+    private static void checkGeneToDisease(TripleDispatcher dispatcher)
+    {
+        dispatcher.checkPredicates(all(), rdf + "type", rdf + "subject", rdf + "object", sio + "SIO_000300",
+                sio + "SIO_001157");
+        dispatcher.checkTypes(all(), vocab + "Cooccurrence", sio + "SIO_000983");
+        dispatcher.checkValues(sio + "SIO_001157", edam + "operation_0306");
+        dispatcher.checkDatatype(sio + "SIO_000300", xsd + "integer");
+    }
+
+
+    private static void checkGeneToGene(TripleDispatcher dispatcher)
+    {
+        dispatcher.checkPredicates(all(), rdf + "type", rdf + "subject", rdf + "object", sio + "SIO_000300",
+                sio + "SIO_001157");
+        dispatcher.checkTypes(all(), vocab + "Cooccurrence", sio + "SIO_001437");
+        dispatcher.checkValues(sio + "SIO_001157", edam + "operation_0306");
+        dispatcher.checkDatatype(sio + "SIO_000300", xsd + "integer");
+    }
+
+
+    private static void loadChemicalToChemicalValues(Statements statements) throws IOException, SQLException
     {
         IntPairIntMap keepValues = new IntPairIntMap();
         IntPairIntMap newValues = new IntPairIntMap();
@@ -20,46 +194,42 @@ public class Cooccurrence extends Updater
 
         load("select subject,object,value from pubchem.chemical_chemical_cooccurrences", oldValues);
 
-        new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
-        {
-            @Override
-            protected void parse() throws IOException
+        statements.on((subjectIri, objectIri, value) -> {
+            Integer subject = Compound.getCompoundID(subjectIri);
+            Integer object = Compound.getCompoundID(objectIri);
+
+            Pair<Integer, Integer> pair = Pair.getPair(subject, object);
+
+            if(value.equals(oldValues.remove(pair)))
             {
-                Integer subject = Compound.getCompoundID(getIRI("subject"));
-                Integer object = Compound.getCompoundID(getIRI("object"));
-                Integer value = getInt("value");
-
-                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
-
-                if(value.equals(oldValues.remove(pair)))
-                {
-                    keepValues.put(pair, value);
-                }
-                else
-                {
-                    Integer keep = keepValues.get(pair);
-
-                    if(value.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Integer put = newValues.put(pair, value);
-
-                    if(put != null && !value.equals(put))
-                        throw new IOException();
-                }
+                keepValues.put(pair, value);
             }
-        }.load(model);
+            else
+            {
+                Integer keep = keepValues.get(pair);
 
-        store("delete from pubchem.chemical_chemical_cooccurrences where subject=? and object=? and value=?",
-                oldValues);
-        store("insert into pubchem.chemical_chemical_cooccurrences(subject,object,value) values(?,?,?) "
-                + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
+                if(value.equals(keep))
+                    return;
+                else if(keep != null)
+                    throw new IOException();
+
+                Integer put = newValues.put(pair, value);
+
+                if(put != null && !value.equals(put))
+                    throw new IOException();
+            }
+        });
+
+        statements.after(() -> {
+            store("delete from pubchem.chemical_chemical_cooccurrences where subject=? and object=? and value=?",
+                    oldValues);
+            store("insert into pubchem.chemical_chemical_cooccurrences(subject,object,value) values(?,?,?) "
+                    + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
+        });
     }
 
 
-    private static void loadChemicalToDiseaseValues(Model model) throws IOException, SQLException
+    private static void loadChemicalToDiseaseValues(Statements statements) throws IOException, SQLException
     {
         IntPairIntMap keepValues = new IntPairIntMap();
         IntPairIntMap newValues = new IntPairIntMap();
@@ -67,49 +237,46 @@ public class Cooccurrence extends Updater
 
         load("select subject,object,value from pubchem.chemical_disease_cooccurrences", oldValues);
 
-        new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
-        {
-            @Override
-            protected void parse() throws IOException
+        statements.on((subjectIri, objectIri, value) -> {
+            // workaround
+            if(!subjectIri.startsWith(Compound.prefix))
+                return;
+
+            Integer subject = Compound.getCompoundID(subjectIri);
+            Integer object = Disease.getDiseaseID(objectIri);
+
+            Pair<Integer, Integer> pair = Pair.getPair(subject, object);
+
+            if(value.equals(oldValues.remove(pair)))
             {
-                // workaround
-                if(!getIRI("subject").startsWith(Compound.prefix))
-                    return;
-
-                Integer subject = Compound.getCompoundID(getIRI("subject"));
-                Integer object = Disease.getDiseaseID(getIRI("object"));
-                Integer value = getInt("value");
-
-                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
-
-                if(value.equals(oldValues.remove(pair)))
-                {
-                    keepValues.put(pair, value);
-                }
-                else
-                {
-                    Integer keep = keepValues.get(pair);
-
-                    if(value.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Integer put = newValues.put(pair, value);
-
-                    if(put != null && !value.equals(put))
-                        throw new IOException();
-                }
+                keepValues.put(pair, value);
             }
-        }.load(model);
+            else
+            {
+                Integer keep = keepValues.get(pair);
 
-        store("delete from pubchem.chemical_disease_cooccurrences where subject=? and object=? and value=?", oldValues);
-        store("insert into pubchem.chemical_disease_cooccurrences(subject,object,value) values(?,?,?) "
-                + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
+                if(value.equals(keep))
+                    return;
+                else if(keep != null)
+                    throw new IOException();
+
+                Integer put = newValues.put(pair, value);
+
+                if(put != null && !value.equals(put))
+                    throw new IOException();
+            }
+        });
+
+        statements.after(() -> {
+            store("delete from pubchem.chemical_disease_cooccurrences where subject=? and object=? and value=?",
+                    oldValues);
+            store("insert into pubchem.chemical_disease_cooccurrences(subject,object,value) values(?,?,?) "
+                    + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
+        });
     }
 
 
-    private static void loadDiseaseToChemicalValues(Model model) throws IOException, SQLException
+    private static void loadDiseaseToChemicalValues(Statements statements) throws IOException, SQLException
     {
         IntPairIntMap keepValues = new IntPairIntMap();
         IntPairIntMap newValues = new IntPairIntMap();
@@ -117,49 +284,46 @@ public class Cooccurrence extends Updater
 
         load("select subject,object,value from pubchem.disease_chemical_cooccurrences", oldValues);
 
-        new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
-        {
-            @Override
-            protected void parse() throws IOException
+        statements.on((subjectIri, objectIri, value) -> {
+            // workaround
+            if(!subjectIri.startsWith(Disease.prefix))
+                return;
+
+            Integer subject = Disease.getDiseaseID(subjectIri);
+            Integer object = Compound.getCompoundID(objectIri);
+
+            Pair<Integer, Integer> pair = Pair.getPair(subject, object);
+
+            if(value.equals(oldValues.remove(pair)))
             {
-                // workaround
-                if(!getIRI("subject").startsWith(Disease.prefix))
-                    return;
-
-                Integer subject = Disease.getDiseaseID(getIRI("subject"));
-                Integer object = Compound.getCompoundID(getIRI("object"));
-                Integer value = getInt("value");
-
-                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
-
-                if(value.equals(oldValues.remove(pair)))
-                {
-                    keepValues.put(pair, value);
-                }
-                else
-                {
-                    Integer keep = keepValues.get(pair);
-
-                    if(value.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Integer put = newValues.put(pair, value);
-
-                    if(put != null && !value.equals(put))
-                        throw new IOException();
-                }
+                keepValues.put(pair, value);
             }
-        }.load(model);
+            else
+            {
+                Integer keep = keepValues.get(pair);
 
-        store("delete from pubchem.disease_chemical_cooccurrences where subject=? and object=? and value=?", oldValues);
-        store("insert into pubchem.disease_chemical_cooccurrences(subject,object,value) values(?,?,?) "
-                + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
+                if(value.equals(keep))
+                    return;
+                else if(keep != null)
+                    throw new IOException();
+
+                Integer put = newValues.put(pair, value);
+
+                if(put != null && !value.equals(put))
+                    throw new IOException();
+            }
+        });
+
+        statements.after(() -> {
+            store("delete from pubchem.disease_chemical_cooccurrences where subject=? and object=? and value=?",
+                    oldValues);
+            store("insert into pubchem.disease_chemical_cooccurrences(subject,object,value) values(?,?,?) "
+                    + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
+        });
     }
 
 
-    private static void loadDiseaseToDiseaseValues(Model model) throws IOException, SQLException
+    private static void loadDiseaseToDiseaseValues(Statements statements) throws IOException, SQLException
     {
         IntPairIntMap keepValues = new IntPairIntMap();
         IntPairIntMap newValues = new IntPairIntMap();
@@ -167,45 +331,42 @@ public class Cooccurrence extends Updater
 
         load("select subject,object,value from pubchem.disease_disease_cooccurrences", oldValues);
 
-        new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
-        {
-            @Override
-            protected void parse() throws IOException
+        statements.on((subjectIri, objectIri, value) -> {
+            Integer subject = Disease.getDiseaseID(subjectIri);
+            Integer object = Disease.getDiseaseID(objectIri);
+
+            Pair<Integer, Integer> pair = Pair.getPair(subject, object);
+
+            if(value.equals(oldValues.remove(pair)))
             {
-                Integer subject = Disease.getDiseaseID(getIRI("subject"));
-                Integer object = Disease.getDiseaseID(getIRI("object"));
-                Integer value = getInt("value");
-
-                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
-
-                if(value.equals(oldValues.remove(pair)))
-                {
-                    keepValues.put(pair, value);
-                }
-                else
-                {
-                    Integer keep = keepValues.get(pair);
-
-                    if(value.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Integer put = newValues.put(pair, value);
-
-                    if(put != null && !value.equals(put))
-                        throw new IOException();
-                }
+                keepValues.put(pair, value);
             }
-        }.load(model);
+            else
+            {
+                Integer keep = keepValues.get(pair);
 
-        store("delete from pubchem.disease_disease_cooccurrences where subject=? and object=? and value=?", oldValues);
-        store("insert into pubchem.disease_disease_cooccurrences(subject,object,value) values(?,?,?) "
-                + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
+                if(value.equals(keep))
+                    return;
+                else if(keep != null)
+                    throw new IOException();
+
+                Integer put = newValues.put(pair, value);
+
+                if(put != null && !value.equals(put))
+                    throw new IOException();
+            }
+        });
+
+        statements.after(() -> {
+            store("delete from pubchem.disease_disease_cooccurrences where subject=? and object=? and value=?",
+                    oldValues);
+            store("insert into pubchem.disease_disease_cooccurrences(subject,object,value) values(?,?,?) "
+                    + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
+        });
     }
 
 
-    private static void loadChemicalToGeneValues(Model model) throws IOException, SQLException
+    private static void loadChemicalToGeneValues(Statements statements) throws IOException, SQLException
     {
         IntPairIntMap keepGeneValues = new IntPairIntMap();
         IntPairIntMap newGeneValues = new IntPairIntMap();
@@ -218,89 +379,84 @@ public class Cooccurrence extends Updater
         load("select subject,object,value from pubchem.chemical_gene_cooccurrences", oldGeneValues);
         load("select subject,object,value from pubchem.chemical_enzyme_cooccurrences", oldEnzymeValues);
 
-        new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
-        {
-            @Override
-            protected void parse() throws IOException
+        statements.on((subjectIri, objectIri, value) -> {
+            // workaround
+            if(!subjectIri.startsWith(Compound.prefix))
+                return;
+
+            if(objectIri.startsWith(Gene.symbolPrefix))
             {
-                // workaround
-                if(!getIRI("subject").startsWith(Compound.prefix))
-                    return;
+                Integer subject = Compound.getCompoundID(subjectIri);
+                Integer object = Gene.getGeneSymbolID(objectIri);
 
-                if(getIRI("object").startsWith(Gene.symbolPrefix))
+                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
+
+                if(value.equals(oldGeneValues.remove(pair)))
                 {
-                    Integer subject = Compound.getCompoundID(getIRI("subject"));
-                    Integer object = Gene.getGeneSymbolID(getIRI("object"));
-                    Integer value = getInt("value");
-
-                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
-
-                    if(value.equals(oldGeneValues.remove(pair)))
-                    {
-                        keepGeneValues.put(pair, value);
-                    }
-                    else
-                    {
-                        Integer keep = keepGeneValues.get(pair);
-
-                        if(value.equals(keep))
-                            return;
-                        else if(keep != null)
-                            throw new IOException();
-
-                        Integer put = newGeneValues.put(pair, value);
-
-                        if(put != null && !value.equals(put))
-                            throw new IOException();
-                    }
-                }
-                else if(getIRI("object").startsWith(Protein.enzymePrefix))
-                {
-                    Integer subject = Compound.getCompoundID(getIRI("subject"));
-                    Integer object = Protein.getEnzymeID(getIRI("object"));
-                    Integer value = getInt("value");
-
-                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
-
-                    if(value.equals(oldEnzymeValues.remove(pair)))
-                    {
-                        keepEnzymeValues.put(pair, value);
-                    }
-                    else
-                    {
-                        Integer keep = keepEnzymeValues.get(pair);
-
-                        if(value.equals(keep))
-                            return;
-                        else if(keep != null)
-                            throw new IOException();
-
-                        Integer put = newEnzymeValues.put(pair, value);
-
-                        if(put != null && !value.equals(put))
-                            throw new IOException();
-                    }
+                    keepGeneValues.put(pair, value);
                 }
                 else
                 {
-                    throw new IOException();
+                    Integer keep = keepGeneValues.get(pair);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newGeneValues.put(pair, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
                 }
             }
-        }.load(model);
+            else if(objectIri.startsWith(Protein.enzymePrefix))
+            {
+                Integer subject = Compound.getCompoundID(subjectIri);
+                Integer object = Protein.getEnzymeID(objectIri);
 
-        store("delete from pubchem.chemical_gene_cooccurrences where subject=? and object=? and value=?",
-                oldGeneValues);
-        store("insert into pubchem.chemical_gene_cooccurrences(subject,object,value) values(?,?,?) "
-                + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
+                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-        store("delete from pubchem.chemical_enzyme_cooccurrences where subject=? and object=? and value=?",
-                oldEnzymeValues);
-        store("insert into pubchem.chemical_enzyme_cooccurrences(subject,object,value) values(?,?,?) "
-                + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
+                if(value.equals(oldEnzymeValues.remove(pair)))
+                {
+                    keepEnzymeValues.put(pair, value);
+                }
+                else
+                {
+                    Integer keep = keepEnzymeValues.get(pair);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newEnzymeValues.put(pair, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
+                }
+            }
+            else
+            {
+                throw new IOException();
+            }
+        });
+
+        statements.after(() -> {
+            store("delete from pubchem.chemical_gene_cooccurrences where subject=? and object=? and value=?",
+                    oldGeneValues);
+            store("insert into pubchem.chemical_gene_cooccurrences(subject,object,value) values(?,?,?) "
+                    + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
+
+            store("delete from pubchem.chemical_enzyme_cooccurrences where subject=? and object=? and value=?",
+                    oldEnzymeValues);
+            store("insert into pubchem.chemical_enzyme_cooccurrences(subject,object,value) values(?,?,?) "
+                    + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
+        });
     }
 
 
-    private static void loadDiseaseToGeneValues(Model model) throws IOException, SQLException
+    private static void loadDiseaseToGeneValues(Statements statements) throws IOException, SQLException
     {
         IntPairIntMap keepGeneValues = new IntPairIntMap();
         IntPairIntMap newGeneValues = new IntPairIntMap();
@@ -313,89 +469,84 @@ public class Cooccurrence extends Updater
         load("select subject,object,value from pubchem.disease_gene_cooccurrences", oldGeneValues);
         load("select subject,object,value from pubchem.disease_enzyme_cooccurrences", oldEnzymeValues);
 
-        new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
-        {
-            @Override
-            protected void parse() throws IOException
+        statements.on((subjectIri, objectIri, value) -> {
+            // workaround
+            if(!subjectIri.startsWith(Disease.prefix))
+                return;
+
+            if(objectIri.startsWith(Gene.symbolPrefix))
             {
-                // workaround
-                if(!getIRI("subject").startsWith(Disease.prefix))
-                    return;
+                Integer subject = Disease.getDiseaseID(subjectIri);
+                Integer object = Gene.getGeneSymbolID(objectIri);
 
-                if(getIRI("object").startsWith(Gene.symbolPrefix))
+                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
+
+                if(value.equals(oldGeneValues.remove(pair)))
                 {
-                    Integer subject = Disease.getDiseaseID(getIRI("subject"));
-                    Integer object = Gene.getGeneSymbolID(getIRI("object"));
-                    Integer value = getInt("value");
-
-                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
-
-                    if(value.equals(oldGeneValues.remove(pair)))
-                    {
-                        keepGeneValues.put(pair, value);
-                    }
-                    else
-                    {
-                        Integer keep = keepGeneValues.get(pair);
-
-                        if(value.equals(keep))
-                            return;
-                        else if(keep != null)
-                            throw new IOException();
-
-                        Integer put = newGeneValues.put(pair, value);
-
-                        if(put != null && !value.equals(put))
-                            throw new IOException();
-                    }
-                }
-                else if(getIRI("object").startsWith(Protein.enzymePrefix))
-                {
-                    Integer subject = Disease.getDiseaseID(getIRI("subject"));
-                    Integer object = Protein.getEnzymeID(getIRI("object"));
-                    Integer value = getInt("value");
-
-                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
-
-                    if(value.equals(oldEnzymeValues.remove(pair)))
-                    {
-                        keepEnzymeValues.put(pair, value);
-                    }
-                    else
-                    {
-                        Integer keep = keepEnzymeValues.get(pair);
-
-                        if(value.equals(keep))
-                            return;
-                        else if(keep != null)
-                            throw new IOException();
-
-                        Integer put = newEnzymeValues.put(pair, value);
-
-                        if(put != null && !value.equals(put))
-                            throw new IOException();
-                    }
+                    keepGeneValues.put(pair, value);
                 }
                 else
                 {
-                    throw new IOException();
+                    Integer keep = keepGeneValues.get(pair);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newGeneValues.put(pair, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
                 }
             }
-        }.load(model);
+            else if(objectIri.startsWith(Protein.enzymePrefix))
+            {
+                Integer subject = Disease.getDiseaseID(subjectIri);
+                Integer object = Protein.getEnzymeID(objectIri);
 
+                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-        store("delete from pubchem.disease_gene_cooccurrences where subject=? and object=? and value=?", oldGeneValues);
-        store("insert into pubchem.disease_gene_cooccurrences(subject,object,value) values(?,?,?) "
-                + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
+                if(value.equals(oldEnzymeValues.remove(pair)))
+                {
+                    keepEnzymeValues.put(pair, value);
+                }
+                else
+                {
+                    Integer keep = keepEnzymeValues.get(pair);
 
-        store("delete from pubchem.disease_enzyme_cooccurrences where subject=? and object=? and value=?",
-                oldEnzymeValues);
-        store("insert into pubchem.disease_enzyme_cooccurrences(subject,object,value) values(?,?,?) "
-                + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newEnzymeValues.put(pair, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
+                }
+            }
+            else
+            {
+                throw new IOException();
+            }
+        });
+
+        statements.after(() -> {
+            store("delete from pubchem.disease_gene_cooccurrences where subject=? and object=? and value=?",
+                    oldGeneValues);
+            store("insert into pubchem.disease_gene_cooccurrences(subject,object,value) values(?,?,?) "
+                    + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
+
+            store("delete from pubchem.disease_enzyme_cooccurrences where subject=? and object=? and value=?",
+                    oldEnzymeValues);
+            store("insert into pubchem.disease_enzyme_cooccurrences(subject,object,value) values(?,?,?) "
+                    + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
+        });
     }
 
 
-    private static void loadGeneToChemicalValues(Model model) throws IOException, SQLException
+    private static void loadGeneToChemicalValues(Statements statements) throws IOException, SQLException
     {
         IntPairIntMap keepGeneValues = new IntPairIntMap();
         IntPairIntMap newGeneValues = new IntPairIntMap();
@@ -408,89 +559,84 @@ public class Cooccurrence extends Updater
         load("select subject,object,value from pubchem.gene_chemical_cooccurrences", oldGeneValues);
         load("select subject,object,value from pubchem.enzyme_chemical_cooccurrences", oldEnzymeValues);
 
-        new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
-        {
-            @Override
-            protected void parse() throws IOException
+        statements.on((subjectIri, objectIri, value) -> {
+            // workaround
+            if(!objectIri.startsWith(Compound.prefix))
+                return;
+
+            if(subjectIri.startsWith(Gene.symbolPrefix))
             {
-                // workaround
-                if(!getIRI("object").startsWith(Compound.prefix))
-                    return;
+                Integer subject = Gene.getGeneSymbolID(subjectIri);
+                Integer object = Compound.getCompoundID(objectIri);
 
-                if(getIRI("subject").startsWith(Gene.symbolPrefix))
+                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
+
+                if(value.equals(oldGeneValues.remove(pair)))
                 {
-                    Integer subject = Gene.getGeneSymbolID(getIRI("subject"));
-                    Integer object = Compound.getCompoundID(getIRI("object"));
-                    Integer value = getInt("value");
-
-                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
-
-                    if(value.equals(oldGeneValues.remove(pair)))
-                    {
-                        keepGeneValues.put(pair, value);
-                    }
-                    else
-                    {
-                        Integer keep = keepGeneValues.get(pair);
-
-                        if(value.equals(keep))
-                            return;
-                        else if(keep != null)
-                            throw new IOException();
-
-                        Integer put = newGeneValues.put(pair, value);
-
-                        if(put != null && !value.equals(put))
-                            throw new IOException();
-                    }
-                }
-                else if(getIRI("subject").startsWith(Protein.enzymePrefix))
-                {
-                    Integer subject = Protein.getEnzymeID(getIRI("subject"));
-                    Integer object = Compound.getCompoundID(getIRI("object"));
-                    Integer value = getInt("value");
-
-                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
-
-                    if(value.equals(oldEnzymeValues.remove(pair)))
-                    {
-                        keepEnzymeValues.put(pair, value);
-                    }
-                    else
-                    {
-                        Integer keep = keepEnzymeValues.get(pair);
-
-                        if(value.equals(keep))
-                            return;
-                        else if(keep != null)
-                            throw new IOException();
-
-                        Integer put = newEnzymeValues.put(pair, value);
-
-                        if(put != null && !value.equals(put))
-                            throw new IOException();
-                    }
+                    keepGeneValues.put(pair, value);
                 }
                 else
                 {
-                    throw new IOException();
+                    Integer keep = keepGeneValues.get(pair);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newGeneValues.put(pair, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
                 }
             }
-        }.load(model);
+            else if(subjectIri.startsWith(Protein.enzymePrefix))
+            {
+                Integer subject = Protein.getEnzymeID(subjectIri);
+                Integer object = Compound.getCompoundID(objectIri);
 
-        store("delete from pubchem.gene_chemical_cooccurrences where subject=? and object=? and value=?",
-                oldGeneValues);
-        store("insert into pubchem.gene_chemical_cooccurrences(subject,object,value) values(?,?,?) "
-                + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
+                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-        store("delete from pubchem.enzyme_chemical_cooccurrences where subject=? and object=? and value=?",
-                oldEnzymeValues);
-        store("insert into pubchem.enzyme_chemical_cooccurrences(subject,object,value) values(?,?,?) "
-                + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
+                if(value.equals(oldEnzymeValues.remove(pair)))
+                {
+                    keepEnzymeValues.put(pair, value);
+                }
+                else
+                {
+                    Integer keep = keepEnzymeValues.get(pair);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newEnzymeValues.put(pair, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
+                }
+            }
+            else
+            {
+                throw new IOException();
+            }
+        });
+
+        statements.after(() -> {
+            store("delete from pubchem.gene_chemical_cooccurrences where subject=? and object=? and value=?",
+                    oldGeneValues);
+            store("insert into pubchem.gene_chemical_cooccurrences(subject,object,value) values(?,?,?) "
+                    + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
+
+            store("delete from pubchem.enzyme_chemical_cooccurrences where subject=? and object=? and value=?",
+                    oldEnzymeValues);
+            store("insert into pubchem.enzyme_chemical_cooccurrences(subject,object,value) values(?,?,?) "
+                    + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
+        });
     }
 
 
-    private static void loadGeneToDiseaseValues(Model model) throws IOException, SQLException
+    private static void loadGeneToDiseaseValues(Statements statements) throws IOException, SQLException
     {
         IntPairIntMap keepGeneValues = new IntPairIntMap();
         IntPairIntMap newGeneValues = new IntPairIntMap();
@@ -503,88 +649,84 @@ public class Cooccurrence extends Updater
         load("select subject,object,value from pubchem.gene_disease_cooccurrences", oldGeneValues);
         load("select subject,object,value from pubchem.enzyme_disease_cooccurrences", oldEnzymeValues);
 
-        new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
-        {
-            @Override
-            protected void parse() throws IOException
+        statements.on((subjectIri, objectIri, value) -> {
+            // workaround
+            if(!objectIri.startsWith(Disease.prefix))
+                return;
+
+            if(subjectIri.startsWith(Gene.symbolPrefix))
             {
-                // workaround
-                if(!getIRI("object").startsWith(Disease.prefix))
-                    return;
+                Integer subject = Gene.getGeneSymbolID(subjectIri);
+                Integer object = Disease.getDiseaseID(objectIri);
 
-                if(getIRI("subject").startsWith(Gene.symbolPrefix))
+                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
+
+                if(value.equals(oldGeneValues.remove(pair)))
                 {
-                    Integer subject = Gene.getGeneSymbolID(getIRI("subject"));
-                    Integer object = Disease.getDiseaseID(getIRI("object"));
-                    Integer value = getInt("value");
-
-                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
-
-                    if(value.equals(oldGeneValues.remove(pair)))
-                    {
-                        keepGeneValues.put(pair, value);
-                    }
-                    else
-                    {
-                        Integer keep = keepGeneValues.get(pair);
-
-                        if(value.equals(keep))
-                            return;
-                        else if(keep != null)
-                            throw new IOException();
-
-                        Integer put = newGeneValues.put(pair, value);
-
-                        if(put != null && !value.equals(put))
-                            throw new IOException();
-                    }
-                }
-                else if(getIRI("subject").startsWith(Protein.enzymePrefix))
-                {
-                    Integer subject = Protein.getEnzymeID(getIRI("subject"));
-                    Integer object = Disease.getDiseaseID(getIRI("object"));
-                    Integer value = getInt("value");
-
-                    Pair<Integer, Integer> pair = Pair.getPair(subject, object);
-
-                    if(value.equals(oldEnzymeValues.remove(pair)))
-                    {
-                        keepEnzymeValues.put(pair, value);
-                    }
-                    else
-                    {
-                        Integer keep = keepEnzymeValues.get(pair);
-
-                        if(value.equals(keep))
-                            return;
-                        else if(keep != null)
-                            throw new IOException();
-
-                        Integer put = newEnzymeValues.put(pair, value);
-
-                        if(put != null && !value.equals(put))
-                            throw new IOException();
-                    }
+                    keepGeneValues.put(pair, value);
                 }
                 else
                 {
-                    throw new IOException();
+                    Integer keep = keepGeneValues.get(pair);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newGeneValues.put(pair, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
                 }
             }
-        }.load(model);
+            else if(subjectIri.startsWith(Protein.enzymePrefix))
+            {
+                Integer subject = Protein.getEnzymeID(subjectIri);
+                Integer object = Disease.getDiseaseID(objectIri);
 
-        store("delete from pubchem.gene_disease_cooccurrences where subject=? and object=? and value=?", oldGeneValues);
-        store("insert into pubchem.gene_disease_cooccurrences(subject,object,value) values(?,?,?) "
-                + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
+                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
 
-        store("delete from pubchem.enzyme_disease_cooccurrences where subject=? and object=? and value=?",
-                oldEnzymeValues);
-        store("insert into pubchem.enzyme_disease_cooccurrences(subject,object,value) values(?,?,?) "
-                + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
+                if(value.equals(oldEnzymeValues.remove(pair)))
+                {
+                    keepEnzymeValues.put(pair, value);
+                }
+                else
+                {
+                    Integer keep = keepEnzymeValues.get(pair);
+
+                    if(value.equals(keep))
+                        return;
+                    else if(keep != null)
+                        throw new IOException();
+
+                    Integer put = newEnzymeValues.put(pair, value);
+
+                    if(put != null && !value.equals(put))
+                        throw new IOException();
+                }
+            }
+            else
+            {
+                throw new IOException();
+            }
+        });
+
+        statements.after(() -> {
+            store("delete from pubchem.gene_disease_cooccurrences where subject=? and object=? and value=?",
+                    oldGeneValues);
+            store("insert into pubchem.gene_disease_cooccurrences(subject,object,value) values(?,?,?) "
+                    + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
+
+            store("delete from pubchem.enzyme_disease_cooccurrences where subject=? and object=? and value=?",
+                    oldEnzymeValues);
+            store("insert into pubchem.enzyme_disease_cooccurrences(subject,object,value) values(?,?,?) "
+                    + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
+        });
     }
 
 
-    private static void loadGeneToGeneValues(Model model) throws IOException, SQLException
+    private static void loadGeneToGeneValues(Statements statements) throws IOException, SQLException
     {
         IntPairIntMap keepValues = new IntPairIntMap();
         IntPairIntMap newValues = new IntPairIntMap();
@@ -592,192 +734,124 @@ public class Cooccurrence extends Updater
 
         load("select subject,object,value from pubchem.gene_gene_cooccurrences", oldValues);
 
-        new QueryResultProcessor(patternQuery("[ rdf:subject ?subject; rdf:object ?object; sio:SIO_000300 ?value ]"))
-        {
-            @Override
-            protected void parse() throws IOException
+        statements.on((subjectIri, objectIri, value) -> {
+            Integer subject = Gene.getGeneSymbolID(subjectIri);
+            Integer object = Gene.getGeneSymbolID(objectIri);
+
+            Pair<Integer, Integer> pair = Pair.getPair(subject, object);
+
+            if(value.equals(oldValues.remove(pair)))
             {
-                Integer subject = Gene.getGeneSymbolID(getIRI("subject"));
-                Integer object = Gene.getGeneSymbolID(getIRI("object"));
-                Integer value = getInt("value");
-
-                Pair<Integer, Integer> pair = Pair.getPair(subject, object);
-
-                if(value.equals(oldValues.remove(pair)))
-                {
-                    keepValues.put(pair, value);
-                }
-                else
-                {
-                    Integer keep = keepValues.get(pair);
-
-                    if(value.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Integer put = newValues.put(pair, value);
-
-                    if(put != null && !value.equals(put))
-                        throw new IOException();
-                }
+                keepValues.put(pair, value);
             }
-        }.load(model);
+            else
+            {
+                Integer keep = keepValues.get(pair);
 
-        store("delete from pubchem.gene_gene_cooccurrences where subject=? and object=? and value=?", oldValues);
-        store("insert into pubchem.gene_gene_cooccurrences(subject,object,value) values(?,?,?) "
-                + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
+                if(value.equals(keep))
+                    return;
+                else if(keep != null)
+                    throw new IOException();
+
+                Integer put = newValues.put(pair, value);
+
+                if(put != null && !value.equals(put))
+                    throw new IOException();
+            }
+        });
+
+        statements.after(() -> {
+            store("delete from pubchem.gene_gene_cooccurrences where subject=? and object=? and value=?", oldValues);
+            store("insert into pubchem.gene_gene_cooccurrences(subject,object,value) values(?,?,?) "
+                    + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
+        });
     }
 
 
     private static void loadChemicalToChemicalCooccurrences() throws IOException, SQLException
     {
-        Model model = ModelFactory.createDefaultModel();
+        TripleDispatcher dispatcher = new TripleDispatcher();
+        Statements statements = new Statements(dispatcher);
 
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_chemical_chemical_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file, t -> {
-                //NOTE: workaround to prevent the loaded model from being too large
+        checkChemicalToChemical(dispatcher);
 
-                if(!t.getPredicate().getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                    return true;
+        loadChemicalToChemicalValues(statements);
 
-                if(!t.getObject().getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Cooccurrence"))
-                    return true;
-
-                return false;
-            });
-
-            synchronized(model)
-            {
-                model.add(submodel);
-            }
-
-            submodel.close();
-        });
-
-        check(model, "pubchem/cooccurrence/check-chemical2chemical.sparql");
-
-        loadChemicalToChemicalValues(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/cooccurrence", "pc_cooccurrence_chemical_chemical_[0-9]+\\.ttl\\.gz");
+        dispatcher.finish();
     }
 
 
     private static void loadChemicalToDiseaseCooccurrences() throws IOException, SQLException
     {
-        Model model = ModelFactory.createDefaultModel();
+        TripleDispatcher dispatcher = new TripleDispatcher();
+        Statements statements = new Statements(dispatcher);
 
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_chemical_disease_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file);
+        //checkChemicalToDisease(dispatcher);
 
-            synchronized(model)
-            {
-                model.add(submodel);
-            }
+        loadChemicalToDiseaseValues(statements);
+        loadDiseaseToChemicalValues(statements);
 
-            submodel.close();
-        });
-
-        //check(model, "pubchem/cooccurrence/check-chemical2disease.sparql");
-
-        loadChemicalToDiseaseValues(model);
-        loadDiseaseToChemicalValues(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/cooccurrence", "pc_cooccurrence_chemical_disease_[0-9]+\\.ttl\\.gz");
+        dispatcher.finish();
     }
 
 
     private static void loadDiseaseToDiseaseCooccurrences() throws IOException, SQLException
     {
-        Model model = ModelFactory.createDefaultModel();
+        TripleDispatcher dispatcher = new TripleDispatcher();
+        Statements statements = new Statements(dispatcher);
 
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_disease_disease_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file);
+        checkDiseaseToDisease(dispatcher);
 
-            synchronized(model)
-            {
-                model.add(submodel);
-            }
+        loadDiseaseToDiseaseValues(statements);
 
-            submodel.close();
-        });
-
-        check(model, "pubchem/cooccurrence/check-disease2disease.sparql");
-
-        loadDiseaseToDiseaseValues(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/cooccurrence", "pc_cooccurrence_disease_disease_[0-9]+\\.ttl\\.gz");
+        dispatcher.finish();
     }
 
 
     private static void loadChemicalToGeneCooccurrences() throws IOException, SQLException
     {
-        Model model = ModelFactory.createDefaultModel();
+        TripleDispatcher dispatcher = new TripleDispatcher();
+        Statements statements = new Statements(dispatcher);
 
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_chemical_gene_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file);
+        //checkChemicalToGene(dispatcher);
 
-            synchronized(model)
-            {
-                model.add(submodel);
-            }
+        loadChemicalToGeneValues(statements);
+        loadGeneToChemicalValues(statements);
 
-            submodel.close();
-        });
-
-        //check(model, "pubchem/cooccurrence/check-chemical2gene.sparql");
-
-        loadChemicalToGeneValues(model);
-        loadGeneToChemicalValues(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/cooccurrence", "pc_cooccurrence_chemical_gene_[0-9]+\\.ttl\\.gz");
+        dispatcher.finish();
     }
 
 
     private static void loadDiseaseToGeneCooccurrences() throws IOException, SQLException
     {
-        Model model = ModelFactory.createDefaultModel();
+        TripleDispatcher dispatcher = new TripleDispatcher();
+        Statements statements = new Statements(dispatcher);
 
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_disease_gene_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file);
+        //checkGeneToDisease(dispatcher);
 
-            synchronized(model)
-            {
-                model.add(submodel);
-            }
+        loadGeneToDiseaseValues(statements);
+        loadDiseaseToGeneValues(statements);
 
-            submodel.close();
-        });
-
-        //check(model, "pubchem/cooccurrence/check-gene2disease.sparql");
-
-        loadGeneToDiseaseValues(model);
-        loadDiseaseToGeneValues(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/cooccurrence", "pc_cooccurrence_disease_gene_[0-9]+\\.ttl\\.gz");
+        dispatcher.finish();
     }
 
 
     private static void loadGeneToGeneCooccurrences() throws IOException, SQLException
     {
-        Model model = ModelFactory.createDefaultModel();
+        TripleDispatcher dispatcher = new TripleDispatcher();
+        Statements statements = new Statements(dispatcher);
 
-        processFiles("pubchem/RDF/cooccurrence", "pc_cooccurrence_gene_gene_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file);
+        checkGeneToGene(dispatcher);
 
-            synchronized(model)
-            {
-                model.add(submodel);
-            }
+        loadGeneToGeneValues(statements);
 
-            submodel.close();
-        });
-
-        check(model, "pubchem/cooccurrence/check-gene2gene.sparql");
-
-        loadGeneToGeneValues(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/cooccurrence", "pc_cooccurrence_gene_gene_[0-9]+\\.ttl\\.gz");
+        dispatcher.finish();
     }
 
 

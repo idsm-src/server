@@ -2,12 +2,20 @@ package cz.iocb.load.pubchem;
 
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.varchar;
+import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
+import static cz.iocb.load.common.TripleStreamProcessor.getString;
+import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
+import static cz.iocb.load.pubchem.PubChemRDF.rdf;
+import static cz.iocb.load.pubchem.PubChemRDF.sio;
+import static cz.iocb.load.pubchem.PubChemRDF.skos;
+import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
-import org.apache.jena.rdf.model.Model;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
-import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
 
@@ -20,157 +28,193 @@ public class Disease extends Updater
 
     private static final EntityTable<Integer> diseases = new EntityTable<>("pubchem.disease_bases", intKey("id"), null,
             varchar("label"));
+    private static final MissingEntities<Integer> missingDiseases = new MissingEntities<>("disease", true);
 
 
-    private static void loadBases(Model model) throws IOException, SQLException
+    private static void check(TripleDispatcher dispatcher)
     {
-        new QueryResultProcessor(patternQuery("?disease rdf:type obo:DOID_4"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                diseases.reference(getIntID("disease", prefix));
-            }
-        }.load(model);
+        dispatcher.checkPredicates(all(), rdf + "type", skos + "prefLabel", skos + "altLabel", skos + "closeMatch",
+                skos + "relatedMatch");
+        dispatcher.checkTypes(all(), vocab + "Disease", sio + "SIO_010299");
+        dispatcher.checkPrefixes(all(), skos + "relatedMatch", "https://uts.nlm.nih.gov/uts/umls/concept/C",
+                "http://purl.obolibrary.org/obo/MONDO_", "http://purl.obolibrary.org/obo/HP_",
+                "https://omim.org/entry/", "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C",
+                "https://www.ncbi.nlm.nih.gov/medgen/C", "https://www.ncbi.nlm.nih.gov/medgen/CN",
+                "https://rarediseases.info.nih.gov/diseases/",
+                "https://www.guidetopharmacology.org/GRAC/DiseaseDisplayForward?diseaseId=",
+                "https://www.kegg.jp/entry/H", "http://nanbyodata.jp/ontology/NANDO_", "http://identifiers.org/DOID:",
+                "http://identifiers.org/kegg.disease:H", "http://identifiers.org/medgen:CN",
+                "http://identifiers.org/medgen:C", "http://identifiers.org/umls:C",
+                "http://identifiers.org/pharmgkb.disease:PA", "http://identifiers.org/orphanet:",
+                "http://identifiers.org/NANDO:", "http://identifiers.org/ncit:C", "http://identifiers.org/mim:",
+                "http://identifiers.org/HP:", "https://www.pharmgkb.org/disease/PA",
+                "https://hpo.jax.org/app/browse/term/HP:", "https://www.orpha.net/en/disease/detail/",
+                "http://purl.obolibrary.org/obo/DOID:", "https://www.disease-ontology.org/?id=DOID:",
+                "https://monarchinitiative.org/disease/MONDO:", "https://glycosmos.org/diseases/DOID:");
+        dispatcher.checkPrefixes(all(), skos + "closeMatch", "http://id.nlm.nih.gov/mesh/",
+                "http://identifiers.org/mesh:", "https://uts.nlm.nih.gov/uts/umls/concept/C",
+                "http://purl.obolibrary.org/obo/MONDO_", "http://purl.obolibrary.org/obo/HP_",
+                "https://omim.org/entry/", "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C",
+                "https://www.ncbi.nlm.nih.gov/medgen/C", "https://www.ncbi.nlm.nih.gov/medgen/CN",
+                "https://rarediseases.info.nih.gov/diseases/",
+                "https://www.guidetopharmacology.org/GRAC/DiseaseDisplayForward?diseaseId=",
+                "https://www.kegg.jp/entry/H", "http://nanbyodata.jp/ontology/NANDO_", "http://identifiers.org/DOID:",
+                "http://identifiers.org/kegg.disease:H", "http://identifiers.org/medgen:CN",
+                "http://identifiers.org/medgen:C", "http://identifiers.org/umls:C",
+                "http://identifiers.org/pharmgkb.disease:PA", "http://identifiers.org/orphanet:",
+                "http://identifiers.org/NANDO:", "http://identifiers.org/ncit:C", "http://identifiers.org/mim:",
+                "http://identifiers.org/HP:", "https://www.pharmgkb.org/disease/PA",
+                "https://hpo.jax.org/app/browse/term/HP:", "https://www.orpha.net/en/disease/detail/",
+                "http://purl.obolibrary.org/obo/DOID:", "https://www.disease-ontology.org/?id=DOID:",
+                "https://monarchinitiative.org/disease/MONDO:", "https://glycosmos.org/diseases/DOID:");
+        dispatcher.checkPaired(skos + "closeMatch", "http://identifiers.org/mesh:", "http://id.nlm.nih.gov/mesh/");
     }
 
 
-    private static void loadLabels(Model model) throws IOException, SQLException
+    private static void loadBases(TripleDispatcher dispatcher)
     {
-        new QueryResultProcessor(patternQuery("?disease skos:prefLabel ?label"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                diseases.set(getDiseaseID(getIRI("disease")), "label", getString("label"));
-            }
-        }.load(model);
+        dispatcher.onType(sio + "SIO_010299", (subject, object) -> {
+            Integer diseaseID = getIntID(subject, prefix);
+
+            diseases.reference(diseaseID);
+            missingDiseases.described(diseaseID);
+        });
     }
 
 
-    private static void loadAlternatives(Model model) throws IOException, SQLException
+    private static void loadLabels(TripleDispatcher dispatcher)
     {
+        dispatcher.on(skos + "prefLabel", (subject, object) -> {
+            diseases.set(getDiseaseID(subject.getURI()), "label", getString(object));
+        });
+    }
+
+
+    private static void loadAlternatives(TripleDispatcher dispatcher) throws SQLException
+    {
+        IntStringSet keepAlternatives = new IntStringSet();
         IntStringSet newAlternatives = new IntStringSet();
         IntStringSet oldAlternatives = new IntStringSet();
 
         load("select disease,alternative from pubchem.disease_alternatives", oldAlternatives);
 
-        new QueryResultProcessor(patternQuery("?disease skos:altLabel ?alternative"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer diseaseID = getDiseaseID(getIRI("disease"));
-                String alternative = getString("alternative");
+        dispatcher.on(skos + "altLabel", (subject, object) -> {
+            Integer diseaseID = getDiseaseID(subject.getURI());
+            String alternative = getString(object);
 
-                Pair<Integer, String> pair = Pair.getPair(diseaseID, alternative);
+            Pair<Integer, String> pair = Pair.getPair(diseaseID, alternative);
 
-                if(!oldAlternatives.remove(pair))
-                    newAlternatives.add(pair);
-            }
-        }.load(model);
+            if(oldAlternatives.remove(pair))
+                keepAlternatives.add(pair);
+            else if(!keepAlternatives.contains(pair))
+                newAlternatives.add(pair);
+        });
 
-        store("delete from pubchem.disease_alternatives where disease=? and alternative=?", oldAlternatives);
-        store("insert into pubchem.disease_alternatives(disease,alternative) values(?,?)", newAlternatives);
+        dispatcher.after(() -> {
+            store("delete from pubchem.disease_alternatives where disease=? and alternative=?", oldAlternatives);
+            store("insert into pubchem.disease_alternatives(disease,alternative) values(?,?)", newAlternatives);
+        });
     }
 
 
-    private static void loadCloseMatches(Model model) throws IOException, SQLException
+    private static void loadCloseMatches(TripleDispatcher dispatcher) throws SQLException
     {
+        IntIntPairSet keepMatches = new IntIntPairSet();
         IntIntPairSet newMatches = new IntIntPairSet();
         IntIntPairSet oldMatches = new IntIntPairSet();
 
         load("select disease,match_unit,match_id from pubchem.disease_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?disease skos:closeMatch ?match. filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/')) "
-                        + "filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                String iri = getIRI("match");
+        dispatcher.on(skos + "closeMatch", (subject, object) -> {
+            String iri = object.getURI();
 
-                // workaround
-                if(iri.matches("http://purl\\.obolibrary\\.org/obo/[0-9]*"))
-                    return;
+            if(iri.startsWith("http://id.nlm.nih.gov/mesh/") || iri.startsWith("http://identifiers.org/mesh:"))
+                return;
 
-                // workaround
-                iri = iri.replaceFirst("^(https://rarediseases.info.nih.gov/diseases/)0*([0-9]*/index)$", "$1$2");
+            // workaround
+            if(iri.matches("http://purl\\.obolibrary\\.org/obo/[0-9]*"))
+                return;
 
-                Integer diseaseID = getDiseaseID(getIRI("disease"));
-                Pair<Integer, Integer> match = Ontology.getId(iri);
+            // workaround
+            iri = iri.replaceFirst("^(https://rarediseases.info.nih.gov/diseases/)0*([0-9]*/index)$", "$1$2");
 
-                Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(diseaseID, match);
+            Integer diseaseID = getDiseaseID(subject.getURI());
+            Pair<Integer, Integer> match = Ontology.getId(iri);
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(diseaseID, match);
 
-        store("delete from pubchem.disease_matches where disease=? and match_unit=? and match_id=?", oldMatches);
-        store("insert into pubchem.disease_matches(disease,match_unit,match_id) values(?,?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.disease_matches where disease=? and match_unit=? and match_id=?", oldMatches);
+            store("insert into pubchem.disease_matches(disease,match_unit,match_id) values(?,?,?)", newMatches);
+        });
     }
 
 
-    private static void loadMeshCloseMatches(Model model) throws IOException, SQLException
+    private static void loadMeshCloseMatches(TripleDispatcher dispatcher) throws SQLException
     {
+        IntStringSet keepMatches = new IntStringSet();
         IntStringSet newMatches = new IntStringSet();
         IntStringSet oldMatches = new IntStringSet();
 
         load("select disease,match from pubchem.disease_mesh_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?disease skos:closeMatch ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer diseaseID = getDiseaseID(getIRI("disease"));
-                String match = getStringID("match", "http://id.nlm.nih.gov/mesh/");
+        dispatcher.on(skos + "closeMatch", (subject, object) -> {
+            if(!object.getURI().startsWith("http://id.nlm.nih.gov/mesh/"))
+                return;
 
-                Pair<Integer, String> pair = Pair.getPair(diseaseID, match);
+            Integer diseaseID = getDiseaseID(subject.getURI());
+            String match = getStringID(object, "http://id.nlm.nih.gov/mesh/");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, String> pair = Pair.getPair(diseaseID, match);
 
-        store("delete from pubchem.disease_mesh_matches where disease=? and match=?", oldMatches);
-        store("insert into pubchem.disease_mesh_matches(disease,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.disease_mesh_matches where disease=? and match=?", oldMatches);
+            store("insert into pubchem.disease_mesh_matches(disease,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadRelatedMatches(Model model) throws IOException, SQLException
+    private static void loadRelatedMatches(TripleDispatcher dispatcher) throws SQLException
     {
+        IntIntPairSet keepMatches = new IntIntPairSet();
         IntIntPairSet newMatches = new IntIntPairSet();
         IntIntPairSet oldMatches = new IntIntPairSet();
 
         load("select disease,match_unit,match_id from pubchem.disease_related_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?disease skos:relatedMatch ?match."))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                //NOTE: workaround to prevent loading incorrect references
-                if(getIRI("match").matches("http://purl\\.obolibrary\\.org/obo/[0-9]+"))
-                    return;
+        dispatcher.on(skos + "relatedMatch", (subject, object) -> {
+            //NOTE: workaround to prevent loading incorrect references
+            if(object.getURI().matches("http://purl\\.obolibrary\\.org/obo/[0-9]+"))
+                return;
 
-                Integer diseaseID = getDiseaseID(getIRI("disease"));
-                Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
+            Integer diseaseID = getDiseaseID(subject.getURI());
+            Pair<Integer, Integer> match = Ontology.getId(object.getURI());
 
-                Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(diseaseID, match);
+            Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(diseaseID, match);
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
 
-            }
-        }.load(model);
-
-        store("delete from pubchem.disease_related_matches where disease=? and match_unit=? and match_id=?",
-                oldMatches);
-        store("insert into pubchem.disease_related_matches(disease,match_unit,match_id) values(?,?,?)", newMatches);
+        dispatcher.after(() -> {
+            store("delete from pubchem.disease_related_matches where disease=? and match_unit=? and match_id=?",
+                    oldMatches);
+            store("insert into pubchem.disease_related_matches(disease,match_unit,match_id) values(?,?,?)", newMatches);
+        });
     }
 
 
@@ -178,17 +222,19 @@ public class Disease extends Updater
     {
         System.out.println("load diseases ...");
 
-        Model model = getModel("pubchem/RDF/disease/pc_disease.ttl.gz");
-        check(model, "pubchem/disease/check.sparql");
+        TripleDispatcher dispatcher = new TripleDispatcher();
 
-        loadBases(model);
-        loadLabels(model);
-        loadAlternatives(model);
-        loadCloseMatches(model);
-        loadMeshCloseMatches(model);
-        loadRelatedMatches(model);
+        check(dispatcher);
+        loadBases(dispatcher);
+        loadLabels(dispatcher);
+        loadAlternatives(dispatcher);
+        loadCloseMatches(dispatcher);
+        loadMeshCloseMatches(dispatcher);
+        loadRelatedMatches(dispatcher);
 
-        model.close();
+        dispatcher.load("pubchem/RDF/disease/pc_disease.ttl.gz");
+        missingDiseases.settle();
+        dispatcher.finish();
 
         diseases.flush();
 
@@ -214,7 +260,7 @@ public class Disease extends Updater
         Integer diseaseID = Integer.parseInt(value.substring(prefixLength));
 
         if(diseases.reference(diseaseID))
-            System.out.println("    add missing disease DZID" + diseaseID);
+            missingDiseases.referenced(diseaseID);
 
         return diseaseID;
     }

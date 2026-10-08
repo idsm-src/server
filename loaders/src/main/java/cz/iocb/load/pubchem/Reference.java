@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
@@ -25,6 +26,7 @@ class Reference extends Updater
             null, date("dcdate"), varchar("date"), uniqueVarchar("title"), uniqueVarchar("citation"),
             varchar("publication"), varchar("issue"), varchar("starting_page"), varchar("ending_page"),
             varchar("page_range"), varchar("lang"));
+    private static final MissingEntities<Integer> missingReferences = new MissingEntities<>("reference", false);
 
     private static HashMap<String, String> sources = new HashMap<>();
 
@@ -1146,7 +1148,7 @@ class Reference extends Updater
         Integer referenceID = Integer.parseInt(value.substring(prefixLength));
 
         if(references.reference(referenceID))
-            System.out.println("    add missing reference " + referenceID);
+            missingReferences.referenced(referenceID);
 
         return referenceID;
     }

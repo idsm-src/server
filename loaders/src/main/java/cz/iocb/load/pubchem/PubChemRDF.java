@@ -4,12 +4,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.graph.Node;
+import cz.iocb.load.common.MissingEntities;
+import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
 
@@ -17,27 +14,53 @@ import cz.iocb.load.ontology.Ontology;
 
 public class PubChemRDF extends Updater
 {
+    static final String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    static final String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
+    static final String xsd = "http://www.w3.org/2001/XMLSchema#";
+    static final String skos = "http://www.w3.org/2004/02/skos/core#";
+    static final String vcard = "http://www.w3.org/2006/vcard/ns#";
+    static final String dcterms = "http://purl.org/dc/terms/";
+    static final String foaf = "http://xmlns.com/foaf/0.1/";
+    static final String prism = "http://prismstandard.org/namespaces/basic/3.0/";
+    static final String cito = "http://purl.org/spar/cito/";
+    static final String fabio = "http://purl.org/spar/fabio/";
+    static final String frapo = "http://purl.org/cerif/frapo/";
+    static final String sio = "http://semanticscience.org/resource/";
+    static final String obo = "http://purl.obolibrary.org/obo/";
+    static final String bao = "http://www.bioassayontology.org/bao#";
+    static final String bp = "http://www.biopax.org/release/biopax-level3.owl#";
+    static final String up = "http://purl.uniprot.org/core/";
+    static final String pdbo = "http://rdf.wwpdb.org/schema/pdbx-v50.owl#";
+    static final String edam = "http://edamontology.org/";
+    static final String vocab = "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#";
+
+
+    /*
+     * Returns the date of the last modification of the PubChemRDF dataset, as its VoID description states it.
+     */
     private static String getVersion() throws IOException
     {
-        String base = "base <http://rdf.ncbi.nlm.nih.gov/pubchem/>";
-        String query = prefixes + base + "select * { <void.ttl#PubChemRDF> dcterms:modified ?date }";
+        String dataset = "http://rdf.ncbi.nlm.nih.gov/pubchem/void.ttl#PubChemRDF";
+        String modified = "http://purl.org/dc/terms/modified";
+        StringBuilder version = new StringBuilder();
 
-        Model model = ModelFactory.createDefaultModel();
         try(InputStream in = new FileInputStream(baseDirectory + "pubchem/RDF/void.ttl"))
         {
-            model.read(in, null, "TTL");
-
-            try(QueryExecution qexec = QueryExecutionFactory.create(query, model))
+            new TripleStreamProcessor()
             {
-                ResultSet results = qexec.execSelect();
-                QuerySolution solution = results.nextSolution();
-                return solution.getLiteral("date").getLexicalForm();
-            }
-            finally
-            {
-                model.close();
-            }
+                @Override
+                protected void parse(Node subject, Node predicate, Node object) throws IOException
+                {
+                    if(subject.isURI() && subject.getURI().equals(dataset) && predicate.getURI().equals(modified))
+                        version.append(getLexicalForm(object));
+                }
+            }.load(in);
         }
+
+        if(version.isEmpty())
+            throw new IOException("the version of PubChemRDF is not known");
+
+        return version.toString();
     }
 
 
@@ -119,6 +142,8 @@ public class PubChemRDF extends Updater
             Measuregroup.finish();
 
             CompoundDescriptor.finish();
+
+            MissingEntities.printSummary();
 
             setCount("PubChem Substances", Substance.size());
             setCount("PubChem Compounds", Compound.size());

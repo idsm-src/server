@@ -3,12 +3,19 @@ package cz.iocb.load.pubchem;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.EntityTable.varchar;
+import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleStreamProcessor.getString;
+import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
+import static cz.iocb.load.pubchem.PubChemRDF.dcterms;
+import static cz.iocb.load.pubchem.PubChemRDF.foaf;
+import static cz.iocb.load.pubchem.PubChemRDF.rdf;
+import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
-import org.apache.jena.rdf.model.Model;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
-import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 
 
@@ -22,141 +29,128 @@ class Source extends Updater
             uniqueVarchar("iri").determinedByKey(), varchar("title"), varchar("homepage"), varchar("license"),
             varchar("rights"));
     private static final StringIntMap sourceIDs = new StringIntMap();
+    private static final MissingEntities<String> missingSources = new MissingEntities<>("source", true);
     private static int nextSourceID;
 
 
-    private static void loadBases(Model model) throws IOException, SQLException
+    private static void check(TripleDispatcher dispatcher)
+    {
+        dispatcher.checkPredicates(all(), dcterms + "title", dcterms + "alternative", dcterms + "subject",
+                dcterms + "license", dcterms + "rights", foaf + "homepage", rdf + "type");
+        dispatcher.checkTypes(all(), vocab + "Source", dcterms + "Dataset");
+    }
+
+
+    private static void loadBases(TripleDispatcher dispatcher) throws SQLException
     {
         load("select iri,id from pubchem.source_bases", sourceIDs);
 
         nextSourceID = sourceIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
-        new QueryResultProcessor(patternQuery("?source rdf:type dcterms:Dataset"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                addSource(getStringID("source", prefix));
-            }
-        }.load(model);
+        dispatcher.onType(dcterms + "Dataset", (subject, object) -> {
+            String source = getStringID(subject, prefix);
+
+            addSource(source);
+            missingSources.described(source);
+        });
     }
 
 
-    private static void loadTitles(Model model) throws IOException, SQLException
+    private static void loadTitles(TripleDispatcher dispatcher)
     {
-        new QueryResultProcessor(patternQuery("?source dcterms:title ?title"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer sourceID = getSourceID(getIRI("source"));
-                String title = getString("title");
+        dispatcher.on(dcterms + "title", (subject, object) -> {
+            Integer sourceID = getSourceID(subject.getURI());
+            String title = getString(object);
 
-                sources.set(sourceID, "title", title);
-            }
-        }.load(model);
+            sources.set(sourceID, "title", title);
+        });
     }
 
 
-    private static void loadHomepages(Model model) throws IOException, SQLException
+    private static void loadHomepages(TripleDispatcher dispatcher)
     {
-        new QueryResultProcessor(patternQuery("?source foaf:homepage ?homepage"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer sourceID = getSourceID(getIRI("source"));
-                String homepage = getIRI("homepage");
+        dispatcher.on(foaf + "homepage", (subject, object) -> {
+            Integer sourceID = getSourceID(subject.getURI());
+            String homepage = object.getURI();
 
-                sources.set(sourceID, "homepage", homepage);
-            }
-        }.load(model);
+            sources.set(sourceID, "homepage", homepage);
+        });
     }
 
 
-    private static void loadLicenses(Model model) throws IOException, SQLException
+    private static void loadLicenses(TripleDispatcher dispatcher)
     {
-        new QueryResultProcessor(patternQuery("?source dcterms:license ?license"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer sourceID = getSourceID(getIRI("source"));
-                String license = getIRI("license");
+        dispatcher.on(dcterms + "license", (subject, object) -> {
+            Integer sourceID = getSourceID(subject.getURI());
+            String license = object.getURI();
 
-                sources.set(sourceID, "license", license);
-            }
-        }.load(model);
+            sources.set(sourceID, "license", license);
+        });
     }
 
 
-    private static void loadRights(Model model) throws IOException, SQLException
+    private static void loadRights(TripleDispatcher dispatcher)
     {
-        new QueryResultProcessor(patternQuery("?source dcterms:rights ?rights"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer sourceID = getSourceID(getIRI("source"));
-                String rights = getString("rights");
+        dispatcher.on(dcterms + "rights", (subject, object) -> {
+            Integer sourceID = getSourceID(subject.getURI());
+            String rights = getString(object);
 
-                sources.set(sourceID, "rights", rights);
-            }
-        }.load(model);
+            sources.set(sourceID, "rights", rights);
+        });
     }
 
 
-    private static void loadSubjects(Model model) throws IOException, SQLException
+    private static void loadSubjects(TripleDispatcher dispatcher) throws SQLException
     {
+        IntPairSet keepSubjects = new IntPairSet();
         IntPairSet newSubjects = new IntPairSet();
         IntPairSet oldSubjects = new IntPairSet();
 
         load("select source,subject from pubchem.source_subjects", oldSubjects);
 
-        new QueryResultProcessor(patternQuery("?source dcterms:subject ?subject"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer sourceID = getSourceID(getIRI("source"));
-                Integer conceptID = Concept.getConceptID(getIRI("subject"));
+        dispatcher.on(dcterms + "subject", (subject, object) -> {
+            Integer sourceID = getSourceID(subject.getURI());
+            Integer conceptID = Concept.getConceptID(object.getURI());
 
-                Pair<Integer, Integer> pair = Pair.getPair(sourceID, conceptID);
+            Pair<Integer, Integer> pair = Pair.getPair(sourceID, conceptID);
 
-                if(!oldSubjects.remove(pair))
-                    newSubjects.add(pair);
-            }
-        }.load(model);
+            if(oldSubjects.remove(pair))
+                keepSubjects.add(pair);
+            else if(!keepSubjects.contains(pair))
+                newSubjects.add(pair);
+        });
 
-        store("delete from pubchem.source_subjects where source=? and subject=?", oldSubjects);
-        store("insert into pubchem.source_subjects(source,subject) values(?,?)", newSubjects);
+        dispatcher.after(() -> {
+            store("delete from pubchem.source_subjects where source=? and subject=?", oldSubjects);
+            store("insert into pubchem.source_subjects(source,subject) values(?,?)", newSubjects);
+        });
     }
 
 
-    private static void loadAlternatives(Model model) throws IOException, SQLException
+    private static void loadAlternatives(TripleDispatcher dispatcher) throws SQLException
     {
+        IntStringSet keepAlternatives = new IntStringSet();
         IntStringSet newAlternatives = new IntStringSet();
         IntStringSet oldAlternatives = new IntStringSet();
 
         load("select source,alternative from pubchem.source_alternatives", oldAlternatives);
 
-        new QueryResultProcessor(patternQuery("?source dcterms:alternative ?alternative"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer sourceID = getSourceID(getIRI("source"));
-                String alternative = getString("alternative");
+        dispatcher.on(dcterms + "alternative", (subject, object) -> {
+            Integer sourceID = getSourceID(subject.getURI());
+            String alternative = getString(object);
 
-                Pair<Integer, String> pair = Pair.getPair(sourceID, alternative);
+            Pair<Integer, String> pair = Pair.getPair(sourceID, alternative);
 
-                if(!oldAlternatives.remove(pair))
-                    newAlternatives.add(pair);
-            }
-        }.load(model);
+            if(oldAlternatives.remove(pair))
+                keepAlternatives.add(pair);
+            else if(!keepAlternatives.contains(pair))
+                newAlternatives.add(pair);
+        });
 
-        store("delete from pubchem.source_alternatives where source=? and alternative=?", oldAlternatives);
-        store("insert into pubchem.source_alternatives(source,alternative) values(?,?)", newAlternatives);
+        dispatcher.after(() -> {
+            store("delete from pubchem.source_alternatives where source=? and alternative=?", oldAlternatives);
+            store("insert into pubchem.source_alternatives(source,alternative) values(?,?)", newAlternatives);
+        });
     }
 
 
@@ -164,19 +158,20 @@ class Source extends Updater
     {
         System.out.println("load sources ...");
 
-        Model model = getModel("pubchem/RDF/source/pc_source.ttl.gz");
+        TripleDispatcher dispatcher = new TripleDispatcher();
 
-        check(model, "pubchem/source/check.sparql");
+        check(dispatcher);
+        loadBases(dispatcher);
+        loadTitles(dispatcher);
+        loadHomepages(dispatcher);
+        loadLicenses(dispatcher);
+        loadRights(dispatcher);
+        loadSubjects(dispatcher);
+        loadAlternatives(dispatcher);
 
-        loadBases(model);
-        loadTitles(model);
-        loadHomepages(model);
-        loadLicenses(model);
-        loadRights(model);
-        loadSubjects(model);
-        loadAlternatives(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/source/pc_source.ttl.gz");
+        missingSources.settle();
+        dispatcher.finish();
 
         sources.flush();
 
@@ -203,7 +198,7 @@ class Source extends Updater
             if(sourceID != null && sources.contains(sourceID))
                 return sourceID;
 
-            System.out.println("    add missing source " + source);
+            missingSources.referenced(source);
 
             sourceID = addSource(source);
             sources.set(sourceID, "title", title);
@@ -227,7 +222,7 @@ class Source extends Updater
             if(sourceID != null && sources.contains(sourceID))
                 return sourceID;
 
-            System.out.println("    add missing source " + source);
+            missingSources.referenced(source);
 
             return addSource(source);
         }

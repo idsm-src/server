@@ -4,13 +4,30 @@ import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.EntityTable.varchar;
+import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleDispatcher.notStartingWith;
+import static cz.iocb.load.common.TripleDispatcher.startingWith;
+import static cz.iocb.load.common.TripleDispatcher.startsWith;
+import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
+import static cz.iocb.load.common.TripleStreamProcessor.getString;
+import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
+import static cz.iocb.load.pubchem.PubChemRDF.bao;
+import static cz.iocb.load.pubchem.PubChemRDF.cito;
+import static cz.iocb.load.pubchem.PubChemRDF.dcterms;
+import static cz.iocb.load.pubchem.PubChemRDF.obo;
+import static cz.iocb.load.pubchem.PubChemRDF.rdf;
+import static cz.iocb.load.pubchem.PubChemRDF.rdfs;
+import static cz.iocb.load.pubchem.PubChemRDF.sio;
+import static cz.iocb.load.pubchem.PubChemRDF.skos;
+import static cz.iocb.load.pubchem.PubChemRDF.up;
+import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
-import org.apache.jena.rdf.model.Model;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
-import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
 
@@ -32,700 +49,735 @@ class Gene extends Updater
     private static final StringIntMap geneSymbolIDs = new StringIntMap();
     private static int nextGeneSymbolID;
 
+    private static final MissingEntities<Integer> missingGenes = new MissingEntities<>("gene", true);
+    private static final MissingEntities<String> missingGeneSymbols = new MissingEntities<>("gene symbol", true);
 
-    private static void loadGeneSymbolBases(Model model) throws IOException, SQLException
+
+    private static void check(TripleDispatcher dispatcher)
+    {
+        dispatcher.checkPredicates(startingWith("http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"), skos + "altLabel",
+                skos + "prefLabel", cito + "isDiscussedBy", rdfs + "seeAlso", rdf + "type", obo + "RO_0000056",
+                obo + "RO_0000085", obo + "RO_0001025", bao + "BAO_0002870", up + "organism", sio + "SIO_000558",
+                dcterms + "identifier");
+        dispatcher.checkPredicates(notStartingWith("http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"), rdf + "type",
+                sio + "SIO_000300");
+        dispatcher.checkTypes(startingWith("http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"), vocab + "Gene",
+                sio + "SIO_010035");
+        dispatcher.checkTypes(notStartingWith("http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"), vocab + "GeneSymbol",
+                sio + "SIO_001383");
+        dispatcher.checkIdentifier(dcterms + "identifier", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID");
+        dispatcher.checkPrefixes(all(), rdfs + "seeAlso", "http://rdf.ebi.ac.uk/resource/ensembl/",
+                "http://id.nlm.nih.gov/mesh/", "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C",
+                "https://enzyme.expasy.org/EC/", "https://medlineplus.gov/genetics/gene/",
+                "https://www.alliancegenome.org/gene/", "http://www.wormbase.org/db/gene/gene?class=Gene;name=WBGene",
+                "https://pharos.nih.gov/targets/", "https://platform.opentargets.org/target/ENSG",
+                "https://search.thegencc.org/genes/HGNC:", "https://www.veupathdb.org/gene/",
+                "http://identifiers.org/mesh:", "http://identifiers.org/kegg.genes:",
+                "http://identifiers.org/bgee.gene:", "http://identifiers.org/ensembl:",
+                "http://identifiers.org/pombase:", "http://identifiers.org/zfin:", "http://identifiers.org/ctd.gene:",
+                "http://identifiers.org/mim:", "http://identifiers.org/hgnc:", "http://identifiers.org/rgd:",
+                "http://identifiers.org/MGI:", "http://identifiers.org/ncit:C",
+                "http://identifiers.org/pharmgkb.gene:PA", "http://identifiers.org/sgd:S",
+                "http://identifiers.org/xenbase:XB-GENE-", "http://identifiers.org/xenbase:XB-GENEPAGE-",
+                "http://purl.uniprot.org/enzyme/", "http://glycosmos.org/glycogene/", "http://identifiers.org/fb:",
+                "http://identifiers.org/ncbigene:", "http://www.wikidata.org/entity/Q");
+        dispatcher.checkPaired(rdfs + "seeAlso", "http://identifiers.org/ensembl:",
+                "http://rdf.ebi.ac.uk/resource/ensembl/");
+        dispatcher.checkPaired(rdfs + "seeAlso", "http://identifiers.org/mesh:", "http://id.nlm.nih.gov/mesh/");
+    }
+
+
+    private static void loadGeneSymbolBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         load("select iri,id from pubchem.gene_symbol_bases", geneSymbolIDs);
 
         nextGeneSymbolID = geneSymbolIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
-        new QueryResultProcessor(patternQuery("?gene_symbol rdf:type sio:SIO_001383"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                addGeneSymbol(getStringID("gene_symbol", symbolPrefix));
-            }
-        }.load(model);
+        dispatcher.onType(sio + "SIO_001383", (subject, object) -> {
+            String symbol = getStringID(subject, symbolPrefix);
+
+            addGeneSymbol(symbol);
+            missingGeneSymbols.described(symbol);
+        });
     }
 
 
-    private static void loadGeneSymbolLiterals(Model model) throws IOException, SQLException
+    private static void loadGeneSymbolLiterals(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?gene_symbol sio:SIO_000300 ?symbol"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneSymbolID = getGeneSymbolID(getIRI("gene_symbol"));
-                String symbol = getString("symbol");
+        dispatcher.on(sio + "SIO_000300", (subject, object) -> {
+            Integer geneSymbolID = getGeneSymbolID(subject.getURI());
+            String symbol = getString(object);
 
-                geneSymbols.set(geneSymbolID, "symbol", symbol);
-            }
-        }.load(model);
+            geneSymbols.set(geneSymbolID, "symbol", symbol);
+        });
     }
 
 
-    private static void loadGeneBases(Model model) throws IOException, SQLException
+    private static void loadGeneBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?gene rdf:type sio:SIO_010035"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getIntID("gene", prefix);
-                checkGeneID(geneID);
+        dispatcher.onType(sio + "SIO_010035", (subject, object) -> {
+            Integer geneID = getIntID(subject, prefix);
+            checkGeneID(geneID);
 
-                genes.reference(geneID);
-            }
-        }.load(model);
+            genes.reference(geneID);
+            missingGenes.described(geneID);
+        });
     }
 
 
-    private static void loadSymbols(Model model) throws IOException, SQLException
+    private static void loadSymbols(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?gene bao:BAO_0002870 ?symbol"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer symbolID = getGeneSymbolID(getIRI("symbol"));
+        dispatcher.on(bao + "BAO_0002870", (subject, object) -> {
+            Integer geneID = getGeneID(subject.getURI());
+            Integer symbolID = getGeneSymbolID(object.getURI());
 
-                genes.set(geneID, "gene_symbol", symbolID);
-            }
-        }.load(model);
+            genes.set(geneID, "gene_symbol", symbolID);
+        });
     }
 
 
-    private static void loadTitles(Model model) throws IOException, SQLException
+    private static void loadTitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?gene skos:prefLabel ?title"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String title = getString("title");
+        dispatcher.on(skos + "prefLabel", (subject, object) -> {
+            Integer geneID = getGeneID(subject.getURI());
+            String title = getString(object);
 
-                genes.set(geneID, "title", title);
-            }
-        }.load(model);
+            genes.set(geneID, "title", title);
+        });
     }
 
 
-    private static void loadOrganisms(Model model) throws IOException, SQLException
+    private static void loadOrganisms(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?gene up:organism ?organism"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer organismID = Taxonomy.getTaxonomyID(getIRI("organism"));
+        dispatcher.on(up + "organism", (subject, object) -> {
+            Integer geneID = getGeneID(subject.getURI());
+            Integer organismID = Taxonomy.getTaxonomyID(object.getURI());
 
-                genes.set(geneID, "organism", organismID);
-            }
-        }.load(model);
+            genes.set(geneID, "organism", organismID);
+        });
     }
 
 
-    private static void loadAlternatives(Model model) throws IOException, SQLException
+    private static void loadAlternatives(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepAlternatives = new IntStringSet();
         IntStringSet newAlternatives = new IntStringSet();
         IntStringSet oldAlternatives = new IntStringSet();
 
         load("select gene,alternative from pubchem.gene_alternatives", oldAlternatives);
 
-        new QueryResultProcessor(patternQuery("?gene skos:altLabel ?alternative"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String alternative = getString("alternative");
+        dispatcher.on(skos + "altLabel", (subject, object) -> {
+            Integer geneID = getGeneID(subject.getURI());
+            String alternative = getString(object);
 
-                Pair<Integer, String> pair = Pair.getPair(geneID, alternative);
+            Pair<Integer, String> pair = Pair.getPair(geneID, alternative);
 
-                if(!oldAlternatives.remove(pair))
-                    newAlternatives.add(pair);
-            }
-        }.load(model);
+            if(oldAlternatives.remove(pair))
+                keepAlternatives.add(pair);
+            else if(!keepAlternatives.contains(pair))
+                newAlternatives.add(pair);
+        });
 
-        store("delete from pubchem.gene_alternatives where gene=? and alternative=?", oldAlternatives);
-        store("insert into pubchem.gene_alternatives(gene,alternative) values(?,?)", newAlternatives);
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_alternatives where gene=? and alternative=?", oldAlternatives);
+            store("insert into pubchem.gene_alternatives(gene,alternative) values(?,?)", newAlternatives);
+        });
     }
 
 
-    private static void loadReferences(Model model) throws IOException, SQLException
+    private static void loadReferences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepReferences = new IntPairSet();
         IntPairSet newReferences = new IntPairSet();
         IntPairSet oldReferences = new IntPairSet();
 
+        IntPairSet keepPatents = new IntPairSet();
         IntPairSet newPatents = new IntPairSet();
         IntPairSet oldPatents = new IntPairSet();
 
         load("select gene,reference from pubchem.gene_references", oldReferences);
         load("select gene,patent from pubchem.gene_patents", oldPatents);
 
-        new QueryResultProcessor(patternQuery("?gene cito:isDiscussedBy ?reference"))
-        {
-            @Override
-            protected void parse() throws IOException
+        dispatcher.on(cito + "isDiscussedBy", (subject, object) -> {
+            Integer geneID = getGeneID(subject.getURI());
+
+            if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
             {
-                Integer geneID = getGeneID(getIRI("gene"));
+                Integer referenceID = Reference.getReferenceID(object.getURI());
 
-                if(getIRI("reference").startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
-                {
-                    Integer referenceID = Reference.getReferenceID(getIRI("reference"));
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, referenceID);
 
-                    Pair<Integer, Integer> pair = Pair.getPair(geneID, referenceID);
-
-                    if(!oldReferences.remove(pair))
-                        newReferences.add(pair);
-                }
-                else
-                {
-                    Integer patentID = Patent.getPatentID(getIRI("reference"));
-
-                    Pair<Integer, Integer> pair = Pair.getPair(geneID, patentID);
-
-                    if(!oldPatents.remove(pair))
-                        newPatents.add(pair);
-                }
+                if(oldReferences.remove(pair))
+                    keepReferences.add(pair);
+                else if(!keepReferences.contains(pair))
+                    newReferences.add(pair);
             }
-        }.load(model);
+            else
+            {
+                Integer patentID = Patent.getPatentID(object.getURI());
 
-        store("delete from pubchem.gene_references where gene=? and reference=?", oldReferences);
-        store("insert into pubchem.gene_references(gene,reference) values(?,?)", newReferences);
+                Pair<Integer, Integer> pair = Pair.getPair(geneID, patentID);
 
-        store("delete from pubchem.gene_patents where gene=? and patent=?", oldPatents);
-        store("insert into pubchem.gene_patents(gene,patent) values(?,?)", newPatents);
+                if(oldPatents.remove(pair))
+                    keepPatents.add(pair);
+                else if(!keepPatents.contains(pair))
+                    newPatents.add(pair);
+            }
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_references where gene=? and reference=?", oldReferences);
+            store("insert into pubchem.gene_references(gene,reference) values(?,?)", newReferences);
+
+            store("delete from pubchem.gene_patents where gene=? and patent=?", oldPatents);
+            store("insert into pubchem.gene_patents(gene,patent) values(?,?)", newPatents);
+        });
     }
 
 
-    private static void loadCloseMatches(Model model) throws IOException, SQLException
+    private static void loadCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntIntPairSet keepMatches = new IntIntPairSet();
         IntIntPairSet newMatches = new IntIntPairSet();
         IntIntPairSet oldMatches = new IntIntPairSet();
 
         load("select gene,match_unit,match_id from pubchem.gene_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("""
-                ?gene rdfs:seeAlso ?match. \
-                filter(!strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/ensembl/'))\
-                filter(!strstarts(str(?match), 'http://identifiers.org/ensembl:'))\
-                filter(!strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))\
-                filter(!strstarts(str(?match), 'http://identifiers.org/mesh:'))\
-                filter(!strstarts(str(?match), 'http://identifiers.org/kegg.genes:'))\
-                filter(!strstarts(str(?match), 'http://identifiers.org/bgee.gene:'))\
-                filter(!strstarts(str(?match), 'http://identifiers.org/pombase:'))\
-                filter(!strstarts(str(?match), 'http://identifiers.org/zfin:ZDB-'))\
-                filter(!strstarts(str(?match), 'https://enzyme.expasy.org/EC/'))\
-                filter(!strstarts(str(?match), 'https://medlineplus.gov/genetics/gene/'))\
-                filter(!strstarts(str(?match), 'https://www.alliancegenome.org/gene/'))\
-                filter(!strstarts(str(?match), 'https://pharos.nih.gov/targets/'))\
-                filter(!strstarts(str(?match), 'https://www.veupathdb.org/gene/'))\
-                filter(!strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))\
-                filter(!strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"""))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Pair<Integer, Integer> match = Ontology.getId(getIRI("match"));
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(startsWith(object, "http://rdf.ebi.ac.uk/resource/ensembl/", "http://identifiers.org/ensembl:",
+                    "http://id.nlm.nih.gov/mesh/", "http://identifiers.org/mesh:", "http://identifiers.org/kegg.genes:",
+                    "http://identifiers.org/bgee.gene:", "http://identifiers.org/pombase:",
+                    "http://identifiers.org/zfin:ZDB-", "https://enzyme.expasy.org/EC/",
+                    "https://medlineplus.gov/genetics/gene/", "https://www.alliancegenome.org/gene/",
+                    "https://pharos.nih.gov/targets/", "https://www.veupathdb.org/gene/",
+                    "http://purl.uniprot.org/enzyme/", "http://www.wikidata.org/entity/Q"))
+                return;
 
-                Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            Pair<Integer, Integer> match = Ontology.getId(object.getURI());
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_matches where gene=? and match_unit=? and match_id=?", oldMatches);
-        store("insert into pubchem.gene_matches(gene,match_unit,match_id) values(?,?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_matches where gene=? and match_unit=? and match_id=?", oldMatches);
+            store("insert into pubchem.gene_matches(gene,match_unit,match_id) values(?,?,?)", newMatches);
+        });
     }
 
 
-    private static void loadEnsemblCloseMatches(Model model) throws IOException, SQLException
+    private static void loadEnsemblCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepMatches = new IntStringSet();
         IntStringSet newMatches = new IntStringSet();
         IntStringSet oldMatches = new IntStringSet();
 
         load("select gene,match from pubchem.gene_ensembl_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?gene rdfs:seeAlso ?match. "
-                + "filter(strstarts(str(?match), 'http://rdf.ebi.ac.uk/resource/ensembl/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "http://rdf.ebi.ac.uk/resource/ensembl/");
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, "http://rdf.ebi.ac.uk/resource/ensembl/"))
+                return;
 
-                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            String match = getStringID(object, "http://rdf.ebi.ac.uk/resource/ensembl/");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_ensembl_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_ensembl_matches(gene,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_ensembl_matches where gene=? and match=?", oldMatches);
+            store("insert into pubchem.gene_ensembl_matches(gene,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadMeshCloseMatches(Model model) throws IOException, SQLException
+    private static void loadMeshCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepMatches = new IntStringSet();
         IntStringSet newMatches = new IntStringSet();
         IntStringSet oldMatches = new IntStringSet();
 
         load("select gene,match from pubchem.gene_mesh_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?gene rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://id.nlm.nih.gov/mesh/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "http://id.nlm.nih.gov/mesh/");
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, "http://id.nlm.nih.gov/mesh/"))
+                return;
 
-                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            String match = getStringID(object, "http://id.nlm.nih.gov/mesh/");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_mesh_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_mesh_matches(gene,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_mesh_matches where gene=? and match=?", oldMatches);
+            store("insert into pubchem.gene_mesh_matches(gene,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadExpasyCloseMatches(Model model) throws IOException, SQLException
+    private static void loadExpasyCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepMatches = new IntStringSet();
         IntStringSet newMatches = new IntStringSet();
         IntStringSet oldMatches = new IntStringSet();
 
         load("select gene,match from pubchem.gene_expasy_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?gene rdfs:seeAlso ?match. filter(strstarts(str(?match), 'https://enzyme.expasy.org/EC/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "https://enzyme.expasy.org/EC/");
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, "https://enzyme.expasy.org/EC/"))
+                return;
 
-                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            String match = getStringID(object, "https://enzyme.expasy.org/EC/");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_expasy_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_expasy_matches(gene,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_expasy_matches where gene=? and match=?", oldMatches);
+            store("insert into pubchem.gene_expasy_matches(gene,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadMedlineplusCloseMatches(Model model) throws IOException, SQLException
+    private static void loadMedlineplusCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepMatches = new IntStringSet();
         IntStringSet newMatches = new IntStringSet();
         IntStringSet oldMatches = new IntStringSet();
 
         load("select gene,match from pubchem.gene_medlineplus_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?gene rdfs:seeAlso ?match. "
-                + "filter(strstarts(str(?match), 'https://medlineplus.gov/genetics/gene/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "https://medlineplus.gov/genetics/gene/");
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, "https://medlineplus.gov/genetics/gene/"))
+                return;
 
-                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            String match = getStringID(object, "https://medlineplus.gov/genetics/gene/");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_medlineplus_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_medlineplus_matches(gene,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_medlineplus_matches where gene=? and match=?", oldMatches);
+            store("insert into pubchem.gene_medlineplus_matches(gene,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadAlliancegenomeCloseMatches(Model model) throws IOException, SQLException
+    private static void loadAlliancegenomeCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepMatches = new IntStringSet();
         IntStringSet newMatches = new IntStringSet();
         IntStringSet oldMatches = new IntStringSet();
 
         load("select gene,match from pubchem.gene_alliancegenome_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery("?gene rdfs:seeAlso ?match. "
-                + "filter(strstarts(str(?match), 'https://www.alliancegenome.org/gene/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "https://www.alliancegenome.org/gene/");
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, "https://www.alliancegenome.org/gene/"))
+                return;
 
-                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            String match = getStringID(object, "https://www.alliancegenome.org/gene/");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_alliancegenome_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_alliancegenome_matches(gene,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_alliancegenome_matches where gene=? and match=?", oldMatches);
+            store("insert into pubchem.gene_alliancegenome_matches(gene,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadKeggCloseMatches(Model model) throws IOException, SQLException
+    private static void loadKeggCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepMatches = new IntStringSet();
         IntStringSet newMatches = new IntStringSet();
         IntStringSet oldMatches = new IntStringSet();
 
         load("select gene,match from pubchem.gene_kegg_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?gene rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://identifiers.org/kegg.genes:'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "http://identifiers.org/kegg.genes:");
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, "http://identifiers.org/kegg.genes:"))
+                return;
 
-                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            String match = getStringID(object, "http://identifiers.org/kegg.genes:");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_kegg_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_kegg_matches(gene,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_kegg_matches where gene=? and match=?", oldMatches);
+            store("insert into pubchem.gene_kegg_matches(gene,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadPharosCloseMatches(Model model) throws IOException, SQLException
+    private static void loadPharosCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepMatches = new IntStringSet();
         IntStringSet newMatches = new IntStringSet();
         IntStringSet oldMatches = new IntStringSet();
 
         load("select gene,match from pubchem.gene_pharos_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?gene rdfs:seeAlso ?match. " + "filter(strstarts(str(?match), 'https://pharos.nih.gov/targets/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "https://pharos.nih.gov/targets/");
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, "https://pharos.nih.gov/targets/"))
+                return;
 
-                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            String match = getStringID(object, "https://pharos.nih.gov/targets/");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_pharos_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_pharos_matches(gene,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_pharos_matches where gene=? and match=?", oldMatches);
+            store("insert into pubchem.gene_pharos_matches(gene,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadBgeeCloseMatches(Model model) throws IOException, SQLException
+    private static void loadBgeeCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepMatches = new IntStringSet();
         IntStringSet newMatches = new IntStringSet();
         IntStringSet oldMatches = new IntStringSet();
 
         load("select gene,match from pubchem.gene_bgee_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?gene rdfs:seeAlso ?match. " + "filter(strstarts(str(?match), 'http://identifiers.org/bgee.gene:'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "http://identifiers.org/bgee.gene:");
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, "http://identifiers.org/bgee.gene:"))
+                return;
 
-                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            String match = getStringID(object, "http://identifiers.org/bgee.gene:");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_bgee_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_bgee_matches(gene,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_bgee_matches where gene=? and match=?", oldMatches);
+            store("insert into pubchem.gene_bgee_matches(gene,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadPombaseCloseMatches(Model model) throws IOException, SQLException
+    private static void loadPombaseCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepMatches = new IntStringSet();
         IntStringSet newMatches = new IntStringSet();
         IntStringSet oldMatches = new IntStringSet();
 
         load("select gene,match from pubchem.gene_pombase_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?gene rdfs:seeAlso ?match. " + "filter(strstarts(str(?match), 'http://identifiers.org/pombase:'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "http://identifiers.org/pombase:");
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, "http://identifiers.org/pombase:"))
+                return;
 
-                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            String match = getStringID(object, "http://identifiers.org/pombase:");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_pombase_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_pombase_matches(gene,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_pombase_matches where gene=? and match=?", oldMatches);
+            store("insert into pubchem.gene_pombase_matches(gene,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadVeupathdbCloseMatches(Model model) throws IOException, SQLException
+    private static void loadVeupathdbCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepMatches = new IntStringSet();
         IntStringSet newMatches = new IntStringSet();
         IntStringSet oldMatches = new IntStringSet();
 
         load("select gene,match from pubchem.gene_veupathdb_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?gene rdfs:seeAlso ?match. " + "filter(strstarts(str(?match), 'https://www.veupathdb.org/gene/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "https://www.veupathdb.org/gene/");
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, "https://www.veupathdb.org/gene/"))
+                return;
 
-                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            String match = getStringID(object, "https://www.veupathdb.org/gene/");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_veupathdb_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_veupathdb_matches(gene,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_veupathdb_matches where gene=? and match=?", oldMatches);
+            store("insert into pubchem.gene_veupathdb_matches(gene,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadZfinCloseMatches(Model model) throws IOException, SQLException
+    private static void loadZfinCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepMatches = new IntStringSet();
         IntStringSet newMatches = new IntStringSet();
         IntStringSet oldMatches = new IntStringSet();
 
         load("select gene,match from pubchem.gene_zfin_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?gene rdfs:seeAlso ?match. " + "filter(strstarts(str(?match), 'http://identifiers.org/zfin:ZDB-'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "http://identifiers.org/zfin:ZDB-");
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, "http://identifiers.org/zfin:ZDB-"))
+                return;
 
-                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            String match = getStringID(object, "http://identifiers.org/zfin:ZDB-");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_zfin_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_zfin_matches(gene,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_zfin_matches where gene=? and match=?", oldMatches);
+            store("insert into pubchem.gene_zfin_matches(gene,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadEnzymeCloseMatches(Model model) throws IOException, SQLException
+    private static void loadEnzymeCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepMatches = new IntStringSet();
         IntStringSet newMatches = new IntStringSet();
         IntStringSet oldMatches = new IntStringSet();
 
         load("select gene,match from pubchem.gene_enzyme_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?gene rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://purl.uniprot.org/enzyme/'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                String match = getStringID("match", "http://purl.uniprot.org/enzyme/");
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, "http://purl.uniprot.org/enzyme/"))
+                return;
 
-                Pair<Integer, String> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            String match = getStringID(object, "http://purl.uniprot.org/enzyme/");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, String> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_enzyme_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_enzyme_matches(gene,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_enzyme_matches where gene=? and match=?", oldMatches);
+            store("insert into pubchem.gene_enzyme_matches(gene,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadWikidataCloseMatches(Model model) throws IOException, SQLException
+    private static void loadWikidataCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepMatches = new IntPairSet();
         IntPairSet newMatches = new IntPairSet();
         IntPairSet oldMatches = new IntPairSet();
 
         load("select gene,match from pubchem.gene_wikidata_matches", oldMatches);
 
-        new QueryResultProcessor(patternQuery(
-                "?gene rdfs:seeAlso ?match. filter(strstarts(str(?match), 'http://www.wikidata.org/entity/Q'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer match = getIntID("match", "http://www.wikidata.org/entity/Q");
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, "http://www.wikidata.org/entity/Q"))
+                return;
 
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
+            Integer geneID = getGeneID(subject.getURI());
+            Integer match = getIntID(object, "http://www.wikidata.org/entity/Q");
 
-                if(!oldMatches.remove(pair))
-                    newMatches.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, Integer> pair = Pair.getPair(geneID, match);
 
-        store("delete from pubchem.gene_wikidata_matches where gene=? and match=?", oldMatches);
-        store("insert into pubchem.gene_wikidata_matches(gene,match) values(?,?)", newMatches);
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_wikidata_matches where gene=? and match=?", oldMatches);
+            store("insert into pubchem.gene_wikidata_matches(gene,match) values(?,?)", newMatches);
+        });
     }
 
 
-    private static void loadProcesses(Model model) throws IOException, SQLException
+    private static void loadProcesses(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepProcesses = new IntPairSet();
         IntPairSet newProcesses = new IntPairSet();
         IntPairSet oldProcesses = new IntPairSet();
 
         load("select gene,process_id from pubchem.gene_processes", oldProcesses);
 
-        new QueryResultProcessor(patternQuery("?gene obo:RO_0000056 ?process "
-                + "filter(strstarts(str(?process), 'http://purl.obolibrary.org/obo/GO_'))"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Pair<Integer, Integer> process = Ontology.getId(getIRI("process"));
+        dispatcher.on(obo + "RO_0000056", (subject, object) -> {
+            if(!startsWith(object, "http://purl.obolibrary.org/obo/GO_"))
+                return;
 
-                if(process.getOne() != OntologyResource.unitGO)
-                    throw new IOException();
+            Integer geneID = getGeneID(subject.getURI());
+            Pair<Integer, Integer> process = Ontology.getId(object.getURI());
 
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, process.getTwo());
+            if(process.getOne() != OntologyResource.unitGO)
+                throw new IOException();
 
-                if(!oldProcesses.remove(pair))
-                    newProcesses.add(pair);
-            }
-        }.load(model);
+            Pair<Integer, Integer> pair = Pair.getPair(geneID, process.getTwo());
 
-        store("delete from pubchem.gene_processes where gene=? and process_id=?", oldProcesses);
-        store("insert into pubchem.gene_processes(gene,process_id) values(?,?)", newProcesses);
+            if(oldProcesses.remove(pair))
+                keepProcesses.add(pair);
+            else if(!keepProcesses.contains(pair))
+                newProcesses.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_processes where gene=? and process_id=?", oldProcesses);
+            store("insert into pubchem.gene_processes(gene,process_id) values(?,?)", newProcesses);
+        });
     }
 
 
-    private static void loadFunctions(Model model) throws IOException, SQLException
+    private static void loadFunctions(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepFunctions = new IntPairSet();
         IntPairSet newFunctions = new IntPairSet();
         IntPairSet oldFunctions = new IntPairSet();
 
         load("select gene,function_id from pubchem.gene_functions", oldFunctions);
 
-        new QueryResultProcessor(patternQuery("?gene obo:RO_0000085 ?function"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Pair<Integer, Integer> function = Ontology.getId(getIRI("function"));
+        dispatcher.on(obo + "RO_0000085", (subject, object) -> {
+            Integer geneID = getGeneID(subject.getURI());
+            Pair<Integer, Integer> function = Ontology.getId(object.getURI());
 
-                if(function.getOne() != OntologyResource.unitGO)
-                    throw new IOException();
+            if(function.getOne() != OntologyResource.unitGO)
+                throw new IOException();
 
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, function.getTwo());
+            Pair<Integer, Integer> pair = Pair.getPair(geneID, function.getTwo());
 
-                if(!oldFunctions.remove(pair))
-                    newFunctions.add(pair);
-            }
-        }.load(model);
+            if(oldFunctions.remove(pair))
+                keepFunctions.add(pair);
+            else if(!keepFunctions.contains(pair))
+                newFunctions.add(pair);
+        });
 
-        store("delete from pubchem.gene_functions where gene=? and function_id=?", oldFunctions);
-        store("insert into pubchem.gene_functions(gene,function_id) values(?,?)", newFunctions);
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_functions where gene=? and function_id=?", oldFunctions);
+            store("insert into pubchem.gene_functions(gene,function_id) values(?,?)", newFunctions);
+        });
     }
 
 
-    private static void loadLocations(Model model) throws IOException, SQLException
+    private static void loadLocations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepLocations = new IntPairSet();
         IntPairSet newLocations = new IntPairSet();
         IntPairSet oldLocations = new IntPairSet();
 
         load("select gene,location_id from pubchem.gene_locations", oldLocations);
 
-        new QueryResultProcessor(patternQuery("?gene obo:RO_0001025 ?location"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Pair<Integer, Integer> location = Ontology.getId(getIRI("location"));
+        dispatcher.on(obo + "RO_0001025", (subject, object) -> {
+            Integer geneID = getGeneID(subject.getURI());
+            Pair<Integer, Integer> location = Ontology.getId(object.getURI());
 
-                if(location.getOne() != OntologyResource.unitGO)
-                    throw new IOException();
+            if(location.getOne() != OntologyResource.unitGO)
+                throw new IOException();
 
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, location.getTwo());
+            Pair<Integer, Integer> pair = Pair.getPair(geneID, location.getTwo());
 
-                if(!oldLocations.remove(pair))
-                    newLocations.add(pair);
-            }
-        }.load(model);
+            if(oldLocations.remove(pair))
+                keepLocations.add(pair);
+            else if(!keepLocations.contains(pair))
+                newLocations.add(pair);
+        });
 
-        store("delete from pubchem.gene_locations where gene=? and location_id=?", oldLocations);
-        store("insert into pubchem.gene_locations(gene,location_id) values(?,?)", newLocations);
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_locations where gene=? and location_id=?", oldLocations);
+            store("insert into pubchem.gene_locations(gene,location_id) values(?,?)", newLocations);
+        });
     }
 
 
-    private static void loadOrthologs(Model model) throws IOException, SQLException
+    private static void loadOrthologs(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepOrthologs = new IntPairSet();
         IntPairSet newOrthologs = new IntPairSet();
         IntPairSet oldOrthologs = new IntPairSet();
 
         load("select gene,ortholog from pubchem.gene_orthologs", oldOrthologs);
 
-        new QueryResultProcessor(patternQuery("?gene sio:SIO_000558 ?ortholog"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer geneID = getGeneID(getIRI("gene"));
-                Integer orthologID = getGeneID(getIRI("ortholog"));
+        dispatcher.on(sio + "SIO_000558", (subject, object) -> {
+            Integer geneID = getGeneID(subject.getURI());
+            Integer orthologID = getGeneID(object.getURI());
 
-                Pair<Integer, Integer> pair = Pair.getPair(geneID, orthologID);
+            Pair<Integer, Integer> pair = Pair.getPair(geneID, orthologID);
 
-                if(!oldOrthologs.remove(pair))
-                    newOrthologs.add(pair);
-            }
-        }.load(model);
+            if(oldOrthologs.remove(pair))
+                keepOrthologs.add(pair);
+            else if(!keepOrthologs.contains(pair))
+                newOrthologs.add(pair);
+        });
 
-        store("delete from pubchem.gene_orthologs where gene=? and ortholog=?", oldOrthologs);
-        store("insert into pubchem.gene_orthologs(gene,ortholog) values(?,?)", newOrthologs);
+        dispatcher.after(() -> {
+            store("delete from pubchem.gene_orthologs where gene=? and ortholog=?", oldOrthologs);
+            store("insert into pubchem.gene_orthologs(gene,ortholog) values(?,?)", newOrthologs);
+        });
     }
 
 
@@ -733,38 +785,40 @@ class Gene extends Updater
     {
         System.out.println("load genes ...");
 
-        Model model = getModel("pubchem/RDF/gene/pc_gene.ttl.gz");
-        check(model, "pubchem/gene/check.sparql");
+        TripleDispatcher dispatcher = new TripleDispatcher();
 
-        loadGeneSymbolBases(model);
-        loadGeneSymbolLiterals(model);
+        check(dispatcher);
+        loadGeneSymbolBases(dispatcher);
+        loadGeneSymbolLiterals(dispatcher);
+        loadGeneBases(dispatcher);
+        loadSymbols(dispatcher);
+        loadTitles(dispatcher);
+        loadOrganisms(dispatcher);
+        loadProcesses(dispatcher);
+        loadFunctions(dispatcher);
+        loadLocations(dispatcher);
+        loadAlternatives(dispatcher);
+        loadReferences(dispatcher);
+        loadCloseMatches(dispatcher);
+        loadEnsemblCloseMatches(dispatcher);
+        loadMeshCloseMatches(dispatcher);
+        loadExpasyCloseMatches(dispatcher);
+        loadMedlineplusCloseMatches(dispatcher);
+        loadAlliancegenomeCloseMatches(dispatcher);
+        loadKeggCloseMatches(dispatcher);
+        loadPharosCloseMatches(dispatcher);
+        loadBgeeCloseMatches(dispatcher);
+        loadPombaseCloseMatches(dispatcher);
+        loadVeupathdbCloseMatches(dispatcher);
+        loadZfinCloseMatches(dispatcher);
+        loadEnzymeCloseMatches(dispatcher);
+        loadWikidataCloseMatches(dispatcher);
+        loadOrthologs(dispatcher);
 
-        loadGeneBases(model);
-        loadSymbols(model);
-        loadTitles(model);
-        loadOrganisms(model);
-        loadProcesses(model);
-        loadFunctions(model);
-        loadLocations(model);
-        loadAlternatives(model);
-        loadReferences(model);
-        loadCloseMatches(model);
-        loadEnsemblCloseMatches(model);
-        loadMeshCloseMatches(model);
-        loadExpasyCloseMatches(model);
-        loadMedlineplusCloseMatches(model);
-        loadAlliancegenomeCloseMatches(model);
-        loadKeggCloseMatches(model);
-        loadPharosCloseMatches(model);
-        loadBgeeCloseMatches(model);
-        loadPombaseCloseMatches(model);
-        loadVeupathdbCloseMatches(model);
-        loadZfinCloseMatches(model);
-        loadEnzymeCloseMatches(model);
-        loadWikidataCloseMatches(model);
-        loadOrthologs(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/gene/pc_gene.ttl.gz");
+        missingGeneSymbols.settle();
+        missingGenes.settle();
+        dispatcher.finish();
 
         geneSymbols.flush();
         genes.flush();
@@ -799,7 +853,7 @@ class Gene extends Updater
             if(geneSymbolID != null && geneSymbols.contains(geneSymbolID))
                 return geneSymbolID;
 
-            System.out.println("    add missing gene symbol " + symbol);
+            missingGeneSymbols.referenced(symbol);
 
             return addGeneSymbol(symbol);
         }
@@ -835,7 +889,7 @@ class Gene extends Updater
         checkGeneID(geneID);
 
         if(genes.reference(geneID))
-            System.out.println("    add missing gene GID" + geneID);
+            missingGenes.referenced(geneID);
 
         return geneID;
     }

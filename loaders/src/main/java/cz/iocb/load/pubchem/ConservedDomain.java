@@ -2,12 +2,21 @@ package cz.iocb.load.pubchem;
 
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
+import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
+import static cz.iocb.load.common.TripleStreamProcessor.getString;
+import static cz.iocb.load.pubchem.PubChemRDF.cito;
+import static cz.iocb.load.pubchem.PubChemRDF.dcterms;
+import static cz.iocb.load.pubchem.PubChemRDF.obo;
+import static cz.iocb.load.pubchem.PubChemRDF.rdf;
+import static cz.iocb.load.pubchem.PubChemRDF.rdfs;
+import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
-import org.apache.jena.rdf.model.Model;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
-import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 
 
@@ -19,79 +28,77 @@ class ConservedDomain extends Updater
 
     private static final EntityTable<Integer> domains = new EntityTable<>("pubchem.conserveddomain_bases", intKey("id"),
             null, uniqueVarchar("title"), uniqueVarchar("abstract"));
+    private static final MissingEntities<Integer> missingDomains = new MissingEntities<>("conserved domain", true);
 
 
-    private static void loadBases(Model model) throws IOException, SQLException
+    private static void check(TripleDispatcher dispatcher)
     {
-        new QueryResultProcessor(patternQuery("?domain rdf:type obo:SO_0000417"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer domainID = getIntID("domain", prefix);
-
-                domains.reference(domainID);
-            }
-        }.load(model);
+        dispatcher.checkPredicates(all(), dcterms + "abstract", dcterms + "title", rdf + "type", rdfs + "seeAlso",
+                cito + "isDiscussedBy");
+        dispatcher.checkTypes(all(), vocab + "ConservedDomain", obo + "SO_0000417");
+        dispatcher.checkLink(all(), rdfs + "seeAlso", all(),
+                "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID",
+                "https://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi\\?uid=");
     }
 
 
-    private static void loadTitles(Model model) throws IOException, SQLException
+    private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?domain dcterms:title ?title"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer domainID = getDomainID(getIRI("domain"));
-                String title = getString("title");
+        dispatcher.onType(obo + "SO_0000417", (subject, object) -> {
+            Integer domainID = getIntID(subject, prefix);
 
-                domains.set(domainID, "title", title);
-            }
-        }.load(model);
+            domains.reference(domainID);
+            missingDomains.described(domainID);
+        });
     }
 
 
-    private static void loadAbstracts(Model model) throws IOException, SQLException
+    private static void loadTitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?domain dcterms:abstract ?abstract"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer domainID = getDomainID(getIRI("domain"));
-                String value = getString("abstract");
+        dispatcher.on(dcterms + "title", (subject, object) -> {
+            Integer domainID = getDomainID(subject.getURI());
+            String title = getString(object);
 
-                domains.set(domainID, "abstract", value);
-            }
-        }.load(model);
+            domains.set(domainID, "title", title);
+        });
     }
 
 
-    private static void loadReferences(Model model) throws IOException, SQLException
+    private static void loadAbstracts(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        dispatcher.on(dcterms + "abstract", (subject, object) -> {
+            Integer domainID = getDomainID(subject.getURI());
+            String value = getString(object);
+
+            domains.set(domainID, "abstract", value);
+        });
+    }
+
+
+    private static void loadReferences(TripleDispatcher dispatcher) throws IOException, SQLException
+    {
+        IntPairSet keepReferences = new IntPairSet();
         IntPairSet newReferences = new IntPairSet();
         IntPairSet oldReferences = new IntPairSet();
 
         load("select domain,reference from pubchem.conserveddomain_references", oldReferences);
 
-        new QueryResultProcessor(patternQuery("?domain cito:isDiscussedBy ?reference"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer domainID = getDomainID(getIRI("domain"));
-                Integer referenceID = Reference.getReferenceID(getIRI("reference"));
+        dispatcher.on(cito + "isDiscussedBy", (subject, object) -> {
+            Integer domainID = getDomainID(subject.getURI());
+            Integer referenceID = Reference.getReferenceID(object.getURI());
 
-                Pair<Integer, Integer> pair = Pair.getPair(domainID, referenceID);
+            Pair<Integer, Integer> pair = Pair.getPair(domainID, referenceID);
 
-                if(!oldReferences.remove(pair))
-                    newReferences.add(pair);
-            }
-        }.load(model);
+            if(oldReferences.remove(pair))
+                keepReferences.add(pair);
+            else if(!keepReferences.contains(pair))
+                newReferences.add(pair);
+        });
 
-        store("delete from pubchem.conserveddomain_references where domain=? and reference=?", oldReferences);
-        store("insert into pubchem.conserveddomain_references(domain,reference) values(?,?)", newReferences);
+        dispatcher.after(() -> {
+            store("delete from pubchem.conserveddomain_references where domain=? and reference=?", oldReferences);
+            store("insert into pubchem.conserveddomain_references(domain,reference) values(?,?)", newReferences);
+        });
     }
 
 
@@ -99,16 +106,17 @@ class ConservedDomain extends Updater
     {
         System.out.println("load conserved domains ...");
 
-        Model model = getModel("pubchem/RDF/conserveddomain/pc_conserveddomain.ttl.gz");
+        TripleDispatcher dispatcher = new TripleDispatcher();
 
-        check(model, "pubchem/conserveddomain/check.sparql");
+        check(dispatcher);
+        loadBases(dispatcher);
+        loadTitles(dispatcher);
+        loadAbstracts(dispatcher);
+        loadReferences(dispatcher);
 
-        loadBases(model);
-        loadTitles(model);
-        loadAbstracts(model);
-        loadReferences(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/conserveddomain/pc_conserveddomain.ttl.gz");
+        missingDomains.settle();
+        dispatcher.finish();
 
         domains.flush();
 
@@ -134,7 +142,7 @@ class ConservedDomain extends Updater
         Integer domainID = Integer.parseInt(value.substring(prefixLength));
 
         if(domains.reference(domainID))
-            System.out.println("    add missing domain PSSMID" + domainID);
+            missingDomains.referenced(domainID);
 
         return domainID;
     }

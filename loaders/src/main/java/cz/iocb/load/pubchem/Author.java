@@ -1,11 +1,18 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleStreamProcessor.getString;
+import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
+import static cz.iocb.load.pubchem.PubChemRDF.dcterms;
+import static cz.iocb.load.pubchem.PubChemRDF.rdf;
+import static cz.iocb.load.pubchem.PubChemRDF.vcard;
+import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
+import java.util.concurrent.atomic.AtomicInteger;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
-import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 
 
@@ -19,9 +26,10 @@ public class Author extends Updater
     private static final StringIntMap newAuthors = new StringIntMap();
     private static final StringIntMap oldAuthors = new StringIntMap();
     private static int nextAuthorID;
+    private static final MissingEntities<String> missingAuthors = new MissingEntities<>("author", false);
 
 
-    private static void loadBases(Model model) throws IOException, SQLException
+    private static void loadBases() throws SQLException
     {
         load("select iri,id from pubchem.author_bases", oldAuthors);
 
@@ -29,140 +37,152 @@ public class Author extends Updater
     }
 
 
-    private static void loadGivenNames(Model model) throws IOException, SQLException
+    private static void check(TripleDispatcher dispatcher)
     {
+        dispatcher.checkPredicates(all(), vcard + "given-name", vcard + "family-name", vcard + "fn",
+                vcard + "organization-name", vcard + "hasUID", dcterms + "source", rdf + "type");
+        dispatcher.checkTypes(all(), vocab + "Author");
+        dispatcher.checkValues(dcterms + "source", "https://orcid.org");
+    }
+
+
+    private static void loadGivenNames(TripleDispatcher dispatcher) throws IOException, SQLException
+    {
+        IntStringSet keepNames = new IntStringSet();
         IntStringSet newNames = new IntStringSet();
         IntStringSet oldNames = new IntStringSet();
 
         load("select author,name from pubchem.author_given_names", oldNames);
 
-        new QueryResultProcessor(patternQuery("?author vcard:given-name ?name"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer authorID = getAuthorID(getIRI("author"), false);
-                String name = getString("name");
+        dispatcher.on(vcard + "given-name", (subject, object) -> {
+            Integer authorID = getAuthorID(subject.getURI(), false);
+            String name = getString(object);
 
-                Pair<Integer, String> pair = Pair.getPair(authorID, name);
+            Pair<Integer, String> pair = Pair.getPair(authorID, name);
 
-                if(!oldNames.remove(pair))
-                    newNames.add(pair);
-            }
-        }.load(model);
+            if(oldNames.remove(pair))
+                keepNames.add(pair);
+            else if(!keepNames.contains(pair))
+                newNames.add(pair);
+        });
 
-        store("delete from pubchem.author_given_names where author=? and name=?", oldNames);
-        store("insert into pubchem.author_given_names(author,name) values(?,?)", newNames);
+        dispatcher.after(() -> {
+            store("delete from pubchem.author_given_names where author=? and name=?", oldNames);
+            store("insert into pubchem.author_given_names(author,name) values(?,?)", newNames);
+        });
     }
 
 
-    private static void loadFamilyNames(Model model) throws IOException, SQLException
+    private static void loadFamilyNames(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepNames = new IntStringSet();
         IntStringSet newNames = new IntStringSet();
         IntStringSet oldNames = new IntStringSet();
 
         load("select author,name from pubchem.author_family_names", oldNames);
 
-        new QueryResultProcessor(patternQuery("?author vcard:family-name ?name"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer authorID = getAuthorID(getIRI("author"), false);
-                String name = getString("name");
+        dispatcher.on(vcard + "family-name", (subject, object) -> {
+            Integer authorID = getAuthorID(subject.getURI(), false);
+            String name = getString(object);
 
-                Pair<Integer, String> pair = Pair.getPair(authorID, name);
+            Pair<Integer, String> pair = Pair.getPair(authorID, name);
 
-                if(!oldNames.remove(pair))
-                    newNames.add(pair);
-            }
-        }.load(model);
+            if(oldNames.remove(pair))
+                keepNames.add(pair);
+            else if(!keepNames.contains(pair))
+                newNames.add(pair);
+        });
 
-        store("delete from pubchem.author_family_names where author=? and name=?", oldNames);
-        store("insert into pubchem.author_family_names(author,name) values(?,?)", newNames);
+        dispatcher.after(() -> {
+            store("delete from pubchem.author_family_names where author=? and name=?", oldNames);
+            store("insert into pubchem.author_family_names(author,name) values(?,?)", newNames);
+        });
     }
 
 
-    private static void loadFormattedNames(Model model) throws IOException, SQLException
+    private static void loadFormattedNames(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepNames = new IntStringSet();
         IntStringSet newNames = new IntStringSet();
         IntStringSet oldNames = new IntStringSet();
 
         load("select author,name from pubchem.author_formatted_names", oldNames);
 
-        new QueryResultProcessor(patternQuery("?author vcard:fn ?name"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer authorID = getAuthorID(getIRI("author"), false);
-                String name = getString("name");
+        dispatcher.on(vcard + "fn", (subject, object) -> {
+            Integer authorID = getAuthorID(subject.getURI(), false);
+            String name = getString(object);
 
-                Pair<Integer, String> pair = Pair.getPair(authorID, name);
+            Pair<Integer, String> pair = Pair.getPair(authorID, name);
 
-                if(!oldNames.remove(pair))
-                    newNames.add(pair);
-            }
-        }.load(model);
+            if(oldNames.remove(pair))
+                keepNames.add(pair);
+            else if(!keepNames.contains(pair))
+                newNames.add(pair);
+        });
 
-        store("delete from pubchem.author_formatted_names where author=? and name=?", oldNames);
-        store("insert into pubchem.author_formatted_names(author,name) values(?,?)", newNames);
+        dispatcher.after(() -> {
+            store("delete from pubchem.author_formatted_names where author=? and name=?", oldNames);
+            store("insert into pubchem.author_formatted_names(author,name) values(?,?)", newNames);
+        });
     }
 
 
-    private static void loadOrganizations(Model model) throws IOException, SQLException
+    private static void loadOrganizations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringPairIntMap keepOrganizations = new IntStringPairIntMap();
         IntStringPairIntMap newOrganizations = new IntStringPairIntMap();
         IntStringPairIntMap oldOrganizations = new IntStringPairIntMap();
 
         load("select author,organization,__ from pubchem.author_organizations", oldOrganizations);
 
-        new QueryResultProcessor(patternQuery("?author vcard:organization-name ?organization"))
-        {
-            int nextValueID = oldOrganizations.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+        AtomicInteger nextValueID = new AtomicInteger(
+                oldOrganizations.values().stream().max(Integer::compare).orElse(-1).intValue() + 1);
 
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer authorID = getAuthorID(getIRI("author"), false);
-                String organization = getString("organization");
+        dispatcher.on(vcard + "organization-name", (subject, object) -> {
+            Integer authorID = getAuthorID(subject.getURI(), false);
+            String organization = getString(object);
 
-                Pair<Integer, String> pair = Pair.getPair(authorID, organization);
+            Pair<Integer, String> pair = Pair.getPair(authorID, organization);
+            Integer valueID = oldOrganizations.remove(pair);
 
-                if(oldOrganizations.remove(pair) == null)
-                    newOrganizations.put(pair, nextValueID++);
-            }
-        }.load(model);
+            if(valueID != null)
+                keepOrganizations.put(pair, valueID);
+            else if(!keepOrganizations.containsKey(pair) && !newOrganizations.containsKey(pair))
+                newOrganizations.put(pair, nextValueID.getAndIncrement());
+        });
 
-        store("delete from pubchem.author_organizations where author=? and organization=? and __=?", oldOrganizations);
-        store("insert into pubchem.author_organizations(author,organization,__) values(?,?,?)", newOrganizations);
+        dispatcher.after(() -> {
+            store("delete from pubchem.author_organizations where author=? and organization=? and __=?",
+                    oldOrganizations);
+            store("insert into pubchem.author_organizations(author,organization,__) values(?,?,?)", newOrganizations);
+        });
     }
 
 
-    private static void loadOrcids(Model model) throws IOException, SQLException
+    private static void loadOrcids(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntStringSet keepOrcids = new IntStringSet();
         IntStringSet newOrcids = new IntStringSet();
         IntStringSet oldOrcids = new IntStringSet();
 
         load("select author,orcid from pubchem.author_orcids", oldOrcids);
 
-        new QueryResultProcessor(patternQuery("?author vcard:hasUID ?orcid"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer authorID = getAuthorID(getIRI("author"), false);
-                String orcid = getStringID("orcid", "https://orcid.org/");
+        dispatcher.on(vcard + "hasUID", (subject, object) -> {
+            Integer authorID = getAuthorID(subject.getURI(), false);
+            String orcid = getStringID(object, "https://orcid.org/");
 
-                Pair<Integer, String> pair = Pair.getPair(authorID, orcid);
+            Pair<Integer, String> pair = Pair.getPair(authorID, orcid);
 
-                if(!oldOrcids.remove(pair))
-                    newOrcids.add(pair);
-            }
-        }.load(model);
+            if(oldOrcids.remove(pair))
+                keepOrcids.add(pair);
+            else if(!keepOrcids.contains(pair))
+                newOrcids.add(pair);
+        });
 
-        store("delete from pubchem.author_orcids where author=? and orcid=?", oldOrcids);
-        store("insert into pubchem.author_orcids(author,orcid) values(?,?)", newOrcids);
+        dispatcher.after(() -> {
+            store("delete from pubchem.author_orcids where author=? and orcid=?", oldOrcids);
+            store("insert into pubchem.author_orcids(author,orcid) values(?,?)", newOrcids);
+        });
     }
 
 
@@ -170,29 +190,19 @@ public class Author extends Updater
     {
         System.out.println("load authors ...");
 
-        Model model = ModelFactory.createDefaultModel();
+        TripleDispatcher dispatcher = new TripleDispatcher();
 
-        processFiles("pubchem/RDF/author", "pc_author_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file);
+        check(dispatcher);
+        loadBases();
+        loadGivenNames(dispatcher);
+        loadFamilyNames(dispatcher);
+        loadFormattedNames(dispatcher);
+        loadOrganizations(dispatcher);
+        loadOrcids(dispatcher);
 
-            synchronized(model)
-            {
-                model.add(submodel);
-            }
+        dispatcher.load("pubchem/RDF/author", "pc_author_[0-9]+\\.ttl\\.gz");
+        dispatcher.finish();
 
-            submodel.close();
-        });
-
-        check(model, "pubchem/author/check.sparql");
-
-        loadBases(model);
-        loadGivenNames(model);
-        loadFamilyNames(model);
-        loadFormattedNames(model);
-        loadOrganizations(model);
-        loadOrcids(model);
-
-        model.close();
         System.out.println();
     }
 
@@ -234,7 +244,7 @@ public class Author extends Updater
                 return authorID;
 
             if(verbose)
-                System.out.println("    add missing author " + author);
+                missingAuthors.referenced(author);
 
             if((authorID = oldAuthors.remove(author)) == null)
                 newAuthors.put(author, authorID = nextAuthorID++);

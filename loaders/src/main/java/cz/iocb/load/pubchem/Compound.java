@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
@@ -20,6 +21,7 @@ class Compound extends Updater
     private static final IntSet keepCompounds = new IntSet();
     private static final IntSet newCompounds = new IntSet();
     private static final IntSet oldCompounds = new IntSet();
+    private static final MissingEntities<Integer> missingCompounds = new MissingEntities<>("compound", false);
 
 
     private static void loadBases() throws IOException, SQLException
@@ -561,7 +563,7 @@ class Compound extends Updater
             if(!keepCompounds.contains(compoundID) && !newCompounds.contains(compoundID))
             {
                 if(verbose)
-                    System.out.println("    add missing compound CID" + compoundID);
+                    missingCompounds.referenced(compoundID);
 
                 if(oldCompounds.remove(compoundID))
                     keepCompounds.add(compoundID);
@@ -590,7 +592,7 @@ class Compound extends Updater
             if(!keepCompounds.contains(compoundID) && !newCompounds.contains(compoundID))
             {
                 if(verbose)
-                    System.out.println("    add missing compound CID" + compoundID);
+                    missingCompounds.referenced(compoundID);
 
                 if(oldCompounds.remove(compoundID))
                     keepCompounds.add(compoundID);

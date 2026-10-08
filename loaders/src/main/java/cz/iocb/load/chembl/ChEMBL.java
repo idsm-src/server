@@ -4,18 +4,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 import org.apache.jena.graph.Node;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.Model;
+import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
@@ -34,6 +33,7 @@ public class ChEMBL extends Updater
     static final String bao = "http://www.bioassayontology.org/bao#";
     static final String cco = "http://rdf.ebi.ac.uk/terms/chembl#";
     static final String chembl = "http://rdf.ebi.ac.uk/resource/chembl/";
+    static final String pav = "http://purl.org/pav/";
 
     static final String rdfType = rdf + "type";
     static final String rdfsLabel = rdfs + "label";
@@ -48,31 +48,40 @@ public class ChEMBL extends Updater
     private static String version;
 
 
-    private static String getVersion() throws IOException
+    /*
+     * Returns the current version of the dataset, as its VoID description states it.
+     */
+    private static String getVersion() throws IOException, SQLException
     {
-        String query = """
-                select ?version
-                {
-                    <http://rdf.ebi.ac.uk/dataset/chembl> <http://purl.org/pav/hasCurrentVersion> ?current .
-                    ?current <http://purl.org/pav/version> ?version
-                }""";
+        String dataset = "http://rdf.ebi.ac.uk/dataset/chembl";
+        HashSet<Node> currents = new HashSet<>();
+        HashMap<Node, HashSet<Node>> versions = new HashMap<>();
 
-        Model model = getModel(rdfFile("void.ttl.gz"));
+        TripleDispatcher dispatcher = new TripleDispatcher();
 
-        try(QueryExecution qexec = QueryExecutionFactory.create(query, model))
-        {
-            ResultSet results = qexec.execSelect();
-            QuerySolution solution = results.nextSolution();
+        dispatcher.on(pav + "hasCurrentVersion", (subject, object) -> {
+            if(TripleDispatcher.is(subject, dataset))
+                currents.add(object);
+        });
 
-            if(results.hasNext())
-                throw new IOException("ambiguous version of the dataset");
+        dispatcher.on(pav + "version", (subject, object) -> {
+            versions.computeIfAbsent(subject, k -> new HashSet<>()).add(object);
+        });
 
-            return solution.getLiteral("version").getLexicalForm();
-        }
-        finally
-        {
-            model.close();
-        }
+        dispatcher.load(rdfFile("void.ttl.gz"));
+
+        List<Node> values = new ArrayList<>();
+
+        for(Node current : currents)
+            values.addAll(versions.getOrDefault(current, new HashSet<>()));
+
+        if(values.isEmpty())
+            throw new IOException("unknown version of the dataset");
+
+        if(values.size() > 1)
+            throw new IOException("ambiguous version of the dataset");
+
+        return TripleStreamProcessor.getLexicalForm(values.get(0));
     }
 
 
@@ -260,6 +269,7 @@ public class ChEMBL extends Updater
 
             checkFiles();
             printWarningSummary();
+            MissingEntities.printSummary();
 
             setCount("ChEMBL Substances", Molecule.size());
             setCount("ChEMBL Assays", Assay.size());

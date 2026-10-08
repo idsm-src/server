@@ -8,6 +8,7 @@ import org.apache.jena.graph.Node_Literal;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFParser;
+import org.apache.jena.riot.RDFParserBuilder;
 
 
 
@@ -15,9 +16,24 @@ public abstract class TripleStreamProcessor
 {
     public void load(InputStream stream) throws IOException
     {
+        load(RDFParser.source(stream).lang(Lang.TURTLE));
+    }
+
+
+    /*
+     * Reads a stream in the given syntax, resolving relative IRIs against the base.
+     */
+    public void load(InputStream stream, Lang lang, String base) throws IOException
+    {
+        load(RDFParser.source(stream).lang(lang).base(base));
+    }
+
+
+    private void load(RDFParserBuilder parser) throws IOException
+    {
         try
         {
-            RDFParser.source(stream).lang(Lang.TURTLE).parse(new VoidStreamRDF()
+            parser.parse(new VoidStreamRDF()
             {
                 @Override
                 public void triple(Triple triple)
@@ -77,6 +93,20 @@ public abstract class TripleStreamProcessor
             throw new IOException("unexpected IRI: " + value);
 
         return Integer.parseInt(value.substring(prefix.length()));
+    }
+
+
+    public static String getStringID(Node node, String prefix, String suffix) throws IOException
+    {
+        String value = node.getURI();
+
+        if(!value.startsWith(prefix))
+            throw new IOException("unexpected IRI: " + value);
+
+        if(!value.endsWith(suffix))
+            throw new IOException("unexpected IRI: " + value);
+
+        return value.substring(prefix.length(), value.length() - suffix.length());
     }
 
 

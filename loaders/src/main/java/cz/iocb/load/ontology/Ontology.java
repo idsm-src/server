@@ -4,25 +4,26 @@ import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.bui
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBlank;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCHEBI;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
+import static cz.iocb.load.common.TripleDispatcher.is;
 import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.riot.Lang;
+import java.util.Map.Entry;
+import java.util.regex.Pattern;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
+import cz.iocb.load.common.BlankNodes;
 import cz.iocb.load.common.Pair;
-import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 
 
@@ -43,13 +44,18 @@ public class Ontology extends Updater
             return name;
         }
 
-        public abstract String getVersion(Model model);
+        public abstract String getVersion();
     }
 
 
     static private class OwlSource extends Source
     {
         public final String iri;
+
+        // the values of owl:versionInfo, doap:Version and owl:versionIRI of the ontology
+        private final LinkedHashSet<Node> infos = new LinkedHashSet<>();
+        private final LinkedHashSet<Node> releases = new LinkedHashSet<>();
+        private final LinkedHashSet<Node> versionIRIs = new LinkedHashSet<>();
 
         public OwlSource(String name, String iri)
         {
@@ -58,36 +64,30 @@ public class Ontology extends Updater
         }
 
 
-        public String getVersionFromInfo(Model model)
+        public String getVersionFromInfo()
         {
             String version = null;
 
-            try(QueryExecution qexec = QueryExecutionFactory
-                    .create(patternQuery("<" + iri + "> <http://www.w3.org/2002/07/owl#versionInfo> | "
-                            + "<http://usefulinc.com/ns/doap#Version> ?version"), model))
+            List<Node> nodes = new ArrayList<>(infos);
+            nodes.addAll(releases);
+
+            for(Node node : nodes)
             {
-                org.apache.jena.query.ResultSet results = qexec.execSelect();
-
-                while(results.hasNext())
+                if(node.isLiteral())
                 {
-                    RDFNode node = results.nextSolution().get("version");
+                    String tmp = node.getLiteralLexicalForm();
 
-                    if(node.isLiteral())
-                    {
-                        String tmp = node.asLiteral().getLexicalForm();
+                    if(tmp.startsWith("http"))
+                        tmp = tmp.replaceFirst(".*/([0-9.-]+)(/|$).*", "$1");
+                    else if(!tmp.matches(".*[0-9].*"))
+                        continue;
 
-                        if(tmp.startsWith("http"))
-                            tmp = tmp.replaceFirst(".*/([0-9.-]+)(/|$).*", "$1");
-                        else if(!tmp.matches(".*[0-9].*"))
-                            continue;
-
-                        if(version == null)
-                            version = tmp;
-                        else if(!tmp.matches("[0-9]{4}(-[0-9]{2}){2}") || !version.matches("[0-9]{4}(-[0-9]{2}){2}"))
-                            return null;
-                        else if(tmp.compareTo(version) > 0)
-                            version = tmp;
-                    }
+                    if(version == null)
+                        version = tmp;
+                    else if(!tmp.matches("[0-9]{4}(-[0-9]{2}){2}") || !version.matches("[0-9]{4}(-[0-9]{2}){2}"))
+                        return null;
+                    else if(tmp.compareTo(version) > 0)
+                        version = tmp;
                 }
             }
 
@@ -95,45 +95,30 @@ public class Ontology extends Updater
         }
 
 
-        public String getVersionFromVersionIRI(Model model)
+        public String getVersionFromVersionIRI()
         {
-            String version = null;
+            if(versionIRIs.size() != 1)
+                return null;
 
-            try(QueryExecution qexec = QueryExecutionFactory
-                    .create(patternQuery("<" + iri + "> <http://www.w3.org/2002/07/owl#versionIRI> ?version"), model))
-            {
-                org.apache.jena.query.ResultSet results = qexec.execSelect();
+            Node node = versionIRIs.iterator().next();
+            String version = node.isLiteral() ? node.getLiteralLexicalForm() : node.getURI();
 
-                if(results.hasNext())
-                {
-                    RDFNode node = results.nextSolution().get("version");
-
-                    if(node.isLiteral())
-                        version = node.asLiteral().getLexicalForm();
-                    else
-                        version = node.asResource().getURI();
-
-                    if(version.matches(".*-20[0-9]{6}$"))
-                        version = version.replaceFirst(".*-(20[0-9]{2})([0-9]{2})([0-9]{2})$", "$1-$2-$3");
-                    else
-                        version = version.replaceFirst(".*/([0-9.-]+)(/|$).*", "$1");
-                }
-
-                if(results.hasNext())
-                    version = null;
-            }
+            if(version.matches(".*-20[0-9]{6}$"))
+                version = version.replaceFirst(".*-(20[0-9]{2})([0-9]{2})([0-9]{2})$", "$1-$2-$3");
+            else
+                version = version.replaceFirst(".*/([0-9.-]+)(/|$).*", "$1");
 
             return version;
         }
 
 
         @Override
-        public String getVersion(Model model)
+        public String getVersion()
         {
-            String version = getVersionFromInfo(model);
+            String version = getVersionFromInfo();
 
             if(version == null)
-                version = getVersionFromVersionIRI(model);
+                version = getVersionFromVersionIRI();
 
             return version;
         }
@@ -151,9 +136,61 @@ public class Ontology extends Updater
         }
 
         @Override
-        public String getVersion(Model model)
+        public String getVersion()
         {
             return version;
+        }
+    }
+
+
+    /*
+     * The rdfs:subClassOf triples as pairs of the (unit, id) of their subject and object, encoded as longs.
+     */
+    private static class SubclassPairs
+    {
+        private long[] subclasses = new long[1024];
+        private long[] superclasses = new long[1024];
+        private int size = 0;
+
+
+        void add(Pair<Integer, Integer> subclass, Pair<Integer, Integer> superclass)
+        {
+            if(size == subclasses.length)
+            {
+                subclasses = Arrays.copyOf(subclasses, 2 * size);
+                superclasses = Arrays.copyOf(superclasses, 2 * size);
+            }
+
+            subclasses[size] = encode(subclass);
+            superclasses[size] = encode(superclass);
+            size++;
+        }
+
+
+        /*
+         * Returns the class with its direct and indirect subclasses.
+         */
+        HashSet<Long> getSubclasses(Pair<Integer, Integer> root)
+        {
+            HashSet<Long> result = new HashSet<>();
+            result.add(encode(root));
+
+            for(boolean changed = true; changed;)
+            {
+                changed = false;
+
+                for(int i = 0; i < size; i++)
+                    if(result.contains(superclasses[i]) && result.add(subclasses[i]))
+                        changed = true;
+            }
+
+            return result;
+        }
+
+
+        static long encode(Pair<Integer, Integer> id)
+        {
+            return (long) id.getOne() << 32 | id.getTwo() & 0xffffffffL;
         }
     }
 
@@ -163,7 +200,7 @@ public class Ontology extends Updater
         int id;
         int valueOffset;
         String suffix;
-        String pattern;
+        Pattern pattern;
     }
 
 
@@ -287,30 +324,20 @@ public class Ontology extends Updater
     }
 
 
-    protected static abstract class OntologyQueryResultProcessor extends QueryResultProcessor
-    {
-        protected OntologyQueryResultProcessor(String sparql)
-        {
-            super(sparql);
-        }
-
-        protected Pair<Integer, Integer> getId(String name)
-        {
-            return Ontology.getId(solution.getResource(name));
-        }
-
-        protected String getBlankNode(String name)
-        {
-            return solution.getResource(name).getId().getLabelString();
-        }
-    }
-
+    static final String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    static final String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
+    static final String owl = "http://www.w3.org/2002/07/owl#";
+    static final String doap = "http://usefulinc.com/ns/doap#";
 
     private static final List<Source> sources = new ArrayList<>();
 
     private static final List<Unit> units = new ArrayList<>();
-    private static final HashMap<String, Integer> blankNodes = new HashMap<>();
+    private static final HashMap<Node, Integer> blankNodes = new HashMap<>();
     private static final HashMap<String, Integer> builtinResources = new HashMap<>();
+
+    // the subjects of the rdf:type triples by their types, and the rdfs:subClassOf triples
+    private static final HashMap<Node, List<Node>> instances = new HashMap<>();
+    private static final SubclassPairs subclassPairs = new SubclassPairs();
 
     private static int nextResourceID;
 
@@ -421,7 +448,7 @@ public class Ontology extends Updater
                     unit.id = result.getShort(1);
                     unit.valueOffset = result.getInt(2);
                     unit.suffix = result.getString(3);
-                    unit.pattern = result.getString(4);
+                    unit.pattern = Pattern.compile(result.getString(4));
 
                     units.add(unit);
                 }
@@ -1154,7 +1181,7 @@ public class Ontology extends Updater
             return null;
 
         for(Unit unit : units)
-            if(iri.matches(unit.pattern))
+            if(unit.pattern.matcher(iri).matches())
                 return Pair.getPair(unit.id, OntologyResource.parseId(unit.id,
                         iri.substring(unit.valueOffset, iri.length() - unit.suffix.length())));
 
@@ -1167,21 +1194,24 @@ public class Ontology extends Updater
     }
 
 
-    private static Pair<Integer, Integer> getId(Resource resource)
+    /*
+     * Returns the (unit, id) of a node; a blank node, as well as an IRI that is neither of a unit nor a built-in
+     * resource, gets a new id when it is first seen.
+     */
+    private static Pair<Integer, Integer> getId(Node node)
     {
-        if(resource.isAnon())
+        if(node.isBlank())
         {
-            String blanknode = resource.getId().getLabelString();
-            Integer blanknodeID = blankNodes.get(blanknode);
+            Integer blanknodeID = blankNodes.get(node);
 
             if(blanknodeID == null)
-                blankNodes.put(blanknode, blanknodeID = blankNodes.size());
+                blankNodes.put(node, blanknodeID = blankNodes.size());
 
             return Pair.getPair((int) unitBlank, blanknodeID);
         }
         else
         {
-            String iri = resource.getURI();
+            String iri = node.getURI();
             Pair<Integer, Integer> result = getId(iri);
 
             if(result != null)
@@ -1209,7 +1239,124 @@ public class Ontology extends Updater
     }
 
 
-    private static void loadBases(Model model) throws IOException, SQLException
+    /*
+     * Returns the (unit, id) of a node if it has one already, without giving it a new id, or null otherwise.
+     */
+    private static Pair<Integer, Integer> findId(Node node)
+    {
+        if(node.isBlank())
+        {
+            Integer blanknodeID = blankNodes.get(node);
+
+            return blanknodeID == null ? null : Pair.getPair((int) unitBlank, blanknodeID);
+        }
+
+        if(!node.isURI())
+            return null;
+
+        String iri = node.getURI();
+        Pair<Integer, Integer> result = getId(iri);
+
+        if(result != null)
+            return result;
+
+        Integer resourceID = keepResources.get(iri);
+
+        if(resourceID == null)
+            resourceID = newResources.get(iri);
+
+        return resourceID == null ? null : Pair.getPair((int) unitUncategorized, resourceID);
+    }
+
+
+    /*
+     * Records a value of the data: a value stored in the database is kept, any other one is new.
+     */
+    private static <T> void add(T value, SqlSet<T> keepValues, SqlSet<T> newValues, SqlSet<T> oldValues)
+    {
+        if(oldValues.remove(value))
+            keepValues.add(value);
+        else if(!keepValues.contains(value))
+            newValues.add(value);
+    }
+
+
+    /*
+     * Collects the values of owl:versionInfo, doap:Version and owl:versionIRI of the ontologies of the sources.
+     */
+    private static void loadVersions(TripleDispatcher dispatcher)
+    {
+        HashMap<String, OwlSource> owlSources = new HashMap<>();
+
+        for(Source source : sources)
+            if(source instanceof OwlSource owlSource)
+                owlSources.put(owlSource.iri, owlSource);
+
+        dispatcher.on(owl + "versionInfo", (subject, object) -> {
+            if(subject.isURI() && owlSources.containsKey(subject.getURI()))
+                owlSources.get(subject.getURI()).infos.add(object);
+        });
+
+        dispatcher.on(doap + "Version", (subject, object) -> {
+            if(subject.isURI() && owlSources.containsKey(subject.getURI()))
+                owlSources.get(subject.getURI()).releases.add(object);
+        });
+
+        dispatcher.on(owl + "versionIRI", (subject, object) -> {
+            if(subject.isURI() && owlSources.containsKey(subject.getURI()))
+                owlSources.get(subject.getURI()).versionIRIs.add(object);
+        });
+    }
+
+
+    /*
+     * Collects the subjects of the rdf:type triples by their types and the rdfs:subClassOf triples, as some resources
+     * can be classified only once all the files have been read.
+     */
+    private static void loadTypes(TripleDispatcher dispatcher)
+    {
+        dispatcher.on(rdf + "type", (subject, object) -> {
+            instances.computeIfAbsent(object, k -> new ArrayList<>()).add(subject);
+        });
+
+        dispatcher.on(rdfs + "subClassOf", (subject, object) -> {
+            subclassPairs.add(getId(subject), getId(object));
+        });
+    }
+
+
+    /*
+     * Returns the instances of the type.
+     */
+    private static List<Node> getInstances(String type)
+    {
+        return instances.getOrDefault(NodeFactory.createURI(type), List.of());
+    }
+
+
+    /*
+     * Returns the types whose instances are classes, which are rdfs:Class and its direct and indirect subclasses.
+     */
+    private static List<Node> getClassTypes()
+    {
+        Pair<Integer, Integer> classID = findId(NodeFactory.createURI(rdfs + "Class"));
+        HashSet<Long> metaclasses = classID == null ? new HashSet<>() : subclassPairs.getSubclasses(classID);
+
+        List<Node> types = new ArrayList<>();
+
+        for(Node type : instances.keySet())
+        {
+            Pair<Integer, Integer> typeID = findId(type);
+
+            if(is(type, rdfs + "Class") || typeID != null && metaclasses.contains(SubclassPairs.encode(typeID)))
+                types.add(type);
+        }
+
+        return types;
+    }
+
+
+    private static void loadBases() throws IOException, SQLException
     {
         load("select iri,resource_id from ontology.resources__reftable", oldResources);
 
@@ -1227,79 +1374,102 @@ public class Ontology extends Updater
     }
 
 
-    private static void loadClasses(Model model) throws IOException, SQLException
+    /*
+     * Loads the classes: the instances of the classes of classes, the classes in the class hierarchy, the domains and
+     * the ranges of the properties and the classes of the values of the value restrictions.
+     */
+    private static void loadClasses(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepClasses = new IntPairSet();
         IntPairSet newClasses = new IntPairSet();
         IntPairSet oldClasses = new IntPairSet();
 
         load("select class_unit,class_id from ontology.classes", oldClasses);
 
-        new OntologyQueryResultProcessor(loadQuery("ontology/classes.sparql"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Pair<Integer, Integer> classID = getId("iri");
+        dispatcher.on(rdfs + "subClassOf", (subject, object) -> {
+            add(getId(subject), keepClasses, newClasses, oldClasses);
+            add(getId(object), keepClasses, newClasses, oldClasses);
+        });
 
-                if(!oldClasses.remove(classID))
-                    newClasses.add(classID);
-            }
-        }.load(model);
+        for(String predicate : List.of(rdfs + "domain", rdfs + "range", owl + "someValuesFrom", owl + "allValuesFrom"))
+            dispatcher.on(predicate, (subject, object) -> {
+                add(getId(object), keepClasses, newClasses, oldClasses);
+            });
 
-        store("delete from ontology.classes where class_unit=? and class_id=?", oldClasses);
-        store("insert into ontology.classes(class_unit,class_id) values(?,?)", newClasses);
+        dispatcher.after(() -> {
+            for(Node type : getClassTypes())
+                for(Node instance : instances.get(type))
+                    add(getId(instance), keepClasses, newClasses, oldClasses);
+
+            store("delete from ontology.classes where class_unit=? and class_id=?", oldClasses);
+            store("insert into ontology.classes(class_unit,class_id) values(?,?)", newClasses);
+        });
     }
 
 
-    private static void loadProperties(Model model) throws IOException, SQLException
+    /*
+     * Loads the properties: the instances of the property types, the properties in the property hierarchy, the
+     * properties with a domain or a range and the properties of the restrictions.
+     */
+    private static void loadProperties(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepProperties = new IntPairSet();
         IntPairSet newProperties = new IntPairSet();
         IntPairSet oldProperties = new IntPairSet();
 
         load("select property_unit,property_id from ontology.properties", oldProperties);
 
-        new OntologyQueryResultProcessor(loadQuery("ontology/properties.sparql"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Pair<Integer, Integer> propertyID = getId("iri");
+        for(String type : List.of(owl + "ObjectProperty", owl + "DatatypeProperty", owl + "AnnotationProperty",
+                rdf + "Property"))
+            dispatcher.onType(type, (subject, object) -> {
+                add(getId(subject), keepProperties, newProperties, oldProperties);
+            });
 
-                if(!oldProperties.remove(propertyID))
-                    newProperties.add(propertyID);
-            }
-        }.load(model);
+        dispatcher.on(rdfs + "subPropertyOf", (subject, object) -> {
+            add(getId(subject), keepProperties, newProperties, oldProperties);
+            add(getId(object), keepProperties, newProperties, oldProperties);
+        });
 
-        store("delete from ontology.properties where property_unit=? and property_id=?", oldProperties);
-        store("insert into ontology.properties(property_unit,property_id) values(?,?)", newProperties);
+        for(String predicate : List.of(rdfs + "domain", rdfs + "range"))
+            dispatcher.on(predicate, (subject, object) -> {
+                add(getId(subject), keepProperties, newProperties, oldProperties);
+            });
+
+        dispatcher.on(owl + "onProperty", (subject, object) -> {
+            add(getId(object), keepProperties, newProperties, oldProperties);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from ontology.properties where property_unit=? and property_id=?", oldProperties);
+            store("insert into ontology.properties(property_unit,property_id) values(?,?)", newProperties);
+        });
     }
 
 
-    private static void loadIndividuals(Model model) throws IOException, SQLException
+    private static void loadIndividuals(TripleDispatcher dispatcher) throws IOException, SQLException
     {
+        IntPairSet keepIndividuals = new IntPairSet();
         IntPairSet newIndividuals = new IntPairSet();
         IntPairSet oldIndividuals = new IntPairSet();
 
         load("select individual_unit,individual_id from ontology.individuals", oldIndividuals);
 
-        new OntologyQueryResultProcessor(patternQuery("?iri rdf:type owl:NamedIndividual"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Pair<Integer, Integer> individualID = getId("iri");
+        dispatcher.onType(owl + "NamedIndividual", (subject, object) -> {
+            add(getId(subject), keepIndividuals, newIndividuals, oldIndividuals);
+        });
 
-                if(!oldIndividuals.remove(individualID))
-                    newIndividuals.add(individualID);
-            }
-        }.load(model);
-
-        store("delete from ontology.individuals where individual_unit=? and individual_id=?", oldIndividuals);
-        store("insert into ontology.individuals(individual_unit,individual_id) values(?,?)", newIndividuals);
+        dispatcher.after(() -> {
+            store("delete from ontology.individuals where individual_unit=? and individual_id=?", oldIndividuals);
+            store("insert into ontology.individuals(individual_unit,individual_id) values(?,?)", newIndividuals);
+        });
     }
 
 
-    private static void loadResourceLabels(Model model) throws IOException, SQLException
+    /*
+     * Loads the labels of the resources: of the English labels and the labels without a language, the greatest one
+     * in the order of SPARQL, which prefers a label with a language and then the greater lexical form.
+     */
+    private static void loadResourceLabels(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairStringMap keepLabels = new IntPairStringMap();
         IntPairStringMap newLabels = new IntPairStringMap();
@@ -1307,454 +1477,318 @@ public class Ontology extends Updater
 
         load("select resource_unit,resource_id,label from ontology.resource_labels", oldLabels);
 
-        new OntologyQueryResultProcessor(loadQuery("ontology/labels.sparql"))
-        {
-            @Override
-            protected void parse() throws IOException
+        HashMap<Pair<Integer, Integer>, Node> labels = new HashMap<>();
+
+        dispatcher.on(rdfs + "label", (subject, object) -> {
+            if(!object.isLiteral())
+                return;
+
+            String language = object.getLiteralLanguage();
+
+            if(language.isEmpty() || language.equals("en"))
+                labels.merge(getId(subject), object, (label, other) -> isGreater(other, label) ? other : label);
+        });
+
+        dispatcher.after(() -> {
+            for(Entry<Pair<Integer, Integer>, Node> entry : labels.entrySet())
             {
-                Pair<Integer, Integer> resourceID = getId("iri");
-                String label = getString("label");
+                Pair<Integer, Integer> resourceID = entry.getKey();
+                String label = entry.getValue().getLiteralLexicalForm();
 
                 if(label.equals(oldLabels.remove(resourceID)))
-                {
                     keepLabels.put(resourceID, label);
-                }
                 else
-                {
-                    String keep = keepLabels.get(resourceID);
-
-                    if(label.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    String put = newLabels.put(resourceID, label);
-
-                    if(put != null && !label.equals(put))
-                        throw new IOException();
-                }
+                    newLabels.put(resourceID, label);
             }
-        }.load(model);
 
-        store("delete from ontology.resource_labels where resource_unit=? and resource_id=? and label=?", oldLabels);
-        store("insert into ontology.resource_labels(resource_unit,resource_id,label) values(?,?,?) "
-                + "on conflict(resource_unit,resource_id) do update set label=EXCLUDED.label", newLabels);
+            store("delete from ontology.resource_labels where resource_unit=? and resource_id=? and label=?",
+                    oldLabels);
+            store("insert into ontology.resource_labels(resource_unit,resource_id,label) values(?,?,?) "
+                    + "on conflict(resource_unit,resource_id) do update set label=EXCLUDED.label", newLabels);
+        });
     }
 
 
-    private static void loadSuperClasses(Model model) throws IOException, SQLException
+    /*
+     * Tests whether a label is greater than another one: a label with a language is greater than one without it,
+     * otherwise the label with the greater lexical form is.
+     */
+    private static boolean isGreater(Node label, Node other)
     {
-        IntPairIntPairSet oldSuperClasses = new IntPairIntPairSet();
+        boolean tagged = !label.getLiteralLanguage().isEmpty();
+
+        if(tagged != !other.getLiteralLanguage().isEmpty())
+            return tagged;
+
+        return label.getLiteralLexicalForm().compareTo(other.getLiteralLexicalForm()) > 0;
+    }
+
+
+    /*
+     * Loads the superclasses: the superclasses of the class hierarchy other than owl:Thing, except those between two
+     * ChEBI classes, and owl:Thing as the superclass of the classes without a superclass (except blank nodes,
+     * owl:Thing and rdfs:Resource).
+     */
+    private static void loadSuperClasses(TripleDispatcher dispatcher) throws IOException, SQLException
+    {
+        IntPairIntPairSet keepSuperClasses = new IntPairIntPairSet();
         IntPairIntPairSet newSuperClasses = new IntPairIntPairSet();
+        IntPairIntPairSet oldSuperClasses = new IntPairIntPairSet();
 
         load("select class_unit,class_id,superclass_unit,superclass_id from ontology.superclasses", oldSuperClasses);
 
-        new OntologyQueryResultProcessor(
-                patternQuery("?class rdfs:subClassOf ?superclass. filter(?superclass != owl:Thing)"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Pair<Integer, Integer> classID = getId("class");
-                Pair<Integer, Integer> superclassID = getId("superclass");
+        HashSet<Pair<Integer, Integer>> subclasses = new HashSet<>();
+        HashSet<Pair<Integer, Integer>> classes = new HashSet<>();
 
-                if(classID.getOne() == unitCHEBI && superclassID.getOne() == unitCHEBI)
-                    return;
+        dispatcher.on(rdfs + "subClassOf", (subject, object) -> {
+            Pair<Integer, Integer> classID = getId(subject);
+            Pair<Integer, Integer> superclassID = getId(object);
 
-                Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> pair = Pair.getPair(classID, superclassID);
+            subclasses.add(classID);
+            classes.add(superclassID);
 
-                if(!oldSuperClasses.remove(pair))
-                    newSuperClasses.add(pair);
-            }
-        }.load(model);
+            if(is(object, owl + "Thing") || classID.getOne() == unitCHEBI && superclassID.getOne() == unitCHEBI)
+                return;
 
+            add(Pair.getPair(classID, superclassID), keepSuperClasses, newSuperClasses, oldSuperClasses);
+        });
 
-        new OntologyQueryResultProcessor(loadQuery("ontology/superclasses.sparql"))
-        {
-            Pair<Integer, Integer> thingID = Ontology
-                    .getId(ResourceFactory.createResource("http://www.w3.org/2002/07/owl#Thing"));
+        for(String predicate : List.of(rdfs + "domain", rdfs + "range"))
+            dispatcher.on(predicate, (subject, object) -> {
+                classes.add(getId(object));
+            });
 
-            @Override
-            protected void parse() throws IOException
-            {
-                Pair<Integer, Integer> classID = getId("class");
+        dispatcher.after(() -> {
+            Pair<Integer, Integer> thingID = getId(NodeFactory.createURI(owl + "Thing"));
+            Pair<Integer, Integer> resourceID = findId(NodeFactory.createURI(rdfs + "Resource"));
 
-                Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> pair = Pair.getPair(classID, thingID);
+            for(Node instance : getInstances(owl + "Class"))
+                if(!instance.isBlank() && !is(instance, owl + "Thing") && !is(instance, rdfs + "Resource")
+                        && !subclasses.contains(findId(instance)))
+                    classes.add(getId(instance));
 
-                if(!oldSuperClasses.remove(pair))
-                    newSuperClasses.add(pair);
-            }
-        }.load(model);
+            for(Pair<Integer, Integer> classID : classes)
+                if(classID.getOne() != unitBlank && !classID.equals(thingID) && !classID.equals(resourceID)
+                        && !subclasses.contains(classID))
+                    add(Pair.getPair(classID, thingID), keepSuperClasses, newSuperClasses, oldSuperClasses);
 
-        store("delete from ontology.superclasses "
-                + "where class_unit=? and class_id=? and superclass_unit=? and superclass_id=?", oldSuperClasses);
-        store("insert into ontology.superclasses(class_unit,class_id,superclass_unit,superclass_id) values(?,?,?,?)",
-                newSuperClasses);
+            store("delete from ontology.superclasses "
+                    + "where class_unit=? and class_id=? and superclass_unit=? and superclass_id=?", oldSuperClasses);
+            store("insert into ontology.superclasses(class_unit,class_id,superclass_unit,superclass_id) "
+                    + "values(?,?,?,?)", newSuperClasses);
+        });
     }
 
 
-    private static void loadSuperProperties(Model model) throws IOException, SQLException
+    private static void loadSuperProperties(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        IntPairIntPairSet oldSuperProperties = new IntPairIntPairSet();
+        IntPairIntPairSet keepSuperProperties = new IntPairIntPairSet();
         IntPairIntPairSet newSuperProperties = new IntPairIntPairSet();
+        IntPairIntPairSet oldSuperProperties = new IntPairIntPairSet();
 
         load("select property_unit,property_id,superproperty_unit,superproperty_id from ontology.superproperties",
                 oldSuperProperties);
 
-        new OntologyQueryResultProcessor(patternQuery("?property rdfs:subPropertyOf ?superproperty"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Pair<Integer, Integer> propertyID = getId("property");
-                Pair<Integer, Integer> superpropertyID = getId("superproperty");
+        dispatcher.on(rdfs + "subPropertyOf", (subject, object) -> {
+            add(Pair.getPair(getId(subject), getId(object)), keepSuperProperties, newSuperProperties,
+                    oldSuperProperties);
+        });
 
-                Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> pair = Pair.getPair(propertyID, superpropertyID);
-
-                if(!oldSuperProperties.remove(pair))
-                    newSuperProperties.add(pair);
-            }
-        }.load(model);
-
-        store("delete from ontology.superproperties "
-                + "where property_unit=? and property_id=? and superproperty_unit=? and superproperty_id=?",
-                oldSuperProperties);
-        store("insert into ontology.superproperties(property_unit,property_id,superproperty_unit,superproperty_id) "
-                + "values(?,?,?,?)", newSuperProperties);
+        dispatcher.after(() -> {
+            store("delete from ontology.superproperties "
+                    + "where property_unit=? and property_id=? and superproperty_unit=? and superproperty_id=?",
+                    oldSuperProperties);
+            store("insert into ontology.superproperties(property_unit,property_id,superproperty_unit,superproperty_id) "
+                    + "values(?,?,?,?)", newSuperProperties);
+        });
     }
 
 
-    private static void loadDomains(Model model) throws IOException, SQLException
+    private static void loadDomains(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        IntPairIntPairSet oldDomains = new IntPairIntPairSet();
+        IntPairIntPairSet keepDomains = new IntPairIntPairSet();
         IntPairIntPairSet newDomains = new IntPairIntPairSet();
+        IntPairIntPairSet oldDomains = new IntPairIntPairSet();
 
         load("select property_unit,property_id,domain_unit,domain_id from ontology.property_domains", oldDomains);
 
-        new OntologyQueryResultProcessor(patternQuery("?property rdfs:domain ?domain"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Pair<Integer, Integer> propertyID = getId("property");
-                Pair<Integer, Integer> domainID = getId("domain");
+        dispatcher.on(rdfs + "domain", (subject, object) -> {
+            add(Pair.getPair(getId(subject), getId(object)), keepDomains, newDomains, oldDomains);
+        });
 
-                Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> pair = Pair.getPair(propertyID, domainID);
-
-                if(!oldDomains.remove(pair))
-                    newDomains.add(pair);
-            }
-        }.load(model);
-
-        store("delete from ontology.property_domains "
-                + "where property_unit=? and property_id=? and domain_unit=? and domain_id=?", oldDomains);
-        store("insert into ontology.property_domains(property_unit,property_id,domain_unit,domain_id) values(?,?,?,?)",
-                newDomains);
+        dispatcher.after(() -> {
+            store("delete from ontology.property_domains "
+                    + "where property_unit=? and property_id=? and domain_unit=? and domain_id=?", oldDomains);
+            store("insert into ontology.property_domains(property_unit,property_id,domain_unit,domain_id) "
+                    + "values(?,?,?,?)", newDomains);
+        });
     }
 
 
-    private static void loadRanges(Model model) throws IOException, SQLException
+    private static void loadRanges(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        IntPairIntPairSet oldRanges = new IntPairIntPairSet();
+        IntPairIntPairSet keepRanges = new IntPairIntPairSet();
         IntPairIntPairSet newRanges = new IntPairIntPairSet();
+        IntPairIntPairSet oldRanges = new IntPairIntPairSet();
 
         load("select property_unit,property_id,range_unit,range_id from ontology.property_ranges", oldRanges);
 
-        new OntologyQueryResultProcessor(patternQuery("?property rdfs:range ?range"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Pair<Integer, Integer> propertyID = getId("property");
-                Pair<Integer, Integer> rangeID = getId("range");
+        dispatcher.on(rdfs + "range", (subject, object) -> {
+            add(Pair.getPair(getId(subject), getId(object)), keepRanges, newRanges, oldRanges);
+        });
 
-                Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> pair = Pair.getPair(propertyID, rangeID);
-
-                if(!oldRanges.remove(pair))
-                    newRanges.add(pair);
-            }
-        }.load(model);
-
-        store("delete from ontology.property_ranges "
-                + "where property_unit=? and property_id=? and range_unit=? and range_id=?", oldRanges);
-        store("insert into ontology.property_ranges(property_unit,property_id,range_unit,range_id) values(?,?,?,?)",
-                newRanges);
+        dispatcher.after(() -> {
+            store("delete from ontology.property_ranges "
+                    + "where property_unit=? and property_id=? and range_unit=? and range_id=?", oldRanges);
+            store("insert into ontology.property_ranges(property_unit,property_id,range_unit,range_id) "
+                    + "values(?,?,?,?)", newRanges);
+        });
     }
 
 
-    private static void loadSomeValuesFromRestriction(Model model) throws SQLException, IOException
+    /*
+     * Loads the restrictions. A restriction is a blank node, so its triples are collected and the restrictions are
+     * assembled once all the files have been read.
+     */
+    private static void loadRestrictions(TripleDispatcher dispatcher) throws IOException, SQLException
+    {
+        BlankNodes restrictions = new BlankNodes(dispatcher, owl + "onProperty", owl + "someValuesFrom",
+                owl + "allValuesFrom", owl + "cardinality", owl + "minCardinality", owl + "maxCardinality");
+
+        dispatcher.onType(owl + "Restriction", (subject, object) -> {
+            if(!subject.isBlank())
+                throw new IOException("unexpected restriction " + subject);
+        });
+
+        loadValueRestrictions(dispatcher, restrictions, owl + "someValuesFrom", "somevaluesfrom_restrictions");
+        loadValueRestrictions(dispatcher, restrictions, owl + "allValuesFrom", "allvaluesfrom_restrictions");
+        loadCardinalityRestrictions(dispatcher, restrictions, owl + "cardinality", "cardinality_restrictions");
+        loadCardinalityRestrictions(dispatcher, restrictions, owl + "minCardinality", "mincardinality_restrictions");
+        loadCardinalityRestrictions(dispatcher, restrictions, owl + "maxCardinality", "maxcardinality_restrictions");
+    }
+
+
+    /*
+     * Loads the restrictions whose class of values is given by the predicate.
+     */
+    private static void loadValueRestrictions(TripleDispatcher dispatcher, BlankNodes restrictions, String predicate,
+            String table) throws IOException, SQLException
     {
         IntValueRestrictionMap keepRestrictions = new IntValueRestrictionMap();
         IntValueRestrictionMap oldRestrictions = new IntValueRestrictionMap();
         IntValueRestrictionMap newRestrictions = new IntValueRestrictionMap();
 
-        load("select restriction_id,property_unit,property_id,class_unit,class_id "
-                + "from ontology.somevaluesfrom_restrictions", oldRestrictions);
+        load("select restriction_id,property_unit,property_id,class_unit,class_id from ontology." + table,
+                oldRestrictions);
 
-        new OntologyQueryResultProcessor(patternQuery(
-                "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:someValuesFrom ?class"))
-        {
-            @Override
-            protected void parse() throws IOException
+        dispatcher.after(() -> {
+            for(Node node : getInstances(owl + "Restriction"))
             {
-                Pair<Integer, Integer> restrictionID = getId("restriction");
-                Pair<Integer, Integer> propertyID = getId("property");
-                Pair<Integer, Integer> classID = getId("class");
-
-                ValueRestriction restriction = new ValueRestriction(propertyID, classID);
-
-                if(restrictionID.getOne() != unitBlank)
-                    throw new IOException();
-
-                if(restriction.equals(oldRestrictions.remove(restrictionID.getTwo())))
+                for(Node property : restrictions.values(node, owl + "onProperty"))
                 {
-                    keepRestrictions.put(restrictionID.getTwo(), restriction);
-                }
-                else
-                {
-                    ValueRestriction keep = keepRestrictions.get(restrictionID.getTwo());
+                    for(Node value : restrictions.values(node, predicate))
+                    {
+                        Integer restrictionID = getId(node).getTwo();
+                        ValueRestriction restriction = new ValueRestriction(getId(property), getId(value));
 
-                    if(restriction.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
+                        if(restriction.equals(oldRestrictions.remove(restrictionID)))
+                        {
+                            keepRestrictions.put(restrictionID, restriction);
+                        }
+                        else
+                        {
+                            ValueRestriction keep = keepRestrictions.get(restrictionID);
 
-                    ValueRestriction put = newRestrictions.put(restrictionID.getTwo(), restriction);
+                            if(restriction.equals(keep))
+                                continue;
+                            else if(keep != null)
+                                throw new IOException();
 
-                    if(put != null && !restriction.equals(put))
-                        throw new IOException();
+                            ValueRestriction put = newRestrictions.put(restrictionID, restriction);
+
+                            if(put != null && !restriction.equals(put))
+                                throw new IOException();
+                        }
+                    }
                 }
             }
-        }.load(model);
 
-        store("delete from ontology.somevaluesfrom_restrictions "
-                + "where restriction_id=? and property_unit=? and property_id=? and class_unit=? and class_id=?",
-                oldRestrictions);
-        store("""
-                insert into ontology.somevaluesfrom_restrictions\
-                (restriction_id,property_unit,property_id,class_unit,class_id) values(?,?,?,?,?)\
-                on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, \
-                property_id=EXCLUDED.property_id, class_unit=EXCLUDED.class_unit, class_id=EXCLUDED.class_id""",
-                newRestrictions);
+            store("delete from ontology." + table
+                    + " where restriction_id=? and property_unit=? and property_id=? and class_unit=? and class_id=?",
+                    oldRestrictions);
+            store("insert into ontology." + table
+                    + "(restriction_id,property_unit,property_id,class_unit,class_id) values(?,?,?,?,?) "
+                    + "on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, "
+                    + "property_id=EXCLUDED.property_id, class_unit=EXCLUDED.class_unit, class_id=EXCLUDED.class_id",
+                    newRestrictions);
+        });
     }
 
 
-    private static void loadAllValuesFromRestriction(Model model) throws SQLException, IOException
-    {
-        IntValueRestrictionMap keepRestrictions = new IntValueRestrictionMap();
-        IntValueRestrictionMap oldRestrictions = new IntValueRestrictionMap();
-        IntValueRestrictionMap newRestrictions = new IntValueRestrictionMap();
-
-        load("select restriction_id,property_unit,property_id,class_unit,class_id "
-                + "from ontology.allvaluesfrom_restrictions", oldRestrictions);
-
-        new OntologyQueryResultProcessor(patternQuery(
-                "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:allValuesFrom ?class"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Pair<Integer, Integer> restrictionID = getId("restriction");
-                Pair<Integer, Integer> propertyID = getId("property");
-                Pair<Integer, Integer> classID = getId("class");
-
-                ValueRestriction restriction = new ValueRestriction(propertyID, classID);
-
-                if(restrictionID.getOne() != unitBlank)
-                    throw new IOException();
-
-                if(restriction.equals(oldRestrictions.remove(restrictionID.getTwo())))
-                {
-                    keepRestrictions.put(restrictionID.getTwo(), restriction);
-                }
-                else
-                {
-                    ValueRestriction keep = keepRestrictions.get(restrictionID.getTwo());
-
-                    if(restriction.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    ValueRestriction put = newRestrictions.put(restrictionID.getTwo(), restriction);
-
-                    if(put != null && !restriction.equals(put))
-                        throw new IOException();
-                }
-            }
-        }.load(model);
-
-        store("delete from ontology.allvaluesfrom_restrictions "
-                + "where restriction_id=? and property_unit=? and property_id=? and class_unit=? and class_id=?",
-                oldRestrictions);
-        store("""
-                insert into ontology.allvaluesfrom_restrictions \
-                (restriction_id,property_unit,property_id,class_unit,class_id) values(?,?,?,?,?)\
-                on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, \
-                property_id=EXCLUDED.property_id, class_unit=EXCLUDED.class_unit, class_id=EXCLUDED.class_id""",
-                newRestrictions);
-    }
-
-
-    private static void loadCardinalityRestriction(Model model) throws SQLException, IOException
+    /*
+     * Loads the restrictions whose cardinality is given by the predicate.
+     */
+    private static void loadCardinalityRestrictions(TripleDispatcher dispatcher, BlankNodes restrictions,
+            String predicate, String table) throws IOException, SQLException
     {
         IntCardinalityRestrictionMap keepRestrictions = new IntCardinalityRestrictionMap();
         IntCardinalityRestrictionMap oldRestrictions = new IntCardinalityRestrictionMap();
         IntCardinalityRestrictionMap newRestrictions = new IntCardinalityRestrictionMap();
 
-        load("select restriction_id,property_unit,property_id,cardinality from ontology.cardinality_restrictions",
-                oldRestrictions);
+        load("select restriction_id,property_unit,property_id,cardinality from ontology." + table, oldRestrictions);
 
-        new OntologyQueryResultProcessor(patternQuery(
-                "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:cardinality ?cardinality"))
-        {
-            @Override
-            protected void parse() throws IOException
+        dispatcher.after(() -> {
+            for(Node node : getInstances(owl + "Restriction"))
             {
-                Pair<Integer, Integer> restrictionID = getId("restriction");
-                Pair<Integer, Integer> propertyID = getId("property");
-                Integer classID = getInt("cardinality");
-
-                CardinalityRestriction restriction = new CardinalityRestriction(propertyID, classID);
-
-                if(restrictionID.getOne() != unitBlank)
-                    throw new IOException();
-
-                if(restriction.equals(oldRestrictions.remove(restrictionID.getTwo())))
+                for(Node property : restrictions.values(node, owl + "onProperty"))
                 {
-                    keepRestrictions.put(restrictionID.getTwo(), restriction);
-                }
-                else
-                {
-                    CardinalityRestriction keep = keepRestrictions.get(restrictionID.getTwo());
+                    for(Node value : restrictions.values(node, predicate))
+                    {
+                        Integer restrictionID = getId(node).getTwo();
+                        CardinalityRestriction restriction = new CardinalityRestriction(getId(property),
+                                getCardinality(value));
 
-                    if(restriction.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
+                        if(restriction.equals(oldRestrictions.remove(restrictionID)))
+                        {
+                            keepRestrictions.put(restrictionID, restriction);
+                        }
+                        else
+                        {
+                            CardinalityRestriction keep = keepRestrictions.get(restrictionID);
 
-                    CardinalityRestriction put = newRestrictions.put(restrictionID.getTwo(), restriction);
+                            if(restriction.equals(keep))
+                                continue;
+                            else if(keep != null)
+                                throw new IOException();
 
-                    if(put != null && !restriction.equals(put))
-                        throw new IOException();
+                            CardinalityRestriction put = newRestrictions.put(restrictionID, restriction);
+
+                            if(put != null && !restriction.equals(put))
+                                throw new IOException();
+                        }
+                    }
                 }
             }
-        }.load(model);
 
-        store("delete from ontology.cardinality_restrictions "
-                + "where restriction_id=? and property_unit=? and property_id=? and cardinality=?", oldRestrictions);
-        store("""
-                insert into ontology.cardinality_restrictions (restriction_id,property_unit,property_id,cardinality) \
-                values(?,?,?,?) on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, \
-                property_id=EXCLUDED.property_id, cardinality=EXCLUDED.cardinality""", newRestrictions);
+            store("delete from ontology." + table
+                    + " where restriction_id=? and property_unit=? and property_id=? and cardinality=?",
+                    oldRestrictions);
+            store("insert into ontology." + table + "(restriction_id,property_unit,property_id,cardinality) "
+                    + "values(?,?,?,?) on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, "
+                    + "property_id=EXCLUDED.property_id, cardinality=EXCLUDED.cardinality", newRestrictions);
+        });
     }
 
 
-    private static void loadMinCardinalityRestriction(Model model) throws SQLException, IOException
+    /*
+     * Returns the value of a cardinality, a literal of a numeric datatype.
+     */
+    private static int getCardinality(Node node) throws IOException
     {
-        IntCardinalityRestrictionMap keepRestrictions = new IntCardinalityRestrictionMap();
-        IntCardinalityRestrictionMap oldRestrictions = new IntCardinalityRestrictionMap();
-        IntCardinalityRestrictionMap newRestrictions = new IntCardinalityRestrictionMap();
+        if(!node.isLiteral() || !(node.getLiteralValue() instanceof Number number))
+            throw new IOException("unexpected cardinality " + node);
 
-        load("select restriction_id,property_unit,property_id,cardinality from ontology.mincardinality_restrictions",
-                oldRestrictions);
-
-        new OntologyQueryResultProcessor(patternQuery(
-                "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:minCardinality ?cardinality"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Pair<Integer, Integer> restrictionID = getId("restriction");
-                Pair<Integer, Integer> propertyID = getId("property");
-                Integer classID = getInt("cardinality");
-
-                CardinalityRestriction restriction = new CardinalityRestriction(propertyID, classID);
-
-                if(restrictionID.getOne() != unitBlank)
-                    throw new IOException();
-
-                if(restriction.equals(oldRestrictions.remove(restrictionID.getTwo())))
-                {
-                    keepRestrictions.put(restrictionID.getTwo(), restriction);
-                }
-                else
-                {
-                    CardinalityRestriction keep = keepRestrictions.get(restrictionID.getTwo());
-
-                    if(restriction.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    CardinalityRestriction put = newRestrictions.put(restrictionID.getTwo(), restriction);
-
-                    if(put != null && !restriction.equals(put))
-                        throw new IOException();
-                }
-            }
-        }.load(model);
-
-        store("delete from ontology.mincardinality_restrictions "
-                + "where restriction_id=? and property_unit=? and property_id=? and cardinality=?", oldRestrictions);
-        store("""
-                insert into ontology.mincardinality_restrictions(restriction_id,property_unit,property_id,cardinality) \
-                values(?,?,?,?) on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, \
-                property_id=EXCLUDED.property_id, cardinality=EXCLUDED.cardinality""", newRestrictions);
-    }
-
-
-    private static void loadMaxCardinalityRestriction(Model model) throws SQLException, IOException
-    {
-        IntCardinalityRestrictionMap keepRestrictions = new IntCardinalityRestrictionMap();
-        IntCardinalityRestrictionMap oldRestrictions = new IntCardinalityRestrictionMap();
-        IntCardinalityRestrictionMap newRestrictions = new IntCardinalityRestrictionMap();
-
-        load("select restriction_id,property_unit,property_id,cardinality from ontology.maxcardinality_restrictions",
-                oldRestrictions);
-
-        new OntologyQueryResultProcessor(patternQuery(
-                "?restriction rdf:type owl:Restriction; owl:onProperty ?property; owl:maxCardinality ?cardinality"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Pair<Integer, Integer> restrictionID = getId("restriction");
-                Pair<Integer, Integer> propertyID = getId("property");
-                Integer classID = getInt("cardinality");
-
-                CardinalityRestriction restriction = new CardinalityRestriction(propertyID, classID);
-
-                if(restrictionID.getOne() != unitBlank)
-                    throw new IOException();
-
-                if(restriction.equals(oldRestrictions.remove(restrictionID.getTwo())))
-                {
-                    keepRestrictions.put(restrictionID.getTwo(), restriction);
-                }
-                else
-                {
-                    CardinalityRestriction keep = keepRestrictions.get(restrictionID.getTwo());
-
-                    if(restriction.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    CardinalityRestriction put = newRestrictions.put(restrictionID.getTwo(), restriction);
-
-                    if(put != null && !restriction.equals(put))
-                        throw new IOException();
-                }
-            }
-        }.load(model);
-
-        store("delete from ontology.maxcardinality_restrictions "
-                + "where restriction_id=? and property_unit=? and property_id=? and cardinality=?", oldRestrictions);
-        store("""
-                insert into ontology.maxcardinality_restrictions(restriction_id,property_unit,property_id,cardinality) \
-                values(?,?,?,?) on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, \
-                property_id=EXCLUDED.property_id, cardinality=EXCLUDED.cardinality""", newRestrictions);
+        return number.intValue();
     }
 
 
@@ -1774,49 +1808,38 @@ public class Ontology extends Updater
 
             initSourceList();
 
-            Model model = ModelFactory.createDefaultModel();
+            TripleDispatcher dispatcher = new TripleDispatcher();
 
-            processFiles("ontology", ".*", file -> {
-                Lang lang = file.endsWith(".ttl") ? Lang.TTL : Lang.RDFXML;
-                Model submodel = getModel(file, lang);
+            loadVersions(dispatcher);
+            loadTypes(dispatcher);
 
-                synchronized(model)
-                {
-                    model.add(submodel);
-                }
+            loadBases();
+            loadClasses(dispatcher);
+            loadProperties(dispatcher);
+            loadIndividuals(dispatcher);
+            loadResourceLabels(dispatcher);
 
-                submodel.close();
-            });
+            loadSuperClasses(dispatcher);
+
+            loadSuperProperties(dispatcher);
+            loadDomains(dispatcher);
+            loadRanges(dispatcher);
+
+            loadRestrictions(dispatcher);
+
+            dispatcher.load("ontology", ".*");
 
             System.out.println("=== load ontologies ===");
 
             for(Source source : sources)
-                System.out.println(source.getName() + ": " + source.getVersion(model));
+                System.out.println(source.getName() + ": " + source.getVersion());
 
-            loadBases(model);
-            loadClasses(model);
-            loadProperties(model);
-            loadIndividuals(model);
-            loadResourceLabels(model);
-
-            loadSuperClasses(model);
-
-            loadSuperProperties(model);
-            loadDomains(model);
-            loadRanges(model);
-
-            loadSomeValuesFromRestriction(model);
-            loadAllValuesFromRestriction(model);
-            loadCardinalityRestriction(model);
-            loadMinCardinalityRestriction(model);
-            loadMaxCardinalityRestriction(model);
-
+            dispatcher.finish();
             finish();
 
             for(Source source : sources)
-                setVersion(source.getName(), source.getVersion(model));
+                setVersion(source.getName(), source.getVersion());
 
-            model.close();
             updateVersion();
             commit();
         }

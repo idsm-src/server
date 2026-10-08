@@ -4,12 +4,17 @@ import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.EntityTable.varchar;
+import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleStreamProcessor.getString;
+import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
+import static cz.iocb.load.pubchem.PubChemRDF.frapo;
+import static cz.iocb.load.pubchem.PubChemRDF.rdf;
+import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import cz.iocb.load.common.EntityTable;
-import cz.iocb.load.common.QueryResultProcessor;
+import cz.iocb.load.common.MissingEntities;
+import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 
 
@@ -21,56 +26,52 @@ public class Grant extends Updater
 
     private static final EntityTable<Integer> grants = new EntityTable<>("pubchem.grant_bases", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), varchar("number"), integer("organization"));
+    private static final MissingEntities<String> missingGrants = new MissingEntities<>("grant", true);
     private static final StringIntMap grantIDs = new StringIntMap();
     private static int nextGrantID;
 
 
-    private static void loadBases(Model model) throws IOException, SQLException
+    private static void check(TripleDispatcher dispatcher)
+    {
+        dispatcher.checkPredicates(all(), rdf + "type", frapo + "hasGrantNumber", frapo + "hasFundingAgency");
+        dispatcher.checkTypes(all(), vocab + "Grant", frapo + "Grant");
+    }
+
+
+    private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         load("select iri,id from pubchem.grant_bases", grantIDs);
 
         nextGrantID = grantIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
-        new QueryResultProcessor(patternQuery("?grant rdf:type frapo:Grant"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                addGrant(getStringID("grant", prefix));
-            }
-        }.load(model);
+        dispatcher.onType(frapo + "Grant", (subject, object) -> {
+            String grant = getStringID(subject, prefix);
+
+            addGrant(grant);
+            missingGrants.described(grant);
+        });
     }
 
 
-    private static void loadNumbers(Model model) throws IOException, SQLException
+    private static void loadNumbers(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?grant frapo:hasGrantNumber ?number"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer grantID = getGrantID(getIRI("grant"));
-                String number = getString("number");
+        dispatcher.on(frapo + "hasGrantNumber", (subject, object) -> {
+            Integer grantID = getGrantID(subject.getURI());
+            String number = getString(object);
 
-                grants.set(grantID, "number", number);
-            }
-        }.load(model);
+            grants.set(grantID, "number", number);
+        });
     }
 
 
-    private static void loadOrganizations(Model model) throws IOException, SQLException
+    private static void loadOrganizations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        new QueryResultProcessor(patternQuery("?grant frapo:hasFundingAgency ?organization"))
-        {
-            @Override
-            protected void parse() throws IOException
-            {
-                Integer grantID = getGrantID(getIRI("grant"));
-                Integer organizationID = Organization.getOrganizationID(getIRI("organization"));
+        dispatcher.on(frapo + "hasFundingAgency", (subject, object) -> {
+            Integer grantID = getGrantID(subject.getURI());
+            Integer organizationID = Organization.getOrganizationID(object.getURI());
 
-                grants.set(grantID, "organization", organizationID);
-            }
-        }.load(model);
+            grants.set(grantID, "organization", organizationID);
+        });
     }
 
 
@@ -78,26 +79,16 @@ public class Grant extends Updater
     {
         System.out.println("load grants ...");
 
-        Model model = ModelFactory.createDefaultModel();
+        TripleDispatcher dispatcher = new TripleDispatcher();
 
-        processFiles("pubchem/RDF/grant", "pc_grant_[0-9]+\\.ttl\\.gz", file -> {
-            Model submodel = getModel(file);
+        check(dispatcher);
+        loadBases(dispatcher);
+        loadNumbers(dispatcher);
+        loadOrganizations(dispatcher);
 
-            synchronized(model)
-            {
-                model.add(submodel);
-            }
-
-            submodel.close();
-        });
-
-        check(model, "pubchem/grant/check.sparql");
-
-        loadBases(model);
-        loadNumbers(model);
-        loadOrganizations(model);
-
-        model.close();
+        dispatcher.load("pubchem/RDF/grant", "pc_grant_[0-9]+\\.ttl\\.gz");
+        missingGrants.settle();
+        dispatcher.finish();
 
         grants.flush();
 
@@ -129,7 +120,7 @@ public class Grant extends Updater
             if(grantID != null && grants.contains(grantID))
                 return grantID;
 
-            System.out.println("    add missing grant " + grant);
+            missingGrants.referenced(grant);
 
             return addGrant(grant);
         }
