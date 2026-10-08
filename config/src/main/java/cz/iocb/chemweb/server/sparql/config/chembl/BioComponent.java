@@ -24,21 +24,21 @@ public class BioComponent
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
-        DatabaseTable table = new DatabaseTable(schema, "bio_component_sequences");
+        DatabaseTable table = new DatabaseTable(schema, "biocomponent_bases");
         TermMapping subject = config.createIriMapping("chembl:biocomponent", "id");
 
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                config.createIriMapping("cco:BioComponent"));
+                config.createIriMapping("cco:BioComponent"), config.createIsNotNullCondition(table, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                config.createIriMapping("ontology:taxonomy", "tax_id"));
+                config.createIriMapping("ontology:taxonomy", "taxonomy"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                config.createIriMapping("reference:ncbi-taxonomy", "tax_id"));
+                config.createIriMapping("reference:ncbi-taxonomy", "taxonomy"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:chemblId"),
                 config.createLiteralMapping(xsdString, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
                 config.createLiteralMapping(xsdString, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:componentType"),
-                config.createLiteralMapping(xsdString, "component_type"));
+                config.createLiteralMapping(xsdString, "type"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:proteinSequence"),
                 config.createLiteralMapping(xsdString, "sequence"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:description"),
@@ -48,6 +48,6 @@ public class BioComponent
 
         // extension
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                config.createIriMapping("ontology:ncbitaxon", "tax_id"));
+                config.createIriMapping("ontology:ncbitaxon", "taxonomy"));
     }
 }

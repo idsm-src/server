@@ -1,45 +1,134 @@
 package cz.iocb.load.chembl;
 
+import static cz.iocb.load.chembl.ChEMBL.bibo;
+import static cz.iocb.load.chembl.ChEMBL.cco;
+import static cz.iocb.load.chembl.ChEMBL.chemblId;
+import static cz.iocb.load.chembl.ChEMBL.dcterms;
+import static cz.iocb.load.chembl.ChEMBL.rdfType;
+import static cz.iocb.load.chembl.ChEMBL.rdfsLabel;
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.integer;
+import static cz.iocb.load.common.EntityTable.uniqueVarchar;
+import static cz.iocb.load.common.EntityTable.varchar;
 import java.io.IOException;
-import java.sql.PreparedStatement;
+import java.io.InputStream;
 import java.sql.SQLException;
-import org.apache.jena.rdf.model.Model;
-import cz.iocb.load.common.QueryResultProcessor;
+import java.util.BitSet;
+import java.util.Map.Entry;
+import org.apache.jena.graph.Node;
+import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
 
 
-public class Document extends Updater
+class Document extends Updater
 {
-    public static void load(String file) throws IOException, SQLException
-    {
-        Model model = getModel(file);
+    static final String prefix = ChEMBL.chembl + "document/CHEMBL";
+    static final String pubmedPrefix = "http://identifiers.org/pubmed/";
 
-        try(PreparedStatement statement = connection
-                .prepareStatement("update chembl_tmp.docs set journal_id=? where chembl_id=?"))
+    private static final EntityTable<Integer> documents = new EntityTable<>("chembl.document_bases", intKey("id"),
+            "chembl_id", uniqueVarchar("chembl_id"), integer("journal"), varchar("type"), varchar("title"),
+            integer("year"), varchar("volume"), varchar("issue"), varchar("first_page"), varchar("last_page"),
+            varchar("doi"), integer("pubmed"));
+
+
+    static void load() throws IOException, SQLException
+    {
+        System.out.println("load documents ...");
+
+        InverseCheck journals = new InverseCheck("cco:hasJournal");
+        BitSet withoutJournal = new BitSet();
+
+        try(InputStream stream = getTtlStream(ChEMBL.file("document")))
         {
-            new QueryResultProcessor(patternQuery("?document cco:hasJournal ?journal"))
+            new TripleStreamProcessor()
             {
                 @Override
-                public void parse() throws SQLException, IOException
+                protected void parse(Node subject, Node predicate, Node object) throws IOException
                 {
-                    if(getIRI("journal").equals("http://rdf.ebi.ac.uk/resource/chembl/journal/CHEMBL_JRN_null"))
+                    if(subject.getURI().startsWith(Journal.prefix))
+                    {
+                        if(!predicate.getURI().equals(cco + "hasDocument"))
+                        {
+                            ChEMBL.unexpected(subject, predicate, object);
+                            return;
+                        }
+
+                        Integer journalID = Journal.getJournalID(subject);
+                        journals.inverse(getDocumentID(object), journalID == null ? -1 : journalID);
                         return;
+                    }
 
-                    statement.setInt(1,
-                            getIntID("journal", "http://rdf.ebi.ac.uk/resource/chembl/journal/CHEMBL_JRN_"));
-                    statement.setString(2, getStringID("document", "http://rdf.ebi.ac.uk/resource/chembl/document/"));
-                    statement.addBatch();
+                    int id = getIntID(subject, prefix);
+
+                    switch(predicate.getURI())
+                    {
+                        case rdfType -> ChEMBL.checkType(subject, object, cco + "Document");
+                        case chemblId -> documents.set(id, "chembl_id",
+                                ChEMBL.getChemblId(subject, predicate, object, "CHEMBL" + id));
+                        case rdfsLabel -> ChEMBL.checkValue(subject, predicate, object, "CHEMBL" + id);
+                        case cco + "documentType" -> documents.set(id, "type", getString(object));
+                        case dcterms + "title" -> documents.set(id, "title", getString(object));
+                        case dcterms + "date" -> documents.set(id, "year", getInt(object));
+                        case bibo + "volume" -> documents.set(id, "volume", getString(object));
+                        case bibo + "issue" -> documents.set(id, "issue", getString(object));
+                        case bibo + "pageStart" -> documents.set(id, "first_page", getString(object));
+                        case bibo + "pageEnd" -> documents.set(id, "last_page", getString(object));
+                        case bibo + "doi" -> documents.set(id, "doi", getString(object));
+                        case bibo + "pmid" -> documents.set(id, "pubmed", getIntID(object, pubmedPrefix));
+                        case cco + "hasJournal" ->
+                        {
+                            Integer journalID = Journal.getJournalID(object);
+
+                            if(journalID == null)
+                                withoutJournal.set(id);
+                            else
+                                documents.set(id, "journal", journalID);
+
+                            journals.forward(id, journalID == null ? -1 : journalID);
+                        }
+                        default -> ChEMBL.unexpected(subject, predicate, object);
+                    }
                 }
-            }.load(model);
-
-            statement.executeBatch();
+            }.load(stream);
         }
+
+        journals.check();
+
+        int chemblIdIndex = documents.columnIndex("chembl_id");
+        int journalIndex = documents.columnIndex("journal");
+
+        for(Entry<Integer, Object[]> entry : documents.rows())
+        {
+            boolean hasJournal = entry.getValue()[journalIndex] != null;
+
+            if(hasJournal && withoutJournal.get(entry.getKey()))
+                throw new IOException("multiple journals of document " + entry.getKey());
+
+            // the mapping produces cco:hasJournal CHEMBL_JRN_null for described documents without a journal
+            if(entry.getValue()[chemblIdIndex] != null && !hasJournal && !withoutJournal.get(entry.getKey()))
+                ChEMBL.warning("document without cco:hasJournal", "CHEMBL" + entry.getKey());
+        }
+
+        ChEMBL.finishLoad();
     }
 
 
-    public static void load() throws IOException, SQLException
+    static void finish() throws SQLException
     {
-        load("chembl/rdf/chembl_" + ChEMBL.version + "_document.ttl.gz");
+        System.out.println("finish documents ...");
+
+        documents.store("document");
+
+        ChEMBL.finishLoad();
+    }
+
+
+    static int getDocumentID(Node node) throws IOException
+    {
+        int id = TripleStreamProcessor.getIntID(node, prefix);
+        documents.reference(id);
+        return id;
     }
 }

@@ -10,17 +10,20 @@ import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 
 public class Taxonomy
 {
+    private static String taxonomyReferenceType = schema + ".taxonomy_reference_type";
+
+
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
-        DatabaseTable table = new DatabaseTable(schema, "taxonomies");
+        DatabaseTable table = new DatabaseTable(schema, "taxonomy_labels");
 
-        config.addQuadMapping(table, graph, config.createIriMapping("ontology:taxonomy", "tax_id"),
-                config.createIriMapping("rdfs:label"),
-                config.createLiteralMapping(xsdString, "(organism || ' (Identifiers.org)')::varchar"));
-        config.addQuadMapping(table, graph, config.createIriMapping("reference:ncbi-taxonomy", "tax_id"),
-                config.createIriMapping("rdfs:label"),
-                config.createLiteralMapping(xsdString, "(organism || ' (NCBI Taxonomy)')::varchar"));
+        config.addQuadMapping(table, graph, config.createIriMapping("ontology:taxonomy", "taxonomy"),
+                config.createIriMapping("rdfs:label"), config.createLiteralMapping(xsdString, "label"),
+                config.createAreEqualCondition("type", "'IDENTIFIERS.ORG'::" + taxonomyReferenceType));
+        config.addQuadMapping(table, graph, config.createIriMapping("reference:ncbi-taxonomy", "taxonomy"),
+                config.createIriMapping("rdfs:label"), config.createLiteralMapping(xsdString, "label"),
+                config.createAreEqualCondition("type", "'NCBI TAXONOMY'::" + taxonomyReferenceType));
     }
 }

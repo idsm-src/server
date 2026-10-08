@@ -25,31 +25,31 @@ public class Document
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
-        DatabaseTable table = new DatabaseTable(schema, "docs");
+        DatabaseTable table = new DatabaseTable(schema, "document_bases");
 
-        Conditions valueCondition = config.createAreNotEqualCondition("id", "'1158643'::integer");
-        Conditions isNullCondition = config.createIsNullCondition(table, "journal_id");
+        // a document only referenced by other entities is not described
+        Conditions described = config.createIsNotNullCondition(table, "chembl_id");
+        Conditions withoutJournal = Conditions.and(described, config.createIsNullCondition(table, "journal"));
 
         TermMapping subject = config.createIriMapping("chembl:document", "id");
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                config.createIriMapping("cco:Document"), valueCondition);
+                config.createIriMapping("cco:Document"), described);
         config.addQuadMapping(table, graph, subject, config.createIriMapping("bibo:pmid"),
-                config.createIriMapping("identifiers:pubmed", "pubmed_id"));
+                config.createIriMapping("identifiers:pubmed", "pubmed"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasJournal"),
-                config.createIriMapping("chembl_journal:CHEMBL_JRN_null"),
-                Conditions.and(valueCondition, isNullCondition));
+                config.createIriMapping("chembl_journal:CHEMBL_JRN_null"), withoutJournal);
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasJournal"),
-                config.createIriMapping("chembl:journal", "journal_id"), valueCondition);
+                config.createIriMapping("chembl:journal", "journal"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:date"),
                 config.createLiteralMapping(xsdInt, "year"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:chemblId"),
-                config.createLiteralMapping(xsdString, "chembl_id"), valueCondition);
+                config.createLiteralMapping(xsdString, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
-                config.createLiteralMapping(xsdString, "chembl_id"), valueCondition);
+                config.createLiteralMapping(xsdString, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:documentType"),
-                config.createLiteralMapping(xsdString, "doc_type"), valueCondition);
+                config.createLiteralMapping(xsdString, "type"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:title"),
-                config.createLiteralMapping(xsdString, "title"), valueCondition);
+                config.createLiteralMapping(xsdString, "title"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("bibo:pageStart"),
                 config.createLiteralMapping(xsdString, "first_page"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("bibo:pageEnd"),
@@ -61,12 +61,12 @@ public class Document
         config.addQuadMapping(table, graph, subject, config.createIriMapping("bibo:issue"),
                 config.createLiteralMapping(xsdString, "issue"));
         config.addQuadMapping(table, graph, config.createIriMapping("chembl_journal:CHEMBL_JRN_null"),
-                config.createIriMapping("cco:hasDocument"), subject, Conditions.and(valueCondition, isNullCondition));
-        config.addQuadMapping(table, graph, config.createIriMapping("chembl:journal", "journal_id"),
-                config.createIriMapping("cco:hasDocument"), subject, valueCondition);
+                config.createIriMapping("cco:hasDocument"), subject, withoutJournal);
+        config.addQuadMapping(table, graph, config.createIriMapping("chembl:journal", "journal"),
+                config.createIriMapping("cco:hasDocument"), subject);
 
         // extension
-        config.addQuadMapping(table, graph, config.createIriMapping("pubchem:reference", "pubmed_id"),
+        config.addQuadMapping(table, graph, config.createIriMapping("pubchem:reference", "pubmed"),
                 config.createIriMapping("skos:exactMatch"), subject);
     }
 }

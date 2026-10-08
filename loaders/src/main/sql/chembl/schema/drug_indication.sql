@@ -1,29 +1,13 @@
-alter table chembl_tmp.drug_indication alter column drugind_id type integer;
-alter table chembl_tmp.drug_indication rename column drugind_id to id;
-
-alter table chembl_tmp.drug_indication add column molecule_id integer not null default -1;
-update chembl_tmp.drug_indication set molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.drug_indication.molregno = chembl_tmp.molecule_dictionary.molregno;
-alter table chembl_tmp.drug_indication alter column molecule_id drop default;
-
-alter table chembl_tmp.drug_indication add column efo_resource_unit smallint;
-update chembl_tmp.drug_indication set efo_resource_unit = case
-    when efo_id ~ '^GO:[0-9]{7}$' then '603'::smallint
-    when efo_id ~ '^HP:[0-9]{7}$' then '235'::smallint
-    when efo_id ~ '^DOID:[1-9][0-9]*$' then '601'::smallint
-    when efo_id ~ '^EFO:[0-9]{7}$' then '602'::smallint
-    when efo_id ~ '^Orphanet:[1-9][0-9]*$' then '2000'::smallint
-    when efo_id ~ '^MP:[0-9]{7}$' then '607'::smallint
-    when efo_id ~ '^MONDO:[0-9]{7}$' then '604'::smallint
-    when efo_id ~ '^UBERON:[0-9]{7}$' then '606'::smallint
-    when efo_id ~ '^CHEBI:[1-9][0-9]*$' then '600'::smallint end;
-
-alter table chembl_tmp.drug_indication add column efo_resource_id integer;
-
-update chembl_tmp.drug_indication set efo_resource_id = case
-    when efo_id ~ '^((GO|HP|MP|EFO|MONDO|UBERON):[0-9]{7}|(DOID|Orphanet|CHEBI|):[1-9][0-9]*)$' then regexp_replace(efo_id, '.*:', '')::integer end;
-
-alter table chembl_tmp.drug_indication add column chembl_id varchar not null generated always as ('CHEMBL_IND_' || id::varchar) stored;
-
-alter table chembl_tmp.drug_indication alter column max_phase_for_ind type integer using trunc(max_phase_for_ind)::integer;
-
-alter table chembl_tmp.drug_indication alter column max_phase_for_ind set not null;
+create table chembl.drug_indication_bases
+(
+    id            integer not null,
+    chembl_id     varchar,
+    molecule      integer,
+    mesh          varchar,
+    mesh_heading  varchar,
+    efo_unit      smallint,
+    efo_id        integer,
+    efo_name      varchar,
+    phase         integer,
+    primary key(id)
+);

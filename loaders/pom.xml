@@ -207,15 +207,6 @@
             </configuration>
           </execution>
           <execution>
-            <id>chembl-preload</id>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>src/main/scripts/preload-chembl.sh</executable>
-            </configuration>
-          </execution>
-          <execution>
             <id>chembl-dbinit</id>
             <goals>
               <goal>exec</goal>
@@ -226,7 +217,6 @@
                 <argument>src/main/sql/chembl/base.sql</argument>
                 <argument>src/main/sql/chembl/schema/</argument>
                 <argument>src/main/sql/chembl/settings/</argument>
-                <argument>src/main/sql/chembl/functions/</argument>
                 <argument>src/main/sql/chembl/foreignkey.sql</argument>
               </arguments>
             </configuration>

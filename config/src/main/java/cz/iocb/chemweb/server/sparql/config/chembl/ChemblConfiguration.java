@@ -98,11 +98,9 @@ public class ChemblConfiguration extends SparqlDatabaseOptimisedConfiguration
         Journal.addResourceClasses(this);
         Mechanism.addResourceClasses(this);
         Molecule.addResourceClasses(this);
-        MoleculeReference.addResourceClasses(this);
         ProteinClassification.addResourceClasses(this);
         Source.addResourceClasses(this);
         TargetComponent.addResourceClasses(this);
-        TargetComponentReference.addResourceClasses(this);
         Target.addResourceClasses(this);
     }
 
@@ -119,11 +117,9 @@ public class ChemblConfiguration extends SparqlDatabaseOptimisedConfiguration
         Journal.addQuadMappings(this);
         Mechanism.addQuadMappings(this);
         Molecule.addQuadMappings(this);
-        MoleculeReference.addQuadMappings(this);
         ProteinClassification.addQuadMappings(this);
         Source.addQuadMappings(this);
         TargetComponent.addQuadMappings(this);
-        TargetComponentReference.addQuadMappings(this);
         Target.addQuadMappings(this);
         Taxonomy.addQuadMappings(this);
     }

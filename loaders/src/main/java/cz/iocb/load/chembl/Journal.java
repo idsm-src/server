@@ -1,57 +1,87 @@
 package cz.iocb.load.chembl;
 
+import static cz.iocb.load.chembl.ChEMBL.bibo;
+import static cz.iocb.load.chembl.ChEMBL.cco;
+import static cz.iocb.load.chembl.ChEMBL.chemblId;
+import static cz.iocb.load.chembl.ChEMBL.dcterms;
+import static cz.iocb.load.chembl.ChEMBL.rdfType;
+import static cz.iocb.load.chembl.ChEMBL.rdfsLabel;
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.uniqueVarchar;
+import static cz.iocb.load.common.EntityTable.varchar;
 import java.io.IOException;
-import java.sql.PreparedStatement;
+import java.io.InputStream;
 import java.sql.SQLException;
-import org.apache.jena.rdf.model.Model;
-import cz.iocb.load.common.QueryResultProcessor;
+import org.apache.jena.graph.Node;
+import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
 
 
-public class Journal extends Updater
+class Journal extends Updater
 {
-    public static void load(String file) throws IOException, SQLException
-    {
-        Model model = getModel(file);
+    static final String prefix = ChEMBL.chembl + "journal/CHEMBL_JRN_";
+    static final String nullJournal = prefix + "null";
 
-        try(PreparedStatement statement = connection.prepareStatement(
-                "insert into chembl_tmp.journal_dictionary(id, label, title, short_title, issn, eissn) "
-                        + "values(?,?,?,?,?,?)"))
+    private static final EntityTable<Integer> journals = new EntityTable<>("chembl.journal_bases", intKey("id"),
+            "chembl_id", uniqueVarchar("chembl_id"), varchar("label"), varchar("title"), varchar("short_title"),
+            varchar("issn"), varchar("eissn"));
+
+
+    static void load() throws IOException, SQLException
+    {
+        System.out.println("load journals ...");
+
+        try(InputStream stream = getTtlStream(ChEMBL.file("journal")))
         {
-            // @formatter:off
-            new QueryResultProcessor(patternQuery("""
-                ?journal rdf:type cco:Journal. \
-                optional { ?journal rdfs:label ?label }\
-                optional { ?journal dcterms:title ?title }\
-                optional { ?journal bibo:shortTitle ?shortTitle }\
-                optional { ?journal bibo:issn ?issn }\
-                optional { ?journal bibo:eissn ?eissn }"""))
-            // @formatter:on
+            new TripleStreamProcessor()
             {
                 @Override
-                public void parse() throws SQLException, IOException
+                protected void parse(Node subject, Node predicate, Node object) throws IOException
                 {
-                    statement.setInt(1,
-                            getIntID("journal", "http://rdf.ebi.ac.uk/resource/chembl/journal/CHEMBL_JRN_"));
-                    statement.setString(2, getString("label"));
-                    statement.setString(3, getString("title"));
-                    statement.setString(4, getString("shortTitle"));
-                    statement.setString(5, getString("issn"));
-                    statement.setString(6, getString("eissn"));
-                    statement.addBatch();
-                }
-            }.load(model);
+                    int id = getIntID(subject, prefix);
 
-            statement.executeBatch();
+                    switch(predicate.getURI())
+                    {
+                        case rdfType -> ChEMBL.checkType(subject, object, cco + "Journal");
+                        case chemblId -> journals.set(id, "chembl_id",
+                                ChEMBL.getChemblId(subject, predicate, object, "CHEMBL_JRN_" + id));
+                        case rdfsLabel -> journals.set(id, "label", getString(object));
+                        case dcterms + "title" -> journals.set(id, "title", getString(object));
+                        case bibo + "shortTitle" -> journals.set(id, "short_title", getString(object));
+                        case bibo + "issn" -> journals.set(id, "issn", getString(object));
+                        case bibo + "eissn" -> journals.set(id, "eissn", getString(object));
+                        default -> ChEMBL.unexpected(subject, predicate, object);
+                    }
+                }
+            }.load(stream);
         }
 
-        model.close();
+        ChEMBL.finishLoad();
     }
 
 
-    public static void load() throws IOException, SQLException
+    static void finish() throws SQLException
     {
-        load("chembl/rdf/chembl_" + ChEMBL.version + "_journal.ttl.gz");
+        System.out.println("finish journals ...");
+
+        journals.store("journal");
+
+        ChEMBL.finishLoad();
+    }
+
+
+    /*
+     * Returns null for CHEMBL_JRN_null, which the mapping produces for the documents without a journal.
+     */
+    static Integer getJournalID(Node node) throws IOException
+    {
+        if(node.getURI().equals(nullJournal))
+            return null;
+
+        int id = TripleStreamProcessor.getIntID(node, prefix);
+        journals.reference(id);
+        return id;
     }
 }

@@ -1,153 +1,107 @@
-alter table chembl_tmp.molecule_dictionary drop column molregno;
-alter table chembl_tmp.molecule_dictionary drop column therapeutic_flag;
-alter table chembl_tmp.molecule_dictionary drop column dosed_ingredient;
-alter table chembl_tmp.molecule_dictionary drop column structure_type;
-alter table chembl_tmp.molecule_dictionary drop column first_approval;
-alter table chembl_tmp.molecule_dictionary drop column oral;
-alter table chembl_tmp.molecule_dictionary drop column parenteral;
-alter table chembl_tmp.molecule_dictionary drop column topical;
-alter table chembl_tmp.molecule_dictionary drop column black_box_warning;
-alter table chembl_tmp.molecule_dictionary drop column first_in_class;
-alter table chembl_tmp.molecule_dictionary drop column chirality;
-alter table chembl_tmp.molecule_dictionary drop column prodrug;
-alter table chembl_tmp.molecule_dictionary drop column inorganic_flag;
-alter table chembl_tmp.molecule_dictionary drop column usan_year;
-alter table chembl_tmp.molecule_dictionary drop column availability_type;
-alter table chembl_tmp.molecule_dictionary drop column usan_stem;
-alter table chembl_tmp.molecule_dictionary drop column polymer_flag;
-alter table chembl_tmp.molecule_dictionary drop column usan_substem;
-alter table chembl_tmp.molecule_dictionary drop column usan_stem_definition;
-alter table chembl_tmp.molecule_dictionary drop column withdrawn_flag;
-
-alter table chembl_tmp.molecule_dictionary add primary key (id);
-create index molecule_dictionary__pref_name on chembl_tmp.molecule_dictionary(pref_name);
-create index molecule_dictionary__chembl_id on chembl_tmp.molecule_dictionary(chembl_id);
-create index molecule_dictionary__max_phase on chembl_tmp.molecule_dictionary(max_phase);
-create index molecule_dictionary__molecule_type on chembl_tmp.molecule_dictionary(molecule_type);
-grant select on chembl_tmp.molecule_dictionary to sparql;
+create index molecule_bases__chembl_id on chembl.molecule_bases(chembl_id);
+create index molecule_bases__type on chembl.molecule_bases(type);
+create index molecule_bases__label on chembl.molecule_bases(label);
+create index molecule_bases__phase on chembl.molecule_bases(phase);
+create index molecule_bases__biotherapeutic on chembl.molecule_bases(biotherapeutic);
+create index molecule_bases__helm_notation on chembl.molecule_bases(helm_notation);
+create index molecule_bases__description on chembl.molecule_bases(description);
+create index molecule_bases__hrac_classification on chembl.molecule_bases(hrac_classification);
+create index molecule_bases__irac_classification on chembl.molecule_bases(irac_classification);
+create index molecule_bases__frac_classification on chembl.molecule_bases(frac_classification);
+create index molecule_bases__parent on chembl.molecule_bases(parent);
+grant select on chembl.molecule_bases to sparql;
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.molecule_synonyms drop column molregno;
-alter table chembl_tmp.molecule_synonyms drop column syn_type;
-
-alter table chembl_tmp.molecule_synonyms add primary key (molsyn_id);
-create index molecule_synonyms__synonyms on chembl_tmp.molecule_synonyms(synonyms);
-create index molecule_synonyms__molecule_id on chembl_tmp.molecule_synonyms(molecule_id);
-grant select on chembl_tmp.molecule_synonyms to sparql;
+create index molecule_alternatives__molecule on chembl.molecule_alternatives(molecule);
+create index molecule_alternatives__alternative on chembl.molecule_alternatives(alternative);
+grant select on chembl.molecule_alternatives to sparql;
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.biotherapeutics drop column molregno;
-
-alter table chembl_tmp.biotherapeutics add primary key (molecule_id);
-create index biotherapeutics__description on chembl_tmp.biotherapeutics(description);
-create index biotherapeutics__helm_notation on chembl_tmp.biotherapeutics(helm_notation);
-grant select on chembl_tmp.biotherapeutics to sparql;
+create index molecule_atc_classifications__molecule on chembl.molecule_atc_classifications(molecule);
+create index molecule_atc_classifications__classification on chembl.molecule_atc_classifications(classification);
+grant select on chembl.molecule_atc_classifications to sparql;
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.molecule_atc_classification drop column molregno;
-
-alter table chembl_tmp.molecule_atc_classification add primary key (mol_atc_id);
-create index molecule_atc_classification__level5 on chembl_tmp.molecule_atc_classification(level5);
-create index molecule_atc_classification__molecule_id on chembl_tmp.molecule_atc_classification(molecule_id);
-grant select on chembl_tmp.molecule_atc_classification to sparql;
+create index molecule_documents__molecule on chembl.molecule_documents(molecule);
+create index molecule_documents__document on chembl.molecule_documents(document);
+grant select on chembl.molecule_documents to sparql;
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.biotherapeutic_components drop column molregno;
-
-alter table chembl_tmp.biotherapeutic_components add primary key (biocomp_id);
-create index biotherapeutic_components__component_id on chembl_tmp.biotherapeutic_components(component_id);
-create index biotherapeutic_components__molecule_id on chembl_tmp.biotherapeutic_components(molecule_id);
-grant select on chembl_tmp.biotherapeutic_components to sparql;
+create index molecule_biocomponents__molecule on chembl.molecule_biocomponents(molecule);
+create index molecule_biocomponents__biocomponent on chembl.molecule_biocomponents(biocomponent);
+grant select on chembl.molecule_biocomponents to sparql;
 
 --------------------------------------------------------------------------------
 
-grant select on chembl_tmp.molecule_hrac_classification to sparql;
+create index molecule_descriptors__alogp on chembl.molecule_descriptors(alogp);
+create index molecule_descriptors__aromatic_rings on chembl.molecule_descriptors(aromatic_rings);
+create index molecule_descriptors__hba on chembl.molecule_descriptors(hba);
+create index molecule_descriptors__hbd on chembl.molecule_descriptors(hbd);
+create index molecule_descriptors__heavy_atoms on chembl.molecule_descriptors(heavy_atoms);
+create index molecule_descriptors__num_ro5_violations on chembl.molecule_descriptors(num_ro5_violations);
+create index molecule_descriptors__psa on chembl.molecule_descriptors(psa);
+create index molecule_descriptors__qed_weighted on chembl.molecule_descriptors(qed_weighted);
+create index molecule_descriptors__rtb on chembl.molecule_descriptors(rtb);
+create index molecule_descriptors__mw_freebase on chembl.molecule_descriptors(mw_freebase);
+create index molecule_descriptors__full_mwt on chembl.molecule_descriptors(full_mwt);
+create index molecule_descriptors__ro3_pass on chembl.molecule_descriptors(ro3_pass);
+create index molecule_descriptors__full_molformula on chembl.molecule_descriptors(full_molformula);
+grant select on chembl.molecule_descriptors to sparql;
 
 --------------------------------------------------------------------------------
 
-grant select on chembl_tmp.molecule_irac_classification to sparql;
+create index molecule_structures__standard_inchi on chembl.molecule_structures using hash (standard_inchi);
+create index molecule_structures__standard_inchi_key on chembl.molecule_structures(standard_inchi_key);
+create index molecule_structures__canonical_smiles on chembl.molecule_structures(canonical_smiles);
+grant select on chembl.molecule_structures to sparql;
 
 --------------------------------------------------------------------------------
 
-grant select on chembl_tmp.molecule_frac_classification to sparql;
+create index molecule_labels__alogp on chembl.molecule_labels(alogp);
+create index molecule_labels__aromatic_rings on chembl.molecule_labels(aromatic_rings);
+create index molecule_labels__hba on chembl.molecule_labels(hba);
+create index molecule_labels__hbd on chembl.molecule_labels(hbd);
+create index molecule_labels__heavy_atoms on chembl.molecule_labels(heavy_atoms);
+create index molecule_labels__num_ro5_violations on chembl.molecule_labels(num_ro5_violations);
+create index molecule_labels__psa on chembl.molecule_labels(psa);
+create index molecule_labels__qed_weighted on chembl.molecule_labels(qed_weighted);
+create index molecule_labels__rtb on chembl.molecule_labels(rtb);
+create index molecule_labels__mw_freebase on chembl.molecule_labels(mw_freebase);
+create index molecule_labels__full_mwt on chembl.molecule_labels(full_mwt);
+create index molecule_labels__ro3_pass on chembl.molecule_labels(ro3_pass);
+create index molecule_labels__full_molformula on chembl.molecule_labels(full_molformula);
+create index molecule_labels__standard_inchi on chembl.molecule_labels(standard_inchi);
+create index molecule_labels__standard_inchi_key on chembl.molecule_labels(standard_inchi_key);
+create index molecule_labels__canonical_smiles on chembl.molecule_labels(canonical_smiles);
+create index molecule_labels__image on chembl.molecule_labels(image);
+grant select on chembl.molecule_labels to sparql;
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.compound_records drop column molregno;
-alter table chembl_tmp.compound_records drop column doc_id;
-alter table chembl_tmp.compound_records drop column compound_key;
-alter table chembl_tmp.compound_records drop column src_id;
-alter table chembl_tmp.compound_records drop column src_compound_id;
-alter table chembl_tmp.compound_records drop column cidx;
-
-alter table chembl_tmp.compound_records add primary key (record_id);
-create index compound_records__compound_name on chembl_tmp.compound_records(compound_name);
-create index compound_records__molecule_id on chembl_tmp.compound_records(molecule_id);
-create index compound_records__document_id on chembl_tmp.compound_records(document_id);
-grant select on chembl_tmp.compound_records to sparql;
+create index molecule_references__molecule on chembl.molecule_references(molecule);
+create index molecule_references__type on chembl.molecule_references(type);
+create index molecule_references__reference on chembl.molecule_references(reference);
+grant select on chembl.molecule_references to sparql;
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.compound_properties drop column molregno;
-alter table chembl_tmp.compound_properties drop column np_likeness_score;
-
-alter table chembl_tmp.compound_properties add primary key (molecule_id);
-create index compound_properties__mw_freebase on chembl_tmp.compound_properties(mw_freebase);
-create index compound_properties__alogp on chembl_tmp.compound_properties(alogp);
-create index compound_properties__hba on chembl_tmp.compound_properties(hba);
-create index compound_properties__hbd on chembl_tmp.compound_properties(hbd);
-create index compound_properties__psa on chembl_tmp.compound_properties(psa);
-create index compound_properties__rtb on chembl_tmp.compound_properties(rtb);
-create index compound_properties__ro3_pass on chembl_tmp.compound_properties(ro3_pass);
-create index compound_properties__num_ro5_violations on chembl_tmp.compound_properties(num_ro5_violations);
-create index compound_properties__full_mwt on chembl_tmp.compound_properties(full_mwt);
-create index compound_properties__aromatic_rings on chembl_tmp.compound_properties(aromatic_rings);
-create index compound_properties__heavy_atoms on chembl_tmp.compound_properties(heavy_atoms);
-create index compound_properties__qed_weighted on chembl_tmp.compound_properties(qed_weighted);
-create index compound_properties__full_molformula on chembl_tmp.compound_properties(full_molformula);
-grant select on chembl_tmp.compound_properties to sparql;
+create index molecule_reference_labels__type on chembl.molecule_reference_labels(type);
+create index molecule_reference_labels__reference on chembl.molecule_reference_labels(reference);
+create index molecule_reference_labels__label on chembl.molecule_reference_labels(label);
+grant select on chembl.molecule_reference_labels to sparql;
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.compound_structures drop column molregno;
-alter table chembl_tmp.compound_structures drop column molfile;
-
-alter table chembl_tmp.compound_structures add primary key (molecule_id);
-create index compound_structures__standard_inchi on chembl_tmp.compound_structures using hash (standard_inchi);
-create index compound_structures__standard_inchi_key on chembl_tmp.compound_structures(standard_inchi_key);
-create index compound_structures__canonical_smiles on chembl_tmp.compound_structures(canonical_smiles);
-grant select on chembl_tmp.compound_structures to sparql;
+create index molecule_pubchem_references__molecule on chembl.molecule_pubchem_references(molecule);
+create index molecule_pubchem_references__compound on chembl.molecule_pubchem_references(compound);
+grant select on chembl.molecule_pubchem_references to sparql;
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.molecule_hierarchy drop column molregno;
-alter table chembl_tmp.molecule_hierarchy drop column parent_molregno;
-alter table chembl_tmp.molecule_hierarchy drop column active_molregno;
-
-delete from chembl_tmp.molecule_hierarchy where molecule_id = parent_molecule_id;
-
-alter table chembl_tmp.molecule_hierarchy add primary key (molecule_id);
-create index molecule_hierarchy__parent_molecule_id on chembl_tmp.molecule_hierarchy(parent_molecule_id);
-grant select on chembl_tmp.molecule_hierarchy to sparql;
-
---------------------------------------------------------------------------------
-
-create view chembl_tmp.molecule_names as
-    select id as molecule_id, pref_name as name from chembl_tmp.molecule_dictionary where pref_name is not null
-  union
-    select molecule_id, synonyms as name from chembl_tmp.molecule_synonyms where synonyms is not null
-  union
-    select molecule_id, compound_name as name from chembl_tmp.compound_records where compound_name is not null and compound_name <> 'NA';
-
-grant select on chembl_tmp.molecule_names to sparql;
-
---------------------------------------------------------------------------------
-
-create view chembl_tmp.molecule_docs as
-  select distinct molecule_id, document_id from chembl_tmp.compound_records;
-
-grant select on chembl_tmp.molecule_docs to sparql;
+create index molecule_chebi_references__molecule on chembl.molecule_chebi_references(molecule);
+create index molecule_chebi_references__chebi on chembl.molecule_chebi_references(chebi);
+grant select on chembl.molecule_chebi_references to sparql;

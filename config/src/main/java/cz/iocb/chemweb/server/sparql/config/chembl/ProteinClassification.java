@@ -25,53 +25,47 @@ public class ProteinClassification
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "protein_classification");
+            DatabaseTable table = new DatabaseTable(schema, "protein_class_bases");
             TermMapping subject = config.createIriMapping("chembl:protclass", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("cco:ProteinClassification"));
+                    config.createIriMapping("cco:ProteinClassification"),
+                    config.createIsNotNullCondition(table, "chembl_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:chemblId"),
                     config.createLiteralMapping(xsdString, "chembl_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
-                    config.createLiteralMapping(xsdString, "pref_name"));
+                    config.createLiteralMapping(xsdString, "label"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
-                    config.createLiteralMapping(xsdString, "pref_name"));
+                    config.createLiteralMapping(xsdString, "label"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:classLevel"),
-                    config.createLiteralMapping(xsdString, "class_level_name"));
+                    config.createLiteralMapping(xsdString, "level"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:classPath"),
+                    config.createLiteralMapping(xsdString, "path"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:broader"),
-                    config.createIriMapping("chembl:protclass", "parent_id"));
+                    config.createIriMapping("chembl:protclass", "parent"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:subClassOf"),
-                    config.createIriMapping("chembl:protclass", "parent_id"));
-            config.addQuadMapping(table, graph, config.createIriMapping("chembl:protclass", "parent_id"),
+                    config.createIriMapping("chembl:protclass", "parent"));
+            config.addQuadMapping(table, graph, config.createIriMapping("chembl:protclass", "parent"),
                     config.createIriMapping("skos:narrower"), subject);
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "protein_classification_paths");
-            TermMapping subject = config.createIriMapping("chembl:protclass", "protein_class_id");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:classPath"),
-                    config.createLiteralMapping(xsdString, "path"));
-        }
-
-
-        {
-            DatabaseTable table = new DatabaseTable(schema, "component_classes");
-            TermMapping subject = config.createIriMapping("chembl:protclass", "protein_class_id");
+            DatabaseTable table = new DatabaseTable(schema, "protein_class_component_descendants");
+            TermMapping subject = config.createIriMapping("chembl:protclass", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasTargetComponentDescendant"),
-                    config.createIriMapping("chembl:targetcomponent", "component_id"));
-            config.addQuadMapping(table, graph, config.createIriMapping("chembl:targetcomponent", "component_id"),
+                    config.createIriMapping("chembl:targetcomponent", "component"));
+            config.addQuadMapping(table, graph, config.createIriMapping("chembl:targetcomponent", "component"),
                     config.createIriMapping("cco:hasProteinClassification"), subject);
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "target_classes");
-            TermMapping subject = config.createIriMapping("chembl:protclass", "protein_class_id");
+            DatabaseTable table = new DatabaseTable(schema, "protein_class_target_descendants");
+            TermMapping subject = config.createIriMapping("chembl:protclass", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasTargetDescendant"),
-                    config.createIriMapping("chembl:target", "target_id"));
-            config.addQuadMapping(table, graph, config.createIriMapping("chembl:target", "target_id"),
+                    config.createIriMapping("chembl:target", "target"));
+            config.addQuadMapping(table, graph, config.createIriMapping("chembl:target", "target"),
                     config.createIriMapping("cco:hasProteinClassification"), subject);
         }
     }

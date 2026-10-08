@@ -1,10 +1,7 @@
-alter table chembl_tmp.bio_component_sequences drop column sequence_md5sum;
-
-alter table chembl_tmp.bio_component_sequences add primary key (id);
-create index bio_component_sequences__component_type on chembl_tmp.bio_component_sequences(component_type);
-create index bio_component_sequences__description on chembl_tmp.bio_component_sequences(description);
-create index bio_component_sequences__sequence on chembl_tmp.bio_component_sequences using hash (sequence);
-create index bio_component_sequences__tax_id on chembl_tmp.bio_component_sequences(tax_id);
-create index bio_component_sequences__organism on chembl_tmp.bio_component_sequences(organism);
-create index bio_component_sequences__chembl_id on chembl_tmp.bio_component_sequences(chembl_id);
-grant select on chembl_tmp.bio_component_sequences to sparql;
+create index biocomponent_bases__chembl_id on chembl.biocomponent_bases(chembl_id);
+create index biocomponent_bases__type on chembl.biocomponent_bases(type);
+create index biocomponent_bases__description on chembl.biocomponent_bases(description);
+create index biocomponent_bases__organism on chembl.biocomponent_bases(organism);
+create index biocomponent_bases__taxonomy on chembl.biocomponent_bases(taxonomy);
+create index biocomponent_bases__sequence on chembl.biocomponent_bases using hash (sequence);
+grant select on chembl.biocomponent_bases to sparql;

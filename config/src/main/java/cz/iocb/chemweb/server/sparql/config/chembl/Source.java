@@ -24,16 +24,16 @@ public class Source
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
-        DatabaseTable table = new DatabaseTable(schema, "source");
+        DatabaseTable table = new DatabaseTable(schema, "source_bases");
         TermMapping subject = config.createIriMapping("chembl:chembl_source", "id");
 
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                config.createIriMapping("cco:Source"));
+                config.createIriMapping("cco:Source"), config.createIsNotNullCondition(table, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:chemblId"),
                 config.createLiteralMapping(xsdString, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
-                config.createLiteralMapping(xsdString, "src_short_name"));
+                config.createLiteralMapping(xsdString, "label"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:description"),
-                config.createLiteralMapping(xsdString, "src_description"));
+                config.createLiteralMapping(xsdString, "description"));
     }
 }

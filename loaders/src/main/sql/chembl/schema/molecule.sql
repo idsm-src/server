@@ -1,129 +1,164 @@
-alter table chembl_tmp.molecule_dictionary add column id integer not null default -1;
-update chembl_tmp.molecule_dictionary set id = replace(chembl_id, 'CHEMBL', '')::integer;
-alter table chembl_tmp.molecule_dictionary alter column id drop default;
-
-alter table chembl_tmp.molecule_dictionary alter column max_phase type float4;
-
-update chembl_tmp.molecule_dictionary set molecule_type = 'Unknown' where molecule_type is null;
-alter table chembl_tmp.molecule_dictionary alter column molecule_type set not null;
-
---------------------------------------------------------------------------------
-
-alter table chembl_tmp.molecule_synonyms add column molecule_id integer not null default -1;
-update chembl_tmp.molecule_synonyms set molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.molecule_synonyms.molregno = chembl_tmp.molecule_dictionary.molregno;
-alter table chembl_tmp.molecule_synonyms alter column molecule_id drop default;
-
-alter table chembl_tmp.molecule_synonyms alter column molsyn_id type integer;
-
-alter table chembl_tmp.molecule_synonyms alter column synonyms set not null;
-
---------------------------------------------------------------------------------
-
-alter table chembl_tmp.biotherapeutics add column molecule_id integer not null default -1;
-update chembl_tmp.biotherapeutics set molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.biotherapeutics.molregno = chembl_tmp.molecule_dictionary.molregno;
-alter table chembl_tmp.biotherapeutics alter column molecule_id drop default;
-
---------------------------------------------------------------------------------
-
-alter table chembl_tmp.molecule_atc_classification add column molecule_id integer not null default -1;
-update chembl_tmp.molecule_atc_classification set molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.molecule_atc_classification.molregno = chembl_tmp.molecule_dictionary.molregno;
-alter table chembl_tmp.molecule_atc_classification alter column molecule_id drop default;
-
-alter table chembl_tmp.molecule_atc_classification alter column mol_atc_id type integer;
-
---------------------------------------------------------------------------------
-
-alter table chembl_tmp.biotherapeutic_components add column molecule_id integer not null default -1;
-update chembl_tmp.biotherapeutic_components set molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.biotherapeutic_components.molregno = chembl_tmp.molecule_dictionary.molregno;
-alter table chembl_tmp.biotherapeutic_components alter column molecule_id drop default;
-
-alter table chembl_tmp.biotherapeutic_components alter column biocomp_id type integer;
-alter table chembl_tmp.biotherapeutic_components alter column component_id type integer;
-
---------------------------------------------------------------------------------
-
-create table chembl_tmp.molecule_hrac_classification
+create table chembl.molecule_bases
 (
-    molecule_id  integer not null,
-    primary key(molecule_id)
+    id                   integer not null,
+    chembl_id            varchar,
+    type                 varchar,
+    label                varchar,
+    phase                real,
+    biotherapeutic       boolean,
+    helm_notation        varchar,
+    description          varchar,
+    hrac_classification  varchar,
+    irac_classification  varchar,
+    frac_classification  varchar,
+    parent               integer,
+    primary key(id)
 );
 
-insert into chembl_tmp.molecule_hrac_classification
-select replace(d.chembl_id, 'CHEMBL', '')::integer
-from chembl_tmp.molecule_dictionary d, chembl_tmp.pesticide_class_mapping m, chembl_tmp.pesticide_classification c
-where d.molregno = m.molregno and m.pest_class_id = c.pest_class_id and c.ref_type = 'HRAC';
 
---------------------------------------------------------------------------------
-
-create table chembl_tmp.molecule_irac_classification
+create table chembl.molecule_alternatives
 (
-    molecule_id  integer not null,
-    primary key(molecule_id)
+    molecule     integer not null,
+    alternative  varchar not null,
+    primary key(molecule, alternative)
 );
 
-insert into chembl_tmp.molecule_irac_classification
-select replace(d.chembl_id, 'CHEMBL', '')::integer
-from chembl_tmp.molecule_dictionary d, chembl_tmp.pesticide_class_mapping m, chembl_tmp.pesticide_classification c
-where d.molregno = m.molregno and m.pest_class_id = c.pest_class_id and c.ref_type = 'IRAC';
 
---------------------------------------------------------------------------------
-
-create table chembl_tmp.molecule_frac_classification
+create table chembl.molecule_atc_classifications
 (
-    molecule_id  integer not null,
-    primary key(molecule_id)
+    molecule        integer not null,
+    classification  varchar not null,
+    primary key(molecule, classification)
 );
 
-insert into chembl_tmp.molecule_frac_classification
-select replace(d.chembl_id, 'CHEMBL', '')::integer
-from chembl_tmp.molecule_dictionary d, chembl_tmp.pesticide_class_mapping m, chembl_tmp.pesticide_classification c
-where d.molregno = m.molregno and m.pest_class_id = c.pest_class_id and c.ref_type = 'FRAC';
 
---------------------------------------------------------------------------------
+create table chembl.molecule_documents
+(
+    molecule  integer not null,
+    document  integer not null,
+    primary key(molecule, document)
+);
 
-alter table chembl_tmp.compound_records add column molecule_id integer not null default -1;
-update chembl_tmp.compound_records set molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.compound_records.molregno = chembl_tmp.molecule_dictionary.molregno;
-alter table chembl_tmp.compound_records alter column molecule_id drop default;
 
-alter table chembl_tmp.compound_records add column document_id integer not null default -1;
-update chembl_tmp.compound_records set document_id = replace(chembl_tmp.docs.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.docs where chembl_tmp.compound_records.doc_id = chembl_tmp.docs.doc_id;
-alter table chembl_tmp.compound_records alter column document_id drop default;
+create table chembl.molecule_biocomponents
+(
+    molecule      integer not null,
+    biocomponent  integer not null,
+    primary key(molecule, biocomponent)
+);
 
-alter table chembl_tmp.compound_records alter column record_id type integer;
 
---------------------------------------------------------------------------------
+create table chembl.molecule_descriptors
+(
+    molecule            integer not null,
+    alogp               float8,
+    aromatic_rings      float8,
+    hba                 float8,
+    hbd                 float8,
+    heavy_atoms         float8,
+    num_ro5_violations  float8,
+    psa                 float8,
+    qed_weighted        float8,
+    rtb                 float8,
+    mw_freebase         float8,
+    full_mwt            float8,
+    ro3_pass            varchar,
+    full_molformula     varchar,
+    primary key(molecule)
+);
 
-alter table chembl_tmp.compound_properties add column molecule_id integer not null default -1;
-update chembl_tmp.compound_properties set molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.compound_properties.molregno = chembl_tmp.molecule_dictionary.molregno;
-alter table chembl_tmp.compound_properties alter column molecule_id drop default;
 
-alter table chembl_tmp.compound_properties alter column alogp type float8;
-alter table chembl_tmp.compound_properties alter column aromatic_rings type float8;
-alter table chembl_tmp.compound_properties alter column hba type float8;
-alter table chembl_tmp.compound_properties alter column hbd type float8;
-alter table chembl_tmp.compound_properties alter column heavy_atoms type float8;
-alter table chembl_tmp.compound_properties alter column num_ro5_violations type float8;
-alter table chembl_tmp.compound_properties alter column psa type float8;
-alter table chembl_tmp.compound_properties alter column qed_weighted type float8;
-alter table chembl_tmp.compound_properties alter column rtb type float8;
-alter table chembl_tmp.compound_properties alter column mw_freebase type float8;
-alter table chembl_tmp.compound_properties alter column full_mwt type float8;
+create table chembl.molecule_structures
+(
+    molecule            integer not null,
+    standard_inchi      varchar,
+    standard_inchi_key  varchar,
+    canonical_smiles    varchar,
+    primary key(molecule)
+);
 
-alter table chembl_tmp.compound_properties alter column full_mwt set not null;
-alter table chembl_tmp.compound_properties alter column full_molformula set not null;
 
---------------------------------------------------------------------------------
+create table chembl.molecule_labels
+(
+    molecule            integer not null,
+    alogp               varchar,
+    aromatic_rings      varchar,
+    hba                 varchar,
+    hbd                 varchar,
+    heavy_atoms         varchar,
+    num_ro5_violations  varchar,
+    psa                 varchar,
+    qed_weighted        varchar,
+    rtb                 varchar,
+    mw_freebase         varchar,
+    full_mwt            varchar,
+    ro3_pass            varchar,
+    full_molformula     varchar,
+    standard_inchi      varchar,
+    standard_inchi_key  varchar,
+    canonical_smiles    varchar,
+    image               varchar,
+    primary key(molecule)
+);
 
-alter table chembl_tmp.compound_structures add column molecule_id integer not null default -1;
-update chembl_tmp.compound_structures set molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.compound_structures.molregno = chembl_tmp.molecule_dictionary.molregno;
-alter table chembl_tmp.compound_structures alter column molecule_id drop default;
 
---------------------------------------------------------------------------------
+create type chembl.molecule_reference_type as enum
+(
+    'BINDING DB',
+    'BRENDA',
+    'CCDC',
+    'CHEBI',
+    'CLINICAL TRIALS',
+    'COMPTOX',
+    'DRUG CENTRAL',
+    'DRUGBANK',
+    'FDA SRS',
+    'FOO DB',
+    'HMDB',
+    'IUPHAR',
+    'LIPID MAPS',
+    'MOLPORT',
+    'NMR SHIFT DB2',
+    'PDBE',
+    'PROBES AND DRUGS',
+    'PUBCHEM',
+    'RCSB PDB',
+    'RHEA CHEBI',
+    'RHEA POLYMER',
+    'SURE CHEMBL',
+    'SWISS LIPIDS'
+);
 
-alter table chembl_tmp.molecule_hierarchy add column molecule_id integer not null default -1;
-update chembl_tmp.molecule_hierarchy set molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.molecule_hierarchy.molregno = chembl_tmp.molecule_dictionary.molregno;
-alter table chembl_tmp.molecule_hierarchy alter column molecule_id drop default;
 
-alter table chembl_tmp.molecule_hierarchy add column parent_molecule_id integer not null default -1;
-update chembl_tmp.molecule_hierarchy set parent_molecule_id = replace(chembl_tmp.molecule_dictionary.chembl_id, 'CHEMBL', '')::integer from chembl_tmp.molecule_dictionary where chembl_tmp.molecule_hierarchy.parent_molregno = chembl_tmp.molecule_dictionary.molregno;
-alter table chembl_tmp.molecule_hierarchy alter column parent_molecule_id drop default;
+create table chembl.molecule_references
+(
+    molecule   integer not null,
+    type       chembl.molecule_reference_type not null,
+    reference  varchar not null,
+    primary key(molecule, type, reference)
+);
+
+
+create table chembl.molecule_reference_labels
+(
+    type       chembl.molecule_reference_type not null,
+    reference  varchar not null,
+    label      varchar not null,
+    primary key(type, reference, label)
+);
+
+
+create table chembl.molecule_pubchem_references
+(
+    molecule  integer not null,
+    compound  integer not null,
+    primary key(molecule, compound)
+);
+
+
+create table chembl.molecule_chebi_references
+(
+    molecule  integer not null,
+    chebi     integer not null,
+    primary key(molecule, chebi)
+);

@@ -24,32 +24,32 @@ public class CellLine
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
-        DatabaseTable table = new DatabaseTable(schema, "cell_dictionary");
+        DatabaseTable table = new DatabaseTable(schema, "cell_line_bases");
         TermMapping subject = config.createIriMapping("chembl:cell_line", "id");
 
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                config.createIriMapping("cco:CellLine"));
+                config.createIriMapping("cco:CellLine"), config.createIsNotNullCondition(table, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasCLO"),
-                config.createIriMapping("ontology:clo", "clo_resource_id"));
+                config.createIriMapping("ontology:clo", "clo_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasEFO"),
-                config.createIriMapping("ontology:efo", "efo_resource_id"));
+                config.createIriMapping("ontology:resource", "efo_unit", "efo_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                config.createIriMapping("ontology:taxonomy", "cell_source_tax_id"));
+                config.createIriMapping("ontology:taxonomy", "taxonomy"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                config.createIriMapping("reference:ncbi-taxonomy", "cell_source_tax_id"));
+                config.createIriMapping("reference:ncbi-taxonomy", "taxonomy"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:chemblId"),
                 config.createLiteralMapping(xsdString, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
-                config.createLiteralMapping(xsdString, "cell_name"));
+                config.createLiteralMapping(xsdString, "label"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:description"),
-                config.createLiteralMapping(xsdString, "cell_description"));
+                config.createLiteralMapping(xsdString, "description"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:organismName"),
-                config.createLiteralMapping(xsdString, "cell_source_organism"));
+                config.createLiteralMapping(xsdString, "organism"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:cellosaurusId"),
-                config.createLiteralMapping(xsdString, "cellosaurus_id"));
+                config.createLiteralMapping(xsdString, "cellosaurus"));
 
         // extension
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                config.createIriMapping("ontology:ncbitaxon", "cell_source_tax_id"));
+                config.createIriMapping("ontology:ncbitaxon", "taxonomy"));
     }
 }

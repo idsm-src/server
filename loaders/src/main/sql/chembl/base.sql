@@ -1,1 +1,2 @@
-grant usage on schema chembl_tmp to sparql;
+create schema chembl;
+grant usage on schema chembl to sparql;

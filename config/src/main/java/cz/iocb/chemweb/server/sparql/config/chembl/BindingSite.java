@@ -24,20 +24,20 @@ public class BindingSite
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
-        DatabaseTable table = new DatabaseTable(schema, "binding_sites");
+        DatabaseTable table = new DatabaseTable(schema, "binding_site_bases");
         TermMapping subject = config.createIriMapping("chembl:binding_site", "id");
 
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                config.createIriMapping("cco:BindingSite"));
+                config.createIriMapping("cco:BindingSite"), config.createIsNotNullCondition(table, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasTarget"),
-                config.createIriMapping("chembl:target", "target_id"));
+                config.createIriMapping("chembl:target", "target"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:chemblId"),
                 config.createLiteralMapping(xsdString, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
                 config.createLiteralMapping(xsdString, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:bindingSiteName"),
-                config.createLiteralMapping(xsdString, "site_name"));
-        config.addQuadMapping(table, graph, config.createIriMapping("chembl:target", "target_id"),
+                config.createLiteralMapping(xsdString, "name"));
+        config.addQuadMapping(table, graph, config.createIriMapping("chembl:target", "target"),
                 config.createIriMapping("cco:hasBindingSite"), subject);
     }
 }

@@ -1,34 +1,33 @@
-alter table chembl_tmp.target_dictionary drop column tid;
-
-alter table chembl_tmp.target_dictionary add primary key (id);
-create index target_dictionary__target_type on chembl_tmp.target_dictionary(target_type);
-create index target_dictionary__pref_name on chembl_tmp.target_dictionary(pref_name);
-create index target_dictionary__tax_id on chembl_tmp.target_dictionary(tax_id);
-create index target_dictionary__organism on chembl_tmp.target_dictionary(organism);
-create index target_dictionary__chembl_id on chembl_tmp.target_dictionary(chembl_id);
-create index target_dictionary__species_group_flag on chembl_tmp.target_dictionary(species_group_flag);
-create index target_dictionary__cell_line_id on chembl_tmp.target_dictionary(cell_line_id);
-grant select on chembl_tmp.target_dictionary to sparql;
+create index target_bases__chembl_id on chembl.target_bases(chembl_id);
+create index target_bases__type on chembl.target_bases(type);
+create index target_bases__label on chembl.target_bases(label);
+create index target_bases__organism on chembl.target_bases(organism);
+create index target_bases__taxonomy on chembl.target_bases(taxonomy);
+create index target_bases__cell_line on chembl.target_bases(cell_line);
+create index target_bases__species_group on chembl.target_bases(species_group);
+grant select on chembl.target_bases to sparql;
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.target_relations drop column tid;
-alter table chembl_tmp.target_relations drop column related_tid;
-
-alter table chembl_tmp.target_relations add primary key (targrel_id);
-create index target_relations__relationship on chembl_tmp.target_relations(relationship);
-create index target_relations__target_id on chembl_tmp.target_relations(target_id);
-create index target_relations__related_target_id on chembl_tmp.target_relations(related_target_id);
-grant select on chembl_tmp.target_relations to sparql;
+create index target_components__target on chembl.target_components(target);
+create index target_components__component on chembl.target_components(component);
+grant select on chembl.target_components to sparql;
 
 --------------------------------------------------------------------------------
 
-alter table chembl_tmp.target_components drop column tid;
-alter table chembl_tmp.target_components drop column homologue;
+create index target_exact_matches__target on chembl.target_exact_matches(target);
+create index target_exact_matches__component on chembl.target_exact_matches(component);
+grant select on chembl.target_exact_matches to sparql;
 
-alter table chembl_tmp.target_components add primary key (targcomp_id);
-create index target_components__component_id on chembl_tmp.target_components(component_id);
-create index target_components__target_id on chembl_tmp.target_components(target_id);
-create index target_components__is_exact on chembl_tmp.target_components(is_exact);
-create index target_components__is_related on chembl_tmp.target_components(is_related);
-grant select on chembl_tmp.target_components to sparql;
+--------------------------------------------------------------------------------
+
+create index target_related_matches__target on chembl.target_related_matches(target);
+create index target_related_matches__component on chembl.target_related_matches(component);
+grant select on chembl.target_related_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index target_relations__target on chembl.target_relations(target);
+create index target_relations__relationship on chembl.target_relations(relationship);
+create index target_relations__related on chembl.target_relations(related);
+grant select on chembl.target_relations to sparql;

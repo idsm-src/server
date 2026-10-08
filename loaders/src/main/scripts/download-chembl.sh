@@ -17,7 +17,6 @@ fi
 output="$base/chembl-$version"
 mkdir "$output"
 
-wget --progress=bar:force -P "$output" -r -A 'chembl_*_postgresql.tar.gz' -nH --cut-dirs=5 "ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest/"
 wget --progress=bar:force -P "$output"/rdf -r -A ttl.gz -nH --cut-dirs=5 "ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBL-RDF/latest/"
 
 test -L "$base/chembl" && rm "$base/chembl"

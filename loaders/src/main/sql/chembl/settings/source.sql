@@ -1,5 +1,4 @@
-alter table chembl_tmp.source add primary key (id);
-create index source__src_description on chembl_tmp.source(src_description);
-create index source__src_short_name on chembl_tmp.source(src_short_name);
-create index source__chembl_id on chembl_tmp.source(chembl_id);
-grant select on chembl_tmp.source to sparql;
+create index source_bases__chembl_id on chembl.source_bases(chembl_id);
+create index source_bases__label on chembl.source_bases(label);
+create index source_bases__description on chembl.source_bases(description);
+grant select on chembl.source_bases to sparql;
