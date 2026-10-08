@@ -60,7 +60,7 @@ public class OntologyResource extends GenericUserIriClass
     public static final short unitUberon = 266;
     public static final short unitUO = 267;
     public static final short unitTaxonomy = 427;
-    public static final short unitEFO = 602;
+    public static final short unitEFO = 603;
     public static final short unitThesaurus = 801;
     public static final short unitCHEMINF = 2600;
     public static final short unitSIO = 2601;
