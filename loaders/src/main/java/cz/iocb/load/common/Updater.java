@@ -697,8 +697,10 @@ public class Updater
             }
             catch(RuntimeException e)
             {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
+                if(e.getCause() instanceof SQLException ex)
+                    throw ex;
+
+                throw e;
             }
 
             if(count % batchSize != 0)
@@ -737,8 +739,10 @@ public class Updater
             }
             catch(RuntimeException e)
             {
-                if(e.getCause() instanceof SQLException)
-                    throw(SQLException) e.getCause();
+                if(e.getCause() instanceof SQLException ex)
+                    throw ex;
+
+                throw e;
             }
 
             if(count % batchSize != 0)
