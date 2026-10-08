@@ -1,11 +1,15 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.integer;
+import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -21,35 +25,30 @@ class Protein extends Updater
     static final String enzymePrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_";
     static final int enzymePrefixLength = enzymePrefix.length();
 
-    private static final StringIntMap keepProteins = new StringIntMap();
-    private static final StringIntMap newProteins = new StringIntMap();
-    private static final StringIntMap oldProteins = new StringIntMap();
+    private static final EntityTable<Integer> proteins = new EntityTable<>("pubchem.protein_bases", intKey("id"), null,
+            uniqueVarchar("iri").determinedByKey(), integer("organism"), uniqueVarchar("title"),
+            uniqueVarchar("sequence"));
+    private static final StringIntMap proteinIDs = new StringIntMap();
     private static int nextProteinID;
 
-    private static final StringIntMap keepEnzymes = new StringIntMap();
-    private static final StringIntMap newEnzymes = new StringIntMap();
-    private static final StringIntMap oldEnzymes = new StringIntMap();
+    private static final EntityTable<Integer> enzymes = new EntityTable<>("pubchem.enzyme_bases", intKey("id"), null,
+            uniqueVarchar("iri").determinedByKey(), integer("parent"), uniqueVarchar("title"));
+    private static final StringIntMap enzymeIDs = new StringIntMap();
     private static int nextEnzymeID;
 
 
     private static void loadEnzymeBases(Model model) throws IOException, SQLException
     {
-        load("select iri,id from pubchem.enzyme_bases", oldEnzymes);
+        load("select iri,id from pubchem.enzyme_bases", enzymeIDs);
 
-        nextEnzymeID = oldEnzymes.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+        nextEnzymeID = enzymeIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
         new QueryResultProcessor(patternQuery("?enzyme rdf:type sio:SIO_010343"))
         {
             @Override
             protected void parse() throws IOException
             {
-                String enzyme = getStringID("enzyme", enzymePrefix);
-                Integer enzymeID = oldEnzymes.remove(enzyme);
-
-                if(enzymeID == null)
-                    newEnzymes.put(enzyme, nextEnzymeID++);
-                else
-                    keepEnzymes.put(enzyme, enzymeID);
+                addEnzyme(getStringID("enzyme", enzymePrefix));
             }
         }.load(model);
     }
@@ -57,12 +56,6 @@ class Protein extends Updater
 
     private static void loadEnzymeParents(Model model) throws IOException, SQLException
     {
-        IntIntMap keepParents = new IntIntMap();
-        IntStringIntPairMap newParents = new IntStringIntPairMap();
-        IntIntMap oldParents = new IntIntMap();
-
-        load("select id,parent from pubchem.enzyme_bases where parent is not null", oldParents);
-
         new QueryResultProcessor(patternQuery("?enzyme rdfs:subClassOf ?parent"))
         {
             @Override
@@ -71,81 +64,29 @@ class Protein extends Updater
                 if(getIRI("parent").equals("http://purl.uniprot.org/core/Enzyme"))
                     return;
 
-                Integer enzymeID = getEnzymeID(getIRI("enzyme"), true);
+                Integer enzymeID = getEnzymeID(getIRI("enzyme"));
                 Integer parentID = getEnzymeID(getIRI("parent"));
 
-                if(parentID.equals(oldParents.remove(enzymeID)))
-                {
-                    keepParents.put(enzymeID, parentID);
-                }
-                else
-                {
-                    Integer keep = keepParents.get(enzymeID);
-
-                    Pair<String, Integer> pair = Pair.getPair(getStringID("enzyme", enzymePrefix), parentID);
-
-                    if(parentID.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Pair<String, Integer> put = newParents.put(enzymeID, pair);
-
-                    if(put != null && !parentID.equals(put.getTwo()))
-                        throw new IOException();
-                }
+                enzymes.set(enzymeID, "parent", parentID);
             }
         }.load(model);
-
-        store("update pubchem.enzyme_bases set parent=null where id=? and parent=?", oldParents);
-        store("insert into pubchem.enzyme_bases(id,iri,parent) values(?,?,?) "
-                + "on conflict(id) do update set parent=EXCLUDED.parent", newParents);
     }
 
 
     private static void loadEnzymeTitles(Model model) throws IOException, SQLException
     {
-        IntStringMap keepTitles = new IntStringMap();
-        IntStringPairMap newTitles = new IntStringPairMap();
-        IntStringMap oldTitles = new IntStringMap();
-
-        load("select id,title from pubchem.enzyme_bases where title is not null", oldTitles);
-
         new QueryResultProcessor(patternQuery("?enzyme skos:prefLabel ?title. "
                 + "filter(strstarts(str(?enzyme), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_'))"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer enzymeID = getEnzymeID(getIRI("enzyme"), true);
+                Integer enzymeID = getEnzymeID(getIRI("enzyme"));
                 String title = getString("title");
 
-                if(title.equals(oldTitles.remove(enzymeID)))
-                {
-                    keepTitles.put(enzymeID, title);
-                }
-                else
-                {
-                    String keep = keepTitles.get(enzymeID);
-
-                    Pair<String, String> pair = Pair.getPair(getStringID("enzyme", enzymePrefix), title);
-
-                    if(title.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Pair<String, String> put = newTitles.put(enzymeID, pair);
-
-                    if(put != null && !title.equals(put.getTwo()))
-                        throw new IOException();
-                }
+                enzymes.set(enzymeID, "title", title);
             }
         }.load(model);
-
-        store("update pubchem.enzyme_bases set title=null where id=? and title=?", oldTitles);
-        store("insert into pubchem.enzyme_bases(id,iri,title) values(?,?,?) "
-                + "on conflict(id) do update set title=EXCLUDED.title", newTitles);
     }
 
 
@@ -179,22 +120,16 @@ class Protein extends Updater
 
     private static void loadProteinBases(Model model) throws IOException, SQLException
     {
-        load("select iri,id from pubchem.protein_bases", oldProteins);
+        load("select iri,id from pubchem.protein_bases", proteinIDs);
 
-        nextProteinID = oldProteins.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+        nextProteinID = proteinIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
         new QueryResultProcessor(patternQuery("?protein rdf:type vocab:Protein"))
         {
             @Override
             protected void parse() throws IOException
             {
-                String protein = getStringID("protein", prefix);
-                Integer proteinID = oldProteins.remove(protein);
-
-                if(proteinID == null)
-                    newProteins.put(protein, nextProteinID++);
-                else
-                    keepProteins.put(protein, proteinID);
+                addProtein(getStringID("protein", prefix));
             }
         }.load(model);
     }
@@ -202,141 +137,54 @@ class Protein extends Updater
 
     private static void loadOrganisms(Model model) throws IOException, SQLException
     {
-        IntIntMap keepOrganisms = new IntIntMap();
-        IntStringIntPairMap newOrganisms = new IntStringIntPairMap();
-        IntIntMap oldOrganisms = new IntIntMap();
-
-        load("select id,organism from pubchem.protein_bases where organism is not null", oldOrganisms);
-
         new QueryResultProcessor(patternQuery("?protein up:organism ?organism"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer proteinID = getProteinID(getIRI("protein"), true);
+                Integer proteinID = getProteinID(getIRI("protein"));
                 Integer organismID = Taxonomy.getTaxonomyID(getIRI("organism"));
 
-                if(organismID.equals(oldOrganisms.remove(proteinID)))
-                {
-                    keepOrganisms.put(proteinID, organismID);
-                }
-                else
-                {
-                    Integer keep = keepOrganisms.get(proteinID);
-
-                    Pair<String, Integer> pair = Pair.getPair(getStringID("protein", prefix), organismID);
-
-                    if(organismID.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Pair<String, Integer> put = newOrganisms.put(proteinID, pair);
-
-                    if(put != null && !organismID.equals(put.getTwo()))
-                        throw new IOException();
-                }
+                proteins.set(proteinID, "organism", organismID);
             }
         }.load(model);
-
-        store("update pubchem.protein_bases set organism=null where id=? and organism=?", oldOrganisms);
-        store("insert into pubchem.protein_bases(id,iri,organism) values(?,?,?) "
-                + "on conflict(id) do update set organism=EXCLUDED.organism", newOrganisms);
     }
 
 
     private static void loadProteinTitles(Model model) throws IOException, SQLException
     {
-        IntStringMap keepTitles = new IntStringMap();
-        IntStringPairMap newTitles = new IntStringPairMap();
-        IntStringMap oldTitles = new IntStringMap();
-
-        load("select id,title from pubchem.protein_bases where title is not null", oldTitles);
-
         new QueryResultProcessor(patternQuery("?protein skos:prefLabel ?title. "
                 + "filter(strstarts(str(?protein), 'http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC'))"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer proteinID = getProteinID(getIRI("protein"), true);
+                Integer proteinID = getProteinID(getIRI("protein"));
                 String title = getString("title");
 
                 // workaround
                 if(title.isEmpty())
                     return;
 
-                if(title.equals(oldTitles.remove(proteinID)))
-                {
-                    keepTitles.put(proteinID, title);
-                }
-                else
-                {
-                    String keep = keepTitles.get(proteinID);
-
-                    Pair<String, String> pair = Pair.getPair(getStringID("protein", prefix), title);
-
-                    if(title.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Pair<String, String> put = newTitles.put(proteinID, pair);
-
-                    if(put != null && !title.equals(put.getTwo()))
-                        throw new IOException();
-                }
+                proteins.set(proteinID, "title", title);
             }
         }.load(model);
-
-        store("update pubchem.protein_bases set title=null where id=? and title=?", oldTitles);
-        store("insert into pubchem.protein_bases(id,iri,title) values(?,?,?) "
-                + "on conflict(id) do update set title=EXCLUDED.title", newTitles);
     }
 
 
     private static void loadSequences(Model model) throws IOException, SQLException
     {
-        IntStringMap keepSequences = new IntStringMap();
-        IntStringPairMap newSequences = new IntStringPairMap();
-        IntStringMap oldSequences = new IntStringMap();
-
-        load("select id,sequence from pubchem.protein_bases where sequence is not null", oldSequences);
-
         new QueryResultProcessor(patternQuery("?protein bao:BAO_0002817 ?sequence"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer proteinID = getProteinID(getIRI("protein"), true);
+                Integer proteinID = getProteinID(getIRI("protein"));
                 String sequence = getString("sequence");
 
-                if(sequence.equals(oldSequences.remove(proteinID)))
-                {
-                    keepSequences.put(proteinID, sequence);
-                }
-                else
-                {
-                    String keep = keepSequences.get(proteinID);
-
-                    Pair<String, String> pair = Pair.getPair(getStringID("protein", prefix), sequence);
-
-                    if(sequence.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Pair<String, String> put = newSequences.put(proteinID, pair);
-
-                    if(put != null && !sequence.equals(put.getTwo()))
-                        throw new IOException();
-                }
+                proteins.set(proteinID, "sequence", sequence);
             }
         }.load(model);
-
-        store("update pubchem.protein_bases set sequence=null where id=? and sequence=?", oldSequences);
-        store("insert into pubchem.protein_bases(id,iri,sequence) values(?,?,?) "
-                + "on conflict(id) do update set sequence=EXCLUDED.sequence", newSequences);
     }
 
 
@@ -1292,6 +1140,10 @@ class Protein extends Updater
         loadPatents(patents);
 
         model.close();
+
+        enzymes.flush();
+        proteins.flush();
+
         System.out.println();
     }
 
@@ -1300,11 +1152,9 @@ class Protein extends Updater
     {
         System.out.println("finish proteins ...");
 
-        store("delete from pubchem.enzyme_bases where iri=? and id=?", oldEnzymes);
-        store("insert into pubchem.enzyme_bases(iri,id) values(?,?)", newEnzymes);
+        enzymes.store();
 
-        store("delete from pubchem.protein_bases where iri=? and id=?", oldProteins);
-        store("insert into pubchem.protein_bases(iri,id) values(?,?)", newProteins);
+        proteins.store();
 
         System.out.println();
     }
@@ -1312,45 +1162,38 @@ class Protein extends Updater
 
     static Integer getEnzymeID(String value) throws IOException
     {
-        return getEnzymeID(value, false);
-    }
-
-
-    static Integer getEnzymeID(String value, boolean forceKeep) throws IOException
-    {
         if(!value.startsWith(enzymePrefix))
             throw new IOException("unexpected IRI: " + value);
 
         String enzyme = value.substring(enzymePrefixLength);
 
-        synchronized(newEnzymes)
+        synchronized(enzymeIDs)
         {
-            Integer enzymeID = keepEnzymes.get(enzyme);
+            Integer enzymeID = enzymeIDs.get(enzyme);
 
-            if(enzymeID != null)
+            if(enzymeID != null && enzymes.contains(enzymeID))
                 return enzymeID;
-
-            enzymeID = newEnzymes.get(enzyme);
-
-            if(enzymeID != null)
-            {
-                if(forceKeep)
-                {
-                    newEnzymes.remove(enzyme);
-                    keepEnzymes.put(enzyme, enzymeID);
-                }
-
-                return enzymeID;
-            }
 
             System.out.println("    add missing enzyme " + enzyme);
 
-            if((enzymeID = oldEnzymes.remove(enzyme)) != null)
-                keepEnzymes.put(enzyme, enzymeID);
-            else if(forceKeep)
-                keepEnzymes.put(enzyme, enzymeID = nextEnzymeID++);
-            else
-                newEnzymes.put(enzyme, enzymeID = nextEnzymeID++);
+            return addEnzyme(enzyme);
+        }
+    }
+
+
+    /*
+     * Adds the row of an enzyme, which keeps its id if it has one.
+     */
+    private static Integer addEnzyme(String enzyme) throws IOException
+    {
+        synchronized(enzymeIDs)
+        {
+            Integer enzymeID = enzymeIDs.get(enzyme);
+
+            if(enzymeID == null)
+                enzymeIDs.put(enzyme, enzymeID = nextEnzymeID++);
+
+            enzymes.set(enzymeID, "iri", enzyme);
 
             return enzymeID;
         }
@@ -1359,45 +1202,38 @@ class Protein extends Updater
 
     static Integer getProteinID(String value) throws IOException
     {
-        return getProteinID(value, false);
-    }
-
-
-    static Integer getProteinID(String value, boolean forceKeep) throws IOException
-    {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
 
         String protein = value.substring(prefixLength);
 
-        synchronized(newProteins)
+        synchronized(proteinIDs)
         {
-            Integer proteinID = keepProteins.get(protein);
+            Integer proteinID = proteinIDs.get(protein);
 
-            if(proteinID != null)
+            if(proteinID != null && proteins.contains(proteinID))
                 return proteinID;
-
-            proteinID = newProteins.get(protein);
-
-            if(proteinID != null)
-            {
-                if(forceKeep)
-                {
-                    newProteins.remove(protein);
-                    keepProteins.put(protein, proteinID);
-                }
-
-                return proteinID;
-            }
 
             System.out.println("    add missing protein " + protein);
 
-            if((proteinID = oldProteins.remove(protein)) != null)
-                keepProteins.put(protein, proteinID);
-            else if(forceKeep)
-                keepProteins.put(protein, proteinID = nextProteinID++);
-            else
-                newProteins.put(protein, proteinID = nextProteinID++);
+            return addProtein(protein);
+        }
+    }
+
+
+    /*
+     * Adds the row of a protein, which keeps its id if it has one.
+     */
+    private static Integer addProtein(String protein) throws IOException
+    {
+        synchronized(proteinIDs)
+        {
+            Integer proteinID = proteinIDs.get(protein);
+
+            if(proteinID == null)
+                proteinIDs.put(protein, proteinID = nextProteinID++);
+
+            proteins.set(proteinID, "iri", protein);
 
             return proteinID;
         }

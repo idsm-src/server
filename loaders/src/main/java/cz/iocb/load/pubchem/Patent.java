@@ -1,9 +1,13 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.EntityTable.date;
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
+import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
@@ -21,9 +25,11 @@ class Patent extends Updater
     static final String assigneePrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/patentassignee/MD5_";
     static final int assigneePrefixLength = assigneePrefix.length();
 
-    private static final StringIntMap keepPatents = new StringIntMap();
-    private static final StringIntMap newPatents = new StringIntMap();
-    private static final StringIntMap oldPatents = new StringIntMap();
+    private static final EntityTable<Integer> patents = new EntityTable<>("pubchem.patent_bases", intKey("id"), null,
+            uniqueVarchar("iri").determinedByKey(), uniqueVarchar("title"), uniqueVarchar("abstract"),
+            uniqueVarchar("publication_number"), date("filing_date"), date("grant_date"), date("publication_date"),
+            date("priority_date"));
+    private static final StringIntMap patentIDs = new StringIntMap();
     private static int nextPatentID;
 
     private static final StringSet keepInventors = new StringSet();
@@ -37,11 +43,11 @@ class Patent extends Updater
 
     private static void loadBases() throws IOException, SQLException
     {
-        load("select iri,id from pubchem.patent_bases", oldPatents);
+        load("select iri,id from pubchem.patent_bases", patentIDs);
         load("select id from pubchem.patentinventor_bases", oldInventors);
         load("select id from pubchem.patentassignee_bases", oldAssignees);
 
-        nextPatentID = oldPatents.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+        nextPatentID = patentIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
         processFiles("pubchem/RDF/patent", "pc_patent2type_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -63,25 +69,7 @@ class Patent extends Updater
                                                 .equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Patent"))
                                     throw new IOException();
 
-                                String patent = getStringID(subject, prefix);
-
-                                synchronized(newPatents)
-                                {
-                                    Integer patentID = keepPatents.get(patent);
-
-                                    if(patentID != null)
-                                        return;
-
-                                    patentID = newPatents.get(patent);
-
-                                    if(patentID != null)
-                                        return;
-
-                                    if((patentID = oldPatents.remove(patent)) == null)
-                                        newPatents.put(patent, nextPatentID++);
-                                    else
-                                        keepPatents.put(patent, patentID);
-                                }
+                                addPatent(getStringID(subject, prefix));
                             }
 
                             case inventorPrefix ->
@@ -127,12 +115,6 @@ class Patent extends Updater
 
     private static void loadTitles() throws IOException, SQLException
     {
-        IntStringMap keepTitles = new IntStringMap();
-        IntStringPairMap newTitles = new IntStringPairMap();
-        IntStringMap oldTitles = new IntStringMap();
-
-        load("select id,title from pubchem.patent_bases where title is not null", oldTitles);
-
         processFiles("pubchem/RDF/patent", "pc_patent2title_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -144,51 +126,19 @@ class Patent extends Updater
                         if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/titleOfInvention"))
                             throw new IOException();
 
-                        Integer patentID = getPatentID(subject.getURI(), true);
+                        Integer patentID = getPatentID(subject.getURI());
                         String title = getString(object);
 
-                        synchronized(newTitles)
-                        {
-                            if(title.equals(oldTitles.remove(patentID)))
-                            {
-                                keepTitles.put(patentID, title);
-                            }
-                            else
-                            {
-                                String keep = keepTitles.get(patentID);
-
-                                Pair<String, String> pair = Pair.getPair(getStringID(subject, prefix), title);
-
-                                if(title.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                Pair<String, String> put = newTitles.put(patentID, pair);
-
-                                if(put != null && !title.equals(put.getTwo()))
-                                    throw new IOException();
-                            }
-                        }
+                        patents.set(patentID, "title", title);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.patent_bases set title=null where id=? and title=?", oldTitles);
-        store("insert into pubchem.patent_bases(id,iri,title) values(?,?,?) "
-                + "on conflict(id) do update set title=EXCLUDED.title", newTitles);
     }
 
 
     private static void loadAbstracts() throws IOException, SQLException
     {
-        IntStringMap keepAbstracts = new IntStringMap();
-        IntStringPairMap newAbstracts = new IntStringPairMap();
-        IntStringMap oldAbstracts = new IntStringMap();
-
-        load("select id,abstract from pubchem.patent_bases where abstract is not null", oldAbstracts);
-
         processFiles("pubchem/RDF/patent", "pc_patent2abstract_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -200,51 +150,19 @@ class Patent extends Updater
                         if(!predicate.getURI().equals("http://purl.org/dc/terms/abstract"))
                             throw new IOException();
 
-                        Integer patentID = getPatentID(subject.getURI(), true);
+                        Integer patentID = getPatentID(subject.getURI());
                         String value = getString(object);
 
-                        synchronized(newAbstracts)
-                        {
-                            if(value.equals(oldAbstracts.remove(patentID)))
-                            {
-                                keepAbstracts.put(patentID, value);
-                            }
-                            else
-                            {
-                                String keep = keepAbstracts.get(patentID);
-
-                                Pair<String, String> pair = Pair.getPair(getStringID(subject, prefix), value);
-
-                                if(value.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                Pair<String, String> put = newAbstracts.put(patentID, pair);
-
-                                if(put != null && !value.equals(put.getTwo()))
-                                    throw new IOException();
-                            }
-                        }
+                        patents.set(patentID, "abstract", value);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.patent_bases set abstract=null where id=? and abstract=?", oldAbstracts);
-        store("insert into pubchem.patent_bases(id,iri,abstract) values(?,?,?) "
-                + "on conflict(id) do update set abstract=EXCLUDED.abstract", newAbstracts);
     }
 
 
     private static void loadNumbers() throws IOException, SQLException
     {
-        IntStringMap keepNumbers = new IntStringMap();
-        IntStringPairMap newNumbers = new IntStringPairMap();
-        IntStringMap oldNumbers = new IntStringMap();
-
-        load("select id,publication_number from pubchem.patent_bases where publication_number is not null", oldNumbers);
-
         processFiles("pubchem/RDF/patent", "pc_patent2publicationnumber_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -256,52 +174,19 @@ class Patent extends Updater
                         if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/publicationNumber"))
                             throw new IOException();
 
-                        Integer patentID = getPatentID(subject.getURI(), true);
+                        Integer patentID = getPatentID(subject.getURI());
                         String number = getString(object);
 
-                        synchronized(newNumbers)
-                        {
-                            if(number.equals(oldNumbers.remove(patentID)))
-                            {
-                                keepNumbers.put(patentID, number);
-                            }
-                            else
-                            {
-                                String keep = keepNumbers.get(patentID);
-
-                                Pair<String, String> pair = Pair.getPair(getStringID(subject, prefix), number);
-
-                                if(number.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                Pair<String, String> put = newNumbers.put(patentID, pair);
-
-                                if(put != null && !number.equals(put.getTwo()))
-                                    throw new IOException();
-                            }
-                        }
+                        patents.set(patentID, "publication_number", number);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.patent_bases set publication_number=null where id=? and publication_number=?",
-                oldNumbers);
-        store("insert into pubchem.patent_bases(id,iri,publication_number) values(?,?,?) "
-                + "on conflict(id) do update set publication_number=EXCLUDED.publication_number", newNumbers);
     }
 
 
     private static void loadFilingDates() throws IOException, SQLException
     {
-        IntStringMap keepFilingDates = new IntStringMap();
-        IntStringPairMap newFilingDates = new IntStringPairMap();
-        IntStringMap oldFilingDates = new IntStringMap();
-
-        load("select id,filing_date::varchar from pubchem.patent_bases where filing_date is not null", oldFilingDates);
-
         processFiles("pubchem/RDF/patent", "pc_patent2filingdate_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -313,51 +198,19 @@ class Patent extends Updater
                         if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/filingDate"))
                             throw new IOException();
 
-                        Integer patentID = getPatentID(subject.getURI(), true);
-                        String date = getString(object).replaceFirst("-0[45]:00$", "");
+                        Integer patentID = getPatentID(subject.getURI());
+                        String date = getLexicalForm(object).replaceFirst("-0[45]:00$", "");
 
-                        synchronized(newFilingDates)
-                        {
-                            if(date.equals(oldFilingDates.remove(patentID)))
-                            {
-                                keepFilingDates.put(patentID, date);
-                            }
-                            else
-                            {
-                                String keep = keepFilingDates.get(patentID);
-
-                                Pair<String, String> pair = Pair.getPair(getStringID(subject, prefix), date);
-
-                                if(date.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                Pair<String, String> put = newFilingDates.put(patentID, pair);
-
-                                if(put != null && !date.equals(put.getTwo()))
-                                    throw new IOException();
-                            }
-                        }
+                        patents.set(patentID, "filing_date", date);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.patent_bases set filing_date=null where id=? and filing_date=?::date", oldFilingDates);
-        store("insert into pubchem.patent_bases(id,iri,filing_date) values(?,?,?::date) "
-                + "on conflict(id) do update set filing_date=EXCLUDED.filing_date", newFilingDates);
     }
 
 
     private static void loadGrantDates() throws IOException, SQLException
     {
-        IntStringMap keepGrantDates = new IntStringMap();
-        IntStringPairMap newGrantDates = new IntStringPairMap();
-        IntStringMap oldGrantDates = new IntStringMap();
-
-        load("select id,grant_date::varchar from pubchem.patent_bases where grant_date is not null", oldGrantDates);
-
         processFiles("pubchem/RDF/patent", "pc_patent2grantdate_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -370,52 +223,19 @@ class Patent extends Updater
                         if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/grantDate"))
                             throw new IOException();
 
-                        Integer patentID = getPatentID(subject.getURI(), true);
-                        String date = getString(object).replaceFirst("-0[45]:00$", "");
+                        Integer patentID = getPatentID(subject.getURI());
+                        String date = getLexicalForm(object).replaceFirst("-0[45]:00$", "");
 
-                        synchronized(newGrantDates)
-                        {
-                            if(date.equals(oldGrantDates.remove(patentID)))
-                            {
-                                keepGrantDates.put(patentID, date);
-                            }
-                            else
-                            {
-                                String keep = keepGrantDates.get(patentID);
-
-                                Pair<String, String> pair = Pair.getPair(getStringID(subject, prefix), date);
-
-                                if(date.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                Pair<String, String> put = newGrantDates.put(patentID, pair);
-
-                                if(put != null && !date.equals(put.getTwo()))
-                                    throw new IOException();
-                            }
-                        }
+                        patents.set(patentID, "grant_date", date);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.patent_bases set grant_date=null where id=? and grant_date=?::date", oldGrantDates);
-        store("insert into pubchem.patent_bases(id,iri,grant_date) values(?,?,?::date) "
-                + "on conflict(id) do update set grant_date=EXCLUDED.grant_date", newGrantDates);
     }
 
 
     private static void loadPublicationDates() throws IOException, SQLException
     {
-        IntStringMap keepPublicationDates = new IntStringMap();
-        IntStringPairMap newPublicationDates = new IntStringPairMap();
-        IntStringMap oldPublicationDates = new IntStringMap();
-
-        load("select id,publication_date::varchar from pubchem.patent_bases where publication_date is not null",
-                oldPublicationDates);
-
         processFiles("pubchem/RDF/patent", "pc_patent2publicationdate_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -427,53 +247,19 @@ class Patent extends Updater
                         if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/publicationDate"))
                             throw new IOException();
 
-                        Integer patentID = getPatentID(subject.getURI(), true);
-                        String date = getString(object).replaceFirst("-0[45]:00$", "");
+                        Integer patentID = getPatentID(subject.getURI());
+                        String date = getLexicalForm(object).replaceFirst("-0[45]:00$", "");
 
-                        synchronized(newPublicationDates)
-                        {
-                            if(date.equals(oldPublicationDates.remove(patentID)))
-                            {
-                                keepPublicationDates.put(patentID, date);
-                            }
-                            else
-                            {
-                                String keep = keepPublicationDates.get(patentID);
-
-                                Pair<String, String> pair = Pair.getPair(getStringID(subject, prefix), date);
-
-                                if(date.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                Pair<String, String> put = newPublicationDates.put(patentID, pair);
-
-                                if(put != null && !date.equals(put.getTwo()))
-                                    throw new IOException();
-                            }
-                        }
+                        patents.set(patentID, "publication_date", date);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.patent_bases set publication_date=null where id=? and publication_date=?::date",
-                oldPublicationDates);
-        store("insert into pubchem.patent_bases(id,iri,publication_date) values(?,?,?::date) "
-                + "on conflict(id) do update set publication_date=EXCLUDED.publication_date", newPublicationDates);
     }
 
 
     private static void loadPriorityDates() throws IOException, SQLException
     {
-        IntStringMap keepPriorityDates = new IntStringMap();
-        IntStringPairMap newPriorityDates = new IntStringPairMap();
-        IntStringMap oldPriorityDates = new IntStringMap();
-
-        load("select id,priority_date::varchar from pubchem.patent_bases where priority_date is not null",
-                oldPriorityDates);
-
         processFiles("pubchem/RDF/patent", "pc_patent2prioritydate_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -485,41 +271,14 @@ class Patent extends Updater
                         if(!predicate.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#priorityDate"))
                             throw new IOException();
 
-                        Integer patentID = getPatentID(subject.getURI(), true);
-                        String date = getString(object).replaceFirst("-0[45]:00$", "");
+                        Integer patentID = getPatentID(subject.getURI());
+                        String date = getLexicalForm(object).replaceFirst("-0[45]:00$", "");
 
-                        synchronized(newPriorityDates)
-                        {
-                            if(date.equals(oldPriorityDates.remove(patentID)))
-                            {
-                                keepPriorityDates.put(patentID, date);
-                            }
-                            else
-                            {
-                                String keep = keepPriorityDates.get(patentID);
-
-                                Pair<String, String> pair = Pair.getPair(getStringID(subject, prefix), date);
-
-                                if(date.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                Pair<String, String> put = newPriorityDates.put(patentID, pair);
-
-                                if(put != null && !date.equals(put.getTwo()))
-                                    throw new IOException();
-                            }
-                        }
+                        patents.set(patentID, "priority_date", date);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.patent_bases set priority_date=null where id=? and priority_date=?::date",
-                oldPriorityDates);
-        store("insert into pubchem.patent_bases(id,iri,priority_date) values(?,?,?::date) "
-                + "on conflict(id) do update set priority_date=EXCLUDED.priority_date", newPriorityDates);
     }
 
 
@@ -1017,6 +776,8 @@ class Patent extends Updater
         loadApplicants();
         loadFormattedNames();
 
+        patents.flush();
+
         System.out.println();
     }
 
@@ -1025,8 +786,7 @@ class Patent extends Updater
     {
         System.out.println("finish patents ...");
 
-        store("delete from pubchem.patent_bases where iri=? and id=?", oldPatents);
-        store("insert into pubchem.patent_bases(iri,id) values(?,?)", newPatents);
+        patents.store();
 
         store("delete from pubchem.patentinventor_bases where id=?", oldInventors);
         store("insert into pubchem.patentinventor_bases(id) values(?)", newInventors);
@@ -1040,45 +800,38 @@ class Patent extends Updater
 
     static Integer getPatentID(String value) throws IOException
     {
-        return getPatentID(value, false);
-    }
-
-
-    static Integer getPatentID(String value, boolean forceKeep) throws IOException
-    {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
 
         String patent = value.substring(prefixLength);
 
-        synchronized(newPatents)
+        synchronized(patentIDs)
         {
-            Integer patentID = keepPatents.get(patent);
+            Integer patentID = patentIDs.get(patent);
 
-            if(patentID != null)
+            if(patentID != null && patents.contains(patentID))
                 return patentID;
-
-            patentID = newPatents.get(patent);
-
-            if(patentID != null)
-            {
-                if(forceKeep)
-                {
-                    newPatents.remove(patent);
-                    keepPatents.put(patent, patentID);
-                }
-
-                return patentID;
-            }
 
             System.out.println("    add missing patent " + patent);
 
-            if((patentID = oldPatents.remove(patent)) != null)
-                keepPatents.put(patent, patentID);
-            else if(forceKeep)
-                keepPatents.put(patent, patentID = nextPatentID++);
-            else
-                newPatents.put(patent, patentID = nextPatentID++);
+            return addPatent(patent);
+        }
+    }
+
+
+    /*
+     * Adds the row of a patent, which keeps its id if it has one.
+     */
+    private static Integer addPatent(String patent) throws IOException
+    {
+        synchronized(patentIDs)
+        {
+            Integer patentID = patentIDs.get(patent);
+
+            if(patentID == null)
+                patentIDs.put(patent, patentID = nextPatentID++);
+
+            patents.set(patentID, "iri", patent);
 
             return patentID;
         }

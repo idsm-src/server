@@ -1,10 +1,15 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.EntityTable.date;
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.uniqueVarchar;
+import static cz.iocb.load.common.EntityTable.varchar;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.HashMap;
 import org.apache.jena.graph.Node;
+import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
@@ -16,9 +21,10 @@ class Reference extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/";
     static final int prefixLength = prefix.length();
 
-    private static final IntSet keepReferences = new IntSet();
-    private static final IntSet newReferences = new IntSet();
-    private static final IntSet oldReferences = new IntSet();
+    private static final EntityTable<Integer> references = new EntityTable<>("pubchem.reference_bases", intKey("id"),
+            null, date("dcdate"), varchar("date"), uniqueVarchar("title"), uniqueVarchar("citation"),
+            varchar("publication"), varchar("issue"), varchar("starting_page"), varchar("ending_page"),
+            varchar("page_range"), varchar("lang"));
 
     private static HashMap<String, String> sources = new HashMap<>();
 
@@ -44,13 +50,6 @@ class Reference extends Updater
 
     private static void loadBases() throws IOException, SQLException
     {
-        IntStringMap keepTitles = new IntStringMap();
-        IntStringMap newTitles = new IntStringMap();
-        IntStringMap oldTitles = new IntStringMap();
-
-        load("select id from pubchem.reference_bases", oldReferences);
-        load("select id,title from pubchem.reference_bases where title is not null", oldTitles);
-
         processFiles("pubchem/RDF/reference", "pc_reference_title_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -68,52 +67,16 @@ class Reference extends Updater
                         Integer referenceID = getIntID(subject, prefix);
                         String title = getString(object);
 
-                        synchronized(newReferences)
-                        {
-                            oldReferences.remove(referenceID);
-                            keepReferences.add(referenceID);
-                        }
-
-                        synchronized(newTitles)
-                        {
-                            if(title.equals(oldTitles.remove(referenceID)))
-                            {
-                                keepTitles.put(referenceID, title);
-                            }
-                            else
-                            {
-                                String keep = keepTitles.get(referenceID);
-
-                                if(title.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                String put = newTitles.put(referenceID, title);
-
-                                if(put != null && !title.equals(put))
-                                    throw new IOException();
-                            }
-                        }
+                        references.set(referenceID, "title", title);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.reference_bases set title=null where id=? and title=?", oldTitles);
-        store("insert into pubchem.reference_bases(id,title) values(?,?) "
-                + "on conflict(id) do update set title=EXCLUDED.title", newTitles);
     }
 
 
     private static void loadPublications() throws IOException, SQLException
     {
-        IntStringMap keepPublications = new IntStringMap();
-        IntStringMap newPublications = new IntStringMap();
-        IntStringMap oldPublications = new IntStringMap();
-
-        load("select id,publication from pubchem.reference_bases where publication is not null", oldPublications);
-
         processFiles("pubchem/RDF/reference", "pc_reference_publication_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -128,49 +91,19 @@ class Reference extends Updater
                         if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/publicationName"))
                             throw new IOException();
 
-                        Integer referenceID = getReferenceID(subject.getURI(), true);
+                        Integer referenceID = getReferenceID(subject.getURI());
                         String publication = getString(object);
 
-                        synchronized(newPublications)
-                        {
-                            if(publication.equals(oldPublications.remove(referenceID)))
-                            {
-                                keepPublications.put(referenceID, publication);
-                            }
-                            else
-                            {
-                                String keep = keepPublications.get(referenceID);
-
-                                if(publication.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                String put = newPublications.put(referenceID, publication);
-
-                                if(put != null && !publication.equals(put))
-                                    throw new IOException();
-                            }
-                        }
+                        references.set(referenceID, "publication", publication);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.reference_bases set publication=null where id=? and publication=?", oldPublications);
-        store("insert into pubchem.reference_bases(id,publication) values(?,?) "
-                + "on conflict(id) do update set publication=EXCLUDED.publication", newPublications);
     }
 
 
     private static void loadCitations() throws IOException, SQLException
     {
-        IntStringMap keepCitations = new IntStringMap();
-        IntStringMap newCitations = new IntStringMap();
-        IntStringMap oldCitations = new IntStringMap();
-
-        load("select id,citation from pubchem.reference_bases where citation is not null", oldCitations);
-
         processFiles("pubchem/RDF/reference", "pc_reference_citation_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -185,49 +118,19 @@ class Reference extends Updater
                         if(!predicate.getURI().equals("http://purl.org/dc/terms/bibliographicCitation"))
                             throw new IOException();
 
-                        Integer referenceID = getReferenceID(subject.getURI(), true);
+                        Integer referenceID = getReferenceID(subject.getURI());
                         String citation = getString(object);
 
-                        synchronized(newCitations)
-                        {
-                            if(citation.equals(oldCitations.remove(referenceID)))
-                            {
-                                keepCitations.put(referenceID, citation);
-                            }
-                            else
-                            {
-                                String keep = keepCitations.get(referenceID);
-
-                                if(citation.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                String put = newCitations.put(referenceID, citation);
-
-                                if(put != null && !citation.equals(put))
-                                    throw new IOException();
-                            }
-                        }
+                        references.set(referenceID, "citation", citation);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.reference_bases set citation=null where id=? and citation=?", oldCitations);
-        store("insert into pubchem.reference_bases(id,citation) values(?,?) "
-                + "on conflict(id) do update set citation=EXCLUDED.citation", newCitations);
     }
 
 
     private static void loadIssues() throws IOException, SQLException
     {
-        IntStringMap keepIssues = new IntStringMap();
-        IntStringMap newIssues = new IntStringMap();
-        IntStringMap oldIssues = new IntStringMap();
-
-        load("select id,issue from pubchem.reference_bases where issue is not null", oldIssues);
-
         processFiles("pubchem/RDF/reference", "pc_reference_issue_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -242,49 +145,19 @@ class Reference extends Updater
                         if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/issueIdentifier"))
                             throw new IOException();
 
-                        Integer referenceID = getReferenceID(subject.getURI(), true);
+                        Integer referenceID = getReferenceID(subject.getURI());
                         String issue = getString(object);
 
-                        synchronized(newIssues)
-                        {
-                            if(issue.equals(oldIssues.remove(referenceID)))
-                            {
-                                keepIssues.put(referenceID, issue);
-                            }
-                            else
-                            {
-                                String keep = keepIssues.get(referenceID);
-
-                                if(issue.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                String put = newIssues.put(referenceID, issue);
-
-                                if(put != null && !issue.equals(put))
-                                    throw new IOException();
-                            }
-                        }
+                        references.set(referenceID, "issue", issue);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.reference_bases set issue=null where id=? and issue=?", oldIssues);
-        store("insert into pubchem.reference_bases(id,issue) values(?,?) "
-                + "on conflict(id) do update set issue=EXCLUDED.issue", newIssues);
     }
 
 
     private static void loadStartingPages() throws IOException, SQLException
     {
-        IntStringMap keepStartingPages = new IntStringMap();
-        IntStringMap newStartingPages = new IntStringMap();
-        IntStringMap oldStartingPages = new IntStringMap();
-
-        load("select id,starting_page from pubchem.reference_bases where starting_page is not null", oldStartingPages);
-
         processFiles("pubchem/RDF/reference", "pc_reference_startingpage_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -299,49 +172,19 @@ class Reference extends Updater
                         if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/startingPage"))
                             throw new IOException();
 
-                        Integer referenceID = getReferenceID(subject.getURI(), true);
+                        Integer referenceID = getReferenceID(subject.getURI());
                         String page = getString(object);
 
-                        synchronized(newStartingPages)
-                        {
-                            if(page.equals(oldStartingPages.remove(referenceID)))
-                            {
-                                keepStartingPages.put(referenceID, page);
-                            }
-                            else
-                            {
-                                String keep = keepStartingPages.get(referenceID);
-
-                                if(page.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                String put = newStartingPages.put(referenceID, page);
-
-                                if(put != null && !page.equals(put))
-                                    throw new IOException();
-                            }
-                        }
+                        references.set(referenceID, "starting_page", page);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.reference_bases set starting_page=null where id=? and starting_page=?", oldStartingPages);
-        store("insert into pubchem.reference_bases(id,starting_page) values(?,?) "
-                + "on conflict(id) do update set starting_page=EXCLUDED.starting_page", newStartingPages);
     }
 
 
     private static void loadEndingPages() throws IOException, SQLException
     {
-        IntStringMap keepEndingPages = new IntStringMap();
-        IntStringMap newEndingPages = new IntStringMap();
-        IntStringMap oldEndingPages = new IntStringMap();
-
-        load("select id,ending_page from pubchem.reference_bases where ending_page is not null", oldEndingPages);
-
         processFiles("pubchem/RDF/reference", "pc_reference_endingpage_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -356,49 +199,19 @@ class Reference extends Updater
                         if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/endingPage"))
                             throw new IOException();
 
-                        Integer referenceID = getReferenceID(subject.getURI(), true);
+                        Integer referenceID = getReferenceID(subject.getURI());
                         String page = getString(object);
 
-                        synchronized(newEndingPages)
-                        {
-                            if(page.equals(oldEndingPages.remove(referenceID)))
-                            {
-                                keepEndingPages.put(referenceID, page);
-                            }
-                            else
-                            {
-                                String keep = keepEndingPages.get(referenceID);
-
-                                if(page.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                String put = newEndingPages.put(referenceID, page);
-
-                                if(put != null && !page.equals(put))
-                                    throw new IOException();
-                            }
-                        }
+                        references.set(referenceID, "ending_page", page);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.reference_bases set ending_page=null where id=? and ending_page=?", oldEndingPages);
-        store("insert into pubchem.reference_bases(id,ending_page) values(?,?) "
-                + "on conflict(id) do update set ending_page=EXCLUDED.ending_page", newEndingPages);
     }
 
 
     private static void loadPageRanges() throws IOException, SQLException
     {
-        IntStringMap keepPageRanges = new IntStringMap();
-        IntStringMap newPageRanges = new IntStringMap();
-        IntStringMap oldPageRanges = new IntStringMap();
-
-        load("select id,page_range from pubchem.reference_bases where page_range is not null", oldPageRanges);
-
         processFiles("pubchem/RDF/reference", "pc_reference_pagerange_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -413,49 +226,19 @@ class Reference extends Updater
                         if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/pageRange"))
                             throw new IOException();
 
-                        Integer referenceID = getReferenceID(subject.getURI(), true);
+                        Integer referenceID = getReferenceID(subject.getURI());
                         String range = getString(object);
 
-                        synchronized(newPageRanges)
-                        {
-                            if(range.equals(oldPageRanges.remove(referenceID)))
-                            {
-                                keepPageRanges.put(referenceID, range);
-                            }
-                            else
-                            {
-                                String keep = keepPageRanges.get(referenceID);
-
-                                if(range.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                String put = newPageRanges.put(referenceID, range);
-
-                                if(put != null && !range.equals(put))
-                                    throw new IOException();
-                            }
-                        }
+                        references.set(referenceID, "page_range", range);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.reference_bases set page_range=null where id=? and page_range=?", oldPageRanges);
-        store("insert into pubchem.reference_bases(id,page_range) values(?,?) "
-                + "on conflict(id) do update set page_range=EXCLUDED.page_range", newPageRanges);
     }
 
 
     private static void loadLangs() throws IOException, SQLException
     {
-        IntStringMap keepLangs = new IntStringMap();
-        IntStringMap newLangs = new IntStringMap();
-        IntStringMap oldLangs = new IntStringMap();
-
-        load("select id,lang from pubchem.reference_bases where lang is not null", oldLangs);
-
         processFiles("pubchem/RDF/reference", "pc_reference_lang_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -470,54 +253,19 @@ class Reference extends Updater
                         if(!predicate.getURI().equals("http://purl.org/dc/terms/language"))
                             throw new IOException();
 
-                        Integer referenceID = getReferenceID(subject.getURI(), true);
+                        Integer referenceID = getReferenceID(subject.getURI());
                         String lang = getString(object);
 
-                        synchronized(newLangs)
-                        {
-                            if(lang.equals(oldLangs.remove(referenceID)))
-                            {
-                                keepLangs.put(referenceID, lang);
-                            }
-                            else
-                            {
-                                String keep = keepLangs.get(referenceID);
-
-                                if(lang.equals(keep))
-                                    return;
-                                else if(keep != null)
-                                    throw new IOException();
-
-                                String put = newLangs.put(referenceID, lang);
-
-                                if(put != null && !lang.equals(put))
-                                    throw new IOException();
-                            }
-                        }
+                        references.set(referenceID, "lang", lang);
                     }
                 }.load(stream);
             }
         });
-
-        store("update pubchem.reference_bases set lang=null where id=? and lang=?", oldLangs);
-        store("insert into pubchem.reference_bases(id,lang) values(?,?) "
-                + "on conflict(id) do update set lang=EXCLUDED.lang", newLangs);
     }
 
 
     private static void loadDates() throws IOException, SQLException
     {
-        IntStringMap keepDates = new IntStringMap();
-        IntStringMap newDates = new IntStringMap();
-        IntStringMap oldDates = new IntStringMap();
-
-        IntStringMap keepStrDates = new IntStringMap();
-        IntStringMap newStrDates = new IntStringMap();
-        IntStringMap oldStrDates = new IntStringMap();
-
-        load("select id,dcdate::varchar from pubchem.reference_bases where dcdate is not null", oldDates);
-        load("select id,date from pubchem.reference_bases where date is not null", oldStrDates);
-
         processFiles("pubchem/RDF/reference", "pc_reference_date\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -532,61 +280,21 @@ class Reference extends Updater
                         if(!predicate.getURI().equals("http://purl.org/dc/terms/date"))
                             throw new IOException();
 
-                        Integer referenceID = getReferenceID(subject.getURI(), true);
+                        Integer referenceID = getReferenceID(subject.getURI());
 
                         switch(object.getLiteral().getDatatype().getURI())
                         {
                             case "http://www.w3.org/2001/XMLSchema#date" ->
                             {
-                                String date = getString(object).replaceFirst("-0[45]:00$", "");
+                                String date = getLexicalForm(object).replaceFirst("-0[45]:00$", "");
 
-                                synchronized(newDates)
-                                {
-                                    if(date.equals(oldDates.remove(referenceID)))
-                                    {
-                                        keepDates.put(referenceID, date);
-                                    }
-                                    else
-                                    {
-                                        String keep = keepDates.get(referenceID);
-
-                                        if(date.equals(keep))
-                                            return;
-                                        else if(keep != null)
-                                            throw new IOException();
-
-                                        String put = newDates.put(referenceID, date);
-
-                                        if(put != null && !date.equals(put))
-                                            throw new IOException();
-                                    }
-                                }
+                                references.set(referenceID, "dcdate", date);
                             }
                             case "http://www.w3.org/2001/XMLSchema#string" ->
                             {
                                 String date = getString(object);
 
-                                synchronized(newStrDates)
-                                {
-                                    if(date.equals(oldStrDates.remove(referenceID)))
-                                    {
-                                        keepStrDates.put(referenceID, date);
-                                    }
-                                    else
-                                    {
-                                        String keep = keepStrDates.get(referenceID);
-
-                                        if(date.equals(keep))
-                                            return;
-                                        else if(keep != null)
-                                            throw new IOException();
-
-                                        String put = newStrDates.put(referenceID, date);
-
-                                        if(put != null && !date.equals(put))
-                                            throw new IOException();
-                                    }
-                                }
+                                references.set(referenceID, "date", date);
                             }
                             default ->
                             {
@@ -597,14 +305,6 @@ class Reference extends Updater
                 }.load(stream);
             }
         });
-
-        store("update pubchem.reference_bases set dcdate=null where id=? and dcdate=?::date", oldDates);
-        store("insert into pubchem.reference_bases(id,dcdate) values(?,?::date) "
-                + "on conflict(id) do update set dcdate=EXCLUDED.dcdate", newDates);
-
-        store("update pubchem.reference_bases set date=null where id=? and date=?", oldStrDates);
-        store("insert into pubchem.reference_bases(id,date) values(?,?) "
-                + "on conflict(id) do update set date=EXCLUDED.date", newStrDates);
     }
 
 
@@ -1422,6 +1122,8 @@ class Reference extends Updater
         loadSources();
         checkTypes();
 
+        references.flush();
+
         System.out.println();
     }
 
@@ -1430,8 +1132,7 @@ class Reference extends Updater
     {
         System.out.println("finish references ...");
 
-        store("delete from pubchem.reference_bases where id=?", oldReferences);
-        store("insert into pubchem.reference_bases(id) values(?)", newReferences);
+        references.store();
 
         System.out.println();
     }
@@ -1439,37 +1140,13 @@ class Reference extends Updater
 
     static Integer getReferenceID(String value) throws IOException
     {
-        return getReferenceID(value, false);
-    }
-
-
-    static Integer getReferenceID(String value, boolean forceKeep) throws IOException
-    {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
 
         Integer referenceID = Integer.parseInt(value.substring(prefixLength));
 
-        synchronized(newReferences)
-        {
-            if(newReferences.contains(referenceID))
-            {
-                if(forceKeep)
-                {
-                    newReferences.remove(referenceID);
-                    keepReferences.add(referenceID);
-                }
-            }
-            else if(!keepReferences.contains(referenceID))
-            {
-                System.out.println("    add missing reference " + referenceID);
-
-                if(!oldReferences.remove(referenceID) && !forceKeep)
-                    newReferences.add(referenceID);
-                else
-                    keepReferences.add(referenceID);
-            }
-        }
+        if(references.reference(referenceID))
+            System.out.println("    add missing reference " + referenceID);
 
         return referenceID;
     }

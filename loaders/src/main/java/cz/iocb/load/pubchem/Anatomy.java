@@ -1,8 +1,11 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.varchar;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -15,26 +18,18 @@ public class Anatomy extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/anatomy/ANATOMYID";
     static final int prefixLength = prefix.length();
 
-    private static final IntSet keepAnatomies = new IntSet();
-    private static final IntSet newAnatomies = new IntSet();
-    private static final IntSet oldAnatomies = new IntSet();
+    private static final EntityTable<Integer> anatomies = new EntityTable<>("pubchem.anatomy_bases", intKey("id"), null,
+            varchar("label"));
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        load("select id from pubchem.anatomy_bases", oldAnatomies);
-
         new QueryResultProcessor(patternQuery("?anatomy rdf:type sio:SIO_001262"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer anatomyID = getIntID("anatomy", prefix);
-
-                if(oldAnatomies.remove(anatomyID))
-                    keepAnatomies.add(anatomyID);
-                else
-                    newAnatomies.add(anatomyID);
+                anatomies.reference(getIntID("anatomy", prefix));
             }
         }.load(model);
     }
@@ -42,44 +37,14 @@ public class Anatomy extends Updater
 
     private static void loadLabels(Model model) throws IOException, SQLException
     {
-        IntStringMap keepLabels = new IntStringMap();
-        IntStringMap newLabels = new IntStringMap();
-        IntStringMap oldLabels = new IntStringMap();
-
-        load("select id,label from pubchem.anatomy_bases where label is not null", oldLabels);
-
         new QueryResultProcessor(patternQuery("?anatomy skos:prefLabel ?label"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer anatomyID = getAnatomyID(getIRI("anatomy"), true);
-                String label = getString("label");
-
-                if(label.equals(oldLabels.remove(anatomyID)))
-                {
-                    keepLabels.put(anatomyID, label);
-                }
-                else
-                {
-                    String keep = keepLabels.get(anatomyID);
-
-                    if(label.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    String put = newLabels.put(anatomyID, label);
-
-                    if(put != null && !label.equals(put))
-                        throw new IOException();
-                }
+                anatomies.set(getAnatomyID(getIRI("anatomy")), "label", getString("label"));
             }
         }.load(model);
-
-        store("update pubchem.anatomy_bases set label=null where id=? and label=?", oldLabels);
-        store("insert into pubchem.anatomy_bases(id,label) values(?,?) "
-                + "on conflict(id) do update set label=EXCLUDED.label", newLabels);
     }
 
 
@@ -212,6 +177,9 @@ public class Anatomy extends Updater
         loadReferences(model);
 
         model.close();
+
+        anatomies.flush();
+
         System.out.println();
     }
 
@@ -220,8 +188,7 @@ public class Anatomy extends Updater
     {
         System.out.println("finish anatomies ...");
 
-        store("delete from pubchem.anatomy_bases where id=?", oldAnatomies);
-        store("insert into pubchem.anatomy_bases(id) values(?)", newAnatomies);
+        anatomies.store();
 
         System.out.println();
     }
@@ -229,37 +196,13 @@ public class Anatomy extends Updater
 
     static Integer getAnatomyID(String value) throws IOException
     {
-        return getAnatomyID(value, false);
-    }
-
-
-    static Integer getAnatomyID(String value, boolean forceKeep) throws IOException
-    {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
 
         Integer anatomyID = Integer.parseInt(value.substring(prefixLength));
 
-        synchronized(newAnatomies)
-        {
-            if(newAnatomies.contains(anatomyID))
-            {
-                if(forceKeep)
-                {
-                    newAnatomies.remove(anatomyID);
-                    keepAnatomies.add(anatomyID);
-                }
-            }
-            else if(!keepAnatomies.contains(anatomyID))
-            {
-                System.out.println("    add missing anatomy ANATOMYID" + anatomyID);
-
-                if(!oldAnatomies.remove(anatomyID) && !forceKeep)
-                    newAnatomies.add(anatomyID);
-                else
-                    keepAnatomies.add(anatomyID);
-            }
-        }
+        if(anatomies.reference(anatomyID))
+            System.out.println("    add missing anatomy ANATOMYID" + anatomyID);
 
         return anatomyID;
     }

@@ -1,8 +1,11 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.varchar;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -15,26 +18,18 @@ public class Disease extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID";
     static final int prefixLength = prefix.length();
 
-    private static final IntSet keepDiseases = new IntSet();
-    private static final IntSet newDiseases = new IntSet();
-    private static final IntSet oldDiseases = new IntSet();
+    private static final EntityTable<Integer> diseases = new EntityTable<>("pubchem.disease_bases", intKey("id"), null,
+            varchar("label"));
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        load("select id from pubchem.disease_bases", oldDiseases);
-
         new QueryResultProcessor(patternQuery("?disease rdf:type obo:DOID_4"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer diseaseID = getIntID("disease", prefix);
-
-                if(oldDiseases.remove(diseaseID))
-                    keepDiseases.add(diseaseID);
-                else
-                    newDiseases.add(diseaseID);
+                diseases.reference(getIntID("disease", prefix));
             }
         }.load(model);
     }
@@ -42,44 +37,14 @@ public class Disease extends Updater
 
     private static void loadLabels(Model model) throws IOException, SQLException
     {
-        IntStringMap keepLabels = new IntStringMap();
-        IntStringMap newLabels = new IntStringMap();
-        IntStringMap oldLabels = new IntStringMap();
-
-        load("select id,label from pubchem.disease_bases where label is not null", oldLabels);
-
         new QueryResultProcessor(patternQuery("?disease skos:prefLabel ?label"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer diseaseID = getDiseaseID(getIRI("disease"), true);
-                String label = getString("label");
-
-                if(label.equals(oldLabels.remove(diseaseID)))
-                {
-                    keepLabels.put(diseaseID, label);
-                }
-                else
-                {
-                    String keep = keepLabels.get(diseaseID);
-
-                    if(label.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    String put = newLabels.put(diseaseID, label);
-
-                    if(put != null && !label.equals(put))
-                        throw new IOException();
-                }
+                diseases.set(getDiseaseID(getIRI("disease")), "label", getString("label"));
             }
         }.load(model);
-
-        store("update pubchem.disease_bases set label=null where id=? and label=?", oldLabels);
-        store("insert into pubchem.disease_bases(id,label) values(?,?) "
-                + "on conflict(id) do update set label=EXCLUDED.label", newLabels);
     }
 
 
@@ -224,6 +189,9 @@ public class Disease extends Updater
         loadRelatedMatches(model);
 
         model.close();
+
+        diseases.flush();
+
         System.out.println();
     }
 
@@ -232,8 +200,7 @@ public class Disease extends Updater
     {
         System.out.println("finish diseases ...");
 
-        store("delete from pubchem.disease_bases where id=?", oldDiseases);
-        store("insert into pubchem.disease_bases(id) values(?)", newDiseases);
+        diseases.store();
 
         System.out.println();
     }
@@ -241,37 +208,13 @@ public class Disease extends Updater
 
     static Integer getDiseaseID(String value) throws IOException
     {
-        return getDiseaseID(value, false);
-    }
-
-
-    static Integer getDiseaseID(String value, boolean forceKeep) throws IOException
-    {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
 
         Integer diseaseID = Integer.parseInt(value.substring(prefixLength));
 
-        synchronized(newDiseases)
-        {
-            if(newDiseases.contains(diseaseID))
-            {
-                if(forceKeep)
-                {
-                    newDiseases.remove(diseaseID);
-                    keepDiseases.add(diseaseID);
-                }
-            }
-            else if(!keepDiseases.contains(diseaseID))
-            {
-                System.out.println("    add missing disease DZID" + diseaseID);
-
-                if(!oldDiseases.remove(diseaseID) && !forceKeep)
-                    newDiseases.add(diseaseID);
-                else
-                    keepDiseases.add(diseaseID);
-            }
-        }
+        if(diseases.reference(diseaseID))
+            System.out.println("    add missing disease DZID" + diseaseID);
 
         return diseaseID;
     }

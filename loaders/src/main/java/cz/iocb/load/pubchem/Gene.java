@@ -1,9 +1,14 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.integer;
+import static cz.iocb.load.common.EntityTable.uniqueVarchar;
+import static cz.iocb.load.common.EntityTable.varchar;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
+import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -19,34 +24,27 @@ class Gene extends Updater
     static final String symbolPrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/";
     static final int symbolPrefixLength = symbolPrefix.length();
 
-    private static final IntSet keepGenes = new IntSet();
-    private static final IntSet newGenes = new IntSet();
-    private static final IntSet oldGenes = new IntSet();
+    private static final EntityTable<Integer> genes = new EntityTable<>("pubchem.gene_bases", intKey("id"), null,
+            uniqueVarchar("title"), integer("gene_symbol"), integer("organism"));
 
-    private static final StringIntMap keepGeneSymbols = new StringIntMap();
-    private static final StringIntMap newGeneSymbols = new StringIntMap();
-    private static final StringIntMap oldGeneSymbols = new StringIntMap();
+    private static final EntityTable<Integer> geneSymbols = new EntityTable<>("pubchem.gene_symbol_bases", intKey("id"),
+            null, uniqueVarchar("iri").determinedByKey(), varchar("symbol"));
+    private static final StringIntMap geneSymbolIDs = new StringIntMap();
     private static int nextGeneSymbolID;
 
 
     private static void loadGeneSymbolBases(Model model) throws IOException, SQLException
     {
-        load("select iri,id from pubchem.gene_symbol_bases", oldGeneSymbols);
+        load("select iri,id from pubchem.gene_symbol_bases", geneSymbolIDs);
 
-        nextGeneSymbolID = oldGeneSymbols.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+        nextGeneSymbolID = geneSymbolIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
         new QueryResultProcessor(patternQuery("?gene_symbol rdf:type sio:SIO_001383"))
         {
             @Override
             protected void parse() throws IOException
             {
-                String geneSymbol = getStringID("gene_symbol", symbolPrefix);
-                Integer geneSymbolID = oldGeneSymbols.remove(geneSymbol);
-
-                if(geneSymbolID == null)
-                    newGeneSymbols.put(geneSymbol, nextGeneSymbolID++);
-                else
-                    keepGeneSymbols.put(geneSymbol, geneSymbolID);
+                addGeneSymbol(getStringID("gene_symbol", symbolPrefix));
             }
         }.load(model);
     }
@@ -54,65 +52,31 @@ class Gene extends Updater
 
     private static void loadGeneSymbolLiterals(Model model) throws IOException, SQLException
     {
-        IntStringMap keepSymbolLiterals = new IntStringMap();
-        IntStringPairMap newSymbolLiterals = new IntStringPairMap();
-        IntStringMap oldSymbolLiterals = new IntStringMap();
-
-        load("select id,symbol from pubchem.gene_symbol_bases where symbol is not null", oldSymbolLiterals);
-
         new QueryResultProcessor(patternQuery("?gene_symbol sio:SIO_000300 ?symbol"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer geneSymbolID = getGeneSymbolID(getIRI("gene_symbol"), true);
+                Integer geneSymbolID = getGeneSymbolID(getIRI("gene_symbol"));
                 String symbol = getString("symbol");
 
-                if(symbol.equals(oldSymbolLiterals.remove(geneSymbolID)))
-                {
-                    keepSymbolLiterals.put(geneSymbolID, symbol);
-                }
-                else
-                {
-                    String keep = keepSymbolLiterals.get(geneSymbolID);
-
-                    Pair<String, String> pair = Pair.getPair(getStringID("gene_symbol", symbolPrefix), symbol);
-
-                    if(symbol.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Pair<String, String> put = newSymbolLiterals.put(geneSymbolID, pair);
-
-                    if(put != null && !symbol.equals(put.getTwo()))
-                        throw new IOException();
-                }
+                geneSymbols.set(geneSymbolID, "symbol", symbol);
             }
         }.load(model);
-
-        store("update pubchem.gene_symbol_bases set symbol=null where id=? and symbol=?", oldSymbolLiterals);
-        store("insert into pubchem.gene_symbol_bases(id,iri,symbol) values(?,?,?) "
-                + "on conflict(id) do update set symbol=EXCLUDED.symbol", newSymbolLiterals);
     }
 
 
     private static void loadGeneBases(Model model) throws IOException, SQLException
     {
-        load("select id from pubchem.gene_bases", oldGenes);
-
         new QueryResultProcessor(patternQuery("?gene rdf:type sio:SIO_010035"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer geneID = getGeneID(getIRI("gene"));
+                Integer geneID = getIntID("gene", prefix);
                 checkGeneID(geneID);
 
-                if(oldGenes.remove(geneID))
-                    keepGenes.add(geneID);
-                else
-                    newGenes.add(geneID);
+                genes.reference(geneID);
             }
         }.load(model);
     }
@@ -120,130 +84,49 @@ class Gene extends Updater
 
     private static void loadSymbols(Model model) throws IOException, SQLException
     {
-        IntIntMap keepSymbols = new IntIntMap();
-        IntIntMap newSymbols = new IntIntMap();
-        IntIntMap oldSymbols = new IntIntMap();
-
-        load("select id,gene_symbol from pubchem.gene_bases where gene_symbol is not null", oldSymbols);
-
         new QueryResultProcessor(patternQuery("?gene bao:BAO_0002870 ?symbol"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer geneID = getGeneID(getIRI("gene"), true);
+                Integer geneID = getGeneID(getIRI("gene"));
                 Integer symbolID = getGeneSymbolID(getIRI("symbol"));
 
-                if(symbolID.equals(oldSymbols.remove(geneID)))
-                {
-                    keepSymbols.put(geneID, symbolID);
-                }
-                else
-                {
-                    Integer keep = keepSymbols.get(geneID);
-
-                    if(symbolID.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Integer put = newSymbols.put(geneID, symbolID);
-
-                    if(put != null && !symbolID.equals(put))
-                        throw new IOException();
-                }
+                genes.set(geneID, "gene_symbol", symbolID);
             }
         }.load(model);
-
-        store("update pubchem.gene_bases set gene_symbol=null where id=? and gene_symbol=?", oldSymbols);
-        store("insert into pubchem.gene_bases(id,gene_symbol) values(?,?) "
-                + "on conflict(id) do update set gene_symbol=EXCLUDED.gene_symbol", newSymbols);
     }
 
 
     private static void loadTitles(Model model) throws IOException, SQLException
     {
-        IntStringMap keepTitles = new IntStringMap();
-        IntStringMap newTitles = new IntStringMap();
-        IntStringMap oldTitles = new IntStringMap();
-
-        load("select id,title from pubchem.gene_bases where title is not null", oldTitles);
-
         new QueryResultProcessor(patternQuery("?gene skos:prefLabel ?title"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer geneID = getGeneID(getIRI("gene"), true);
+                Integer geneID = getGeneID(getIRI("gene"));
                 String title = getString("title");
 
-                if(title.equals(oldTitles.remove(geneID)))
-                {
-                    keepTitles.put(geneID, title);
-                }
-                else
-                {
-                    String keep = keepTitles.get(geneID);
-
-                    if(title.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    String put = newTitles.put(geneID, title);
-
-                    if(put != null && !title.equals(put))
-                        throw new IOException();
-                }
+                genes.set(geneID, "title", title);
             }
         }.load(model);
-
-        store("update pubchem.gene_bases set title=null where id=? and title=?", oldTitles);
-        store("insert into pubchem.gene_bases(id,title) values(?,?) on conflict(id) do update set title=EXCLUDED.title",
-                newTitles);
     }
 
 
     private static void loadOrganisms(Model model) throws IOException, SQLException
     {
-        IntIntMap keepOrganisms = new IntIntMap();
-        IntIntMap newOrganisms = new IntIntMap();
-        IntIntMap oldOrganisms = new IntIntMap();
-
-        load("select id,organism from pubchem.gene_bases where organism is not null", oldOrganisms);
-
         new QueryResultProcessor(patternQuery("?gene up:organism ?organism"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer geneID = getGeneID(getIRI("gene"), true);
+                Integer geneID = getGeneID(getIRI("gene"));
                 Integer organismID = Taxonomy.getTaxonomyID(getIRI("organism"));
 
-                if(organismID.equals(oldOrganisms.remove(geneID)))
-                {
-                    keepOrganisms.put(geneID, organismID);
-                }
-                else
-                {
-                    Integer keep = keepOrganisms.get(geneID);
-
-                    if(organismID.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Integer put = newOrganisms.put(geneID, organismID);
-
-                    if(put != null && !organismID.equals(put))
-                        throw new IOException();
-                }
+                genes.set(geneID, "organism", organismID);
             }
         }.load(model);
-
-        store("update pubchem.gene_bases set organism=null where id=? and organism=?", oldOrganisms);
-        store("insert into pubchem.gene_bases(id,organism) values(?,?) "
-                + "on conflict(id) do update set organism=EXCLUDED.organism", newOrganisms);
     }
 
 
@@ -882,6 +765,10 @@ class Gene extends Updater
         loadOrthologs(model);
 
         model.close();
+
+        geneSymbols.flush();
+        genes.flush();
+
         System.out.println();
     }
 
@@ -890,11 +777,9 @@ class Gene extends Updater
     {
         System.out.println("finish genes ...");
 
-        store("delete from pubchem.gene_symbol_bases where iri=? and id=?", oldGeneSymbols);
-        store("insert into pubchem.gene_symbol_bases(iri,id) values(?,?)", newGeneSymbols);
+        geneSymbols.store();
 
-        store("delete from pubchem.gene_bases where id=?", oldGenes);
-        store("insert into pubchem.gene_bases(id) values(?)", newGenes);
+        genes.store();
 
         System.out.println();
     }
@@ -902,45 +787,38 @@ class Gene extends Updater
 
     static Integer getGeneSymbolID(String value) throws IOException
     {
-        return getGeneSymbolID(value, false);
-    }
-
-
-    static Integer getGeneSymbolID(String value, boolean forceKeep) throws IOException
-    {
         if(!value.startsWith(symbolPrefix))
             throw new IOException("unexpected IRI: " + value);
 
         String symbol = value.substring(symbolPrefixLength);
 
-        synchronized(newGeneSymbols)
+        synchronized(geneSymbolIDs)
         {
-            Integer geneSymbolID = keepGeneSymbols.get(symbol);
+            Integer geneSymbolID = geneSymbolIDs.get(symbol);
 
-            if(geneSymbolID != null)
+            if(geneSymbolID != null && geneSymbols.contains(geneSymbolID))
                 return geneSymbolID;
-
-            geneSymbolID = newGeneSymbols.get(symbol);
-
-            if(geneSymbolID != null)
-            {
-                if(forceKeep)
-                {
-                    newGeneSymbols.remove(symbol);
-                    keepGeneSymbols.put(symbol, geneSymbolID);
-                }
-
-                return geneSymbolID;
-            }
 
             System.out.println("    add missing gene symbol " + symbol);
 
-            if((geneSymbolID = oldGeneSymbols.remove(symbol)) != null)
-                keepGeneSymbols.put(symbol, geneSymbolID);
-            else if(forceKeep)
-                keepGeneSymbols.put(symbol, geneSymbolID = nextGeneSymbolID++);
-            else
-                newGeneSymbols.put(symbol, geneSymbolID = nextGeneSymbolID++);
+            return addGeneSymbol(symbol);
+        }
+    }
+
+
+    /*
+     * Adds the row of a gene symbol, which keeps its id if it has one.
+     */
+    private static Integer addGeneSymbol(String symbol) throws IOException
+    {
+        synchronized(geneSymbolIDs)
+        {
+            Integer geneSymbolID = geneSymbolIDs.get(symbol);
+
+            if(geneSymbolID == null)
+                geneSymbolIDs.put(symbol, geneSymbolID = nextGeneSymbolID++);
+
+            geneSymbols.set(geneSymbolID, "iri", symbol);
 
             return geneSymbolID;
         }
@@ -949,12 +827,6 @@ class Gene extends Updater
 
     static Integer getGeneID(String value) throws IOException
     {
-        return getGeneID(value, false);
-    }
-
-
-    static Integer getGeneID(String value, boolean forceKeep) throws IOException
-    {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
 
@@ -962,26 +834,8 @@ class Gene extends Updater
 
         checkGeneID(geneID);
 
-        synchronized(newGenes)
-        {
-            if(newGenes.contains(geneID))
-            {
-                if(forceKeep)
-                {
-                    newGenes.remove(geneID);
-                    keepGenes.add(geneID);
-                }
-            }
-            else if(!keepGenes.contains(geneID))
-            {
-                System.out.println("    add missing gene GID" + geneID);
-
-                if(!oldGenes.remove(geneID) && !forceKeep)
-                    newGenes.add(geneID);
-                else
-                    keepGenes.add(geneID);
-            }
-        }
+        if(genes.reference(geneID))
+            System.out.println("    add missing gene GID" + geneID);
 
         return geneID;
     }

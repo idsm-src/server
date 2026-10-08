@@ -1,5 +1,8 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.integer;
+import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +24,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
+import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -53,9 +57,8 @@ class Bioassay extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID";
     static final int prefixLength = prefix.length();
 
-    private static final IntSet keepBioassays = new IntSet();
-    private static final IntSet newBioassays = new IntSet();
-    private static final IntSet oldBioassays = new IntSet();
+    private static final EntityTable<Integer> bioassays = new EntityTable<>("pubchem.bioassay_bases", intKey("id"),
+            null, integer("source"), uniqueVarchar("title"));
 
 
     private static String getMultiNodeValue(XPathExpression path, Node node) throws XPathExpressionException
@@ -100,12 +103,6 @@ class Bioassay extends Updater
     private static void loadBioassays()
             throws SQLException, IOException, XPathException, ParserConfigurationException, SAXException
     {
-        IntIntMap newSources = new IntIntMap();
-        IntIntMap oldSources = new IntIntMap();
-
-        IntStringMap newTitles = new IntStringMap();
-        IntStringMap oldTitles = new IntStringMap();
-
         IntStringMap newDescriptions = new IntStringMap();
         IntStringMap oldDescriptions = new IntStringMap();
 
@@ -121,9 +118,6 @@ class Bioassay extends Updater
         IntIntMap newMechanisms = new IntIntMap();
         IntIntMap oldMechanisms = new IntIntMap();
 
-        load("select id from pubchem.bioassay_bases", oldBioassays);
-        load("select id,source from pubchem.bioassay_bases where source is not null", oldSources);
-        load("select id,title from pubchem.bioassay_bases where title is not null", oldTitles);
         load("select bioassay,value from pubchem.bioassay_data where type_id = '136'::smallint", oldDescriptions);
         load("select bioassay,value from pubchem.bioassay_data where type_id = '1041'::smallint", oldProtocols);
         load("select bioassay,value from pubchem.bioassay_data where type_id = '1167'::smallint", oldComments);
@@ -171,30 +165,18 @@ class Bioassay extends Updater
 
                     Integer bioassayID = Integer.parseInt(getSingleNodeValue(idPath, baseNode));
 
-                    synchronized(newBioassays)
-                    {
-                        oldBioassays.remove(bioassayID);
-                        keepBioassays.add(bioassayID);
-                    }
+                    bioassays.reference(bioassayID);
 
 
                     String sourceName = getSingleNodeValue(sourceNamePath, baseNode);
                     Integer sourceID = Source.registerSourceID(createSourceID(sourceName), sourceName);
 
-                    synchronized(newSources)
-                    {
-                        if(!sourceID.equals(oldSources.remove(bioassayID)))
-                            newSources.put(bioassayID, sourceID);
-                    }
+                    bioassays.set(bioassayID, "source", sourceID);
 
 
                     String title = getSingleNodeValue(titlePath, baseNode);
 
-                    synchronized(newTitles)
-                    {
-                        if(!title.equals(oldTitles.remove(bioassayID)))
-                            newTitles.put(bioassayID, title);
-                    }
+                    bioassays.set(bioassayID, "title", title);
 
 
                     String description = getMultiNodeValue(descriptionPath, baseNode);
@@ -270,14 +252,6 @@ class Bioassay extends Updater
             zipStream.myClose();
         });
 
-
-        store("update pubchem.bioassay_bases set source=null where id=? and source=?", oldSources);
-        store("insert into pubchem.bioassay_bases(id,source) values(?,?) "
-                + "on conflict(id) do update set source=EXCLUDED.source", newSources);
-
-        store("update pubchem.bioassay_bases set title=null where id=? and title=?", oldTitles);
-        store("insert into pubchem.bioassay_bases(id,title) values(?,?) "
-                + "on conflict(id) do update set title=EXCLUDED.title", newTitles);
 
         store("delete from pubchem.bioassay_data where type_id = '136'::smallint and bioassay=? and value=?",
                 oldDescriptions);
@@ -459,6 +433,8 @@ class Bioassay extends Updater
 
         model.close();
 
+        bioassays.flush();
+
         System.out.println();
     }
 
@@ -467,8 +443,7 @@ class Bioassay extends Updater
     {
         System.out.println("finish bioassays ...");
 
-        store("delete from pubchem.bioassay_bases where id=?", oldBioassays);
-        store("insert into pubchem.bioassay_bases(id) values(?)", newBioassays);
+        bioassays.store();
 
         System.out.println();
     }
@@ -476,18 +451,8 @@ class Bioassay extends Updater
 
     static void addBioassayID(Integer bioassayID)
     {
-        synchronized(newBioassays)
-        {
-            if(!keepBioassays.contains(bioassayID) && !newBioassays.contains(bioassayID))
-            {
-                System.out.println("    add missing bioassay AID" + bioassayID);
-
-                if(!oldBioassays.remove(bioassayID))
-                    newBioassays.add(bioassayID);
-                else
-                    keepBioassays.add(bioassayID);
-            }
-        }
+        if(bioassays.reference(bioassayID))
+            System.out.println("    add missing bioassay AID" + bioassayID);
     }
 
 
@@ -506,7 +471,7 @@ class Bioassay extends Updater
 
     public static int size()
     {
-        return newBioassays.size() + keepBioassays.size();
+        return bioassays.size();
     }
 
 

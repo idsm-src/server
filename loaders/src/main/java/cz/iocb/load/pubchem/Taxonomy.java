@@ -1,8 +1,11 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.varchar;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -15,26 +18,18 @@ public class Taxonomy extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID";
     static final int prefixLength = prefix.length();
 
-    private static final IntSet keepTaxonomies = new IntSet();
-    private static final IntSet newTaxonomies = new IntSet();
-    private static final IntSet oldTaxonomies = new IntSet();
+    private static final EntityTable<Integer> taxonomies = new EntityTable<>("pubchem.taxonomy_bases", intKey("id"),
+            null, varchar("label"));
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        load("select id from pubchem.taxonomy_bases", oldTaxonomies);
-
         new QueryResultProcessor(patternQuery("?taxonomy rdf:type sio:SIO_010000"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer taxonomyID = getIntID("taxonomy", prefix);
-
-                if(oldTaxonomies.remove(taxonomyID))
-                    keepTaxonomies.add(taxonomyID);
-                else
-                    newTaxonomies.add(taxonomyID);
+                taxonomies.reference(getIntID("taxonomy", prefix));
             }
         }.load(model);
     }
@@ -42,44 +37,14 @@ public class Taxonomy extends Updater
 
     private static void loadLabels(Model model) throws IOException, SQLException
     {
-        IntStringMap keepLabels = new IntStringMap();
-        IntStringMap newLabels = new IntStringMap();
-        IntStringMap oldLabels = new IntStringMap();
-
-        load("select id,label from pubchem.taxonomy_bases where label is not null", oldLabels);
-
         new QueryResultProcessor(patternQuery("?taxonomy skos:prefLabel ?label"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer taxonomyID = getTaxonomyID(getIRI("taxonomy"), true);
-                String label = getString("label");
-
-                if(label.equals(oldLabels.remove(taxonomyID)))
-                {
-                    keepLabels.put(taxonomyID, label);
-                }
-                else
-                {
-                    String keep = keepLabels.get(taxonomyID);
-
-                    if(label.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    String put = newLabels.put(taxonomyID, label);
-
-                    if(put != null && !label.equals(put))
-                        throw new IOException();
-                }
+                taxonomies.set(getTaxonomyID(getIRI("taxonomy")), "label", getString("label"));
             }
         }.load(model);
-
-        store("update pubchem.taxonomy_bases set label=null where id=? and label=?", oldLabels);
-        store("insert into pubchem.taxonomy_bases(id,label) values(?,?) "
-                + "on conflict(id) do update set label=EXCLUDED.label", newLabels);
     }
 
 
@@ -293,6 +258,9 @@ public class Taxonomy extends Updater
         loadWikidataCloseMatches(model);
 
         model.close();
+
+        taxonomies.flush();
+
         System.out.println();
     }
 
@@ -301,8 +269,7 @@ public class Taxonomy extends Updater
     {
         System.out.println("finish taxonomies ...");
 
-        store("delete from pubchem.taxonomy_bases where id=?", oldTaxonomies);
-        store("insert into pubchem.taxonomy_bases(id) values(?)", newTaxonomies);
+        taxonomies.store();
 
         System.out.println();
     }
@@ -310,37 +277,13 @@ public class Taxonomy extends Updater
 
     static Integer getTaxonomyID(String value) throws IOException
     {
-        return getTaxonomyID(value, false);
-    }
-
-
-    static Integer getTaxonomyID(String value, boolean forceKeep) throws IOException
-    {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
 
         Integer taxonomyID = Integer.parseInt(value.substring(prefixLength));
 
-        synchronized(newTaxonomies)
-        {
-            if(newTaxonomies.contains(taxonomyID))
-            {
-                if(forceKeep)
-                {
-                    newTaxonomies.remove(taxonomyID);
-                    keepTaxonomies.add(taxonomyID);
-                }
-            }
-            else if(!keepTaxonomies.contains(taxonomyID))
-            {
-                System.out.println("    add missing taxonomy TAXID" + taxonomyID);
-
-                if(!oldTaxonomies.remove(taxonomyID) && !forceKeep)
-                    newTaxonomies.add(taxonomyID);
-                else
-                    keepTaxonomies.add(taxonomyID);
-            }
-        }
+        if(taxonomies.reference(taxonomyID))
+            System.out.println("    add missing taxonomy TAXID" + taxonomyID);
 
         return taxonomyID;
     }

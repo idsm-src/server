@@ -1,8 +1,12 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.integer;
+import static cz.iocb.load.common.EntityTable.varchar;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -15,15 +19,12 @@ public class Cell extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID";
     static final int prefixLength = prefix.length();
 
-    private static final IntSet keepCells = new IntSet();
-    private static final IntSet newCells = new IntSet();
-    private static final IntSet oldCells = new IntSet();
+    private static final EntityTable<Integer> cells = new EntityTable<>("pubchem.cell_bases", intKey("id"), null,
+            integer("organism"), varchar("label"));
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        load("select id from pubchem.cell_bases", oldCells);
-
         new QueryResultProcessor(patternQuery("?cell rdf:type sio:SIO_010054"))
         {
             @Override
@@ -31,10 +32,7 @@ public class Cell extends Updater
             {
                 Integer cellID = getIntID("cell", prefix);
 
-                if(oldCells.remove(cellID))
-                    keepCells.add(cellID);
-                else
-                    newCells.add(cellID);
+                cells.reference(cellID);
             }
         }.load(model);
     }
@@ -42,55 +40,22 @@ public class Cell extends Updater
 
     private static void loadLabels(Model model) throws IOException, SQLException
     {
-        IntStringMap keepLabels = new IntStringMap();
-        IntStringMap newLabels = new IntStringMap();
-        IntStringMap oldLabels = new IntStringMap();
-
-        load("select id,label from pubchem.cell_bases where label is not null", oldLabels);
-
         new QueryResultProcessor(patternQuery("?cell skos:prefLabel ?label"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer cellID = getCellID(getIRI("cell"), true);
+                Integer cellID = getCellID(getIRI("cell"));
                 String label = getString("label");
 
-                if(label.equals(oldLabels.remove(cellID)))
-                {
-                    keepLabels.put(cellID, label);
-                }
-                else
-                {
-                    String keep = keepLabels.get(cellID);
-
-                    if(label.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    String put = newLabels.put(cellID, label);
-
-                    if(put != null && !label.equals(put))
-                        throw new IOException();
-                }
+                cells.set(cellID, "label", label);
             }
         }.load(model);
-
-        store("update pubchem.cell_bases set label=null where id=? and label=?", oldLabels);
-        store("insert into pubchem.cell_bases(id,label) values(?,?) on conflict(id) do update set label=EXCLUDED.label",
-                newLabels);
     }
 
 
     private static void loadOrganisms(Model model) throws IOException, SQLException
     {
-        IntIntMap keepOrganisms = new IntIntMap();
-        IntIntMap newOrganisms = new IntIntMap();
-        IntIntMap oldOrganisms = new IntIntMap();
-
-        load("select id,organism from pubchem.cell_bases where organism is not null", oldOrganisms);
-
         new QueryResultProcessor(patternQuery("?cell up:organism ?organism"))
         {
             @Override
@@ -100,33 +65,12 @@ public class Cell extends Updater
                 if(getIRI("organism").equals(Taxonomy.prefix))
                     return;
 
-                Integer cellID = getCellID(getIRI("cell"), true);
+                Integer cellID = getCellID(getIRI("cell"));
                 Integer organismID = Taxonomy.getTaxonomyID(getIRI("organism"));
 
-                if(organismID.equals(oldOrganisms.remove(cellID)))
-                {
-                    keepOrganisms.put(cellID, organismID);
-                }
-                else
-                {
-                    Integer keep = keepOrganisms.get(cellID);
-
-                    if(organismID.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Integer put = newOrganisms.put(cellID, organismID);
-
-                    if(put != null && !organismID.equals(put))
-                        throw new IOException();
-                }
+                cells.set(cellID, "organism", organismID);
             }
         }.load(model);
-
-        store("update pubchem.cell_bases set organism=null where id=? and organism=?", oldOrganisms);
-        store("insert into pubchem.cell_bases(id,organism) values(?,?) "
-                + "on conflict(id) do update set organism=EXCLUDED.organism", newOrganisms);
     }
 
 
@@ -404,6 +348,9 @@ public class Cell extends Updater
         loadAnatomies(model);
 
         model.close();
+
+        cells.flush();
+
         System.out.println();
     }
 
@@ -412,8 +359,7 @@ public class Cell extends Updater
     {
         System.out.println("finish cells ...");
 
-        store("delete from pubchem.cell_bases where id=?", oldCells);
-        store("insert into pubchem.cell_bases(id) values(?)", newCells);
+        cells.store();
 
         System.out.println();
     }
@@ -421,37 +367,13 @@ public class Cell extends Updater
 
     static Integer getCellID(String value) throws IOException
     {
-        return getCellID(value, false);
-    }
-
-
-    static Integer getCellID(String value, boolean forceKeep) throws IOException
-    {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
 
         Integer cellID = Integer.parseInt(value.substring(prefixLength));
 
-        synchronized(newCells)
-        {
-            if(newCells.contains(cellID))
-            {
-                if(forceKeep)
-                {
-                    newCells.remove(cellID);
-                    keepCells.add(cellID);
-                }
-            }
-            else if(!keepCells.contains(cellID))
-            {
-                System.out.println("    add missing cell CELLID" + cellID);
-
-                if(!oldCells.remove(cellID) && !forceKeep)
-                    newCells.add(cellID);
-                else
-                    keepCells.add(cellID);
-            }
-        }
+        if(cells.reference(cellID))
+            System.out.println("    add missing cell CELLID" + cellID);
 
         return cellID;
     }

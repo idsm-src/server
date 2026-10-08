@@ -1,5 +1,11 @@
 package cz.iocb.load.mona;
 
+import static cz.iocb.load.common.EntityTable.date;
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.integer;
+import static cz.iocb.load.common.EntityTable.typed;
+import static cz.iocb.load.common.EntityTable.uniqueVarchar;
+import static cz.iocb.load.common.EntityTable.varchar;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -22,6 +28,8 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.EntityTable.Column;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.Updater;
 
@@ -145,54 +153,14 @@ public class MoNA extends Updater
 
     public static void main(String[] args) throws IOException, SQLException
     {
-        StringIntMap keepCompounds = new StringIntMap();
-        StringIntMap newCompounds = new StringIntMap();
-        StringIntMap oldCompounds = new StringIntMap();
-
-        IntStringMap keepCreatedDates = new IntStringMap();
-        IntStringPairMap newCreatedDates = new IntStringPairMap();
-        IntStringMap oldCreatedDates = new IntStringMap();
-
-        IntStringMap keepCuratedDates = new IntStringMap();
-        IntStringPairMap newCuratedDates = new IntStringPairMap();
-        IntStringMap oldCuratedDates = new IntStringMap();
-
-        IntStringMap keepUpdatedDates = new IntStringMap();
-        IntStringPairMap newUpdatedDates = new IntStringPairMap();
-        IntStringMap oldUpdatedDates = new IntStringMap();
-
-        IntStringMap keepSpectra = new IntStringMap();
-        IntStringPairMap newSpectra = new IntStringPairMap();
-        IntStringMap oldSpectra = new IntStringMap();
-
-        IntStringMap keepSplashes = new IntStringMap();
-        IntStringPairMap newSplashes = new IntStringPairMap();
-        IntStringMap oldSplashes = new IntStringMap();
-
-        IntStringMap keepIonizationModes = new IntStringMap();
-        IntStringPairMap newIonizationModes = new IntStringPairMap();
-        IntStringMap oldIonizationModes = new IntStringMap();
-
-        IntIntMap keepIonizationTypes = new IntIntMap();
-        IntStringIntPairMap newIonizationTypes = new IntStringIntPairMap();
-        IntIntMap oldIonizationTypes = new IntIntMap();
-
-        IntIntMap keepLevels = new IntIntMap();
-        IntStringIntPairMap newLevels = new IntStringIntPairMap();
-        IntIntMap oldLevels = new IntIntMap();
-
-        IntIntMap keepCompoundLibraries = new IntIntMap();
-        IntStringIntPairMap newCompoundLibraries = new IntStringIntPairMap();
-        IntIntMap oldCompoundLibraries = new IntIntMap();
-
-        IntIntMap keepCompoundSubmitters = new IntIntMap();
-        IntStringIntPairMap newCompoundSubmitters = new IntStringIntPairMap();
-        IntIntMap oldCompoundSubmitters = new IntIntMap();
-
-        IntStringMap keepLibraryLinks = new IntStringMap();
-        IntStringPairMap newLibraryLinks = new IntStringPairMap();
-        IntStringMap oldLibraryLinks = new IntStringMap();
-
+        // the spectra are compared as sets of peaks
+        Column spectrumColumn = typed("spectrum", "pgms.spectrum").unique()
+                .comparedBy((a, b) -> spectrumCompare((String) a, (String) b));
+        EntityTable<Integer> compounds = new EntityTable<>("mona.compound_bases", intKey("id"), null, date("created"),
+                date("curated"), date("updated"), uniqueVarchar("accession"), spectrumColumn, uniqueVarchar("splash"),
+                integer("level"), varchar("ionization_mode"), integer("ionization_type"), integer("library"),
+                integer("submitter"), varchar("link"));
+        StringIntMap compoundIDs = new StringIntMap();
         IntStringMap keepStructures = new IntStringMap();
         IntStringMap newStructures = new IntStringMap();
         IntStringMap oldStructures = new IntStringMap();
@@ -320,14 +288,9 @@ public class MoNA extends Updater
         IntFloatSet keepPrecursorMZs = new IntFloatSet();
         IntFloatSet newPrecursorMZs = new IntFloatSet();
         IntFloatSet oldPrecursorMZs = new IntFloatSet();
-
-        IntStringMap keepLibraryDescriptions = new IntStringMap();
-        IntStringPairMap newLibraryDescriptions = new IntStringPairMap();
-        IntStringMap oldLibraryDescriptions = new IntStringMap();
-
-        StringIntMap keepLibraries = new StringIntMap();
-        StringIntMap newLibraries = new StringIntMap();
-        StringIntMap oldLibraries = new StringIntMap();
+        EntityTable<Integer> libraries = new EntityTable<>("mona.library_bases", intKey("id"), null,
+                uniqueVarchar("name"), varchar("description"));
+        StringIntMap libraryIDs = new StringIntMap();
 
         SubmitterIntMap keepSubmitters = new SubmitterIntMap();
         SubmitterIntMap newSubmitters = new SubmitterIntMap();
@@ -344,20 +307,7 @@ public class MoNA extends Updater
         Map<String, ClassyFire> classyFires = loadClassyFires(classyFiresStream);
 
 
-        load("select accession,id from mona.compound_bases", oldCompounds);
-        load("select id,created::varchar from mona.compound_bases where created is not null", oldCreatedDates);
-        load("select id,curated::varchar from mona.compound_bases where curated is not null", oldCuratedDates);
-        load("select id,updated::varchar from mona.compound_bases where updated is not null", oldUpdatedDates);
-        load("select id,spectrum::varchar from mona.compound_bases where spectrum is not null", oldSpectra);
-        load("select id,splash from mona.compound_bases where splash is not null", oldSplashes);
-        load("select id,ionization_mode from mona.compound_bases where ionization_mode is not null",
-                oldIonizationModes);
-        load("select id,ionization_type from mona.compound_bases where ionization_type is not null",
-                oldIonizationTypes);
-        load("select id,level from mona.compound_bases where level is not null", oldLevels);
-        load("select id,library from mona.compound_bases where library is not null", oldCompoundLibraries);
-        load("select id,submitter from mona.compound_bases where submitter is not null", oldCompoundSubmitters);
-        load("select id,link from mona.compound_bases where link is not null", oldLibraryLinks);
+        load("select accession,id from mona.compound_bases", compoundIDs);
         load("select compound,structure from mona.compound_structures", oldStructures);
         load("select compound,name from mona.compound_names", oldNames);
         load("select compound,class from mona.compound_classyfires", oldClassyFires);
@@ -391,12 +341,11 @@ public class MoNA extends Updater
         load("select compound,instrument from mona.spectrum_instruments", oldInstruments);
         load("select compound,type from mona.spectrum_precursor_types", oldPrecursorTypes);
         load("select compound,mz from mona.spectrum_precursor_mzs", oldPrecursorMZs);
-        load("select name,id from mona.library_bases", oldLibraries);
-        load("select id,description from mona.library_bases where description is not null", oldLibraryDescriptions);
+        load("select name,id from mona.library_bases", libraryIDs);
         load("select email,first_name,last_name,institution,id from mona.submitter_bases", oldSubmitters);
 
-        int nextCompoundID = oldCompounds.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
-        int nextLibraryID = oldLibraries.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+        int nextCompoundID = compoundIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+        int nextLibraryID = libraryIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
         int nextSubmitterID = oldSubmitters.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
         int nextInchiID = oldInchis.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
         int nextAnnotationID = oldAnnotations.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
@@ -422,47 +371,19 @@ public class MoNA extends Updater
                     throw new IOException();
 
 
-                Integer id = keepCompounds.get(item.id);
+                Integer id = compoundIDs.get(item.id);
 
                 if(id == null)
-                {
+                    compoundIDs.put(item.id, id = nextCompoundID++);
 
-                    id = newCompounds.get(item.id);
-
-                    if(id == null)
-                    {
-
-                        if((id = oldCompounds.remove(item.id)) == null)
-                            newCompounds.put(item.id, id = nextCompoundID++);
-                        else
-                            keepCompounds.put(item.id, id);
-                    }
-                }
+                compounds.set(id, "accession", item.id);
 
 
                 if(item.dateCreated != null)
                 {
                     String date = df.format(new Date((item.dateCreated)));
 
-                    if(date.equals(oldCreatedDates.remove(id)))
-                    {
-                        keepCreatedDates.put(id, date);
-                    }
-                    else
-                    {
-                        String keep = keepCreatedDates.get(id);
-
-                        if(!date.equals(keep))
-                        {
-                            if(keep != null)
-                                throw new IOException();
-
-                            Pair<String, String> put = newCreatedDates.put(id, Pair.getPair(item.id, date));
-
-                            if(put != null && !date.equals(put.getTwo()))
-                                throw new IOException();
-                        }
-                    }
+                    compounds.set(id, "created", date);
                 }
 
 
@@ -470,25 +391,7 @@ public class MoNA extends Updater
                 {
                     String date = df.format(new Date((item.lastCurated)));
 
-                    if(date.equals(oldCuratedDates.remove(id)))
-                    {
-                        keepCuratedDates.put(id, date);
-                    }
-                    else
-                    {
-                        String keep = keepCuratedDates.get(id);
-
-                        if(!date.equals(keep))
-                        {
-                            if(keep != null)
-                                throw new IOException();
-
-                            Pair<String, String> put = newCuratedDates.put(id, Pair.getPair(item.id, date));
-
-                            if(put != null && !date.equals(put.getTwo()))
-                                throw new IOException();
-                        }
-                    }
+                    compounds.set(id, "curated", date);
                 }
 
 
@@ -496,25 +399,7 @@ public class MoNA extends Updater
                 {
                     String date = df.format(new Date((item.lastUpdated)));
 
-                    if(date.equals(oldUpdatedDates.remove(id)))
-                    {
-                        keepUpdatedDates.put(id, date);
-                    }
-                    else
-                    {
-                        String keep = keepUpdatedDates.get(id);
-
-                        if(!date.equals(keep))
-                        {
-                            if(keep != null)
-                                throw new IOException();
-
-                            Pair<String, String> put = newUpdatedDates.put(id, Pair.getPair(item.id, date));
-
-                            if(put != null && !date.equals(put.getTwo()))
-                                throw new IOException();
-                        }
-                    }
+                    compounds.set(id, "updated", date);
                 }
 
 
@@ -522,25 +407,7 @@ public class MoNA extends Updater
 
                 if(Arrays.stream(spectrum.split(" ")).allMatch(p -> p.matches(peakPattern)))
                 {
-                    if(spectrumCompare(spectrum, oldSpectra.remove(id)))
-                    {
-                        keepSpectra.put(id, spectrum);
-                    }
-                    else
-                    {
-                        String keep = keepSpectra.get(id);
-
-                        if(!spectrumCompare(spectrum, keep))
-                        {
-                            if(keep != null)
-                                throw new IOException();
-
-                            Pair<String, String> put = newSpectra.put(id, Pair.getPair(item.id, spectrum));
-
-                            if(put != null && !spectrum.equals(put.getTwo()))
-                                throw new IOException();
-                        }
-                    }
+                    compounds.set(id, "spectrum", spectrum);
                 }
                 else
                 {
@@ -552,25 +419,7 @@ public class MoNA extends Updater
                 {
                     String splash = item.splash.splash;
 
-                    if(splash.equals(oldSplashes.remove(id)))
-                    {
-                        keepSplashes.put(id, splash);
-                    }
-                    else
-                    {
-                        String keep = keepSplashes.get(id);
-
-                        if(!splash.equals(keep))
-                        {
-                            if(keep != null)
-                                throw new IOException();
-
-                            Pair<String, String> put = newSplashes.put(id, Pair.getPair(item.id, splash));
-
-                            if(put != null && !splash.equals(put.getTwo()))
-                                throw new IOException();
-                        }
-                    }
+                    compounds.set(id, "splash", splash);
                 }
 
 
@@ -1006,25 +855,7 @@ public class MoNA extends Updater
                             else
                                 break;
 
-                            if(mode.equals(oldIonizationModes.remove(id)))
-                            {
-                                keepIonizationModes.put(id, mode);
-                            }
-                            else
-                            {
-                                String keep = keepIonizationModes.get(id);
-
-                                if(!mode.equals(keep))
-                                {
-                                    if(keep != null)
-                                        throw new IOException();
-
-                                    Pair<String, String> put = newIonizationModes.put(id, Pair.getPair(item.id, mode));
-
-                                    if(put != null && !mode.equals(put.getTwo()))
-                                        throw new IOException();
-                                }
-                            }
+                            compounds.set(id, "ionization_mode", mode);
 
                             break;
                         }
@@ -1081,26 +912,7 @@ public class MoNA extends Updater
                             if(value == null)
                                 break;
 
-                            if(value.equals(oldIonizationTypes.remove(id)))
-                            {
-                                keepIonizationTypes.put(id, value);
-                            }
-                            else
-                            {
-                                Integer keep = keepIonizationTypes.get(id);
-
-                                if(!value.equals(keep))
-                                {
-                                    if(keep != null)
-                                        throw new IOException();
-
-                                    Pair<String, Integer> put = newIonizationTypes.put(id,
-                                            Pair.getPair(item.id, value));
-
-                                    if(put != null && !value.equals(put.getTwo()))
-                                        throw new IOException();
-                                }
-                            }
+                            compounds.set(id, "ionization_type", value);
 
                             break;
                         }
@@ -1112,25 +924,7 @@ public class MoNA extends Updater
 
                             Integer level = Integer.valueOf(a.value.replaceFirst("^MS", ""));
 
-                            if(level.equals(oldLevels.remove(id)))
-                            {
-                                keepLevels.put(id, level);
-                            }
-                            else
-                            {
-                                Integer keep = keepLevels.get(id);
-
-                                if(!level.equals(keep))
-                                {
-                                    if(keep != null)
-                                        throw new IOException();
-
-                                    Pair<String, Integer> put = newLevels.put(id, Pair.getPair(item.id, level));
-
-                                    if(put != null && !level.equals(put.getTwo()))
-                                        throw new IOException();
-                                }
-                            }
+                            compounds.set(id, "level", level);
 
                             break;
                         }
@@ -1308,91 +1102,27 @@ public class MoNA extends Updater
 
                 if(item.library != null)
                 {
-                    Integer library = keepLibraries.get(item.library.library);
+                    Integer library = libraryIDs.get(item.library.library);
 
                     if(library == null)
-                    {
+                        libraryIDs.put(item.library.library, library = nextLibraryID++);
 
-                        library = newLibraries.get(item.library.library);
-
-                        if(library == null)
-                        {
-                            if((library = oldLibraries.remove(item.library.library)) == null)
-                                newLibraries.put(item.library.library, library = nextLibraryID++);
-                            else
-                                keepLibraries.put(item.library.library, library);
-                        }
-                    }
+                    libraries.set(library, "name", item.library.library);
 
 
-                    if(library.equals(oldCompoundLibraries.remove(id)))
-                    {
-                        keepCompoundLibraries.put(id, library);
-                    }
-                    else
-                    {
-                        Integer keep = keepCompoundLibraries.get(id);
-
-                        if(!library.equals(keep))
-                        {
-                            if(keep != null)
-                                throw new IOException();
-
-                            Pair<String, Integer> put = newCompoundLibraries.put(id, Pair.getPair(item.id, library));
-
-                            if(put != null && !library.equals(put.getTwo()))
-                                throw new IOException();
-                        }
-                    }
+                    compounds.set(id, "library", library);
 
 
                     String description = item.library.description;
 
-                    if(description.equals(oldLibraryDescriptions.remove(library)))
-                    {
-                        keepLibraryDescriptions.put(library, description);
-                    }
-                    else
-                    {
-                        String keep = keepLibraryDescriptions.get(library);
-
-                        if(!description.equals(keep))
-                        {
-                            if(keep != null)
-                                throw new IOException();
-
-                            Pair<String, String> put = newLibraryDescriptions.put(library,
-                                    Pair.getPair(item.library.library, description));
-
-                            if(put != null && !description.equals(put.getTwo()))
-                                throw new IOException();
-                        }
-                    }
+                    libraries.set(library, "description", description);
 
 
                     if(!item.library.link.isEmpty())
                     {
                         String link = item.library.link;
 
-                        if(link.equals(oldLibraryLinks.remove(id)))
-                        {
-                            keepLibraryLinks.put(id, link);
-                        }
-                        else
-                        {
-                            String keep = keepLibraryLinks.get(id);
-
-                            if(!link.equals(keep))
-                            {
-                                if(keep != null)
-                                    throw new IOException();
-
-                                Pair<String, String> put = newLibraryLinks.put(id, Pair.getPair(item.id, link));
-
-                                if(put != null && !link.equals(put.getTwo()))
-                                    throw new IOException();
-                            }
-                        }
+                        compounds.set(id, "link", link);
                     }
                 }
 
@@ -1415,25 +1145,7 @@ public class MoNA extends Updater
                     }
 
 
-                    if(submitter.equals(oldCompoundSubmitters.remove(id)))
-                    {
-                        keepCompoundSubmitters.put(id, submitter);
-                    }
-                    else
-                    {
-                        Integer keep = keepCompoundSubmitters.get(id);
-
-                        if(!submitter.equals(keep))
-                        {
-                            if(keep != null)
-                                throw new IOException();
-
-                            Pair<String, Integer> put = newCompoundSubmitters.put(id, Pair.getPair(item.id, submitter));
-
-                            if(put != null && !submitter.equals(put.getTwo()))
-                                throw new IOException();
-                        }
-                    }
+                    compounds.set(id, "submitter", submitter);
                 }
             }
 
@@ -1441,55 +1153,7 @@ public class MoNA extends Updater
         }
 
 
-        store("delete from mona.compound_bases where accession=? and id=?", oldCompounds);
-        store("insert into mona.compound_bases(accession,id) values(?,?)", newCompounds);
-
-        store("update mona.compound_bases set created=null where id=? and created=?::date", oldCreatedDates);
-        store("insert into mona.compound_bases(id,accession,created) values(?,?,?::date) "
-                + "on conflict(id) do update set created=EXCLUDED.created", newCreatedDates);
-
-        store("update mona.compound_bases set curated=null where id=? and curated=?::date", oldCuratedDates);
-        store("insert into mona.compound_bases(id,accession,curated) values(?,?,?::date) "
-                + "on conflict(id) do update set curated=EXCLUDED.curated", newCuratedDates);
-
-        store("update mona.compound_bases set updated=null where id=? and updated=?::date", oldUpdatedDates);
-        store("insert into mona.compound_bases(id,accession,updated) values(?,?,?::date) "
-                + "on conflict(id) do update set updated=EXCLUDED.updated", newUpdatedDates);
-
-        store("update mona.compound_bases set spectrum=null where id=? and spectrum operator(pgms.=)?::pgms.spectrum",
-                oldSpectra);
-        store("insert into mona.compound_bases(id,accession,spectrum) values(?,?,?::pgms.spectrum) "
-                + "on conflict(id) do update set spectrum=EXCLUDED.spectrum", newSpectra);
-
-        store("update mona.compound_bases set splash=null where id=? and splash=?", oldSplashes);
-        store("insert into mona.compound_bases(id,accession,splash) values(?,?,?) "
-                + "on conflict(id) do update set splash=EXCLUDED.splash", newSplashes);
-
-        store("update mona.compound_bases set ionization_mode=null where id=? and ionization_mode=?",
-                oldIonizationModes);
-        store("insert into mona.compound_bases(id,accession,ionization_mode) values(?,?,?) "
-                + "on conflict(id) do update set ionization_mode=EXCLUDED.ionization_mode", newIonizationModes);
-
-        store("update mona.compound_bases set ionization_type=null where id=? and ionization_type=?",
-                oldIonizationTypes);
-        store("insert into mona.compound_bases(id,accession,ionization_type) values(?,?,?) "
-                + "on conflict(id) do update set ionization_type=EXCLUDED.ionization_type", newIonizationTypes);
-
-        store("update mona.compound_bases set level=null where id=? and level=?", oldLevels);
-        store("insert into mona.compound_bases(id,accession,level) values(?,?,?) "
-                + "on conflict(id) do update set level=EXCLUDED.level", newLevels);
-
-        store("update mona.compound_bases set library=null where id=? and library=?", oldCompoundLibraries);
-        store("insert into mona.compound_bases(id,accession,library) values(?,?,?) "
-                + "on conflict(id) do update set library=EXCLUDED.library", newCompoundLibraries);
-
-        store("update mona.compound_bases set submitter=null where id=? and submitter=?", oldCompoundSubmitters);
-        store("insert into mona.compound_bases(id,accession,submitter) values(?,?,?) "
-                + "on conflict(id) do update set submitter=EXCLUDED.submitter", newCompoundSubmitters);
-
-        store("update mona.compound_bases set link=null where id=? and link=?", oldLibraryLinks);
-        store("insert into mona.compound_bases(id,accession,link) values(?,?,?) "
-                + "on conflict(id) do update set link=EXCLUDED.link", newLibraryLinks);
+        compounds.store();
 
         store("delete from mona.compound_structures where compound=? and structure=?", oldStructures);
         store("insert into mona.compound_structures(compound,structure) values(?,?) "
@@ -1596,12 +1260,7 @@ public class MoNA extends Updater
         store("delete from mona.spectrum_precursor_mzs where compound=? and mz=?", oldPrecursorMZs);
         store("insert into mona.spectrum_precursor_mzs(compound,mz) values(?,?)", newPrecursorMZs);
 
-        store("delete from mona.library_bases where name=? and id=?", oldLibraries);
-        store("insert into mona.library_bases(name,id) values(?,?)", newLibraries);
-
-        store("update mona.library_bases set description=null where id=? and description=?", oldLibraryDescriptions);
-        store("insert into mona.library_bases(id,name,description) values(?,?,?) "
-                + "on conflict(id) do update set description=EXCLUDED.description", newLibraryDescriptions);
+        libraries.store();
 
         store("delete from mona.submitter_bases where email=? and first_name=? and last_name=? and institution=? and id=?",
                 oldSubmitters);

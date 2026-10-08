@@ -1,8 +1,12 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.uniqueVarchar;
+import static cz.iocb.load.common.EntityTable.varchar;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -14,33 +18,25 @@ class Source extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/source/";
     static final int prefixLength = prefix.length();
 
-    private static final StringIntMap keepSources = new StringIntMap();
-    private static final StringIntMap newSources = new StringIntMap();
-    private static final StringIntMap oldSources = new StringIntMap();
+    private static final EntityTable<Integer> sources = new EntityTable<>("pubchem.source_bases", intKey("id"), null,
+            uniqueVarchar("iri").determinedByKey(), varchar("title"), varchar("homepage"), varchar("license"),
+            varchar("rights"));
+    private static final StringIntMap sourceIDs = new StringIntMap();
     private static int nextSourceID;
-
-    private static final IntStringPairMap newTitles = new IntStringPairMap();
-    private static final IntStringMap oldTitles = new IntStringMap();
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        load("select iri,id from pubchem.source_bases", oldSources);
+        load("select iri,id from pubchem.source_bases", sourceIDs);
 
-        nextSourceID = oldSources.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
+        nextSourceID = sourceIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
         new QueryResultProcessor(patternQuery("?source rdf:type dcterms:Dataset"))
         {
             @Override
             protected void parse() throws IOException
             {
-                String source = getStringID("source", prefix);
-                Integer sourceID = oldSources.remove(source);
-
-                if(sourceID == null)
-                    newSources.put(source, nextSourceID++);
-                else
-                    keepSources.put(source, sourceID);
+                addSource(getStringID("source", prefix));
             }
         }.load(model);
     }
@@ -48,38 +44,15 @@ class Source extends Updater
 
     private static void loadTitles(Model model) throws IOException, SQLException
     {
-        IntStringMap keepTitles = new IntStringMap();
-
-        load("select id,title from pubchem.source_bases where title is not null", oldTitles);
-
         new QueryResultProcessor(patternQuery("?source dcterms:title ?title"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer sourceID = getSourceID(getIRI("source"), true);
+                Integer sourceID = getSourceID(getIRI("source"));
                 String title = getString("title");
 
-                if(title.equals(oldTitles.remove(sourceID)))
-                {
-                    keepTitles.put(sourceID, title);
-                }
-                else
-                {
-                    String keep = keepTitles.get(sourceID);
-
-                    Pair<String, String> pair = Pair.getPair(getStringID("source", prefix), title);
-
-                    if(title.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Pair<String, String> put = newTitles.put(sourceID, pair);
-
-                    if(put != null && !title.equals(put.getTwo()))
-                        throw new IOException();
-                }
+                sources.set(sourceID, "title", title);
             }
         }.load(model);
     }
@@ -87,136 +60,49 @@ class Source extends Updater
 
     private static void loadHomepages(Model model) throws IOException, SQLException
     {
-        IntStringMap keepHomepages = new IntStringMap();
-        IntStringPairMap newHomepages = new IntStringPairMap();
-        IntStringMap oldHomepages = new IntStringMap();
-
-        load("select id,homepage from pubchem.source_bases where homepage is not null", oldHomepages);
-
         new QueryResultProcessor(patternQuery("?source foaf:homepage ?homepage"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer sourceID = getSourceID(getIRI("source"), true);
+                Integer sourceID = getSourceID(getIRI("source"));
                 String homepage = getIRI("homepage");
 
-                if(homepage.equals(oldHomepages.remove(sourceID)))
-                {
-                    keepHomepages.put(sourceID, homepage);
-                }
-                else
-                {
-                    String keep = keepHomepages.get(sourceID);
-
-                    Pair<String, String> pair = Pair.getPair(getStringID("source", prefix), homepage);
-
-                    if(homepage.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Pair<String, String> put = newHomepages.put(sourceID, pair);
-
-                    if(put != null && !homepage.equals(put.getTwo()))
-                        throw new IOException();
-                }
+                sources.set(sourceID, "homepage", homepage);
             }
         }.load(model);
-
-        store("update pubchem.source_bases set homepage=null where id=? and homepage=?", oldHomepages);
-        store("insert into pubchem.source_bases(id,iri,homepage) values(?,?,?) "
-                + "on conflict(id) do update set homepage=EXCLUDED.homepage", newHomepages);
     }
 
 
     private static void loadLicenses(Model model) throws IOException, SQLException
     {
-        IntStringMap keepLicenses = new IntStringMap();
-        IntStringPairMap newLicenses = new IntStringPairMap();
-        IntStringMap oldLicenses = new IntStringMap();
-
-        load("select id,license from pubchem.source_bases where license is not null", oldLicenses);
-
         new QueryResultProcessor(patternQuery("?source dcterms:license ?license"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer sourceID = getSourceID(getIRI("source"), true);
+                Integer sourceID = getSourceID(getIRI("source"));
                 String license = getIRI("license");
 
-                if(license.equals(oldLicenses.remove(sourceID)))
-                {
-                    keepLicenses.put(sourceID, license);
-                }
-                else
-                {
-                    String keep = keepLicenses.get(sourceID);
-
-                    Pair<String, String> pair = Pair.getPair(getStringID("source", prefix), license);
-
-                    if(license.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Pair<String, String> put = newLicenses.put(sourceID, pair);
-
-                    if(put != null && !license.equals(put.getTwo()))
-                        throw new IOException();
-                }
+                sources.set(sourceID, "license", license);
             }
         }.load(model);
-
-        store("update pubchem.source_bases set license=null where id=? and license=?", oldLicenses);
-        store("insert into pubchem.source_bases(id,iri,license) values(?,?,?) "
-                + "on conflict(id) do update set license=EXCLUDED.license", newLicenses);
     }
 
 
     private static void loadRights(Model model) throws IOException, SQLException
     {
-        IntStringMap keepRights = new IntStringMap();
-        IntStringPairMap newRights = new IntStringPairMap();
-        IntStringMap oldRights = new IntStringMap();
-
-        load("select id,rights from pubchem.source_bases where rights is not null", oldRights);
-
         new QueryResultProcessor(patternQuery("?source dcterms:rights ?rights"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer sourceID = getSourceID(getIRI("source"), true);
+                Integer sourceID = getSourceID(getIRI("source"));
                 String rights = getString("rights");
 
-                if(rights.equals(oldRights.remove(sourceID)))
-                {
-                    keepRights.put(sourceID, rights);
-                }
-                else
-                {
-                    String keep = keepRights.get(sourceID);
-
-                    Pair<String, String> pair = Pair.getPair(getStringID("source", prefix), rights);
-
-                    if(rights.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Pair<String, String> put = newRights.put(sourceID, pair);
-
-                    if(put != null && !rights.equals(put.getTwo()))
-                        throw new IOException();
-                }
+                sources.set(sourceID, "rights", rights);
             }
         }.load(model);
-
-        store("update pubchem.source_bases set rights=null where id=? and rights=?", oldRights);
-        store("insert into pubchem.source_bases(id,iri,rights) values(?,?,?) "
-                + "on conflict(id) do update set rights=EXCLUDED.rights", newRights);
     }
 
 
@@ -291,6 +177,9 @@ class Source extends Updater
         loadAlternatives(model);
 
         model.close();
+
+        sources.flush();
+
         System.out.println();
     }
 
@@ -299,12 +188,7 @@ class Source extends Updater
     {
         System.out.println("finish sources ...");
 
-        store("update pubchem.source_bases set title=null where id=? and title=?", oldTitles);
-        store("insert into pubchem.source_bases(id,iri,title) values(?,?,?) "
-                + "on conflict(id) do update set title=EXCLUDED.title", newTitles);
-
-        store("delete from pubchem.source_bases where iri=? and id=?", oldSources);
-        store("insert into pubchem.source_bases(iri,id) values(?,?)", newSources);
+        sources.store();
 
         System.out.println();
     }
@@ -312,27 +196,17 @@ class Source extends Updater
 
     static Integer registerSourceID(String source, String title) throws IOException
     {
-        synchronized(newSources)
+        synchronized(sourceIDs)
         {
-            Integer sourceID = keepSources.get(source);
+            Integer sourceID = sourceIDs.get(source);
 
-            if(sourceID != null)
-                return sourceID;
-
-            sourceID = newSources.get(source);
-
-            if(sourceID != null)
+            if(sourceID != null && sources.contains(sourceID))
                 return sourceID;
 
             System.out.println("    add missing source " + source);
 
-            if((sourceID = oldSources.remove(source)) == null)
-                keepSources.put(source, sourceID = nextSourceID++);
-            else
-                keepSources.put(source, sourceID);
-
-            if(!title.equals(oldTitles.remove(sourceID)))
-                newTitles.put(sourceID, Pair.getPair(source, title));
+            sourceID = addSource(source);
+            sources.set(sourceID, "title", title);
 
             return sourceID;
         }
@@ -341,45 +215,38 @@ class Source extends Updater
 
     static Integer getSourceID(String value) throws IOException
     {
-        return getSourceID(value, false);
-    }
-
-
-    static Integer getSourceID(String value, boolean forceKeep) throws IOException
-    {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
 
         String source = value.substring(prefixLength);
 
-        synchronized(newSources)
+        synchronized(sourceIDs)
         {
-            Integer sourceID = keepSources.get(source);
+            Integer sourceID = sourceIDs.get(source);
 
-            if(sourceID != null)
+            if(sourceID != null && sources.contains(sourceID))
                 return sourceID;
-
-            sourceID = newSources.get(source);
-
-            if(sourceID != null)
-            {
-                if(forceKeep)
-                {
-                    newSources.remove(source);
-                    keepSources.put(source, sourceID);
-                }
-
-                return sourceID;
-            }
 
             System.out.println("    add missing source " + source);
 
-            if((sourceID = oldSources.remove(source)) != null)
-                keepSources.put(source, sourceID);
-            else if(forceKeep)
-                keepSources.put(source, sourceID = nextSourceID++);
-            else
-                newSources.put(source, sourceID = nextSourceID++);
+            return addSource(source);
+        }
+    }
+
+
+    /*
+     * Adds the row of a source, which keeps its id if it has one.
+     */
+    private static Integer addSource(String source) throws IOException
+    {
+        synchronized(sourceIDs)
+        {
+            Integer sourceID = sourceIDs.get(source);
+
+            if(sourceID == null)
+                sourceIDs.put(source, sourceID = nextSourceID++);
+
+            sources.set(sourceID, "iri", source);
 
             return sourceID;
         }

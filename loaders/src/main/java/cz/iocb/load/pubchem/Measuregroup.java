@@ -1,9 +1,13 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.EntityTable.intPairKey;
+import static cz.iocb.load.common.EntityTable.integer;
+import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
+import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
@@ -15,9 +19,9 @@ class Measuregroup extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID";
     static final int prefixLength = prefix.length();
 
-    private static final IntPairSet keepMeasuregroups = new IntPairSet();
-    private static final IntPairSet newMeasuregroups = new IntPairSet();
-    private static final IntPairSet oldMeasuregroups = new IntPairSet();
+    private static final EntityTable<Pair<Integer, Integer>> measuregroups = new EntityTable<>(
+            "pubchem.measuregroup_bases", intPairKey("bioassay", "measuregroup"), null, integer("source"),
+            uniqueVarchar("title"));
 
     private static final IntPairIntSet keepSubstances = new IntPairIntSet();
     private static final IntPairIntSet newSubstances = new IntPairIntSet();
@@ -26,7 +30,6 @@ class Measuregroup extends Updater
 
     private static void loadBases() throws IOException, SQLException
     {
-        load("select bioassay,measuregroup from pubchem.measuregroup_bases", oldMeasuregroups);
         load("select bioassay,measuregroup,substance from pubchem.measuregroup_substances", oldSubstances);
     }
 
@@ -47,7 +50,7 @@ class Measuregroup extends Updater
                             && !object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MeasureGroup"))
                         throw new IOException();
 
-                    parseMeasuregroup(subject, false);
+                    parseMeasuregroup(subject);
                 }
             }.load(stream);
         }
@@ -56,13 +59,6 @@ class Measuregroup extends Updater
 
     private static void loadSources() throws IOException, SQLException
     {
-        IntPairIntMap keepSources = new IntPairIntMap();
-        IntPairIntMap newSources = new IntPairIntMap();
-        IntPairIntMap oldSources = new IntPairIntMap();
-
-        load("select bioassay,measuregroup,source from pubchem.measuregroup_bases where source is not null",
-                oldSources);
-
         try(InputStream stream = getTtlStream("pubchem/RDF/measuregroup/pc_measuregroup_source.ttl.gz"))
         {
             new TripleStreamProcessor()
@@ -73,46 +69,18 @@ class Measuregroup extends Updater
                     if(!predicate.getURI().equals("http://purl.org/dc/terms/source"))
                         throw new IOException();
 
-                    Pair<Integer, Integer> measuregroup = parseMeasuregroup(subject, true);
+                    Pair<Integer, Integer> measuregroup = parseMeasuregroup(subject);
                     Integer sourceID = Source.getSourceID(object.getURI());
 
-                    if(sourceID.equals(oldSources.remove(measuregroup)))
-                    {
-                        keepSources.put(measuregroup, sourceID);
-                    }
-                    else
-                    {
-                        Integer keep = keepSources.get(measuregroup);
-
-                        if(sourceID.equals(keep))
-                            return;
-                        else if(keep != null)
-                            throw new IOException();
-
-                        Integer put = newSources.put(measuregroup, sourceID);
-
-                        if(put != null && !sourceID.equals(put))
-                            throw new IOException();
-                    }
+                    measuregroups.set(measuregroup, "source", sourceID);
                 }
             }.load(stream);
         }
-
-        store("update pubchem.measuregroup_bases set source=null where bioassay=? and measuregroup=? and source=?",
-                oldSources);
-        store("insert into pubchem.measuregroup_bases(bioassay,measuregroup,source) values(?,?,?) "
-                + "on conflict(bioassay,measuregroup) do update set source=EXCLUDED.source", newSources);
     }
 
 
     private static void loadTitles() throws IOException, SQLException
     {
-        IntPairStringMap keepTitles = new IntPairStringMap();
-        IntPairStringMap newTitles = new IntPairStringMap();
-        IntPairStringMap oldTitles = new IntPairStringMap();
-
-        load("select bioassay,measuregroup,title from pubchem.measuregroup_bases where title is not null", oldTitles);
-
         try(InputStream stream = getTtlStream("pubchem/RDF/measuregroup/pc_measuregroup_title.ttl.gz"))
         {
             new TripleStreamProcessor()
@@ -123,35 +91,13 @@ class Measuregroup extends Updater
                     if(!predicate.getURI().equals("http://purl.org/dc/terms/title"))
                         throw new IOException();
 
-                    Pair<Integer, Integer> measuregroup = parseMeasuregroup(subject, true);
+                    Pair<Integer, Integer> measuregroup = parseMeasuregroup(subject);
                     String title = getString(object);
 
-                    if(title.equals(oldTitles.remove(measuregroup)))
-                    {
-                        keepTitles.put(measuregroup, title);
-                    }
-                    else
-                    {
-                        String keep = keepTitles.get(measuregroup);
-
-                        if(title.equals(keep))
-                            return;
-                        else if(keep != null)
-                            throw new IOException();
-
-                        String put = newTitles.put(measuregroup, title);
-
-                        if(put != null && !title.equals(put))
-                            throw new IOException();
-                    }
+                    measuregroups.set(measuregroup, "title", title);
                 }
             }.load(stream);
         }
-
-        store("update pubchem.measuregroup_bases set title=null where bioassay=? and measuregroup=? and title=?",
-                oldTitles);
-        store("insert into pubchem.measuregroup_bases(bioassay,measuregroup,title) values(?,?,?) "
-                + "on conflict(bioassay, measuregroup) do update set title=EXCLUDED.title", newTitles);
     }
 
 
@@ -196,7 +142,7 @@ class Measuregroup extends Updater
                     if(object.getURI().startsWith(Protein.prefix))
                     {
                         Integer proteinID = Protein.getProteinID(object.getURI());
-                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject, false);
+                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject);
 
                         Pair<Pair<Integer, Integer>, Integer> pair = Pair.getPair(measuregourp, proteinID);
 
@@ -208,7 +154,7 @@ class Measuregroup extends Updater
                     else if(object.getURI().startsWith(Gene.prefix))
                     {
                         Integer geneID = Gene.getGeneID(object.getURI());
-                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject, false);
+                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject);
 
                         Pair<Pair<Integer, Integer>, Integer> pair = Pair.getPair(measuregourp, geneID);
 
@@ -220,7 +166,7 @@ class Measuregroup extends Updater
                     else if(object.getURI().startsWith(Taxonomy.prefix))
                     {
                         Integer taxonomyID = Taxonomy.getTaxonomyID(object.getURI());
-                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject, false);
+                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject);
 
                         Pair<Pair<Integer, Integer>, Integer> pair = Pair.getPair(measuregourp, taxonomyID);
 
@@ -232,7 +178,7 @@ class Measuregroup extends Updater
                     else if(object.getURI().startsWith(Cell.prefix))
                     {
                         Integer cellID = Cell.getCellID(object.getURI());
-                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject, false);
+                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject);
 
                         Pair<Pair<Integer, Integer>, Integer> pair = Pair.getPair(measuregourp, cellID);
 
@@ -244,7 +190,7 @@ class Measuregroup extends Updater
                     else if(object.getURI().startsWith(Anatomy.prefix))
                     {
                         Integer anatomyID = Anatomy.getAnatomyID(object.getURI());
-                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject, false);
+                        Pair<Integer, Integer> measuregourp = parseMeasuregroup(subject);
 
                         Pair<Pair<Integer, Integer>, Integer> pair = Pair.getPair(measuregourp, anatomyID);
 
@@ -318,6 +264,8 @@ class Measuregroup extends Updater
         loadProteinsAndGenes();
         checkEndpoints();
 
+        measuregroups.flush();
+
         System.out.println();
     }
 
@@ -326,8 +274,7 @@ class Measuregroup extends Updater
     {
         System.out.println("finish measuregroups ...");
 
-        store("delete from pubchem.measuregroup_bases where bioassay=? and measuregroup=?", oldMeasuregroups);
-        store("insert into pubchem.measuregroup_bases(bioassay,measuregroup) values(?,?)", newMeasuregroups);
+        measuregroups.store();
 
         store("delete from pubchem.measuregroup_substances where bioassay=? and measuregroup=? and substance=?",
                 oldSubstances);
@@ -340,32 +287,7 @@ class Measuregroup extends Updater
 
     static void addMeasuregroupID(Integer bioassay, Integer measuregroup)
     {
-        addMeasuregroupID(bioassay, measuregroup, false);
-    }
-
-
-    static void addMeasuregroupID(Integer bioassay, Integer measuregroup, boolean forceKeep)
-    {
-        Pair<Integer, Integer> pair = Pair.getPair(bioassay, measuregroup);
-
-        synchronized(newMeasuregroups)
-        {
-            if(newMeasuregroups.contains(pair))
-            {
-                if(forceKeep)
-                {
-                    newMeasuregroups.remove(pair);
-                    keepMeasuregroups.add(pair);
-                }
-            }
-            else if(!keepMeasuregroups.contains(pair))
-            {
-                if(!oldMeasuregroups.remove(pair) && !forceKeep)
-                    newMeasuregroups.add(pair);
-                else
-                    keepMeasuregroups.add(pair);
-            }
-        }
+        measuregroups.reference(Pair.getPair(bioassay, measuregroup));
     }
 
 
@@ -386,7 +308,7 @@ class Measuregroup extends Updater
     }
 
 
-    private static Pair<Integer, Integer> parseMeasuregroup(Node node, boolean forceKeep) throws IOException
+    private static Pair<Integer, Integer> parseMeasuregroup(Node node) throws IOException
     {
         String iri = node.getURI();
         Integer bioassay;
@@ -433,7 +355,7 @@ class Measuregroup extends Updater
             measuregroup = 2147483647; // magic number
         }
 
-        addMeasuregroupID(bioassay, measuregroup, forceKeep);
+        addMeasuregroupID(bioassay, measuregroup);
         Bioassay.addBioassayID(bioassay);
 
         return Pair.getPair(bioassay, measuregroup);

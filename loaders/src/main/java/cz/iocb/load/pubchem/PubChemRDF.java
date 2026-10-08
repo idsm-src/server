@@ -117,7 +117,6 @@ public class PubChemRDF extends Updater
 
             Bioassay.finish();
             Measuregroup.finish();
-            Endpoint.finish();
 
             CompoundDescriptor.finish();
 

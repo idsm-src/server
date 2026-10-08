@@ -1,9 +1,15 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.integer;
+import static cz.iocb.load.common.EntityTable.typed;
+import static cz.iocb.load.common.EntityTable.uniqueVarchar;
+import static cz.iocb.load.common.EntityTable.varchar;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import org.apache.jena.rdf.model.Model;
+import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.QueryResultProcessor;
 import cz.iocb.load.common.Updater;
@@ -54,15 +60,13 @@ class Pathway extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID";
     static final int prefixLength = prefix.length();
 
-    private static final IntSet keepPathways = new IntSet();
-    private static final IntSet newPathways = new IntSet();
-    private static final IntSet oldPathways = new IntSet();
+    private static final EntityTable<Integer> pathways = new EntityTable<>("pubchem.pathway_bases", intKey("id"), null,
+            integer("source"), uniqueVarchar("title"), typed("reference_type", "pubchem.pathway_reference_type"),
+            varchar("reference"), integer("organism"));
 
 
     private static void loadBases(Model model) throws IOException, SQLException
     {
-        load("select id from pubchem.pathway_bases", oldPathways);
-
         new QueryResultProcessor(patternQuery("?pathway rdf:type vocab:Pathway"))
         {
             @Override
@@ -70,10 +74,7 @@ class Pathway extends Updater
             {
                 Integer pathwayID = getIntID("pathway", prefix);
 
-                if(oldPathways.remove(pathwayID))
-                    keepPathways.add(pathwayID);
-                else
-                    newPathways.add(pathwayID);
+                pathways.reference(pathwayID);
             }
         }.load(model);
     }
@@ -81,105 +82,44 @@ class Pathway extends Updater
 
     private static void loadTitles(Model model) throws IOException, SQLException
     {
-        IntStringMap keepTitles = new IntStringMap();
-        IntStringMap newTitles = new IntStringMap();
-        IntStringMap oldTitles = new IntStringMap();
-
-        load("select id,title from pubchem.pathway_bases where title is not null", oldTitles);
-
         new QueryResultProcessor(patternQuery("?pathway dcterms:title ?title"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer pathwayID = getPathwayID(getIRI("pathway"), true);
+                Integer pathwayID = getPathwayID(getIRI("pathway"));
                 String title = getString("title");
 
-                if(title.equals(oldTitles.remove(pathwayID)))
-                {
-                    keepTitles.put(pathwayID, title);
-                }
-                else
-                {
-                    String keep = keepTitles.get(pathwayID);
-
-                    if(title.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    String put = newTitles.put(pathwayID, title);
-
-                    if(put != null && !title.equals(put))
-                        throw new IOException();
-                }
+                pathways.set(pathwayID, "title", title);
             }
         }.load(model);
-
-        store("update pubchem.pathway_bases set title=null where id=? and title=?", oldTitles);
-        store("insert into pubchem.pathway_bases(id,title) values(?,?) "
-                + "on conflict(id) do update set title=EXCLUDED.title", newTitles);
     }
 
 
     private static void loadSources(Model model) throws IOException, SQLException
     {
-        IntIntMap keepSources = new IntIntMap();
-        IntIntMap newSources = new IntIntMap();
-        IntIntMap oldSources = new IntIntMap();
-
-        load("select id,source from pubchem.pathway_bases where source is not null", oldSources);
-
         new QueryResultProcessor(patternQuery("?pathway dcterms:source ?source"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer pathwayID = getPathwayID(getIRI("pathway"), true);
+                Integer pathwayID = getPathwayID(getIRI("pathway"));
                 Integer sourceID = Source.getSourceID(getIRI("source"));
 
-                if(sourceID.equals(oldSources.remove(pathwayID)))
-                {
-                    keepSources.put(pathwayID, sourceID);
-                }
-                else
-                {
-                    Integer keep = keepSources.get(pathwayID);
-
-                    if(sourceID.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Integer put = newSources.put(pathwayID, sourceID);
-
-                    if(put != null && !sourceID.equals(put))
-                        throw new IOException();
-                }
+                pathways.set(pathwayID, "source", sourceID);
             }
         }.load(model);
-
-        store("update pubchem.pathway_bases set source=null where id=? and source=?", oldSources);
-        store("insert into pubchem.pathway_bases(id,source) values(?,?) "
-                + "on conflict(id) do update set source=EXCLUDED.source", newSources);
     }
 
 
     private static void loadSameAsReferences(Model model) throws IOException, SQLException
     {
-        IntStringPairMap keepReferences = new IntStringPairMap();
-        IntStringPairMap newReferences = new IntStringPairMap();
-        IntStringPairMap oldReferences = new IntStringPairMap();
-
-        load("select id,reference_type::varchar,reference from pubchem.pathway_bases where reference is not null",
-                oldReferences);
-
         new QueryResultProcessor(patternQuery("?pathway rdfs:seeAlso ?match"))
         {
             @Override
             protected void parse() throws IOException
             {
-                Integer pathwayID = getPathwayID(getIRI("pathway"), true);
+                Integer pathwayID = getPathwayID(getIRI("pathway"));
                 String iri = getIRI("match");
 
                 // workaround
@@ -195,47 +135,15 @@ class Pathway extends Updater
                 if(description == null)
                     throw new IOException(iri);
 
-                Pair<String, String> pair = Pair.getPair(description.name, iri.substring(description.prefix.length()));
-
-                if(pair.equals(oldReferences.remove(pathwayID)))
-                {
-                    keepReferences.put(pathwayID, pair);
-                }
-                else
-                {
-                    Pair<String, String> keep = keepReferences.get(pathwayID);
-
-                    if(pair.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Pair<String, String> put = newReferences.put(pathwayID, pair);
-
-                    if(put != null && !pair.equals(put))
-                        throw new IOException();
-                }
+                pathways.set(pathwayID, "reference_type", description.name);
+                pathways.set(pathwayID, "reference", iri.substring(description.prefix.length()));
             }
         }.load(model);
-
-        store("update pubchem.pathway_bases set reference_type=null,reference=null "
-                + "where id=? and reference_type=?::pubchem.pathway_reference_type and reference=?", oldReferences);
-        store("""
-                insert into pubchem.pathway_bases(id,reference_type,reference) \
-                values(?,?::pubchem.pathway_reference_type,?) \
-                on conflict(id) do update set reference_type=EXCLUDED.reference_type, reference=EXCLUDED.reference""",
-                newReferences);
     }
 
 
     private static void loadOrganisms(Model model) throws IOException, SQLException
     {
-        IntIntMap keepOrganisms = new IntIntMap();
-        IntIntMap newOrganisms = new IntIntMap();
-        IntIntMap oldOrganisms = new IntIntMap();
-
-        load("select id,organism from pubchem.pathway_bases where organism is not null", oldOrganisms);
-
         new QueryResultProcessor(patternQuery("?pathway up:organism ?organism"))
         {
             @Override
@@ -245,33 +153,12 @@ class Pathway extends Updater
                 if(getIRI("organism").equals(Taxonomy.prefix))
                     return;
 
-                Integer pathwayID = getPathwayID(getIRI("pathway"), true);
+                Integer pathwayID = getPathwayID(getIRI("pathway"));
                 Integer organismID = Taxonomy.getTaxonomyID(getIRI("organism"));
 
-                if(organismID.equals(oldOrganisms.remove(pathwayID)))
-                {
-                    keepOrganisms.put(pathwayID, organismID);
-                }
-                else
-                {
-                    Integer keep = keepOrganisms.get(pathwayID);
-
-                    if(organismID.equals(keep))
-                        return;
-                    else if(keep != null)
-                        throw new IOException();
-
-                    Integer put = newOrganisms.put(pathwayID, organismID);
-
-                    if(put != null && !organismID.equals(put))
-                        throw new IOException();
-                }
+                pathways.set(pathwayID, "organism", organismID);
             }
         }.load(model);
-
-        store("update pubchem.pathway_bases set organism=null where id=? and organism=?", oldOrganisms);
-        store("insert into pubchem.pathway_bases(id,organism) values(?,?) "
-                + "on conflict(id) do update set organism=EXCLUDED.organism", newOrganisms);
     }
 
 
@@ -461,6 +348,9 @@ class Pathway extends Updater
         loadRelatedPathways(model);
 
         model.close();
+
+        pathways.flush();
+
         System.out.println();
     }
 
@@ -469,8 +359,7 @@ class Pathway extends Updater
     {
         System.out.println("finish pathways ...");
 
-        store("delete from pubchem.pathway_bases where id=?", oldPathways);
-        store("insert into pubchem.pathway_bases(id) values(?)", newPathways);
+        pathways.store();
 
         System.out.println();
     }
@@ -478,37 +367,13 @@ class Pathway extends Updater
 
     static Integer getPathwayID(String value) throws IOException
     {
-        return getPathwayID(value, false);
-    }
-
-
-    static Integer getPathwayID(String value, boolean forceKeep) throws IOException
-    {
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
 
         Integer pathwayID = Integer.parseInt(value.substring(prefixLength));
 
-        synchronized(newPathways)
-        {
-            if(newPathways.contains(pathwayID))
-            {
-                if(forceKeep)
-                {
-                    newPathways.remove(pathwayID);
-                    keepPathways.add(pathwayID);
-                }
-            }
-            else if(!keepPathways.contains(pathwayID))
-            {
-                System.out.println("    add missing patwway PWID" + pathwayID);
-
-                if(!oldPathways.remove(pathwayID) && !forceKeep)
-                    newPathways.add(pathwayID);
-                else
-                    keepPathways.add(pathwayID);
-            }
-        }
+        if(pathways.reference(pathwayID))
+            System.out.println("    add missing patwway PWID" + pathwayID);
 
         return pathwayID;
     }
