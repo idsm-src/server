@@ -420,9 +420,9 @@ public class GenerateVoid extends Updater
     }
 
 
-    private static final HashSet<SourceTable> uniques = new HashSet<>(
-            Set.of(new DatabaseTable("molecules", "chebi"), new DatabaseTable("molecules", "chembl"),
-                    new DatabaseTable("molecules", "drugbank"), new DatabaseTable("molecules", "pubchem")));
+    private static final HashSet<SourceTable> uniques = new HashSet<>(Set.of(new DatabaseTable("chebi", "molfiles"),
+            new DatabaseTable("chembl", "molecule_molfiles"), new DatabaseTable("drugbank", "compound_bases"),
+            new DatabaseTable("pubchem", "compound_molfiles")));
 
     private static final Variable varS = new Variable("S");
     private static final Variable varO = new Variable("O");

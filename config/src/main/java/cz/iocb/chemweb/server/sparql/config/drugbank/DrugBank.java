@@ -28,7 +28,7 @@ public class DrugBank
         ConstantIriMapping graph = config.createIriMapping("drugbank:");
 
         {
-            DatabaseTable table = new DatabaseTable("molecules", "drugbank");
+            DatabaseTable table = new DatabaseTable("drugbank", "compound_bases");
             TermMapping subject = config.createIriMapping("drugbank:molfile", "id");
             LiteralClass molfileLiteral = new StringSubsetLiteralClass("drugbank-molfile");
 

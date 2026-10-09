@@ -65,7 +65,7 @@ alter table pubchem.compound_active_ingredients add foreign key (compound) refer
 alter table pubchem.compound_labels add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.compound_matches add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 alter table pubchem.compound_wikidata_matches add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
-alter table molecules.pubchem add foreign key (id) references pubchem.compound_bases(id) initially deferred;
+alter table pubchem.compound_molfiles add foreign key (compound) references pubchem.compound_bases(id) initially deferred;
 
 
 -- concept

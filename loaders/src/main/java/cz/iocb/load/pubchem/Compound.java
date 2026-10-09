@@ -1,12 +1,17 @@
 package cz.iocb.load.pubchem;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.Arrays;
 import org.apache.jena.graph.Node;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.SdfReader;
+import cz.iocb.load.common.StructureTable;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
@@ -26,7 +31,7 @@ class Compound extends Updater
 
     private static void loadBases() throws IOException, SQLException
     {
-        load("select id from pubchem.compound_bases where keep", oldCompounds);
+        load("select id from pubchem.compound_bases", oldCompounds);
     }
 
 
@@ -462,6 +467,63 @@ class Compound extends Updater
     }
 
 
+    /*
+     * Checks that the molfile files cover the identifiers contiguously from the first one, so that an incomplete dump
+     * does not delete the structures it lacks.
+     */
+    private static void checkMolfileFiles(String path, String pattern) throws IOException
+    {
+        String[] files = new File(baseDirectory + path).list((dir, file) -> file.matches(pattern));
+
+        if(files == null || files.length == 0)
+            throw new IOException("no molfile file in " + path);
+
+        Arrays.sort(files);
+        long next = 1;
+
+        for(String file : files)
+        {
+            long from = Long.parseLong(file.substring(9, 18));
+            long to = Long.parseLong(file.substring(19, 28));
+
+            if(from != next || to < from)
+                throw new IOException("unexpected molfile file " + file + " (expected the range from " + next + ")");
+
+            next = to + 1;
+        }
+    }
+
+
+    /*
+     * Loads the structures of the compounds from the dump of all molfiles; a compound known only from the dump gets
+     * its row as well.
+     */
+    private static void loadMolfiles() throws IOException, SQLException
+    {
+        String path = "pubchem/Compound/CURRENT-Full/SDF";
+        String pattern = "Compound_[0-9]{9}_[0-9]{9}\\.sdf\\.gz";
+
+        checkMolfileFiles(path, pattern);
+
+        StructureTable molfiles = new StructureTable("pubchem.compound_molfiles", "compound", "molfile");
+        molfiles.load();
+
+        processFiles(path, pattern, file -> {
+            try(BufferedReader reader = getReader(file))
+            {
+                SdfReader.read(file, reader, "PUBCHEM_COMPOUND_CID", (id, molfile) -> {
+                    int compoundID = Integer.parseInt(id);
+
+                    addCompoundID(compoundID, false);
+                    molfiles.put(compoundID, molfile);
+                });
+            }
+        });
+
+        molfiles.store();
+    }
+
+
     private static void checkDescriptors() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/compound/general", "pc_compound2descriptor_[0-9]+\\.ttl\\.gz", file -> {
@@ -524,6 +586,7 @@ class Compound extends Updater
         loadTypes();
         loadLabels();
         loadCloseMatches();
+        loadMolfiles();
         checkDescriptors();
         checkIdentifiers();
 
@@ -535,16 +598,8 @@ class Compound extends Updater
     {
         System.out.println("finish compounds ...");
 
-        store("delete from pubchem.compound_bases "
-                + "where id=? and not exists (select id from molecules.pubchem where compound_bases.id = pubchem.id)",
-                oldCompounds);
-
-        store("update pubchem.compound_bases set keep = false "
-                + "where id=? and  exists (select id from molecules.pubchem where compound_bases.id = pubchem.id)",
-                oldCompounds);
-
-        store("insert into pubchem.compound_bases(id,keep) values(?,true) "
-                + "on conflict(id) do update set keep=EXCLUDED.keep", newCompounds);
+        store("delete from pubchem.compound_bases where id=?", oldCompounds);
+        store("insert into pubchem.compound_bases(id) values(?)", newCompounds);
 
         System.out.println();
     }

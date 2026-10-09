@@ -20,3 +20,11 @@ create table wikidata.inchies
     inchi       varchar not null,
     primary key(compound, inchi)
 );
+
+
+create table wikidata.compound_structures
+(
+    compound    integer not null,
+    smiles      varchar not null,
+    primary key(compound)
+);

@@ -21,5 +21,6 @@ alter table chebi.smiles_codes add foreign key (chebi) references chebi.classes(
 alter table chebi.inchikeys add foreign key (chebi) references chebi.classes(id) initially deferred;
 alter table chebi.inchies add foreign key (chebi) references chebi.classes(id) initially deferred;
 alter table chebi.wurcs_representations add foreign key (chebi) references chebi.classes(id) initially deferred;
+alter table chebi.molfiles add foreign key (chebi) references chebi.classes(id) initially deferred;
 alter table chebi.definitions add foreign key (chebi) references chebi.classes(id) initially deferred;
 alter table chebi.deprecated_flags add foreign key (chebi) references chebi.classes(id) initially deferred;

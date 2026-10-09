@@ -671,24 +671,24 @@ public class Molecule
 
         // extension
         {
-            DatabaseTable table = new DatabaseTable("molecules", "chembl");
-            TermMapping subject = config.createIriMapping("chembl:molfile", "id");
+            DatabaseTable table = new DatabaseTable(schema, "molecule_molfiles");
+            TermMapping subject = config.createIriMapping("chembl:molfile", "molecule");
             LiteralClass molfileLiteral = new StringSubsetLiteralClass("chembl-molfile");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_011120"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000011"),
-                    config.createIriMapping("chembl:compound", "id"));
+                    config.createIriMapping("chembl:compound", "molecule"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
                     config.createLiteralMapping(molfileLiteral, "molfile"));
 
             // extension
-            config.addQuadMapping(table, graph, config.createIriMapping("chembl:compound", "id"),
+            config.addQuadMapping(table, graph, config.createIriMapping("chembl:compound", "molecule"),
                     config.createIriMapping("sio:SIO_000008"), subject);
 
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:is-attribute-of"),
-                    config.createIriMapping("chembl:compound", "id"));
+                    config.createIriMapping("chembl:compound", "molecule"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-value"),
                     config.createLiteralMapping(molfileLiteral, "molfile"));
         }

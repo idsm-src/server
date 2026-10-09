@@ -61,6 +61,11 @@ grant select on chembl.molecule_structures to sparql;
 
 --------------------------------------------------------------------------------
 
+create index molecule_molfiles__molfile on chembl.molecule_molfiles using hash (molfile);
+grant select on chembl.molecule_molfiles to sparql;
+
+--------------------------------------------------------------------------------
+
 create index molecule_labels__alogp on chembl.molecule_labels(alogp);
 create index molecule_labels__aromatic_rings on chembl.molecule_labels(aromatic_rings);
 create index molecule_labels__hba on chembl.molecule_labels(hba);

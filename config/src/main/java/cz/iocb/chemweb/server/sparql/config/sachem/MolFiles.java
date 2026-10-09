@@ -40,12 +40,4 @@ public class MolFiles
         config.addQuadMapping(table, null, subject, config.createIriMapping("sio:has-value"),
                 config.createLiteralMapping(molfileLiteralClass, molfile));
     }
-
-
-    public static void addQuadMappings(SparqlDatabaseConfiguration config, String compoundClass, String molfileClass,
-            DatabaseTable table, List<Column> compoundFields, LiteralClass molfileLiteralClass)
-    {
-        addQuadMappings(config, compoundClass, molfileClass, table, compoundFields, "id", "molfile",
-                molfileLiteralClass);
-    }
 }

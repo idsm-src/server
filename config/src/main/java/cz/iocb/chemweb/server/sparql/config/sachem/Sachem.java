@@ -129,7 +129,7 @@ public abstract class Sachem
     public static void addProcedures(SparqlDatabaseConfiguration config, String index, String compoundClass,
             List<Column> compoundFields)
     {
-        addProcedures(config, index, "sachem", compoundClass, compoundFields);
+        addProcedures(config, index, "common", compoundClass, compoundFields);
     }
 
 
@@ -453,7 +453,7 @@ public abstract class Sachem
         String sachem = config.getPrefixes().get("sachem");
 
         FunctionDefinition similarity = new FunctionDefinition(sachem + "similarity",
-                new Function("sachem", "similarity_stub"), xsdDouble,
+                new Function("common", "similarity_stub"), xsdDouble,
                 List.of(xsdString, xsdString, xsdInteger, config.getIriClass("aromaticity_mode")), 2, false, true);
 
         config.addFunction(similarity);

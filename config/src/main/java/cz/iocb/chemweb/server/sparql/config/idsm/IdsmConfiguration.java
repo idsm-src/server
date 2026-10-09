@@ -53,11 +53,10 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         {
             super(schema);
 
-            for(String name : List.of("drugbank", "chebi", "chembl", "pubchem"))
-            {
-                DatabaseTable table = new DatabaseTable("molecules", name);
+            for(DatabaseTable table : List.of(new DatabaseTable("drugbank", "compound_bases"),
+                    new DatabaseTable("chebi", "molfiles"), new DatabaseTable("chembl", "molecule_molfiles"),
+                    new DatabaseTable("pubchem", "compound_molfiles")))
                 primaryKeys.get(table).add(List.of(getColumn(table, "molfile")));
-            }
         }
     }
 
@@ -226,7 +225,7 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         mapping.put(getIriClass("pdb:compound"), getColumns(getIriClass("pdb:compound"), "pdb"));
 
         Sachem.addResourceClasses(this);
-        Sachem.addProcedures(this, "sachem", mapping);
+        Sachem.addProcedures(this, "common", mapping);
         Sachem.addFunctions(this);
 
 

@@ -122,6 +122,11 @@ grant select on chebi.wurcs_representations to sparql;
 
 --------------------------------------------------------------------------------
 
+create index molfiles__molfile on chebi.molfiles using hash (molfile);
+grant select on chebi.molfiles to sparql;
+
+--------------------------------------------------------------------------------
+
 create index definitions__definition on chebi.definitions(definition);
 grant select on chebi.definitions to sparql;
 

@@ -17,6 +17,7 @@ import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.real;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.EntityTable.varchar;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -33,6 +34,8 @@ import java.util.regex.Pattern;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.chembl.ValueTable.Value;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.SdfReader;
+import cz.iocb.load.common.StructureTable;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -534,6 +537,34 @@ class Molecule extends Updater
     }
 
 
+    /*
+     * Loads the structures of the molecules from the SDF files of the release; a molecule known only from the files
+     * gets its row as well.
+     */
+    private static void loadMolfiles() throws IOException, SQLException
+    {
+        StructureTable molfiles = new StructureTable("chembl.molecule_molfiles", "molecule", "molfile");
+        molfiles.load();
+
+        processFiles("chembl/sdf", ".*\\.sdf\\.gz", file -> {
+            try(BufferedReader reader = getReader(file))
+            {
+                SdfReader.read(file, reader, "chembl_id", (id, molfile) -> {
+                    if(!id.startsWith("CHEMBL"))
+                        throw new IOException("unexpected molecule " + id);
+
+                    int moleculeID = Integer.parseInt(id.substring(6));
+
+                    molecules.reference(moleculeID);
+                    molfiles.put(moleculeID, molfile);
+                });
+            }
+        });
+
+        molfiles.store();
+    }
+
+
     static void load() throws IOException, SQLException
     {
         System.out.println("load molecules ...");
@@ -541,6 +572,7 @@ class Molecule extends Updater
         loadMolecules();
         loadHierarchy();
         loadReferences();
+        loadMolfiles();
 
         ChEMBL.finishLoad();
     }

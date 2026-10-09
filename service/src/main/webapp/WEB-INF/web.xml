@@ -241,7 +241,7 @@
     <servlet-name>ChebiCompoundPngImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-chebi</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from molecules.chebi where id = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from chebi.molfiles where chebi = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>ChebiCompoundPngImage</servlet-name>
@@ -252,7 +252,7 @@
     <servlet-name>ChemblCompoundPngImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-chembl</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from molecules.chembl where id = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from chembl.molecule_molfiles where molecule = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>ChemblCompoundPngImage</servlet-name>
@@ -263,7 +263,7 @@
     <servlet-name>DrugbankCompoundPngImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-drugbank</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from molecules.drugbank where id = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from drugbank.compound_bases where id = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>DrugbankCompoundPngImage</servlet-name>
@@ -274,7 +274,7 @@
     <servlet-name>PubChemCompoundPngImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-pubchem</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from molecules.pubchem where id = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from pubchem.compound_molfiles where compound = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>PubChemCompoundPngImage</servlet-name>
@@ -285,7 +285,7 @@
     <servlet-name>WikidataCompoundPngImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-wikidata</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select smiles from molecules.wikidata where id = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select smiles from wikidata.compound_structures where compound = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>WikidataCompoundPngImage</servlet-name>
@@ -343,7 +343,7 @@
     <servlet-name>ChebiCompoundSvgImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-chebi</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from molecules.chebi where id = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from chebi.molfiles where chebi = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>ChebiCompoundSvgImage</servlet-name>
@@ -354,7 +354,7 @@
     <servlet-name>ChemblCompoundSvgImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-chembl</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from molecules.chembl where id = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from chembl.molecule_molfiles where molecule = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>ChemblCompoundSvgImage</servlet-name>
@@ -365,7 +365,7 @@
     <servlet-name>DrugbankCompoundSvgImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-drugbank</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from molecules.drugbank where id = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from drugbank.compound_bases where id = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>DrugbankCompoundSvgImage</servlet-name>
@@ -376,7 +376,7 @@
     <servlet-name>PubChemCompoundSvgImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-pubchem</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from molecules.pubchem where id = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from pubchem.compound_molfiles where compound = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>PubChemCompoundSvgImage</servlet-name>
@@ -387,7 +387,7 @@
     <servlet-name>WikidataCompoundSvgImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-wikidata</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select smiles from molecules.wikidata where id = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select smiles from wikidata.compound_structures where compound = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>WikidataCompoundSvgImage</servlet-name>
@@ -461,23 +461,6 @@
   <servlet-mapping>
     <servlet-name>IsdbSpectrumServlet</servlet-name>
     <url-pattern>/isdb/compound/spectrum</url-pattern>
-  </servlet-mapping>
-
-
-  <!-- Statistics Servlet -->
-
-  <servlet>
-    <servlet-name>SachemEndpointStatisticsServlet</servlet-name>
-    <servlet-class>cz.iocb.chemweb.server.servlets.endpoint.SachemEndpointStatisticsServlet</servlet-class>
-    <init-param><param-name>resource-chebi</param-name><param-value>jdbc:sachem-chebi</param-value></init-param>
-    <init-param><param-name>resource-chembl</param-name><param-value>jdbc:sachem-chembl</param-value></init-param>
-    <init-param><param-name>resource-drugbank</param-name><param-value>jdbc:sachem-drugbank</param-value></init-param>
-    <init-param><param-name>resource-pubchem</param-name><param-value>jdbc:sachem-pubchem</param-value></init-param>
-    <init-param><param-name>resource-wikidata</param-name><param-value>jdbc:sachem-wikidata</param-value></init-param>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>SachemEndpointStatisticsServlet</servlet-name>
-    <url-pattern>/endpoint/statistics.json</url-pattern>
   </servlet-mapping>
 
 

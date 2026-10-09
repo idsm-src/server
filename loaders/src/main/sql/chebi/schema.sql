@@ -182,6 +182,14 @@ create table chebi.wurcs_representations
 );
 
 
+create table chebi.molfiles
+(
+    chebi       integer not null,
+    molfile     varchar not null,
+    primary key(chebi)
+);
+
+
 create table chebi.definitions
 (
     chebi       integer not null,

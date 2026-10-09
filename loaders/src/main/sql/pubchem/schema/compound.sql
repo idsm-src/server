@@ -1,7 +1,6 @@
 create table pubchem.compound_bases
 (
     id          integer not null,
-    keep        bool not null,
     primary key(id)
 );
 
@@ -94,4 +93,12 @@ create table pubchem.compound_wikidata_matches
     compound           integer not null,
     match              integer not null,
     primary key(compound, match)
+);
+
+
+create table pubchem.compound_molfiles
+(
+    compound           integer not null,
+    molfile            varchar not null,
+    primary key(compound)
 );

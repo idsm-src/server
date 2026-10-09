@@ -39,11 +39,6 @@
       <version>6.2.0</version>
     </dependency>
     <dependency>
-      <groupId>commons-net</groupId>
-      <artifactId>commons-net</artifactId>
-      <version>3.13.0</version>
-    </dependency>
-    <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>42.7.13</version>
@@ -83,65 +78,38 @@
             </configuration>
           </execution>
 
-          <!-- sachem -->
+          <!-- drugbank -->
           <execution>
-            <id>sachem-dbinit</id>
+            <id>drugbank-download</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/download-drugbank.sh</executable>
+            </configuration>
+          </execution>
+          <execution>
+            <id>drugbank-dbinit</id>
             <goals>
               <goal>exec</goal>
             </goals>
             <configuration>
               <executable>src/main/scripts/run_psql.sh</executable>
               <arguments>
-                <argument>src/main/sql/sachem/base.sql</argument>
-                <argument>src/main/sql/sachem/schema.sql</argument>
-                <argument>src/main/sql/sachem/settings.sql</argument>
-                <argument>src/main/sql/sachem/procedures.sql</argument>
+                <argument>src/main/sql/drugbank/base.sql</argument>
+                <argument>src/main/sql/drugbank/schema.sql</argument>
+                <argument>src/main/sql/drugbank/sachem.sql</argument>
+                <argument>src/main/sql/drugbank/settings.sql</argument>
               </arguments>
             </configuration>
           </execution>
           <execution>
-            <id>sachem-download-pubchem-base</id>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>src/main/scripts/sachem-download-pubchem.sh</executable>
-            </configuration>
-          </execution>
-          <execution>
-            <id>sachem-load-drugbank</id>
+            <id>drugbank-load</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>cz.iocb.load.sachem.DrugbankCompoundUpdater</mainClass>
-            </configuration>
-          </execution>
-          <execution>
-            <id>sachem-load-chebi</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>cz.iocb.load.sachem.ChEBICompoundUpdater</mainClass>
-            </configuration>
-          </execution>
-          <execution>
-            <id>sachem-load-chembl</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>cz.iocb.load.sachem.ChEMBLCompoundUpdater</mainClass>
-            </configuration>
-          </execution>
-          <execution>
-            <id>sachem-load-pubchem</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>cz.iocb.load.sachem.PubChemCompoundUpdater</mainClass>
+              <mainClass>cz.iocb.load.drugbank.DrugBank</mainClass>
             </configuration>
           </execution>
 
@@ -156,6 +124,7 @@
               <arguments>
                 <argument>src/main/sql/common/base.sql</argument>
                 <argument>src/main/sql/common/functions.sql</argument>
+                <argument>src/main/sql/common/sachem.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -216,6 +185,7 @@
               <arguments>
                 <argument>src/main/sql/chembl/base.sql</argument>
                 <argument>src/main/sql/chembl/schema/</argument>
+                <argument>src/main/sql/chembl/sachem.sql</argument>
                 <argument>src/main/sql/chembl/settings/</argument>
                 <argument>src/main/sql/chembl/foreignkey.sql</argument>
               </arguments>
@@ -251,6 +221,7 @@
               <arguments>
                 <argument>src/main/sql/pubchem/base.sql</argument>
                 <argument>src/main/sql/pubchem/schema/</argument>
+                <argument>src/main/sql/pubchem/sachem.sql</argument>
                 <argument>src/main/sql/pubchem/settings/</argument>
                 <argument>src/main/sql/pubchem/functions/</argument>
                 <argument>src/main/sql/pubchem/procedures/</argument>
@@ -288,6 +259,7 @@
               <arguments>
                 <argument>src/main/sql/chebi/base.sql</argument>
                 <argument>src/main/sql/chebi/schema.sql</argument>
+                <argument>src/main/sql/chebi/sachem.sql</argument>
                 <argument>src/main/sql/chebi/settings.sql</argument>
                 <argument>src/main/sql/chebi/foreignkey.sql</argument>
               </arguments>
@@ -340,6 +312,15 @@
 
           <!-- wikidata -->
           <execution>
+            <id>wikidata-download</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/download-wikidata.sh</executable>
+            </configuration>
+          </execution>
+          <execution>
             <id>wikidata-dbinit</id>
             <goals>
               <goal>exec</goal>
@@ -349,17 +330,18 @@
               <arguments>
                 <argument>src/main/sql/wikidata/base.sql</argument>
                 <argument>src/main/sql/wikidata/schema.sql</argument>
+                <argument>src/main/sql/wikidata/sachem.sql</argument>
                 <argument>src/main/sql/wikidata/settings.sql</argument>
               </arguments>
             </configuration>
           </execution>
           <execution>
-            <id>sachem-load-wikidata</id>
+            <id>wikidata-load</id>
             <goals>
               <goal>java</goal>
             </goals>
             <configuration>
-              <mainClass>cz.iocb.load.sachem.WikidataCompoundUpdater</mainClass>
+              <mainClass>cz.iocb.load.wikidata.Wikidata</mainClass>
             </configuration>
           </execution>
 

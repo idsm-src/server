@@ -21,6 +21,9 @@ wget --progress=bar:force -P "$output" -r -l 3 -nH --cut-dirs=1 ftp://ftp.ncbi.n
 wget --progress=bar:force -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/compound/general
 wget --progress=bar:force -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/descriptor
 wget --progress=bar:force -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/Bioassay/XML
+wget --progress=bar:force -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF
+
+(cd "$output/Compound/CURRENT-Full/SDF" && md5sum -c --quiet -- *.md5)
 
 test -L "$base/pubchem" && rm "$base/pubchem"
 ln -s "pubchem-$version" "$base/pubchem"

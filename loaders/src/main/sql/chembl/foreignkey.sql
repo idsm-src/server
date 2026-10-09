@@ -39,6 +39,7 @@ alter table chembl.molecule_biocomponents add foreign key (molecule) references 
 alter table chembl.molecule_biocomponents add foreign key (biocomponent) references chembl.biocomponent_bases(id) initially deferred;
 alter table chembl.molecule_descriptors add foreign key (molecule) references chembl.molecule_bases(id) initially deferred;
 alter table chembl.molecule_structures add foreign key (molecule) references chembl.molecule_bases(id) initially deferred;
+alter table chembl.molecule_molfiles add foreign key (molecule) references chembl.molecule_bases(id) initially deferred;
 alter table chembl.molecule_labels add foreign key (molecule) references chembl.molecule_bases(id) initially deferred;
 alter table chembl.molecule_references add foreign key (molecule) references chembl.molecule_bases(id) initially deferred;
 alter table chembl.molecule_pubchem_references add foreign key (molecule) references chembl.molecule_bases(id) initially deferred;

@@ -942,6 +942,84 @@ public class Updater
     }
 
 
+    /*
+     * Updates the Sachem index of the given name according to the audited changes of its table: removes the stale
+     * versions of the index and synchronises it. The cleanup has to precede the synchronisation, because after it the
+     * cleanup would delete the previous version although the new one is not committed yet. Prints the size of the
+     * index and the molecules that the indexer has rejected meanwhile.
+     */
+    protected static void syncIndex(String index, boolean optimize) throws SQLException
+    {
+        if(dryRun)
+            return;
+
+        System.out.println("sync sachem index " + index + " ...");
+
+        long time = System.currentTimeMillis();
+        int lastError = 0;
+
+        try(PreparedStatement statement = connection.prepareStatement("select coalesce(max(e.id), 0) "
+                + "from sachem.compound_errors e, sachem.configuration c where e.index = c.id and c.index_name = ?"))
+        {
+            statement.setString(1, index);
+
+            try(ResultSet result = statement.executeQuery())
+            {
+                result.next();
+                lastError = result.getInt(1);
+            }
+        }
+
+        try(PreparedStatement statement = connection.prepareStatement("select sachem.cleanup(?)"))
+        {
+            statement.setString(1, index);
+            statement.execute();
+        }
+
+        try(PreparedStatement statement = connection.prepareStatement("select sachem.sync_data(?, false, ?)"))
+        {
+            statement.setString(1, index);
+            statement.setBoolean(2, optimize);
+            statement.execute();
+        }
+
+        try(PreparedStatement statement = connection.prepareStatement("select sachem.index_size(?)"))
+        {
+            statement.setString(1, index);
+
+            try(ResultSet result = statement.executeQuery())
+            {
+                result.next();
+                System.out.println("  sachem.index_size('" + index + "') -> " + result.getInt(1) + " / time: "
+                        + ((System.currentTimeMillis() - time) / 6000 / 10.0));
+            }
+        }
+
+        try(PreparedStatement statement = connection.prepareStatement("""
+                select e.compound, e.message \
+                from sachem.compound_errors e, sachem.configuration c where e.index = c.id and c.index_name = ? \
+                and e.id > ? order by e.id"""))
+        {
+            statement.setString(1, index);
+            statement.setInt(2, lastError);
+
+            try(ResultSet result = statement.executeQuery())
+            {
+                int errors = 0;
+
+                while(result.next())
+                    if(++errors <= 10)
+                        System.out.println("  error: " + result.getInt(1) + ": " + result.getString(2));
+
+                if(errors > 0)
+                    System.out.println("  sachem.compound_errors -> count: " + errors);
+            }
+        }
+
+        System.out.println();
+    }
+
+
     protected static void commit() throws SQLException
     {
         if(dryRun)

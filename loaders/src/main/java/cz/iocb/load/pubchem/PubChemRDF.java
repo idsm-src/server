@@ -145,6 +145,8 @@ public class PubChemRDF extends Updater
 
             MissingEntities.printSummary();
 
+            syncIndex("pubchem", false);
+
             setCount("PubChem Substances", Substance.size());
             setCount("PubChem Compounds", Compound.size());
             setCount("PubChem BioAssays", Bioassay.size());

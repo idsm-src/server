@@ -49,8 +49,9 @@ public class ChebiOntologySachemConfiguration extends SparqlDatabaseConfiguratio
 
     private void addQuadMappings()
     {
-        MolFiles.addQuadMappings(this, "ontology:chebi", "chebi:molfile", new DatabaseTable("molecules", "chebi"),
-                getColumns(getIriClass("ontology:chebi"), "id"), new StringSubsetLiteralClass("chebi-molfile"));
+        MolFiles.addQuadMappings(this, "ontology:chebi", "chebi:molfile", new DatabaseTable("chebi", "molfiles"),
+                getColumns(getIriClass("ontology:chebi"), "chebi"), "chebi", "molfile",
+                new StringSubsetLiteralClass("chebi-molfile"));
     }
 
 

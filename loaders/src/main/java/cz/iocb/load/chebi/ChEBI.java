@@ -7,6 +7,7 @@ import static cz.iocb.load.common.TripleStreamProcessor.getBoolean;
 import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
 import static cz.iocb.load.common.TripleStreamProcessor.getLexicalForm;
 import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +27,8 @@ import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.BlankNodes;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.SdfReader;
+import cz.iocb.load.common.StructureTable;
 import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
@@ -749,12 +752,41 @@ public class ChEBI extends Updater
         if(!value.startsWith(prefix))
             throw new IOException("unexpected IRI: " + value);
 
-        Integer entityID = Integer.parseInt(value.substring(prefixLength));
+        return getEntityID(Integer.parseInt(value.substring(prefixLength)));
+    }
 
+
+    private static Integer getEntityID(Integer entityID)
+    {
         if(addEntity(entityID))
             missingEntities.referenced(entityID);
 
         return entityID;
+    }
+
+
+    /*
+     * Loads the structures of the entities from the SDF file of the release.
+     */
+    private static void loadMolfiles() throws IOException, SQLException
+    {
+        String name = "chebi.sdf.gz";
+        StructureTable molfiles = new StructureTable("chebi.molfiles", "chebi", "molfile");
+        molfiles.load();
+
+        try(BufferedReader reader = getReader("chebi/" + name))
+        {
+            SdfReader.read(name, reader, "ChEBI ID", (id, molfile) -> {
+                if(!id.startsWith("CHEBI:"))
+                    throw new IOException("unexpected entity " + id);
+
+                int entityID = getEntityID(Integer.parseInt(id.substring(6)));
+
+                molfiles.put(entityID, molfile);
+            });
+        }
+
+        molfiles.store();
     }
 
 
@@ -805,8 +837,12 @@ public class ChEBI extends Updater
             missingEntities.settle();
             dispatcher.finish();
 
+            loadMolfiles();
+
             finish();
             MissingEntities.printSummary();
+
+            syncIndex("chebi", true);
 
             setVersion("ChEBI Ontology", version);
             setCount("ChEBI Entities", newEntities.size() + keepEntities.size());

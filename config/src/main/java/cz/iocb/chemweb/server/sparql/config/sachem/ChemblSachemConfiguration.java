@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.StringSubsetLiteralClass;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 
 
 
@@ -13,6 +14,7 @@ public class ChemblSachemConfiguration extends SachemConfiguration
             throws SQLException
     {
         super(service, connectionPool, schema, "chembl", "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL", 0,
+                new DatabaseTable("chembl", "molecule_molfiles"), "molecule",
                 new StringSubsetLiteralClass("chembl-molfile"));
 
         addPrefixes();

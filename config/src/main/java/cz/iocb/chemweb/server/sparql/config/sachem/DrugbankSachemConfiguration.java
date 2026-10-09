@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.StringSubsetLiteralClass;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 
 
 
@@ -14,6 +15,7 @@ public class DrugbankSachemConfiguration extends SachemConfiguration
     {
         super(service, connectionPool, schema, "drugbank",
                 "http://wifo5-04.informatik.uni-mannheim.de/drugbank/resource/drugs/DB", 5,
+                new DatabaseTable("drugbank", "compound_bases"), "id",
                 new StringSubsetLiteralClass("drugbank-molfile"));
 
         addPrefixes();

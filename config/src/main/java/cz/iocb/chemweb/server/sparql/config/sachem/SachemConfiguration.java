@@ -15,13 +15,14 @@ import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 public class SachemConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
     public SachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema, String index,
-            String iriPrefix, int idLength, LiteralClass molfileLiteralClass) throws SQLException
+            String iriPrefix, int idLength, DatabaseTable table, String idColumn, LiteralClass molfileLiteralClass)
+            throws SQLException
     {
         super(service, connectionPool, schema);
 
         addPrefixes();
         addResourceClasses(index, iriPrefix, idLength);
-        addQuadMappings(index, molfileLiteralClass);
+        addQuadMappings(index, table, idColumn, molfileLiteralClass);
         addProcedures(index);
     }
 
@@ -43,10 +44,10 @@ public class SachemConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
-    private void addQuadMappings(String index, LiteralClass molfileLiteralClass)
+    private void addQuadMappings(String index, DatabaseTable table, String idColumn, LiteralClass molfileLiteralClass)
     {
-        MolFiles.addQuadMappings(this, index + ":compound", index + ":molfile", new DatabaseTable("molecules", index),
-                getColumns(getIriClass(index + ":compound"), "id"), molfileLiteralClass);
+        MolFiles.addQuadMappings(this, index + ":compound", index + ":molfile", table,
+                getColumns(getIriClass(index + ":compound"), idColumn), idColumn, "molfile", molfileLiteralClass);
     }
 
 

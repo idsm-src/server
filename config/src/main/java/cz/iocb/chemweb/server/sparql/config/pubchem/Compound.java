@@ -54,24 +54,24 @@ public class Compound
         }
 
         {
-            DatabaseTable table = new DatabaseTable("molecules", "pubchem");
-            TermMapping subject = config.createIriMapping("pubchem:molfile", "id");
+            DatabaseTable table = new DatabaseTable(schema, "compound_molfiles");
+            TermMapping subject = config.createIriMapping("pubchem:molfile", "compound");
             LiteralClass molfileLiteral = new StringSubsetLiteralClass("pubchem-molfile");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_011120"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000011"),
-                    config.createIriMapping("pubchem:compound", "id"));
+                    config.createIriMapping("pubchem:compound", "compound"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
                     config.createLiteralMapping(molfileLiteral, "molfile"));
 
             // extension
-            config.addQuadMapping(table, graph, config.createIriMapping("pubchem:compound", "id"),
+            config.addQuadMapping(table, graph, config.createIriMapping("pubchem:compound", "compound"),
                     config.createIriMapping("sio:SIO_000008"), subject);
 
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:is-attribute-of"),
-                    config.createIriMapping("pubchem:compound", "id"));
+                    config.createIriMapping("pubchem:compound", "compound"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-value"),
                     config.createLiteralMapping(molfileLiteral, "molfile"));
         }

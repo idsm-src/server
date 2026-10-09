@@ -78,6 +78,14 @@ create table chembl.molecule_structures
 );
 
 
+create table chembl.molecule_molfiles
+(
+    molecule            integer not null,
+    molfile             varchar not null,
+    primary key(molecule)
+);
+
+
 create table chembl.molecule_labels
 (
     molecule            integer not null,

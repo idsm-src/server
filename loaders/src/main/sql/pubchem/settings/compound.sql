@@ -71,23 +71,5 @@ grant select on pubchem.compound_wikidata_matches to sparql;
 
 --------------------------------------------------------------------------------
 
-insert into pubchem.compound_bases(id, keep)
-select distinct id, false from molecules.pubchem where not exists (select id from pubchem.compound_bases where id = molecules.pubchem.id);
-
-grant select on pubchem.compound_bases to sparql;
-
-
-create function pubchem.compound_bases__sync() returns trigger language plpgsql as
-$$
-  begin
-    if TG_OP = 'INSERT' then
-      insert into pubchem.compound_bases(id, keep) values (NEW.id, false) on conflict do nothing;
-    elsif TG_OP = 'DELETE' then
-      delete from pubchem.compound_bases where id = OLD.id and not keep;
-    end if;
-    return NEW;
-  end;
-$$;
-
-create trigger compound_bases__sync_insert before insert on molecules.pubchem for each row execute procedure pubchem.compound_bases__sync();
-create trigger compound_bases__sync_delete after  delete on molecules.pubchem for each row execute procedure pubchem.compound_bases__sync();
+create index compound_molfiles__molfile on pubchem.compound_molfiles using hash (molfile);
+grant select on pubchem.compound_molfiles to sparql;

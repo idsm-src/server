@@ -242,24 +242,24 @@ public class Chebi
 
         // extension
         {
-            DatabaseTable table = new DatabaseTable("molecules", "chebi");
-            TermMapping subject = config.createIriMapping("chebi:molfile", "id");
+            DatabaseTable table = new DatabaseTable(schema, "molfiles");
+            TermMapping subject = config.createIriMapping("chebi:molfile", "chebi");
             LiteralClass molfileLiteral = new StringSubsetLiteralClass("chebi-molfile");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_011120"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000011"),
-                    config.createIriMapping("ontology:chebi", "id"));
+                    config.createIriMapping("ontology:chebi", "chebi"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
                     config.createLiteralMapping(molfileLiteral, "molfile"));
 
             // extension
-            config.addQuadMapping(table, graph, config.createIriMapping("ontology:chebi", "id"),
+            config.addQuadMapping(table, graph, config.createIriMapping("ontology:chebi", "chebi"),
                     config.createIriMapping("sio:SIO_000008"), subject);
 
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:is-attribute-of"),
-                    config.createIriMapping("ontology:chebi", "id"));
+                    config.createIriMapping("ontology:chebi", "chebi"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-value"),
                     config.createLiteralMapping(molfileLiteral, "molfile"));
         }

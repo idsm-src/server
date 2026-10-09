@@ -26,23 +26,23 @@ public class Wikidata
         ConstantIriMapping graph = config.createIriMapping("wikidata:");
 
         {
-            DatabaseTable table = new DatabaseTable("molecules", "wikidata");
-            TermMapping subject = config.createIriMapping("wikidata:smiles", "id");
+            DatabaseTable table = new DatabaseTable("wikidata", "compound_structures");
+            TermMapping subject = config.createIriMapping("wikidata:smiles", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:CHEMINF_000018"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000011"),
-                    config.createIriMapping("wikidata:entity", "id"));
+                    config.createIriMapping("wikidata:entity", "compound"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
                     config.createLiteralMapping(xsdString, "smiles"));
 
             // extension
-            config.addQuadMapping(table, graph, config.createIriMapping("wikidata:entity", "id"),
+            config.addQuadMapping(table, graph, config.createIriMapping("wikidata:entity", "compound"),
                     config.createIriMapping("sio:SIO_000008"), subject);
 
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:is-attribute-of"),
-                    config.createIriMapping("wikidata:entity", "id"));
+                    config.createIriMapping("wikidata:entity", "compound"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-value"),
                     config.createLiteralMapping(xsdString, "smiles"));
         }

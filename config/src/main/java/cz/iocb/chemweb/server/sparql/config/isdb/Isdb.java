@@ -266,12 +266,12 @@ public class Isdb
             DatabaseTable table = new DatabaseTable(schema, "spectrum_bases");
             TermMapping subject = config.createIriMapping("isdb:instrument", "id", "ionmode");
             TermMapping experiment = config.createIriMapping("isdb:experiment", "id", "ionmode");
-
+        
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000031")); // instrument model
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"), // has value
                     config.createLiteralMapping("")); //TODO:
-
+        
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000553"), // is parameter in
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter

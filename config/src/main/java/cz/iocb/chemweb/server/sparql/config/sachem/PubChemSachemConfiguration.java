@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.StringSubsetLiteralClass;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
+import cz.iocb.sparql.engine.database.DatabaseTable;
 
 
 
@@ -13,6 +14,7 @@ public class PubChemSachemConfiguration extends SachemConfiguration
             throws SQLException
     {
         super(service, connectionPool, schema, "pubchem", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID", 0,
+                new DatabaseTable("pubchem", "compound_molfiles"), "compound",
                 new StringSubsetLiteralClass("pubchem-molfile"));
 
         addPrefixes();

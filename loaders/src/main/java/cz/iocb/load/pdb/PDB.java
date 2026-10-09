@@ -83,11 +83,10 @@ public final class PDB extends Updater
 
             loadCompounds();
 
+            syncIndex("pdb", true);
+
             try(Statement statement = connection.createStatement())
             {
-                statement.execute("select sachem.cleanup('pdb')");
-                statement.execute("select sachem.sync_data('pdb', false, true)");
-
                 try(ResultSet result = statement.executeQuery("select count(*) from pdb.compound_bases"))
                 {
                     if(result.next())

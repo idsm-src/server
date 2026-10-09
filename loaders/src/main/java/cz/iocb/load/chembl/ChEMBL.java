@@ -271,6 +271,8 @@ public class ChEMBL extends Updater
             printWarningSummary();
             MissingEntities.printSummary();
 
+            syncIndex("chembl", true);
+
             setCount("ChEMBL Substances", Molecule.size());
             setCount("ChEMBL Assays", Assay.size());
 
