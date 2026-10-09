@@ -196,6 +196,7 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
         addTemplate(isdb + "bn([A-Z]{14})_exact_mass", "isdb/Descriptor.vm");
         addTemplate(isdb + "bn([A-Z]{14})_formula", "isdb/Descriptor.vm");
         addTemplate(isdb + "bn([A-Z]{14})_inchi", "isdb/Descriptor.vm");
+        addTemplate(isdb + "bn([A-Z]{14})_inchikey", "isdb/Descriptor.vm");
         addTemplate(isdb + "bn([A-Z]{14}-[NP])_charge_state", "isdb/Descriptor.vm");
         addTemplate(isdb + "bn([A-Z]{14}-[NP])_instrument_type", "isdb/Descriptor.vm");
         addTemplate(isdb + "bn([A-Z]{14}-[NP])_level", "isdb/Descriptor.vm");

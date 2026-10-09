@@ -3,7 +3,6 @@ package cz.iocb.load.mona;
 import static cz.iocb.load.common.EntityTable.date;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
-import static cz.iocb.load.common.EntityTable.typed;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.EntityTable.varchar;
 import java.io.BufferedReader;
@@ -21,16 +20,14 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import cz.iocb.load.common.EntityTable;
-import cz.iocb.load.common.EntityTable.Column;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.SpectrumLiteral;
 import cz.iocb.load.common.Updater;
 
 
@@ -153,13 +150,10 @@ public class MoNA extends Updater
 
     public static void main(String[] args) throws IOException, SQLException
     {
-        // the spectra are compared as sets of peaks
-        Column spectrumColumn = typed("spectrum", "pgms.spectrum").unique()
-                .comparedBy((a, b) -> spectrumCompare((String) a, (String) b));
         EntityTable<Integer> compounds = new EntityTable<>("mona.compound_bases", intKey("id"), null, date("created"),
-                date("curated"), date("updated"), uniqueVarchar("accession"), spectrumColumn, uniqueVarchar("splash"),
-                integer("level"), varchar("ionization_mode"), integer("ionization_type"), integer("library"),
-                integer("submitter"), varchar("link"));
+                date("curated"), date("updated"), uniqueVarchar("accession"), SpectrumLiteral.column("spectrum"),
+                uniqueVarchar("splash"), integer("level"), varchar("ionization_mode"), integer("ionization_type"),
+                integer("library"), integer("submitter"), varchar("link"));
         StringIntMap compoundIDs = new StringIntMap();
         IntStringMap keepStructures = new IntStringMap();
         IntStringMap newStructures = new IntStringMap();
@@ -1285,51 +1279,5 @@ public class MoNA extends Updater
 
         updateVersion();
         commit();
-    }
-
-
-    private static boolean spectrumCompare(String s1, String s2)
-    {
-        class Element implements Comparable<Element>
-        {
-            float mz;
-            float intenzity;
-
-            Element(String s)
-            {
-                mz = Float.parseFloat(s.replaceFirst(":.*", ""));
-                intenzity = Float.parseFloat(s.replaceFirst(".*:", ""));
-            }
-
-            @Override
-            public int compareTo(Element obj)
-            {
-                return mz == obj.mz ? Float.compare(intenzity, obj.intenzity) : Float.compare(mz, obj.mz);
-            }
-
-            @Override
-            public boolean equals(Object obj)
-            {
-                return mz == ((Element) obj).mz && intenzity == ((Element) obj).intenzity;
-            }
-
-            @Override
-            public String toString()
-            {
-                return mz + ":" + intenzity;
-            }
-        }
-
-
-        if(s1 == null && s2 == null)
-            return true;
-
-        if(s1 == null || s2 == null)
-            return false;
-
-        List<Element> l1 = Arrays.stream(s1.split(" +")).map(Element::new).sorted().collect(Collectors.toList());
-        List<Element> l2 = Arrays.stream(s2.split(" +")).map(Element::new).sorted().collect(Collectors.toList());
-
-        return l1.equals(l2);
     }
 }

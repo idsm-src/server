@@ -75,7 +75,7 @@ public class IsdbUserIriClass extends UserIriClass
                 if(result.next())
                 {
                     return List.of(new ValueColumn(result.getString(1), INT4),
-                            new ValueColumn(iri.getValue().substring(prefix.length() + 15), CHAR));
+                            new ValueColumn(iri.getValue().substring(prefixLen + 15, prefixLen + 16), CHAR));
                 }
                 else
                 {
@@ -213,7 +213,9 @@ public class IsdbUserIriClass extends UserIriClass
     @Override
     public List<Column> toOrderColumns(List<Column> columns)
     {
-        String code = String.format("(SELECT accession FROM isdb.compound_bases WHERE id = %s)", columns.get(0));
+        String access = "(SELECT id as \"@from\", accession as \"@to\" FROM isdb.compound_bases) as \"@rctab\"";
+        String code = String.format("(SELECT \"@to\" FROM %s WHERE \"@from\" = %s)", access, columns.get(0));
+
         return List.of(new ExpressionColumn(code, VARCHAR), columns.get(1));
     }
 

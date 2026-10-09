@@ -69,7 +69,7 @@ insert into info.idsm_sources values ( 3, 'PDB Chemical Components (PDBeChem)', 
 insert into info.idsm_sources values ( 4, 'Wikidata Compounds', 'https://www.wikidata.org/', '');
 insert into info.idsm_sources values ( 5, 'DrugBank Compounds', 'https://drugbank.com/', '');
 insert into info.idsm_sources values ( 6, 'MassBank of North America (MoNA)', 'https://mona.fiehnlab.ucdavis.edu/', '');
-insert into info.idsm_sources values ( 7, 'In Silico Spectral Database (ISDB)', 'https://zenodo.org/records/8287341', '');
+insert into info.idsm_sources values ( 7, 'In Silico Spectral Database (ISDB)', 'https://zenodo.org/records/14887271', '');
 insert into info.idsm_sources values ( 8, 'Medical Subject Headings (MESH)', 'https://id.nlm.nih.gov/mesh/', '');
 insert into info.idsm_sources values ( 9, 'BioAssay Ontology (BAO)', 'http://bioassayontology.org/bioassayontology/', '');
 insert into info.idsm_sources values (10, 'Protein Ontology (PRO)', 'https://proconsortium.org', '');

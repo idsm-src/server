@@ -1,12 +1,13 @@
 create table isdb.compound_bases
 (
-    id              serial unique not null,
-    accession       varchar not null,
+    id              integer not null,
+    accession       varchar unique not null,
+    inchikey        varchar not null,
     exact_mass      real not null,
     formula         varchar not null,
     smiles          varchar not null,
     inchi           varchar not null,
-    primary key(accession)
+    primary key(id)
 );
 
 

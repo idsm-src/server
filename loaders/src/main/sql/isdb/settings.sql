@@ -1,3 +1,4 @@
+create index compound_bases__inchikey on isdb.compound_bases(inchikey);
 create index compound_bases__exact_mass on isdb.compound_bases(exact_mass);
 create index compound_bases__formula on isdb.compound_bases(formula);
 create index compound_bases__smiles on isdb.compound_bases(smiles);

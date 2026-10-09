@@ -59,6 +59,9 @@ public class Isdb
 
         config.addIriClass(new MapUserIriClass("isdb:inchi", INT4, new DatabaseTable(schema, "compound_bases"),
                 new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), bnisdb, 14, "[A-Z]{14}", "_inchi"));
+        config.addIriClass(new MapUserIriClass("isdb:inchikey", INT4, new DatabaseTable(schema, "compound_bases"),
+                new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), bnisdb, 14, "[A-Z]{14}",
+                "_inchikey"));
         config.addIriClass(new MapUserIriClass("isdb:formula", INT4, new DatabaseTable(schema, "compound_bases"),
                 new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), bnisdb, 14, "[A-Z]{14}",
                 "_formula"));
@@ -102,6 +105,22 @@ public class Isdb
                     config.createIriMapping("sio:CHEMINF_000113")); // InChI descriptor
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"), // has value
                     config.createLiteralMapping(xsdString, "inchi"));
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000011"), // is attribute of
+                    compound);
+            config.addQuadMapping(table, graph, compound, config.createIriMapping("sio:SIO_000008"), // has attribute
+                    subject);
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            TermMapping subject = config.createIriMapping("isdb:inchikey", "id");
+            TermMapping compound = config.createIriMapping("isdb:compound", "id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("sio:CHEMINF_000059")); // InChIKey
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"), // has value
+                    config.createLiteralMapping(xsdString, "inchikey"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000011"), // is attribute of
                     compound);
@@ -266,12 +285,12 @@ public class Isdb
             DatabaseTable table = new DatabaseTable(schema, "spectrum_bases");
             TermMapping subject = config.createIriMapping("isdb:instrument", "id", "ionmode");
             TermMapping experiment = config.createIriMapping("isdb:experiment", "id", "ionmode");
-        
+
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000031")); // instrument model
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"), // has value
                     config.createLiteralMapping("")); //TODO:
-        
+
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000553"), // is parameter in
                     experiment);
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("sio:SIO_000552"), // has parameter
@@ -356,10 +375,10 @@ public class Isdb
                     config.createIriMapping("sio:SIO_000089")); // dataset
 
             config.addQuadMapping(null, graph, subject, config.createIriMapping("dcterms:title"),
-                    config.createLiteralMapping("In Silico Spectral Databases of Natural Products"));
+                    config.createLiteralMapping("In Silico Spectral Database (ISDB)"));
             config.addQuadMapping(null, graph, subject, config.createIriMapping("dcterms:description"),
-                    config.createLiteralMapping("An In Silico spectral DataBase (ISDB) of natural products "
-                            + "calculated from structures aggregated in the frame of the LOTUS Initiative."));
+                    config.createLiteralMapping("An In Silico spectral DataBase (ISDB) of the chemical compounds "
+                            + "of Wikidata, with the spectra predicted by CFM-ID 4."));
         }
 
         {

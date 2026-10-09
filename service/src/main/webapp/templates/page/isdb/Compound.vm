@@ -8,6 +8,7 @@
   VALUES (?TYPE ?TITLE ?UNIT)
   {
     (sio:CHEMINF_000113 "IUPAC InChI" UNDEF)
+    (sio:CHEMINF_000059 "IUPAC InChIKey" UNDEF)
     (sio:CHEMINF_000042 "molecular formula" UNDEF)
     (sio:CHEMINF_000018 "SMILES" UNDEF)
     (sio:CHEMINF_000217 "exact mass" "g/mol")

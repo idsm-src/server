@@ -412,10 +412,10 @@
           <execution>
             <id>isdb-load</id>
             <goals>
-              <goal>exec</goal>
+              <goal>java</goal>
             </goals>
             <configuration>
-              <executable>src/main/scripts/load-isdb.sh</executable>
+              <mainClass>cz.iocb.load.isdb.ISDB</mainClass>
             </configuration>
           </execution>
 
