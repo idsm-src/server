@@ -59,21 +59,23 @@
         <version>3.6.4</version>
         <executions>
 
-          <!-- info -->
+          <!-- idsm -->
           <execution>
-            <id>info-dbinit</id>
+            <id>idsm-dbinit</id>
             <goals>
               <goal>exec</goal>
             </goals>
             <configuration>
               <executable>src/main/scripts/run_psql.sh</executable>
               <arguments>
-                <argument>src/main/sql/info/base.sql</argument>
-                <argument>src/main/sql/info/schema.sql</argument>
-                <argument>src/main/sql/info/examples.sql</argument>
-                <argument>src/main/sql/info/federated.sql</argument>
-                <argument>src/main/sql/info/settings.sql</argument>
-                <argument>src/main/sql/info/foreignkey.sql</argument>
+                <argument>src/main/sql/idsm/base.sql</argument>
+                <argument>src/main/sql/idsm/schema.sql</argument>
+                <argument>src/main/sql/idsm/functions.sql</argument>
+                <argument>src/main/sql/idsm/sachem.sql</argument>
+                <argument>src/main/sql/idsm/examples.sql</argument>
+                <argument>src/main/sql/idsm/federated.sql</argument>
+                <argument>src/main/sql/idsm/settings.sql</argument>
+                <argument>src/main/sql/idsm/foreignkey.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -110,22 +112,6 @@
             </goals>
             <configuration>
               <mainClass>cz.iocb.load.drugbank.DrugBank</mainClass>
-            </configuration>
-          </execution>
-
-          <!-- common -->
-          <execution>
-            <id>common-dbinit</id>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>src/main/scripts/run_psql.sh</executable>
-              <arguments>
-                <argument>src/main/sql/common/base.sql</argument>
-                <argument>src/main/sql/common/functions.sql</argument>
-                <argument>src/main/sql/common/sachem.sql</argument>
-              </arguments>
             </configuration>
           </execution>
 

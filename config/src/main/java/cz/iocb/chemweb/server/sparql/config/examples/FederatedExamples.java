@@ -23,7 +23,7 @@ public class FederatedExamples
 
     public static void addResourceClasses(ExamplesConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("info:federated_example", INT4,
+        config.addIriClass(new IntegerUserIriClass("idsm:federated_example", INT4,
                 "https://idsm.elixir-czech.cz/.well-known/federated-sparql-examples/", 6));
     }
 
@@ -35,7 +35,7 @@ public class FederatedExamples
 
         {
             DatabaseTable table = new DatabaseTable(schema, "federated_queries");
-            TermMapping subject = config.createIriMapping("info:federated_example", "id");
+            TermMapping subject = config.createIriMapping("idsm:federated_example", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sh:SPARQLExecutable"));
@@ -47,15 +47,15 @@ public class FederatedExamples
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sh:select"),
                     config.createLiteralMapping(xsdString, "query"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("schema:target"),
-                    config.createIriMapping("info:endpoint", "target"));
+                    config.createIriMapping("idsm:endpoint", "target"));
         }
 
         {
             DatabaseTable table = new DatabaseTable(schema, "federated_query_targets");
-            TermMapping subject = config.createIriMapping("info:federated_example", "query");
+            TermMapping subject = config.createIriMapping("idsm:federated_example", "query");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("spex:federatesWith"),
-                    config.createIriMapping("info:endpoint", "target"));
+                    config.createIriMapping("idsm:endpoint", "target"));
         }
     }
 }

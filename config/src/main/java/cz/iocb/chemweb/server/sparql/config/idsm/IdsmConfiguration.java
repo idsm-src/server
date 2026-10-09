@@ -225,7 +225,7 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         mapping.put(getIriClass("pdb:compound"), getColumns(getIriClass("pdb:compound"), "pdb"));
 
         Sachem.addResourceClasses(this);
-        Sachem.addProcedures(this, "common", mapping);
+        Sachem.addProcedures(this, "idsm", mapping);
         Sachem.addFunctions(this);
 
 

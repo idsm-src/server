@@ -23,8 +23,8 @@ public class Examples
 
     public static void addResourceClasses(ExamplesConfiguration config)
     {
-        config.addIriClass(new StringUserIriClass("info:prefix", "https://idsm.elixir-czech.cz/sparql-prefixes/"));
-        config.addIriClass(new IntegerUserIriClass("info:example", INT4,
+        config.addIriClass(new StringUserIriClass("idsm:prefix", "https://idsm.elixir-czech.cz/sparql-prefixes/"));
+        config.addIriClass(new IntegerUserIriClass("idsm:example", INT4,
                 "https://idsm.elixir-czech.cz/.well-known/sparql-examples/", 6));
     }
 
@@ -36,7 +36,7 @@ public class Examples
 
         {
             DatabaseTable table = new DatabaseTable(schema, "queries");
-            TermMapping subject = config.createIriMapping("info:example", "id");
+            TermMapping subject = config.createIriMapping("idsm:example", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sh:SPARQLExecutable"));
@@ -48,7 +48,7 @@ public class Examples
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sh:select"),
                     config.createLiteralMapping(xsdString, "query"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("schema:target"),
-                    config.createIriMapping("info:endpoint", "target"));
+                    config.createIriMapping("idsm:endpoint", "target"));
         }
     }
 }

@@ -81,7 +81,7 @@ public class Void
         }
 
         {
-            DatabaseTable table = new DatabaseTable("info", "version");
+            DatabaseTable table = new DatabaseTable("idsm", "version");
 
             DateTimeInZoneClass xsdDateTimeM0 = DateTimeInZoneClass.get(0);
 

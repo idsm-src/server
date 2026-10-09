@@ -8,7 +8,7 @@
 -- examples/iocb/001.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (1,
+insert into idsm.federated_queries values (1,
 'Which molecules are hydrophobic, can cross the blood-brain barrier, and have been experimentally shown to interact with the human 5-HT2C receptor?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -78,14 +78,14 @@ WHERE {
 GROUP BY ?chemblId ?name
 ORDER BY ?bestNM');
 
-insert into info.federated_query_targets values (1, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (1, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/iocb/002.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (2,
+insert into idsm.federated_queries values (2,
 'Which hydrophobic, blood-brain-barrier-permeant ligands of the human 5-HT2C receptor are there, together with their Wikidata concept and PubChem compound identifiers?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -161,15 +161,15 @@ WHERE {
 }
 ORDER BY ?bestNM');
 
-insert into info.federated_query_targets values (2, 'https://query.wikidata.org/sparql');
-insert into info.federated_query_targets values (2, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (2, 'https://query.wikidata.org/sparql');
+insert into idsm.federated_query_targets values (2, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/iocb/003.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (3,
+insert into idsm.federated_queries values (3,
 'Which human lipid-recognising GPCRs have experimentally determined structures, and what are their Wikidata concepts? (candidate set for receptors where a ligand can egress laterally into the membrane through the transmembrane helices)',
 'https://sparql.uniprot.org/sparql',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -207,14 +207,14 @@ WHERE {
 }
 ORDER BY ?mnemonic ?pdbid');
 
-insert into info.federated_query_targets values (3, 'https://query.wikidata.org/sparql');
+insert into idsm.federated_query_targets values (3, 'https://query.wikidata.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/iocb/004.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (4,
+insert into idsm.federated_queries values (4,
 'Which experimentally determined structures exist for the GPCRs in which lateral, membrane-facing ligand entry or egress through the transmembrane helices has been reported (CysLT1R, GPR183, S1P1, CB1, LPA1), and which PubChem compounds are bound in them?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -253,14 +253,14 @@ WHERE {
 }
 ORDER BY ?mnemonic ?pdbid ?compound');
 
-insert into info.federated_query_targets values (4, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (4, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/iocb/005.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (5,
+insert into idsm.federated_queries values (5,
 'What are the koff and kon values for agomelatine at the human 5-HT2C receptor?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -310,14 +310,14 @@ WHERE {
 }
 ORDER BY ?stdType ?value');
 
-insert into info.federated_query_targets values (5, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (5, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/iocb/006.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (6,
+insert into idsm.federated_queries values (6,
 'Which molecules that target human GPCRs have entered phase 1 or phase 2 clinical testing recently, and which UniProtKB protein does each target correspond to?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -390,14 +390,14 @@ WHERE {
 ORDER BY DESC(?latestYear) ?molName
 LIMIT 200');
 
-insert into info.federated_query_targets values (6, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (6, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/iocb/007.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (7,
+insert into idsm.federated_queries values (7,
 'Which deuterated drug analogues are currently in clinical development or testing, what non-deuterated parent compound is each a minimal variant of, and what is the corresponding Wikidata concept?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -449,14 +449,14 @@ WHERE {
 }
 ORDER BY DESC(?phase) ?molName');
 
-insert into info.federated_query_targets values (7, 'https://query.wikidata.org/sparql');
+insert into idsm.federated_query_targets values (7, 'https://query.wikidata.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/iocb/008.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (8,
+insert into idsm.federated_queries values (8,
 'Which chemical analogues of alkaloids are currently approved or undergoing clinical testing, to which alkaloid family does each belong, and which human proteins do they act on?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -535,14 +535,14 @@ WHERE {
 }
 ORDER BY DESC(?phase) ?molName ?mnemonic');
 
-insert into info.federated_query_targets values (8, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (8, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/iocb/009.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (9,
+insert into idsm.federated_queries values (9,
 'How do methylnicotine (6-methylnicotine) and nicotine compare in binding kinetics, binding affinity, and in-vivo pharmacokinetic readouts?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -586,7 +586,7 @@ ORDER BY ?compound ?stdType');
 -- examples/iocb_inf/010.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (10,
+insert into idsm.federated_queries values (10,
 'What are UniProt and Rhea, and what kinds of data can I find in them?',
 'https://sparql.uniprot.org/sparql',
 'PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -642,14 +642,14 @@ WHERE {
 }
 ORDER BY DESC(?triples) ?database ?dataCollection');
 
-insert into info.federated_query_targets values (10, 'https://sparql.rhea-db.org/sparql');
+insert into idsm.federated_query_targets values (10, 'https://sparql.rhea-db.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/iocb_inf/011.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (11,
+insert into idsm.federated_queries values (11,
 'How can I programmatically access the following databases: PDB, UniProt, Rhea, PubChem, and ChEMBL?',
 'https://sparql.uniprot.org/sparql',
 'PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -746,15 +746,15 @@ WHERE {
 GROUP BY ?database ?accessRoute ?endpointOrTemplate
 ORDER BY ?accessRoute ?database ?endpointOrTemplate');
 
-insert into info.federated_query_targets values (11, 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm');
-insert into info.federated_query_targets values (11, 'https://sparql.rhea-db.org/sparql');
+insert into idsm.federated_query_targets values (11, 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm');
+insert into idsm.federated_query_targets values (11, 'https://sparql.rhea-db.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/iocb_inf/012.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (12,
+insert into idsm.federated_queries values (12,
 'Where can I find documentation for their data formats? Which data formats are used by PDB, UniProt, Rhea, PubChem, and ChEMBL?',
 'https://sparql.uniprot.org/sparql',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -855,15 +855,15 @@ WHERE {
 }
 ORDER BY ?answerKind ?database ?formatOrDatatype');
 
-insert into info.federated_query_targets values (12, 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm');
-insert into info.federated_query_targets values (12, 'https://sparql.rhea-db.org/sparql');
+insert into idsm.federated_query_targets values (12, 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm');
+insert into idsm.federated_query_targets values (12, 'https://sparql.rhea-db.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/iocb_inf/013.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (13,
+insert into idsm.federated_queries values (13,
 'How is UniProt interconnected with other databases such as PDB, Rhea, PubChem, and ChEMBL? What is the central entity in these mappings, and what is the cardinality (one-to-one, one-to-many, many-to-many) of each mapping?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX void: <http://rdfs.org/ns/void#>
@@ -967,14 +967,14 @@ WHERE {
 }
 ORDER BY ?cardinality ?linkTo ?linkFrom');
 
-insert into info.federated_query_targets values (13, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (13, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/pubchem/014.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (14,
+insert into idsm.federated_queries values (14,
 'How can I retrieve all Rhea reactions that involve L-glutamate(1-) (CID 5460299)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -996,14 +996,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (14, 'https://sparql.rhea-db.org/sparql');
+insert into idsm.federated_query_targets values (14, 'https://sparql.rhea-db.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/pubchem/015.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (15,
+insert into idsm.federated_queries values (15,
 'How can I retrieve all compounds involved in the given Rhea reaction (RHEA:10020)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1026,14 +1026,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (15, 'https://sparql.rhea-db.org/sparql');
+insert into idsm.federated_query_targets values (15, 'https://sparql.rhea-db.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/pubchem/016.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (16,
+insert into idsm.federated_queries values (16,
 'How can I retrieve the WURCS sequence from Glycosmos for the glycan structure (SID 252275760) in PubChem?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1055,14 +1055,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (16, 'https://ts.glycosmos.org/sparql');
+insert into idsm.federated_query_targets values (16, 'https://ts.glycosmos.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/pubchem/017.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (17,
+insert into idsm.federated_queries values (17,
 'Which PubChem pathways include the genes associated with Keshan disease (DOID:0050083), as identified by Glycosmos?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1093,14 +1093,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (17, 'https://ts.glycosmos.org/sparql');
+insert into idsm.federated_query_targets values (17, 'https://ts.glycosmos.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/pubchem/018.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (18,
+insert into idsm.federated_queries values (18,
 'Which PDB structures with a resolution better than 2 Å that include Aspirin (CID 2244) and have associated bioactivity data in PubChem?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1142,14 +1142,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (18, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (18, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/pubchem/019.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (19,
+insert into idsm.federated_queries values (19,
 'How can I retrieve all compounds involved in PDB structures with a resolution better than 2 Å for the protein Basic phospholipase A2 VRV-PL-VIIIa (UniProt ID: P59071)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1177,14 +1177,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (19, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (19, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/pubchem/020.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (20,
+insert into idsm.federated_queries values (20,
 'How to retrieve the labels of Aspirin (CID 2244) in English and Spanish from Wikidata?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1202,14 +1202,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (20, 'https://query.wikidata.org/sparql');
+insert into idsm.federated_query_targets values (20, 'https://query.wikidata.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/pubchem/021.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (21,
+insert into idsm.federated_queries values (21,
 'How to retrieve the preferred label from PubChem for the Wikidata entry (Q18216)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -1231,14 +1231,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (21, 'https://query.wikidata.org/sparql');
+insert into idsm.federated_query_targets values (21, 'https://query.wikidata.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/pubchem/022.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (22,
+insert into idsm.federated_queries values (22,
 'How can I find the WikiPathways that include the compound dihydroflavine-adenine dinucleotide (CID 446013)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1266,14 +1266,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (22, 'https://sparql.wikipathways.org/sparql');
+insert into idsm.federated_query_targets values (22, 'https://sparql.wikipathways.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/pubchem/023.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (23,
+insert into idsm.federated_queries values (23,
 'How can I retrieve the CID of compounds involved in the pathway Electron Transport Chain: OXPHOS system in mitochondria (Wikipathways:WP111)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1304,15 +1304,15 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (23, 'https://sparql.api.identifiers.org/sparql');
-insert into info.federated_query_targets values (23, 'https://sparql.wikipathways.org/sparql');
+insert into idsm.federated_query_targets values (23, 'https://sparql.api.identifiers.org/sparql');
+insert into idsm.federated_query_targets values (23, 'https://sparql.wikipathways.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/rhea/024.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (24,
+insert into idsm.federated_queries values (24,
 'Retrieve the Rhea biochemical reactions that involve cholesterol or cholesterol derivatives',
 'https://sparql.rhea-db.org/sparql',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1336,14 +1336,14 @@ WHERE {
   ?CHEBI up:name ?CHEBI_UNIPROT_NAME .
 }');
 
-insert into info.federated_query_targets values (24, 'https://idsm.elixir-czech.cz/sparql/endpoint/chebi');
+insert into idsm.federated_query_targets values (24, 'https://idsm.elixir-czech.cz/sparql/endpoint/chebi');
 
 
 --------------------------------------------------------------------------------
 -- examples/rhea/025.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (25,
+insert into idsm.federated_queries values (25,
 'Retrieve the number of UniProtKB/Swiss-Prot human enzymes that metabolize cholesterol or cholesterol derivatives',
 'https://sparql.rhea-db.org/sparql',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1386,15 +1386,15 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (25, 'https://idsm.elixir-czech.cz/sparql/endpoint/chebi');
-insert into info.federated_query_targets values (25, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (25, 'https://idsm.elixir-czech.cz/sparql/endpoint/chebi');
+insert into idsm.federated_query_targets values (25, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/rhea/026.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (26,
+insert into idsm.federated_queries values (26,
 'Retrieve the list of UniProtKB/Swiss-Prot human proteins that catalyze Rhea reactions involving cholesterol or cholesterol derivatives',
 'https://sparql.rhea-db.org/sparql',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1439,15 +1439,15 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (26, 'https://idsm.elixir-czech.cz/sparql/endpoint/chebi');
-insert into info.federated_query_targets values (26, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (26, 'https://idsm.elixir-czech.cz/sparql/endpoint/chebi');
+insert into idsm.federated_query_targets values (26, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/rhea/027.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (27,
+insert into idsm.federated_queries values (27,
 'Retrieve the number of UniProtKB/Swiss-Prot human enzymes that metabolize cholesterol or cholesterol derivatives and that are involved in diseases',
 'https://sparql.rhea-db.org/sparql',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1492,15 +1492,15 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (27, 'https://idsm.elixir-czech.cz/sparql/endpoint/chebi');
-insert into info.federated_query_targets values (27, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (27, 'https://idsm.elixir-czech.cz/sparql/endpoint/chebi');
+insert into idsm.federated_query_targets values (27, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/rhea/028.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (28,
+insert into idsm.federated_queries values (28,
 'Retrieve the list of diseases involving human enzymes that metabolize cholesterol or cholesterol derivatives and the number of proteins involved',
 'https://sparql.rhea-db.org/sparql',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1547,15 +1547,15 @@ WHERE {
 GROUP BY ?DISEASE ?DISEASE_NAME
 ORDER BY DESC(COUNT(DISTINCT ?PROTEIN))');
 
-insert into info.federated_query_targets values (28, 'https://idsm.elixir-czech.cz/sparql/endpoint/chebi');
-insert into info.federated_query_targets values (28, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (28, 'https://idsm.elixir-czech.cz/sparql/endpoint/chebi');
+insert into idsm.federated_query_targets values (28, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/rhea/029.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (29,
+insert into idsm.federated_queries values (29,
 'Retrieve ChEMBL drugs that interact with UniProt enzymes catalyzing Rhea reactions involving members of the ChEBI class ChEBI:15889 (sterol) as participants.',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1612,15 +1612,15 @@ WHERE {
   FILTER (?phase = 4)
 }');
 
-insert into info.federated_query_targets values (29, 'https://sparql.rhea-db.org/sparql');
-insert into info.federated_query_targets values (29, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (29, 'https://sparql.rhea-db.org/sparql');
+insert into idsm.federated_query_targets values (29, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/scicomp/030.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (30,
+insert into idsm.federated_queries values (30,
 'Give me all oxidoreductase inhibitors active <100 nM in human and mouse.',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1672,14 +1672,14 @@ WHERE {
 }
 LIMIT 500');
 
-insert into info.federated_query_targets values (30, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (30, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/scicomp/031.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (31,
+insert into idsm.federated_queries values (31,
 'What compounds are known to modulate human PRKCA (protein kinase C alpha, UniProt P17252) directly?',
 'https://sparql.uniprot.org/sparql',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1712,14 +1712,14 @@ WHERE {
 }
 ORDER BY ?value');
 
-insert into info.federated_query_targets values (31, 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm');
+insert into idsm.federated_query_targets values (31, 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm');
 
 
 --------------------------------------------------------------------------------
 -- examples/scicomp/032.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (32,
+insert into idsm.federated_queries values (32,
 'For a given compound (here loratadine, ChEMBL998), give its interaction profile with targets.',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX cco: <http://rdf.ebi.ac.uk/terms/chembl#>
@@ -1758,14 +1758,14 @@ WHERE {
 }
 ORDER BY ?value');
 
-insert into info.federated_query_targets values (32, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (32, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/scicomp/033.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (33,
+insert into idsm.federated_queries values (33,
 'For a given compound (here imatinib), summarize similar compounds and their activities.',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX cco: <http://rdf.ebi.ac.uk/terms/chembl#>
@@ -1824,15 +1824,15 @@ WHERE {
 ORDER BY DESC(?similarity) ?value
 LIMIT 200');
 
-insert into info.federated_query_targets values (33, 'https://idsm.elixir-czech.cz/sparql/endpoint/chembl');
-insert into info.federated_query_targets values (33, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (33, 'https://idsm.elixir-czech.cz/sparql/endpoint/chembl');
+insert into idsm.federated_query_targets values (33, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/scicomp/034.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (34,
+insert into idsm.federated_queries values (34,
 'Which compounds are known activators of targets related to Parkinson''s or Alzheimer''s disease?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1895,14 +1895,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (34, 'https://query.wikidata.org/sparql');
+insert into idsm.federated_query_targets values (34, 'https://query.wikidata.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/scicomp/035.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (35,
+insert into idsm.federated_queries values (35,
 'Which compounds annotated in an active Melochia umbellata extract have reported activity against Trypanosoma cruzi, and in which taxa are they reported?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1974,14 +1974,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (35, 'https://query.wikidata.org/sparql');
+insert into idsm.federated_query_targets values (35, 'https://query.wikidata.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/036.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (36,
+insert into idsm.federated_queries values (36,
 'Which proteins in UniProtKB/Swiss-Prot have magnesium(2+) as a cofactor?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX oboInOwl: <http://www.geneontology.org/formats/oboInOwl#>
@@ -2006,14 +2006,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (36, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (36, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/037.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (37,
+insert into idsm.federated_queries values (37,
 'Which Rhea reactions involve any germacrene compound?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -2035,14 +2035,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (37, 'https://sparql.rhea-db.org/sparql');
+insert into idsm.federated_query_targets values (37, 'https://sparql.rhea-db.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/038.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (38,
+insert into idsm.federated_queries values (38,
 'Which diterpenoids in ChEBI also have a DrugBank record?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -2070,14 +2070,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (38, 'https://idsm.elixir-czech.cz/sparql/endpoint/drugbank');
+insert into idsm.federated_query_targets values (38, 'https://idsm.elixir-czech.cz/sparql/endpoint/drugbank');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/039.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (39,
+insert into idsm.federated_queries values (39,
 'Which chemical compounds with a recorded discovery date are the oldest, among those that have a measured mass spectrum?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -2113,14 +2113,14 @@ GROUP BY ?smiles
 ORDER BY ?firstYear
 LIMIT 10');
 
-insert into info.federated_query_targets values (39, 'https://query.wikidata.org/sparql');
+insert into idsm.federated_query_targets values (39, 'https://query.wikidata.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/040.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (40,
+insert into idsm.federated_queries values (40,
 'Which taxa produce sesterterpenes?',
 'https://sparql.uniprot.org/sparql',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -2208,15 +2208,15 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (40, 'https://idsm.elixir-czech.cz/sparql/endpoint/wikidata');
-insert into info.federated_query_targets values (40, 'https://query.wikidata.org/sparql');
+insert into idsm.federated_query_targets values (40, 'https://idsm.elixir-czech.cz/sparql/endpoint/wikidata');
+insert into idsm.federated_query_targets values (40, 'https://query.wikidata.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/041.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (41,
+insert into idsm.federated_queries values (41,
 'Which sesterterpenes have no DrugBank record?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -2245,14 +2245,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (41, 'https://idsm.elixir-czech.cz/sparql/endpoint/drugbank');
+insert into idsm.federated_query_targets values (41, 'https://idsm.elixir-czech.cz/sparql/endpoint/drugbank');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/042.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (42,
+insert into idsm.federated_queries values (42,
 'How do sesterterpenes in ChEBI/IDSM map to Wikidata items, with their English labels?',
 'https://sparql.uniprot.org/sparql',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -2285,15 +2285,15 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (42, 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm');
-insert into info.federated_query_targets values (42, 'https://query.wikidata.org/sparql');
+insert into idsm.federated_query_targets values (42, 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm');
+insert into idsm.federated_query_targets values (42, 'https://query.wikidata.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/043.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (43,
+insert into idsm.federated_queries values (43,
 'Which molecules are structurally similar to aspirin, and what are their Wikidata labels?',
 'https://sparql.uniprot.org/sparql',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -2325,15 +2325,15 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (43, 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm');
-insert into info.federated_query_targets values (43, 'https://query.wikidata.org/sparql');
+insert into idsm.federated_query_targets values (43, 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm');
+insert into idsm.federated_query_targets values (43, 'https://query.wikidata.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/044.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (44,
+insert into idsm.federated_queries values (44,
 'In how many Rhea reactions do given terpene compounds appear?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -2355,14 +2355,14 @@ WHERE {
 GROUP BY ?chebi
 ORDER BY DESC(?reactionCount)');
 
-insert into info.federated_query_targets values (44, 'https://sparql.rhea-db.org/sparql');
+insert into idsm.federated_query_targets values (44, 'https://sparql.rhea-db.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/045.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (45,
+insert into idsm.federated_queries values (45,
 'What names does a compound (farnesyl triphosphate) have across Wikidata and ChEBI/IDSM?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -2398,14 +2398,14 @@ WHERE {
   }
 }');
 
-insert into info.federated_query_targets values (45, 'https://query.wikidata.org/sparql');
+insert into idsm.federated_query_targets values (45, 'https://query.wikidata.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/046.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (46,
+insert into idsm.federated_queries values (46,
 'Which biological pathways contain compounds at least 0.7 similar to germacrene, and how many such compounds does each contain?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -2445,14 +2445,14 @@ WHERE {
 GROUP BY ?wpid ?title
 ORDER BY DESC(?bestScore)');
 
-insert into info.federated_query_targets values (46, 'https://sparql.wikipathways.org/sparql');
+insert into idsm.federated_query_targets values (46, 'https://sparql.wikipathways.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/047.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (47,
+insert into idsm.federated_queries values (47,
 'Which chosen terpene substrates take part in at least three Rhea reactions, and in which reactions?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -2487,14 +2487,14 @@ GROUP BY ?chebi
 HAVING (COUNT(DISTINCT ?rhea) >= 3)
 ORDER BY DESC(?reactionCount)');
 
-insert into info.federated_query_targets values (47, 'https://sparql.rhea-db.org/sparql');
+insert into idsm.federated_query_targets values (47, 'https://sparql.rhea-db.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/048.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (48,
+insert into idsm.federated_queries values (48,
 'Which PDB structures of beta-tubulin - the target of paclitaxel - are bound to paclitaxel?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -2537,15 +2537,15 @@ WHERE {
 ORDER BY ?resolution
 LIMIT 50');
 
-insert into info.federated_query_targets values (48, 'https://idsm.elixir-czech.cz/sparql/endpoint/pubchem');
-insert into info.federated_query_targets values (48, 'https://sparql.uniprot.org/sparql');
+insert into idsm.federated_query_targets values (48, 'https://idsm.elixir-czech.cz/sparql/endpoint/pubchem');
+insert into idsm.federated_query_targets values (48, 'https://sparql.uniprot.org/sparql');
 
 
 --------------------------------------------------------------------------------
 -- examples/students/049.ttl
 --------------------------------------------------------------------------------
 
-insert into info.federated_queries values (49,
+insert into idsm.federated_queries values (49,
 'How are molecules similar to aspirin distributed across molecular-mass bands?',
 'https://sparql.uniprot.org/sparql',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -2585,5 +2585,5 @@ WHERE {
 GROUP BY ?massBand ?bandLow
 ORDER BY ?bandLow');
 
-insert into info.federated_query_targets values (49, 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm');
-insert into info.federated_query_targets values (49, 'https://query.wikidata.org/sparql');
+insert into idsm.federated_query_targets values (49, 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm');
+insert into idsm.federated_query_targets values (49, 'https://query.wikidata.org/sparql');

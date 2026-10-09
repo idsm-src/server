@@ -160,7 +160,7 @@ public class Common
     {
         String fulltext = config.getPrefixes().get("fulltext");
 
-        FunctionDefinition match = new FunctionDefinition(fulltext + "match", new Function("common", "fulltext_match"),
+        FunctionDefinition match = new FunctionDefinition(fulltext + "match", new Function("idsm", "fulltext_match"),
                 xsdBoolean, List.of(stringLiteral, xsdString), false, true);
 
         config.addFunction(match);

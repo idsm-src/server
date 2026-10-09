@@ -14,7 +14,7 @@ import cz.iocb.sparql.engine.mapping.classes.ListUserIriClass;
 
 public class ExamplesConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
-    static final String schema = "info";
+    static final String schema = "idsm";
 
 
     public ExamplesConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
@@ -38,7 +38,7 @@ public class ExamplesConfiguration extends SparqlDatabaseOptimisedConfiguration
 
     private void addResourceClasses() throws SQLException
     {
-        addIriClass(new ListUserIriClass("info:endpoint", new DatabaseTable(schema, "sparql_endpoints"),
+        addIriClass(new ListUserIriClass("idsm:endpoint", new DatabaseTable(schema, "sparql_endpoints"),
                 new TableColumn("iri", VARCHAR)));
 
         Examples.addResourceClasses(this);

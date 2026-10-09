@@ -60,7 +60,7 @@ public class InfoServiceImpl extends GWTRemoteServiceServlet implements InfoServ
 
             try(Statement statement = connection.createStatement())
             {
-                try(ResultSet result = statement.executeQuery("select name, count from info.stats order by id"))
+                try(ResultSet result = statement.executeQuery("select name, count from idsm.stats order by id"))
                 {
                     while(result.next())
                         list.add(new CountItem(result.getString(1), result.getInt(2)));
@@ -88,7 +88,7 @@ public class InfoServiceImpl extends GWTRemoteServiceServlet implements InfoServ
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet result = statement
-                        .executeQuery("select url, name, version from info.sources order by id"))
+                        .executeQuery("select url, name, version from idsm.sources order by id"))
                 {
                     while(result.next())
                         list.add(new SourceItem(result.getString(1), result.getString(2), result.getString(3)));
