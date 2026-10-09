@@ -1839,12 +1839,14 @@ public class Ontology extends Updater
                 setVersion(source.getName(), source.getVersion());
 
             updateVersion();
+
+            checkProblems();
+
             commit();
         }
         catch(Throwable e)
         {
-            e.printStackTrace();
-            rollback();
+            fail(e);
         }
     }
 }

@@ -22,6 +22,7 @@ import java.util.Map.Entry;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -126,7 +127,7 @@ class Activity extends Updater
                             if(getBoolean(object))
                                 validityIssues.set(id);
                             else
-                                ChEMBL.warning("false cco:dataValidityIssue", subject.getURI());
+                                Problems.error("false cco:dataValidityIssue", subject.getURI());
                         }
                         case cco + "potentialDuplicate" -> activities.set(id, "potential_duplicate",
                                 getBoolean(object));
@@ -144,10 +145,10 @@ class Activity extends Updater
 
         for(Entry<Integer, Object[]> entry : activities.rows())
             if((entry.getValue()[commentIndex] != null) != validityIssues.get(entry.getKey()))
-                ChEMBL.warning("cco:dataValidityIssue not corresponding to cco:dataValidityComment",
+                Problems.error("cco:dataValidityIssue not corresponding to cco:dataValidityComment",
                         "CHEMBL_ACT_" + entry.getKey());
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -157,7 +158,7 @@ class Activity extends Updater
 
         activities.store("activity");
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

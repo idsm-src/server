@@ -126,7 +126,7 @@ public class InputStreamFixer extends InputStream
             if(c == '>')
             {
                 if(bug)
-                    System.err.println("    bad iri: " + new String(iri, 0, iriLength, StandardCharsets.UTF_8));
+                    Problems.warning("repaired IRI", new String(iri, 0, iriLength, StandardCharsets.UTF_8));
 
                 bug = false;
                 state = State.OUTSIDE;
@@ -140,7 +140,7 @@ public class InputStreamFixer extends InputStream
                     int cx = next();
 
                     if(cx == -1)
-                        throw new IOException();
+                        throw new IOException("unexpected end of the stream");
 
                     addIri(cx);
                     buffer[i] = (byte) cx;
@@ -203,7 +203,7 @@ public class InputStreamFixer extends InputStream
                 int c1 = next();
 
                 if(c1 == -1)
-                    throw new IOException();
+                    throw new IOException("unexpected end of the stream");
 
                 if(c1 != 0xAC && c1 != 0xA0)
                 {
@@ -212,9 +212,9 @@ public class InputStreamFixer extends InputStream
                 }
 
                 if(c1 == 0xAC)
-                    System.err.println("    bad character: U+00AC (not sign)");
+                    Problems.warning("replaced character", "U+00AC (not sign)");
                 else
-                    System.err.println("    bad character: U+00A0 (no-break space)");
+                    Problems.warning("replaced character", "U+00A0 (no-break space)");
 
                 return c1 == 0xAC ? '-' : ' ';
             }
@@ -224,7 +224,7 @@ public class InputStreamFixer extends InputStream
                 int c2 = next();
 
                 if(c1 == -1 || c2 == -1)
-                    throw new IOException();
+                    throw new IOException("unexpected end of the stream");
 
                 if(c1 != 0x80 || c2 != 0xA9 && c2 != 0x91 && c2 != 0x93)
                 {
@@ -233,11 +233,11 @@ public class InputStreamFixer extends InputStream
                 }
 
                 if(c2 == 0xA9)
-                    System.err.println("    bad character: U+2029 (paragraph separator)");
+                    Problems.warning("replaced character", "U+2029 (paragraph separator)");
                 else if(c2 == 0x91)
-                    System.err.println("    bad character: U+2010 (non-breaking hyphen)");
+                    Problems.warning("replaced character", "U+2010 (non-breaking hyphen)");
                 if(c2 == 0x93)
-                    System.err.println("    bad character: U+2013 (en dash)");
+                    Problems.warning("replaced character", "U+2013 (en dash)");
 
                 return c2 == 0xA9 ? ' ' : '-';
             }

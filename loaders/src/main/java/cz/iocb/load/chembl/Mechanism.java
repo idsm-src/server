@@ -97,7 +97,7 @@ class Mechanism extends Updater
         targets.check();
         sites.check();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -107,7 +107,7 @@ class Mechanism extends Updater
 
         mechanisms.store("mechanism");
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

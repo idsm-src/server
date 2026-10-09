@@ -87,8 +87,6 @@ public final class PDB extends Updater
 
             loadCompounds();
 
-            syncIndex("pdb", true);
-
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet result = statement.executeQuery("select count(*) from pdb.compounds"))
@@ -101,12 +99,15 @@ public final class PDB extends Updater
             setVersion("PDB Chemical Components (PDBeChem)", version);
 
             updateVersion();
+
+            checkProblems();
+
+            syncIndex("pdb", true);
             commit();
         }
         catch(Throwable e)
         {
-            e.printStackTrace();
-            rollback();
+            fail(e);
         }
     }
 }

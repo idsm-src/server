@@ -482,8 +482,8 @@ public class EntityTable<K> extends Updater
         if(row[index] == null)
             row[index] = columns[index].type.check(value);
         else if(!columns[index].same(row[index], value))
-            throw new IOException(
-                    "multiple values of " + table + "." + column + " for " + id + ": " + row[index] + ", " + value);
+            throw new DataException("multiple values of " + table + "." + column,
+                    id + ": " + row[index] + ", " + value);
     }
 
 

@@ -1089,8 +1089,7 @@ public class GenerateVoid extends Updater
         }
         catch(Throwable e)
         {
-            e.printStackTrace();
-            rollback();
+            fail(e);
         }
     }
 

@@ -68,7 +68,7 @@ class BioComponent extends Updater
 
         taxonomies.check();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -78,7 +78,7 @@ class BioComponent extends Updater
 
         biocomponents.store("biocomponent");
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

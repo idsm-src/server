@@ -19,6 +19,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -124,19 +125,19 @@ class ProteinClassification extends Updater
         for(Entry<Integer, Object[]> entry : classes.rows())
         {
             if(!Objects.equals(entry.getValue()[labelIndex], prefLabels.remove(entry.getKey())))
-                ChEMBL.warning("skos:prefLabel different from rdfs:label", "CHEMBL_PC_" + entry.getKey());
+                Problems.error("skos:prefLabel different from rdfs:label", "CHEMBL_PC_" + entry.getKey());
 
             if(!Objects.equals(entry.getValue()[parentIndex], broaders.remove(entry.getKey())))
-                ChEMBL.warning("skos:broader different from rdfs:subClassOf", "CHEMBL_PC_" + entry.getKey());
+                Problems.error("skos:broader different from rdfs:subClassOf", "CHEMBL_PC_" + entry.getKey());
         }
 
         for(Integer id : prefLabels.keySet())
-            ChEMBL.warning("skos:prefLabel different from rdfs:label", "CHEMBL_PC_" + id);
+            Problems.error("skos:prefLabel different from rdfs:label", "CHEMBL_PC_" + id);
 
         for(Integer id : broaders.keySet())
-            ChEMBL.warning("skos:broader different from rdfs:subClassOf", "CHEMBL_PC_" + id);
+            Problems.error("skos:broader different from rdfs:subClassOf", "CHEMBL_PC_" + id);
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -148,7 +149,7 @@ class ProteinClassification extends Updater
         componentDescendants.store();
         targetDescendants.store();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

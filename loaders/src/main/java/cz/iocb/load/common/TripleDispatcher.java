@@ -124,7 +124,7 @@ public class TripleDispatcher extends Updater
      */
     public static String text(Node node)
     {
-        return node.isURI() ? node.getURI() : node.toString();
+        return TripleStreamProcessor.text(node);
     }
 
 
@@ -314,24 +314,59 @@ public class TripleDispatcher extends Updater
     }
 
 
+    /*
+     * Passes the triple to its handlers. A problem of the data that a handler finds is reported, and the other handlers
+     * still get the triple.
+     */
     private synchronized void dispatch(Node subject, Node predicate, Node object) throws IOException, SQLException
     {
         for(TripleHandler handler : tripleHandlers)
-            handler.handle(subject, predicate, object);
+        {
+            try
+            {
+                handler.handle(subject, predicate, object);
+            }
+            catch(DataException | NumberFormatException e)
+            {
+                TripleStreamProcessor.report(e, subject, predicate, object);
+            }
+        }
 
         List<Handler> list = handlers.get(predicate.getURI());
 
         if(list != null)
+        {
             for(Handler handler : list)
-                handler.handle(subject, object);
+            {
+                try
+                {
+                    handler.handle(subject, object);
+                }
+                catch(DataException | NumberFormatException e)
+                {
+                    TripleStreamProcessor.report(e, subject, predicate, object);
+                }
+            }
+        }
 
         if(object.isURI() && predicate.getURI().equals(typePredicate))
         {
             List<Handler> types = typeHandlers.get(object.getURI());
 
             if(types != null)
+            {
                 for(Handler handler : types)
-                    handler.handle(subject, object);
+                {
+                    try
+                    {
+                        handler.handle(subject, object);
+                    }
+                    catch(DataException | NumberFormatException e)
+                    {
+                        TripleStreamProcessor.report(e, subject, predicate, object);
+                    }
+                }
+            }
         }
     }
 

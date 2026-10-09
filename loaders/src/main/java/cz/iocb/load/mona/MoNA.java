@@ -148,7 +148,7 @@ public class MoNA extends Updater
     }
 
 
-    public static void main(String[] args) throws IOException, SQLException
+    private static void load() throws IOException, SQLException
     {
         EntityTable<Integer> compounds = new EntityTable<>("mona.spectra", intKey("id"), null, date("created"),
                 date("curated"), date("updated"), uniqueVarchar("accession"), SpectrumLiteral.column("spectrum"),
@@ -1262,12 +1262,8 @@ public class MoNA extends Updater
                 newSubmitters);
 
 
-        syncIndex("mona", true);
-
         try(Statement statement = connection.createStatement())
         {
-            statement.execute("refresh materialized view mona.compound_pubchem_compounds");
-
             try(ResultSet result = statement.executeQuery("select count(*) from mona.spectra"))
             {
                 if(result.next())
@@ -1278,6 +1274,29 @@ public class MoNA extends Updater
         setVersion("MassBank of North America (MoNA)", version);
 
         updateVersion();
+
+        checkProblems();
+
+        syncIndex("mona", true);
+
+        try(Statement statement = connection.createStatement())
+        {
+            statement.execute("refresh materialized view mona.compound_pubchem_compounds");
+        }
+
         commit();
+    }
+
+
+    public static void main(String[] args)
+    {
+        try
+        {
+            load();
+        }
+        catch(Throwable e)
+        {
+            fail(e);
+        }
     }
 }

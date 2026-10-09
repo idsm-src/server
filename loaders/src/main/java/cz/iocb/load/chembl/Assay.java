@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -172,7 +173,7 @@ class Assay extends Updater
         checkXrefs(xrefTypes);
         setPubchemBioassays();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -190,11 +191,11 @@ class Assay extends Updater
 
         for(Integer xref : xrefs)
             if(!types.contains(xref))
-                ChEMBL.warning("reference without rdf:type", pubchemPrefix + xref);
+                Problems.error("reference without rdf:type", pubchemPrefix + xref);
 
         for(Integer xref : types)
             if(!xrefs.contains(xref))
-                ChEMBL.warning("unreferenced reference", pubchemPrefix + xref);
+                Problems.error("unreferenced reference", pubchemPrefix + xref);
     }
 
 
@@ -256,7 +257,7 @@ class Assay extends Updater
             else
             {
                 for(Integer id : panel)
-                    ChEMBL.warning("unresolved PubChem panel assay",
+                    Problems.warning("unresolved PubChem panel assay",
                             "CHEMBL" + id + " " + pubchemPrefix + assays.get(id, "pubchem_assay"));
             }
         }
@@ -272,7 +273,7 @@ class Assay extends Updater
         assays.store("assay");
         referenceLabels.store();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

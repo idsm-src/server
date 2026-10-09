@@ -165,10 +165,6 @@ public class PubChemRDF extends Updater
 
             CompoundDescriptor.finish();
 
-            MissingEntities.printSummary();
-
-            syncIndex("pubchem", false);
-
             setCount("PubChem Substances", Substance.size());
             setCount("PubChem Compounds", Compound.size());
             setCount("PubChem BioAssays", Bioassay.size());
@@ -178,12 +174,16 @@ public class PubChemRDF extends Updater
             setVersion("PubChem Compounds (SDF)", molfileVersion);
 
             updateVersion();
+
+            MissingEntities.printSummary();
+            checkProblems();
+
+            syncIndex("pubchem", false);
             commit();
         }
         catch(Throwable e)
         {
-            e.printStackTrace();
-            rollback();
+            fail(e);
         }
     }
 }

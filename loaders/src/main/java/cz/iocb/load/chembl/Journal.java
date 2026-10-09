@@ -58,7 +58,7 @@ class Journal extends Updater
             }.load(stream);
         }
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -68,7 +68,7 @@ class Journal extends Updater
 
         journals.store("journal");
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

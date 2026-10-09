@@ -64,8 +64,6 @@ public class DrugBank extends Updater
             loadCompounds();
             System.out.println();
 
-            syncIndex("drugbank", true);
-
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet result = statement.executeQuery("select count(*) from drugbank.compounds"))
@@ -78,12 +76,15 @@ public class DrugBank extends Updater
             setVersion("DrugBank Compounds", version);
 
             updateVersion();
+
+            checkProblems();
+
+            syncIndex("drugbank", true);
             commit();
         }
         catch(Throwable e)
         {
-            e.printStackTrace();
-            rollback();
+            fail(e);
         }
     }
 }

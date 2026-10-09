@@ -17,6 +17,7 @@ import java.util.BitSet;
 import java.util.Map.Entry;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -104,14 +105,14 @@ class Document extends Updater
             boolean hasJournal = entry.getValue()[journalIndex] != null;
 
             if(hasJournal && withoutJournal.get(entry.getKey()))
-                throw new IOException("multiple journals of document " + entry.getKey());
+                Problems.error("multiple journals of document", "CHEMBL" + entry.getKey());
 
             // the mapping produces cco:hasJournal CHEMBL_JRN_null for described documents without a journal
             if(entry.getValue()[chemblIdIndex] != null && !hasJournal && !withoutJournal.get(entry.getKey()))
-                ChEMBL.warning("document without cco:hasJournal", "CHEMBL" + entry.getKey());
+                Problems.error("document without cco:hasJournal", "CHEMBL" + entry.getKey());
         }
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -121,7 +122,7 @@ class Document extends Updater
 
         documents.store("document");
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

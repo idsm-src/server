@@ -748,7 +748,10 @@ public class Updater
         String url = properties.getProperty("url");
         properties.remove("url");
 
-        boolean autoCommit = Boolean.valueOf(properties.getProperty("autoCommit"));
+        // the data of a load are committed at once or not at all, so that incomplete data are never committed
+        if(Boolean.parseBoolean(properties.getProperty("autoCommit")))
+            throw new IllegalStateException("autoCommit is not supported");
+
         properties.remove("autoCommit");
 
         baseDirectory = properties.getProperty("base");
@@ -758,7 +761,7 @@ public class Updater
             baseDirectory += "/";
 
         connection = DriverManager.getConnection(url, properties);
-        connection.setAutoCommit(autoCommit);
+        connection.setAutoCommit(false);
     }
 
 
@@ -794,13 +797,20 @@ public class Updater
     }
 
 
+    /*
+     * Processes the files of the directory whose names match the pattern, several of them in parallel. No such file
+     * is an error, as the data of the files would be missing.
+     */
     protected static void processFiles(String path, String name, FileNameSqlFunction func)
             throws IOException, SQLException
     {
         String[] files = new File(baseDirectory + path).list((dir, file) -> file.matches(name));
 
-        if(files.length == 0)
-            System.out.println("  warning: file list " + name + " in " + path + " is empty");
+        if(files == null || files.length == 0)
+        {
+            Problems.error("no input file", path + File.separatorChar + name);
+            return;
+        }
 
         try
         {
@@ -832,8 +842,11 @@ public class Updater
     {
         String[] files = new File(baseDirectory + path).list((dir, file) -> file.matches(name));
 
-        if(files.length == 0)
-            throw new IOException("file list is empty");
+        if(files == null || files.length == 0)
+        {
+            Problems.error("no input file", path + File.separatorChar + name);
+            return;
+        }
 
         try
         {
@@ -864,6 +877,10 @@ public class Updater
     }
 
 
+    /*
+     * Sets the number of the entities of the statistics of the given name. A database without the table of the
+     * statistics is left as it is, a missing statistics in it is an error.
+     */
     protected static void setCount(String name, int count) throws SQLException
     {
         if(dryRun)
@@ -882,13 +899,17 @@ public class Updater
                     statement.setString(2, name);
 
                     if(statement.executeUpdate() != 1)
-                        System.err.printf("warning: number of '%s' was not set", name);
+                        Problems.error("count not set", name);
                 }
             }
         }
     }
 
 
+    /*
+     * Sets the version of the given source. A database without the table of the sources is left as it is, a missing
+     * source in it is an error.
+     */
     protected static void setVersion(String name, String version) throws SQLException
     {
         if(dryRun)
@@ -907,7 +928,7 @@ public class Updater
                     statement.setString(2, name);
 
                     if(statement.executeUpdate() != 1)
-                        System.err.printf("warning: version '%s' of source '%s' was not set\n", version, name);
+                        Problems.error("version not set", name + ": " + version);
                 }
             }
         }
@@ -929,7 +950,7 @@ public class Updater
                 {
                     if(statement.executeUpdate(
                             "update idsm.version set date = greatest(date, date_trunc('second', now()))") != 1)
-                        System.err.printf("warning: version was not set\n");
+                        Problems.error("version date not set", null);
                 }
             }
         }
@@ -950,6 +971,9 @@ public class Updater
      */
     protected static void syncIndex(String index, boolean optimize) throws SQLException
     {
+        if(Problems.hasErrors())
+            throw new IllegalStateException("incomplete data cannot be indexed");
+
         if(dryRun)
             return;
 
@@ -1020,8 +1044,14 @@ public class Updater
     }
 
 
+    /*
+     * Commits the loaded data; incomplete data, i.e. data with a reported error, are refused.
+     */
     protected static void commit() throws SQLException
     {
+        if(Problems.hasErrors())
+            throw new IllegalStateException("incomplete data cannot be committed");
+
         if(dryRun)
             return;
 
@@ -1034,13 +1064,49 @@ public class Updater
 
     protected static void rollback() throws SQLException
     {
-        if(dryRun)
+        if(dryRun || connection == null)
             return;
 
-        if(connection != null && !connection.getAutoCommit())
+        if(!connection.getAutoCommit())
             connection.rollback();
 
         connection.close();
+    }
+
+
+    /*
+     * Ends the reading of the data: prints the summary of the problems and, if the data are incomplete, fails the
+     * load at once, so that they are neither indexed nor committed.
+     */
+    protected static void checkProblems()
+    {
+        Problems.printSummary();
+
+        if(Problems.hasErrors())
+            fail(null);
+    }
+
+
+    /*
+     * Fails the load: prints the exception, if any, rolls the data back and exits with a non-zero status, so that the
+     * scripts running the loaders can tell the failure.
+     */
+    protected static void fail(Throwable exception)
+    {
+        if(exception != null)
+            exception.printStackTrace();
+
+        try
+        {
+            rollback();
+        }
+        catch(Throwable e)
+        {
+            e.printStackTrace();
+        }
+
+        System.out.println("the load has failed, its data have been rolled back");
+        System.exit(1);
     }
 
 

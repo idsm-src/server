@@ -88,7 +88,7 @@ class DrugIndication extends Updater
 
         molecules.check();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -98,7 +98,7 @@ class DrugIndication extends Updater
 
         indications.store("drug indication");
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

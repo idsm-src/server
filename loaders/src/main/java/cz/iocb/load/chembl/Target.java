@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -122,7 +123,7 @@ class Target extends Updater
                         case rdfType ->
                         {
                             if(classes.put(id, object.getURI()) != null)
-                                ChEMBL.warning("multiple rdf:type values", subject.getURI());
+                                Problems.error("multiple rdf:type values", subject.getURI());
                         }
                         case chemblId -> targets.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL" + id));
@@ -165,19 +166,19 @@ class Target extends Updater
             String expectedClass = type == null || !types.containsKey(type) ? null : cco + types.get(type);
 
             if(type != null && expectedClass == null)
-                ChEMBL.warning("unknown cco:targetType", "CHEMBL" + entry.getKey() + " " + type);
+                Problems.error("unknown cco:targetType", "CHEMBL" + entry.getKey() + " " + type);
             else if(expectedClass != null && !expectedClass.equals(classes.remove(entry.getKey())))
-                ChEMBL.warning("rdf:type not corresponding to cco:targetType", "CHEMBL" + entry.getKey());
+                Problems.error("rdf:type not corresponding to cco:targetType", "CHEMBL" + entry.getKey());
 
             if(label != null && !label.equals(titles.remove(entry.getKey())))
-                ChEMBL.warning("dcterms:title different from rdfs:label", "CHEMBL" + entry.getKey());
+                Problems.error("dcterms:title different from rdfs:label", "CHEMBL" + entry.getKey());
         }
 
         for(Integer id : classes.keySet())
-            ChEMBL.warning("rdf:type without cco:targetType", "CHEMBL" + id);
+            Problems.error("rdf:type without cco:targetType", "CHEMBL" + id);
 
         for(Integer id : titles.keySet())
-            ChEMBL.warning("dcterms:title without rdfs:label", "CHEMBL" + id);
+            Problems.error("dcterms:title without rdfs:label", "CHEMBL" + id);
     }
 
 
@@ -241,7 +242,7 @@ class Target extends Updater
         loadLinkset("grouptarget_targetcmpt_ls", skos + "relatedMatch", relatedMatches);
         loadRelations();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -255,7 +256,7 @@ class Target extends Updater
         relatedMatches.store();
         relations.store();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

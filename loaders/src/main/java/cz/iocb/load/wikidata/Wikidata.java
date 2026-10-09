@@ -164,8 +164,6 @@ public class Wikidata extends Updater
 
             loadStructures();
 
-            syncIndex("wikidata", true);
-
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet result = statement.executeQuery("select count(*) from wikidata.compound_structures"))
@@ -178,12 +176,15 @@ public class Wikidata extends Updater
             setVersion("Wikidata Compounds", version);
 
             updateVersion();
+
+            checkProblems();
+
+            syncIndex("wikidata", true);
             commit();
         }
         catch(Throwable e)
         {
-            e.printStackTrace();
-            rollback();
+            fail(e);
         }
     }
 }

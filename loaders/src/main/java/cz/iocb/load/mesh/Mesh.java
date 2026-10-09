@@ -550,17 +550,19 @@ public class Mesh extends Updater
             dispatcher.finish();
 
             finish();
-            MissingEntities.printSummary();
 
             setVersion("Medical Subject Headings (MESH)", version);
 
             updateVersion();
+
+            MissingEntities.printSummary();
+            checkProblems();
+
             commit();
         }
         catch(Throwable e)
         {
-            e.printStackTrace();
-            rollback();
+            fail(e);
         }
     }
 }

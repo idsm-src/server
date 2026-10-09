@@ -33,7 +33,9 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.chembl.ValueTable.Value;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.SdfReader;
 import cz.iocb.load.common.StructureTable;
 import cz.iocb.load.common.TripleStreamProcessor;
@@ -221,7 +223,7 @@ class Molecule extends Updater
                 private void checkClass(int id, String type, String declared)
                 {
                     if(types.containsKey(type) && !(cco + types.get(type)).equals(declared))
-                        ChEMBL.warning("rdf:type not corresponding to cco:substanceType", "CHEMBL" + id);
+                        Problems.error("rdf:type not corresponding to cco:substanceType", "CHEMBL" + id);
                 }
 
 
@@ -235,7 +237,7 @@ class Molecule extends Updater
 
                     if(descriptor == null)
                     {
-                        ChEMBL.warning("unexpected descriptor", iri);
+                        Problems.error("unexpected descriptor", iri);
                         return;
                     }
 
@@ -304,7 +306,7 @@ class Molecule extends Updater
                             if(type != null)
                                 checkClass(id, type, object.getURI());
                             else if(pendingClasses.put(id, object.getURI()) != null)
-                                ChEMBL.warning("multiple rdf:type values", iri);
+                                Problems.error("multiple rdf:type values", iri);
                         }
                         case chemblId -> molecules.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL" + id));
@@ -314,7 +316,7 @@ class Molecule extends Updater
                             String prefLabel = pendingLabels.remove(id);
 
                             if(prefLabel != null && !prefLabel.equals(getString(object)))
-                                ChEMBL.warning("skos:prefLabel different from rdfs:label", iri);
+                                Problems.error("skos:prefLabel different from rdfs:label", iri);
                         }
                         case skos + "prefLabel" ->
                         {
@@ -323,7 +325,7 @@ class Molecule extends Updater
                             if(label == null)
                                 pendingLabels.put(id, getString(object));
                             else if(!label.equals(getString(object)))
-                                ChEMBL.warning("skos:prefLabel different from rdfs:label", iri);
+                                Problems.error("skos:prefLabel different from rdfs:label", iri);
                         }
                         case cco + "substanceType" ->
                         {
@@ -332,7 +334,7 @@ class Molecule extends Updater
                             String declared = pendingClasses.remove(id);
 
                             if(!types.containsKey(type))
-                                ChEMBL.warning("unknown cco:substanceType", "CHEMBL" + id + " " + type);
+                                Problems.error("unknown cco:substanceType", "CHEMBL" + id + " " + type);
                             else if(declared != null)
                                 checkClass(id, type, declared);
                         }
@@ -360,7 +362,7 @@ class Molecule extends Updater
                         case foaf + "depiction" ->
                         {
                             if(getIntID(object, imagePrefix, imageSuffix) != id)
-                                ChEMBL.warning("unexpected foaf:depiction", iri + " " + object.getURI());
+                                Problems.error("unexpected foaf:depiction", iri + " " + object.getURI());
 
                             depicted.set(id);
                         }
@@ -372,7 +374,7 @@ class Molecule extends Updater
                             if(name != null && descriptorTypes.containsKey(name))
                                 links.computeIfAbsent(name, k -> new BitSet()).set(id);
                             else
-                                ChEMBL.warning("unexpected descriptor", iri + " " + node);
+                                Problems.error("unexpected descriptor", iri + " " + node);
                         }
                         default -> ChEMBL.unexpected(subject, predicate, object);
                     }
@@ -384,10 +386,10 @@ class Molecule extends Updater
         biocomponentInverses.check();
 
         for(Integer id : pendingClasses.keySet())
-            ChEMBL.warning("rdf:type without cco:substanceType", "CHEMBL" + id);
+            Problems.error("rdf:type without cco:substanceType", "CHEMBL" + id);
 
         for(Integer id : pendingLabels.keySet())
-            ChEMBL.warning("skos:prefLabel different from rdfs:label", "CHEMBL" + id);
+            Problems.error("skos:prefLabel different from rdfs:label", "CHEMBL" + id);
 
         // the mapping produces rdf:type, foaf:depiction and the image for the described molecules
         int typeIndex = molecules.columnIndex("type");
@@ -400,7 +402,7 @@ class Molecule extends Updater
                 described.set(entry.getKey());
 
             if(entry.getValue()[typeIndex] != null && !typed.get(entry.getKey()))
-                ChEMBL.warning("cco:substanceType without rdf:type", "CHEMBL" + entry.getKey());
+                Problems.error("cco:substanceType without rdf:type", "CHEMBL" + entry.getKey());
         }
 
         compare(described, depicted, "described molecule", "foaf:depiction");
@@ -420,9 +422,9 @@ class Molecule extends Updater
 
         for(int id = difference.nextSetBit(0); id >= 0; id = difference.nextSetBit(id + 1))
             if(set.get(id))
-                ChEMBL.warning(setName + " without " + expectedName, "CHEMBL" + id);
+                Problems.error(setName + " without " + expectedName, "CHEMBL" + id);
             else
-                ChEMBL.warning(expectedName + " without " + setName, "CHEMBL" + id);
+                Problems.error(expectedName + " without " + setName, "CHEMBL" + id);
     }
 
 
@@ -512,7 +514,7 @@ class Molecule extends Updater
 
         for(Value value : referenceLabels.values())
             if(!referenced.contains(new Value(new Object[] { value.get(0), value.get(1) })))
-                ChEMBL.warning("reference label without cco:moleculeXref", value.get(0) + " " + value.get(1));
+                Problems.error("reference label without cco:moleculeXref", value.get(0) + " " + value.get(1));
     }
 
 
@@ -522,7 +524,7 @@ class Molecule extends Updater
             if(iri.startsWith(reference.prefix) && iri.endsWith(reference.suffix))
                 return reference;
 
-        throw new IOException("unexpected reference " + iri);
+        throw new DataException("unexpected reference", iri);
     }
 
 
@@ -531,7 +533,7 @@ class Molecule extends Updater
         String value = iri.substring(reference.prefix.length(), iri.length() - reference.suffix.length());
 
         if(!reference.pattern.matcher(value).matches())
-            throw new IOException("unexpected reference " + iri);
+            throw new DataException("unexpected reference", iri);
 
         return value;
     }
@@ -551,7 +553,7 @@ class Molecule extends Updater
             {
                 SdfReader.read(file, reader, "chembl_id", (id, molfile) -> {
                     if(!id.startsWith("CHEMBL"))
-                        throw new IOException("unexpected molecule " + id);
+                        throw new DataException("unexpected molecule", id);
 
                     int moleculeID = Integer.parseInt(id.substring(6));
 
@@ -574,7 +576,7 @@ class Molecule extends Updater
         loadReferences();
         loadMolfiles();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -595,7 +597,7 @@ class Molecule extends Updater
         pubchemReferences.store();
         chebiReferences.store();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

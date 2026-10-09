@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.BitSet;
 import org.apache.jena.graph.Node;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 
 
@@ -51,7 +52,7 @@ class Taxonomy
             single.xor(ncbi);
 
             for(int id = single.nextSetBit(0); id >= 0; id = single.nextSetBit(id + 1))
-                ChEMBL.warning("cco:taxonomy of one form only", entity + " " + id);
+                Problems.error("cco:taxonomy of one form only", entity + " " + id);
         }
     }
 
@@ -88,6 +89,6 @@ class Taxonomy
 
         labels.store();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 }

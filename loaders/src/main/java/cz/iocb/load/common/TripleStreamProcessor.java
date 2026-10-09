@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
-import org.apache.jena.graph.Node_Literal;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFParser;
@@ -12,8 +11,22 @@ import org.apache.jena.riot.RDFParserBuilder;
 
 
 
+/*
+ * Reads a stream of triples and passes every triple to parse(). A problem of the data of a triple, i.e. a
+ * DataException or a malformed number, is reported as an error and the triple is skipped, so that the reading goes on.
+ */
 public abstract class TripleStreamProcessor
 {
+    private static final String xsd = "http://www.w3.org/2001/XMLSchema#";
+    private static final String xsdString = xsd + "string";
+    private static final String xsdInteger = xsd + "integer";
+    private static final String xsdInt = xsd + "int";
+    private static final String xsdDouble = xsd + "double";
+    private static final String xsdBoolean = xsd + "boolean";
+    private static final String xsdFloat = xsd + "float";
+    private static final String xsdDecimal = xsd + "decimal";
+
+
     public void load(InputStream stream) throws IOException
     {
         load(RDFParser.source(stream).lang(Lang.TURTLE));
@@ -42,6 +55,10 @@ public abstract class TripleStreamProcessor
                     {
                         parse(triple.getSubject(), triple.getPredicate(), triple.getObject());
                     }
+                    catch(DataException | NumberFormatException e)
+                    {
+                        report(e, triple.getSubject(), triple.getPredicate(), triple.getObject());
+                    }
                     catch(SQLException | IOException e)
                     {
                         throw new RuntimeException(e);
@@ -62,49 +79,78 @@ public abstract class TripleStreamProcessor
     protected abstract void parse(Node subject, Node predicate, Node object) throws SQLException, IOException;
 
 
+    /*
+     * Reports a problem of the data of a triple as an error of its kind in the triples of the predicate.
+     */
+    public static void report(Exception e, Node subject, Node predicate, Node object)
+    {
+        String kind = e instanceof DataException data ? data.getKind() : "malformed number";
+        String detail = e instanceof DataException data ? data.getDetail() : e.getMessage();
+        String triple = text(subject) + " " + text(object);
+
+        if(detail != null && !detail.equals(text(subject)) && !detail.equals(text(object)))
+            triple += " (" + detail + ")";
+
+        Problems.error(kind + " in " + predicate.getURI(), triple);
+    }
+
+
+    /*
+     * Returns the IRI of an IRI node and the string form of any other node, as the messages show them.
+     */
+    public static String text(Node node)
+    {
+        return node.isURI() ? node.getURI() : node.toString();
+    }
+
+
     public static int getIntID(Node node, String prefix, String suffix) throws IOException
     {
-        String value = node.getURI();
-
-        if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
-
-        if(!value.endsWith(suffix))
-            throw new IOException("unexpected IRI: " + value);
-
-        return Integer.parseInt(value.substring(prefix.length(), value.length() - suffix.length()));
+        return parseID(getStringID(node, prefix, suffix), node);
     }
 
 
     public static int getIntID(Node node, String prefix) throws IOException
     {
-        String value = node.getURI();
-
-        if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
-
-        return Integer.parseInt(value.substring(prefix.length()));
+        return parseID(getStringID(node, prefix), node);
     }
 
 
     public static int getIntID(String value, String prefix) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
-        return Integer.parseInt(value.substring(prefix.length()));
+        try
+        {
+            return Integer.parseInt(value.substring(prefix.length()));
+        }
+        catch(NumberFormatException e)
+        {
+            throw new DataException("unexpected IRI", value);
+        }
+    }
+
+
+    private static int parseID(String id, Node node) throws DataException
+    {
+        try
+        {
+            return Integer.parseInt(id);
+        }
+        catch(NumberFormatException e)
+        {
+            throw new DataException("unexpected IRI", text(node));
+        }
     }
 
 
     public static String getStringID(Node node, String prefix, String suffix) throws IOException
     {
-        String value = node.getURI();
+        String value = node.isURI() ? node.getURI() : null;
 
-        if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
-
-        if(!value.endsWith(suffix))
-            throw new IOException("unexpected IRI: " + value);
+        if(value == null || !value.startsWith(prefix) || !value.endsWith(suffix))
+            throw new DataException("unexpected IRI", text(node));
 
         return value.substring(prefix.length(), value.length() - suffix.length());
     }
@@ -112,12 +158,24 @@ public abstract class TripleStreamProcessor
 
     public static String getStringID(Node node, String prefix) throws IOException
     {
-        String value = node.getURI();
+        String value = node.isURI() ? node.getURI() : null;
 
-        if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+        if(value == null || !value.startsWith(prefix))
+            throw new DataException("unexpected IRI", text(node));
 
         return value.substring(prefix.length());
+    }
+
+
+    private static DataException unexpectedValue(Node node, String datatype)
+    {
+        return new DataException("unexpected value instead of an " + datatype + " literal", text(node));
+    }
+
+
+    private static DataException malformedValue(Node node, String datatype)
+    {
+        return new DataException("malformed " + datatype + " literal", text(node));
     }
 
 
@@ -126,8 +184,8 @@ public abstract class TripleStreamProcessor
      */
     public static String getString(Node node) throws IOException
     {
-        if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#string"))
-            throw new IOException("unexpected value instead of an xsd:string literal: " + node);
+        if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsdString))
+            throw unexpectedValue(node, "xsd:string");
 
         return node.getLiteralLexicalForm();
     }
@@ -139,7 +197,7 @@ public abstract class TripleStreamProcessor
     public static String getLexicalForm(Node node) throws IOException
     {
         if(!node.isLiteral())
-            throw new IOException("unexpected value instead of a literal: " + node);
+            throw new DataException("unexpected value instead of a literal", text(node));
 
         return node.getLiteralLexicalForm();
     }
@@ -147,72 +205,95 @@ public abstract class TripleStreamProcessor
 
     public static int getIntFromInteger(Node node) throws IOException
     {
-        Node_Literal literal = (Node_Literal) node;
+        if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsdInteger))
+            throw unexpectedValue(node, "xsd:integer");
 
-        if(!literal.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#integer"))
-            throw new IOException("unexpected literal datatype");
-
-        return Integer.parseInt(literal.getLiteralLexicalForm());
+        try
+        {
+            return Integer.parseInt(node.getLiteralLexicalForm());
+        }
+        catch(NumberFormatException e)
+        {
+            throw malformedValue(node, "xsd:integer");
+        }
     }
 
 
     public static int getInt(Node node) throws IOException
     {
-        Node_Literal literal = (Node_Literal) node;
+        if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsdInt))
+            throw unexpectedValue(node, "xsd:int");
 
-        if(!literal.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#int"))
-            throw new IOException("unexpected literal datatype");
-
-        return Integer.parseInt(literal.getLiteralLexicalForm());
+        try
+        {
+            return Integer.parseInt(node.getLiteralLexicalForm());
+        }
+        catch(NumberFormatException e)
+        {
+            throw malformedValue(node, "xsd:int");
+        }
     }
 
 
     public static double getDouble(Node node) throws IOException
     {
-        Node_Literal literal = (Node_Literal) node;
+        if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsdDouble))
+            throw unexpectedValue(node, "xsd:double");
 
-        if(!literal.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#double"))
-            throw new IOException("unexpected literal datatype");
-
-        return Double.parseDouble(literal.getLiteralLexicalForm());
+        try
+        {
+            return Double.parseDouble(node.getLiteralLexicalForm());
+        }
+        catch(NumberFormatException e)
+        {
+            throw malformedValue(node, "xsd:double");
+        }
     }
 
 
     public static boolean getBoolean(Node node) throws IOException
     {
-        Node_Literal literal = (Node_Literal) node;
+        if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsdBoolean))
+            throw unexpectedValue(node, "xsd:boolean");
 
-        if(!literal.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#boolean"))
-            throw new IOException("unexpected literal datatype");
-
-        return switch(literal.getLiteralLexicalForm())
+        return switch(node.getLiteralLexicalForm())
         {
             case "true", "1" -> true;
             case "false", "0" -> false;
-            default -> throw new IOException("unexpected boolean value");
+            default -> throw malformedValue(node, "xsd:boolean");
         };
     }
 
 
     public static float getFloat(Node node) throws IOException
     {
-        Node_Literal literal = (Node_Literal) node;
+        if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsdFloat))
+            throw unexpectedValue(node, "xsd:float");
 
-        if(!literal.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#float"))
-            throw new IOException("unexpected literal datatype");
-
-        return Float.parseFloat(literal.getLiteralLexicalForm());
+        try
+        {
+            return Float.parseFloat(node.getLiteralLexicalForm());
+        }
+        catch(NumberFormatException e)
+        {
+            throw malformedValue(node, "xsd:float");
+        }
     }
 
 
     public static float getFloatFromDecimal(Node node) throws IOException
     {
-        Node_Literal literal = (Node_Literal) node;
+        if(!node.isLiteral()
+                || !node.getLiteralDatatypeURI().equals(xsdInteger) && !node.getLiteralDatatypeURI().equals(xsdDecimal))
+            throw unexpectedValue(node, "xsd:decimal");
 
-        if(!literal.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#integer")
-                && !literal.getLiteralDatatypeURI().equals("http://www.w3.org/2001/XMLSchema#decimal"))
-            throw new IOException("unexpected literal datatype");
-
-        return Float.parseFloat(literal.getLiteralLexicalForm());
+        try
+        {
+            return Float.parseFloat(node.getLiteralLexicalForm());
+        }
+        catch(NumberFormatException e)
+        {
+            throw malformedValue(node, "xsd:decimal");
+        }
     }
 }

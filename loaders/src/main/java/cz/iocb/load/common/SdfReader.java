@@ -20,8 +20,9 @@ public class SdfReader
     /*
      * Reads the records of the given file. The identifier of a record is the value of the given data item; the
      * molfile is passed with the identifier in place of its name line, so that the stored structures are named by
-     * their identifiers. A record has to carry the data item exactly once and has to be terminated, otherwise the
-     * file is refused; a blank line left at the end of the file is tolerated.
+     * their identifiers. A record has to carry the data item exactly once and has to be terminated; a record that
+     * does not, as well as a record the handler refuses by a DataException or a malformed number, is reported as an
+     * error and skipped. A blank line left at the end of the file is tolerated.
      */
     public static void read(String name, BufferedReader reader, String idTag, RecordHandler handler)
             throws IOException, SQLException
@@ -42,6 +43,7 @@ public class SdfReader
 
             StringBuilder molfile = new StringBuilder();
             String id = null;
+            boolean repeated = false;
 
             while(line != null && !line.startsWith(">") && !line.equals("$$$$"))
             {
@@ -58,9 +60,7 @@ public class SdfReader
                     if(line == null)
                         break;
 
-                    if(id != null)
-                        throw new IOException(name + ": record " + record + " has more than one " + idTag);
-
+                    repeated |= id != null;
                     id = line.trim();
                 }
 
@@ -68,12 +68,31 @@ public class SdfReader
             }
 
             if(line == null)
-                throw new IOException(name + ": record " + record + " is not terminated");
+            {
+                Problems.error("unterminated SDF record", name + ": record " + record);
+                break;
+            }
 
-            if(id == null)
-                throw new IOException(name + ": record " + record + " has no " + idTag);
+            if(id == null || repeated)
+            {
+                Problems.error((repeated ? "repeated " : "missing ") + idTag + " of an SDF record",
+                        name + ": record " + record);
+                continue;
+            }
 
-            handler.record(id, id + "\n" + molfile);
+            try
+            {
+                handler.record(id, id + "\n" + molfile);
+            }
+            catch(DataException e)
+            {
+                String detail = e.getDetail() == null ? "" : " (" + e.getDetail() + ")";
+                Problems.error(e.getKind(), name + ": record " + record + detail);
+            }
+            catch(NumberFormatException e)
+            {
+                Problems.error("malformed number", name + ": record " + record + " (" + e.getMessage() + ")");
+            }
         }
     }
 }

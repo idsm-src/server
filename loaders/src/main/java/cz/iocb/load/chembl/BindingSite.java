@@ -72,7 +72,7 @@ class BindingSite extends Updater
 
         targets.check();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -82,7 +82,7 @@ class BindingSite extends Updater
 
         sites.store("binding site");
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

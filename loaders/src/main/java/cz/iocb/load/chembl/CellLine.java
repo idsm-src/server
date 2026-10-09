@@ -80,7 +80,7 @@ class CellLine extends Updater
 
         taxonomies.check();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -90,7 +90,7 @@ class CellLine extends Updater
 
         cellLines.store("cell line");
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

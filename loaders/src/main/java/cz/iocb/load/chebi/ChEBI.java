@@ -841,20 +841,21 @@ public class ChEBI extends Updater
             loadMolfiles();
 
             finish();
-            MissingEntities.printSummary();
-
-            syncIndex("chebi", true);
 
             setVersion("ChEBI Ontology", version);
             setCount("ChEBI Entities", newEntities.size() + keepEntities.size());
 
             updateVersion();
+
+            MissingEntities.printSummary();
+            checkProblems();
+
+            syncIndex("chebi", true);
             commit();
         }
         catch(Throwable e)
         {
-            e.printStackTrace();
-            rollback();
+            fail(e);
         }
     }
 }

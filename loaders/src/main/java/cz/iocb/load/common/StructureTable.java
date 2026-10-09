@@ -126,14 +126,14 @@ public class StructureTable extends Updater
             throw new IllegalStateException(table + " is not open");
 
         if(id < 0)
-            throw new IOException("negative identifier " + id);
+            throw new DataException("negative identifier", String.valueOf(id));
 
         long hash = hash(structure);
 
         synchronized(this)
         {
             if(seen.get(id))
-                throw new IOException("duplicate structure of " + id);
+                throw new DataException("duplicate structure", String.valueOf(id));
 
             seen.set(id);
             count++;
@@ -153,17 +153,22 @@ public class StructureTable extends Updater
 
     /*
      * Sends the remaining rows and deletes the rows of the entities whose structures have not been put; the table
-     * cannot be used afterwards. A dump without any structure is refused, so that it does not empty the table.
+     * cannot be used afterwards. A dump without any structure is reported as an error and the table is left as it is,
+     * so that a missing dump does not empty it.
      */
     public synchronized void store() throws IOException, SQLException
     {
         if(upsert == null || finished)
             throw new IllegalStateException(table + " is not open");
 
-        if(count == 0)
-            throw new IOException("no structure for " + table);
-
         finished = true;
+
+        if(count == 0)
+        {
+            Problems.error("no structure", table);
+            upsert.close();
+            return;
+        }
 
         for(Batch batch : allBatches)
             flush(batch);

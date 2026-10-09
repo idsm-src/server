@@ -251,13 +251,8 @@ public final class ISDB extends Updater
 
             loadFiles();
 
-            syncIndex("isdb", true);
-
             try(Statement statement = connection.createStatement())
             {
-                statement.execute("refresh materialized view isdb.compound_pubchem_compounds");
-                statement.execute("refresh materialized view isdb.compound_wikidata_compounds");
-
                 try(ResultSet result = statement.executeQuery("select count(*) from isdb.spectra"))
                 {
                     if(result.next())
@@ -268,12 +263,22 @@ public final class ISDB extends Updater
             setVersion("In Silico Spectral Database (ISDB)", version);
 
             updateVersion();
+
+            checkProblems();
+
+            syncIndex("isdb", true);
+
+            try(Statement statement = connection.createStatement())
+            {
+                statement.execute("refresh materialized view isdb.compound_pubchem_compounds");
+                statement.execute("refresh materialized view isdb.compound_wikidata_compounds");
+            }
+
             commit();
         }
         catch(Throwable e)
         {
-            e.printStackTrace();
-            rollback();
+            fail(e);
         }
     }
 }

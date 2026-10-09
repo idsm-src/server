@@ -24,8 +24,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.apache.jena.graph.Node;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -116,7 +118,7 @@ class TargetComponent extends Updater
                             String type = xrefTypes.put(subject.getURI(), getStringID(object, cco));
 
                             if(type != null && !type.equals(xrefTypes.get(subject.getURI())))
-                                throw new IOException("multiple types of reference " + subject.getURI());
+                                throw new DataException("multiple types of reference", subject.getURI());
                         }
                         else if(predicate.getURI().equals(rdfsLabel))
                         {
@@ -157,21 +159,24 @@ class TargetComponent extends Updater
         for(Pair<Integer, String> xref : xrefs)
         {
             Pair<Reference, String> reference = getReference(xref.getTwo(), xrefTypes);
-            references.add(xref.getOne(), reference.getOne().type, reference.getTwo());
+
+            if(reference != null)
+                references.add(xref.getOne(), reference.getOne().type, reference.getTwo());
         }
 
         for(Entry<String, Set<String>> entry : xrefLabels.entrySet())
         {
             if(!xrefTypes.containsKey(entry.getKey()))
             {
-                ChEMBL.warning("reference label without rdf:type", entry.getKey());
+                Problems.error("reference label without rdf:type", entry.getKey());
                 continue;
             }
 
             Pair<Reference, String> reference = getReference(entry.getKey(), xrefTypes);
 
-            for(String label : entry.getValue())
-                referenceLabels.add(reference.getOne().type, reference.getTwo(), label);
+            if(reference != null)
+                for(String label : entry.getValue())
+                    referenceLabels.add(reference.getOne().type, reference.getTwo(), label);
         }
 
         Set<String> referenced = new HashSet<>();
@@ -181,25 +186,32 @@ class TargetComponent extends Updater
 
         for(String iri : xrefTypes.keySet())
             if(!referenced.contains(iri))
-                ChEMBL.warning("unreferenced reference", iri);
+                Problems.error("unreferenced reference", iri);
     }
 
 
     /*
-     * Returns the reference type and the stored value of a reference IRI with the given rdf:type values.
+     * Returns the reference type and the stored value of a reference IRI with the given rdf:type values; a reference
+     * of an unknown type or with an unexpected IRI is reported and null is returned.
      */
-    private static Pair<Reference, String> getReference(String iri, Map<String, String> types) throws IOException
+    private static Pair<Reference, String> getReference(String iri, Map<String, String> types)
     {
         String type = types.get(iri);
         Reference reference = type == null ? null : referenceTypes.get(type);
 
         if(reference == null)
-            throw new IOException("unknown type of reference " + iri);
+        {
+            Problems.error("unknown type of reference", iri + " " + type);
+            return null;
+        }
 
         String value = iri.startsWith(reference.prefix) ? iri.substring(reference.prefix.length()) : null;
 
         if(value == null || !reference.pattern.matcher(value).matches())
-            throw new IOException("unexpected reference " + iri + " of type " + type);
+        {
+            Problems.error("unexpected reference", iri + " of type " + type);
+            return null;
+        }
 
         return Pair.getPair(reference, value);
     }
@@ -234,7 +246,7 @@ class TargetComponent extends Updater
         loadComponents();
         loadAccessions();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -247,7 +259,7 @@ class TargetComponent extends Updater
         references.store();
         referenceLabels.store();
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

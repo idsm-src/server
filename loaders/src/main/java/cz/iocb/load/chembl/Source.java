@@ -52,7 +52,7 @@ class Source extends Updater
             }.load(stream);
         }
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 
@@ -62,7 +62,7 @@ class Source extends Updater
 
         sources.store("source");
 
-        ChEMBL.finishLoad();
+        System.out.println();
     }
 
 

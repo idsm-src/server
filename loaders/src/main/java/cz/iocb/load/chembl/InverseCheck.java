@@ -1,6 +1,7 @@
 package cz.iocb.load.chembl;
 
 import java.util.Arrays;
+import cz.iocb.load.common.Problems;
 
 
 
@@ -59,9 +60,9 @@ class InverseCheck
         while(i < a.length || j < b.length)
         {
             if(j == b.length || i < a.length && a[i] < b[j])
-                ChEMBL.warning(name + " without its inverse triple", unpack(a[i++]));
+                Problems.error(name + " without its inverse triple", unpack(a[i++]));
             else if(i == a.length || b[j] < a[i])
-                ChEMBL.warning("inverse triple of " + name + " without its triple", unpack(b[j++]));
+                Problems.error("inverse triple of " + name + " without its triple", unpack(b[j++]));
             else
             {
                 i++;

@@ -1,5 +1,6 @@
 package cz.iocb.load.chembl;
 
+import static cz.iocb.load.common.TripleStreamProcessor.text;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,13 +8,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.stream.Stream;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
@@ -40,10 +40,6 @@ public class ChEMBL extends Updater
     static final String chemblId = cco + "chemblId";
     static final String voidInDataset = "http://rdfs.org/ns/void#inDataset";
 
-    private static final int maxWarnings = 10;
-
-    private static final LinkedHashMap<String, Integer> warnings = new LinkedHashMap<>();
-    private static final LinkedHashMap<String, Integer> allWarnings = new LinkedHashMap<>();
     private static final HashSet<String> files = new HashSet<>();
     private static String version;
 
@@ -102,8 +98,8 @@ public class ChEMBL extends Updater
 
 
     /*
-     * Warns about the RDF files of the release that the loader has not read, such as a part that a new release adds.
-     * The ChEMBL ontology, which comes with the release, is loaded by the ontology loader.
+     * Reports the RDF files of the release that the loader has not read, such as a part that a new release adds, as
+     * errors. The ChEMBL ontology, which comes with the release, is loaded by the ontology loader.
      */
     private static void checkFiles() throws IOException
     {
@@ -119,44 +115,33 @@ public class ChEMBL extends Updater
 
         for(String name : names)
             if(!name.equals("cco.ttl.gz") && !files.contains(name))
-                warning("unknown file", name);
+                Problems.error("unknown file", name);
 
-        finishLoad();
+        System.out.println();
     }
 
 
     /*
-     * Reports a problem of the data that the loader can deal with, typically a triple that the mapping does not
-     * reproduce. Only the first occurrences of each kind are printed, the remaining ones are counted.
+     * Reports a triple whose predicate the loader does not know, i.e. a triple that the mapping does not reproduce.
      */
-    static void warning(String kind, String detail)
-    {
-        int count = warnings.merge(kind, 1, Integer::sum);
-        allWarnings.merge(kind, 1, Integer::sum);
-
-        if(count <= maxWarnings)
-            System.out.println("    warning: " + kind + ": " + detail);
-    }
-
-
     static void unexpected(Node subject, Node predicate, Node object)
     {
-        warning("unexpected predicate " + predicate.getURI(), subject + " " + object);
+        Problems.error("unexpected predicate " + predicate.getURI(), text(subject) + " " + text(object));
     }
 
 
     static void checkType(Node subject, Node object, String type)
     {
         if(!object.isURI() || !object.getURI().equals(type))
-            warning("unexpected rdf:type " + object, subject.getURI());
+            Problems.error("unexpected rdf:type " + text(object), text(subject));
     }
 
 
     static void checkValue(Node subject, Node predicate, Node object, String value) throws IOException
     {
         if(!TripleStreamProcessor.getString(object).equals(value))
-            warning("unexpected value of " + predicate.getURI(),
-                    subject.getURI() + " " + object + " instead of '" + value + "'");
+            Problems.error("unexpected value of " + predicate.getURI(),
+                    text(subject) + " " + text(object) + " instead of '" + value + "'");
     }
 
 
@@ -173,46 +158,15 @@ public class ChEMBL extends Updater
      */
     static Pair<Integer, Integer> getOntologyId(Node subject, Node predicate, Node object, Short unit)
     {
-        Pair<Integer, Integer> id = Ontology.getId(object.getURI());
+        Pair<Integer, Integer> id = object.isURI() ? Ontology.getId(object.getURI()) : null;
 
         if(id == null || unit != null && id.getOne().intValue() != unit.intValue())
         {
-            warning("unexpected ontology resource of " + predicate.getURI(), subject.getURI() + " " + object);
+            Problems.error("unexpected ontology resource of " + predicate.getURI(), text(subject) + " " + text(object));
             return null;
         }
 
         return id;
-    }
-
-
-    private static void printWarningCounts()
-    {
-        for(Entry<String, Integer> entry : warnings.entrySet())
-            if(entry.getValue() > maxWarnings)
-                System.out.println("    warning: " + entry.getKey() + ": " + entry.getValue() + " occurrences");
-
-        warnings.clear();
-    }
-
-
-    static void finishLoad()
-    {
-        printWarningCounts();
-        System.out.println();
-    }
-
-
-    /*
-     * Prints the numbers of the warnings of the whole load, so that none of them is missed among the progress output.
-     */
-    private static void printWarningSummary()
-    {
-        System.out.println(allWarnings.isEmpty() ? "no warnings" : "warnings:");
-
-        for(Entry<String, Integer> entry : allWarnings.entrySet())
-            System.out.println("    " + entry.getKey() + ": " + entry.getValue());
-
-        System.out.println();
     }
 
 
@@ -267,24 +221,23 @@ public class ChEMBL extends Updater
             Journal.finish();
             Source.finish();
 
-            checkFiles();
-            printWarningSummary();
-            MissingEntities.printSummary();
-
-            syncIndex("chembl", true);
-
             setCount("ChEMBL Substances", Molecule.size());
             setCount("ChEMBL Assays", Assay.size());
 
             setVersion("ChEMBL", version);
 
             updateVersion();
+
+            checkFiles();
+            MissingEntities.printSummary();
+            checkProblems();
+
+            syncIndex("chembl", true);
             commit();
         }
         catch(Throwable e)
         {
-            e.printStackTrace();
-            rollback();
+            fail(e);
         }
     }
 }
