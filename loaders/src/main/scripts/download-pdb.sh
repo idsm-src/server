@@ -4,7 +4,8 @@ set -ueo pipefail
 
 source datasource.properties
 
-version=$(date '+%Y-%m-%d')
+date=$(date '+%Y-%m-%d')
+version="$date"
 
 if [ -e "$base/pdb-$version" ]; then
     suffix=1
@@ -16,6 +17,8 @@ fi
 
 output="$base/pdb-$version"
 mkdir "$output"
+
+echo "$date" | gzip > "$output/version.txt.gz"
 
 wget --progress=bar:force -P "$output" https://ftp.ebi.ac.uk/pub/databases/msd/pdbechem_v2/ccd/ccd.tar.gz
 

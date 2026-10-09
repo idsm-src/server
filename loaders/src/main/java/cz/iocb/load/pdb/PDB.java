@@ -81,6 +81,10 @@ public final class PDB extends Updater
         {
             init();
 
+            String version = getReader("pdb/version.txt.gz").readLine();
+            System.out.println("=== load pdb version " + version + " ===");
+            System.out.println();
+
             loadCompounds();
 
             syncIndex("pdb", true);
@@ -93,6 +97,8 @@ public final class PDB extends Updater
                         setCount("PDB Chemical Components", result.getInt(1));
                 }
             }
+
+            setVersion("PDB Chemical Components (PDBeChem)", version);
 
             updateVersion();
             commit();

@@ -4,6 +4,8 @@ set -ueo pipefail
 
 source datasource.properties
 
+version=$(zcat "$base/isdb/version.txt.gz")
+
 psql -v ON_ERROR_STOP=on --echo-errors --host="$host" --port="$port" --dbname="$dbname" --username="$user" << EOF
 begin;
 
@@ -66,6 +68,14 @@ begin
 
     if not found then
       raise warning 'number of ''ISDB Mass Spectra'' was not set';
+    end if;
+  end if;
+
+  if to_regclass('info.idsm_sources') is not null then
+    update info.idsm_sources set version = '$version' where name = 'In Silico Spectral Database (ISDB)';
+
+    if not found then
+      raise warning 'version of ''In Silico Spectral Database (ISDB)'' was not set';
     end if;
   end if;
 end

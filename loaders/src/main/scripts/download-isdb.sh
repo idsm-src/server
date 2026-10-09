@@ -4,7 +4,8 @@ set -ueo pipefail
 
 source datasource.properties
 
-version=4.1
+release=4.1
+version="$release"
 
 if [ -e "$base/isdb-$version" ]; then
     suffix=1
@@ -16,6 +17,8 @@ fi
 
 output="$base/isdb-$version"
 mkdir "$output"
+
+echo "$release" | gzip > "$output/version.txt.gz"
 
 wget --progress=bar:force -P "$output" https://zenodo.org/records/8287341/files/isdb_neg.mgf
 wget --progress=bar:force -P "$output" https://zenodo.org/records/8287341/files/isdb_pos.mgf
