@@ -1,7 +1,7 @@
 create table pubchem.inchikeys
 (
     id          integer not null,
-    inchikey    char(27) unique not null,
+    inchikey    varchar unique not null,
     primary key(id)
 );
 

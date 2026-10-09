@@ -38,7 +38,7 @@ create table pubchem.protein_alternatives
 create table pubchem.protein_pdblinks
 (
     protein    integer not null,
-    pdblink    char(4) not null,
+    pdblink    varchar not null,
     primary key(protein, pdblink)
 );
 

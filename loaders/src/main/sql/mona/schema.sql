@@ -8,7 +8,7 @@ create table mona.spectra
     spectrum        pgms.spectrum,
     splash          varchar,
     level           integer,
-    ionization_mode varchar,
+    ionization_mode char,
     ionization_type integer,
     library         integer,
     submitter       integer,

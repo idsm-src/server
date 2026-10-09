@@ -52,7 +52,7 @@ create table pubchem.substance_patents
 create table pubchem.substance_pdblinks
 (
     substance    integer not null,
-    pdblink      char(4) not null,
+    pdblink      varchar not null,
     primary key(substance, pdblink)
 );
 

@@ -1,7 +1,7 @@
 create table pubchem.synonyms
 (
     id       integer not null,
-    md5      char(32) unique not null,
+    md5      varchar unique not null,
     primary key(id)
 );
 

@@ -2,7 +2,7 @@ create table molmedb.substances
 (
     id               integer not null,
     parent           integer,
-    charge           integer,
+    charge           numeric,
     ph_start         real,
     ph_end           real,
     molecular_weight real,
