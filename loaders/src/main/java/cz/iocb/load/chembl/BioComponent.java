@@ -23,9 +23,9 @@ class BioComponent extends Updater
 {
     static final String prefix = ChEMBL.chembl + "biocomponent/CHEMBL_BC_";
 
-    private static final EntityTable<Integer> biocomponents = new EntityTable<>("chembl.biocomponent_bases",
-            intKey("id"), "chembl_id", uniqueVarchar("chembl_id"), varchar("type"), varchar("description"),
-            varchar("organism"), integer("taxonomy"), varchar("sequence"));
+    private static final EntityTable<Integer> biocomponents = new EntityTable<>("chembl.biocomponents", intKey("id"),
+            "chembl_id", uniqueVarchar("chembl_id"), varchar("type"), varchar("description"), varchar("organism"),
+            integer("taxonomy"), varchar("sequence"));
 
 
     static void load() throws IOException, SQLException

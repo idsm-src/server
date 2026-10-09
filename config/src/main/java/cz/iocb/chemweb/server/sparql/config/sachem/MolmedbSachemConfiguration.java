@@ -49,18 +49,18 @@ public class MolmedbSachemConfiguration extends SparqlDatabaseOptimisedConfigura
 
         String prefix = "https://rdf.molmedb.upol.cz/substance/";
 
-        addIriClass(new MapUserIriClass("molmedb:substance", INT4, new DatabaseTable(schema, "substance_bases"),
+        addIriClass(new MapUserIriClass("molmedb:substance", INT4, new DatabaseTable(schema, "substances"),
                 new TableColumn("id", INT4), new TableColumn("identifier", VARCHAR), "https://identifiers.org/molmedb/",
                 "MM[0-9.]+"));
 
-        addIriClass(new MapUserIriClass("molmedb:smiles", INT4, new DatabaseTable(schema, "substance_bases"),
+        addIriClass(new MapUserIriClass("molmedb:smiles", INT4, new DatabaseTable(schema, "substances"),
                 new TableColumn("id", INT4), new TableColumn("identifier", VARCHAR), prefix, "MM[0-9.]+", "_SMILES"));
     }
 
 
     private void addQuadMappings()
     {
-        DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+        DatabaseTable table = new DatabaseTable(schema, "substances");
         TermMapping subject = createIriMapping("molmedb:smiles", "id");
         Conditions cnd = createIsNotNullCondition(table, "canonical_smiles");
 

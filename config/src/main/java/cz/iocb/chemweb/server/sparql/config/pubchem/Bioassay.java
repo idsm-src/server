@@ -34,7 +34,7 @@ public class Bioassay
         ConstantIriMapping graph = config.createIriMapping("pubchem:bioassay");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "bioassay_bases");
+            DatabaseTable table = new DatabaseTable(schema, "bioassays");
             TermMapping subject = config.createIriMapping("pubchem:bioassay", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -54,7 +54,7 @@ public class Bioassay
             TermMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000210"),
-                    config.createIriMapping("ontology:bao", "stage"));
+                    config.createIriMapping("ontology:bao", "stage_id"));
         }
 
         {
@@ -99,7 +99,7 @@ public class Bioassay
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "bioassay_data");
+            DatabaseTable table = new DatabaseTable(schema, "bioassay_texts");
             TermMapping subject = config.createIriMapping("pubchem:bioassay_description", "bioassay");
             Conditions conditions = config.createAreEqualCondition("type_id", "'136'::smallint");
 
@@ -108,7 +108,7 @@ public class Bioassay
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000011"),
                     config.createIriMapping("pubchem:bioassay", "bioassay"), conditions);
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
-                    config.createLiteralMapping(xsdString, "value"), conditions);
+                    config.createLiteralMapping(xsdString, "text"), conditions);
 
             // extension
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:bioassay", "bioassay"),
@@ -118,11 +118,11 @@ public class Bioassay
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:is-attribute-of"),
                     config.createIriMapping("pubchem:bioassay", "bioassay"), conditions);
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-value"),
-                    config.createLiteralMapping(xsdString, "value"), conditions);
+                    config.createLiteralMapping(xsdString, "text"), conditions);
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "bioassay_data");
+            DatabaseTable table = new DatabaseTable(schema, "bioassay_texts");
             TermMapping subject = config.createIriMapping("pubchem:bioassay_protocol", "bioassay");
             Conditions conditions = config.createAreEqualCondition("type_id", "'1041'::smallint");
 
@@ -131,7 +131,7 @@ public class Bioassay
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000011"),
                     config.createIriMapping("pubchem:bioassay", "bioassay"), conditions);
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
-                    config.createLiteralMapping(xsdString, "value"), conditions);
+                    config.createLiteralMapping(xsdString, "text"), conditions);
 
             // extension
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:bioassay", "bioassay"),
@@ -141,11 +141,11 @@ public class Bioassay
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:is-attribute-of"),
                     config.createIriMapping("pubchem:bioassay", "bioassay"), conditions);
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-value"),
-                    config.createLiteralMapping(xsdString, "value"), conditions);
+                    config.createLiteralMapping(xsdString, "text"), conditions);
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "bioassay_data");
+            DatabaseTable table = new DatabaseTable(schema, "bioassay_texts");
             TermMapping subject = config.createIriMapping("pubchem:bioassay_comment", "bioassay");
             Conditions conditions = config.createAreEqualCondition("type_id", "'1167'::smallint");
 
@@ -154,7 +154,7 @@ public class Bioassay
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000011"),
                     config.createIriMapping("pubchem:bioassay", "bioassay"), conditions);
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
-                    config.createLiteralMapping(xsdString, "value"), conditions);
+                    config.createLiteralMapping(xsdString, "text"), conditions);
 
             // extension
             config.addQuadMapping(table, graph, config.createIriMapping("pubchem:bioassay", "bioassay"),
@@ -164,11 +164,11 @@ public class Bioassay
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:is-attribute-of"),
                     config.createIriMapping("pubchem:bioassay", "bioassay"), conditions);
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-value"),
-                    config.createLiteralMapping(xsdString, "value"), conditions);
+                    config.createLiteralMapping(xsdString, "text"), conditions);
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "measuregroup_bases");
+            DatabaseTable table = new DatabaseTable(schema, "measuregroups");
             TermMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000209"),

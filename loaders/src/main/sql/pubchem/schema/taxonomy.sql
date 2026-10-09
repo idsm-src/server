@@ -1,4 +1,4 @@
-create table pubchem.taxonomy_bases
+create table pubchem.taxonomies
 (
     id            integer not null,
     label         varchar,

@@ -28,7 +28,7 @@ public final class PDB extends Updater
         StringStringMap newCompounds = new StringStringMap();
         StringStringMap oldCompounds = new StringStringMap();
 
-        load("select name,molfile from pdb.compound_bases", oldCompounds);
+        load("select name,molfile from pdb.compounds", oldCompounds);
 
         try(TarArchiveInputStream tar = new TarArchiveInputStream(new GzipCompressorInputStream(
                 new BufferedInputStream(new FileInputStream(baseDirectory + "pdb/ccd.tar.gz")))))
@@ -68,8 +68,8 @@ public final class PDB extends Updater
                 }
             }
 
-            store("delete from pdb.compound_bases where name=? and molfile=?", oldCompounds);
-            store("insert into pdb.compound_bases(name,molfile) values(?,?) "
+            store("delete from pdb.compounds where name=? and molfile=?", oldCompounds);
+            store("insert into pdb.compounds(name,molfile) values(?,?) "
                     + "on conflict(name) do update set molfile=EXCLUDED.molfile", newCompounds);
         }
     }
@@ -91,7 +91,7 @@ public final class PDB extends Updater
 
             try(Statement statement = connection.createStatement())
             {
-                try(ResultSet result = statement.executeQuery("select count(*) from pdb.compound_bases"))
+                try(ResultSet result = statement.executeQuery("select count(*) from pdb.compounds"))
                 {
                     if(result.next())
                         setCount("PDB Chemical Components", result.getInt(1));

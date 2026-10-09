@@ -24,7 +24,7 @@ public class Journal
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
-        DatabaseTable table = new DatabaseTable(schema, "journal_bases");
+        DatabaseTable table = new DatabaseTable(schema, "journals");
         TermMapping subject = config.createIriMapping("chembl:journal", "id");
 
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

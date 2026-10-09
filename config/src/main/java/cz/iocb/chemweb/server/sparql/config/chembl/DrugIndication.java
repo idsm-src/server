@@ -25,7 +25,7 @@ public class DrugIndication
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
-        DatabaseTable table = new DatabaseTable(schema, "drug_indication_bases");
+        DatabaseTable table = new DatabaseTable(schema, "drug_indications");
         TermMapping subject = config.createIriMapping("chembl:drug_indication", "id");
 
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -35,7 +35,7 @@ public class DrugIndication
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasEFO"),
                 config.createIriMapping("ontology:resource", "efo_unit", "efo_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasMolecule"),
-                config.createIriMapping("chembl:compound", "molecule"));
+                config.createIriMapping("chembl:molecule", "molecule"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:highestDevelopmentPhase"),
                 config.createLiteralMapping(xsdInt, "phase"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:chemblId"),
@@ -46,11 +46,11 @@ public class DrugIndication
                 config.createLiteralMapping(xsdString, "mesh_heading"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasEFOName"),
                 config.createLiteralMapping(xsdString, "efo_name"));
-        config.addQuadMapping(table, graph, config.createIriMapping("chembl:compound", "molecule"),
+        config.addQuadMapping(table, graph, config.createIriMapping("chembl:molecule", "molecule"),
                 config.createIriMapping("cco:hasDrugIndication"), subject);
 
         // extension
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasMesh"),
-                config.createIriMapping("mesh:heading", "mesh"));
+                config.createIriMapping("mesh:resource", "mesh"));
     }
 }

@@ -1,2 +1,2 @@
-create index descriptor_substance_bases__version on pubchem.descriptor_substance_bases(version);
-grant select on pubchem.descriptor_substance_bases to sparql;
+create index substance_versions__version on pubchem.substance_versions(version);
+grant select on pubchem.substance_versions to sparql;

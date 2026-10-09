@@ -1,4 +1,4 @@
-create function ontology.ontology_resource(unit in smallint, id in integer) returns varchar language plpgsql as
+create function ontology.resource(unit in smallint, id in integer) returns varchar language plpgsql as
 $$
   declare
     rec record;
@@ -6,10 +6,10 @@ $$
     val integer;
   begin
     if unit = 0 then
-      return (select iri from ontology.resources__reftable where resource_id = id);
+      return (select iri from ontology.uncategorized_resources tab where tab.id = resource.id);
     end if;
 	
-    select prefix, value_length, suffix into rec from ontology.resource_categories__reftable where unit_id = unit;
+    select prefix, value_length, suffix into rec from ontology.units where units.id = unit;
 
     if unit = 102 then
       -- [0-9][A-Z0-9][0-9][A-Z0-9]{3}[0-9]
@@ -81,33 +81,33 @@ $$
 immutable parallel safe;
 
 
-create function ontology.ontology_resource_inv1(iri in varchar) returns smallint language sql as
+create function ontology.resource_inv1(iri in varchar) returns smallint language sql as
 $$
-  select coalesce((select unit_id from ontology.resource_categories__reftable where starts_with(iri, prefix) and iri ~ pattern limit 1), 0::smallint);
+  select coalesce((select id from ontology.units where starts_with(iri, prefix) and iri ~ pattern limit 1), 0::smallint);
 $$
 immutable parallel safe;
 
 
-create function ontology.ontology_resource_inv2(iri in varchar) returns integer language plpgsql as
+create function ontology.resource_inv2(iri in varchar) returns integer language plpgsql as
 $$
   declare rec record;
   declare tail varchar;
   declare val char;
   declare big bigint;
   begin
-    select unit_id, value_offset, suffix into rec from ontology.resource_categories__reftable where starts_with(iri, prefix) and iri ~ pattern limit 1;
+    select id, value_offset, suffix into rec from ontology.units where starts_with(iri, prefix) and iri ~ pattern limit 1;
 
     if not found then
-      return (select resource_id from ontology.resources__reftable tab where tab.iri = ontology_resource_inv2.iri);
+      return (select id from ontology.uncategorized_resources tab where tab.iri = resource_inv2.iri);
     end if;
 
     tail := substring(iri, rec.value_offset, length(iri) - rec.value_offset + 1 - length(rec.suffix));
 
-    if rec.unit_id < 100 or rec.unit_id > 102 then
+    if rec.id < 100 or rec.id > 102 then
       return tail::integer;
     end if;
 
-    if rec.unit_id = 102 then
+    if rec.id = 102 then
       big := ascii(substring(tail, 1, 1)) - ascii('0');
 
       val := substring(tail, 2, 1);
@@ -121,7 +121,7 @@ $$
       end loop;
 
       big := big * 10 + ascii(substring(tail, 7, 1)) - ascii('0');
-    elsif rec.unit_id = 100 or rec.unit_id = 101 then
+    elsif rec.id = 100 or rec.id = 101 then
       big := ascii(substring(tail, 1, 1)) - ascii('A');
       big := big * 10 + ascii(substring(tail, 2, 1)) - ascii('0');
 
@@ -132,7 +132,7 @@ $$
 
       big := big * 10 + ascii(substring(tail, 6, 1)) - ascii('0');
 
-      if rec.unit_id = 101 then
+      if rec.id = 101 then
         big := big * 30 + substring(tail, 8)::integer;
       end if;
     end if;

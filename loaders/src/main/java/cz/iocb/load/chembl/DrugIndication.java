@@ -24,9 +24,9 @@ class DrugIndication extends Updater
     static final String prefix = ChEMBL.chembl + "drug_indication/CHEMBL_IND_";
     static final String meshPrefix = "http://identifiers.org/mesh/";
 
-    private static final EntityTable<Integer> indications = new EntityTable<>("chembl.drug_indication_bases",
-            intKey("id"), "chembl_id", uniqueVarchar("chembl_id"), integer("molecule"), varchar("mesh"),
-            varchar("mesh_heading"), integer("efo_unit"), integer("efo_id"), varchar("efo_name"), integer("phase"));
+    private static final EntityTable<Integer> indications = new EntityTable<>("chembl.drug_indications", intKey("id"),
+            "chembl_id", uniqueVarchar("chembl_id"), integer("molecule"), varchar("mesh"), varchar("mesh_heading"),
+            integer("efo_unit"), integer("efo_id"), varchar("efo_name"), integer("phase"));
 
 
     static void load() throws IOException, SQLException

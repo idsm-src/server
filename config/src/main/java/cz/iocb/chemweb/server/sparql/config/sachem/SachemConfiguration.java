@@ -15,15 +15,17 @@ import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 public class SachemConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
     public SachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema, String index,
-            String iriPrefix, int idLength, DatabaseTable table, String idColumn, LiteralClass molfileLiteralClass)
-            throws SQLException
+            String entity, String iriPrefix, int idLength, DatabaseTable table, String idColumn,
+            LiteralClass molfileLiteralClass) throws SQLException
     {
         super(service, connectionPool, schema);
 
+        String compound = index + ":" + entity;
+
         addPrefixes();
-        addResourceClasses(index, iriPrefix, idLength);
-        addQuadMappings(index, table, idColumn, molfileLiteralClass);
-        addProcedures(index);
+        addResourceClasses(index, compound, iriPrefix, idLength);
+        addQuadMappings(index, compound, table, idColumn, molfileLiteralClass);
+        addProcedures(index, compound);
     }
 
 
@@ -35,25 +37,25 @@ public class SachemConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
-    private void addResourceClasses(String index, String iriPrefix, int idLength)
+    private void addResourceClasses(String index, String compound, String iriPrefix, int idLength)
     {
         Sachem.addResourceClasses(this);
 
-        addIriClass(new IntegerUserIriClass(index + ":compound", INT4, iriPrefix, idLength));
+        addIriClass(new IntegerUserIriClass(compound, INT4, iriPrefix, idLength));
         addIriClass(new IntegerUserIriClass(index + ":molfile", INT4, iriPrefix, idLength, "_Molfile"));
     }
 
 
-    private void addQuadMappings(String index, DatabaseTable table, String idColumn, LiteralClass molfileLiteralClass)
+    private void addQuadMappings(String index, String compound, DatabaseTable table, String idColumn,
+            LiteralClass molfileLiteralClass)
     {
-        MolFiles.addQuadMappings(this, index + ":compound", index + ":molfile", table,
-                getColumns(getIriClass(index + ":compound"), idColumn), idColumn, "molfile", molfileLiteralClass);
+        MolFiles.addQuadMappings(this, compound, index + ":molfile", table, getColumns(getIriClass(compound), idColumn),
+                idColumn, "molfile", molfileLiteralClass);
     }
 
 
-    private void addProcedures(String index)
+    private void addProcedures(String index, String compound)
     {
-        Sachem.addProcedures(this, index, index + ":compound",
-                getColumns(getIriClass(index + ":compound"), "compound"));
+        Sachem.addProcedures(this, index, compound, getColumns(getIriClass(compound), "compound"));
     }
 }

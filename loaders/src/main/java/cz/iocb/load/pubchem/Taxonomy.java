@@ -31,8 +31,8 @@ public class Taxonomy extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> taxonomies = new EntityTable<>("pubchem.taxonomy_bases", intKey("id"),
-            null, varchar("label"));
+    private static final EntityTable<Integer> taxonomies = new EntityTable<>("pubchem.taxonomies", intKey("id"), null,
+            varchar("label"));
     private static final MissingEntities<Integer> missingTaxonomies = new MissingEntities<>("taxonomy", true);
 
 

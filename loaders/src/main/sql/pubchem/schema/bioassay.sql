@@ -1,4 +1,4 @@
-create table pubchem.bioassay_bases
+create table pubchem.bioassays
 (
     id        integer not null,
     source    smallint,
@@ -7,11 +7,11 @@ create table pubchem.bioassay_bases
 );
 
 
-create table pubchem.bioassay_data
+create table pubchem.bioassay_texts
 (
     bioassay    integer not null,
     type_id     smallint not null,
-    value       varchar not null,
+    text        varchar not null,
     primary key(bioassay, type_id)
 );
 
@@ -19,7 +19,7 @@ create table pubchem.bioassay_data
 create table pubchem.bioassay_stages
 (
     bioassay    integer not null,
-    stage       integer not null,
+    stage_id    integer not null,
     primary key(bioassay)
 );
 

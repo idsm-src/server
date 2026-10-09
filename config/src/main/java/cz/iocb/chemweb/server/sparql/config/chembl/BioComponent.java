@@ -24,7 +24,7 @@ public class BioComponent
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
-        DatabaseTable table = new DatabaseTable(schema, "biocomponent_bases");
+        DatabaseTable table = new DatabaseTable(schema, "biocomponents");
         TermMapping subject = config.createIriMapping("chembl:biocomponent", "id");
 
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -32,7 +32,7 @@ public class BioComponent
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
                 config.createIriMapping("ontology:taxonomy", "taxonomy"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                config.createIriMapping("reference:ncbi-taxonomy", "taxonomy"));
+                config.createIriMapping("reference:ncbi_taxonomy", "taxonomy"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:chemblId"),
                 config.createLiteralMapping(xsdString, "chembl_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),

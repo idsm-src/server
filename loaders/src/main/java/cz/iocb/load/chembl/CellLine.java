@@ -25,7 +25,7 @@ class CellLine extends Updater
 {
     static final String prefix = ChEMBL.chembl + "cell_line/CHEMBL";
 
-    private static final EntityTable<Integer> cellLines = new EntityTable<>("chembl.cell_line_bases", intKey("id"),
+    private static final EntityTable<Integer> cellLines = new EntityTable<>("chembl.cell_lines", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), varchar("label"), varchar("description"), varchar("organism"),
             integer("taxonomy"), varchar("cellosaurus"), integer("clo_id"), integer("efo_unit"), integer("efo_id"));
 

@@ -420,9 +420,9 @@ public class GenerateVoid extends Updater
     }
 
 
-    private static final HashSet<SourceTable> uniques = new HashSet<>(Set.of(new DatabaseTable("chebi", "molfiles"),
-            new DatabaseTable("chembl", "molecule_molfiles"), new DatabaseTable("drugbank", "compound_bases"),
-            new DatabaseTable("pubchem", "compound_molfiles")));
+    private static final HashSet<SourceTable> uniques = new HashSet<>(
+            Set.of(new DatabaseTable("chebi", "class_molfiles"), new DatabaseTable("chembl", "molecule_molfiles"),
+                    new DatabaseTable("drugbank", "compounds"), new DatabaseTable("pubchem", "compound_molfiles")));
 
     private static final Variable varS = new Variable("S");
     private static final Variable varO = new Variable("O");
@@ -485,7 +485,7 @@ public class GenerateVoid extends Updater
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet rs = statement.executeQuery("""
-                        select unit_id from ontology.resource_categories__reftable where prefix like any (array[
+                        select id from ontology.units where prefix like any (array[
                             'http://purl.obolibrary.org/obo/PR_%',
                             'http://purl.obolibrary.org/obo/CHEBI_%',
                             'http://purl.obolibrary.org/obo/CHEMONTID_%',

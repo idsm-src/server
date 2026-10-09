@@ -26,7 +26,7 @@ class Concept extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/concept/";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> concepts = new EntityTable<>("pubchem.concept_bases", intKey("id"), null,
+    private static final EntityTable<Integer> concepts = new EntityTable<>("pubchem.concepts", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), varchar("label"), integer("scheme"), integer("broader"));
     private static final StringIntMap conceptIDs = new StringIntMap();
     private static final MissingEntities<String> missingConcepts = new MissingEntities<>("concept", true);
@@ -51,7 +51,7 @@ class Concept extends Updater
 
     private static void loadBases(TripleDispatcher dispatcher) throws SQLException
     {
-        load("select iri,id from pubchem.concept_bases", conceptIDs);
+        load("select iri,id from pubchem.concepts", conceptIDs);
 
         nextConceptID = conceptIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 

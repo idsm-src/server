@@ -5,42 +5,42 @@ create table chebi.classes
 );
 
 
-create table chebi.parents
+create table chebi.class_parents
 (
-    chebi       integer not null,
+    class       integer not null,
     parent      integer not null,
-    primary key(chebi, parent)
+    primary key(class, parent)
 );
 
 
-create table chebi.stars
+create table chebi.class_stars
 (
-    chebi       integer not null,
-    star        integer not null,
-    primary key(chebi)
+    class       integer not null,
+    star_id     integer not null,
+    primary key(class)
 );
 
 
-create table chebi.replacements
+create table chebi.class_replacements
 (
-    chebi       integer not null,
+    class       integer not null,
     replacement integer not null,
-    primary key(chebi)
+    primary key(class)
 );
 
 
-create table chebi.obsolescence_reasons
+create table chebi.class_obsolescence_reasons
 (
-    chebi       integer not null,
-    reason      integer not null,
-    primary key(chebi)
+    class       integer not null,
+    reason_id   integer not null,
+    primary key(class)
 );
 
 
 create table chebi.restrictions
 (
     id                  integer not null,
-    chebi               integer not null,
+    class               integer not null,
     value_restriction   integer not null,
     property_unit       smallint not null,
     property_id         integer not null,
@@ -51,7 +51,7 @@ create table chebi.restrictions
 create table chebi.axioms
 (
     id              integer not null,
-    chebi           integer not null,
+    class           integer not null,
     property_unit   smallint not null,
     property_id     integer not null,
     target          varchar not null,
@@ -62,145 +62,145 @@ create table chebi.axioms
 );
 
 
-create table chebi.references
+create table chebi.class_references
 (
-    chebi       integer not null,
+    class       integer not null,
     reference   varchar not null,
-    primary key(chebi, reference)
+    primary key(class, reference)
 );
 
 
-create table chebi.related_synonyms
+create table chebi.class_related_synonyms
 (
-    chebi       integer not null,
+    class       integer not null,
     synonym     varchar not null,
-    primary key(chebi, synonym)
+    primary key(class, synonym)
 );
 
 
-create table chebi.exact_synonyms
+create table chebi.class_exact_synonyms
 (
-    chebi       integer not null,
+    class       integer not null,
     synonym     varchar not null,
-    primary key(chebi, synonym)
+    primary key(class, synonym)
 );
 
 
-create table chebi.formulas
+create table chebi.class_formulas
 (
-    chebi       integer not null,
+    class       integer not null,
     formula     varchar not null,
-    primary key(chebi, formula)
+    primary key(class, formula)
 );
 
 
-create table chebi.masses
+create table chebi.class_masses
 (
-    chebi       integer not null,
+    class       integer not null,
     mass        varchar not null,
-    primary key(chebi, mass)
+    primary key(class, mass)
 );
 
 
-create table chebi.monoisotopic_masses
+create table chebi.class_monoisotopic_masses
 (
-    chebi       integer not null,
+    class       integer not null,
     mass        varchar not null,
-    primary key(chebi, mass)
+    primary key(class, mass)
 );
 
 
-create table chebi.alternative_identifiers
+create table chebi.class_alternative_identifiers
 (
-    chebi       integer not null,
+    class       integer not null,
     identifier  varchar not null,
-    primary key(chebi, identifier)
+    primary key(class, identifier)
 );
 
 
-create table chebi.labels
+create table chebi.class_labels
 (
-    chebi       integer not null,
+    class       integer not null,
     label       varchar not null,
-    primary key(chebi)
+    primary key(class)
 );
 
 
-create table chebi.identifiers
+create table chebi.class_identifiers
 (
-    chebi       integer not null,
+    class       integer not null,
     identifier  varchar not null,
-    primary key(chebi)
+    primary key(class)
 );
 
 
-create table chebi.namespaces
+create table chebi.class_namespaces
 (
-    chebi       integer not null,
+    class       integer not null,
     namespace   varchar not null,
-    primary key(chebi)
+    primary key(class)
 );
 
 
-create table chebi.charges
+create table chebi.class_charges
 (
-    chebi       integer not null,
+    class       integer not null,
     charge      varchar not null,
-    primary key(chebi)
+    primary key(class)
 );
 
 
-create table chebi.smiles_codes
+create table chebi.class_smileses
 (
-    chebi       integer not null,
+    class       integer not null,
     smiles      varchar not null,
-    primary key(chebi)
+    primary key(class)
 );
 
 
-create table chebi.inchikeys
+create table chebi.class_inchikeys
 (
-    chebi       integer not null,
+    class       integer not null,
     inchikey    varchar not null,
-    primary key(chebi)
+    primary key(class)
 );
 
 
-create table chebi.inchies
+create table chebi.class_inchis
 (
-    chebi       integer not null,
+    class       integer not null,
     inchi       varchar not null,
-    primary key(chebi)
+    primary key(class)
 );
 
 
-create table chebi.wurcs_representations
+create table chebi.class_wurcs_representations
 (
-    chebi       integer not null,
+    class       integer not null,
     wurcs       varchar not null,
-    primary key(chebi)
+    primary key(class)
 );
 
 
-create table chebi.molfiles
+create table chebi.class_molfiles
 (
-    chebi       integer not null,
+    class       integer not null,
     molfile     varchar not null,
-    primary key(chebi)
+    primary key(class)
 );
 
 
-create table chebi.definitions
+create table chebi.class_definitions
 (
-    chebi       integer not null,
+    class       integer not null,
     definition  varchar not null,
-    primary key(chebi)
+    primary key(class)
 );
 
 
-create table chebi.deprecated_flags
+create table chebi.class_deprecated_flags
 (
-    chebi       integer not null,
+    class       integer not null,
     flag        boolean not null,
-    primary key(chebi)
+    primary key(class)
 );

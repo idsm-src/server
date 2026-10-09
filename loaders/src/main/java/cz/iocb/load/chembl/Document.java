@@ -27,7 +27,7 @@ class Document extends Updater
     static final String prefix = ChEMBL.chembl + "document/CHEMBL";
     static final String pubmedPrefix = "http://identifiers.org/pubmed/";
 
-    private static final EntityTable<Integer> documents = new EntityTable<>("chembl.document_bases", intKey("id"),
+    private static final EntityTable<Integer> documents = new EntityTable<>("chembl.documents", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), integer("journal"), varchar("type"), varchar("title"),
             integer("year"), varchar("volume"), varchar("issue"), varchar("first_page"), varchar("last_page"),
             varchar("doi"), integer("pubmed"));

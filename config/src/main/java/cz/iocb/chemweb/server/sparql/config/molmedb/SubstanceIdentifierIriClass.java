@@ -31,7 +31,7 @@ import cz.iocb.sparql.engine.request.Request;
 
 public class SubstanceIdentifierIriClass extends UserIriClass
 {
-    protected final DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+    protected final DatabaseTable table = new DatabaseTable(schema, "substances");
     protected final TableColumn from = new TableColumn("id", INT4);
     protected final TableColumn to = new TableColumn("identifier", VARCHAR);
 

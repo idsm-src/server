@@ -1,4 +1,4 @@
-grant select on pubchem.organization_bases to sparql;
+grant select on pubchem.organizations to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -14,5 +14,5 @@ grant select on pubchem.organization_formatted_names to sparql;
 --------------------------------------------------------------------------------
 
 create index organization_crossref_matches__organization on pubchem.organization_crossref_matches(organization);
-create index organization_crossref_matches__name on pubchem.organization_crossref_matches(crossref);
+create index organization_crossref_matches__match on pubchem.organization_crossref_matches(match);
 grant select on pubchem.organization_crossref_matches to sparql;

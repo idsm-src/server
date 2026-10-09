@@ -13,7 +13,8 @@ public class PubChemSachemConfiguration extends SachemConfiguration
     public PubChemSachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema)
             throws SQLException
     {
-        super(service, connectionPool, schema, "pubchem", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID", 0,
+        super(service, connectionPool, schema, "pubchem", "compound",
+                "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID", 0,
                 new DatabaseTable("pubchem", "compound_molfiles"), "compound",
                 new StringSubsetLiteralClass("pubchem-molfile"));
 

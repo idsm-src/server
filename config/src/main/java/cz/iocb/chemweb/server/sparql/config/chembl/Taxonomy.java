@@ -22,7 +22,7 @@ public class Taxonomy
         config.addQuadMapping(table, graph, config.createIriMapping("ontology:taxonomy", "taxonomy"),
                 config.createIriMapping("rdfs:label"), config.createLiteralMapping(xsdString, "label"),
                 config.createAreEqualCondition("type", "'IDENTIFIERS.ORG'::" + taxonomyReferenceType));
-        config.addQuadMapping(table, graph, config.createIriMapping("reference:ncbi-taxonomy", "taxonomy"),
+        config.addQuadMapping(table, graph, config.createIriMapping("reference:ncbi_taxonomy", "taxonomy"),
                 config.createIriMapping("rdfs:label"), config.createLiteralMapping(xsdString, "label"),
                 config.createAreEqualCondition("type", "'NCBI TAXONOMY'::" + taxonomyReferenceType));
     }

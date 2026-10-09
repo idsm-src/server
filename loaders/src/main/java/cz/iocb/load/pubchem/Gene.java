@@ -41,11 +41,11 @@ class Gene extends Updater
     static final String symbolPrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/";
     static final int symbolPrefixLength = symbolPrefix.length();
 
-    private static final EntityTable<Integer> genes = new EntityTable<>("pubchem.gene_bases", intKey("id"), null,
-            uniqueVarchar("title"), integer("gene_symbol"), integer("organism"));
+    private static final EntityTable<Integer> genes = new EntityTable<>("pubchem.genes", intKey("id"), null,
+            uniqueVarchar("title"), integer("genesymbol"), integer("organism"));
 
-    private static final EntityTable<Integer> geneSymbols = new EntityTable<>("pubchem.gene_symbol_bases", intKey("id"),
-            null, uniqueVarchar("iri").determinedByKey(), varchar("symbol"));
+    private static final EntityTable<Integer> geneSymbols = new EntityTable<>("pubchem.genesymbols", intKey("id"), null,
+            uniqueVarchar("iri").determinedByKey(), varchar("symbol"));
     private static final StringIntMap geneSymbolIDs = new StringIntMap();
     private static int nextGeneSymbolID;
 
@@ -89,7 +89,7 @@ class Gene extends Updater
 
     private static void loadGeneSymbolBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        load("select iri,id from pubchem.gene_symbol_bases", geneSymbolIDs);
+        load("select iri,id from pubchem.genesymbols", geneSymbolIDs);
 
         nextGeneSymbolID = geneSymbolIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
@@ -131,7 +131,7 @@ class Gene extends Updater
             Integer geneID = getGeneID(subject.getURI());
             Integer symbolID = getGeneSymbolID(object.getURI());
 
-            genes.set(geneID, "gene_symbol", symbolID);
+            genes.set(geneID, "genesymbol", symbolID);
         });
     }
 

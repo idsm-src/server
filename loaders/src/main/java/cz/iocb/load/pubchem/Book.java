@@ -27,7 +27,7 @@ public class Book extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/book/NBK";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> books = new EntityTable<>("pubchem.book_bases", intKey("id"), null,
+    private static final EntityTable<Integer> books = new EntityTable<>("pubchem.books", intKey("id"), null,
             uniqueVarchar("title"), varchar("publisher"), varchar("location"), uniqueVarchar("subtitle"),
             varchar("date"), uniqueVarchar("isbn"));
     private static final MissingEntities<Integer> missingBooks = new MissingEntities<>("book", true);

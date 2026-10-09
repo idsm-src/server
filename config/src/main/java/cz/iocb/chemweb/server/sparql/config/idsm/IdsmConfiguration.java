@@ -53,8 +53,8 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         {
             super(schema);
 
-            for(DatabaseTable table : List.of(new DatabaseTable("drugbank", "compound_bases"),
-                    new DatabaseTable("chebi", "molfiles"), new DatabaseTable("chembl", "molecule_molfiles"),
+            for(DatabaseTable table : List.of(new DatabaseTable("drugbank", "compounds"),
+                    new DatabaseTable("chebi", "class_molfiles"), new DatabaseTable("chembl", "molecule_molfiles"),
                     new DatabaseTable("pubchem", "compound_molfiles")))
                 primaryKeys.get(table).add(List.of(getColumn(table, "molfile")));
         }
@@ -215,7 +215,7 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
 
         Map<ResourceClass, List<Column>> mapping = new HashMap<>();
         mapping.put(getIriClass("ontology:chebi"), getColumns(getIriClass("ontology:chebi"), "chebi"));
-        mapping.put(getIriClass("chembl:compound"), getColumns(getIriClass("chembl:compound"), "chembl"));
+        mapping.put(getIriClass("chembl:molecule"), getColumns(getIriClass("chembl:molecule"), "chembl"));
         mapping.put(getIriClass("drugbank:compound"), getColumns(getIriClass("drugbank:compound"), "drugbank"));
         mapping.put(getIriClass("isdb:compound"), getColumns(getIriClass("isdb:compound"), "isdb"));
         mapping.put(getIriClass("mona:compound"), getColumns(getIriClass("mona:compound"), "mona"));

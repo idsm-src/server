@@ -1,4 +1,4 @@
-create table drugbank.compound_bases
+create table drugbank.compounds
 (
     id          integer not null,
     molfile     varchar not null,

@@ -97,50 +97,50 @@ public class Interaction
 
         // triples map #1
         {
-            DatabaseTable table = new DatabaseTable(schema, "interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "interactions");
             TermMapping subject = config.createIriMapping("molmedb:interaction", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0002182")); // pharmacokinetic assay
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090012"), // has participant
-                    config.createIriMapping("molmedb:substance", "substance_id"));
+                    config.createIriMapping("molmedb:substance", "substance"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090012"), // has participant
-                    config.createIriMapping("molmedb:membrane", "membrane_id"));
+                    config.createIriMapping("molmedb:membrane", "membrane"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000209"), // has measure group
                     config.createIriMapping("molmedb:measure_group", "id"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("prov:wasQuotedFrom"),
-                    config.createIriMapping("molmedb:reference", "model_publication_id"));
+                    config.createIriMapping("molmedb:reference", "model_reference"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("prov:hadPrimarySource"),
-                    config.createIriMapping("molmedb:reference", "publication_id"));
+                    config.createIriMapping("molmedb:reference", "reference"));
         }
 
         // triples map #2
         {
-            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interactions");
             TermMapping subject = config.createIriMapping("molmedb:fluorescent_interaction", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0002182")); // pharmacokinetic assay
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090012"), // has participant
-                    config.createIriMapping("molmedb:substance", "substance_id"));
+                    config.createIriMapping("molmedb:substance", "substance"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090012"), // has participant
-                    config.createIriMapping("molmedb:membrane", "membrane_id"));
+                    config.createIriMapping("molmedb:membrane", "membrane"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000209"), // has measure group
                     config.createIriMapping("molmedb:fluorescent_measure_group", "id"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("prov:wasQuotedFrom"),
-                    config.createIriMapping("molmedb:reference", "model_publication_id"));
+                    config.createIriMapping("molmedb:reference", "model_reference"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("prov:hadPrimarySource"),
-                    config.createIriMapping("molmedb:reference", "publication_id"));
+                    config.createIriMapping("molmedb:reference", "reference"));
         }
 
 
@@ -150,14 +150,14 @@ public class Interaction
 
         // triples map #3
         {
-            DatabaseTable table = new DatabaseTable(schema, "interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "interactions");
             TermMapping subject = config.createIriMapping("molmedb:measure_group", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0000040")); // measure group
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000212"), // has assay method
-                    config.createIriMapping("molmedb:method", "method_id"));
+                    config.createIriMapping("molmedb:method", "method"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000208"), // has endpoint
                     config.createIriMapping("molmedb:endpoint_logk", "id"),
@@ -180,10 +180,10 @@ public class Interaction
                     config.createIsNotNullCondition(table, "gwat"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090012"), // has participant
-                    config.createIriMapping("molmedb:substance", "substance_id"));
+                    config.createIriMapping("molmedb:substance", "substance"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090012"), // has participant
-                    config.createIriMapping("molmedb:membrane", "membrane_id"));
+                    config.createIriMapping("molmedb:membrane", "membrane"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000426"), // is measure group of
                     config.createIriMapping("molmedb:interaction", "id"));
@@ -209,14 +209,14 @@ public class Interaction
 
         // triples map #4
         {
-            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interactions");
             TermMapping subject = config.createIriMapping("molmedb:fluorescent_measure_group", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0000040")); // measure group
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000212"), // has assay method
-                    config.createIriMapping("molmedb:method", "method_id"));
+                    config.createIriMapping("molmedb:method", "method"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000208"), // has endpoint
                     config.createIriMapping("molmedb:fluorescent_endpoint_theta", "id"),
@@ -239,10 +239,10 @@ public class Interaction
                     config.createIsNotNullCondition(table, "lt"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090012"), // has participant
-                    config.createIriMapping("molmedb:substance", "substance_id"));
+                    config.createIriMapping("molmedb:substance", "substance"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090012"), // has participant
-                    config.createIriMapping("molmedb:membrane", "membrane_id"));
+                    config.createIriMapping("molmedb:membrane", "membrane"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000426"), // is measure group of
                     config.createIriMapping("molmedb:fluorescent_interaction", "id"));
@@ -273,7 +273,7 @@ public class Interaction
 
         // triples map #5
         {
-            DatabaseTable table = new DatabaseTable(schema, "membrane_bases");
+            DatabaseTable table = new DatabaseTable(schema, "membranes");
             TermMapping subject = config.createIriMapping("molmedb:membrane", "id");
 
             //FIXME:
@@ -292,7 +292,7 @@ public class Interaction
 
         // triples map #6
         {
-            DatabaseTable table = new DatabaseTable(schema, "membrane_bases");
+            DatabaseTable table = new DatabaseTable(schema, "membranes");
             TermMapping subject = config.createIriMapping("molmedb:membrane", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -341,7 +341,7 @@ public class Interaction
 
         // triples map #7
         {
-            DatabaseTable table = new DatabaseTable(schema, "method_bases");
+            DatabaseTable table = new DatabaseTable(schema, "methods");
             TermMapping subject = config.createIriMapping("molmedb:method", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -364,7 +364,7 @@ public class Interaction
 
         // triples map #8
         {
-            DatabaseTable table = new DatabaseTable(schema, "method_bases");
+            DatabaseTable table = new DatabaseTable(schema, "methods");
             TermMapping subject = config.createIriMapping("molmedb:method", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -431,7 +431,7 @@ public class Interaction
 
         // triples map #9
         {
-            DatabaseTable table = new DatabaseTable(schema, "interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "temperature");
             TermMapping subject = config.createIriMapping("molmedb:measure_group_temperature", "id");
 
@@ -447,7 +447,7 @@ public class Interaction
 
         // triples map #10
         {
-            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "temperature");
             TermMapping subject = config.createIriMapping("molmedb:fluorescent_measure_group_temperature", "id");
 
@@ -463,7 +463,7 @@ public class Interaction
 
         // triples map #11
         {
-            DatabaseTable table = new DatabaseTable(schema, "interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "charge");
             TermMapping subject = config.createIriMapping("molmedb:measure_group_mol_charge", "id");
 
@@ -477,7 +477,7 @@ public class Interaction
 
         // triples map #12
         {
-            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "charge");
             TermMapping subject = config.createIriMapping("molmedb:fluorescent_measure_group_mol_charge", "id");
 
@@ -491,7 +491,7 @@ public class Interaction
 
         // triples map #13
         {
-            DatabaseTable table = new DatabaseTable(schema, "interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "ph");
             TermMapping subject = config.createIriMapping("molmedb:measure_group_ph", "id");
 
@@ -504,7 +504,7 @@ public class Interaction
 
         // triples map #14
         {
-            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "ph");
             TermMapping subject = config.createIriMapping("molmedb:fluorescent_measure_group_ph", "id");
 
@@ -522,7 +522,7 @@ public class Interaction
 
         // triples map #15
         {
-            DatabaseTable table = new DatabaseTable(schema, "interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "logk");
             TermMapping subject = config.createIriMapping("molmedb:endpoint_logk", "id");
 
@@ -542,7 +542,7 @@ public class Interaction
 
         // triples map #16
         {
-            DatabaseTable table = new DatabaseTable(schema, "interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "logperm");
             TermMapping subject = config.createIriMapping("molmedb:endpoint_logperm", "id");
 
@@ -565,7 +565,7 @@ public class Interaction
 
         // triples map #17
         {
-            DatabaseTable table = new DatabaseTable(schema, "interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "x_min");
             TermMapping subject = config.createIriMapping("molmedb:endpoint_position", "id");
 
@@ -587,7 +587,7 @@ public class Interaction
 
         // triples map #18
         {
-            DatabaseTable table = new DatabaseTable(schema, "interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "gpen");
             TermMapping subject = config.createIriMapping("molmedb:endpoint_penetration", "id");
 
@@ -610,7 +610,7 @@ public class Interaction
 
         // triples map #19
         {
-            DatabaseTable table = new DatabaseTable(schema, "interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "gwat");
             TermMapping subject = config.createIriMapping("molmedb:endpoint_water", "id");
 
@@ -633,7 +633,7 @@ public class Interaction
 
         // triples map #20
         {
-            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "theta");
             TermMapping subject = config.createIriMapping("molmedb:fluorescent_endpoint_theta", "id");
 
@@ -655,7 +655,7 @@ public class Interaction
 
         // triples map #21
         {
-            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "abs_wl");
             TermMapping subject = config.createIriMapping("molmedb:fluorescent_endpoint_abs_wl", "id");
 
@@ -677,7 +677,7 @@ public class Interaction
 
         // triples map #22
         {
-            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "fluo_wl");
             TermMapping subject = config.createIriMapping("molmedb:fluorescent_endpoint_fluo_wl", "id");
 
@@ -699,7 +699,7 @@ public class Interaction
 
         // triples map #23
         {
-            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "qy");
             TermMapping subject = config.createIriMapping("molmedb:fluorescent_endpoint_qy", "id");
 
@@ -718,7 +718,7 @@ public class Interaction
 
         // triples map #24
         {
-            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interaction_bases");
+            DatabaseTable table = new DatabaseTable(schema, "fluorescent_interactions");
             Conditions cnd = config.createIsNotNullCondition(table, "lt");
             TermMapping subject = config.createIriMapping("molmedb:fluorescent_endpoint_lt", "id");
 
@@ -744,10 +744,10 @@ public class Interaction
          */
         {
             DatabaseTable table = new DatabaseTable(schema, "membrane_parts");
-            TermMapping subject = config.createIriMapping("molmedb:membrane", "membrane_id");
+            TermMapping subject = config.createIriMapping("molmedb:membrane", "membrane");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090004"), // has part
-                    config.createIriMapping("ontology:chebi", "chebi_id"));
+                    config.createIriMapping("ontology:chebi", "chebi"));
         }
     }
 }

@@ -17,7 +17,7 @@ public class Concept
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pubchem:concept", INT2, new DatabaseTable(schema, "concept_bases"),
+        config.addIriClass(new MapUserIriClass("pubchem:concept", INT2, new DatabaseTable(schema, "concepts"),
                 new TableColumn("id", INT2), new TableColumn("iri", VARCHAR),
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/concept/"));
     }
@@ -28,7 +28,7 @@ public class Concept
         ConstantIriMapping graph = config.createIriMapping("pubchem:concept");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "concept_bases");
+            DatabaseTable table = new DatabaseTable(schema, "concepts");
             TermMapping subject = config.createIriMapping("pubchem:concept", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

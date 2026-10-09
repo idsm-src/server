@@ -1,5 +1,5 @@
-create index compound_bases__id__varchar on pubchem.compound_bases((id::varchar));
-grant select on pubchem.compound_bases to sparql;
+create index compounds__id__varchar on pubchem.compounds((id::varchar));
+grant select on pubchem.compounds to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -34,19 +34,19 @@ grant select on pubchem.compound_same_connectivities to sparql;
 --------------------------------------------------------------------------------
 
 create index compound_roles__compound on pubchem.compound_roles(compound);
-create index compound_roles__role on pubchem.compound_roles(role_id);
+create index compound_roles__role_id on pubchem.compound_roles(role_id);
 grant select on pubchem.compound_roles to sparql;
 
 --------------------------------------------------------------------------------
 
 create index compound_types__compound on pubchem.compound_types(compound);
-create index compound_types__type on pubchem.compound_types(type_id);
+create index compound_types__type_id on pubchem.compound_types(type_id);
 grant select on pubchem.compound_types to sparql;
 
 --------------------------------------------------------------------------------
 
 create index compound_active_ingredients__compound on pubchem.compound_active_ingredients(compound);
-create index compound_active_ingredients__ingredient on pubchem.compound_active_ingredients(ingredient_unit, ingredient_id);
+create index compound_active_ingredients__ingredient_unit_ingredient_id on pubchem.compound_active_ingredients(ingredient_unit, ingredient_id);
 grant select on pubchem.compound_active_ingredients to sparql;
 
 --------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ grant select on pubchem.compound_labels to sparql;
 --------------------------------------------------------------------------------
 
 create index compound_matches__compound on pubchem.compound_matches(compound);
-create index compound_matches__match on pubchem.compound_matches(match_unit, match_id);
+create index compound_matches__match_unit_match_id on pubchem.compound_matches(match_unit, match_id);
 grant select on pubchem.compound_matches to sparql;
 
 --------------------------------------------------------------------------------

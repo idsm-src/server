@@ -1,10 +1,10 @@
-create index book_bases__title on pubchem.book_bases(title);
-create index book_bases__publisher on pubchem.book_bases(publisher);
-create index book_bases__location on pubchem.book_bases(location);
-create index book_bases__subtitle on pubchem.book_bases(subtitle);
-create index book_bases__date on pubchem.book_bases(date);
-create index book_bases__isbn on pubchem.book_bases(isbn);
-grant select on pubchem.book_bases to sparql;
+create index books__title on pubchem.books(title);
+create index books__publisher on pubchem.books(publisher);
+create index books__location on pubchem.books(location);
+create index books__subtitle on pubchem.books(subtitle);
+create index books__date on pubchem.books(date);
+create index books__isbn on pubchem.books(isbn);
+grant select on pubchem.books to sparql;
 
 --------------------------------------------------------------------------------
 

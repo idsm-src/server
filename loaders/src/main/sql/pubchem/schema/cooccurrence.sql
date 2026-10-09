@@ -1,4 +1,4 @@
-create table pubchem.chemical_chemical_cooccurrences
+create table pubchem.compound_compound_cooccurrences
 (
     subject     integer not null,
     object      integer not null,
@@ -7,7 +7,7 @@ create table pubchem.chemical_chemical_cooccurrences
 );
 
 
-create table pubchem.chemical_disease_cooccurrences
+create table pubchem.compound_disease_cooccurrences
 (
     subject     integer not null,
     object      integer not null,
@@ -16,7 +16,7 @@ create table pubchem.chemical_disease_cooccurrences
 );
 
 
-create table pubchem.chemical_gene_cooccurrences
+create table pubchem.compound_genesymbol_cooccurrences
 (
     subject     integer not null,
     object      integer not null,
@@ -25,7 +25,7 @@ create table pubchem.chemical_gene_cooccurrences
 );
 
 
-create table pubchem.chemical_enzyme_cooccurrences
+create table pubchem.compound_enzyme_cooccurrences
 (
     subject     integer not null,
     object      integer not null,
@@ -34,7 +34,7 @@ create table pubchem.chemical_enzyme_cooccurrences
 );
 
 
-create table pubchem.disease_chemical_cooccurrences
+create table pubchem.disease_compound_cooccurrences
 (
     subject     integer not null,
     object      integer not null,
@@ -52,7 +52,7 @@ create table pubchem.disease_disease_cooccurrences
 );
 
 
-create table pubchem.disease_gene_cooccurrences
+create table pubchem.disease_genesymbol_cooccurrences
 (
     subject     integer not null,
     object      integer not null,
@@ -70,7 +70,7 @@ create table pubchem.disease_enzyme_cooccurrences
 );
 
 
-create table pubchem.gene_chemical_cooccurrences
+create table pubchem.genesymbol_compound_cooccurrences
 (
     subject     integer not null,
     object      integer not null,
@@ -79,7 +79,7 @@ create table pubchem.gene_chemical_cooccurrences
 );
 
 
-create table pubchem.enzyme_chemical_cooccurrences
+create table pubchem.enzyme_compound_cooccurrences
 (
     subject     integer not null,
     object      integer not null,
@@ -88,7 +88,7 @@ create table pubchem.enzyme_chemical_cooccurrences
 );
 
 
-create table pubchem.gene_disease_cooccurrences
+create table pubchem.genesymbol_disease_cooccurrences
 (
     subject     integer not null,
     object      integer not null,
@@ -106,7 +106,7 @@ create table pubchem.enzyme_disease_cooccurrences
 );
 
 
-create table pubchem.gene_gene_cooccurrences
+create table pubchem.genesymbol_genesymbol_cooccurrences
 (
     subject     integer not null,
     object      integer not null,

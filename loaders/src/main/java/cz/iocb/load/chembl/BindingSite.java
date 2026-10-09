@@ -22,7 +22,7 @@ class BindingSite extends Updater
 {
     static final String prefix = ChEMBL.chembl + "binding_site/CHEMBL_BS_";
 
-    private static final EntityTable<Integer> sites = new EntityTable<>("chembl.binding_site_bases", intKey("id"),
+    private static final EntityTable<Integer> sites = new EntityTable<>("chembl.binding_sites", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), varchar("name"), integer("target"));
 
 

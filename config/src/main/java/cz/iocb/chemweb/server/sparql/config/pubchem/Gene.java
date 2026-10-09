@@ -18,9 +18,9 @@ public class Gene
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pubchem:gene_symbol", INT4,
-                new DatabaseTable(schema, "gene_symbol_bases"), new TableColumn("id", INT4),
-                new TableColumn("iri", VARCHAR), "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"));
+        config.addIriClass(new MapUserIriClass("pubchem:genesymbol", INT4, new DatabaseTable(schema, "genesymbols"),
+                new TableColumn("id", INT4), new TableColumn("iri", VARCHAR),
+                "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/"));
         config.addIriClass(
                 new IntegerUserIriClass("pubchem:gene", INT4, "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"));
     }
@@ -31,8 +31,8 @@ public class Gene
         ConstantIriMapping graph = config.createIriMapping("pubchem:gene");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "gene_symbol_bases");
-            TermMapping subject = config.createIriMapping("pubchem:gene_symbol", "id");
+            DatabaseTable table = new DatabaseTable(schema, "genesymbols");
+            TermMapping subject = config.createIriMapping("pubchem:genesymbol", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:GeneSymbol"));
@@ -43,7 +43,7 @@ public class Gene
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "gene_bases");
+            DatabaseTable table = new DatabaseTable(schema, "genes");
             TermMapping subject = config.createIriMapping("pubchem:gene", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -55,7 +55,7 @@ public class Gene
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0002870"),
-                    config.createIriMapping("pubchem:gene_symbol", "gene_symbol"));
+                    config.createIriMapping("pubchem:genesymbol", "genesymbol"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("up:organism"),
                     config.createIriMapping("pubchem:taxonomy", "organism"));
 
@@ -64,8 +64,8 @@ public class Gene
                     config.createIriMapping("bp:Gene"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:title"),
                     config.createLiteralMapping(xsdString, "title"));
-            config.addQuadMapping(table, new DatabaseTable(schema, "gene_symbol_bases"), "gene_symbol", "id", graph,
-                    subject, config.createIriMapping("sio:gene-symbol"), config.createLiteralMapping(xsdString, "iri"));
+            config.addQuadMapping(table, new DatabaseTable(schema, "genesymbols"), "genesymbol", "id", graph, subject,
+                    config.createIriMapping("sio:gene-symbol"), config.createLiteralMapping(xsdString, "iri"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bp:organism"),
                     config.createIriMapping("pubchem:taxonomy", "organism"));
 
@@ -130,7 +130,7 @@ public class Gene
             TermMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("mesh:heading", "match"));
+                    config.createIriMapping("mesh:resource", "match"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:mesh", "match"));

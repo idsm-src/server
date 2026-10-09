@@ -1,11 +1,11 @@
-create index patent_bases__title on pubchem.patent_bases using hash(title);
-create index patent_bases__abstract on pubchem.patent_bases using hash(abstract);
-create index patent_bases__publication_number on pubchem.patent_bases(publication_number);
-create index patent_bases__filing_date on pubchem.patent_bases(filing_date);
-create index patent_bases__grant_date on pubchem.patent_bases(grant_date);
-create index patent_bases__publication_date on pubchem.patent_bases(publication_date);
-create index patent_bases__priority_date on pubchem.patent_bases(priority_date);
-grant select on pubchem.patent_bases to sparql;
+create index patents__title on pubchem.patents using hash(title);
+create index patents__abstract on pubchem.patents using hash(abstract);
+create index patents__publication_number on pubchem.patents(publication_number);
+create index patents__filing_date on pubchem.patents(filing_date);
+create index patents__grant_date on pubchem.patents(grant_date);
+create index patents__publication_date on pubchem.patents(publication_date);
+create index patents__priority_date on pubchem.patents(priority_date);
+grant select on pubchem.patents to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -51,10 +51,10 @@ grant select on pubchem.patent_applicants to sparql;
 
 --------------------------------------------------------------------------------
 
-create index patentinventor_bases__name on pubchem.patentinventor_bases(name);
-grant select on pubchem.patentinventor_bases to sparql;
+create index inventors__name on pubchem.inventors(name);
+grant select on pubchem.inventors to sparql;
 
 --------------------------------------------------------------------------------
 
-create index patentassignee_bases__name on pubchem.patentassignee_bases(name);
-grant select on pubchem.patentassignee_bases to sparql;
+create index applicants__name on pubchem.applicants(name);
+grant select on pubchem.applicants to sparql;

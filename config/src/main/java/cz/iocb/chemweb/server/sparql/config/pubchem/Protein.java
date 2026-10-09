@@ -17,10 +17,10 @@ public class Protein
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pubchem:enzyme", INT4, new DatabaseTable(schema, "enzyme_bases"),
+        config.addIriClass(new MapUserIriClass("pubchem:enzyme", INT4, new DatabaseTable(schema, "enzymes"),
                 new TableColumn("id", INT4), new TableColumn("iri", VARCHAR),
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_"));
-        config.addIriClass(new MapUserIriClass("pubchem:protein", INT4, new DatabaseTable(schema, "protein_bases"),
+        config.addIriClass(new MapUserIriClass("pubchem:protein", INT4, new DatabaseTable(schema, "proteins"),
                 new TableColumn("id", INT4), new TableColumn("iri", VARCHAR),
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC"));
     }
@@ -31,7 +31,7 @@ public class Protein
         ConstantIriMapping graph = config.createIriMapping("pubchem:protein");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "enzyme_bases");
+            DatabaseTable table = new DatabaseTable(schema, "enzymes");
             TermMapping subject = config.createIriMapping("pubchem:enzyme", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -61,7 +61,7 @@ public class Protein
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "protein_bases");
+            DatabaseTable table = new DatabaseTable(schema, "proteins");
             TermMapping subject = config.createIriMapping("pubchem:protein", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -111,11 +111,11 @@ public class Protein
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "protein_similarproteins");
+            DatabaseTable table = new DatabaseTable(schema, "protein_similar_proteins");
             TermMapping subject = config.createIriMapping("pubchem:protein", "protein");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:hasSimilarProtein"),
-                    config.createIriMapping("pubchem:protein", "simprotein"));
+                    config.createIriMapping("pubchem:protein", "similar_protein"));
         }
 
         {
@@ -174,7 +174,7 @@ public class Protein
             TermMapping subject = config.createIriMapping("pubchem:protein", "protein");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("mesh:heading", "match"));
+                    config.createIriMapping("mesh:resource", "match"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:mesh", "match"));
@@ -297,11 +297,11 @@ public class Protein
             TermMapping subject = config.createIriMapping("pubchem:protein", "protein");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:RO_0002180"),
-                    config.createIriMapping("pubchem:conserveddomain", "domain"));
+                    config.createIriMapping("pubchem:conserveddomain", "conserveddomain"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "protein_continuantparts");
+            DatabaseTable table = new DatabaseTable(schema, "protein_continuant_parts");
             TermMapping subject = config.createIriMapping("pubchem:protein", "protein");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:RO_0002180"),

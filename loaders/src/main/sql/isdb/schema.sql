@@ -1,4 +1,4 @@
-create table isdb.compound_bases
+create table isdb.compounds
 (
     id              integer not null,
     accession       varchar unique not null,
@@ -11,11 +11,11 @@ create table isdb.compound_bases
 );
 
 
-create table isdb.spectrum_bases
+create table isdb.spectra
 (
-    id              integer not null,
+    compound        integer not null,
     ionmode         char not null,
     pepmass         real not null,
     spectrum        pgms.spectrum not null,
-    primary key(id, ionmode)
+    primary key(compound, ionmode)
 );

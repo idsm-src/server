@@ -26,7 +26,7 @@ public class Disease extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> diseases = new EntityTable<>("pubchem.disease_bases", intKey("id"), null,
+    private static final EntityTable<Integer> diseases = new EntityTable<>("pubchem.diseases", intKey("id"), null,
             varchar("label"));
     private static final MissingEntities<Integer> missingDiseases = new MissingEntities<>("disease", true);
 

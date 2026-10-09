@@ -1,4 +1,4 @@
-create table pubchem.descriptor_compound_bases
+create table pubchem.compound_descriptors
 (
     compound                        integer not null,
     hydrogen_bond_acceptor_count    smallint,
@@ -23,7 +23,7 @@ create table pubchem.descriptor_compound_bases
 );
 
 
-create table pubchem.descriptor_compound_molecular_formulas
+create table pubchem.compound_molecular_formulas
 (
     compound             integer not null,
     molecular_formula    varchar not null,
@@ -31,7 +31,7 @@ create table pubchem.descriptor_compound_molecular_formulas
 );
 
 
-create table pubchem.descriptor_compound_smileses
+create table pubchem.compound_smileses
 (
     compound           integer not null,
     smiles             varchar not null,
@@ -39,7 +39,7 @@ create table pubchem.descriptor_compound_smileses
 );
 
 
-create table pubchem.descriptor_compound_connectivity_smileses
+create table pubchem.compound_connectivity_smileses
 (
     compound            integer not null,
     connectivity_smiles varchar not null,
@@ -47,7 +47,7 @@ create table pubchem.descriptor_compound_connectivity_smileses
 );
 
 
-create table pubchem.descriptor_compound_iupac_inchis
+create table pubchem.compound_iupac_inchis
 (
     compound       integer not null,
     iupac_inchi    varchar not null,
@@ -55,7 +55,7 @@ create table pubchem.descriptor_compound_iupac_inchis
 );
 
 
-create table pubchem.descriptor_compound_preferred_iupac_names
+create table pubchem.compound_preferred_iupac_names
 (
     compound                integer not null,
     preferred_iupac_name    varchar not null,

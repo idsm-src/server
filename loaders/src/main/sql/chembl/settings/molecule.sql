@@ -1,15 +1,15 @@
-create index molecule_bases__chembl_id on chembl.molecule_bases(chembl_id);
-create index molecule_bases__type on chembl.molecule_bases(type);
-create index molecule_bases__label on chembl.molecule_bases(label);
-create index molecule_bases__phase on chembl.molecule_bases(phase);
-create index molecule_bases__biotherapeutic on chembl.molecule_bases(biotherapeutic);
-create index molecule_bases__helm_notation on chembl.molecule_bases(helm_notation);
-create index molecule_bases__description on chembl.molecule_bases(description);
-create index molecule_bases__hrac_classification on chembl.molecule_bases(hrac_classification);
-create index molecule_bases__irac_classification on chembl.molecule_bases(irac_classification);
-create index molecule_bases__frac_classification on chembl.molecule_bases(frac_classification);
-create index molecule_bases__parent on chembl.molecule_bases(parent);
-grant select on chembl.molecule_bases to sparql;
+create index molecules__chembl_id on chembl.molecules(chembl_id);
+create index molecules__type on chembl.molecules(type);
+create index molecules__label on chembl.molecules(label);
+create index molecules__phase on chembl.molecules(phase);
+create index molecules__biotherapeutic on chembl.molecules(biotherapeutic);
+create index molecules__helm_notation on chembl.molecules(helm_notation);
+create index molecules__description on chembl.molecules(description);
+create index molecules__hrac_classification on chembl.molecules(hrac_classification);
+create index molecules__irac_classification on chembl.molecules(irac_classification);
+create index molecules__frac_classification on chembl.molecules(frac_classification);
+create index molecules__parent on chembl.molecules(parent);
+grant select on chembl.molecules to sparql;
 
 --------------------------------------------------------------------------------
 

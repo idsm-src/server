@@ -1,4 +1,4 @@
-create table chembl.activity_bases
+create table chembl.activities
 (
     id                   integer not null,
     chembl_id            varchar,

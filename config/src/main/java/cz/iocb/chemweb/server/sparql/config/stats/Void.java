@@ -40,23 +40,23 @@ public class Void
         config.addIriClass(new MapUserIriClass("sd:graph", INT4, new DatabaseTable(schema, "graphs"),
                 new TableColumn("id", INT4), new TableColumn("iri", VARCHAR), null));
 
-        //config.addIriClass(new VoidResource("void:named-graph", "http://void/named-graph-", List.of(INT4)));
+        //config.addIriClass(new VoidResource("void:named_graph", "http://void/named-graph-", List.of(INT4)));
 
         config.addIriClass(new VoidResource("void:graph", "http://void/graph-", List.of(INT4)));
 
         config.addIriClass(
-                new VoidResource("void:class-partition", "http://void/class-partition-", List.of(INT4, INT2, INT4)));
+                new VoidResource("void:class_partition", "http://void/class-partition-", List.of(INT4, INT2, INT4)));
 
-        config.addIriClass(new VoidResource("void:property-partition", "http://void/property-partition-",
+        config.addIriClass(new VoidResource("void:property_partition", "http://void/property-partition-",
                 List.of(INT4, INT2, INT4)));
 
-        config.addIriClass(new VoidResource("void:class-property-partition", "http://void/class-property-partition-",
+        config.addIriClass(new VoidResource("void:class_property_partition", "http://void/class-property-partition-",
                 List.of(INT4, INT2, INT4, INT2, INT4)));
 
         config.addIriClass(new VoidResource("void:linkset", "http://void/linkset-",
                 List.of(INT4, INT2, INT4, INT4, INT2, INT4, INT4, INT2, INT4)));
 
-        config.addIriClass(new VoidResource("void:class-property-datatype-partition",
+        config.addIriClass(new VoidResource("void:class_property_datatype_partition",
                 "http://void/class-property-datatype-partition-", List.of(INT4, INT2, INT4, INT2, INT4, INT2, INT4)));
     }
 
@@ -81,7 +81,7 @@ public class Void
         }
 
         {
-            DatabaseTable table = new DatabaseTable("info", "idsm_version");
+            DatabaseTable table = new DatabaseTable("info", "version");
 
             DateTimeInZoneClass xsdDateTimeM0 = DateTimeInZoneClass.get(0);
 
@@ -99,7 +99,7 @@ public class Void
         {
             DatabaseTable table = new DatabaseTable(schema, "graphs");
 
-            TermMapping named = config.createIriMapping("sd:graph" /*"void:named-graph"*/, "id");
+            TermMapping named = config.createIriMapping("sd:graph" /*"void:named_graph"*/, "id");
 
             Conditions condition = config.createAreNotEqualCondition("id", "'0'::integer");
 
@@ -160,7 +160,7 @@ public class Void
             DatabaseTable table = new DatabaseTable(schema, "class_partitions");
             Conditions cnd = config.createAreNotEqualCondition("class_unit", unitCHEBI, unitTaxonomy);
 
-            TermMapping dataset = config.createIriMapping("void:class-partition", "graph", "class_unit", "class_id");
+            TermMapping dataset = config.createIriMapping("void:class_partition", "graph", "class_unit", "class_id");
 
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("rdf:type"),
                     config.createIriMapping("void:Dataset"), cnd);
@@ -204,7 +204,7 @@ public class Void
         {
             DatabaseTable table = new DatabaseTable(schema, "property_partitions");
 
-            TermMapping dataset = config.createIriMapping("void:property-partition", "graph", "property_unit",
+            TermMapping dataset = config.createIriMapping("void:property_partition", "graph", "property_unit",
                     "property_id");
 
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("rdf:type"),
@@ -244,7 +244,7 @@ public class Void
             DatabaseTable table = new DatabaseTable(schema, "class_property_partitions");
             Conditions cnd = config.createAreNotEqualCondition("class_unit", unitCHEBI, unitTaxonomy);
 
-            TermMapping dataset = config.createIriMapping("void:class-property-partition", "graph", "class_unit",
+            TermMapping dataset = config.createIriMapping("void:class_property_partition", "graph", "class_unit",
                     "class_id", "property_unit", "property_id");
 
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("rdf:type"),
@@ -254,15 +254,15 @@ public class Void
                     config.createIriMapping("void:subset"), dataset, cnd);
 
             config.addQuadMapping(table, graph,
-                    config.createIriMapping("void:property-partition", "graph", "property_unit", "property_id"),
+                    config.createIriMapping("void:property_partition", "graph", "property_unit", "property_id"),
                     config.createIriMapping("void:subset"), dataset, cnd);
 
             config.addQuadMapping(table, graph,
-                    config.createIriMapping("void:class-partition", "graph", "class_unit", "class_id"),
+                    config.createIriMapping("void:class_partition", "graph", "class_unit", "class_id"),
                     config.createIriMapping("void:subset"), dataset, cnd);
 
             config.addQuadMapping(table, graph,
-                    config.createIriMapping("void:class-partition", "graph", "class_unit", "class_id"),
+                    config.createIriMapping("void:class_partition", "graph", "class_unit", "class_id"),
                     config.createIriMapping("void:propertyPartition"), dataset, cnd);
 
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("void:property"),
@@ -308,36 +308,36 @@ public class Void
             config.addQuadMapping(table, graph, config.createIriMapping("void:graph", "property_graph"),
                     config.createIriMapping("void:subset"), dataset, cnd);
 
-            config.addQuadMapping(table, graph, config.createIriMapping("void:property-partition", "property_graph",
+            config.addQuadMapping(table, graph, config.createIriMapping("void:property_partition", "property_graph",
                     "property_unit", "property_id"), config.createIriMapping("void:subset"), dataset, cnd);
 
             config.addQuadMapping(table, graph,
-                    config.createIriMapping("void:class-partition", "subject_graph", "subject_unit", "subject_id"),
+                    config.createIriMapping("void:class_partition", "subject_graph", "subject_unit", "subject_id"),
                     config.createIriMapping("void:subset"), dataset,
                     Conditions.and(cnd, config.createAreEqualCondition(table, "subject_graph", "property_graph")));
 
             config.addQuadMapping(table, graph,
-                    config.createIriMapping("void:class-property-partition", "property_graph", "subject_unit",
+                    config.createIriMapping("void:class_property_partition", "property_graph", "subject_unit",
                             "subject_id", "property_unit", "property_id"),
                     config.createIriMapping("void:subset"), dataset,
                     Conditions.and(cnd, config.createAreEqualCondition(table, "subject_graph", "property_graph")));
 
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("void:target"),
-                    config.createIriMapping("void:class-partition", "subject_graph", "subject_unit", "subject_id"),
+                    config.createIriMapping("void:class_partition", "subject_graph", "subject_unit", "subject_id"),
                     cnd);
 
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("void:subjectsTarget"),
-                    config.createIriMapping("void:class-partition", "subject_graph", "subject_unit", "subject_id"),
+                    config.createIriMapping("void:class_partition", "subject_graph", "subject_unit", "subject_id"),
                     cnd);
 
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("void:target"),
-                    config.createIriMapping("void:class-partition", "object_graph", "object_unit", "object_id"),
+                    config.createIriMapping("void:class_partition", "object_graph", "object_unit", "object_id"),
                     Conditions.and(config.createAreNotEqualCondition(table, "subject_graph", "object_graph"),
                             config.createAreNotEqualCondition(table, "subject_unit", "object_unit"),
                             config.createAreNotEqualCondition(table, "subject_id", "object_id"), cnd));
 
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("void:objectsTarget"),
-                    config.createIriMapping("void:class-partition", "object_graph", "object_unit", "object_id"), cnd);
+                    config.createIriMapping("void:class_partition", "object_graph", "object_unit", "object_id"), cnd);
 
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("void:linkPredicate"),
                     config.createIriMapping("ontology:resource", "property_unit", "property_id"), cnd);
@@ -368,7 +368,7 @@ public class Void
             Conditions cnd = Conditions.and(config.createAreNotEqualCondition("subject_unit", unitCHEBI, unitTaxonomy),
                     config.createAreEqualCondition(table, "subject_graph", "property_graph"));
 
-            TermMapping dataset = config.createIriMapping("void:class-property-datatype-partition", "subject_graph",
+            TermMapping dataset = config.createIriMapping("void:class_property_datatype_partition", "subject_graph",
                     "subject_unit", "subject_id", "property_unit", "property_id", "datatype_unit", "datatype_id");
 
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("rdf:type"),
@@ -377,20 +377,20 @@ public class Void
             config.addQuadMapping(table, graph, config.createIriMapping("void:graph", "subject_graph"),
                     config.createIriMapping("void:subset"), dataset, cnd);
 
-            config.addQuadMapping(table, graph, config.createIriMapping("void:property-partition", "property_graph",
+            config.addQuadMapping(table, graph, config.createIriMapping("void:property_partition", "property_graph",
                     "property_unit", "property_id"), config.createIriMapping("void:subset"), dataset, cnd);
 
             config.addQuadMapping(table, graph,
-                    config.createIriMapping("void:class-partition", "subject_graph", "subject_unit", "subject_id"),
+                    config.createIriMapping("void:class_partition", "subject_graph", "subject_unit", "subject_id"),
                     config.createIriMapping("void:subset"), dataset, cnd);
 
             config.addQuadMapping(table, graph,
-                    config.createIriMapping("void:class-property-partition", "subject_graph", "subject_unit",
+                    config.createIriMapping("void:class_property_partition", "subject_graph", "subject_unit",
                             "subject_id", "property_unit", "property_id"),
                     config.createIriMapping("void:subset"), dataset, cnd);
 
             config.addQuadMapping(table, graph,
-                    config.createIriMapping("void:class-property-partition", "subject_graph", "subject_unit",
+                    config.createIriMapping("void:class_property_partition", "subject_graph", "subject_unit",
                             "subject_id", "property_unit", "property_id"),
                     config.createIriMapping("void_ext:datatypePartition"), dataset, cnd);
 

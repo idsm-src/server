@@ -46,7 +46,7 @@ public class MonaSachemConfiguration extends SparqlDatabaseOptimisedConfiguratio
 
         addIriClass(new IntegerUserIriClass("mona:molfile", INT4, Mona.bnmona + "id", "_molfile"));
 
-        addIriClass(new MapUserIriClass("mona:compound", INT4, new DatabaseTable("mona", "compound_bases"),
+        addIriClass(new MapUserIriClass("mona:compound", INT4, new DatabaseTable("mona", "spectra"),
                 new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), Mona.mona, ".*", "_CMPD"));
     }
 

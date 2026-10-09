@@ -1,4 +1,4 @@
-create table pubchem.endpoint_bases
+create table pubchem.endpoints
 (
     substance       integer not null,
     bioassay        integer not null,

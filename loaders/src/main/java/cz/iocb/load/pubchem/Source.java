@@ -25,7 +25,7 @@ class Source extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/source/";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> sources = new EntityTable<>("pubchem.source_bases", intKey("id"), null,
+    private static final EntityTable<Integer> sources = new EntityTable<>("pubchem.sources", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), varchar("title"), varchar("homepage"), varchar("license"),
             varchar("rights"));
     private static final StringIntMap sourceIDs = new StringIntMap();
@@ -43,7 +43,7 @@ class Source extends Updater
 
     private static void loadBases(TripleDispatcher dispatcher) throws SQLException
     {
-        load("select iri,id from pubchem.source_bases", sourceIDs);
+        load("select iri,id from pubchem.sources", sourceIDs);
 
         nextSourceID = sourceIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 

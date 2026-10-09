@@ -26,7 +26,7 @@ class ConservedDomain extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> domains = new EntityTable<>("pubchem.conserveddomain_bases", intKey("id"),
+    private static final EntityTable<Integer> domains = new EntityTable<>("pubchem.conserveddomains", intKey("id"),
             null, uniqueVarchar("title"), uniqueVarchar("abstract"));
     private static final MissingEntities<Integer> missingDomains = new MissingEntities<>("conserved domain", true);
 
@@ -81,7 +81,7 @@ class ConservedDomain extends Updater
         IntPairSet newReferences = new IntPairSet();
         IntPairSet oldReferences = new IntPairSet();
 
-        load("select domain,reference from pubchem.conserveddomain_references", oldReferences);
+        load("select conserveddomain,reference from pubchem.conserveddomain_references", oldReferences);
 
         dispatcher.on(cito + "isDiscussedBy", (subject, object) -> {
             Integer domainID = getDomainID(subject.getURI());
@@ -96,8 +96,10 @@ class ConservedDomain extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from pubchem.conserveddomain_references where domain=? and reference=?", oldReferences);
-            store("insert into pubchem.conserveddomain_references(domain,reference) values(?,?)", newReferences);
+            store("delete from pubchem.conserveddomain_references where conserveddomain=? and reference=?",
+                    oldReferences);
+            store("insert into pubchem.conserveddomain_references(conserveddomain,reference) values(?,?)",
+                    newReferences);
         });
     }
 

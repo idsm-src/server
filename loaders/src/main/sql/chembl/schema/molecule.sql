@@ -1,4 +1,4 @@
-create table chembl.molecule_bases
+create table chembl.molecules
 (
     id                   integer not null,
     chembl_id            varchar,

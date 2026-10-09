@@ -1,4 +1,4 @@
-create table pubchem.author_bases
+create table pubchem.authors
 (
     id          integer not null,
     iri         varchar unique not null,
@@ -32,10 +32,10 @@ create table pubchem.author_formatted_names
 
 create table pubchem.author_organizations
 (
-    __              integer,
+    id              integer,
     author          integer not null,
     organization    varchar not null,
-    primary key(__)
+    primary key(id)
 );
 
 

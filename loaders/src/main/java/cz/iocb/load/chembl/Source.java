@@ -22,8 +22,8 @@ class Source extends Updater
 {
     static final String prefix = ChEMBL.chembl + "source/CHEMBL_SRC_";
 
-    private static final EntityTable<Integer> sources = new EntityTable<>("chembl.source_bases", intKey("id"),
-            "chembl_id", uniqueVarchar("chembl_id"), varchar("label"), varchar("description"));
+    private static final EntityTable<Integer> sources = new EntityTable<>("chembl.sources", intKey("id"), "chembl_id",
+            uniqueVarchar("chembl_id"), varchar("label"), varchar("description"));
 
 
     static void load() throws IOException, SQLException

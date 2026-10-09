@@ -6,7 +6,7 @@ $$
         where to_tsvector('simple', label) @@ to_tsquery('simple', query)
     union all
     select compound, trgm.similarity(preferred_iupac_name, query) as score, preferred_iupac_name as name
-        from pubchem.descriptor_compound_preferred_iupac_names
+        from pubchem.compound_preferred_iupac_names
         where to_tsvector('simple', preferred_iupac_name) @@ to_tsquery('simple', query)
     union all
     select cmp.compound as compound, trgm.similarity(val.value, query) as score, val.value as name

@@ -10,7 +10,7 @@ grant select on void.graphs to sparql;
 --------------------------------------------------------------------------------
 
 create index class_partitions__graph on void.class_partitions(graph);
-create index class_partitions__class on void.class_partitions(class_unit, class_id);
+create index class_partitions__class_unit_class_id on void.class_partitions(class_unit, class_id);
 create index class_partitions__classes on void.class_partitions(classes);
 create index class_partitions__properties on void.class_partitions(properties);
 create index class_partitions__triples on void.class_partitions(triples);
@@ -23,7 +23,7 @@ grant select on void.class_partitions to sparql;
 --------------------------------------------------------------------------------
 
 create index property_partitions__graph on void.property_partitions(graph);
-create index property_partitions__property on void.property_partitions(property_unit, property_id);
+create index property_partitions__property_unit_property_id on void.property_partitions(property_unit, property_id);
 create index property_partitions__triples on void.property_partitions(triples);
 create index property_partitions__subjects on void.property_partitions(subjects);
 create index property_partitions__objects on void.property_partitions(objects);
@@ -34,8 +34,8 @@ grant select on void.property_partitions to sparql;
 --------------------------------------------------------------------------------
 
 create index class_property_partitions__graph on void.class_property_partitions(graph);
-create index class_property_partitions__class on void.class_property_partitions(class_unit, class_id);
-create index class_property_partitions__property on void.class_property_partitions(property_unit, property_id);
+create index class_property_partitions__class_unit_class_id on void.class_property_partitions(class_unit, class_id);
+create index class_property_partitions__property_unit_property_id on void.class_property_partitions(property_unit, property_id);
 create index class_property_partitions__triples on void.class_property_partitions(triples);
 create index class_property_partitions__subjects on void.class_property_partitions(subjects);
 create index class_property_partitions__objects on void.class_property_partitions(objects);
@@ -46,11 +46,11 @@ grant select on void.class_property_partitions to sparql;
 --------------------------------------------------------------------------------
 
 create index linksets__property_graph on void.linksets(property_graph);
-create index linksets__property on void.linksets(property_unit, property_id);
+create index linksets__property_unit_property_id on void.linksets(property_unit, property_id);
 create index linksets__subject_graph on void.linksets(subject_graph);
-create index linksets__subject on void.linksets(subject_unit, subject_id);
+create index linksets__subject_unit_subject_id on void.linksets(subject_unit, subject_id);
 create index linksets__object_graph on void.linksets(object_graph);
-create index linksets__object on void.linksets(object_unit, object_id);
+create index linksets__object_unit_object_id on void.linksets(object_unit, object_id);
 create index linksets__triples on void.linksets(triples);
 create index linksets__subjects on void.linksets(subjects);
 create index linksets__objects on void.linksets(objects);
@@ -59,10 +59,10 @@ grant select on void.linksets to sparql;
 --------------------------------------------------------------------------------
 
 create index literal_linksets__property_graph on void.literal_linksets(property_graph);
-create index literal_linksets__property on void.literal_linksets(property_unit, property_id);
+create index literal_linksets__property_unit_property_id on void.literal_linksets(property_unit, property_id);
 create index literal_linksets__subject_graph on void.literal_linksets(subject_graph);
-create index literal_linksets__subject on void.literal_linksets(subject_unit, subject_id);
-create index literal_linksets__datatype on void.literal_linksets(datatype_unit, datatype_id);
+create index literal_linksets__subject_unit_subject_id on void.literal_linksets(subject_unit, subject_id);
+create index literal_linksets__datatype_unit_datatype_id on void.literal_linksets(datatype_unit, datatype_id);
 create index literal_linksets__triples on void.literal_linksets(triples);
 create index literal_linksets__subjects on void.literal_linksets(subjects);
 create index literal_linksets__objects on void.literal_linksets(objects);

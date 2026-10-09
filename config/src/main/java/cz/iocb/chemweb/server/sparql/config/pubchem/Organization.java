@@ -17,9 +17,9 @@ public class Organization
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pubchem:organization", INT4,
-                new DatabaseTable(schema, "organization_bases"), new TableColumn("id", INT4),
-                new TableColumn("iri", VARCHAR), "http://rdf.ncbi.nlm.nih.gov/pubchem/organization/"));
+        config.addIriClass(new MapUserIriClass("pubchem:organization", INT4, new DatabaseTable(schema, "organizations"),
+                new TableColumn("id", INT4), new TableColumn("iri", VARCHAR),
+                "http://rdf.ncbi.nlm.nih.gov/pubchem/organization/"));
     }
 
 
@@ -28,7 +28,7 @@ public class Organization
         ConstantIriMapping graph = config.createIriMapping("pubchem:organization");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "organization_bases");
+            DatabaseTable table = new DatabaseTable(schema, "organizations");
             TermMapping subject = config.createIriMapping("pubchem:organization", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -60,7 +60,7 @@ public class Organization
             TermMapping subject = config.createIriMapping("pubchem:organization", "organization");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("crossref:funder", "crossref"));
+                    config.createIriMapping("crossref:funder", "match"));
         }
     }
 }

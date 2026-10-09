@@ -48,7 +48,7 @@ public class WikidataSachemConfiguration extends SparqlDatabaseOptimisedConfigur
     private void addQuadMappings()
     {
         {
-            DatabaseTable table = new DatabaseTable("wikidata", "canonical_smiles");
+            DatabaseTable table = new DatabaseTable("wikidata", "compound_canonical_smileses");
             TermMapping subject = createIriMapping("wikidata:entity", "compound");
 
             addQuadMapping(table, null, subject, createIriMapping("wdt:P233"),
@@ -56,7 +56,7 @@ public class WikidataSachemConfiguration extends SparqlDatabaseOptimisedConfigur
         }
 
         {
-            DatabaseTable table = new DatabaseTable("wikidata", "isomeric_smiles");
+            DatabaseTable table = new DatabaseTable("wikidata", "compound_isomeric_smileses");
             TermMapping subject = createIriMapping("wikidata:entity", "compound");
 
             addQuadMapping(table, null, subject, createIriMapping("wdt:P2017"),

@@ -17,11 +17,11 @@ public class Pdb
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pdb:compound", INT4, new DatabaseTable("pdb", "compound_bases"),
+        config.addIriClass(new MapUserIriClass("pdb:compound", INT4, new DatabaseTable("pdb", "compounds"),
                 new TableColumn("id", INT4), new TableColumn("name", VARCHAR), "https://identifiers.org/pdb-ccd/",
                 ".*"));
 
-        config.addIriClass(new MapUserIriClass("pdb:molfile", INT4, new DatabaseTable("pdb", "compound_bases"),
+        config.addIriClass(new MapUserIriClass("pdb:molfile", INT4, new DatabaseTable("pdb", "compounds"),
                 new TableColumn("id", INT4), new TableColumn("name", VARCHAR),
                 "https://idsm.elixir-czech.cz/rdf/pdb-ccd/", ".*", "_molfile"));
     }
@@ -32,7 +32,7 @@ public class Pdb
         ConstantIriMapping graph = config.createIriMapping("pdb-ccd:");
 
         {
-            DatabaseTable table = new DatabaseTable("pdb", "compound_bases");
+            DatabaseTable table = new DatabaseTable("pdb", "compounds");
             TermMapping subject = config.createIriMapping("pdb:molfile", "id");
             LiteralClass molfileLiteral = new StringSubsetLiteralClass("pdb-molfile");
 

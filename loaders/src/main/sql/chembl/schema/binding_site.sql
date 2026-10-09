@@ -1,4 +1,4 @@
-create table chembl.binding_site_bases
+create table chembl.binding_sites
 (
     id         integer not null,
     chembl_id  varchar,

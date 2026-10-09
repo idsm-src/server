@@ -26,7 +26,7 @@ public class Activity
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
-        DatabaseTable table = new DatabaseTable(schema, "activity_bases");
+        DatabaseTable table = new DatabaseTable(schema, "activities");
         TermMapping subject = config.createIriMapping("chembl:activity", "id");
 
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -38,7 +38,7 @@ public class Activity
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasQUDT"),
                 config.createIriMapping("ontology:uncategorized", "qudt_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasMolecule"),
-                config.createIriMapping("chembl:compound", "molecule"));
+                config.createIriMapping("chembl:molecule", "molecule"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasDocument"),
                 config.createIriMapping("chembl:document", "document"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:dataValidityIssue"),
@@ -71,7 +71,7 @@ public class Activity
                 config.createLiteralMapping(xsdString, "comment"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:dataValidityComment"),
                 config.createLiteralMapping(xsdString, "validity_comment"));
-        config.addQuadMapping(table, graph, config.createIriMapping("chembl:compound", "molecule"),
+        config.addQuadMapping(table, graph, config.createIriMapping("chembl:molecule", "molecule"),
                 config.createIriMapping("cco:hasActivity"), subject);
         config.addQuadMapping(table, graph, config.createIriMapping("chembl:document", "document"),
                 config.createIriMapping("cco:hasActivity"), subject);

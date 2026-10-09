@@ -24,7 +24,7 @@ public class Grant extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/grant/";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> grants = new EntityTable<>("pubchem.grant_bases", intKey("id"), null,
+    private static final EntityTable<Integer> grants = new EntityTable<>("pubchem.grants", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), varchar("number"), integer("organization"));
     private static final MissingEntities<String> missingGrants = new MissingEntities<>("grant", true);
     private static final StringIntMap grantIDs = new StringIntMap();
@@ -40,7 +40,7 @@ public class Grant extends Updater
 
     private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        load("select iri,id from pubchem.grant_bases", grantIDs);
+        load("select iri,id from pubchem.grants", grantIDs);
 
         nextGrantID = grantIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 

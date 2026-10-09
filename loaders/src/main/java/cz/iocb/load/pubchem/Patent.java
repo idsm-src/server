@@ -26,7 +26,7 @@ class Patent extends Updater
     static final String assigneePrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/patentassignee/MD5_";
     static final int assigneePrefixLength = assigneePrefix.length();
 
-    private static final EntityTable<Integer> patents = new EntityTable<>("pubchem.patent_bases", intKey("id"), null,
+    private static final EntityTable<Integer> patents = new EntityTable<>("pubchem.patents", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), uniqueVarchar("title"), uniqueVarchar("abstract"),
             uniqueVarchar("publication_number"), date("filing_date"), date("grant_date"), date("publication_date"),
             date("priority_date"));
@@ -47,9 +47,9 @@ class Patent extends Updater
 
     private static void loadBases() throws IOException, SQLException
     {
-        load("select iri,id from pubchem.patent_bases", patentIDs);
-        load("select id from pubchem.patentinventor_bases", oldInventors);
-        load("select id from pubchem.patentassignee_bases", oldAssignees);
+        load("select iri,id from pubchem.patents", patentIDs);
+        load("select id from pubchem.inventors", oldInventors);
+        load("select id from pubchem.applicants", oldAssignees);
 
         nextPatentID = patentIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
@@ -598,8 +598,8 @@ class Patent extends Updater
         StringStringMap replacedAssigneeNames = new StringStringMap();
 
 
-        load("select id,name from pubchem.patentinventor_bases where name is not null", oldInventorNames);
-        load("select id,name from pubchem.patentassignee_bases where name is not null", oldAssigneeNames);
+        load("select id,name from pubchem.inventors where name is not null", oldInventorNames);
+        load("select id,name from pubchem.applicants where name is not null", oldAssigneeNames);
 
         processFiles("pubchem/RDF/patent", "pc_patent2vc_fn_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -719,12 +719,12 @@ class Patent extends Updater
             }
         });
 
-        store("update pubchem.patentinventor_bases set name=null where id=? and name=?", oldInventorNames);
-        store("insert into pubchem.patentinventor_bases(id,name) values(?,?) "
+        store("update pubchem.inventors set name=null where id=? and name=?", oldInventorNames);
+        store("insert into pubchem.inventors(id,name) values(?,?) "
                 + "on conflict(id) do update set name=EXCLUDED.name", newInventorNames);
 
-        store("update pubchem.patentassignee_bases set name=null where id=? and name=?", oldAssigneeNames);
-        store("insert into pubchem.patentassignee_bases(id,name) values(?,?) "
+        store("update pubchem.applicants set name=null where id=? and name=?", oldAssigneeNames);
+        store("insert into pubchem.applicants(id,name) values(?,?) "
                 + "on conflict(id) do update set name=EXCLUDED.name", newAssigneeNames);
     }
 
@@ -792,11 +792,11 @@ class Patent extends Updater
 
         patents.store();
 
-        store("delete from pubchem.patentinventor_bases where id=?", oldInventors);
-        store("insert into pubchem.patentinventor_bases(id) values(?)", newInventors);
+        store("delete from pubchem.inventors where id=?", oldInventors);
+        store("insert into pubchem.inventors(id) values(?)", newInventors);
 
-        store("delete from pubchem.patentassignee_bases where id=?", oldAssignees);
-        store("insert into pubchem.patentassignee_bases(id) values(?)", newAssignees);
+        store("delete from pubchem.applicants where id=?", oldAssignees);
+        store("insert into pubchem.applicants(id) values(?)", newAssignees);
 
         System.out.println();
     }

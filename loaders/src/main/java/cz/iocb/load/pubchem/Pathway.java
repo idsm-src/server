@@ -73,7 +73,7 @@ class Pathway extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> pathways = new EntityTable<>("pubchem.pathway_bases", intKey("id"), null,
+    private static final EntityTable<Integer> pathways = new EntityTable<>("pubchem.pathways", intKey("id"), null,
             integer("source"), uniqueVarchar("title"), typed("reference_type", "pubchem.pathway_reference_type"),
             varchar("reference"), integer("organism"));
     private static final MissingEntities<Integer> missingPathways = new MissingEntities<>("pathway", true);

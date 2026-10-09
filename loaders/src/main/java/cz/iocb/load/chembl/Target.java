@@ -63,9 +63,9 @@ class Target extends Updater
         types.put("NO TARGET", "UnclassifiedTarget");
     }
 
-    private static final EntityTable<Integer> targets = new EntityTable<>("chembl.target_bases", intKey("id"),
-            "chembl_id", uniqueVarchar("chembl_id"), varchar("type"), varchar("label"), varchar("organism"),
-            integer("taxonomy"), integer("cell_line"), bool("species_group"));
+    private static final EntityTable<Integer> targets = new EntityTable<>("chembl.targets", intKey("id"), "chembl_id",
+            uniqueVarchar("chembl_id"), varchar("type"), varchar("label"), varchar("organism"), integer("taxonomy"),
+            integer("cell_line"), bool("species_group"));
 
     private static final ValueTable components = new ValueTable("chembl.target_components", column("target"),
             column("component"));

@@ -22,7 +22,7 @@ public class DrugBank extends Updater
      */
     private static void loadCompounds() throws IOException, SQLException
     {
-        StructureTable compounds = new StructureTable("drugbank.compound_bases", "id", "molfile");
+        StructureTable compounds = new StructureTable("drugbank.compounds", "id", "molfile");
         compounds.load();
 
         try(ZipInputStream zip = new ZipInputStream(getZipStream("drugbank/drugbank_all_open_structures.sdf.zip")))
@@ -68,7 +68,7 @@ public class DrugBank extends Updater
 
             try(Statement statement = connection.createStatement())
             {
-                try(ResultSet result = statement.executeQuery("select count(*) from drugbank.compound_bases"))
+                try(ResultSet result = statement.executeQuery("select count(*) from drugbank.compounds"))
                 {
                     if(result.next())
                         setCount("DrugBank Compounds", result.getInt(1));

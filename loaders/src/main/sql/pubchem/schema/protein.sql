@@ -1,4 +1,4 @@
-create table pubchem.enzyme_bases
+create table pubchem.enzymes
 (
     id             integer not null,
     iri            varchar unique not null,
@@ -16,7 +16,7 @@ create table pubchem.enzyme_alternatives
 );
 
 
-create table pubchem.protein_bases
+create table pubchem.proteins
 (
     id             integer,
     iri            varchar unique not null,
@@ -43,11 +43,11 @@ create table pubchem.protein_pdblinks
 );
 
 
-create table pubchem.protein_similarproteins
+create table pubchem.protein_similar_proteins
 (
-    protein       integer not null,
-    simprotein    integer not null,
-    primary key(protein, simprotein)
+    protein         integer not null,
+    similar_protein integer not null,
+    primary key(protein, similar_protein)
 );
 
 
@@ -222,13 +222,13 @@ create table pubchem.protein_wikidata_matches
 
 create table pubchem.protein_conserveddomains
 (
-    protein    integer not null,
-    domain     integer not null,
-    primary key(protein, domain)
+    protein         integer not null,
+    conserveddomain integer not null,
+    primary key(protein, conserveddomain)
 );
 
 
-create table pubchem.protein_continuantparts
+create table pubchem.protein_continuant_parts
 (
     protein    integer not null,
     part       integer not null,

@@ -1,6 +1,6 @@
-create index cell_bases__organism on pubchem.cell_bases(organism);
-create index cell_bases__label on pubchem.cell_bases(label);
-grant select on pubchem.cell_bases to sparql;
+create index cells__organism on pubchem.cells(organism);
+create index cells__label on pubchem.cells(label);
+grant select on pubchem.cells to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ grant select on pubchem.cell_references to sparql;
 --------------------------------------------------------------------------------
 
 create index cell_matches__cell on pubchem.cell_matches(cell);
-create index cell_matches__match on pubchem.cell_matches(match_unit, match_id);
+create index cell_matches__match_unit_match_id on pubchem.cell_matches(match_unit, match_id);
 grant select on pubchem.cell_matches to sparql;
 
 --------------------------------------------------------------------------------

@@ -1,7 +1,7 @@
-create table pubchem.journal_bases
+create table pubchem.journals
 (
     id              integer not null,
-    catalogid       varchar,
+    catalog_id      varchar,
     title           varchar,
     abbreviation    varchar,
     issn            varchar,

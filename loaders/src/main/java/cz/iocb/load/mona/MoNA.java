@@ -150,7 +150,7 @@ public class MoNA extends Updater
 
     public static void main(String[] args) throws IOException, SQLException
     {
-        EntityTable<Integer> compounds = new EntityTable<>("mona.compound_bases", intKey("id"), null, date("created"),
+        EntityTable<Integer> compounds = new EntityTable<>("mona.spectra", intKey("id"), null, date("created"),
                 date("curated"), date("updated"), uniqueVarchar("accession"), SpectrumLiteral.column("spectrum"),
                 uniqueVarchar("splash"), integer("level"), varchar("ionization_mode"), integer("ionization_type"),
                 integer("library"), integer("submitter"), varchar("link"));
@@ -282,8 +282,8 @@ public class MoNA extends Updater
         IntFloatSet keepPrecursorMZs = new IntFloatSet();
         IntFloatSet newPrecursorMZs = new IntFloatSet();
         IntFloatSet oldPrecursorMZs = new IntFloatSet();
-        EntityTable<Integer> libraries = new EntityTable<>("mona.library_bases", intKey("id"), null,
-                uniqueVarchar("name"), varchar("description"));
+        EntityTable<Integer> libraries = new EntityTable<>("mona.libraries", intKey("id"), null, uniqueVarchar("name"),
+                varchar("description"));
         StringIntMap libraryIDs = new StringIntMap();
 
         SubmitterIntMap keepSubmitters = new SubmitterIntMap();
@@ -301,10 +301,10 @@ public class MoNA extends Updater
         Map<String, ClassyFire> classyFires = loadClassyFires(classyFiresStream);
 
 
-        load("select accession,id from mona.compound_bases", compoundIDs);
+        load("select accession,id from mona.spectra", compoundIDs);
         load("select compound,structure from mona.compound_structures", oldStructures);
         load("select compound,name from mona.compound_names", oldNames);
-        load("select compound,class from mona.compound_classyfires", oldClassyFires);
+        load("select compound,class from mona.compound_classyfire_classes", oldClassyFires);
         load("select compound,chebi from mona.compound_chebi_classes", oldChebiClasses);
         load("select compound,mesh from mona.compound_mesh_classes", oldMeshClasses);
         load("select compound,inchi,id from mona.compound_inchis", oldInchis);
@@ -323,20 +323,20 @@ public class MoNA extends Updater
         load("select compound,lipidmaps from mona.compound_lipidmaps_ids", oldLipidMapsIdentifiers);
         load("select compound,cid from mona.compound_pubchem_compound_ids", oldPubchemCompoundIdentifiers);
         load("select compound,sid from mona.compound_pubchem_substance_ids", oldPubchemSubstanceIdentifiers);
-        load("select compound,peak,value,id from mona.spectrum_annotations", oldAnnotations);
-        load("select compound,tag from mona.spectrum_tags", oldTags);
-        load("select compound,entropy from mona.spectrum_normalized_entropies", oldNormalizedEntropies);
-        load("select compound,entropy from mona.spectrum_spectral_entropies", oldSpectralEntropies);
-        load("select compound,time,unit from mona.spectrum_retention_times", oldRetentionTimes);
-        load("select compound,energy,unit from mona.spectrum_collision_energies", oldCollisionEnergies);
-        load("select compound,ramp_start,ramp_end,unit from mona.spectrum_collision_energy_ramps",
+        load("select spectrum,peak,value,id from mona.spectrum_annotations", oldAnnotations);
+        load("select spectrum,tag from mona.spectrum_tags", oldTags);
+        load("select spectrum,entropy from mona.spectrum_normalized_entropies", oldNormalizedEntropies);
+        load("select spectrum,entropy from mona.spectrum_spectral_entropies", oldSpectralEntropies);
+        load("select spectrum,time,unit from mona.spectrum_retention_times", oldRetentionTimes);
+        load("select spectrum,energy,unit from mona.spectrum_collision_energies", oldCollisionEnergies);
+        load("select spectrum,ramp_start,ramp_end,unit from mona.spectrum_collision_energy_ramps",
                 oldCollisionEnergyRamps);
-        load("select compound,type from mona.spectrum_instrument_types", oldInstrumentTypes);
-        load("select compound,instrument from mona.spectrum_instruments", oldInstruments);
-        load("select compound,type from mona.spectrum_precursor_types", oldPrecursorTypes);
-        load("select compound,mz from mona.spectrum_precursor_mzs", oldPrecursorMZs);
-        load("select name,id from mona.library_bases", libraryIDs);
-        load("select email,first_name,last_name,institution,id from mona.submitter_bases", oldSubmitters);
+        load("select spectrum,type from mona.spectrum_instrument_types", oldInstrumentTypes);
+        load("select spectrum,instrument from mona.spectrum_instruments", oldInstruments);
+        load("select spectrum,type from mona.spectrum_precursor_types", oldPrecursorTypes);
+        load("select spectrum,mz from mona.spectrum_precursor_mzs", oldPrecursorMZs);
+        load("select name,id from mona.libraries", libraryIDs);
+        load("select email,first_name,last_name,institution,id from mona.submitters", oldSubmitters);
 
         int nextCompoundID = compoundIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
         int nextLibraryID = libraryIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
@@ -1156,8 +1156,8 @@ public class MoNA extends Updater
         store("delete from mona.compound_names where compound=? and name=?", oldNames);
         store("insert into mona.compound_names(compound,name) values(?,?)", newNames);
 
-        store("delete from mona.compound_classyfires where compound=? and class=?", oldClassyFires);
-        store("insert into mona.compound_classyfires(compound,class) values(?,?)", newClassyFires);
+        store("delete from mona.compound_classyfire_classes where compound=? and class=?", oldClassyFires);
+        store("insert into mona.compound_classyfire_classes(compound,class) values(?,?)", newClassyFires);
 
         store("delete from mona.compound_chebi_classes where compound=? and chebi=?", oldChebiClasses);
         store("insert into mona.compound_chebi_classes(compound,chebi) values(?,?)", newChebiClasses);
@@ -1217,48 +1217,48 @@ public class MoNA extends Updater
         store("insert into mona.compound_pubchem_substance_ids(compound,sid) values(?,?)",
                 newPubchemSubstanceIdentifiers);
 
-        store("delete from mona.spectrum_annotations where compound=? and peak=? and value=? and id=?", oldAnnotations);
-        store("insert into mona.spectrum_annotations(compound,peak,value,id) values(?,?,?,?)", newAnnotations);
+        store("delete from mona.spectrum_annotations where spectrum=? and peak=? and value=? and id=?", oldAnnotations);
+        store("insert into mona.spectrum_annotations(spectrum,peak,value,id) values(?,?,?,?)", newAnnotations);
 
-        store("delete from mona.spectrum_tags where compound=? and tag=?", oldTags);
-        store("insert into mona.spectrum_tags(compound,tag) values(?,?)", newTags);
+        store("delete from mona.spectrum_tags where spectrum=? and tag=?", oldTags);
+        store("insert into mona.spectrum_tags(spectrum,tag) values(?,?)", newTags);
 
 
-        store("delete from mona.spectrum_normalized_entropies where compound=? and entropy=?", oldNormalizedEntropies);
-        store("insert into mona.spectrum_normalized_entropies(compound,entropy) values(?,?)", newNormalizedEntropies);
+        store("delete from mona.spectrum_normalized_entropies where spectrum=? and entropy=?", oldNormalizedEntropies);
+        store("insert into mona.spectrum_normalized_entropies(spectrum,entropy) values(?,?)", newNormalizedEntropies);
 
-        store("delete from mona.spectrum_spectral_entropies where compound=? and entropy=?", oldSpectralEntropies);
-        store("insert into mona.spectrum_spectral_entropies(compound,entropy) values(?,?)", newSpectralEntropies);
+        store("delete from mona.spectrum_spectral_entropies where spectrum=? and entropy=?", oldSpectralEntropies);
+        store("insert into mona.spectrum_spectral_entropies(spectrum,entropy) values(?,?)", newSpectralEntropies);
 
-        store("delete from mona.spectrum_retention_times where compound=? and time=? and unit=?", oldRetentionTimes);
-        store("insert into mona.spectrum_retention_times(compound,time,unit) values(?,?,?)", newRetentionTimes);
+        store("delete from mona.spectrum_retention_times where spectrum=? and time=? and unit=?", oldRetentionTimes);
+        store("insert into mona.spectrum_retention_times(spectrum,time,unit) values(?,?,?)", newRetentionTimes);
 
-        store("delete from mona.spectrum_collision_energies where compound=? and energy=? and unit=?",
+        store("delete from mona.spectrum_collision_energies where spectrum=? and energy=? and unit=?",
                 oldCollisionEnergies);
-        store("insert into mona.spectrum_collision_energies(compound,energy,unit) values(?,?,?)", newCollisionEnergies);
+        store("insert into mona.spectrum_collision_energies(spectrum,energy,unit) values(?,?,?)", newCollisionEnergies);
 
-        store("delete from mona.spectrum_collision_energy_ramps where compound=? and ramp_start=? and ramp_end=? and unit=?",
-                oldCollisionEnergyRamps);
-        store("insert into mona.spectrum_collision_energy_ramps(compound,ramp_start,ramp_end,unit) values(?,?,?,?)",
+        store("delete from mona.spectrum_collision_energy_ramps "
+                + "where spectrum=? and ramp_start=? and ramp_end=? and unit=?", oldCollisionEnergyRamps);
+        store("insert into mona.spectrum_collision_energy_ramps(spectrum,ramp_start,ramp_end,unit) values(?,?,?,?)",
                 newCollisionEnergyRamps);
 
-        store("delete from mona.spectrum_instrument_types where compound=? and type=?", oldInstrumentTypes);
-        store("insert into mona.spectrum_instrument_types(compound,type) values(?,?)", newInstrumentTypes);
+        store("delete from mona.spectrum_instrument_types where spectrum=? and type=?", oldInstrumentTypes);
+        store("insert into mona.spectrum_instrument_types(spectrum,type) values(?,?)", newInstrumentTypes);
 
-        store("delete from mona.spectrum_instruments where compound=? and instrument=?", oldInstruments);
-        store("insert into mona.spectrum_instruments(compound,instrument) values(?,?)", newInstruments);
+        store("delete from mona.spectrum_instruments where spectrum=? and instrument=?", oldInstruments);
+        store("insert into mona.spectrum_instruments(spectrum,instrument) values(?,?)", newInstruments);
 
-        store("delete from mona.spectrum_precursor_types where compound=? and type=?", oldPrecursorTypes);
-        store("insert into mona.spectrum_precursor_types(compound,type) values(?,?)", newPrecursorTypes);
+        store("delete from mona.spectrum_precursor_types where spectrum=? and type=?", oldPrecursorTypes);
+        store("insert into mona.spectrum_precursor_types(spectrum,type) values(?,?)", newPrecursorTypes);
 
-        store("delete from mona.spectrum_precursor_mzs where compound=? and mz=?", oldPrecursorMZs);
-        store("insert into mona.spectrum_precursor_mzs(compound,mz) values(?,?)", newPrecursorMZs);
+        store("delete from mona.spectrum_precursor_mzs where spectrum=? and mz=?", oldPrecursorMZs);
+        store("insert into mona.spectrum_precursor_mzs(spectrum,mz) values(?,?)", newPrecursorMZs);
 
         libraries.store();
 
-        store("delete from mona.submitter_bases where email=? and first_name=? and last_name=? and institution=? and id=?",
+        store("delete from mona.submitters where email=? and first_name=? and last_name=? and institution=? and id=?",
                 oldSubmitters);
-        store("insert into mona.submitter_bases(email,first_name,last_name,institution,id) values(?,?,?,?,?)",
+        store("insert into mona.submitters(email,first_name,last_name,institution,id) values(?,?,?,?,?)",
                 newSubmitters);
 
 
@@ -1268,7 +1268,7 @@ public class MoNA extends Updater
         {
             statement.execute("refresh materialized view mona.compound_pubchem_compounds");
 
-            try(ResultSet result = statement.executeQuery("select count(*) from mona.compound_bases"))
+            try(ResultSet result = statement.executeQuery("select count(*) from mona.spectra"))
             {
                 if(result.next())
                     setCount("MoNA Mass Spectra", result.getInt(1));

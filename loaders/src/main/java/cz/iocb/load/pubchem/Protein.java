@@ -41,7 +41,7 @@ class Protein extends Updater
     static final String enzymePrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_";
     static final int enzymePrefixLength = enzymePrefix.length();
 
-    private static final EntityTable<Integer> proteins = new EntityTable<>("pubchem.protein_bases", intKey("id"), null,
+    private static final EntityTable<Integer> proteins = new EntityTable<>("pubchem.proteins", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), integer("organism"), uniqueVarchar("title"),
             uniqueVarchar("sequence"));
     private static final MissingEntities<String> missingProteins = new MissingEntities<>("protein", true);
@@ -49,7 +49,7 @@ class Protein extends Updater
     private static final StringIntMap proteinIDs = new StringIntMap();
     private static int nextProteinID;
 
-    private static final EntityTable<Integer> enzymes = new EntityTable<>("pubchem.enzyme_bases", intKey("id"), null,
+    private static final EntityTable<Integer> enzymes = new EntityTable<>("pubchem.enzymes", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), integer("parent"), uniqueVarchar("title"));
     private static final StringIntMap enzymeIDs = new StringIntMap();
     private static int nextEnzymeID;
@@ -98,7 +98,7 @@ class Protein extends Updater
 
     private static void loadEnzymeBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        load("select iri,id from pubchem.enzyme_bases", enzymeIDs);
+        load("select iri,id from pubchem.enzymes", enzymeIDs);
 
         nextEnzymeID = enzymeIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
@@ -171,7 +171,7 @@ class Protein extends Updater
 
     private static void loadProteinBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        load("select iri,id from pubchem.protein_bases", proteinIDs);
+        load("select iri,id from pubchem.proteins", proteinIDs);
 
         nextProteinID = proteinIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
@@ -287,7 +287,7 @@ class Protein extends Updater
         IntPairSet newSimilarProteins = new IntPairSet();
         IntPairSet oldSimilarProteins = new IntPairSet();
 
-        load("select protein,simprotein from pubchem.protein_similarproteins", oldSimilarProteins);
+        load("select protein,similar_protein from pubchem.protein_similar_proteins", oldSimilarProteins);
 
         dispatcher.on(vocab + "hasSimilarProtein", (subject, object) -> {
             Integer proteinID = getProteinID(subject.getURI());
@@ -302,8 +302,10 @@ class Protein extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from pubchem.protein_similarproteins where protein=? and simprotein=?", oldSimilarProteins);
-            store("insert into pubchem.protein_similarproteins(protein,simprotein) values(?,?)", newSimilarProteins);
+            store("delete from pubchem.protein_similar_proteins where protein=? and similar_protein=?",
+                    oldSimilarProteins);
+            store("insert into pubchem.protein_similar_proteins(protein,similar_protein) values(?,?)",
+                    newSimilarProteins);
         });
     }
 
@@ -945,7 +947,7 @@ class Protein extends Updater
         IntPairSet newDomains = new IntPairSet();
         IntPairSet oldDomains = new IntPairSet();
 
-        load("select protein,domain from pubchem.protein_conserveddomains", oldDomains);
+        load("select protein,conserveddomain from pubchem.protein_conserveddomains", oldDomains);
 
         dispatcher.on(obo + "RO_0002180", (subject, object) -> {
             if(!startsWith(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID"))
@@ -963,8 +965,8 @@ class Protein extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from pubchem.protein_conserveddomains where protein=? and domain=?", oldDomains);
-            store("insert into pubchem.protein_conserveddomains(protein,domain) values(?,?)", newDomains);
+            store("delete from pubchem.protein_conserveddomains where protein=? and conserveddomain=?", oldDomains);
+            store("insert into pubchem.protein_conserveddomains(protein,conserveddomain) values(?,?)", newDomains);
         });
     }
 
@@ -975,7 +977,7 @@ class Protein extends Updater
         IntPairSet newContinuantParts = new IntPairSet();
         IntPairSet oldContinuantParts = new IntPairSet();
 
-        load("select protein,part from pubchem.protein_continuantparts", oldContinuantParts);
+        load("select protein,part from pubchem.protein_continuant_parts", oldContinuantParts);
 
         dispatcher.on(obo + "RO_0002180", (subject, object) -> {
             if(!startsWith(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/"))
@@ -993,8 +995,8 @@ class Protein extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from pubchem.protein_continuantparts where protein=? and part=?", oldContinuantParts);
-            store("insert into pubchem.protein_continuantparts(protein,part) values(?,?)", newContinuantParts);
+            store("delete from pubchem.protein_continuant_parts where protein=? and part=?", oldContinuantParts);
+            store("insert into pubchem.protein_continuant_parts(protein,part) values(?,?)", newContinuantParts);
         });
     }
 

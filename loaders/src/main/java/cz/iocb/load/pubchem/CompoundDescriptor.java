@@ -19,7 +19,7 @@ class CompoundDescriptor extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> descriptors = new EntityTable<>("pubchem.descriptor_compound_bases",
+    private static final EntityTable<Integer> descriptors = new EntityTable<>("pubchem.compound_descriptors",
             intKey("compound"), null, integer("hydrogen_bond_acceptor_count"), integer("defined_atom_stereo_count"),
             integer("defined_bond_stereo_count"), integer("undefined_bond_stereo_count"), integer("isotope_atom_count"),
             integer("covalent_unit_count"), integer("hydrogen_bond_donor_count"), integer("non_hydrogen_atom_count"),
@@ -189,8 +189,8 @@ class CompoundDescriptor extends Updater
     private static void loadStringField(String name, String suffix, String table, String field)
             throws IOException, SQLException
     {
-        EntityTable<Integer> values = new EntityTable<>("pubchem.descriptor_compound_" + table, intKey("compound"),
-                null, uniqueVarchar(field));
+        EntityTable<Integer> values = new EntityTable<>("pubchem.compound_" + table, intKey("compound"), null,
+                uniqueVarchar(field));
 
         processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))

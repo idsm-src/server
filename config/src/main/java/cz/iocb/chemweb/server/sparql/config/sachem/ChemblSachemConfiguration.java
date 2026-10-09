@@ -13,7 +13,8 @@ public class ChemblSachemConfiguration extends SachemConfiguration
     public ChemblSachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema)
             throws SQLException
     {
-        super(service, connectionPool, schema, "chembl", "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL", 0,
+        super(service, connectionPool, schema, "chembl", "molecule",
+                "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL", 0,
                 new DatabaseTable("chembl", "molecule_molfiles"), "molecule",
                 new StringSubsetLiteralClass("chembl-molfile"));
 

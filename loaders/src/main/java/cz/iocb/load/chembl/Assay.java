@@ -36,10 +36,10 @@ class Assay extends Updater
     static final String pubchemPrefix = "http://pubchem.ncbi.nlm.nih.gov/assay/assay.cgi?aid=";
     static final String panelMember = "Panel member name:";
 
-    private static final EntityTable<Integer> assays = new EntityTable<>("chembl.assay_bases", intKey("id"),
-            "chembl_id", uniqueVarchar("chembl_id"), varchar("type"), varchar("description"), integer("document"),
-            integer("target"), integer("source"), integer("cell_line"), integer("format_id"), varchar("organism"),
-            integer("taxonomy"), varchar("category"), varchar("cell_type"), varchar("strain"), varchar("tissue"),
+    private static final EntityTable<Integer> assays = new EntityTable<>("chembl.assays", intKey("id"), "chembl_id",
+            uniqueVarchar("chembl_id"), varchar("type"), varchar("description"), integer("document"), integer("target"),
+            integer("source"), integer("cell_line"), integer("format_id"), varchar("organism"), integer("taxonomy"),
+            varchar("category"), varchar("cell_type"), varchar("strain"), varchar("tissue"),
             varchar("subcellular_fraction"), varchar("test_type"), varchar("relationship_type"),
             varchar("relationship_desc"), integer("confidence_score"), varchar("confidence_desc"),
             integer("pubchem_assay"), integer("pubchem_bioassay"));

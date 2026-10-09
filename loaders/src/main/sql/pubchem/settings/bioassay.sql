@@ -1,20 +1,20 @@
-create index bioassay_bases__id__varchar on pubchem.bioassay_bases((id::varchar));
-create index bioassay_bases__source on pubchem.bioassay_bases(source);
-create index bioassay_bases__title on pubchem.bioassay_bases(title);
-create index bioassay_bases__title__english on pubchem.bioassay_bases using gin (to_tsvector('english', title));
-grant select on pubchem.bioassay_bases to sparql;
+create index bioassays__id__varchar on pubchem.bioassays((id::varchar));
+create index bioassays__source on pubchem.bioassays(source);
+create index bioassays__title on pubchem.bioassays(title);
+create index bioassays__title__english on pubchem.bioassays using gin (to_tsvector('english', title));
+grant select on pubchem.bioassays to sparql;
 
 --------------------------------------------------------------------------------
 
-create index bioassay_data__bioassay on pubchem.bioassay_data(bioassay);
-create index bioassay_data__type on pubchem.bioassay_data(type_id);
-create index bioassay_data__value on pubchem.bioassay_data using hash (value);
-create index bioassay_data__value__english on pubchem.bioassay_data using gin (to_tsvector('english', value));
-grant select on pubchem.bioassay_data to sparql;
+create index bioassay_texts__bioassay on pubchem.bioassay_texts(bioassay);
+create index bioassay_texts__type_id on pubchem.bioassay_texts(type_id);
+create index bioassay_texts__text on pubchem.bioassay_texts using hash (text);
+create index bioassay_texts__text__english on pubchem.bioassay_texts using gin (to_tsvector('english', text));
+grant select on pubchem.bioassay_texts to sparql;
 
 --------------------------------------------------------------------------------
 
-create index bioassay_stages__stage on pubchem.bioassay_stages(stage);
+create index bioassay_stages__stage_id on pubchem.bioassay_stages(stage_id);
 grant select on pubchem.bioassay_stages to sparql;
 
 --------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-create table pubchem.anatomy_bases
+create table pubchem.anatomies
 (
     id            integer not null,
     label         varchar,

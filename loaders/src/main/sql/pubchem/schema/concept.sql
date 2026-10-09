@@ -1,4 +1,4 @@
-create table pubchem.concept_bases
+create table pubchem.concepts
 (
     id         smallint not null,
     iri        varchar unique not null,

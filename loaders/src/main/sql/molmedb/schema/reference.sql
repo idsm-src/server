@@ -1,4 +1,4 @@
-create table molmedb.reference_bases
+create table molmedb.references
 (
     id                      integer not null,
     doi                     varchar,
@@ -12,31 +12,31 @@ create table molmedb.reference_bases
 
 create table molmedb.reference_substances
 (
-    reference_id            integer not null,
-    substance_id            integer not null,
-    primary key(reference_id, substance_id)
+    reference               integer not null,
+    substance               integer not null,
+    primary key(reference, substance)
 );
 
 
 create table molmedb.reference_membranes
 (
-    reference_id            integer not null,
-    membrane_id             integer not null,
-    primary key(reference_id, membrane_id)
+    reference               integer not null,
+    membrane                integer not null,
+    primary key(reference, membrane)
 );
 
 
 create table molmedb.reference_methods
 (
-    reference_id            integer not null,
-    method_id               integer not null,
-    primary key(reference_id, method_id)
+    reference               integer not null,
+    method                  integer not null,
+    primary key(reference, method)
 );
 
 
 create table molmedb.reference_proteins
 (
-    reference_id            integer not null,
-    protein_id              integer not null,
-    primary key(reference_id, protein_id)
+    reference               integer not null,
+    protein                 integer not null,
+    primary key(reference, protein)
 );

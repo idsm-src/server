@@ -28,15 +28,15 @@ class ProteinClassification extends Updater
 {
     static final String prefix = ChEMBL.chembl + "protclass/CHEMBL_PC_";
 
-    private static final EntityTable<Integer> classes = new EntityTable<>("chembl.protein_class_bases", intKey("id"),
+    private static final EntityTable<Integer> classes = new EntityTable<>("chembl.protein_classes", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), varchar("label"), varchar("level"), varchar("path"),
             integer("parent"));
 
     private static final ValueTable componentDescendants = new ValueTable("chembl.protein_class_component_descendants",
-            column("class"), column("component"));
+            column("protein_class"), column("component"));
 
     private static final ValueTable targetDescendants = new ValueTable("chembl.protein_class_target_descendants",
-            column("class"), column("target"));
+            column("protein_class"), column("target"));
 
 
     static void load() throws IOException, SQLException

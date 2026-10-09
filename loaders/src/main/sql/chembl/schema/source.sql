@@ -1,4 +1,4 @@
-create table chembl.source_bases
+create table chembl.sources
 (
     id           integer not null,
     chembl_id    varchar,

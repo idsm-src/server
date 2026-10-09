@@ -871,12 +871,12 @@ public class Updater
 
         DatabaseMetaData databaseMetaData = connection.getMetaData();
 
-        try(ResultSet info = databaseMetaData.getTables(null, "info", "idsm_stats", new String[] { "TABLE" }))
+        try(ResultSet info = databaseMetaData.getTables(null, "info", "stats", new String[] { "TABLE" }))
         {
             if(info.next())
             {
                 try(PreparedStatement statement = connection
-                        .prepareStatement("update info.idsm_stats set count=? where name=?"))
+                        .prepareStatement("update info.stats set count=? where name=?"))
                 {
                     statement.setInt(1, count);
                     statement.setString(2, name);
@@ -896,12 +896,12 @@ public class Updater
 
         DatabaseMetaData databaseMetaData = connection.getMetaData();
 
-        try(ResultSet info = databaseMetaData.getTables(null, "info", "idsm_sources", new String[] { "TABLE" }))
+        try(ResultSet info = databaseMetaData.getTables(null, "info", "sources", new String[] { "TABLE" }))
         {
             if(info.next())
             {
                 try(PreparedStatement statement = connection
-                        .prepareStatement("update info.idsm_sources set version=? where name=?"))
+                        .prepareStatement("update info.sources set version=? where name=?"))
                 {
                     statement.setString(1, version == null ? "" : version);
                     statement.setString(2, name);
@@ -921,14 +921,14 @@ public class Updater
 
         DatabaseMetaData databaseMetaData = connection.getMetaData();
 
-        try(ResultSet info = databaseMetaData.getTables(null, "info", "idsm_version", new String[] { "TABLE" }))
+        try(ResultSet info = databaseMetaData.getTables(null, "info", "version", new String[] { "TABLE" }))
         {
             if(info.next())
             {
                 try(Statement statement = connection.createStatement())
                 {
                     if(statement.executeUpdate(
-                            "update info.idsm_version set date = greatest(date, date_trunc('second', now()))") != 1)
+                            "update info.version set date = greatest(date, date_trunc('second', now()))") != 1)
                         System.err.printf("warning: version was not set\n");
                 }
             }

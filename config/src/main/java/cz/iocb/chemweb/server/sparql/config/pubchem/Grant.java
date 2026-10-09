@@ -17,7 +17,7 @@ public class Grant
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pubchem:grant", INT4, new DatabaseTable(schema, "grant_bases"),
+        config.addIriClass(new MapUserIriClass("pubchem:grant", INT4, new DatabaseTable(schema, "grants"),
                 new TableColumn("id", INT4), new TableColumn("iri", VARCHAR),
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/grant/"));
     }
@@ -28,7 +28,7 @@ public class Grant
         ConstantIriMapping graph = config.createIriMapping("pubchem:grant");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "grant_bases");
+            DatabaseTable table = new DatabaseTable(schema, "grants");
             TermMapping subject = config.createIriMapping("pubchem:grant", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

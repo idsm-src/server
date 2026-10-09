@@ -1,9 +1,9 @@
-create index pathway_bases__source on pubchem.pathway_bases(source);
-create index pathway_bases__title on pubchem.pathway_bases(title);
-create index pathway_bases__reference_type on pubchem.pathway_bases(reference_type);
-create index pathway_bases__reference on pubchem.pathway_bases(reference);
-create index pathway_bases__organism on pubchem.pathway_bases(organism);
-grant select on pubchem.pathway_bases to sparql;
+create index pathways__source on pubchem.pathways(source);
+create index pathways__title on pubchem.pathways(title);
+create index pathways__reference_type on pubchem.pathways(reference_type);
+create index pathways__reference on pubchem.pathways(reference);
+create index pathways__organism on pubchem.pathways(organism);
+grant select on pubchem.pathways to sparql;
 
 --------------------------------------------------------------------------------
 

@@ -64,7 +64,7 @@ class Molecule extends Updater
     static final String imagePrefix = "https://www.ebi.ac.uk/chembl/api/data/image/CHEMBL";
     static final String imageSuffix = ".svg";
 
-    private static final EntityTable<Integer> molecules = new EntityTable<>("chembl.molecule_bases", intKey("id"),
+    private static final EntityTable<Integer> molecules = new EntityTable<>("chembl.molecules", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), varchar("type"), varchar("label"), real("phase"),
             bool("biotherapeutic"), varchar("helm_notation"), varchar("description"), varchar("hrac_classification"),
             varchar("irac_classification"), varchar("frac_classification"), integer("parent"));

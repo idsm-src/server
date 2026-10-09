@@ -1,12 +1,12 @@
-create table molmedb.transporter_bases
+create table molmedb.transporters
 (
     id                      integer not null,
-    substance_id            integer,
-    protein_id              integer,
-    membrane_id             integer,
-    method_id               integer,
-    publication_id          integer,
-    model_publication_id    integer,
+    substance               integer,
+    protein                 integer,
+    membrane                integer,
+    method                  integer,
+    reference               integer,
+    model_reference         integer,
     category                integer,
     km                      real,
     km_accuracy             real,
@@ -24,7 +24,7 @@ create table molmedb.transporter_bases
 );
 
 
-create table molmedb.protein_bases
+create table molmedb.proteins
 (
     id                      integer not null,
     uniprot_id              varchar,

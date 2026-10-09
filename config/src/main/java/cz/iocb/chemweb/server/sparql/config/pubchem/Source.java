@@ -18,12 +18,12 @@ public class Source
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pubchem:source", INT2, new DatabaseTable(schema, "source_bases"),
+        config.addIriClass(new MapUserIriClass("pubchem:source", INT2, new DatabaseTable(schema, "sources"),
                 new TableColumn("id", INT2), new TableColumn("iri", VARCHAR),
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/source/"));
-        config.addIriClass(new ListUserIriClass("pubchem:source-license", new DatabaseTable(schema, "source_bases"),
+        config.addIriClass(new ListUserIriClass("pubchem:source_license", new DatabaseTable(schema, "sources"),
                 new TableColumn("license", VARCHAR)));
-        config.addIriClass(new ListUserIriClass("pubchem:source-homepage", new DatabaseTable(schema, "source_bases"),
+        config.addIriClass(new ListUserIriClass("pubchem:source_homepage", new DatabaseTable(schema, "sources"),
                 new TableColumn("homepage", VARCHAR)));
     }
 
@@ -33,7 +33,7 @@ public class Source
         ConstantIriMapping graph = config.createIriMapping("pubchem:source");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "source_bases");
+            DatabaseTable table = new DatabaseTable(schema, "sources");
             TermMapping subject = config.createIriMapping("pubchem:source", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -41,9 +41,9 @@ public class Source
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("dcterms:Dataset"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:license"),
-                    config.createIriMapping("pubchem:source-license", "license"));
+                    config.createIriMapping("pubchem:source_license", "license"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("foaf:homepage"),
-                    config.createIriMapping("pubchem:source-homepage", "homepage"));
+                    config.createIriMapping("pubchem:source_homepage", "homepage"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:title"),
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:rights"),

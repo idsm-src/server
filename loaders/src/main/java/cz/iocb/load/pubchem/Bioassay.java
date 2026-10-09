@@ -63,8 +63,8 @@ class Bioassay extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> bioassays = new EntityTable<>("pubchem.bioassay_bases", intKey("id"),
-            null, integer("source"), uniqueVarchar("title"));
+    private static final EntityTable<Integer> bioassays = new EntityTable<>("pubchem.bioassays", intKey("id"), null,
+            integer("source"), uniqueVarchar("title"));
     private static final MissingEntities<Integer> missingBioassays = new MissingEntities<>("bioassay", false);
 
 
@@ -125,9 +125,9 @@ class Bioassay extends Updater
         IntIntMap newMechanisms = new IntIntMap();
         IntIntMap oldMechanisms = new IntIntMap();
 
-        load("select bioassay,value from pubchem.bioassay_data where type_id = '136'::smallint", oldDescriptions);
-        load("select bioassay,value from pubchem.bioassay_data where type_id = '1041'::smallint", oldProtocols);
-        load("select bioassay,value from pubchem.bioassay_data where type_id = '1167'::smallint", oldComments);
+        load("select bioassay,text from pubchem.bioassay_texts where type_id = '136'::smallint", oldDescriptions);
+        load("select bioassay,text from pubchem.bioassay_texts where type_id = '1041'::smallint", oldProtocols);
+        load("select bioassay,text from pubchem.bioassay_texts where type_id = '1167'::smallint", oldComments);
         load("select bioassay,chembl_assay from pubchem.bioassay_chembl_assays", oldAssays);
         load("select bioassay,chembl_mechanism from pubchem.bioassay_chembl_mechanisms", oldMechanisms);
 
@@ -260,20 +260,20 @@ class Bioassay extends Updater
         });
 
 
-        store("delete from pubchem.bioassay_data where type_id = '136'::smallint and bioassay=? and value=?",
+        store("delete from pubchem.bioassay_texts where type_id = '136'::smallint and bioassay=? and text=?",
                 oldDescriptions);
-        store("insert into pubchem.bioassay_data(type_id,bioassay,value) values(136,?,?)"
-                + "on conflict(type_id,bioassay) do update set value=EXCLUDED.value", newDescriptions);
+        store("insert into pubchem.bioassay_texts(type_id,bioassay,text) values(136,?,?)"
+                + "on conflict(type_id,bioassay) do update set text=EXCLUDED.text", newDescriptions);
 
-        store("delete from pubchem.bioassay_data where type_id = '1041'::smallint and bioassay=? and value=?",
+        store("delete from pubchem.bioassay_texts where type_id = '1041'::smallint and bioassay=? and text=?",
                 oldProtocols);
-        store("insert into pubchem.bioassay_data(type_id,bioassay,value) values(1041,?,?)"
-                + "on conflict(type_id,bioassay) do update set value=EXCLUDED.value", newProtocols);
+        store("insert into pubchem.bioassay_texts(type_id,bioassay,text) values(1041,?,?)"
+                + "on conflict(type_id,bioassay) do update set text=EXCLUDED.text", newProtocols);
 
-        store("delete from pubchem.bioassay_data where type_id = '1167'::smallint and bioassay=? and value=?",
+        store("delete from pubchem.bioassay_texts where type_id = '1167'::smallint and bioassay=? and text=?",
                 oldComments);
-        store("insert into pubchem.bioassay_data(type_id,bioassay,value) values(1167,?,?)"
-                + "on conflict(type_id,bioassay) do update set value=EXCLUDED.value", newComments);
+        store("insert into pubchem.bioassay_texts(type_id,bioassay,text) values(1167,?,?)"
+                + "on conflict(type_id,bioassay) do update set text=EXCLUDED.text", newComments);
 
         store("delete from pubchem.bioassay_chembl_assays where bioassay=? and chembl_assay=?", oldAssays);
         store("insert into pubchem.bioassay_chembl_assays(bioassay,chembl_assay) values(?,?)"
@@ -303,7 +303,7 @@ class Bioassay extends Updater
         IntIntMap newStages = new IntIntMap();
         IntIntMap oldStages = new IntIntMap();
 
-        load("select bioassay,stage from pubchem.bioassay_stages", oldStages);
+        load("select bioassay,stage_id from pubchem.bioassay_stages", oldStages);
 
         dispatcher.on(bao + "BAO_0000210", (subject, object) -> {
             Integer bioassayID = getBioassayID(subject.getURI());
@@ -333,9 +333,9 @@ class Bioassay extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from pubchem.bioassay_stages where bioassay=? and stage=?", oldStages);
-            store("insert into pubchem.bioassay_stages(bioassay,stage) values(?,?) "
-                    + "on conflict(bioassay) do update set stage=EXCLUDED.stage", newStages);
+            store("delete from pubchem.bioassay_stages where bioassay=? and stage_id=?", oldStages);
+            store("insert into pubchem.bioassay_stages(bioassay,stage_id) values(?,?) "
+                    + "on conflict(bioassay) do update set stage_id=EXCLUDED.stage_id", newStages);
         });
     }
 

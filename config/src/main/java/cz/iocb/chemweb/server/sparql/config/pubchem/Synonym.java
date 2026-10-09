@@ -17,7 +17,7 @@ public class Synonym
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pubchem:synonym", INT4, new DatabaseTable(schema, "synonym_bases"),
+        config.addIriClass(new MapUserIriClass("pubchem:synonym", INT4, new DatabaseTable(schema, "synonyms"),
                 new TableColumn("id", INT4), new TableColumn("md5", VARCHAR),
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_"));
     }
@@ -70,7 +70,7 @@ public class Synonym
             TermMapping subject = config.createIriMapping("pubchem:synonym", "synonym");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:subject"),
-                    config.createIriMapping("mesh:heading", "subject"));
+                    config.createIriMapping("mesh:resource", "subject"));
         }
 
         {

@@ -25,7 +25,7 @@ public class Journal
         ConstantIriMapping graph = config.createIriMapping("pubchem:journal");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "journal_bases");
+            DatabaseTable table = new DatabaseTable(schema, "journals");
             TermMapping subject = config.createIriMapping("pubchem:journal", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -34,7 +34,7 @@ public class Journal
                     config.createIriMapping("fabio:Journal"));
             config.addQuadMapping(table, graph, subject,
                     config.createIriMapping("fabio:hasNationalLibraryOfMedicineJournalId"),
-                    config.createLiteralMapping(xsdString, "catalogid"));
+                    config.createLiteralMapping(xsdString, "catalog_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:title"),
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, subject,
@@ -45,7 +45,7 @@ public class Journal
             config.addQuadMapping(table, graph, subject, config.createIriMapping("prism:eissn"),
                     config.createLiteralMapping(xsdString, "eissn"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
-                    config.createIriMapping("ncbi:journal", "catalogid"));
+                    config.createIriMapping("ncbi:journal", "catalog_id"));
         }
     }
 }

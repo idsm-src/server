@@ -1,11 +1,11 @@
-create index target_bases__chembl_id on chembl.target_bases(chembl_id);
-create index target_bases__type on chembl.target_bases(type);
-create index target_bases__label on chembl.target_bases(label);
-create index target_bases__organism on chembl.target_bases(organism);
-create index target_bases__taxonomy on chembl.target_bases(taxonomy);
-create index target_bases__cell_line on chembl.target_bases(cell_line);
-create index target_bases__species_group on chembl.target_bases(species_group);
-grant select on chembl.target_bases to sparql;
+create index targets__chembl_id on chembl.targets(chembl_id);
+create index targets__type on chembl.targets(type);
+create index targets__label on chembl.targets(label);
+create index targets__organism on chembl.targets(organism);
+create index targets__taxonomy on chembl.targets(taxonomy);
+create index targets__cell_line on chembl.targets(cell_line);
+create index targets__species_group on chembl.targets(species_group);
+grant select on chembl.targets to sparql;
 
 --------------------------------------------------------------------------------
 

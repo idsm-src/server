@@ -1,4 +1,4 @@
-create table wikidata.canonical_smiles
+create table wikidata.compound_canonical_smileses
 (
     compound    integer not null,
     smiles      varchar not null,
@@ -6,7 +6,7 @@ create table wikidata.canonical_smiles
 );
 
 
-create table wikidata.isomeric_smiles
+create table wikidata.compound_isomeric_smileses
 (
     compound    integer not null,
     smiles      varchar not null,
@@ -14,7 +14,7 @@ create table wikidata.isomeric_smiles
 );
 
 
-create table wikidata.inchies
+create table wikidata.compound_inchis
 (
     compound    integer not null,
     inchi       varchar not null,

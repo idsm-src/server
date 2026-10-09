@@ -1,7 +1,7 @@
-create index journal_bases__chembl_id on chembl.journal_bases(chembl_id);
-create index journal_bases__label on chembl.journal_bases(label);
-create index journal_bases__title on chembl.journal_bases(title);
-create index journal_bases__short_title on chembl.journal_bases(short_title);
-create index journal_bases__issn on chembl.journal_bases(issn);
-create index journal_bases__eissn on chembl.journal_bases(eissn);
-grant select on chembl.journal_bases to sparql;
+create index journals__chembl_id on chembl.journals(chembl_id);
+create index journals__label on chembl.journals(label);
+create index journals__title on chembl.journals(title);
+create index journals__short_title on chembl.journals(short_title);
+create index journals__issn on chembl.journals(issn);
+create index journals__eissn on chembl.journals(eissn);
+grant select on chembl.journals to sparql;

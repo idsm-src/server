@@ -31,7 +31,7 @@ public class Compound
         ConstantIriMapping graph = config.createIriMapping("pubchem:compound");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compounds");
             TermMapping subject = config.createIriMapping("pubchem:compound", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -157,7 +157,7 @@ public class Compound
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
@@ -334,7 +334,7 @@ public class Compound
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_molecular_formulas");
+            DatabaseTable table = new DatabaseTable(schema, "compound_molecular_formulas");
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
@@ -350,7 +350,7 @@ public class Compound
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_smileses");
+            DatabaseTable table = new DatabaseTable(schema, "compound_smileses");
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
@@ -366,7 +366,7 @@ public class Compound
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_connectivity_smileses");
+            DatabaseTable table = new DatabaseTable(schema, "compound_connectivity_smileses");
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
@@ -382,7 +382,7 @@ public class Compound
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_iupac_inchis");
+            DatabaseTable table = new DatabaseTable(schema, "compound_iupac_inchis");
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
@@ -398,7 +398,7 @@ public class Compound
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_preferred_iupac_names");
+            DatabaseTable table = new DatabaseTable(schema, "compound_preferred_iupac_names");
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
@@ -430,7 +430,7 @@ public class Compound
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:hydrogen_bond_acceptor_count"),
@@ -489,7 +489,7 @@ public class Compound
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_molecular_formulas");
+            DatabaseTable table = new DatabaseTable(schema, "compound_molecular_formulas");
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:molecular_formula"),
@@ -497,7 +497,7 @@ public class Compound
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_connectivity_smileses");
+            DatabaseTable table = new DatabaseTable(schema, "compound_connectivity_smileses");
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:connectivity_smiles"),
@@ -505,7 +505,7 @@ public class Compound
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_iupac_inchis");
+            DatabaseTable table = new DatabaseTable(schema, "compound_iupac_inchis");
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:iupac_inchi"),
@@ -513,7 +513,7 @@ public class Compound
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_preferred_iupac_names");
+            DatabaseTable table = new DatabaseTable(schema, "compound_preferred_iupac_names");
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:preferred_iupac_name"),
@@ -524,7 +524,7 @@ public class Compound
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(new DatabaseTable(schema, "inchikey_compounds"),
-                    new DatabaseTable(schema, "inchikey_bases"), "inchikey", "id", graph, subject,
+                    new DatabaseTable(schema, "inchikeys"), "inchikey", "id", graph, subject,
                     config.createIriMapping("vocab:inchikey"), config.createLiteralMapping(xsdString, "inchikey"));
         }
     }

@@ -30,8 +30,8 @@ public class Journal extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/journal/";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> journals = new EntityTable<>("pubchem.journal_bases", intKey("id"), null,
-            uniqueVarchar("catalogid"), uniqueVarchar("title"), uniqueVarchar("abbreviation"), uniqueVarchar("issn"),
+    private static final EntityTable<Integer> journals = new EntityTable<>("pubchem.journals", intKey("id"), null,
+            uniqueVarchar("catalog_id"), uniqueVarchar("title"), uniqueVarchar("abbreviation"), uniqueVarchar("issn"),
             uniqueVarchar("eissn"));
     private static final MissingEntities<Integer> missingJournals = new MissingEntities<>("journal", true);
 
@@ -83,7 +83,7 @@ public class Journal extends Updater
             Integer journalID = getJournalID(subject.getURI());
             String catalogID = getString(object);
 
-            journals.set(journalID, "catalogid", catalogID);
+            journals.set(journalID, "catalog_id", catalogID);
         });
     }
 

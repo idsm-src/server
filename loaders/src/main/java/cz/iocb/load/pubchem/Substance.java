@@ -26,8 +26,8 @@ class Substance extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> substances = new EntityTable<>("pubchem.substance_bases", intKey("id"),
-            null, integer("source"), date("available"), date("modified"), integer("compound"));
+    private static final EntityTable<Integer> substances = new EntityTable<>("pubchem.substances", intKey("id"), null,
+            integer("source"), date("available"), date("modified"), integer("compound"));
     private static final MissingEntities<Integer> missingSubstances = new MissingEntities<>("substance", false);
 
 
@@ -225,8 +225,8 @@ class Substance extends Updater
         IntStringMap newGlytoucanMatches = new IntStringMap();
         IntStringMap oldGlytoucanMatches = new IntStringMap();
 
-        load("select substance,chembl from pubchem.substance_chembl_matches", oldChemblMatches);
-        load("select substance,glytoucan from pubchem.substance_glytoucan_matches", oldGlytoucanMatches);
+        load("select substance,match from pubchem.substance_chembl_matches", oldChemblMatches);
+        load("select substance,match from pubchem.substance_glytoucan_matches", oldGlytoucanMatches);
 
         processFiles("pubchem/RDF/substance", "pc_substance_seealso_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -292,12 +292,12 @@ class Substance extends Updater
             }
         });
 
-        store("delete from pubchem.substance_chembl_matches where substance=? and chembl=?", oldChemblMatches);
-        store("insert into pubchem.substance_chembl_matches(substance,chembl) values(?,?)", newChemblMatches);
+        store("delete from pubchem.substance_chembl_matches where substance=? and match=?", oldChemblMatches);
+        store("insert into pubchem.substance_chembl_matches(substance,match) values(?,?)", newChemblMatches);
 
-        store("delete from pubchem.substance_glytoucan_matches where substance=? and glytoucan=?", oldGlytoucanMatches);
-        store("insert into pubchem.substance_glytoucan_matches(substance,glytoucan) values(?,?) "
-                + "on conflict(substance) do update set glytoucan=EXCLUDED.glytoucan", newGlytoucanMatches);
+        store("delete from pubchem.substance_glytoucan_matches where substance=? and match=?", oldGlytoucanMatches);
+        store("insert into pubchem.substance_glytoucan_matches(substance,match) values(?,?) "
+                + "on conflict(substance) do update set match=EXCLUDED.match", newGlytoucanMatches);
     }
 
 

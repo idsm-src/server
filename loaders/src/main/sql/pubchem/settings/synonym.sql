@@ -1,4 +1,4 @@
-grant select on pubchem.synonym_bases to sparql;
+grant select on pubchem.synonyms to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -12,7 +12,7 @@ grant select on pubchem.synonym_values to sparql;
 --------------------------------------------------------------------------------
 
 create index synonym_types__synonym on pubchem.synonym_types(synonym);
-create index synonym_types__type on pubchem.synonym_types(type_id);
+create index synonym_types__type_id on pubchem.synonym_types(type_id);
 grant select on pubchem.synonym_types to sparql;
 
 --------------------------------------------------------------------------------

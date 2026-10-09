@@ -13,10 +13,9 @@ public class DrugbankSachemConfiguration extends SachemConfiguration
     public DrugbankSachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema)
             throws SQLException
     {
-        super(service, connectionPool, schema, "drugbank",
+        super(service, connectionPool, schema, "drugbank", "compound",
                 "http://wifo5-04.informatik.uni-mannheim.de/drugbank/resource/drugs/DB", 5,
-                new DatabaseTable("drugbank", "compound_bases"), "id",
-                new StringSubsetLiteralClass("drugbank-molfile"));
+                new DatabaseTable("drugbank", "compounds"), "id", new StringSubsetLiteralClass("drugbank-molfile"));
 
         addPrefixes();
     }

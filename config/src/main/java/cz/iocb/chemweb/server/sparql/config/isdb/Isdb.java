@@ -53,22 +53,22 @@ public class Isdb
         config.addIriClass(new IntegerUserIriClass("wikidata:entity", INT4, "http://www.wikidata.org/entity/Q"));
 
         config.addIriClass(new IsdbUserIriClass("isdb:experiment", isdb, "_EXP"));
-        config.addIriClass(new MapUserIriClass("isdb:compound", INT4, new DatabaseTable(schema, "compound_bases"),
+        config.addIriClass(new MapUserIriClass("isdb:compound", INT4, new DatabaseTable(schema, "compounds"),
                 new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), isdb, 14, "[A-Z]{14}", "_CMPD"));
         config.addIriClass(new IsdbUserIriClass("isdb:spectrum", isdb, "_MS"));
 
-        config.addIriClass(new MapUserIriClass("isdb:inchi", INT4, new DatabaseTable(schema, "compound_bases"),
+        config.addIriClass(new MapUserIriClass("isdb:inchi", INT4, new DatabaseTable(schema, "compounds"),
                 new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), bnisdb, 14, "[A-Z]{14}", "_inchi"));
-        config.addIriClass(new MapUserIriClass("isdb:inchikey", INT4, new DatabaseTable(schema, "compound_bases"),
+        config.addIriClass(new MapUserIriClass("isdb:inchikey", INT4, new DatabaseTable(schema, "compounds"),
                 new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), bnisdb, 14, "[A-Z]{14}",
                 "_inchikey"));
-        config.addIriClass(new MapUserIriClass("isdb:formula", INT4, new DatabaseTable(schema, "compound_bases"),
+        config.addIriClass(new MapUserIriClass("isdb:formula", INT4, new DatabaseTable(schema, "compounds"),
                 new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), bnisdb, 14, "[A-Z]{14}",
                 "_formula"));
-        config.addIriClass(new MapUserIriClass("isdb:smiles", INT4, new DatabaseTable(schema, "compound_bases"),
+        config.addIriClass(new MapUserIriClass("isdb:smiles", INT4, new DatabaseTable(schema, "compounds"),
                 new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), bnisdb, 14, "[A-Z]{14}",
                 "_smiles"));
-        config.addIriClass(new MapUserIriClass("isdb:exact_mass", INT4, new DatabaseTable(schema, "compound_bases"),
+        config.addIriClass(new MapUserIriClass("isdb:exact_mass", INT4, new DatabaseTable(schema, "compounds"),
                 new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), bnisdb, 14, "[A-Z]{14}",
                 "_exact_mass"));
 
@@ -89,7 +89,7 @@ public class Isdb
         ConstantIriMapping graph = config.createIriMapping("isdb:");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compounds");
             TermMapping compound = config.createIriMapping("isdb:compound", "id");
 
             config.addQuadMapping(table, graph, compound, config.createIriMapping("rdf:type"),
@@ -97,7 +97,7 @@ public class Isdb
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compounds");
             TermMapping subject = config.createIriMapping("isdb:inchi", "id");
             TermMapping compound = config.createIriMapping("isdb:compound", "id");
 
@@ -113,7 +113,7 @@ public class Isdb
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compounds");
             TermMapping subject = config.createIriMapping("isdb:inchikey", "id");
             TermMapping compound = config.createIriMapping("isdb:compound", "id");
 
@@ -129,7 +129,7 @@ public class Isdb
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compounds");
             TermMapping subject = config.createIriMapping("isdb:formula", "id");
             TermMapping compound = config.createIriMapping("isdb:compound", "id");
 
@@ -145,7 +145,7 @@ public class Isdb
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compounds");
             TermMapping subject = config.createIriMapping("isdb:smiles", "id");
             TermMapping compound = config.createIriMapping("isdb:compound", "id");
 
@@ -161,7 +161,7 @@ public class Isdb
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compounds");
             TermMapping subject = config.createIriMapping("isdb:exact_mass", "id");
             TermMapping compound = config.createIriMapping("isdb:compound", "id");
 
@@ -179,10 +179,10 @@ public class Isdb
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "spectrum_bases");
-            TermMapping compound = config.createIriMapping("isdb:compound", "id");
-            TermMapping experiment = config.createIriMapping("isdb:experiment", "id", "ionmode");
-            TermMapping spectrum = config.createIriMapping("isdb:spectrum", "id", "ionmode");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
+            TermMapping compound = config.createIriMapping("isdb:compound", "compound");
+            TermMapping experiment = config.createIriMapping("isdb:experiment", "compound", "ionmode");
+            TermMapping spectrum = config.createIriMapping("isdb:spectrum", "compound", "ionmode");
             TermMapping library = config.createIriMapping(isdbLibrary);
 
             config.addQuadMapping(table, graph, experiment, config.createIriMapping("rdf:type"),
@@ -209,17 +209,17 @@ public class Isdb
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "spectrum_bases");
-            TermMapping subject = config.createIriMapping("isdb:spectrum", "id", "ionmode");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
+            TermMapping subject = config.createIriMapping("isdb:spectrum", "compound", "ionmode");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"), // has value
                     config.createLiteralMapping(Matchms.spectrum, "spectrum"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "spectrum_bases");
-            TermMapping subject = config.createIriMapping("isdb:scan", "id", "ionmode");
-            TermMapping experiment = config.createIriMapping("isdb:experiment", "id", "ionmode");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
+            TermMapping subject = config.createIriMapping("isdb:scan", "compound", "ionmode");
+            TermMapping experiment = config.createIriMapping("isdb:experiment", "compound", "ionmode");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000130"), // positive scan
@@ -235,9 +235,9 @@ public class Isdb
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "spectrum_bases");
-            TermMapping subject = config.createIriMapping("isdb:ionization", "id", "ionmode");
-            TermMapping experiment = config.createIriMapping("isdb:experiment", "id", "ionmode");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
+            TermMapping subject = config.createIriMapping("isdb:ionization", "compound", "ionmode");
+            TermMapping experiment = config.createIriMapping("isdb:experiment", "compound", "ionmode");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000073")); // electrospray ionization
@@ -249,9 +249,9 @@ public class Isdb
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "spectrum_bases");
-            TermMapping subject = config.createIriMapping("isdb:level", "id", "ionmode");
-            TermMapping experiment = config.createIriMapping("isdb:experiment", "id", "ionmode");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
+            TermMapping subject = config.createIriMapping("isdb:level", "compound", "ionmode");
+            TermMapping experiment = config.createIriMapping("isdb:experiment", "compound", "ionmode");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000511")); // ms level
@@ -265,9 +265,9 @@ public class Isdb
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "spectrum_bases");
-            TermMapping subject = config.createIriMapping("isdb:instrument_type", "id", "ionmode");
-            TermMapping experiment = config.createIriMapping("isdb:experiment", "id", "ionmode");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
+            TermMapping subject = config.createIriMapping("isdb:instrument_type", "compound", "ionmode");
+            TermMapping experiment = config.createIriMapping("isdb:experiment", "compound", "ionmode");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000463")); // instrument
@@ -282,9 +282,9 @@ public class Isdb
 
         /*
         {
-            DatabaseTable table = new DatabaseTable(schema, "spectrum_bases");
-            TermMapping subject = config.createIriMapping("isdb:instrument", "id", "ionmode");
-            TermMapping experiment = config.createIriMapping("isdb:experiment", "id", "ionmode");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
+            TermMapping subject = config.createIriMapping("isdb:instrument", "compound", "ionmode");
+            TermMapping experiment = config.createIriMapping("isdb:experiment", "compound", "ionmode");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000031")); // instrument model
@@ -299,9 +299,9 @@ public class Isdb
         */
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "spectrum_bases");
-            TermMapping subject = config.createIriMapping("isdb:precursor_type", "id", "ionmode");
-            TermMapping experiment = config.createIriMapping("isdb:experiment", "id", "ionmode");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
+            TermMapping subject = config.createIriMapping("isdb:precursor_type", "compound", "ionmode");
+            TermMapping experiment = config.createIriMapping("isdb:experiment", "compound", "ionmode");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1002813")); // adduct ion formula
@@ -317,9 +317,9 @@ public class Isdb
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "spectrum_bases");
-            TermMapping subject = config.createIriMapping("isdb:charge_state", "id", "ionmode");
-            TermMapping experiment = config.createIriMapping("isdb:experiment", "id", "ionmode");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
+            TermMapping subject = config.createIriMapping("isdb:charge_state", "compound", "ionmode");
+            TermMapping experiment = config.createIriMapping("isdb:experiment", "compound", "ionmode");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000041")); // charge state
@@ -335,9 +335,9 @@ public class Isdb
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "spectrum_bases");
-            TermMapping subject = config.createIriMapping("isdb:precursor_mz", "id", "ionmode");
-            TermMapping experiment = config.createIriMapping("isdb:experiment", "id", "ionmode");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
+            TermMapping subject = config.createIriMapping("isdb:precursor_mz", "compound", "ionmode");
+            TermMapping experiment = config.createIriMapping("isdb:experiment", "compound", "ionmode");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000744")); // selected ion m/z
@@ -353,9 +353,9 @@ public class Isdb
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "spectrum_bases");
-            TermMapping subject = config.createIriMapping("isdb:tag", "id", "ionmode");
-            TermMapping experiment = config.createIriMapping("isdb:experiment", "id", "ionmode");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
+            TermMapping subject = config.createIriMapping("isdb:tag", "compound", "ionmode");
+            TermMapping experiment = config.createIriMapping("isdb:experiment", "compound", "ionmode");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_001166")); // annotation

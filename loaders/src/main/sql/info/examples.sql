@@ -1,4 +1,4 @@
-insert into info.idsm_queries values (1,
+insert into info.queries values (1,
 'What protein targets does donepezil (CHEBI_53289) inhibit with an IC50 of 10 µM or lower?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -30,7 +30,7 @@ WHERE {
   }
 }');
 
-insert into info.idsm_queries values (2,
+insert into info.queries values (2,
 'What pharmacological roles of SID46505803 are defined by CHEBI?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -56,7 +56,7 @@ WHERE {
   ?role rdfs:label ?rolelabel .
 }');
 
-insert into info.idsm_queries values (3,
+insert into info.queries values (3,
 'What compounds have a pharmacological role of NSAID as defined by CHEBI and molecular weight less than 200 g/mol?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -84,7 +84,7 @@ WHERE {
   FILTER (?MWValue < 200)
 }');
 
-insert into info.idsm_queries values (4,
+insert into info.queries values (4,
 'What substances have a pharmacological role of NSAID as defined by CHEBI and chemical vendor information?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -110,7 +110,7 @@ WHERE {
   ] .
 }');
 
-insert into info.idsm_queries values (5,
+insert into info.queries values (5,
 'What protein targets are inhibited by substances with an IC50 less than 10 µM and have a pharmacological role of cholinesterase inhibitors as defined by CHEBI?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -146,7 +146,7 @@ WHERE {
   FILTER (?value < 10)
 }');
 
-insert into info.idsm_queries values (6,
+insert into info.queries values (6,
 'Which substances inhibit protein targets similar to ACCP00533 and have the function domain PSSMID395614?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX obo: <http://purl.obolibrary.org/obo/>
@@ -174,7 +174,7 @@ WHERE {
   ?endpoint sio:SIO_000300 ?value .
 }');
 
-insert into info.idsm_queries values (7,
+insert into info.queries values (7,
 'What protein targets are inhibited by substances with IC50 less than 10 µM and have the same standardized chemical structure (CID3152)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -202,7 +202,7 @@ WHERE {
   FILTER (?value < 10)
 }');
 
-insert into info.idsm_queries values (8,
+insert into info.queries values (8,
 'What substances inhibit the proteins involved in the same biological pathway: prostaglandin biosynthetic process (GO:0001516), with an IC 50 less than 10 µM?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX obo: <http://purl.obolibrary.org/obo/>
@@ -232,7 +232,7 @@ WHERE {
   FILTER (?value < 10)
 }');
 
-insert into info.idsm_queries values (9,
+insert into info.queries values (9,
 'What the pharmacological roles defined by CHEBI are for the substances that inhibit protein target ACCQ12809 with an IC50 less than 10 µM?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -266,7 +266,7 @@ WHERE {
   FILTER (?value < 10)
 }');
 
-insert into info.idsm_queries values (10,
+insert into info.queries values (10,
 'Summarize the statistics about the total number of substances tested in the PubChem database against each protein target.',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX obo: <http://purl.obolibrary.org/obo/>
@@ -291,7 +291,7 @@ WHERE {
 GROUP BY ?protein
 ORDER BY ?subcnt');
 
-insert into info.idsm_queries values (11,
+insert into info.queries values (11,
 'What are the top five diseases commonly mentioned with indomethacin (CID3715)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -313,7 +313,7 @@ WHERE {
 ORDER BY DESC(?score)
 LIMIT 5');
 
-insert into info.idsm_queries values (12,
+insert into info.queries values (12,
 'What are the three most recent references that mention indomethacin (CID3715) and inflammation (DZID8173)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -335,7 +335,7 @@ WHERE {
 ORDER BY DESC(?date)
 LIMIT 3');
 
-insert into info.idsm_queries values (13,
+insert into info.queries values (13,
 'What are the top 20 genes co-mentioned with indomethacin (CID3715)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -362,7 +362,7 @@ WHERE {
 ORDER BY DESC(?score)
 LIMIT 20');
 
-insert into info.idsm_queries values (14,
+insert into info.queries values (14,
 'What are the top ten diseases co-occurring with the gene most commonly mentioned with maribavir (CID471161)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -395,7 +395,7 @@ WHERE {
 ORDER BY DESC(?score2)
 LIMIT 10');
 
-insert into info.idsm_queries values (15,
+insert into info.queries values (15,
 'What chemicals are commonly mentioned with the fibroblast growth factor receptor 1 gene (FGFR1)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -414,7 +414,7 @@ WHERE {
   ?cooccurrence sio:SIO_000300 ?score .
 }');
 
-insert into info.idsm_queries values (16,
+insert into info.queries values (16,
 'What chemicals are co-mentioned with a set of three genes, i.e., kinase insert domain receptor (KDR), platelet derived growth factor receptor beta (PDGFRB), and fibroblast growth factor receptor 1 (FGFR1)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -448,7 +448,7 @@ WHERE {
 }
 ORDER BY DESC(?score1) DESC(?score2) DESC(?score3)');
 
-insert into info.idsm_queries values (17,
+insert into info.queries values (17,
 'What are the drug-likeness properties of Aspirin (CID2244) according to Lipinski''s Rule of Five?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -466,7 +466,7 @@ WHERE {
     vocab:xlogp3 ?LogP .
 }');
 
-insert into info.idsm_queries values (101,
+insert into info.queries values (101,
 'How can I retrieve all Rhea reactions that involve L-glutamate(1-) (CID 5460299)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -489,7 +489,7 @@ WHERE {
   }
 }');
 
-insert into info.idsm_queries values (102,
+insert into info.queries values (102,
 'How can I retrieve all compounds involved in the given Rhea reaction (RHEA:10020)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -513,7 +513,7 @@ WHERE {
   }
 }');
 
-insert into info.idsm_queries values (103,
+insert into info.queries values (103,
 'How can I retrieve the WURCS sequence from Glycosmos for the glycan structure (SID 252275760) in PubChem?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -536,7 +536,7 @@ WHERE {
   }
 }');
 
-insert into info.idsm_queries values (104,
+insert into info.queries values (104,
 'Which PubChem pathways include the genes associated with Keshan disease (DOID:0050083), as identified by Glycosmos?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -568,7 +568,7 @@ WHERE {
   }
 }');
 
-insert into info.idsm_queries values (105,
+insert into info.queries values (105,
 'Which PDB structures with a resolution better than 2 Å that include Aspirin (CID 2244) and have associated bioactivity data in PubChem?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -611,7 +611,7 @@ WHERE {
   }
 }');
 
-insert into info.idsm_queries values (106,
+insert into info.queries values (106,
 'How can I retrieve all compounds involved in PDB structures with a resolution better than 2 Å for the protein Basic phospholipase A2 VRV-PL-VIIIa (UniProt ID: P59071)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -640,7 +640,7 @@ WHERE {
   }
 }');
 
-insert into info.idsm_queries values (107,
+insert into info.queries values (107,
 'How to retrieve the labels of Aspirin (CID 2244) in English and Spanish from Wikidata?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -659,7 +659,7 @@ WHERE {
   }
 }');
 
-insert into info.idsm_queries values (108,
+insert into info.queries values (108,
 'How to retrieve the preferred label from PubChem for the Wikidata entry (Q18216)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -682,7 +682,7 @@ WHERE {
   }
 }');
 
-insert into info.idsm_queries values (109,
+insert into info.queries values (109,
 'How can I find the WikiPathways that include the compound dihydroflavine-adenine dinucleotide (CID 446013)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -711,7 +711,7 @@ WHERE {
   }
 }');
 
-insert into info.idsm_queries values (110,
+insert into info.queries values (110,
 'How can I retrieve the CID of compounds involved in the pathway Electron Transport Chain: OXPHOS system in mitochondria (Wikipathways:WP111)?',
 'https://idsm.elixir-czech.cz/sparql/endpoint/idsm',
 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

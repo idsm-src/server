@@ -48,7 +48,7 @@ public final class ISDB extends Updater
      */
     private static final float massTolerance = 0.001f;
 
-    private static final Key<Pair<Integer, String>> spectrumKey = new Key<>("id", "ionmode")
+    private static final Key<Pair<Integer, String>> spectrumKey = new Key<>("compound", "ionmode")
     {
         @Override
         protected Pair<Integer, String> read(ResultSet result) throws SQLException
@@ -64,13 +64,13 @@ public final class ISDB extends Updater
         }
     };
 
-    private static final EntityTable<Integer> compounds = new EntityTable<>("isdb.compound_bases", intKey("id"), null,
+    private static final EntityTable<Integer> compounds = new EntityTable<>("isdb.compounds", intKey("id"), null,
             uniqueVarchar("accession"), uniqueVarchar("inchikey"),
-            real("exact_mass").comparedBy((a, b) -> a != null && b != null
-                    && Math.abs((Float) a - (Float) b) <= massTolerance),
+            real("exact_mass")
+                    .comparedBy((a, b) -> a != null && b != null && Math.abs((Float) a - (Float) b) <= massTolerance),
             varchar("formula"), uniqueVarchar("smiles"), uniqueVarchar("inchi"));
-    private static final EntityTable<Pair<Integer, String>> spectra = new EntityTable<>("isdb.spectrum_bases",
-            spectrumKey, null, real("pepmass"), SpectrumLiteral.column("spectrum"));
+    private static final EntityTable<Pair<Integer, String>> spectra = new EntityTable<>("isdb.spectra", spectrumKey,
+            null, real("pepmass"), SpectrumLiteral.column("spectrum"));
     private static final StringIntMap compoundIDs = new StringIntMap();
     private static final HashSet<String> unknownParameters = new HashSet<>();
     private static int nextCompoundID;
@@ -217,7 +217,7 @@ public final class ISDB extends Updater
      */
     private static void loadFiles() throws IOException, SQLException
     {
-        load("select accession,id from isdb.compound_bases", compoundIDs);
+        load("select accession,id from isdb.compounds", compoundIDs);
 
         nextCompoundID = compoundIDs.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
@@ -258,7 +258,7 @@ public final class ISDB extends Updater
                 statement.execute("refresh materialized view isdb.compound_pubchem_compounds");
                 statement.execute("refresh materialized view isdb.compound_wikidata_compounds");
 
-                try(ResultSet result = statement.executeQuery("select count(*) from isdb.spectrum_bases"))
+                try(ResultSet result = statement.executeQuery("select count(*) from isdb.spectra"))
                 {
                     if(result.next())
                         setCount("ISDB Mass Spectra", result.getInt(1));

@@ -439,8 +439,8 @@ public class Ontology extends Updater
     {
         try(Statement statement = connection.createStatement())
         {
-            try(ResultSet result = statement.executeQuery(
-                    "select unit_id, value_offset - 1, suffix, pattern from ontology.resource_categories__reftable"))
+            try(ResultSet result = statement
+                    .executeQuery("select id, value_offset - 1, suffix, pattern from ontology.units"))
             {
                 while(result.next())
                 {
@@ -1358,7 +1358,7 @@ public class Ontology extends Updater
 
     private static void loadBases() throws IOException, SQLException
     {
-        load("select iri,resource_id from ontology.resources__reftable", oldResources);
+        load("select iri,id from ontology.uncategorized_resources", oldResources);
 
         nextResourceID = Math.max(oldResources.values().stream().max(Integer::compare).orElse(-1).intValue() + 1,
                 builtinResourceLimit);
@@ -1384,7 +1384,7 @@ public class Ontology extends Updater
         IntPairSet newClasses = new IntPairSet();
         IntPairSet oldClasses = new IntPairSet();
 
-        load("select class_unit,class_id from ontology.classes", oldClasses);
+        load("select unit,id from ontology.classes", oldClasses);
 
         dispatcher.on(rdfs + "subClassOf", (subject, object) -> {
             add(getId(subject), keepClasses, newClasses, oldClasses);
@@ -1401,8 +1401,8 @@ public class Ontology extends Updater
                 for(Node instance : instances.get(type))
                     add(getId(instance), keepClasses, newClasses, oldClasses);
 
-            store("delete from ontology.classes where class_unit=? and class_id=?", oldClasses);
-            store("insert into ontology.classes(class_unit,class_id) values(?,?)", newClasses);
+            store("delete from ontology.classes where unit=? and id=?", oldClasses);
+            store("insert into ontology.classes(unit,id) values(?,?)", newClasses);
         });
     }
 
@@ -1417,7 +1417,7 @@ public class Ontology extends Updater
         IntPairSet newProperties = new IntPairSet();
         IntPairSet oldProperties = new IntPairSet();
 
-        load("select property_unit,property_id from ontology.properties", oldProperties);
+        load("select unit,id from ontology.properties", oldProperties);
 
         for(String type : List.of(owl + "ObjectProperty", owl + "DatatypeProperty", owl + "AnnotationProperty",
                 rdf + "Property"))
@@ -1440,8 +1440,8 @@ public class Ontology extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from ontology.properties where property_unit=? and property_id=?", oldProperties);
-            store("insert into ontology.properties(property_unit,property_id) values(?,?)", newProperties);
+            store("delete from ontology.properties where unit=? and id=?", oldProperties);
+            store("insert into ontology.properties(unit,id) values(?,?)", newProperties);
         });
     }
 
@@ -1452,15 +1452,15 @@ public class Ontology extends Updater
         IntPairSet newIndividuals = new IntPairSet();
         IntPairSet oldIndividuals = new IntPairSet();
 
-        load("select individual_unit,individual_id from ontology.individuals", oldIndividuals);
+        load("select unit,id from ontology.individuals", oldIndividuals);
 
         dispatcher.onType(owl + "NamedIndividual", (subject, object) -> {
             add(getId(subject), keepIndividuals, newIndividuals, oldIndividuals);
         });
 
         dispatcher.after(() -> {
-            store("delete from ontology.individuals where individual_unit=? and individual_id=?", oldIndividuals);
-            store("insert into ontology.individuals(individual_unit,individual_id) values(?,?)", newIndividuals);
+            store("delete from ontology.individuals where unit=? and id=?", oldIndividuals);
+            store("insert into ontology.individuals(unit,id) values(?,?)", newIndividuals);
         });
     }
 
@@ -1678,8 +1678,7 @@ public class Ontology extends Updater
         IntValueRestrictionMap oldRestrictions = new IntValueRestrictionMap();
         IntValueRestrictionMap newRestrictions = new IntValueRestrictionMap();
 
-        load("select restriction_id,property_unit,property_id,class_unit,class_id from ontology." + table,
-                oldRestrictions);
+        load("select id,property_unit,property_id,class_unit,class_id from ontology." + table, oldRestrictions);
 
         dispatcher.after(() -> {
             for(Node node : getInstances(owl + "Restriction"))
@@ -1714,11 +1713,11 @@ public class Ontology extends Updater
             }
 
             store("delete from ontology." + table
-                    + " where restriction_id=? and property_unit=? and property_id=? and class_unit=? and class_id=?",
+                    + " where id=? and property_unit=? and property_id=? and class_unit=? and class_id=?",
                     oldRestrictions);
             store("insert into ontology." + table
-                    + "(restriction_id,property_unit,property_id,class_unit,class_id) values(?,?,?,?,?) "
-                    + "on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, "
+                    + "(id,property_unit,property_id,class_unit,class_id) values(?,?,?,?,?) "
+                    + "on conflict(id) do update set property_unit=EXCLUDED.property_unit, "
                     + "property_id=EXCLUDED.property_id, class_unit=EXCLUDED.class_unit, class_id=EXCLUDED.class_id",
                     newRestrictions);
         });
@@ -1735,7 +1734,7 @@ public class Ontology extends Updater
         IntCardinalityRestrictionMap oldRestrictions = new IntCardinalityRestrictionMap();
         IntCardinalityRestrictionMap newRestrictions = new IntCardinalityRestrictionMap();
 
-        load("select restriction_id,property_unit,property_id,cardinality from ontology." + table, oldRestrictions);
+        load("select id,property_unit,property_id,cardinality from ontology." + table, oldRestrictions);
 
         dispatcher.after(() -> {
             for(Node node : getInstances(owl + "Restriction"))
@@ -1771,10 +1770,9 @@ public class Ontology extends Updater
             }
 
             store("delete from ontology." + table
-                    + " where restriction_id=? and property_unit=? and property_id=? and cardinality=?",
-                    oldRestrictions);
-            store("insert into ontology." + table + "(restriction_id,property_unit,property_id,cardinality) "
-                    + "values(?,?,?,?) on conflict(restriction_id) do update set property_unit=EXCLUDED.property_unit, "
+                    + " where id=? and property_unit=? and property_id=? and cardinality=?", oldRestrictions);
+            store("insert into ontology." + table + "(id,property_unit,property_id,cardinality) "
+                    + "values(?,?,?,?) on conflict(id) do update set property_unit=EXCLUDED.property_unit, "
                     + "property_id=EXCLUDED.property_id, cardinality=EXCLUDED.cardinality", newRestrictions);
         });
     }
@@ -1794,8 +1792,8 @@ public class Ontology extends Updater
 
     static void finish() throws SQLException, IOException
     {
-        store("delete from ontology.resources__reftable where iri=? and resource_id=?", oldResources);
-        store("insert into ontology.resources__reftable(iri,resource_id) values(?,?)", newResources);
+        store("delete from ontology.uncategorized_resources where iri=? and id=?", oldResources);
+        store("insert into ontology.uncategorized_resources(iri,id) values(?,?)", newResources);
     }
 
 

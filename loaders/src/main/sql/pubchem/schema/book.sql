@@ -1,4 +1,4 @@
-create table pubchem.book_bases
+create table pubchem.books
 (
     id          integer not null,
     title       varchar,

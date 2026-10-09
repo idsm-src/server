@@ -1,4 +1,4 @@
-create table chembl.mechanism_bases
+create table chembl.mechanisms
 (
     id            integer not null,
     chembl_id     varchar,

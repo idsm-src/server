@@ -26,7 +26,7 @@ public class Measuregroup
         ConstantIriMapping graph = config.createIriMapping("pubchem:measuregroup");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "measuregroup_bases");
+            DatabaseTable table = new DatabaseTable(schema, "measuregroups");
             TermMapping subject = config.createIriMapping("pubchem:measuregroup", "bioassay", "measuregroup");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -40,7 +40,7 @@ public class Measuregroup
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "endpoint_bases");
+            DatabaseTable table = new DatabaseTable(schema, "endpoints");
             TermMapping subject = config.createIriMapping("pubchem:measuregroup", "bioassay", "measuregroup");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:OBI_0000299"),

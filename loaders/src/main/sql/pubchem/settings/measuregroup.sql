@@ -1,7 +1,7 @@
-create index measuregroup_bases__bioassay on pubchem.measuregroup_bases(bioassay);
-create index measuregroup_bases__source on pubchem.measuregroup_bases(source);
-create index measuregroup_bases__title on pubchem.measuregroup_bases(title);
-grant select on pubchem.measuregroup_bases to sparql;
+create index measuregroups__bioassay on pubchem.measuregroups(bioassay);
+create index measuregroups__source on pubchem.measuregroups(source);
+create index measuregroups__title on pubchem.measuregroups(title);
+grant select on pubchem.measuregroups to sparql;
 
 --------------------------------------------------------------------------------
 

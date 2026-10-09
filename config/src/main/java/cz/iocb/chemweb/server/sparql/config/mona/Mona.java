@@ -63,14 +63,14 @@ public class Mona
         Matchms.addResourceClasses(config);
         Sachem.addResourceClasses(config);
 
-        config.addIriClass(new MapUserIriClass("mona:web", INT4, new DatabaseTable(schema, "compound_bases"),
+        config.addIriClass(new MapUserIriClass("mona:web", INT4, new DatabaseTable(schema, "spectra"),
                 new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), web, ".*"));
 
-        config.addIriClass(new MapUserIriClass("mona:experiment", INT4, new DatabaseTable(schema, "compound_bases"),
+        config.addIriClass(new MapUserIriClass("mona:experiment", INT4, new DatabaseTable(schema, "spectra"),
                 new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), mona, ".*", "_EXP"));
-        config.addIriClass(new MapUserIriClass("mona:compound", INT4, new DatabaseTable(schema, "compound_bases"),
+        config.addIriClass(new MapUserIriClass("mona:compound", INT4, new DatabaseTable(schema, "spectra"),
                 new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), mona, ".*", "_CMPD"));
-        config.addIriClass(new MapUserIriClass("mona:spectrum", INT4, new DatabaseTable(schema, "compound_bases"),
+        config.addIriClass(new MapUserIriClass("mona:spectrum", INT4, new DatabaseTable(schema, "spectra"),
                 new TableColumn("id", INT4), new TableColumn("accession", VARCHAR), mona, ".*", "_MS"));
         config.addIriClass(new IntegerUserIriClass("mona:library", INT4, bnmona + "id", "_library"));
         config.addIriClass(new IntegerUserIriClass("mona:submitter", INT4, bnmona + "id", "_submitter"));
@@ -121,7 +121,7 @@ public class Mona
         ConstantIriMapping graph = config.createIriMapping("mona:");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
             TermMapping experiment = config.createIriMapping("mona:experiment", "id");
             TermMapping compound = config.createIriMapping("mona:compound", "id");
             TermMapping spectrum = config.createIriMapping("mona:spectrum", "id");
@@ -177,7 +177,7 @@ public class Mona
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
             TermMapping subject = config.createIriMapping("mona:spectrum", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"), // has value
@@ -185,7 +185,7 @@ public class Mona
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
             TermMapping subject = config.createIriMapping("mona:splash", "id");
             TermMapping spectrum = config.createIriMapping("mona:spectrum", "id");
             Conditions condition = config.createIsNotNullCondition(table, "splash");
@@ -203,7 +203,7 @@ public class Mona
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
             TermMapping subject = config.createIriMapping("mona:level", "id");
             TermMapping experiment = config.createIriMapping("mona:experiment", "id");
             Conditions condition = config.createIsNotNullCondition(table, "level");
@@ -221,7 +221,7 @@ public class Mona
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
             TermMapping subject = config.createIriMapping("mona:scan", "id");
             TermMapping experiment = config.createIriMapping("mona:experiment", "id");
             Conditions condition = config.createIsNotNullCondition(table, "ionization_mode");
@@ -240,7 +240,7 @@ public class Mona
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "spectra");
             TermMapping subject = config.createIriMapping("mona:ionization", "id");
             TermMapping experiment = config.createIriMapping("mona:experiment", "id");
             Conditions condition = config.createIsNotNullCondition(table, "ionization_type");
@@ -277,7 +277,7 @@ public class Mona
         }
 
         /* TODO:
-             compound_bases:
+             spectra:
                accession
                link
         */
@@ -315,7 +315,7 @@ public class Mona
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_classyfires");
+            DatabaseTable table = new DatabaseTable(schema, "compound_classyfire_classes");
             TermMapping subject = config.createIriMapping("mona:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -335,7 +335,7 @@ public class Mona
             TermMapping subject = config.createIriMapping("mona:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("mesh:heading", "mesh"));
+                    config.createIriMapping("mesh:resource", "mesh"));
         }
 
         {
@@ -588,7 +588,7 @@ public class Mona
         {
             DatabaseTable table = new DatabaseTable(schema, "spectrum_annotations");
             TermMapping subject = config.createIriMapping("mona:peak", "id");
-            TermMapping spectrum = config.createIriMapping("mona:spectrum", "compound");
+            TermMapping spectrum = config.createIriMapping("mona:spectrum", "spectrum");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000231")); // peak
@@ -620,7 +620,7 @@ public class Mona
         {
             DatabaseTable table = new DatabaseTable(schema, "spectrum_tags");
             TermMapping subject = config.createIriMapping("mona:tag", "id");
-            TermMapping experiment = config.createIriMapping("mona:experiment", "compound");
+            TermMapping experiment = config.createIriMapping("mona:experiment", "spectrum");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_001166")); // annotation
@@ -641,7 +641,7 @@ public class Mona
         {
             DatabaseTable table = new DatabaseTable(schema, "spectrum_retention_times");
             TermMapping subject = config.createIriMapping("mona:retention_time", "id");
-            TermMapping experiment = config.createIriMapping("mona:experiment", "compound");
+            TermMapping experiment = config.createIriMapping("mona:experiment", "spectrum");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000894")); // retention time
@@ -663,7 +663,7 @@ public class Mona
         {
             DatabaseTable table = new DatabaseTable(schema, "spectrum_collision_energies");
             TermMapping subject = config.createIriMapping("mona:collision_energy", "id");
-            TermMapping experiment = config.createIriMapping("mona:experiment", "compound");
+            TermMapping experiment = config.createIriMapping("mona:experiment", "spectrum");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000045"), // collision energy
@@ -695,7 +695,7 @@ public class Mona
         {
             DatabaseTable table = new DatabaseTable(schema, "spectrum_collision_energy_ramps");
             TermMapping subject = config.createIriMapping("mona:collision_energy_ramp_start", "id");
-            TermMapping experiment = config.createIriMapping("mona:experiment", "compound");
+            TermMapping experiment = config.createIriMapping("mona:experiment", "spectrum");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1002013"), // collision energy ramp start
@@ -724,7 +724,7 @@ public class Mona
         {
             DatabaseTable table = new DatabaseTable(schema, "spectrum_collision_energy_ramps");
             TermMapping subject = config.createIriMapping("mona:collision_energy_ramp_end", "id");
-            TermMapping experiment = config.createIriMapping("mona:experiment", "compound");
+            TermMapping experiment = config.createIriMapping("mona:experiment", "spectrum");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1002014"), // collision energy ramp end
@@ -753,7 +753,7 @@ public class Mona
         {
             DatabaseTable table = new DatabaseTable(schema, "spectrum_instrument_types");
             TermMapping subject = config.createIriMapping("mona:instrument_type", "id");
-            TermMapping experiment = config.createIriMapping("mona:experiment", "compound");
+            TermMapping experiment = config.createIriMapping("mona:experiment", "spectrum");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000463")); // instrument
@@ -769,7 +769,7 @@ public class Mona
         {
             DatabaseTable table = new DatabaseTable(schema, "spectrum_instruments");
             TermMapping subject = config.createIriMapping("mona:instrument", "id");
-            TermMapping experiment = config.createIriMapping("mona:experiment", "compound");
+            TermMapping experiment = config.createIriMapping("mona:experiment", "spectrum");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000031")); // instrument model
@@ -785,7 +785,7 @@ public class Mona
         {
             DatabaseTable table = new DatabaseTable(schema, "spectrum_precursor_types");
             TermMapping subject = config.createIriMapping("mona:precursor_type", "id");
-            TermMapping experiment = config.createIriMapping("mona:experiment", "compound");
+            TermMapping experiment = config.createIriMapping("mona:experiment", "spectrum");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1002813")); // adduct ion formula
@@ -801,7 +801,7 @@ public class Mona
         {
             DatabaseTable table = new DatabaseTable(schema, "spectrum_precursor_mzs");
             TermMapping subject = config.createIriMapping("mona:precursor_mz", "id");
-            TermMapping experiment = config.createIriMapping("mona:experiment", "compound");
+            TermMapping experiment = config.createIriMapping("mona:experiment", "spectrum");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000744")); // selected ion m/z
@@ -817,7 +817,7 @@ public class Mona
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "library_bases");
+            DatabaseTable table = new DatabaseTable(schema, "libraries");
             TermMapping subject = config.createIriMapping("mona:library", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -830,7 +830,7 @@ public class Mona
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "submitter_bases");
+            DatabaseTable table = new DatabaseTable(schema, "submitters");
             TermMapping subject = config.createIriMapping("mona:submitter", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

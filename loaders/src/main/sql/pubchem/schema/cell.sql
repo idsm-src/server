@@ -1,4 +1,4 @@
-create table pubchem.cell_bases
+create table pubchem.cells
 (
     id            integer not null,
     organism      integer,

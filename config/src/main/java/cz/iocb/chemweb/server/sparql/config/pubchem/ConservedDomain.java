@@ -25,7 +25,7 @@ public class ConservedDomain
         ConstantIriMapping graph = config.createIriMapping("pubchem:conserveddomain");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "conserveddomain_bases");
+            DatabaseTable table = new DatabaseTable(schema, "conserveddomains");
             TermMapping subject = config.createIriMapping("pubchem:conserveddomain", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -42,7 +42,7 @@ public class ConservedDomain
 
         {
             DatabaseTable table = new DatabaseTable(schema, "conserveddomain_references");
-            TermMapping subject = config.createIriMapping("pubchem:conserveddomain", "domain");
+            TermMapping subject = config.createIriMapping("pubchem:conserveddomain", "conserveddomain");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:isDiscussedBy"),
                     config.createIriMapping("pubchem:reference", "reference"));

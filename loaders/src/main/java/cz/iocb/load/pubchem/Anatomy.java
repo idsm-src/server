@@ -29,7 +29,7 @@ public class Anatomy extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/anatomy/ANATOMYID";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> anatomies = new EntityTable<>("pubchem.anatomy_bases", intKey("id"), null,
+    private static final EntityTable<Integer> anatomies = new EntityTable<>("pubchem.anatomies", intKey("id"), null,
             varchar("label"));
     private static final MissingEntities<Integer> missingAnatomies = new MissingEntities<>("anatomy", true);
 

@@ -1,4 +1,4 @@
-create table chembl.assay_bases
+create table chembl.assays
 (
     id                    integer not null,
     chembl_id             varchar,

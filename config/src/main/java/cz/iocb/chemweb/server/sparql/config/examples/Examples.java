@@ -35,7 +35,7 @@ public class Examples
                 .createIriMapping(new Iri("https://idsm.elixir-czech.cz/.well-known/sparql-examples"));
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "idsm_queries");
+            DatabaseTable table = new DatabaseTable(schema, "queries");
             TermMapping subject = config.createIriMapping("info:example", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

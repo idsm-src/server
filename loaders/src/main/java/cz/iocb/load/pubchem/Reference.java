@@ -22,10 +22,9 @@ class Reference extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> references = new EntityTable<>("pubchem.reference_bases", intKey("id"),
-            null, date("dcdate"), varchar("date"), uniqueVarchar("title"), uniqueVarchar("citation"),
-            varchar("publication"), varchar("issue"), varchar("starting_page"), varchar("ending_page"),
-            varchar("page_range"), varchar("lang"));
+    private static final EntityTable<Integer> references = new EntityTable<>("pubchem.references", intKey("id"), null,
+            date("dcdate"), varchar("date"), uniqueVarchar("title"), uniqueVarchar("citation"), varchar("publication"),
+            varchar("issue"), varchar("starting_page"), varchar("ending_page"), varchar("page_range"), varchar("lang"));
     private static final MissingEntities<Integer> missingReferences = new MissingEntities<>("reference", false);
 
     private static HashMap<String, String> sources = new HashMap<>();
@@ -316,7 +315,7 @@ class Reference extends Updater
         IntStringSet newDiscusses = new IntStringSet();
         IntStringSet oldDiscusses = new IntStringSet();
 
-        load("select reference,statement from pubchem.reference_discusses", oldDiscusses);
+        load("select reference,heading from pubchem.reference_discussed_headings", oldDiscusses);
 
         processFiles("pubchem/RDF/reference", "pc_reference2chemical_disease_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -349,8 +348,8 @@ class Reference extends Updater
             }
         });
 
-        store("delete from pubchem.reference_discusses where reference=? and statement=?", oldDiscusses);
-        store("insert into pubchem.reference_discusses(reference,statement) values(?,?)", newDiscusses);
+        store("delete from pubchem.reference_discussed_headings where reference=? and heading=?", oldDiscusses);
+        store("insert into pubchem.reference_discussed_headings(reference,heading) values(?,?)", newDiscusses);
     }
 
 
@@ -651,7 +650,7 @@ class Reference extends Updater
         IntPairSet newGrants = new IntPairSet();
         IntPairSet oldGrants = new IntPairSet();
 
-        load("select reference,grantid from pubchem.reference_grants", oldGrants);
+        load("select reference,supporting_grant from pubchem.reference_grants", oldGrants);
 
         processFiles("pubchem/RDF/reference", "pc_reference_grant_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -684,8 +683,8 @@ class Reference extends Updater
             }
         });
 
-        store("delete from pubchem.reference_grants where reference=? and grantid=?", oldGrants);
-        store("insert into pubchem.reference_grants(reference,grantid) values(?,?)", newGrants);
+        store("delete from pubchem.reference_grants where reference=? and supporting_grant=?", oldGrants);
+        store("insert into pubchem.reference_grants(reference,supporting_grant) values(?,?)", newGrants);
     }
 
 
@@ -871,7 +870,7 @@ class Reference extends Updater
 
         load("select reference,compound from pubchem.reference_mined_compounds", oldCompounds);
         load("select reference,disease from pubchem.reference_mined_diseases", oldDiseases);
-        load("select reference,gene_symbol from pubchem.reference_mined_genes", oldGenes);
+        load("select reference,genesymbol from pubchem.reference_mined_genesymbols", oldGenes);
         load("select reference,enzyme from pubchem.reference_mined_enzymes", oldEnzymes);
 
         processFiles("pubchem/RDF/reference", "pc_reference_discusses_by_textming_[0-9]+\\.ttl\\.gz", file -> {
@@ -962,8 +961,8 @@ class Reference extends Updater
         store("delete from pubchem.reference_mined_diseases where reference=? and disease=?", oldDiseases);
         store("insert into pubchem.reference_mined_diseases(reference,disease) values(?,?)", newDiseases);
 
-        store("delete from pubchem.reference_mined_genes where reference=? and gene_symbol=?", oldGenes);
-        store("insert into pubchem.reference_mined_genes(reference,gene_symbol) values(?,?)", newGenes);
+        store("delete from pubchem.reference_mined_genesymbols where reference=? and genesymbol=?", oldGenes);
+        store("insert into pubchem.reference_mined_genesymbols(reference,genesymbol) values(?,?)", newGenes);
 
         store("delete from pubchem.reference_mined_enzymes where reference=? and enzyme=?", oldEnzymes);
         store("insert into pubchem.reference_mined_enzymes(reference,enzyme) values(?,?)", newEnzymes);
@@ -1020,7 +1019,7 @@ class Reference extends Updater
         IntStringSet newSources = new IntStringSet();
         IntStringSet oldSources = new IntStringSet();
 
-        load("select reference,source_type::varchar from pubchem.reference_sources", oldSources);
+        load("select reference,source_type::varchar from pubchem.reference_source_types", oldSources);
 
         processFiles("pubchem/RDF/reference", "pc_reference_source_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -1053,10 +1052,10 @@ class Reference extends Updater
             }
         });
 
-        store("delete from pubchem.reference_sources "
+        store("delete from pubchem.reference_source_types "
                 + "where reference=? and source_type=?::pubchem.reference_source_type", oldSources);
-        store("insert into pubchem.reference_sources(reference,source_type) values(?,?::pubchem.reference_source_type)",
-                newSources);
+        store("insert into pubchem.reference_source_types(reference,source_type) "
+                + "values(?,?::pubchem.reference_source_type)", newSources);
     }
 
 

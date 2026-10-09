@@ -28,35 +28,35 @@ public class Substance
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("molmedb:substance", INT4, new DatabaseTable(schema, "substance_bases"),
+        config.addIriClass(new MapUserIriClass("molmedb:substance", INT4, new DatabaseTable(schema, "substances"),
                 new TableColumn("id", INT4), new TableColumn("identifier", VARCHAR), "https://identifiers.org/molmedb/",
                 "MM[0-9.]+"));
 
         config.addIriClass(new MapUserIriClass("molmedb:obsoleted_substance", VARCHAR,
-                new DatabaseTable(schema, "obsoleted_substances"), new TableColumn("identifier", VARCHAR),
+                new DatabaseTable(schema, "substance_obsolete_identifiers"), new TableColumn("identifier", VARCHAR),
                 new TableColumn("identifier", VARCHAR), "https://identifiers.org/molmedb/", "MM[0-9.]+"));
 
         String prefix = "https://rdf.molmedb.upol.cz/substance/";
 
         config.addIriClass(new MapUserIriClass("molmedb:molecular_weight", INT4,
-                new DatabaseTable(schema, "substance_bases"), new TableColumn("id", INT4),
+                new DatabaseTable(schema, "substances"), new TableColumn("id", INT4),
                 new TableColumn("identifier", VARCHAR), prefix, "MM[0-9.]+", "_Molecular_Weight"));
-        config.addIriClass(new MapUserIriClass("molmedb:logp", INT4, new DatabaseTable(schema, "substance_bases"),
+        config.addIriClass(new MapUserIriClass("molmedb:logp", INT4, new DatabaseTable(schema, "substances"),
                 new TableColumn("id", INT4), new TableColumn("identifier", VARCHAR), prefix, "MM[0-9.]+", "_LogP"));
-        config.addIriClass(new MapUserIriClass("molmedb:charge", INT4, new DatabaseTable(schema, "substance_bases"),
+        config.addIriClass(new MapUserIriClass("molmedb:charge", INT4, new DatabaseTable(schema, "substances"),
                 new TableColumn("id", INT4), new TableColumn("identifier", VARCHAR), prefix, "MM[0-9.]+", "_charge"));
-        config.addIriClass(new MapUserIriClass("molmedb:ph_min", INT4, new DatabaseTable(schema, "substance_bases"),
+        config.addIriClass(new MapUserIriClass("molmedb:ph_min", INT4, new DatabaseTable(schema, "substances"),
                 new TableColumn("id", INT4), new TableColumn("identifier", VARCHAR), prefix, "MM[0-9.]+", "_pHmin"));
-        config.addIriClass(new MapUserIriClass("molmedb:ph_max", INT4, new DatabaseTable(schema, "substance_bases"),
+        config.addIriClass(new MapUserIriClass("molmedb:ph_max", INT4, new DatabaseTable(schema, "substances"),
                 new TableColumn("id", INT4), new TableColumn("identifier", VARCHAR), prefix, "MM[0-9.]+", "_pHmax"));
-        config.addIriClass(new MapUserIriClass("molmedb:inchi", INT4, new DatabaseTable(schema, "substance_bases"),
+        config.addIriClass(new MapUserIriClass("molmedb:inchi", INT4, new DatabaseTable(schema, "substances"),
                 new TableColumn("id", INT4), new TableColumn("identifier", VARCHAR), prefix, "MM[0-9.]+", "_InChI"));
-        config.addIriClass(new MapUserIriClass("molmedb:smiles", INT4, new DatabaseTable(schema, "substance_bases"),
+        config.addIriClass(new MapUserIriClass("molmedb:smiles", INT4, new DatabaseTable(schema, "substances"),
                 new TableColumn("id", INT4), new TableColumn("identifier", VARCHAR), prefix, "MM[0-9.]+", "_SMILES"));
-        config.addIriClass(new MapUserIriClass("molmedb:inchikey", INT4, new DatabaseTable(schema, "substance_bases"),
+        config.addIriClass(new MapUserIriClass("molmedb:inchikey", INT4, new DatabaseTable(schema, "substances"),
                 new TableColumn("id", INT4), new TableColumn("identifier", VARCHAR), prefix, "MM[0-9.]+", "_InChIKey"));
 
-        config.addIriClass(new MapUserIriClass("molmedb:mmdbid", INT4, new DatabaseTable(schema, "substance_bases"),
+        config.addIriClass(new MapUserIriClass("molmedb:mmdbid", INT4, new DatabaseTable(schema, "substances"),
                 new TableColumn("id", INT4), new TableColumn("identifier", VARCHAR), prefix, "MM[0-9.]+", "_MolMeDB"));
 
         config.addIriClass(new SubstanceIdentifierIriClass("molmedb:pubchem", "_PubChemCID", "[0-9]+"));
@@ -148,7 +148,7 @@ public class Substance
 
         // triples map #1
         {
-            DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substances");
             TermMapping subject = config.createIriMapping("molmedb:substance", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -188,18 +188,18 @@ public class Substance
 
         // triples map #2
         {
-            DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substances");
             TermMapping subject = config.createIriMapping("molmedb:substance", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:CHEMINF_000457"),
-                    config.createIriMapping("molmedb:substance", "parent_id"));
+                    config.createIriMapping("molmedb:substance", "parent"));
         }
 
         // triples map #3
         {
-            DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substances");
             TermMapping subject = config.createIriMapping("molmedb:substance", "id");
-            Conditions cnd = config.createIsNullCondition(table, "parent_id");
+            Conditions cnd = config.createIsNullCondition(table, "parent");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:CHEBI_25367"), cnd);
@@ -216,30 +216,30 @@ public class Substance
         // triples map #4
         {
             DatabaseTable table = new DatabaseTable(schema, "substance_identifiers");
-            TermMapping subject = config.createIriMapping("molmedb:substance", "substance_id");
+            TermMapping subject = config.createIriMapping("molmedb:substance", "substance");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString, "value"),
                     config.createAreEqualCondition("type", "'1'::smallint"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
-                    config.createIriMapping("molmedb:pubchem", "substance_id", "value"),
+                    config.createIriMapping("molmedb:pubchem", "substance", "value"),
                     config.createAreEqualCondition("type", "'4'::smallint"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
-                    config.createIriMapping("molmedb:drugbank", "substance_id", "value"),
+                    config.createIriMapping("molmedb:drugbank", "substance", "value"),
                     config.createAreEqualCondition("type", "'5'::smallint"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
-                    config.createIriMapping("molmedb:chebi", "substance_id", "value"),
+                    config.createIriMapping("molmedb:chebi", "substance", "value"),
                     config.createAreEqualCondition("type", "'6'::smallint"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
-                    config.createIriMapping("molmedb:pdb", "substance_id", "value"),
+                    config.createIriMapping("molmedb:pdb", "substance", "value"),
                     config.createAreEqualCondition("type", "'7'::smallint"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
-                    config.createIriMapping("molmedb:chembl", "substance_id", "value"),
+                    config.createIriMapping("molmedb:chembl", "substance", "value"),
                     config.createAreEqualCondition("type", "'8'::smallint"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
@@ -249,7 +249,7 @@ public class Substance
 
         {
             DatabaseTable table = new DatabaseTable(schema, "substance_links");
-            TermMapping subject = config.createIriMapping("molmedb:substance", "substance_id");
+            TermMapping subject = config.createIriMapping("molmedb:substance", "substance");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
                     config.createIriMapping("pubchem:compound", "value"),
@@ -260,7 +260,7 @@ public class Substance
                     config.createAreEqualCondition("type", "'6'::smallint"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("chembl:compound", "value"),
+                    config.createIriMapping("chembl:molecule", "value"),
                     config.createAreEqualCondition("type", "'8'::smallint"));
         }
 
@@ -271,14 +271,14 @@ public class Substance
 
         // triples map #5
         {
-            DatabaseTable table = new DatabaseTable(schema, "obsoleted_substances");
+            DatabaseTable table = new DatabaseTable(schema, "substance_obsolete_identifiers");
             TermMapping subject = config.createIriMapping("molmedb:obsoleted_substance", "identifier");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0000076"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:IAO_0100001"),
-                    config.createIriMapping("molmedb:substance", "substance_id"));
+                    config.createIriMapping("molmedb:substance", "substance"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:IAO_0000231"),
                     config.createIriMapping("obo:IAO_0000227"));
@@ -291,7 +291,7 @@ public class Substance
 
         // triples map #6
         {
-            DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substances");
             TermMapping subject = config.createIriMapping("molmedb:smiles", "id");
             Conditions cnd = config.createIsNotNullCondition(table, "canonical_smiles");
 
@@ -304,7 +304,7 @@ public class Substance
 
         // triples map #7
         {
-            DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substances");
             Conditions cnd = config.createIsNotNullCondition(table, "inchikey");
             TermMapping subject = config.createIriMapping("molmedb:inchikey", "id");
 
@@ -317,7 +317,7 @@ public class Substance
 
         // triples map #8
         {
-            DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substances");
             Conditions cnd = config.createIsNotNullCondition(table, "molecular_weight");
             TermMapping subject = config.createIriMapping("molmedb:molecular_weight", "id");
 
@@ -333,7 +333,7 @@ public class Substance
 
         // triples map #9
         {
-            DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substances");
             Conditions cnd = config.createIsNotNullCondition(table, "logp");
             TermMapping subject = config.createIriMapping("molmedb:logp", "id");
 
@@ -346,7 +346,7 @@ public class Substance
 
         // triples map #10
         {
-            DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substances");
             TermMapping subject = config.createIriMapping("molmedb:mmdbid", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -358,7 +358,7 @@ public class Substance
 
         // triples map #11
         {
-            DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substances");
             TermMapping subject = config.createIriMapping("molmedb:charge", "id");
             Conditions cnd = config.createIsNotNullCondition(table, "charge");
 
@@ -371,7 +371,7 @@ public class Substance
 
         // triples map #12
         {
-            DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substances");
             TermMapping subject = config.createIriMapping("molmedb:ph_min", "id");
             Conditions cnd = config.createIsNotNullCondition(table, "ph_start");
 
@@ -384,7 +384,7 @@ public class Substance
 
         // triples map #13
         {
-            DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substances");
             TermMapping subject = config.createIriMapping("molmedb:ph_max", "id");
             Conditions cnd = config.createIsNotNullCondition(table, "ph_end");
 
@@ -397,7 +397,7 @@ public class Substance
 
         // triples map #14
         {
-            DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substances");
             TermMapping subject = config.createIriMapping("molmedb:inchi", "id");
             Conditions cnd = config.createIsNotNullCondition(table, "inchi");
 
@@ -417,7 +417,7 @@ public class Substance
         {
             DatabaseTable table = new DatabaseTable(schema, "substance_identifiers");
             Conditions cnd = config.createAreEqualCondition("type", "'4'::smallint");
-            TermMapping subject = config.createIriMapping("molmedb:pubchem", "substance_id", "value");
+            TermMapping subject = config.createIriMapping("molmedb:pubchem", "substance", "value");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:CHEMINF_000140"), cnd);
@@ -430,7 +430,7 @@ public class Substance
         {
             DatabaseTable table = new DatabaseTable(schema, "substance_identifiers");
             Conditions cnd = config.createAreEqualCondition("type", "'5'::smallint");
-            TermMapping subject = config.createIriMapping("molmedb:drugbank", "substance_id", "value");
+            TermMapping subject = config.createIriMapping("molmedb:drugbank", "substance", "value");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:CHEMINF_000406"), cnd);
@@ -443,7 +443,7 @@ public class Substance
         {
             DatabaseTable table = new DatabaseTable(schema, "substance_identifiers");
             Conditions cnd = config.createAreEqualCondition("type", "'6'::smallint");
-            TermMapping subject = config.createIriMapping("molmedb:chebi", "substance_id", "value");
+            TermMapping subject = config.createIriMapping("molmedb:chebi", "substance", "value");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:CHEMINF_000407"), cnd);
@@ -456,7 +456,7 @@ public class Substance
         {
             DatabaseTable table = new DatabaseTable(schema, "substance_identifiers");
             Conditions cnd = config.createAreEqualCondition("type", "'7'::smallint");
-            TermMapping subject = config.createIriMapping("molmedb:pdb", "substance_id", "value");
+            TermMapping subject = config.createIriMapping("molmedb:pdb", "substance", "value");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:CHEMINF_000572"), cnd);
@@ -469,7 +469,7 @@ public class Substance
         {
             DatabaseTable table = new DatabaseTable(schema, "substance_identifiers");
             Conditions cnd = config.createAreEqualCondition("type", "'8'::smallint");
-            TermMapping subject = config.createIriMapping("molmedb:chembl", "substance_id", "value");
+            TermMapping subject = config.createIriMapping("molmedb:chembl", "substance", "value");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:CHEMINF_000412"), cnd);

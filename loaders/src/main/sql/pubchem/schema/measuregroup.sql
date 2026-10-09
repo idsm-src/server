@@ -1,4 +1,4 @@
-create table pubchem.measuregroup_bases
+create table pubchem.measuregroups
 (
     bioassay        integer not null,
     measuregroup    integer not null,

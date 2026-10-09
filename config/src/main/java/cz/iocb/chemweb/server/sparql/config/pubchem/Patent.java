@@ -19,7 +19,7 @@ public class Patent
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pubchem:patent", INT4, new DatabaseTable(schema, "patent_bases"),
+        config.addIriClass(new MapUserIriClass("pubchem:patent", INT4, new DatabaseTable(schema, "patents"),
                 new TableColumn("id", INT4), new TableColumn("iri", VARCHAR),
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/patent/"));
         config.addIriClass(
@@ -38,7 +38,7 @@ public class Patent
         ConstantIriMapping graph = config.createIriMapping("pubchem:patent");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "patent_bases");
+            DatabaseTable table = new DatabaseTable(schema, "patents");
             TermMapping subject = config.createIriMapping("pubchem:patent", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -119,7 +119,7 @@ public class Patent
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "patentinventor_bases");
+            DatabaseTable table = new DatabaseTable(schema, "inventors");
             TermMapping subject = config.createIriMapping("pubchem:inventor", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -129,7 +129,7 @@ public class Patent
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "patentassignee_bases");
+            DatabaseTable table = new DatabaseTable(schema, "applicants");
             TermMapping subject = config.createIriMapping("pubchem:applicant", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

@@ -1,4 +1,4 @@
-create table pubchem.substance_bases
+create table pubchem.substances
 (
     id           integer not null,
     source       smallint,
@@ -20,15 +20,15 @@ create table pubchem.substance_types
 create table pubchem.substance_chembl_matches
 (
     substance    integer not null,
-    chembl       integer not null,
-    primary key(substance, chembl)
+    match        integer not null,
+    primary key(substance, match)
 );
 
 
 create table pubchem.substance_glytoucan_matches
 (
     substance    integer not null,
-    glytoucan    varchar not null,
+    match        varchar not null,
     primary key(substance)
 );
 

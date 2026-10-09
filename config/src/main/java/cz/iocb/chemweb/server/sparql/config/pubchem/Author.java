@@ -17,7 +17,7 @@ public class Author
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pubchem:author", INT4, new DatabaseTable(schema, "author_bases"),
+        config.addIriClass(new MapUserIriClass("pubchem:author", INT4, new DatabaseTable(schema, "authors"),
                 new TableColumn("id", INT4), new TableColumn("iri", VARCHAR),
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/author/"));
     }
@@ -28,7 +28,7 @@ public class Author
         ConstantIriMapping graph = config.createIriMapping("pubchem:author");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "author_bases");
+            DatabaseTable table = new DatabaseTable(schema, "authors");
             TermMapping subject = config.createIriMapping("pubchem:author", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

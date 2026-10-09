@@ -1,4 +1,4 @@
-create table pubchem.inchikey_bases
+create table pubchem.inchikeys
 (
     id          integer not null,
     inchikey    char(27) unique not null,

@@ -26,7 +26,7 @@ public class SubstanceDescriptor
         ConstantIriMapping graph = config.createIriMapping("descriptor:substance");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substance_versions");
             TermMapping subject = config.createIriMapping("pubchem:substance_version", "substance");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

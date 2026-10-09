@@ -38,7 +38,7 @@ public class Organization extends Updater
 
     private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        load("select iri,id from pubchem.organization_bases", oldOrganizations);
+        load("select iri,id from pubchem.organizations", oldOrganizations);
 
         nextOrganizationID = oldOrganizations.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
@@ -111,7 +111,7 @@ public class Organization extends Updater
         IntStringSet newNames = new IntStringSet();
         IntStringSet oldNames = new IntStringSet();
 
-        load("select organization,crossref from pubchem.organization_crossref_matches", oldNames);
+        load("select organization,match from pubchem.organization_crossref_matches", oldNames);
 
         dispatcher.on(skos + "closeMatch", (subject, object) -> {
             Integer organizationID = getOrganizationID(subject.getURI());
@@ -126,8 +126,8 @@ public class Organization extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from pubchem.organization_crossref_matches where organization=? and crossref=?", oldNames);
-            store("insert into pubchem.organization_crossref_matches(organization,crossref) values(?,?)", newNames);
+            store("delete from pubchem.organization_crossref_matches where organization=? and match=?", oldNames);
+            store("insert into pubchem.organization_crossref_matches(organization,match) values(?,?)", newNames);
         });
     }
 
@@ -156,8 +156,8 @@ public class Organization extends Updater
     {
         System.out.println("finish organizations ...");
 
-        store("delete from pubchem.organization_bases where iri=? and id=?", oldOrganizations);
-        store("insert into pubchem.organization_bases(iri,id) values(?,?)", newOrganizations);
+        store("delete from pubchem.organizations where iri=? and id=?", oldOrganizations);
+        store("insert into pubchem.organizations(iri,id) values(?,?)", newOrganizations);
 
         System.out.println();
     }

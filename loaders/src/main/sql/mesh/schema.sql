@@ -1,4 +1,4 @@
-create table mesh.mesh_bases
+create table mesh.resources
 (
     id          varchar not null,
     type_id     integer,
@@ -6,388 +6,388 @@ create table mesh.mesh_bases
 );
 
 
-create table mesh.alt_labels
+create table mesh.resource_alt_labels
 (
-    mesh    varchar not null,
-    label   varchar not null,
-    primary key(mesh, label)
+    resource    varchar not null,
+    label       varchar not null,
+    primary key(resource, label)
 );
 
 
-create table mesh.previous_indexing_values
+create table mesh.resource_previous_indexing_values
 (
-    mesh    varchar not null,
-    value   varchar not null,
-    primary key(mesh, value)
+    resource    varchar not null,
+    value       varchar not null,
+    primary key(resource, value)
 );
 
 
-create table mesh.sources
+create table mesh.resource_sources
 (
-    mesh    varchar not null,
-    source  varchar not null,
-    primary key(mesh, source)
+    resource    varchar not null,
+    source      varchar not null,
+    primary key(resource, source)
 );
 
 
-create table mesh.thesauruses
+create table mesh.resource_thesauruses
 (
-    mesh        varchar not null,
+    resource    varchar not null,
     thesaurus   varchar not null,
-    primary key(mesh, thesaurus)
+    primary key(resource, thesaurus)
 );
 
 
-create table mesh.labels
+create table mesh.resource_labels
 (
-    mesh    varchar not null,
-    label   varchar not null,
-    primary key(mesh, label)
+    resource    varchar not null,
+    label       varchar not null,
+    primary key(resource, label)
 );
 
 
-create table mesh.abbreviations
+create table mesh.resource_abbreviations
 (
-    mesh            varchar not null,
+    resource        varchar not null,
     abbreviation    varchar not null,
-    primary key(mesh)
+    primary key(resource)
 );
 
 
-create table mesh.annotations
+create table mesh.resource_annotations
 (
-    mesh        varchar not null,
+    resource    varchar not null,
     annotation  varchar not null,
-    primary key(mesh)
+    primary key(resource)
 );
 
 
-create table mesh.casn1_labels
+create table mesh.resource_casn1_labels
 (
-    mesh    varchar not null,
-    label   varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    label       varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.consider_also_values
+create table mesh.resource_consider_also_values
 (
-    mesh    varchar not null,
-    value   varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    value       varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.entry_versions
+create table mesh.resource_entry_versions
 (
-    mesh    varchar not null,
-    version varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    version     varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.history_notes
+create table mesh.resource_history_notes
 (
-    mesh    varchar not null,
-    note    varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    note        varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.last_active_years
+create table mesh.resource_last_active_years
 (
-    mesh    varchar not null,
-    year    varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    year        varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.lexical_tags
+create table mesh.resource_lexical_tags
 (
-    mesh    varchar not null,
-    tag     varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    tag         varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.notese_notes
+create table mesh.resource_notes
 (
-    mesh    varchar not null,
-    note    varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    note        varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.online_notes
+create table mesh.resource_online_notes
 (
-    mesh    varchar not null,
-    note    varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    note        varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.pref_labels
+create table mesh.resource_pref_labels
 (
-    mesh    varchar not null,
-    label   varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    label       varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.public_mesh_notes
+create table mesh.resource_public_mesh_notes
 (
-    mesh    varchar not null,
-    note    varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    note        varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.scope_notes
+create table mesh.resource_scope_notes
 (
-    mesh    varchar not null,
-    note    varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    note        varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.sort_versions
+create table mesh.resource_sort_versions
 (
-    mesh    varchar not null,
-    version varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    version     varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.related_registry_numbers
+create table mesh.resource_related_registry_numbers
 (
-    mesh    varchar not null,
-    number  varchar not null,
-    primary key(mesh, number)
+    resource    varchar not null,
+    number      varchar not null,
+    primary key(resource, number)
 );
 
 
-create table mesh.identifiers
+create table mesh.resource_identifiers
 (
-    mesh        varchar not null,
+    resource    varchar not null,
     identifier  varchar not null,
-    primary key(mesh)
+    primary key(resource)
 );
 
 
-create table mesh.nlm_cassification_numbers
+create table mesh.resource_nlm_classification_numbers
 (
-    mesh    varchar not null,
-    number  varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    number      varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.registry_numbers
+create table mesh.resource_registry_numbers
 (
-    mesh    varchar not null,
-    number  varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    number      varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.created_dates
+create table mesh.resource_created_dates
 (
-    mesh        varchar not null,
+    resource    varchar not null,
     date        date not null,
     timezone    integer not null,
-    primary key(mesh)
+    primary key(resource)
 );
 
 
-create table mesh.revised_dates
+create table mesh.resource_revised_dates
 (
-    mesh        varchar not null,
+    resource    varchar not null,
     date        date not null,
     timezone    integer not null,
-    primary key(mesh)
+    primary key(resource)
 );
 
 
-create table mesh.established_dates
+create table mesh.resource_established_dates
 (
-    mesh        varchar not null,
+    resource    varchar not null,
     date        date not null,
     timezone    integer not null,
-    primary key(mesh)
+    primary key(resource)
 );
 
 
-create table mesh.active_property
+create table mesh.resource_active_flags
 (
-    mesh    varchar not null,
-    value   boolean not null,
-    primary key(mesh)
+    resource    varchar not null,
+    flag        boolean not null,
+    primary key(resource)
 );
 
 
-create table mesh.frequencies
+create table mesh.resource_frequencies
 (
-    mesh        varchar not null,
+    resource    varchar not null,
     frequency   integer not null,
-    primary key(mesh)
+    primary key(resource)
 );
 
 
-create table mesh.allowable_qualifiers
+create table mesh.resource_allowable_qualifiers
 (
-    mesh        varchar not null,
+    resource    varchar not null,
     qualifier   varchar not null,
-    primary key(mesh, qualifier)
+    primary key(resource, qualifier)
 );
 
 
-create table mesh.broader_concepts
+create table mesh.resource_broader_concepts
 (
-    mesh    varchar not null,
-    concept varchar not null,
-    primary key(mesh, concept)
+    resource    varchar not null,
+    concept     varchar not null,
+    primary key(resource, concept)
 );
 
 
-create table mesh.broader_descriptors
+create table mesh.resource_broader_descriptors
 (
-    mesh        varchar not null,
+    resource    varchar not null,
     descriptor  varchar not null,
-    primary key(mesh, descriptor)
+    primary key(resource, descriptor)
 );
 
 
-create table mesh.broader_qualifiers
+create table mesh.resource_broader_qualifiers
 (
-    mesh        varchar not null,
+    resource    varchar not null,
     qualifier   varchar not null,
-    primary key(mesh, qualifier)
+    primary key(resource, qualifier)
 );
 
 
-create table mesh.concepts
+create table mesh.resource_concepts
 (
-    mesh    varchar not null,
-    concept varchar not null,
-    primary key(mesh, concept)
+    resource    varchar not null,
+    concept     varchar not null,
+    primary key(resource, concept)
 );
 
 
-create table mesh.indexer_consider_also_relations
+create table mesh.resource_indexer_consider_also_relations
 (
-    mesh    varchar not null,
-    value   varchar not null,
-    primary key(mesh, value)
+    resource    varchar not null,
+    value       varchar not null,
+    primary key(resource, value)
 );
 
 
-create table mesh.mapped_to_relations
+create table mesh.resource_mapped_to_relations
 (
-    mesh    varchar not null,
-    value   varchar not null,
-    primary key(mesh, value)
+    resource    varchar not null,
+    value       varchar not null,
+    primary key(resource, value)
 );
 
 
-create table mesh.narrower_concepts
+create table mesh.resource_narrower_concepts
 (
-    mesh    varchar not null,
-    concept varchar not null,
-    primary key(mesh, concept)
+    resource    varchar not null,
+    concept     varchar not null,
+    primary key(resource, concept)
 );
 
 
-create table mesh.pharmacological_actions
+create table mesh.resource_pharmacological_actions
 (
-    mesh    varchar not null,
-    action  varchar not null,
-    primary key(mesh, action)
+    resource    varchar not null,
+    action      varchar not null,
+    primary key(resource, action)
 );
 
 
-create table mesh.preferred_mapped_to_relations
+create table mesh.resource_preferred_mapped_to_relations
 (
-    mesh    varchar not null,
-    value   varchar not null,
-    primary key(mesh, value)
+    resource    varchar not null,
+    value       varchar not null,
+    primary key(resource, value)
 );
 
 
-create table mesh.related_concepts
+create table mesh.resource_related_concepts
 (
-    mesh    varchar not null,
-    concept varchar not null,
-    primary key(mesh, concept)
+    resource    varchar not null,
+    concept     varchar not null,
+    primary key(resource, concept)
 );
 
 
-create table mesh.see_also_relations
+create table mesh.resource_see_also_relations
 (
-    mesh        varchar not null,
+    resource    varchar not null,
     reference   varchar not null,
-    primary key(mesh, reference)
+    primary key(resource, reference)
 );
 
 
-create table mesh.terms
+create table mesh.resource_terms
 (
-    mesh    varchar not null,
-    term    varchar not null,
-    primary key(mesh, term)
+    resource    varchar not null,
+    term        varchar not null,
+    primary key(resource, term)
 );
 
 
-create table mesh.tree_numbers
+create table mesh.resource_tree_numbers
 (
-    mesh    varchar not null,
-    number  varchar not null,
-    primary key(mesh, number)
+    resource    varchar not null,
+    number      varchar not null,
+    primary key(resource, number)
 );
 
 
-create table mesh.descriptors
+create table mesh.resource_descriptors
 (
-    mesh        varchar not null,
+    resource    varchar not null,
     descriptor  varchar not null,
-    primary key(mesh)
+    primary key(resource)
 );
 
 
-create table mesh.qualifiers
+create table mesh.resource_qualifiers
 (
-    mesh        varchar not null,
+    resource    varchar not null,
     qualifier   varchar not null,
-    primary key(mesh)
+    primary key(resource)
 );
 
 
-create table mesh.parent_tree_numbers
+create table mesh.resource_parent_tree_numbers
 (
-    mesh    varchar not null,
-    number  varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    number      varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.preferred_concept
+create table mesh.resource_preferred_concepts
 (
-    mesh    varchar not null,
-    concept varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    concept     varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.preferred_term
+create table mesh.resource_preferred_terms
 (
-    mesh    varchar not null,
-    term    varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    term        varchar not null,
+    primary key(resource)
 );
 
 
-create table mesh.use_instead_relations
+create table mesh.resource_use_instead_relations
 (
-    mesh    varchar not null,
-    value   varchar not null,
-    primary key(mesh)
+    resource    varchar not null,
+    value       varchar not null,
+    primary key(resource)
 );

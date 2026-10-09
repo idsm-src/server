@@ -1,4 +1,4 @@
-create table pubchem.synonym_bases
+create table pubchem.synonyms
 (
     id       integer not null,
     md5      char(32) unique not null,
@@ -8,10 +8,10 @@ create table pubchem.synonym_bases
 
 create table pubchem.synonym_values
 (
-    __         integer,
+    id         integer,
     synonym    integer not null,
     value      varchar not null,
-    primary key(__)
+    primary key(id)
 );
 
 

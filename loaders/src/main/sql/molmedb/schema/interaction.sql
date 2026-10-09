@@ -1,11 +1,11 @@
-create table molmedb.interaction_bases
+create table molmedb.interactions
 (
     id                      integer not null,
-    substance_id            integer,
-    membrane_id             integer,
-    method_id               integer,
-    publication_id          integer,
-    model_publication_id    integer,
+    substance               integer,
+    membrane                integer,
+    method                  integer,
+    reference               integer,
+    model_reference         integer,
     logk                    real,
     logk_accuracy           real,
     logperm                 real,
@@ -24,14 +24,14 @@ create table molmedb.interaction_bases
 );
 
 
-create table molmedb.fluorescent_interaction_bases
+create table molmedb.fluorescent_interactions
 (
     id                      integer not null,
-    substance_id            integer,
-    membrane_id             integer,
-    method_id               integer,
-    publication_id          integer,
-    model_publication_id    integer,
+    substance               integer,
+    membrane                integer,
+    method                  integer,
+    reference               integer,
+    model_reference         integer,
     theta                   real,
     theta_accuracy          real,
     abs_wl                  real,
@@ -50,7 +50,7 @@ create table molmedb.fluorescent_interaction_bases
 );
 
 
-create table molmedb.membrane_bases
+create table molmedb.membranes
 (
     id                  integer not null,
     category            integer,
@@ -64,13 +64,13 @@ create table molmedb.membrane_bases
 
 create table molmedb.membrane_parts
 (
-    membrane_id         integer not null,
-    chebi_id            integer not null,
-    primary key(membrane_id, chebi_id)
+    membrane            integer not null,
+    chebi               integer not null,
+    primary key(membrane, chebi)
 );
 
 
-create table molmedb.method_bases
+create table molmedb.methods
 (
     id                  integer not null,
     category            integer,

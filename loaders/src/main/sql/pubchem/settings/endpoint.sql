@@ -1,8 +1,8 @@
-create index endpoint_bases__substance on pubchem.endpoint_bases(substance);
-create index endpoint_bases__bioassay on pubchem.endpoint_bases(bioassay);
-create index endpoint_bases__bioassay_measuregroup on pubchem.endpoint_bases(bioassay, measuregroup);
-create index endpoint_bases__outcome on pubchem.endpoint_bases(outcome_id);
-grant select on pubchem.endpoint_bases to sparql;
+create index endpoints__substance on pubchem.endpoints(substance);
+create index endpoints__bioassay on pubchem.endpoints(bioassay);
+create index endpoints__bioassay_measuregroup on pubchem.endpoints(bioassay, measuregroup);
+create index endpoints__outcome_id on pubchem.endpoints(outcome_id);
+grant select on pubchem.endpoints to sparql;
 
 --------------------------------------------------------------------------------
 

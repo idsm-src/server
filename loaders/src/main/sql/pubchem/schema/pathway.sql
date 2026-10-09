@@ -14,7 +14,7 @@ create type pubchem.pathway_reference_type as enum
 );
 
 
-create table pubchem.pathway_bases
+create table pubchem.pathways
 (
     id              integer not null,
     source          smallint,

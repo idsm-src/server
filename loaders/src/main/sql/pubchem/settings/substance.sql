@@ -1,9 +1,9 @@
-create index substance_bases__id__varchar on pubchem.substance_bases((id::varchar));
-create index substance_bases__source on pubchem.substance_bases(source);
-create index substance_bases__available on pubchem.substance_bases(available);
-create index substance_bases__modified on pubchem.substance_bases(modified);
-create index substance_bases__compound on pubchem.substance_bases(compound);
-grant select on pubchem.substance_bases to sparql;
+create index substances__id__varchar on pubchem.substances((id::varchar));
+create index substances__source on pubchem.substances(source);
+create index substances__available on pubchem.substances(available);
+create index substances__modified on pubchem.substances(modified);
+create index substances__compound on pubchem.substances(compound);
+grant select on pubchem.substances to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -14,12 +14,12 @@ grant select on pubchem.substance_types to sparql;
 --------------------------------------------------------------------------------
 
 create index substance_chembl_matches__substance on pubchem.substance_chembl_matches(substance);
-create index substance_chembl_matches__chembl on pubchem.substance_chembl_matches(chembl);
+create index substance_chembl_matches__match on pubchem.substance_chembl_matches(match);
 grant select on pubchem.substance_chembl_matches to sparql;
 
 --------------------------------------------------------------------------------
 
-create index substance_glytoucan_matches__glytoucan on pubchem.substance_glytoucan_matches(glytoucan);
+create index substance_glytoucan_matches__match on pubchem.substance_glytoucan_matches(match);
 grant select on pubchem.substance_glytoucan_matches to sparql;
 
 --------------------------------------------------------------------------------

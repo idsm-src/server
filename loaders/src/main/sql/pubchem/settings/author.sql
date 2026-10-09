@@ -1,4 +1,4 @@
-grant select on pubchem.author_bases to sparql;
+grant select on pubchem.authors to sparql;
 
 --------------------------------------------------------------------------------
 

@@ -19,9 +19,8 @@ class Measuregroup extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Pair<Integer, Integer>> measuregroups = new EntityTable<>(
-            "pubchem.measuregroup_bases", intPairKey("bioassay", "measuregroup"), null, integer("source"),
-            uniqueVarchar("title"));
+    private static final EntityTable<Pair<Integer, Integer>> measuregroups = new EntityTable<>("pubchem.measuregroups",
+            intPairKey("bioassay", "measuregroup"), null, integer("source"), uniqueVarchar("title"));
 
     private static final IntPairIntSet keepSubstances = new IntPairIntSet();
     private static final IntPairIntSet newSubstances = new IntPairIntSet();

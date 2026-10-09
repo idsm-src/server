@@ -37,7 +37,7 @@ public class OntologyResource extends GenericUserIriClass
     }
 
 
-    private static final String sqlQuery = "select resource_id from ontology.resources__reftable where iri = ?";
+    private static final String sqlQuery = "select id from ontology.uncategorized_resources where iri = ?";
     private static OntologyResource instance;
     private static List<Unit> units = new ArrayList<>();
     private static Map<Column, Unit> unitMap = new HashMap<>();
@@ -71,7 +71,7 @@ public class OntologyResource extends GenericUserIriClass
 
     private OntologyResource()
     {
-        super("ontology:resource", "ontology", "ontology_resource", List.of(INT2, INT4),
+        super("ontology:resource", "ontology", "resource", List.of(INT2, INT4),
                 units.stream().map(c -> c.pattern.pattern()).collect(Collectors.joining("|")),
                 GenericUserIriClass.SqlCheck.IF_NOT_MATCH);
     }
@@ -319,8 +319,8 @@ public class OntologyResource extends GenericUserIriClass
             try(Statement statement = connection.createStatement())
             {
                 try(ResultSet r = statement
-                        .executeQuery("select unit_id, prefix, value_offset, value_length, suffix, pattern "
-                                + "from ontology.resource_categories__reftable order by unit_id"))
+                        .executeQuery("select id, prefix, value_offset, value_length, suffix, pattern "
+                                + "from ontology.units order by id"))
                 {
                     while(r.next())
                     {

@@ -1,20 +1,20 @@
-create index reference_bases__dcdate on pubchem.reference_bases(dcdate);
-create index reference_bases__date on pubchem.reference_bases(date);
-create index reference_bases__title on pubchem.reference_bases using hash (title);
-create index reference_bases__citation on pubchem.reference_bases using hash (citation);
-create index reference_bases__publication on pubchem.reference_bases(publication);
-create index reference_bases__issue on pubchem.reference_bases(issue);
-create index reference_bases__starting_page on pubchem.reference_bases(starting_page);
-create index reference_bases__ending_page on pubchem.reference_bases(ending_page);
-create index reference_bases__page_range on pubchem.reference_bases(page_range);
-create index reference_bases__lang on pubchem.reference_bases(lang);
-grant select on pubchem.reference_bases to sparql;
+create index references__dcdate on pubchem.references(dcdate);
+create index references__date on pubchem.references(date);
+create index references__title on pubchem.references using hash (title);
+create index references__citation on pubchem.references using hash (citation);
+create index references__publication on pubchem.references(publication);
+create index references__issue on pubchem.references(issue);
+create index references__starting_page on pubchem.references(starting_page);
+create index references__ending_page on pubchem.references(ending_page);
+create index references__page_range on pubchem.references(page_range);
+create index references__lang on pubchem.references(lang);
+grant select on pubchem.references to sparql;
 
 --------------------------------------------------------------------------------
 
-create index reference_discusses__reference on pubchem.reference_discusses(reference);
-create index reference_discusses__statement on pubchem.reference_discusses(statement);
-grant select on pubchem.reference_discusses to sparql;
+create index reference_discussed_headings__reference on pubchem.reference_discussed_headings(reference);
+create index reference_discussed_headings__heading on pubchem.reference_discussed_headings(heading);
+grant select on pubchem.reference_discussed_headings to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -61,7 +61,7 @@ grant select on pubchem.reference_authors to sparql;
 --------------------------------------------------------------------------------
 
 create index reference_grants__reference on pubchem.reference_grants(reference);
-create index reference_grants__grantid on pubchem.reference_grants(grantid);
+create index reference_grants__supporting_grant on pubchem.reference_grants(supporting_grant);
 grant select on pubchem.reference_grants to sparql;
 
 --------------------------------------------------------------------------------
@@ -108,9 +108,9 @@ grant select on pubchem.reference_mined_diseases to sparql;
 
 --------------------------------------------------------------------------------
 
-create index reference_mined_genes__reference on pubchem.reference_mined_genes(reference);
-create index reference_mined_genes__gene_symbol on pubchem.reference_mined_genes(gene_symbol);
-grant select on pubchem.reference_mined_genes to sparql;
+create index reference_mined_genesymbols__reference on pubchem.reference_mined_genesymbols(reference);
+create index reference_mined_genesymbols__genesymbol on pubchem.reference_mined_genesymbols(genesymbol);
+grant select on pubchem.reference_mined_genesymbols to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -126,6 +126,6 @@ grant select on pubchem.reference_identifiers to sparql;
 
 --------------------------------------------------------------------------------
 
-create index reference_sources__reference on pubchem.reference_sources(reference);
-create index reference_sources__source_type on pubchem.reference_sources(source_type);
-grant select on pubchem.reference_sources to sparql;
+create index reference_source_types__reference on pubchem.reference_source_types(reference);
+create index reference_source_types__source_type on pubchem.reference_source_types(source_type);
+grant select on pubchem.reference_source_types to sparql;

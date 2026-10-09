@@ -17,7 +17,7 @@ create type pubchem.reference_source_type as enum
 );
 
 
-create table pubchem.reference_bases
+create table pubchem.references
 (
     id              integer not null,
     dcdate          date,
@@ -34,11 +34,11 @@ create table pubchem.reference_bases
 );
 
 
-create table pubchem.reference_discusses
+create table pubchem.reference_discussed_headings
 (
     reference   integer not null,
-    statement   varchar not null,
-    primary key(reference, statement)
+    heading     varchar not null,
+    primary key(reference, heading)
 );
 
 
@@ -100,9 +100,9 @@ create table pubchem.reference_authors
 
 create table pubchem.reference_grants
 (
-    reference   integer not null,
-    grantid     integer not null,
-    primary key(reference, grantid)
+    reference           integer not null,
+    supporting_grant    integer not null,
+    primary key(reference, supporting_grant)
 );
 
 
@@ -162,11 +162,11 @@ create table pubchem.reference_mined_diseases
 );
 
 
-create table pubchem.reference_mined_genes
+create table pubchem.reference_mined_genesymbols
 (
     reference   integer not null,
-    gene_symbol integer not null,
-    primary key(reference, gene_symbol)
+    genesymbol  integer not null,
+    primary key(reference, genesymbol)
 );
 
 
@@ -186,7 +186,7 @@ create table pubchem.reference_identifiers
 );
 
 
-create table pubchem.reference_sources
+create table pubchem.reference_source_types
 (
     reference   integer not null,
     source_type      pubchem.reference_source_type not null,

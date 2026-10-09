@@ -31,7 +31,7 @@ public class Author extends Updater
 
     private static void loadBases() throws SQLException
     {
-        load("select iri,id from pubchem.author_bases", oldAuthors);
+        load("select iri,id from pubchem.authors", oldAuthors);
 
         nextAuthorID = oldAuthors.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
     }
@@ -133,7 +133,7 @@ public class Author extends Updater
         IntStringPairIntMap newOrganizations = new IntStringPairIntMap();
         IntStringPairIntMap oldOrganizations = new IntStringPairIntMap();
 
-        load("select author,organization,__ from pubchem.author_organizations", oldOrganizations);
+        load("select author,organization,id from pubchem.author_organizations", oldOrganizations);
 
         AtomicInteger nextValueID = new AtomicInteger(
                 oldOrganizations.values().stream().max(Integer::compare).orElse(-1).intValue() + 1);
@@ -152,9 +152,9 @@ public class Author extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from pubchem.author_organizations where author=? and organization=? and __=?",
+            store("delete from pubchem.author_organizations where author=? and organization=? and id=?",
                     oldOrganizations);
-            store("insert into pubchem.author_organizations(author,organization,__) values(?,?,?)", newOrganizations);
+            store("insert into pubchem.author_organizations(author,organization,id) values(?,?,?)", newOrganizations);
         });
     }
 
@@ -211,8 +211,8 @@ public class Author extends Updater
     {
         System.out.println("finish authors ...");
 
-        store("delete from pubchem.author_bases where iri=? and id=?", oldAuthors);
-        store("insert into pubchem.author_bases(iri,id) values(?,?)", newAuthors);
+        store("delete from pubchem.authors where iri=? and id=?", oldAuthors);
+        store("insert into pubchem.authors(iri,id) values(?,?)", newAuthors);
 
         System.out.println();
     }

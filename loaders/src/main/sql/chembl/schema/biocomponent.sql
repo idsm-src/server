@@ -1,4 +1,4 @@
-create table chembl.biocomponent_bases
+create table chembl.biocomponents
 (
     id           integer not null,
     chembl_id    varchar,

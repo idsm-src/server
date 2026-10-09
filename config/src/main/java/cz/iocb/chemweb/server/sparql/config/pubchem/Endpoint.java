@@ -29,7 +29,7 @@ public class Endpoint
         ConstantIriMapping graph = config.createIriMapping("pubchem:endpoint");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "endpoint_bases");
+            DatabaseTable table = new DatabaseTable(schema, "endpoints");
             TermMapping subject = config.createIriMapping("pubchem:endpoint", "substance", "bioassay", "measuregroup",
                     "value");
 

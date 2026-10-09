@@ -25,7 +25,7 @@ public class Anatomy
         ConstantIriMapping graph = config.createIriMapping("pubchem:anatomy");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "anatomy_bases");
+            DatabaseTable table = new DatabaseTable(schema, "anatomies");
             TermMapping subject = config.createIriMapping("pubchem:anatomy", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -57,7 +57,7 @@ public class Anatomy
             TermMapping subject = config.createIriMapping("pubchem:anatomy", "anatomy");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("mesh:heading", "match"));
+                    config.createIriMapping("mesh:resource", "match"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:mesh", "match"));

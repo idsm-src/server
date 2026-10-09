@@ -73,18 +73,18 @@ class TargetComponent extends Updater
         referenceTypes.put("CGDRef", new Reference("CGD", "http://research.nhgri.nih.gov/CGD/view/?g=", "[A-Z0-9-]+"));
     }
 
-    private static final EntityTable<Integer> components = new EntityTable<>("chembl.target_component_bases",
-            intKey("id"), "chembl_id", uniqueVarchar("chembl_id"), varchar("type"), varchar("description"),
-            varchar("organism"), integer("taxonomy"), varchar("sequence"), varchar("accession"));
+    private static final EntityTable<Integer> components = new EntityTable<>("chembl.components", intKey("id"),
+            "chembl_id", uniqueVarchar("chembl_id"), varchar("type"), varchar("description"), varchar("organism"),
+            integer("taxonomy"), varchar("sequence"), varchar("accession"));
 
-    private static final ValueTable alternatives = new ValueTable("chembl.target_component_alternatives",
-            column("component"), column("alternative"));
+    private static final ValueTable alternatives = new ValueTable("chembl.component_alternatives", column("component"),
+            column("alternative"));
 
-    private static final ValueTable references = new ValueTable("chembl.target_component_references",
-            column("component"), enumeration("type", "chembl.component_reference_type"), column("reference"));
+    private static final ValueTable references = new ValueTable("chembl.component_references", column("component"),
+            enumeration("type", "chembl.component_reference_type"), column("reference"));
 
     // the labels of the reference IRIs, which carry one label per component referencing them
-    private static final ValueTable referenceLabels = new ValueTable("chembl.target_component_reference_labels",
+    private static final ValueTable referenceLabels = new ValueTable("chembl.component_reference_labels",
             enumeration("type", "chembl.component_reference_type"), column("reference"), column("label"));
 
 

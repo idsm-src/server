@@ -1,7 +1,7 @@
-create table molmedb.substance_bases
+create table molmedb.substances
 (
     id               integer not null,
-    parent_id        integer,
+    parent           integer,
     charge           integer,
     ph_start         real,
     ph_end           real,
@@ -17,25 +17,25 @@ create table molmedb.substance_bases
 
 create table molmedb.substance_identifiers
 (
-    substance_id     integer not null,
+    substance        integer not null,
     type             smallint not null,
     value            varchar not null,
-    primary key(substance_id, type, value)
+    primary key(substance, type, value)
 );
 
 
 create table molmedb.substance_links
 (
-    substance_id     integer not null,
+    substance        integer not null,
     type             smallint not null,
     value            integer not null,
-    primary key(substance_id, type, value)
+    primary key(substance, type, value)
 );
 
 
-create table molmedb.obsoleted_substances
+create table molmedb.substance_obsolete_identifiers
 (
     identifier          varchar not null,
-    substance_id        integer not null,
+    substance           integer not null,
     primary key(identifier)
 );

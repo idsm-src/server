@@ -1,4 +1,4 @@
-create table chembl.drug_indication_bases
+create table chembl.drug_indications
 (
     id            integer not null,
     chembl_id     varchar,

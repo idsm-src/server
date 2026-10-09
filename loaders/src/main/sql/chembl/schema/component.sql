@@ -1,4 +1,4 @@
-create table chembl.target_component_bases
+create table chembl.components
 (
     id           integer not null,
     chembl_id    varchar,
@@ -12,7 +12,7 @@ create table chembl.target_component_bases
 );
 
 
-create table chembl.target_component_alternatives
+create table chembl.component_alternatives
 (
     component    integer not null,
     alternative  varchar not null,
@@ -38,7 +38,7 @@ create type chembl.component_reference_type as enum
 );
 
 
-create table chembl.target_component_references
+create table chembl.component_references
 (
     component  integer not null,
     type       chembl.component_reference_type not null,
@@ -47,7 +47,7 @@ create table chembl.target_component_references
 );
 
 
-create table chembl.target_component_reference_labels
+create table chembl.component_reference_labels
 (
     type       chembl.component_reference_type not null,
     reference  varchar not null,

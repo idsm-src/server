@@ -73,7 +73,7 @@ public class CompoundDescriptor
         ConstantIriMapping oldUnit = config.createIriMapping("sio:has-unit");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compounds");
             TermMapping subject = config.createIriMapping("pubchem:compound_identifier", "id");
             String field = "(id)::varchar";
 
@@ -86,7 +86,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "hydrogen_bond_acceptor_count";
             TermMapping subject = config.createIriMapping("pubchem:hydrogen_bond_acceptor_count", "compound");
 
@@ -101,7 +101,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "defined_atom_stereo_count";
             TermMapping subject = config.createIriMapping("pubchem:defined_atom_stereo_count", "compound");
 
@@ -115,7 +115,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "defined_bond_stereo_count";
             TermMapping subject = config.createIriMapping("pubchem:defined_bond_stereo_count", "compound");
 
@@ -129,7 +129,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "undefined_bond_stereo_count";
             TermMapping subject = config.createIriMapping("pubchem:undefined_bond_stereo_count", "compound");
 
@@ -144,7 +144,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "isotope_atom_count";
             TermMapping subject = config.createIriMapping("pubchem:isotope_atom_count", "compound");
 
@@ -158,7 +158,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "covalent_unit_count";
             TermMapping subject = config.createIriMapping("pubchem:covalent_unit_count", "compound");
 
@@ -172,7 +172,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "hydrogen_bond_donor_count";
             TermMapping subject = config.createIriMapping("pubchem:hydrogen_bond_donor_count", "compound");
 
@@ -186,7 +186,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "non_hydrogen_atom_count";
             TermMapping subject = config.createIriMapping("pubchem:non_hydrogen_atom_count", "compound");
 
@@ -200,7 +200,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "rotatable_bond_count";
             TermMapping subject = config.createIriMapping("pubchem:rotatable_bond_count", "compound");
 
@@ -214,7 +214,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "undefined_atom_stereo_count";
             TermMapping subject = config.createIriMapping("pubchem:undefined_atom_stereo_count", "compound");
 
@@ -229,7 +229,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "total_formal_charge";
             TermMapping subject = config.createIriMapping("pubchem:total_formal_charge", "compound");
 
@@ -243,7 +243,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "structure_complexity";
             TermMapping subject = config.createIriMapping("pubchem:structure_complexity", "compound");
 
@@ -257,7 +257,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "mono_isotopic_weight";
             TermMapping subject = config.createIriMapping("pubchem:mono_isotopic_weight", "compound");
 
@@ -275,7 +275,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "xlogp3_aa";
             TermMapping subject = config.createIriMapping("pubchem:xlogp3_aa", "compound");
 
@@ -289,7 +289,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "xlogp3";
             TermMapping subject = config.createIriMapping("pubchem:xlogp3", "compound");
 
@@ -303,7 +303,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "exact_mass";
             TermMapping subject = config.createIriMapping("pubchem:exact_mass", "compound");
 
@@ -321,7 +321,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "molecular_weight";
             TermMapping subject = config.createIriMapping("pubchem:molecular_weight", "compound");
 
@@ -339,7 +339,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_bases");
+            DatabaseTable table = new DatabaseTable(schema, "compound_descriptors");
             String field = "tpsa";
             TermMapping subject = config.createIriMapping("pubchem:tpsa", "compound");
 
@@ -357,7 +357,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_molecular_formulas");
+            DatabaseTable table = new DatabaseTable(schema, "compound_molecular_formulas");
             String field = "molecular_formula";
             TermMapping subject = config.createIriMapping("pubchem:molecular_formula", "compound");
 
@@ -370,7 +370,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_smileses");
+            DatabaseTable table = new DatabaseTable(schema, "compound_smileses");
             String field = "smiles";
             TermMapping subject = config.createIriMapping("pubchem:smiles", "compound");
 
@@ -383,7 +383,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_connectivity_smileses");
+            DatabaseTable table = new DatabaseTable(schema, "compound_connectivity_smileses");
             String field = "connectivity_smiles";
             TermMapping subject = config.createIriMapping("pubchem:connectivity_smiles", "compound");
 
@@ -396,7 +396,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_iupac_inchis");
+            DatabaseTable table = new DatabaseTable(schema, "compound_iupac_inchis");
             String field = "iupac_inchi";
             TermMapping subject = config.createIriMapping("pubchem:iupac_inchi", "compound");
 
@@ -409,7 +409,7 @@ public class CompoundDescriptor
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_compound_preferred_iupac_names");
+            DatabaseTable table = new DatabaseTable(schema, "compound_preferred_iupac_names");
             String field = "preferred_iupac_name";
             TermMapping subject = config.createIriMapping("pubchem:preferred_iupac_name", "compound");
 

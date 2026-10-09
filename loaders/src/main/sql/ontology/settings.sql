@@ -15,63 +15,63 @@ grant select on ontology.resource_labels to sparql;
 
 --------------------------------------------------------------------------------
 
-create index superclasses__class on ontology.superclasses(class_unit, class_id);
-create index superclasses__superclass on ontology.superclasses(superclass_unit, superclass_id);
+create index superclasses__class_unit_class_id on ontology.superclasses(class_unit, class_id);
+create index superclasses__superclass_unit_superclass_id on ontology.superclasses(superclass_unit, superclass_id);
 grant select on ontology.superclasses to sparql;
 
 --------------------------------------------------------------------------------
 
-create index superproperties__property on ontology.superproperties(property_unit, property_id);
-create index superproperties__superproperty on ontology.superproperties(superproperty_unit, superproperty_id);
+create index superproperties__property_unit_property_id on ontology.superproperties(property_unit, property_id);
+create index superproperties__superproperty_unit_superproperty_id on ontology.superproperties(superproperty_unit, superproperty_id);
 grant select on ontology.superproperties to sparql;
 
 --------------------------------------------------------------------------------
 
-create index property_domains__property on ontology.property_domains(property_unit, property_id);
-create index property_domains__domain on ontology.property_domains(domain_unit, domain_id);
+create index property_domains__property_unit_property_id on ontology.property_domains(property_unit, property_id);
+create index property_domains__domain_unit_domain_id on ontology.property_domains(domain_unit, domain_id);
 grant select on ontology.property_domains to sparql;
 
 --------------------------------------------------------------------------------
 
-create index property_ranges__property on ontology.property_ranges(property_unit, property_id);
-create index property_ranges__range on ontology.property_ranges(range_unit, range_id);
+create index property_ranges__property_unit_property_id on ontology.property_ranges(property_unit, property_id);
+create index property_ranges__range_unit_range_id on ontology.property_ranges(range_unit, range_id);
 grant select on ontology.property_ranges to sparql;
 
 --------------------------------------------------------------------------------
 
-create index somevaluesfrom_restrictions__property on ontology.somevaluesfrom_restrictions(property_unit, property_id);
-create index somevaluesfrom_restrictions__class on ontology.somevaluesfrom_restrictions(class_unit, class_id);
+create index somevaluesfrom_restrictions__property_unit_property_id on ontology.somevaluesfrom_restrictions(property_unit, property_id);
+create index somevaluesfrom_restrictions__class_unit_class_id on ontology.somevaluesfrom_restrictions(class_unit, class_id);
 grant select on ontology.somevaluesfrom_restrictions to sparql;
 
 --------------------------------------------------------------------------------
 
-create index allvaluesfrom_restrictions__property on ontology.allvaluesfrom_restrictions(property_unit, property_id);
-create index allvaluesfrom_restrictions__class on ontology.allvaluesfrom_restrictions(class_unit, class_id);
+create index allvaluesfrom_restrictions__property_unit_property_id on ontology.allvaluesfrom_restrictions(property_unit, property_id);
+create index allvaluesfrom_restrictions__class_unit_class_id on ontology.allvaluesfrom_restrictions(class_unit, class_id);
 grant select on ontology.allvaluesfrom_restrictions to sparql;
 
 --------------------------------------------------------------------------------
 
-create index cardinality_restrictions__property on ontology.cardinality_restrictions(property_unit, property_id);
+create index cardinality_restrictions__property_unit_property_id on ontology.cardinality_restrictions(property_unit, property_id);
 create index cardinality_restrictions__cardinality on ontology.cardinality_restrictions(cardinality);
 grant select on ontology.cardinality_restrictions to sparql;
 
 --------------------------------------------------------------------------------
 
-create index mincardinality_restrictions__property on ontology.mincardinality_restrictions(property_unit, property_id);
+create index mincardinality_restrictions__property_unit_property_id on ontology.mincardinality_restrictions(property_unit, property_id);
 create index mincardinality_restrictions__cardinality on ontology.mincardinality_restrictions(cardinality);
 grant select on ontology.mincardinality_restrictions to sparql;
 
 --------------------------------------------------------------------------------
 
-create index maxcardinality_restrictions__property on ontology.maxcardinality_restrictions(property_unit, property_id);
+create index maxcardinality_restrictions__property_unit_property_id on ontology.maxcardinality_restrictions(property_unit, property_id);
 create index maxcardinality_restrictions__cardinality on ontology.maxcardinality_restrictions(cardinality);
 grant select on ontology.maxcardinality_restrictions to sparql;
 
 --------------------------------------------------------------------------------
 
-create index resources__reftable__iri on ontology.resources__reftable using hash (iri);
-grant select on ontology.resources__reftable to sparql;
+create index uncategorized_resources__iri on ontology.uncategorized_resources using hash (iri);
+grant select on ontology.uncategorized_resources to sparql;
 
 --------------------------------------------------------------------------------
 
-grant select on ontology.resource_categories__reftable to sparql;
+grant select on ontology.units to sparql;

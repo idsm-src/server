@@ -13,8 +13,8 @@ public class ChebiSachemConfiguration extends SachemConfiguration
     public ChebiSachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema)
             throws SQLException
     {
-        super(service, connectionPool, schema, "chebi", "http://purl.obolibrary.org/obo/CHEBI_", 0,
-                new DatabaseTable("chebi", "molfiles"), "chebi", new StringSubsetLiteralClass("chebi-molfile"));
+        super(service, connectionPool, schema, "chebi", "compound", "http://purl.obolibrary.org/obo/CHEBI_", 0,
+                new DatabaseTable("chebi", "class_molfiles"), "class", new StringSubsetLiteralClass("chebi-molfile"));
 
         addPrefixes();
     }

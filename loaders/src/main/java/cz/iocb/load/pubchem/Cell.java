@@ -32,7 +32,7 @@ public class Cell extends Updater
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID";
     static final int prefixLength = prefix.length();
 
-    private static final EntityTable<Integer> cells = new EntityTable<>("pubchem.cell_bases", intKey("id"), null,
+    private static final EntityTable<Integer> cells = new EntityTable<>("pubchem.cells", intKey("id"), null,
             integer("organism"), varchar("label"));
     private static final MissingEntities<Integer> missingCells = new MissingEntities<>("cell", true);
 

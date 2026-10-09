@@ -106,7 +106,7 @@ class Endpoint extends Updater
         }
     };
 
-    private static final EntityTable<EndpointID> endpoints = new EntityTable<>("pubchem.endpoint_bases", key, null,
+    private static final EntityTable<EndpointID> endpoints = new EntityTable<>("pubchem.endpoints", key, null,
             integer("outcome_id"));
 
     private static final EntityTable<EndpointID> measurements = new EntityTable<>("pubchem.endpoint_measurements", key,

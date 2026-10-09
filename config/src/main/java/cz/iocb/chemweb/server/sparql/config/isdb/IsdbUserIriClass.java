@@ -47,7 +47,7 @@ public class IsdbUserIriClass extends UserIriClass
         this.suffix = suffix;
         this.prefixLen = prefix.length();
         this.suffixLen = suffix != null ? suffix.length() : 0;
-        this.sqlQuery = "select id::varchar from isdb.compound_bases where accession = ?";
+        this.sqlQuery = "select id::varchar from isdb.compounds where accession = ?";
 
         //FIXME: check whether the pattern is valid also in pcre2
         this.regexp = Pattern.quote(prefix) + "([A-Z]{14}-[NP])" + (suffix != null ? Pattern.quote(suffix) : "");
@@ -123,7 +123,7 @@ public class IsdbUserIriClass extends UserIriClass
 
     protected Column generateFunction(List<Column> columns)
     {
-        String access = "(SELECT id as \"@from\", accession as \"@to\" FROM isdb.compound_bases) as \"@rctab\"";
+        String access = "(SELECT id as \"@from\", accession as \"@to\" FROM isdb.compounds) as \"@rctab\"";
 
         String code = String.format("'%s' || \"@to\" || '-' || %s", prefix.replaceAll("'", "''"), columns.get(1));
 
@@ -138,7 +138,7 @@ public class IsdbUserIriClass extends UserIriClass
 
     protected List<Column> generateInverseFunctions(Column parameter, boolean check)
     {
-        String access = "(SELECT id as \"@from\", accession as \"@to\" FROM isdb.compound_bases) as \"@rctab\"";
+        String access = "(SELECT id as \"@from\", accession as \"@to\" FROM isdb.compounds) as \"@rctab\"";
         String col1 = String.format(
                 "(SELECT \"@from\"::integer FROM %s WHERE \"@to\" = substring(%s, %d, 14)::varchar)", access, parameter,
                 prefixLen + 1);
@@ -213,7 +213,7 @@ public class IsdbUserIriClass extends UserIriClass
     @Override
     public List<Column> toOrderColumns(List<Column> columns)
     {
-        String access = "(SELECT id as \"@from\", accession as \"@to\" FROM isdb.compound_bases) as \"@rctab\"";
+        String access = "(SELECT id as \"@from\", accession as \"@to\" FROM isdb.compounds) as \"@rctab\"";
         String code = String.format("(SELECT \"@to\" FROM %s WHERE \"@from\" = %s)", access, columns.get(0));
 
         return List.of(new ExpressionColumn(code, VARCHAR), columns.get(1));

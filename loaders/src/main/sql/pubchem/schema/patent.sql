@@ -1,4 +1,4 @@
-create table pubchem.patent_bases
+create table pubchem.patents
 (
     id                  integer not null,
     iri                 varchar unique not null,
@@ -69,7 +69,7 @@ create table pubchem.patent_applicants
 );
 
 
-create table pubchem.patentinventor_bases
+create table pubchem.inventors
 (
     id                  varchar not null,
     name                varchar,
@@ -77,7 +77,7 @@ create table pubchem.patentinventor_bases
 );
 
 
-create table pubchem.patentassignee_bases
+create table pubchem.applicants
 (
     id                  varchar not null,
     name                varchar,

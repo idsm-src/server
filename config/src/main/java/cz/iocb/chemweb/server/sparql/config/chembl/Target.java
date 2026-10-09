@@ -29,7 +29,7 @@ public class Target
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "target_bases");
+            DatabaseTable table = new DatabaseTable(schema, "targets");
             TermMapping subject = config.createIriMapping("chembl:target", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -99,7 +99,7 @@ public class Target
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
                     config.createIriMapping("ontology:taxonomy", "taxonomy"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                    config.createIriMapping("reference:ncbi-taxonomy", "taxonomy"));
+                    config.createIriMapping("reference:ncbi_taxonomy", "taxonomy"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:isTargetForCellLine"),
                     config.createIriMapping("chembl:cell_line", "cell_line"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:isSpeciesGroup"),
@@ -147,8 +147,8 @@ public class Target
             TermMapping subject = config.createIriMapping("chembl:target", "target");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasTargetComponent"),
-                    config.createIriMapping("chembl:targetcomponent", "component"));
-            config.addQuadMapping(table, graph, config.createIriMapping("chembl:targetcomponent", "component"),
+                    config.createIriMapping("chembl:component", "component"));
+            config.addQuadMapping(table, graph, config.createIriMapping("chembl:component", "component"),
                     config.createIriMapping("cco:hasTarget"), subject);
         }
 
@@ -157,7 +157,7 @@ public class Target
 
             config.addQuadMapping(table, graph, config.createIriMapping("chembl:target", "target"),
                     config.createIriMapping("skos:exactMatch"),
-                    config.createIriMapping("chembl:targetcomponent", "component"));
+                    config.createIriMapping("chembl:component", "component"));
         }
 
         {
@@ -165,7 +165,7 @@ public class Target
 
             config.addQuadMapping(table, graph, config.createIriMapping("chembl:target", "target"),
                     config.createIriMapping("skos:relatedMatch"),
-                    config.createIriMapping("chembl:targetcomponent", "component"));
+                    config.createIriMapping("chembl:component", "component"));
         }
     }
 }

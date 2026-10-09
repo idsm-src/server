@@ -24,9 +24,9 @@ class Journal extends Updater
     static final String prefix = ChEMBL.chembl + "journal/CHEMBL_JRN_";
     static final String nullJournal = prefix + "null";
 
-    private static final EntityTable<Integer> journals = new EntityTable<>("chembl.journal_bases", intKey("id"),
-            "chembl_id", uniqueVarchar("chembl_id"), varchar("label"), varchar("title"), varchar("short_title"),
-            varchar("issn"), varchar("eissn"));
+    private static final EntityTable<Integer> journals = new EntityTable<>("chembl.journals", intKey("id"), "chembl_id",
+            uniqueVarchar("chembl_id"), varchar("label"), varchar("title"), varchar("short_title"), varchar("issn"),
+            varchar("eissn"));
 
 
     static void load() throws IOException, SQLException

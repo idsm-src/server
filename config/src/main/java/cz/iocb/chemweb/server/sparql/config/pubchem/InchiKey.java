@@ -18,7 +18,7 @@ public class InchiKey
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new MapUserIriClass("pubchem:inchikey", INT4, new DatabaseTable(schema, "inchikey_bases"),
+        config.addIriClass(new MapUserIriClass("pubchem:inchikey", INT4, new DatabaseTable(schema, "inchikeys"),
                 new TableColumn("id", INT4), new TableColumn("inchikey", VARCHAR),
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/"));
     }
@@ -29,7 +29,7 @@ public class InchiKey
         ConstantIriMapping graph = config.createIriMapping("pubchem:inchikey");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "inchikey_bases");
+            DatabaseTable table = new DatabaseTable(schema, "inchikeys");
             TermMapping subject = config.createIriMapping("pubchem:inchikey", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -65,7 +65,7 @@ public class InchiKey
             TermMapping subject = config.createIriMapping("pubchem:inchikey", "inchikey");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:subject"),
-                    config.createIriMapping("mesh:heading", "subject"));
+                    config.createIriMapping("mesh:resource", "subject"));
         }
     }
 }

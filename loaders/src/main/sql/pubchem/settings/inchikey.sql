@@ -1,4 +1,4 @@
-grant select on pubchem.inchikey_bases to sparql;
+grant select on pubchem.inchikeys to sparql;
 
 --------------------------------------------------------------------------------
 

@@ -1,14 +1,14 @@
-create index gene_symbol_bases__symbol on pubchem.gene_symbol_bases(symbol);
-grant select on pubchem.gene_symbol_bases to sparql;
+create index genesymbols__symbol on pubchem.genesymbols(symbol);
+grant select on pubchem.genesymbols to sparql;
 
 --------------------------------------------------------------------------------
 
-create index gene_bases__id__varchar on pubchem.gene_bases((id::varchar));
-create index gene_bases__title on pubchem.gene_bases(title);
-create index gene_bases__title__english on pubchem.gene_bases using gin (to_tsvector('english', title));
-create index gene_bases__gene_symbol on pubchem.gene_bases(gene_symbol);
-create index gene_bases__organism on pubchem.gene_bases(organism);
-grant select on pubchem.gene_bases to sparql;
+create index genes__id__varchar on pubchem.genes((id::varchar));
+create index genes__title on pubchem.genes(title);
+create index genes__title__english on pubchem.genes using gin (to_tsvector('english', title));
+create index genes__genesymbol on pubchem.genes(genesymbol);
+create index genes__organism on pubchem.genes(organism);
+grant select on pubchem.genes to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -31,7 +31,7 @@ grant select on pubchem.gene_patents to sparql;
 --------------------------------------------------------------------------------
 
 create index gene_matches__gene on pubchem.gene_matches(gene);
-create index gene_matches__match on pubchem.gene_matches(match_unit, match_id);
+create index gene_matches__match_unit_match_id on pubchem.gene_matches(match_unit, match_id);
 grant select on pubchem.gene_matches to sparql;
 
 --------------------------------------------------------------------------------
@@ -115,19 +115,19 @@ grant select on pubchem.gene_wikidata_matches to sparql;
 --------------------------------------------------------------------------------
 
 create index gene_processes__gene on pubchem.gene_processes(gene);
-create index gene_processes__process on pubchem.gene_processes(process_id);
+create index gene_processes__process_id on pubchem.gene_processes(process_id);
 grant select on pubchem.gene_processes to sparql;
 
 --------------------------------------------------------------------------------
 
 create index gene_functions__gene on pubchem.gene_functions(gene);
-create index gene_functions__function on pubchem.gene_functions(function_id);
+create index gene_functions__function_id on pubchem.gene_functions(function_id);
 grant select on pubchem.gene_functions to sparql;
 
 --------------------------------------------------------------------------------
 
 create index gene_locations__gene on pubchem.gene_locations(gene);
-create index gene_locations__location on pubchem.gene_locations(location_id);
+create index gene_locations__location_id on pubchem.gene_locations(location_id);
 grant select on pubchem.gene_locations to sparql;
 
 --------------------------------------------------------------------------------

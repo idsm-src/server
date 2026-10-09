@@ -39,11 +39,11 @@ public class PdbSachemConfiguration extends SparqlDatabaseOptimisedConfiguration
     {
         Sachem.addResourceClasses(this);
 
-        addIriClass(new MapUserIriClass("pdb:molfile", INT4, new DatabaseTable("pdb", "compound_bases"),
+        addIriClass(new MapUserIriClass("pdb:molfile", INT4, new DatabaseTable("pdb", "compounds"),
                 new TableColumn("id", INT4), new TableColumn("name", VARCHAR),
                 "https://idsm.elixir-czech.cz/rdf/pdb-ccd/", ".*", "_molfile"));
 
-        addIriClass(new MapUserIriClass("pdb:compound", INT4, new DatabaseTable("pdb", "compound_bases"),
+        addIriClass(new MapUserIriClass("pdb:compound", INT4, new DatabaseTable("pdb", "compounds"),
                 new TableColumn("id", INT4), new TableColumn("name", VARCHAR), "https://identifiers.org/pdb-ccd/",
                 ".*"));
     }
@@ -51,7 +51,7 @@ public class PdbSachemConfiguration extends SparqlDatabaseOptimisedConfiguration
 
     private void addQuadMappings()
     {
-        MolFiles.addQuadMappings(this, "pdb:compound", "pdb:molfile", new DatabaseTable("pdb", "compound_bases"),
+        MolFiles.addQuadMappings(this, "pdb:compound", "pdb:molfile", new DatabaseTable("pdb", "compounds"),
                 getColumns(getIriClass("pdb:compound"), "id"), "id", "molfile", xsdString);
     }
 

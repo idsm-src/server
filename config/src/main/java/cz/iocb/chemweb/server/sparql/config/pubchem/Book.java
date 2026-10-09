@@ -25,7 +25,7 @@ public class Book
         ConstantIriMapping graph = config.createIriMapping("pubchem:book");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "book_bases");
+            DatabaseTable table = new DatabaseTable(schema, "books");
             TermMapping subject = config.createIriMapping("pubchem:book", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

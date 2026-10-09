@@ -1,4 +1,4 @@
-create table pubchem.gene_symbol_bases
+create table pubchem.genesymbols
 (
     id             integer not null,
     iri            varchar unique not null,
@@ -7,11 +7,11 @@ create table pubchem.gene_symbol_bases
 );
 
 
-create table pubchem.gene_bases
+create table pubchem.genes
 (
     id             integer not null,
     title          varchar,
-    gene_symbol    integer,
+    genesymbol     integer,
     organism       integer,
     primary key(id)
 );

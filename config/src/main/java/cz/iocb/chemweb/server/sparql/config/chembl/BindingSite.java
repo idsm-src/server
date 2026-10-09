@@ -24,7 +24,7 @@ public class BindingSite
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
-        DatabaseTable table = new DatabaseTable(schema, "binding_site_bases");
+        DatabaseTable table = new DatabaseTable(schema, "binding_sites");
         TermMapping subject = config.createIriMapping("chembl:binding_site", "id");
 
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

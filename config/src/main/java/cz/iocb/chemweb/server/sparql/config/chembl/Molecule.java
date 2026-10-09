@@ -23,7 +23,7 @@ public class Molecule
 
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("chembl:compound", INT4,
+        config.addIriClass(new IntegerUserIriClass("chembl:molecule", INT4,
                 "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL"));
         config.addIriClass(new IntegerUserIriClass("chembl:molfile", INT4,
                 "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL", "_Molfile"));
@@ -69,8 +69,8 @@ public class Molecule
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "molecule_bases");
-            TermMapping subject = config.createIriMapping("chembl:compound", "id");
+            DatabaseTable table = new DatabaseTable(schema, "molecules");
+            TermMapping subject = config.createIriMapping("chembl:molecule", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("cco:CellTherapy"),
@@ -123,8 +123,8 @@ public class Molecule
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:FRACClassification"),
                     config.createLiteralMapping(xsdString, "frac_classification"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasParentMolecule"),
-                    config.createIriMapping("chembl:compound", "parent"));
-            config.addQuadMapping(table, graph, config.createIriMapping("chembl:compound", "parent"),
+                    config.createIriMapping("chembl:molecule", "parent"));
+            config.addQuadMapping(table, graph, config.createIriMapping("chembl:molecule", "parent"),
                     config.createIriMapping("cco:hasChildMolecule"), subject);
             config.addQuadMapping(table, graph, config.createIriMapping("chembl:image", "id"),
                     config.createIriMapping("rdf:type"), config.createIriMapping("foaf:Image"),
@@ -137,7 +137,7 @@ public class Molecule
 
         {
             DatabaseTable table = new DatabaseTable(schema, "molecule_alternatives");
-            TermMapping subject = config.createIriMapping("chembl:compound", "molecule");
+            TermMapping subject = config.createIriMapping("chembl:molecule", "molecule");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:altLabel"),
                     config.createLiteralMapping(xsdString, "alternative"));
@@ -145,7 +145,7 @@ public class Molecule
 
         {
             DatabaseTable table = new DatabaseTable(schema, "molecule_atc_classifications");
-            TermMapping subject = config.createIriMapping("chembl:compound", "molecule");
+            TermMapping subject = config.createIriMapping("chembl:molecule", "molecule");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:atcClassification"),
                     config.createLiteralMapping(xsdString, "classification"));
@@ -153,7 +153,7 @@ public class Molecule
 
         {
             DatabaseTable table = new DatabaseTable(schema, "molecule_biocomponents");
-            TermMapping subject = config.createIriMapping("chembl:compound", "molecule");
+            TermMapping subject = config.createIriMapping("chembl:molecule", "molecule");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasBioComponent"),
                     config.createIriMapping("chembl:biocomponent", "biocomponent"));
@@ -163,7 +163,7 @@ public class Molecule
 
         {
             DatabaseTable table = new DatabaseTable(schema, "molecule_documents");
-            TermMapping subject = config.createIriMapping("chembl:compound", "molecule");
+            TermMapping subject = config.createIriMapping("chembl:molecule", "molecule");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasDocument"),
                     config.createIriMapping("chembl:document", "document"));
@@ -173,7 +173,7 @@ public class Molecule
 
         {
             DatabaseTable table = new DatabaseTable(schema, "molecule_descriptors");
-            TermMapping subject = config.createIriMapping("chembl:compound", "molecule");
+            TermMapping subject = config.createIriMapping("chembl:molecule", "molecule");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("chembl:molecule_alogp", "molecule"),
@@ -338,7 +338,7 @@ public class Molecule
 
         {
             DatabaseTable table = new DatabaseTable(schema, "molecule_structures");
-            TermMapping subject = config.createIriMapping("chembl:compound", "molecule");
+            TermMapping subject = config.createIriMapping("chembl:molecule", "molecule");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
                     config.createIriMapping("chembl:molecule_standard_inchi_key", "molecule"),
@@ -430,7 +430,7 @@ public class Molecule
 
         {
             DatabaseTable table = new DatabaseTable(schema, "molecule_references");
-            TermMapping subject = config.createIriMapping("chembl:compound", "molecule");
+            TermMapping subject = config.createIriMapping("chembl:molecule", "molecule");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:moleculeXref"),
                     config.createIriMapping("reference:bindingdb", "reference"),
@@ -653,7 +653,7 @@ public class Molecule
 
         {
             DatabaseTable table = new DatabaseTable(schema, "molecule_pubchem_references");
-            TermMapping subject = config.createIriMapping("chembl:compound", "molecule");
+            TermMapping subject = config.createIriMapping("chembl:molecule", "molecule");
 
             // extension
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
@@ -662,7 +662,7 @@ public class Molecule
 
         {
             DatabaseTable table = new DatabaseTable(schema, "molecule_chebi_references");
-            TermMapping subject = config.createIriMapping("chembl:compound", "molecule");
+            TermMapping subject = config.createIriMapping("chembl:molecule", "molecule");
 
             // extension
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -678,17 +678,17 @@ public class Molecule
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_011120"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000011"),
-                    config.createIriMapping("chembl:compound", "molecule"));
+                    config.createIriMapping("chembl:molecule", "molecule"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
                     config.createLiteralMapping(molfileLiteral, "molfile"));
 
             // extension
-            config.addQuadMapping(table, graph, config.createIriMapping("chembl:compound", "molecule"),
+            config.addQuadMapping(table, graph, config.createIriMapping("chembl:molecule", "molecule"),
                     config.createIriMapping("sio:SIO_000008"), subject);
 
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:is-attribute-of"),
-                    config.createIriMapping("chembl:compound", "molecule"));
+                    config.createIriMapping("chembl:molecule", "molecule"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-value"),
                     config.createLiteralMapping(molfileLiteral, "molfile"));
         }

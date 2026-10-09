@@ -36,8 +36,8 @@ public class Common
 
         config.addIriClass(new IntegerUserIriClass("ncbi:book", INT4, "https://www.ncbi.nlm.nih.gov/books/NBK"));
         config.addIriClass(new IntegerUserIriClass("ncbi:taxonomy", INT4, "https://www.ncbi.nlm.nih.gov/taxonomy/"));
-        config.addIriClass(new IntegerUserIriClass("ncbi:pubchem-compound", INT4, "http://pubchem.ncbi.nlm.nih.gov/compound/"));
-        config.addIriClass(new IntegerUserIriClass("ncbi:pubchem-substance", INT4, "http://pubchem.ncbi.nlm.nih.gov/substance/"));
+        config.addIriClass(new IntegerUserIriClass("ncbi:pubchem_compound", INT4, "http://pubchem.ncbi.nlm.nih.gov/compound/"));
+        config.addIriClass(new IntegerUserIriClass("ncbi:pubchem_substance", INT4, "http://pubchem.ncbi.nlm.nih.gov/substance/"));
         config.addIriClass(new IntegerUserIriClass("ncbi:conserveddomain", INT4, "https://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid="));
         config.addIriClass(new StringUserIriClass("ncbi:journal", "https://www.ncbi.nlm.nih.gov/nlmcatalog/"));
         config.addIriClass(new StringUserIriClass("purl:uniprot", "http://purl.uniprot.org/uniprot/"));
@@ -55,7 +55,7 @@ public class Common
         config.addIriClass(new StringUserIriClass("identifiers:pdb", "http://identifiers.org/pdb/", "[0-9][A-Z0-9]{3}"));
         config.addIriClass(new StringUserIriClass("identifiers:interpro", "http://identifiers.org/interpro/", "IPR[0-9]{6}"));
         config.addIriClass(new StringUserIriClass("identifiers:reactome_old", "http://identifiers.org/reactome/", "R-[A-Z]{3}-[1-9][0-9]*"));
-        config.addIriClass(new StringUserIriClass("identifiers:ec-code", "http://identifiers.org/ec-code/", "((-|[1-9][0-9]*)\\.){3}(-|n?[1-9][0-9]*)"));
+        config.addIriClass(new StringUserIriClass("identifiers:ec_code", "http://identifiers.org/ec-code/", "((-|[1-9][0-9]*)\\.){3}(-|n?[1-9][0-9]*)"));
         config.addIriClass(new StringUserIriClass("identifiers:lincs.smallmolecule", "http://identifiers.org/lincs.smallmolecule/", "LSM-[1-9][0-9]*"));
         config.addIriClass(new StringUserIriClass("identifiers:mesh_old", "http://identifiers.org/mesh/", "[A-Z][0-9]+(\\.[0-9]+|[A-Z][0-9]+)*"));
         config.addIriClass(new StringUserIriClass("identifiers:glytoucan", "http://identifiers.org/glytoucan:", "G[0-9]{5}[A-Z]{2}"));
@@ -81,10 +81,10 @@ public class Common
         config.addIriClass(new IntegerUserIriClass("identifiers:taxonomy", INT4, "http://identifiers.org/taxonomy:"));
         config.addIriClass(new IntegerUserIriClass("identifiers:pubmed", INT4, "http://identifiers.org/pubmed/"));
 
-        config.addIriClass(new IntegerUserIriClass("reference:ncbi-taxonomy", INT4, "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id="));
-        config.addIriClass(new IntegerUserIriClass("reference:pubchem-assay", INT4, "http://pubchem.ncbi.nlm.nih.gov/assay/assay.cgi?aid="));
+        config.addIriClass(new IntegerUserIriClass("reference:ncbi_taxonomy", INT4, "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id="));
+        config.addIriClass(new IntegerUserIriClass("reference:pubchem_assay", INT4, "http://pubchem.ncbi.nlm.nih.gov/assay/assay.cgi?aid="));
 
-        config.addIriClass(new StringUserIriClass("reference:pharmgkb-gene", "http://www.pharmgkb.org/gene/", "PA[1-9][0-9]*"));
+        config.addIriClass(new StringUserIriClass("reference:pharmgkb_gene", "http://www.pharmgkb.org/gene/", "PA[1-9][0-9]*"));
         config.addIriClass(new StringUserIriClass("reference:timbal", "http://mordred.bioc.cam.ac.uk/timbal/", "[A-Za-z0-9%()-]+"));
         config.addIriClass(new StringUserIriClass("reference:cgd", "http://research.nhgri.nih.gov/CGD/view/?g=", "[A-Z0-9-]+"));
 
@@ -112,11 +112,11 @@ public class Common
         config.addIriClass(new StringUserIriClass("reference:surechembl", "https://www.surechembl.org/chemical/", "[1-9][0-9]*"));
         config.addIriClass(new StringUserIriClass("reference:swisslipids", "https://www.swisslipids.org/#/entity/SLM%3A", "[0-9]{9}"));
 
-        config.addIriClass(new StringUserIriClass("reference:pathbank-pathway", "http://pathbank.org/view/", "SMP[0-9]{5,7}"));
-        config.addIriClass(new StringUserIriClass("reference:plantcyc-pathway", "https://pmn.plantcyc.org/pathway?", "orgid=[A-Z0-9_]+&id=[-A-Z0-9]+"));
-        config.addIriClass(new StringUserIriClass("reference:plantreactome-pathway", "https://plantreactome.gramene.org/content/detail/", "R-OSA-[0-9]{7}"));
-        config.addIriClass(new StringUserIriClass("reference:fairdomhub-model", "https://fairdomhub.org/models/", "[0-9]+"));
-        config.addIriClass(new StringUserIriClass("reference:lipidmaps-pathway", "https://www.lipidmaps.org/data/IntegratedPathwaysData/SetupIntegratedPathways.pl?imgsize=730&Mode=BMDMATPS11&Datatype=", ".*"));
+        config.addIriClass(new StringUserIriClass("reference:pathbank_pathway", "http://pathbank.org/view/", "SMP[0-9]{5,7}"));
+        config.addIriClass(new StringUserIriClass("reference:plantcyc_pathway", "https://pmn.plantcyc.org/pathway?", "orgid=[A-Z0-9_]+&id=[-A-Z0-9]+"));
+        config.addIriClass(new StringUserIriClass("reference:plantreactome_pathway", "https://plantreactome.gramene.org/content/detail/", "R-OSA-[0-9]{7}"));
+        config.addIriClass(new StringUserIriClass("reference:fairdomhub_model", "https://fairdomhub.org/models/", "[0-9]+"));
+        config.addIriClass(new StringUserIriClass("reference:lipidmaps_pathway", "https://www.lipidmaps.org/data/IntegratedPathwaysData/SetupIntegratedPathways.pl?imgsize=730&Mode=BMDMATPS11&Datatype=", ".*"));
 
         config.addIriClass(new StringUserIriClass("expasy:enzyme", "https://enzyme.expasy.org/EC/"));
         config.addIriClass(new StringUserIriClass("medlineplus:gene", "https://medlineplus.gov/genetics/gene/"));

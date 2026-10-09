@@ -1,5 +1,5 @@
-create index anatomy_bases__label on pubchem.anatomy_bases(label);
-grant select on pubchem.anatomy_bases to sparql;
+create index anatomies__label on pubchem.anatomies(label);
+grant select on pubchem.anatomies to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -10,7 +10,7 @@ grant select on pubchem.anatomy_alternatives to sparql;
 --------------------------------------------------------------------------------
 
 create index anatomy_matches__anatomy on pubchem.anatomy_matches(anatomy);
-create index anatomy_matches__match on pubchem.anatomy_matches(match_unit, match_id);
+create index anatomy_matches__match_unit_match_id on pubchem.anatomy_matches(match_unit, match_id);
 grant select on pubchem.anatomy_matches to sparql;
 
 --------------------------------------------------------------------------------

@@ -4,14 +4,14 @@
 -- updates or deletes only the differing rows.
 
 
---- substance_bases ---
+--- substances ---
 
-create temporary table substance_bases (like molmedb.substance_bases, primary key(id)) on commit drop;
+create temporary table pg_temp.substances (like molmedb.substances, primary key(id)) on commit drop;
 
-insert into pg_temp.substance_bases
+insert into pg_temp.substances
 (
     id,
-    parent_id,
+    parent,
     charge,
     ph_start,
     ph_end,
@@ -37,11 +37,11 @@ select
 from molmedb_tmp.structures as structures
 where not exists (select 1 from molmedb_tmp.structure_links as links where links.identifier = structures.identifier);
 
-merge into molmedb.substance_bases as t
-using pg_temp.substance_bases as s on t.id = s.id
+merge into molmedb.substances as t
+using pg_temp.substances as s on t.id = s.id
 when matched and t is distinct from s then
     update set
-        parent_id = s.parent_id,
+        parent = s.parent,
         charge = s.charge,
         ph_start = s.ph_start,
         ph_end = s.ph_end,
@@ -59,11 +59,11 @@ when not matched by source then
 
 --- substance_identifiers ---
 
-create temporary table substance_identifiers (like molmedb.substance_identifiers, primary key(substance_id, type, value)) on commit drop;
+create temporary table pg_temp.substance_identifiers (like molmedb.substance_identifiers, primary key(substance, type, value)) on commit drop;
 
 insert into pg_temp.substance_identifiers
 (
-    substance_id,
+    substance,
     type,
     value
 )
@@ -82,7 +82,7 @@ where identifiers.state != 3 and identifiers.type in (1,4,5,6,7,8) and
         where identifiers.structure_id = structures.id and links.identifier = structures.identifier);
 
 merge into molmedb.substance_identifiers as t
-using pg_temp.substance_identifiers as s on t.substance_id = s.substance_id and t.type = s.type and t.value = s.value
+using pg_temp.substance_identifiers as s on t.substance = s.substance and t.type = s.type and t.value = s.value
 when not matched by target then
     insert values (s.*)
 when not matched by source then
@@ -91,11 +91,11 @@ when not matched by source then
 
 --- substance_links ---
 
-create temporary table substance_links (like molmedb.substance_links, primary key(substance_id, type, value)) on commit drop;
+create temporary table pg_temp.substance_links (like molmedb.substance_links, primary key(substance, type, value)) on commit drop;
 
 insert into pg_temp.substance_links
 (
-    substance_id,
+    substance,
     type,
     value
 )
@@ -116,50 +116,50 @@ where identifiers.state != 3 and identifiers.type in (4,5,6,8) and
         where identifiers.structure_id = structures.id and links.identifier = structures.identifier);
 
 merge into molmedb.substance_links as t
-using pg_temp.substance_links as s on t.substance_id = s.substance_id and t.type = s.type and t.value = s.value
+using pg_temp.substance_links as s on t.substance = s.substance and t.type = s.type and t.value = s.value
 when not matched by target then
     insert values (s.*)
 when not matched by source then
     delete;
 
 
---- obsoleted_substances ---
+--- substance_obsolete_identifiers ---
 
-create temporary table obsoleted_substances (like molmedb.obsoleted_substances, primary key(identifier)) on commit drop;
+create temporary table pg_temp.substance_obsolete_identifiers (like molmedb.substance_obsolete_identifiers, primary key(identifier)) on commit drop;
 
-insert into pg_temp.obsoleted_substances
+insert into pg_temp.substance_obsolete_identifiers
 (
     identifier,
-    substance_id
+    substance
 )
 select
     identifier,
     structure_id
 from molmedb_tmp.structure_links;
 
-merge into molmedb.obsoleted_substances as t
-using pg_temp.obsoleted_substances as s on t.identifier = s.identifier
+merge into molmedb.substance_obsolete_identifiers as t
+using pg_temp.substance_obsolete_identifiers as s on t.identifier = s.identifier
 when matched and t is distinct from s then
     update set
-        substance_id = s.substance_id
+        substance = s.substance
 when not matched by target then
     insert values (s.*)
 when not matched by source then
     delete;
 
 
---- interaction_bases ---
+--- interactions ---
 
-create temporary table interaction_bases (like molmedb.interaction_bases, primary key(id)) on commit drop;
+create temporary table pg_temp.interactions (like molmedb.interactions, primary key(id)) on commit drop;
 
-insert into pg_temp.interaction_bases
+insert into pg_temp.interactions
 (
     id,
-    substance_id,
-    membrane_id,
-    method_id,
-    publication_id,
-    model_publication_id,
+    substance,
+    membrane,
+    method,
+    reference,
+    model_reference,
     logk,
     logk_accuracy,
     logperm,
@@ -199,15 +199,15 @@ select
 from molmedb_tmp.interactions_passive as interactions, molmedb_tmp.datasets as datasets, molmedb_tmp.model_has_publications as model_publications
 where interactions.dataset_id = datasets.id and interactions.dataset_id = model_publications.model_id and model_publications.model_type = 'App\Models\Dataset';
 
-merge into molmedb.interaction_bases as t
-using pg_temp.interaction_bases as s on t.id = s.id
+merge into molmedb.interactions as t
+using pg_temp.interactions as s on t.id = s.id
 when matched and t is distinct from s then
     update set
-        substance_id = s.substance_id,
-        membrane_id = s.membrane_id,
-        method_id = s.method_id,
-        publication_id = s.publication_id,
-        model_publication_id = s.model_publication_id,
+        substance = s.substance,
+        membrane = s.membrane,
+        method = s.method,
+        reference = s.reference,
+        model_reference = s.model_reference,
         logk = s.logk,
         logk_accuracy = s.logk_accuracy,
         logperm = s.logperm,
@@ -228,18 +228,18 @@ when not matched by source then
     delete;
 
 
---- fluorescent_interaction_bases ---
+--- fluorescent_interactions ---
 
-create temporary table fluorescent_interaction_bases (like molmedb.fluorescent_interaction_bases, primary key(id)) on commit drop;
+create temporary table pg_temp.fluorescent_interactions (like molmedb.fluorescent_interactions, primary key(id)) on commit drop;
 
-insert into pg_temp.fluorescent_interaction_bases
+insert into pg_temp.fluorescent_interactions
 (
     id,
-    substance_id,
-    membrane_id,
-    method_id,
-    publication_id,
-    model_publication_id,
+    substance,
+    membrane,
+    method,
+    reference,
+    model_reference,
     theta,
     theta_accuracy,
     abs_wl,
@@ -279,15 +279,15 @@ select
 from molmedb_tmp.fluorescent_properties as interactions, molmedb_tmp.datasets as datasets, molmedb_tmp.model_has_publications as model_publications
 where interactions.dataset_id = datasets.id and interactions.dataset_id = model_publications.model_id and model_publications.model_type = 'App\Models\Dataset';
 
-merge into molmedb.fluorescent_interaction_bases as t
-using pg_temp.fluorescent_interaction_bases as s on t.id = s.id
+merge into molmedb.fluorescent_interactions as t
+using pg_temp.fluorescent_interactions as s on t.id = s.id
 when matched and t is distinct from s then
     update set
-        substance_id = s.substance_id,
-        membrane_id = s.membrane_id,
-        method_id = s.method_id,
-        publication_id = s.publication_id,
-        model_publication_id = s.model_publication_id,
+        substance = s.substance,
+        membrane = s.membrane,
+        method = s.method,
+        reference = s.reference,
+        model_reference = s.model_reference,
         theta = s.theta,
         theta_accuracy = s.theta_accuracy,
         abs_wl = s.abs_wl,
@@ -308,11 +308,11 @@ when not matched by source then
     delete;
 
 
---- membrane_bases ---
+--- membranes ---
 
-create temporary table membrane_bases (like molmedb.membrane_bases, primary key(id)) on commit drop;
+create temporary table pg_temp.membranes (like molmedb.membranes, primary key(id)) on commit drop;
 
-insert into pg_temp.membrane_bases
+insert into pg_temp.membranes
 (
     id,
     category,
@@ -333,8 +333,8 @@ from
     left join (molmedb_tmp.categories as categories join molmedb_tmp.model_has_categories as model_categories
         on categories.type = 1 and model_categories.category_id = categories.id) on model_categories.model_id = membranes.id;
 
-merge into molmedb.membrane_bases as t
-using pg_temp.membrane_bases as s on t.id = s.id
+merge into molmedb.membranes as t
+using pg_temp.membranes as s on t.id = s.id
 when matched and t is distinct from s then
     update set
         category = s.category,
@@ -350,12 +350,12 @@ when not matched by source then
 
 --- membrane_parts ---
 
-create temporary table membrane_parts (like molmedb.membrane_parts, primary key(membrane_id, chebi_id)) on commit drop;
+create temporary table pg_temp.membrane_parts (like molmedb.membrane_parts, primary key(membrane, chebi)) on commit drop;
 
 insert into pg_temp.membrane_parts
 (
-    membrane_id,
-    chebi_id
+    membrane,
+    chebi
 )
 values
     ( 1, 45240),
@@ -390,18 +390,18 @@ values
     (54, 16188);
 
 merge into molmedb.membrane_parts as t
-using pg_temp.membrane_parts as s on t.membrane_id = s.membrane_id and t.chebi_id = s.chebi_id
+using pg_temp.membrane_parts as s on t.membrane = s.membrane and t.chebi = s.chebi
 when not matched by target then
     insert values (s.*)
 when not matched by source then
     delete;
 
 
---- method_bases ---
+--- methods ---
 
-create temporary table method_bases (like molmedb.method_bases, primary key(id)) on commit drop;
+create temporary table pg_temp.methods (like molmedb.methods, primary key(id)) on commit drop;
 
-insert into pg_temp.method_bases
+insert into pg_temp.methods
 (
     id,
     category,
@@ -422,8 +422,8 @@ from
     left join (molmedb_tmp.categories as categories join molmedb_tmp.model_has_categories as model_categories
         on categories.type = 2 and model_categories.category_id = categories.id) on model_categories.model_id = methods.id;
 
-merge into molmedb.method_bases as t
-using pg_temp.method_bases as s on t.id = s.id
+merge into molmedb.methods as t
+using pg_temp.methods as s on t.id = s.id
 when matched and t is distinct from s then
     update set
         category = s.category,
@@ -437,19 +437,19 @@ when not matched by source then
     delete;
 
 
---- transporter_bases ---
+--- transporters ---
 
-create temporary table transporter_bases (like molmedb.transporter_bases, primary key(id)) on commit drop;
+create temporary table pg_temp.transporters (like molmedb.transporters, primary key(id)) on commit drop;
 
-insert into pg_temp.transporter_bases
+insert into pg_temp.transporters
 (
     id,
-    substance_id,
-    protein_id,
-    membrane_id,
-    method_id,
-    publication_id,
-    model_publication_id,
+    substance,
+    protein,
+    membrane,
+    method,
+    reference,
+    model_reference,
     category,
     km,
     km_accuracy,
@@ -488,16 +488,16 @@ select
 from molmedb_tmp.interactions_active as interactions, molmedb_tmp.datasets as datasets, molmedb_tmp.model_has_publications as model_publications
 where interactions.dataset_id = datasets.id and interactions.dataset_id = model_publications.model_id and model_publications.model_type = 'App\Models\Dataset';
 
-merge into molmedb.transporter_bases as t
-using pg_temp.transporter_bases as s on t.id = s.id
+merge into molmedb.transporters as t
+using pg_temp.transporters as s on t.id = s.id
 when matched and t is distinct from s then
     update set
-        substance_id = s.substance_id,
-        protein_id = s.protein_id,
-        membrane_id = s.membrane_id,
-        method_id = s.method_id,
-        publication_id = s.publication_id,
-        model_publication_id = s.model_publication_id,
+        substance = s.substance,
+        protein = s.protein,
+        membrane = s.membrane,
+        method = s.method,
+        reference = s.reference,
+        model_reference = s.model_reference,
         category = s.category,
         km = s.km,
         km_accuracy = s.km_accuracy,
@@ -517,11 +517,11 @@ when not matched by source then
     delete;
 
 
---- protein_bases ---
+--- proteins ---
 
-create temporary table protein_bases (like molmedb.protein_bases, primary key(id)) on commit drop;
+create temporary table pg_temp.proteins (like molmedb.proteins, primary key(id)) on commit drop;
 
-insert into pg_temp.protein_bases
+insert into pg_temp.proteins
 (
     id,
     uniprot_id,
@@ -536,8 +536,8 @@ from
     left join molmedb_tmp.protein_identifiers as identifiers
         on proteins.id = identifiers.protein_id and identifiers.type = 1 and identifiers.state = 2;
 
-merge into molmedb.protein_bases as t
-using pg_temp.protein_bases as s on t.id = s.id
+merge into molmedb.proteins as t
+using pg_temp.proteins as s on t.id = s.id
 when matched and t is distinct from s then
     update set
         uniprot_id = s.uniprot_id,
@@ -548,11 +548,11 @@ when not matched by source then
     delete;
 
 
---- reference_bases ---
+--- references ---
 
-create temporary table reference_bases (like molmedb.reference_bases, primary key(id)) on commit drop;
+create temporary table pg_temp.references (like molmedb.references, primary key(id)) on commit drop;
 
-insert into pg_temp.reference_bases
+insert into pg_temp.references
 (
     id,
     doi,
@@ -567,7 +567,7 @@ select
 from molmedb_tmp.publications
 where id not in (22, 1030, 1031, 1875, 1876, 4308);
 
-insert into pg_temp.reference_bases
+insert into pg_temp.references
 (
     id,
     label,
@@ -581,8 +581,8 @@ values
     (1876, 'Metrabase', 'http://www-metrabase.ch.cam.ac.uk/'),
     (4308, 'BindingDB', 'https://bindingdb.org/');
 
-merge into molmedb.reference_bases as t
-using pg_temp.reference_bases as s on t.id = s.id
+merge into molmedb.references as t
+using pg_temp.references as s on t.id = s.id
 when matched and t is distinct from s then
     update set
         doi = s.doi,
@@ -598,12 +598,12 @@ when not matched by source then
 
 --- reference_substances ---
 
-create temporary table reference_substances (like molmedb.reference_substances, primary key(reference_id, substance_id)) on commit drop;
+create temporary table pg_temp.reference_substances (like molmedb.reference_substances, primary key(reference, substance)) on commit drop;
 
 insert into pg_temp.reference_substances
 (
-    reference_id,
-    substance_id
+    reference,
+    substance
 )
 select interactions.publication_id, interactions.structure_id
 from molmedb_tmp.interactions_active as interactions
@@ -654,7 +654,7 @@ from molmedb_tmp.fluorescent_properties as interactions, molmedb_tmp.structures 
 where interactions.structure_id = structures. id and model_publications.model_id = interactions.dataset_id and model_publications.model_type = 'App\Models\Dataset' and structures.parent_id is not null;
 
 merge into molmedb.reference_substances as t
-using pg_temp.reference_substances as s on t.reference_id = s.reference_id and t.substance_id = s.substance_id
+using pg_temp.reference_substances as s on t.reference = s.reference and t.substance = s.substance
 when not matched by target then
     insert values (s.*)
 when not matched by source then
@@ -663,12 +663,12 @@ when not matched by source then
 
 --- reference_membranes ---
 
-create temporary table reference_membranes (like molmedb.reference_membranes, primary key(reference_id, membrane_id)) on commit drop;
+create temporary table pg_temp.reference_membranes (like molmedb.reference_membranes, primary key(reference, membrane)) on commit drop;
 
 insert into pg_temp.reference_membranes
 (
-    reference_id,
-    membrane_id
+    reference,
+    membrane
 )
 select interactions.publication_id, datasets.membrane_id
 from molmedb_tmp.interactions_passive as interactions, molmedb_tmp.datasets as datasets
@@ -683,7 +683,7 @@ from molmedb_tmp.datasets as datasets, molmedb_tmp.model_has_publications as mod
 where model_publications.model_id = datasets.id and model_publications.model_type = 'App\Models\Dataset' and datasets.membrane_id is not null;
 
 merge into molmedb.reference_membranes as t
-using pg_temp.reference_membranes as s on t.reference_id = s.reference_id and t.membrane_id = s.membrane_id
+using pg_temp.reference_membranes as s on t.reference = s.reference and t.membrane = s.membrane
 when not matched by target then
     insert values (s.*)
 when not matched by source then
@@ -692,12 +692,12 @@ when not matched by source then
 
 --- reference_methods ---
 
-create temporary table reference_methods (like molmedb.reference_methods, primary key(reference_id, method_id)) on commit drop;
+create temporary table pg_temp.reference_methods (like molmedb.reference_methods, primary key(reference, method)) on commit drop;
 
 insert into pg_temp.reference_methods
 (
-    reference_id,
-    method_id
+    reference,
+    method
 )
 select interactions.publication_id, datasets.method_id
 from molmedb_tmp.interactions_passive as interactions, molmedb_tmp.datasets as datasets
@@ -716,7 +716,7 @@ from molmedb_tmp.datasets as datasets, molmedb_tmp.model_has_publications as mod
 where model_publications.model_id = datasets.id and model_publications.model_type = 'App\Models\Dataset' and datasets.method_id is not null;
 
 merge into molmedb.reference_methods as t
-using pg_temp.reference_methods as s on t.reference_id = s.reference_id and t.method_id = s.method_id
+using pg_temp.reference_methods as s on t.reference = s.reference and t.method = s.method
 when not matched by target then
     insert values (s.*)
 when not matched by source then
@@ -725,12 +725,12 @@ when not matched by source then
 
 --- reference_proteins ---
 
-create temporary table reference_proteins (like molmedb.reference_proteins, primary key(reference_id, protein_id)) on commit drop;
+create temporary table pg_temp.reference_proteins (like molmedb.reference_proteins, primary key(reference, protein)) on commit drop;
 
 insert into pg_temp.reference_proteins
 (
-    reference_id,
-    protein_id
+    reference,
+    protein
 )
 select interactions.publication_id, interactions.protein_id
 from molmedb_tmp.interactions_active as interactions
@@ -740,7 +740,7 @@ from molmedb_tmp.interactions_active as interactions, molmedb_tmp.model_has_publ
 where interactions.dataset_id = model_publications.model_id and model_publications.model_type = 'App\Models\Dataset';
 
 merge into molmedb.reference_proteins as t
-using pg_temp.reference_proteins as s on t.reference_id = s.reference_id and t.protein_id = s.protein_id
+using pg_temp.reference_proteins as s on t.reference = s.reference and t.protein = s.protein
 when not matched by target then
     insert values (s.*)
 when not matched by source then

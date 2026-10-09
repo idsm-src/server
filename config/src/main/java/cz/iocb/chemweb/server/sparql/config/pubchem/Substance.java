@@ -27,7 +27,7 @@ public class Substance
         ConstantIriMapping graph = config.createIriMapping("pubchem:substance");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substances");
             TermMapping subject = config.createIriMapping("pubchem:substance", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -65,9 +65,9 @@ public class Substance
             TermMapping subject = config.createIriMapping("pubchem:substance", "substance");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("identifiers:chembl", "chembl"));
+                    config.createIriMapping("identifiers:chembl", "match"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("chembl:compound", "chembl"));
+                    config.createIriMapping("chembl:molecule", "match"));
         }
 
         {
@@ -75,9 +75,9 @@ public class Substance
             TermMapping subject = config.createIriMapping("pubchem:substance", "substance");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("identifiers:glytoucan", "glytoucan"));
+                    config.createIriMapping("identifiers:glytoucan", "match"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("glycoinfo:glycan", "glytoucan"));
+                    config.createIriMapping("glycoinfo:glycan", "match"));
         }
 
         {
@@ -121,7 +121,7 @@ public class Substance
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substance_versions");
             TermMapping subject = config.createIriMapping("pubchem:substance", "substance");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
@@ -137,7 +137,7 @@ public class Substance
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "descriptor_substance_bases");
+            DatabaseTable table = new DatabaseTable(schema, "substance_versions");
             TermMapping subject = config.createIriMapping("pubchem:substance", "substance");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:substance_version"),

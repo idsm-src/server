@@ -25,7 +25,7 @@ public class Document
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
-        DatabaseTable table = new DatabaseTable(schema, "document_bases");
+        DatabaseTable table = new DatabaseTable(schema, "documents");
 
         // a document only referenced by other entities is not described
         Conditions described = config.createIsNotNullCondition(table, "chembl_id");

@@ -1,4 +1,4 @@
-create table chembl.cell_line_bases
+create table chembl.cell_lines
 (
     id           integer not null,
     chembl_id    varchar,

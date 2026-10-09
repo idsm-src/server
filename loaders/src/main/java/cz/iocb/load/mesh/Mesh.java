@@ -98,8 +98,8 @@ public class Mesh extends Updater
         StringIntMap newTypes = new StringIntMap();
         StringIntMap oldTypes = new StringIntMap();
 
-        load("select id from mesh.mesh_bases", oldMeshes);
-        load("select id,type_id from mesh.mesh_bases where type_id is not null", oldTypes);
+        load("select id from mesh.resources", oldMeshes);
+        load("select id,type_id from mesh.resources where type_id is not null", oldTypes);
 
         dispatcher.on(rdf + "type", (subject, object) -> {
             String meshID = getStringID(subject, prefix);
@@ -135,8 +135,8 @@ public class Mesh extends Updater
         });
 
         dispatcher.after(() -> {
-            store("update mesh.mesh_bases set type_id=null where id=? and type_id=?", oldTypes);
-            store("insert into mesh.mesh_bases(id,type_id) values(?,?) "
+            store("update mesh.resources set type_id=null where id=? and type_id=?", oldTypes);
+            store("insert into mesh.resources(id,type_id) values(?,?) "
                     + "on conflict(id) do update set type_id=EXCLUDED.type_id", newTypes);
         });
     }
@@ -149,7 +149,7 @@ public class Mesh extends Updater
         StringPairSet newValues = new StringPairSet();
         StringPairSet oldValues = new StringPairSet();
 
-        load("select mesh," + column + " from mesh." + table, oldValues);
+        load("select resource," + column + " from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
             if(!object.isLiteral() || !object.getLiteralLanguage().equals(lang))
@@ -167,8 +167,8 @@ public class Mesh extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from mesh." + table + " where mesh=? and " + column + "=?", oldValues);
-            store("insert into mesh." + table + "(mesh," + column + ") values(?,?)", newValues);
+            store("delete from mesh." + table + " where resource=? and " + column + "=?", oldValues);
+            store("insert into mesh." + table + "(resource," + column + ") values(?,?)", newValues);
         });
     }
 
@@ -180,7 +180,7 @@ public class Mesh extends Updater
         StringStringMap newValues = new StringStringMap();
         StringStringMap oldValues = new StringStringMap();
 
-        load("select mesh," + column + " from mesh." + table, oldValues);
+        load("select resource," + column + " from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
             if(!object.isLiteral() || !object.getLiteralLanguage().equals(lang))
@@ -210,9 +210,9 @@ public class Mesh extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from mesh." + table + " where mesh=? and " + column + "=?", oldValues);
-            store("insert into mesh." + table + "(mesh," + column + ") values(?,?) on conflict(mesh) do update set "
-                    + column + "=EXCLUDED." + column, newValues);
+            store("delete from mesh." + table + " where resource=? and " + column + "=?", oldValues);
+            store("insert into mesh." + table + "(resource," + column + ") values(?,?) "
+                    + "on conflict(resource) do update set " + column + "=EXCLUDED." + column, newValues);
         });
     }
 
@@ -224,7 +224,7 @@ public class Mesh extends Updater
         StringIntMap newValues = new StringIntMap();
         StringIntMap oldValues = new StringIntMap();
 
-        load("select mesh," + column + "::integer from mesh." + table, oldValues);
+        load("select resource," + column + "::integer from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
             String meshID = getMeshID(subject.getURI());
@@ -251,9 +251,9 @@ public class Mesh extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from mesh." + table + " where mesh=? and " + column + "=?::boolean", oldValues);
-            store("insert into mesh." + table + "(mesh," + column + ") values(?,?::boolean) "
-                    + "on conflict(mesh) do update set " + column + "=EXCLUDED." + column, newValues);
+            store("delete from mesh." + table + " where resource=? and " + column + "=?::boolean", oldValues);
+            store("insert into mesh." + table + "(resource," + column + ") values(?,?::boolean) "
+                    + "on conflict(resource) do update set " + column + "=EXCLUDED." + column, newValues);
         });
     }
 
@@ -265,7 +265,7 @@ public class Mesh extends Updater
         StringIntMap newValues = new StringIntMap();
         StringIntMap oldValues = new StringIntMap();
 
-        load("select mesh," + column + " from mesh." + table, oldValues);
+        load("select resource," + column + " from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
             String meshID = getMeshID(subject.getURI());
@@ -292,9 +292,9 @@ public class Mesh extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from mesh." + table + " where mesh=? and " + column + "=?", oldValues);
-            store("insert into mesh." + table + "(mesh," + column + ") values(?,?) on conflict(mesh) do update set "
-                    + column + "=EXCLUDED." + column, newValues);
+            store("delete from mesh." + table + " where resource=? and " + column + "=?", oldValues);
+            store("insert into mesh." + table + "(resource," + column + ") values(?,?) "
+                    + "on conflict(resource) do update set " + column + "=EXCLUDED." + column, newValues);
         });
     }
 
@@ -306,7 +306,7 @@ public class Mesh extends Updater
         StringStringIntPairMap newValues = new StringStringIntPairMap();
         StringStringIntPairMap oldValues = new StringStringIntPairMap();
 
-        load("select mesh,date::varchar,timezone from mesh." + table, oldValues);
+        load("select resource,date::varchar,timezone from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
             String meshID = getMeshID(subject.getURI());
@@ -335,9 +335,9 @@ public class Mesh extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from mesh." + table + " where mesh=? and date=?::date and timezone=?", oldValues);
-            store("insert into mesh." + table + "(mesh,date,timezone) values(?,?::date,?) "
-                    + "on conflict(mesh) do update set date=EXCLUDED.date, timezone=EXCLUDED.timezone", newValues);
+            store("delete from mesh." + table + " where resource=? and date=?::date and timezone=?", oldValues);
+            store("insert into mesh." + table + "(resource,date,timezone) values(?,?::date,?) "
+                    + "on conflict(resource) do update set date=EXCLUDED.date, timezone=EXCLUDED.timezone", newValues);
         });
     }
 
@@ -349,7 +349,7 @@ public class Mesh extends Updater
         StringPairSet newValues = new StringPairSet();
         StringPairSet oldValues = new StringPairSet();
 
-        load("select mesh," + column + " from mesh." + table, oldValues);
+        load("select resource," + column + " from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
             String meshID = getMeshID(subject.getURI());
@@ -364,8 +364,8 @@ public class Mesh extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from mesh." + table + " where mesh=? and " + column + "=?", oldValues);
-            store("insert into mesh." + table + "(mesh," + column + ") values(?,?)", newValues);
+            store("delete from mesh." + table + " where resource=? and " + column + "=?", oldValues);
+            store("insert into mesh." + table + "(resource," + column + ") values(?,?)", newValues);
         });
     }
 
@@ -377,7 +377,7 @@ public class Mesh extends Updater
         StringStringMap newValues = new StringStringMap();
         StringStringMap oldValues = new StringStringMap();
 
-        load("select mesh," + column + " from mesh." + table, oldValues);
+        load("select resource," + column + " from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
             String meshID = getMeshID(subject.getURI());
@@ -404,9 +404,9 @@ public class Mesh extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from mesh." + table + " where mesh=? and " + column + "=?", oldValues);
-            store("insert into mesh." + table + "(mesh," + column + ") values(?,?) on conflict(mesh) do update set "
-                    + column + "=EXCLUDED." + column, newValues);
+            store("delete from mesh." + table + " where resource=? and " + column + "=?", oldValues);
+            store("insert into mesh." + table + "(resource," + column + ") values(?,?) "
+                    + "on conflict(resource) do update set " + column + "=EXCLUDED." + column, newValues);
         });
     }
 
@@ -437,8 +437,8 @@ public class Mesh extends Updater
 
     static void finish() throws IOException, SQLException
     {
-        store("delete from mesh.mesh_bases where id=?", oldMeshes);
-        store("insert into mesh.mesh_bases(id) values(?)", newMeshes);
+        store("delete from mesh.resources where id=?", oldMeshes);
+        store("insert into mesh.resources(id) values(?)", newMeshes);
     }
 
 
@@ -485,60 +485,65 @@ public class Mesh extends Updater
             check(dispatcher);
             loadTypes(dispatcher);
 
-            loadMultiStringValues(dispatcher, meshv + "altLabel", "alt_labels", "label", "en");
-            loadMultiStringValues(dispatcher, meshv + "previousIndexing", "previous_indexing_values", "value", "en");
-            loadMultiStringValues(dispatcher, meshv + "source", "sources", "source", "en");
-            loadMultiStringValues(dispatcher, meshv + "thesaurusID", "thesauruses", "thesaurus", "en");
-            loadMultiStringValues(dispatcher, rdfs + "label", "labels", "label", "en");
-            loadStringValues(dispatcher, meshv + "abbreviation", "abbreviations", "abbreviation", "en");
-            loadStringValues(dispatcher, meshv + "annotation", "annotations", "annotation", "en");
-            loadStringValues(dispatcher, meshv + "casn1_label", "casn1_labels", "label", "en");
-            loadStringValues(dispatcher, meshv + "considerAlso", "consider_also_values", "value", "en");
-            loadStringValues(dispatcher, meshv + "entryVersion", "entry_versions", "version", "en");
-            loadStringValues(dispatcher, meshv + "historyNote", "history_notes", "note", "en");
-            loadStringValues(dispatcher, meshv + "lastActiveYear", "last_active_years", "year", "en");
-            loadStringValues(dispatcher, meshv + "lexicalTag", "lexical_tags", "tag", "en");
-            loadStringValues(dispatcher, meshv + "note", "notese_notes", "note", "en");
-            loadStringValues(dispatcher, meshv + "onlineNote", "online_notes", "note", "en");
-            loadStringValues(dispatcher, meshv + "prefLabel", "pref_labels", "label", "en");
-            loadStringValues(dispatcher, meshv + "publicMeSHNote", "public_mesh_notes", "note", "en");
-            loadStringValues(dispatcher, meshv + "scopeNote", "scope_notes", "note", "en");
-            loadStringValues(dispatcher, meshv + "sortVersion", "sort_versions", "version", "en");
+            loadMultiStringValues(dispatcher, meshv + "altLabel", "resource_alt_labels", "label", "en");
+            loadMultiStringValues(dispatcher, meshv + "previousIndexing", "resource_previous_indexing_values", "value",
+                    "en");
+            loadMultiStringValues(dispatcher, meshv + "source", "resource_sources", "source", "en");
+            loadMultiStringValues(dispatcher, meshv + "thesaurusID", "resource_thesauruses", "thesaurus", "en");
+            loadMultiStringValues(dispatcher, rdfs + "label", "resource_labels", "label", "en");
+            loadStringValues(dispatcher, meshv + "abbreviation", "resource_abbreviations", "abbreviation", "en");
+            loadStringValues(dispatcher, meshv + "annotation", "resource_annotations", "annotation", "en");
+            loadStringValues(dispatcher, meshv + "casn1_label", "resource_casn1_labels", "label", "en");
+            loadStringValues(dispatcher, meshv + "considerAlso", "resource_consider_also_values", "value", "en");
+            loadStringValues(dispatcher, meshv + "entryVersion", "resource_entry_versions", "version", "en");
+            loadStringValues(dispatcher, meshv + "historyNote", "resource_history_notes", "note", "en");
+            loadStringValues(dispatcher, meshv + "lastActiveYear", "resource_last_active_years", "year", "en");
+            loadStringValues(dispatcher, meshv + "lexicalTag", "resource_lexical_tags", "tag", "en");
+            loadStringValues(dispatcher, meshv + "note", "resource_notes", "note", "en");
+            loadStringValues(dispatcher, meshv + "onlineNote", "resource_online_notes", "note", "en");
+            loadStringValues(dispatcher, meshv + "prefLabel", "resource_pref_labels", "label", "en");
+            loadStringValues(dispatcher, meshv + "publicMeSHNote", "resource_public_mesh_notes", "note", "en");
+            loadStringValues(dispatcher, meshv + "scopeNote", "resource_scope_notes", "note", "en");
+            loadStringValues(dispatcher, meshv + "sortVersion", "resource_sort_versions", "version", "en");
 
-            loadMultiStringValues(dispatcher, meshv + "relatedRegistryNumber", "related_registry_numbers", "number",
-                    "");
-            loadStringValues(dispatcher, meshv + "identifier", "identifiers", "identifier", "");
-            loadStringValues(dispatcher, meshv + "nlmClassificationNumber", "nlm_cassification_numbers", "number", "");
-            loadStringValues(dispatcher, meshv + "registryNumber", "registry_numbers", "number", "");
+            loadMultiStringValues(dispatcher, meshv + "relatedRegistryNumber", "resource_related_registry_numbers",
+                    "number", "");
+            loadStringValues(dispatcher, meshv + "identifier", "resource_identifiers", "identifier", "");
+            loadStringValues(dispatcher, meshv + "nlmClassificationNumber", "resource_nlm_classification_numbers",
+                    "number", "");
+            loadStringValues(dispatcher, meshv + "registryNumber", "resource_registry_numbers", "number", "");
 
-            loadBooleanValues(dispatcher, meshv + "active", "active_property", "value");
+            loadBooleanValues(dispatcher, meshv + "active", "resource_active_flags", "flag");
 
-            loadIntegerValues(dispatcher, meshv + "frequency", "frequencies", "frequency");
+            loadIntegerValues(dispatcher, meshv + "frequency", "resource_frequencies", "frequency");
 
-            loadDateValues(dispatcher, meshv + "dateCreated", "created_dates");
-            loadDateValues(dispatcher, meshv + "dateRevised", "revised_dates");
-            loadDateValues(dispatcher, meshv + "dateEstablished", "established_dates");
+            loadDateValues(dispatcher, meshv + "dateCreated", "resource_created_dates");
+            loadDateValues(dispatcher, meshv + "dateRevised", "resource_revised_dates");
+            loadDateValues(dispatcher, meshv + "dateEstablished", "resource_established_dates");
 
-            loadMultiMeshValues(dispatcher, meshv + "allowableQualifier", "allowable_qualifiers", "qualifier");
-            loadMultiMeshValues(dispatcher, meshv + "broaderConcept", "broader_concepts", "concept");
-            loadMultiMeshValues(dispatcher, meshv + "broaderDescriptor", "broader_descriptors", "descriptor");
-            loadMultiMeshValues(dispatcher, meshv + "broaderQualifier", "broader_qualifiers", "qualifier");
-            loadMultiMeshValues(dispatcher, meshv + "concept", "concepts", "concept");
-            loadMultiMeshValues(dispatcher, meshv + "indexerConsiderAlso", "indexer_consider_also_relations", "value");
-            loadMultiMeshValues(dispatcher, meshv + "mappedTo", "mapped_to_relations", "value");
-            loadMultiMeshValues(dispatcher, meshv + "narrowerConcept", "narrower_concepts", "concept");
-            loadMultiMeshValues(dispatcher, meshv + "pharmacologicalAction", "pharmacological_actions", "action");
-            loadMultiMeshValues(dispatcher, meshv + "preferredMappedTo", "preferred_mapped_to_relations", "value");
-            loadMultiMeshValues(dispatcher, meshv + "relatedConcept", "related_concepts", "concept");
-            loadMultiMeshValues(dispatcher, meshv + "seeAlso", "see_also_relations", "reference");
-            loadMultiMeshValues(dispatcher, meshv + "term", "terms", "term");
-            loadMultiMeshValues(dispatcher, meshv + "treeNumber", "tree_numbers", "number");
-            loadMeshValues(dispatcher, meshv + "hasDescriptor", "descriptors", "descriptor");
-            loadMeshValues(dispatcher, meshv + "hasQualifier", "qualifiers", "qualifier");
-            loadMeshValues(dispatcher, meshv + "parentTreeNumber", "parent_tree_numbers", "number");
-            loadMeshValues(dispatcher, meshv + "preferredConcept", "preferred_concept", "concept");
-            loadMeshValues(dispatcher, meshv + "preferredTerm", "preferred_term", "term");
-            loadMeshValues(dispatcher, meshv + "useInstead", "use_instead_relations", "value");
+            loadMultiMeshValues(dispatcher, meshv + "allowableQualifier", "resource_allowable_qualifiers", "qualifier");
+            loadMultiMeshValues(dispatcher, meshv + "broaderConcept", "resource_broader_concepts", "concept");
+            loadMultiMeshValues(dispatcher, meshv + "broaderDescriptor", "resource_broader_descriptors", "descriptor");
+            loadMultiMeshValues(dispatcher, meshv + "broaderQualifier", "resource_broader_qualifiers", "qualifier");
+            loadMultiMeshValues(dispatcher, meshv + "concept", "resource_concepts", "concept");
+            loadMultiMeshValues(dispatcher, meshv + "indexerConsiderAlso", "resource_indexer_consider_also_relations",
+                    "value");
+            loadMultiMeshValues(dispatcher, meshv + "mappedTo", "resource_mapped_to_relations", "value");
+            loadMultiMeshValues(dispatcher, meshv + "narrowerConcept", "resource_narrower_concepts", "concept");
+            loadMultiMeshValues(dispatcher, meshv + "pharmacologicalAction", "resource_pharmacological_actions",
+                    "action");
+            loadMultiMeshValues(dispatcher, meshv + "preferredMappedTo", "resource_preferred_mapped_to_relations",
+                    "value");
+            loadMultiMeshValues(dispatcher, meshv + "relatedConcept", "resource_related_concepts", "concept");
+            loadMultiMeshValues(dispatcher, meshv + "seeAlso", "resource_see_also_relations", "reference");
+            loadMultiMeshValues(dispatcher, meshv + "term", "resource_terms", "term");
+            loadMultiMeshValues(dispatcher, meshv + "treeNumber", "resource_tree_numbers", "number");
+            loadMeshValues(dispatcher, meshv + "hasDescriptor", "resource_descriptors", "descriptor");
+            loadMeshValues(dispatcher, meshv + "hasQualifier", "resource_qualifiers", "qualifier");
+            loadMeshValues(dispatcher, meshv + "parentTreeNumber", "resource_parent_tree_numbers", "number");
+            loadMeshValues(dispatcher, meshv + "preferredConcept", "resource_preferred_concepts", "concept");
+            loadMeshValues(dispatcher, meshv + "preferredTerm", "resource_preferred_terms", "term");
+            loadMeshValues(dispatcher, meshv + "useInstead", "resource_use_instead_relations", "value");
 
             dispatcher.load(file);
             missingMeshes.settle();

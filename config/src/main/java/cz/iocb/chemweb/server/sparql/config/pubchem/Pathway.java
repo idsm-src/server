@@ -27,7 +27,7 @@ public class Pathway
         ConstantIriMapping graph = config.createIriMapping("pubchem:pathway");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "pathway_bases");
+            DatabaseTable table = new DatabaseTable(schema, "pathways");
             TermMapping subject = config.createIriMapping("pubchem:pathway", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -42,7 +42,7 @@ public class Pathway
                     config.createIriMapping("pubchem:taxonomy", "organism"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("reference:pathbank-pathway", "reference"), config.createAreEqualCondition(
+                    config.createIriMapping("reference:pathbank_pathway", "reference"), config.createAreEqualCondition(
                             "reference_type", "'PATHBANK'::" + schema + ".pathway_reference_type"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:reactome", "reference"), config.createAreEqualCondition(
@@ -54,10 +54,10 @@ public class Pathway
                     config.createIriMapping("identifiers:biocyc", "reference"), config.createAreEqualCondition(
                             "reference_type", "'BIOCYC'::" + schema + ".pathway_reference_type"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("reference:plantcyc-pathway", "reference"), config.createAreEqualCondition(
+                    config.createIriMapping("reference:plantcyc_pathway", "reference"), config.createAreEqualCondition(
                             "reference_type", "'PLANTCYC'::" + schema + ".pathway_reference_type"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("reference:plantreactome-pathway", "reference"),
+                    config.createIriMapping("reference:plantreactome_pathway", "reference"),
                     config.createAreEqualCondition("reference_type",
                             "'PLANTREACTOME'::" + schema + ".pathway_reference_type"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
@@ -65,10 +65,10 @@ public class Pathway
                     config.createAreEqualCondition("reference_type",
                             "'PHARMGKB'::" + schema + ".pathway_reference_type"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("reference:fairdomhub-model", "reference"), config.createAreEqualCondition(
+                    config.createIriMapping("reference:fairdomhub_model", "reference"), config.createAreEqualCondition(
                             "reference_type", "'FAIRDOMHUB'::" + schema + ".pathway_reference_type"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("reference:lipidmaps-pathway", "reference"), config.createAreEqualCondition(
+                    config.createIriMapping("reference:lipidmaps_pathway", "reference"), config.createAreEqualCondition(
                             "reference_type", "'LIPIDMAPS'::" + schema + ".pathway_reference_type"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:panther.pathway", "reference"), config.createAreEqualCondition(

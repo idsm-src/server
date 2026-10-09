@@ -21,7 +21,7 @@ class SubstanceDescriptor extends Updater
         IntIntMap newValues = new IntIntMap();
         IntIntMap oldValues = new IntIntMap();
 
-        load("select substance,version from pubchem.descriptor_substance_bases", oldValues);
+        load("select substance,version from pubchem.substance_versions", oldValues);
 
         processFiles("pubchem/RDF/descriptor/substance", "pc_descr_SubstanceVersion_value_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
@@ -106,8 +106,8 @@ class SubstanceDescriptor extends Updater
             }
         });
 
-        store("delete from pubchem.descriptor_substance_bases where substance=? and version=?", oldValues);
-        store("insert into pubchem.descriptor_substance_bases(substance,version) values(?,?) "
+        store("delete from pubchem.substance_versions where substance=? and version=?", oldValues);
+        store("insert into pubchem.substance_versions(substance,version) values(?,?) "
                 + "on conflict(substance) do update set version=EXCLUDED.version", newValues);
     }
 

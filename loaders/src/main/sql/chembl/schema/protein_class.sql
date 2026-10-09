@@ -1,4 +1,4 @@
-create table chembl.protein_class_bases
+create table chembl.protein_classes
 (
     id         integer not null,
     chembl_id  varchar,
@@ -12,15 +12,15 @@ create table chembl.protein_class_bases
 
 create table chembl.protein_class_component_descendants
 (
-    class      integer not null,
-    component  integer not null,
-    primary key(class, component)
+    protein_class   integer not null,
+    component       integer not null,
+    primary key(protein_class, component)
 );
 
 
 create table chembl.protein_class_target_descendants
 (
-    class   integer not null,
-    target  integer not null,
-    primary key(class, target)
+    protein_class   integer not null,
+    target          integer not null,
+    primary key(protein_class, target)
 );

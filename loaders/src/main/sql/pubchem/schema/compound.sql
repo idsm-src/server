@@ -1,4 +1,4 @@
-create table pubchem.compound_bases
+create table pubchem.compounds
 (
     id          integer not null,
     primary key(id)

@@ -23,7 +23,7 @@ class InchiKey extends Updater
     {
         StringIntMap oldKeys = new StringIntMap();
 
-        load("select inchikey,id from pubchem.inchikey_bases", oldKeys);
+        load("select inchikey,id from pubchem.inchikeys", oldKeys);
         nextKeyID = oldKeys.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
         processFiles("pubchem/RDF/inchikey", "pc_inchikey_value_[0-9]+\\.ttl\\.gz", file -> {
@@ -56,8 +56,8 @@ class InchiKey extends Updater
             }
         });
 
-        store("delete from pubchem.inchikey_bases where inchikey=? and id=?", oldKeys);
-        store("insert into pubchem.inchikey_bases(inchikey,id) values(?,?)", newKeys);
+        store("delete from pubchem.inchikeys where inchikey=? and id=?", oldKeys);
+        store("insert into pubchem.inchikeys(inchikey,id) values(?,?)", newKeys);
     }
 
 

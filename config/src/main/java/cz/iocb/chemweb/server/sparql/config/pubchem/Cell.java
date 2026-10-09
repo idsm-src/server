@@ -25,7 +25,7 @@ public class Cell
         ConstantIriMapping graph = config.createIriMapping("pubchem:cell");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "cell_bases");
+            DatabaseTable table = new DatabaseTable(schema, "cells");
             TermMapping subject = config.createIriMapping("pubchem:cell", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -75,7 +75,7 @@ public class Cell
             TermMapping subject = config.createIriMapping("pubchem:cell", "cell");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("mesh:heading", "match"));
+                    config.createIriMapping("mesh:resource", "match"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("identifiers:mesh", "match"));

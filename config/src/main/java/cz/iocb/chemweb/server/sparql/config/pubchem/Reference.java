@@ -26,7 +26,7 @@ public class Reference
         ConstantIriMapping graph = config.createIriMapping("pubchem:reference");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "reference_bases");
+            DatabaseTable table = new DatabaseTable(schema, "references");
             TermMapping subject = config.createIriMapping("pubchem:reference", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -54,11 +54,11 @@ public class Reference
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "reference_discusses");
+            DatabaseTable table = new DatabaseTable(schema, "reference_discussed_headings");
             TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:discusses"),
-                    config.createIriMapping("mesh:heading", "statement"));
+                    config.createIriMapping("mesh:resource", "heading"));
         }
 
         {
@@ -66,7 +66,7 @@ public class Reference
             TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("fabio:hasSubjectTerm"),
-                    config.createIriMapping("mesh:heading", "subject"));
+                    config.createIriMapping("mesh:resource", "subject"));
         }
 
         {
@@ -82,7 +82,7 @@ public class Reference
             TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("fabio:hasPrimarySubjectTerm"),
-                    config.createIriMapping("mesh:heading", "subject"));
+                    config.createIriMapping("mesh:resource", "subject"));
         }
 
         {
@@ -122,7 +122,7 @@ public class Reference
             TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("frapo:isSupportedBy"),
-                    config.createIriMapping("pubchem:grant", "grantid"));
+                    config.createIriMapping("pubchem:grant", "supporting_grant"));
         }
 
         {
@@ -184,12 +184,12 @@ public class Reference
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "reference_mined_genes");
+            DatabaseTable table = new DatabaseTable(schema, "reference_mined_genesymbols");
             TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject,
                     config.createIriMapping("vocab:discussesAsDerivedByTextMining"),
-                    config.createIriMapping("pubchem:gene_symbol", "gene_symbol"));
+                    config.createIriMapping("pubchem:genesymbol", "genesymbol"));
         }
 
         {
@@ -210,7 +210,7 @@ public class Reference
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "reference_sources");
+            DatabaseTable table = new DatabaseTable(schema, "reference_source_types");
             TermMapping subject = config.createIriMapping("pubchem:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:source"),

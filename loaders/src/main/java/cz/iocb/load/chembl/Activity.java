@@ -31,7 +31,7 @@ class Activity extends Updater
 {
     static final String prefix = ChEMBL.chembl + "activity/CHEMBL_ACT_";
 
-    private static final EntityTable<Integer> activities = new EntityTable<>("chembl.activity_bases", intKey("id"),
+    private static final EntityTable<Integer> activities = new EntityTable<>("chembl.activities", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), integer("assay"), integer("molecule"), integer("document"),
             integer("endpoint_id"), integer("unit_id"), integer("qudt_id"), varchar("type"), varchar("relation"),
             float8("value"), varchar("units"), varchar("standard_type"), varchar("standard_relation"),

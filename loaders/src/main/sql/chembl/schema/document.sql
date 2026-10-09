@@ -1,4 +1,4 @@
-create table chembl.document_bases
+create table chembl.documents
 (
     id          integer not null,
     chembl_id   varchar,

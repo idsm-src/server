@@ -25,7 +25,7 @@ public class Disease
         ConstantIriMapping graph = config.createIriMapping("pubchem:disease");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "disease_bases");
+            DatabaseTable table = new DatabaseTable(schema, "diseases");
             TermMapping subject = config.createIriMapping("pubchem:disease", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -57,7 +57,7 @@ public class Disease
             TermMapping subject = config.createIriMapping("pubchem:disease", "disease");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("mesh:heading", "match"));
+                    config.createIriMapping("mesh:resource", "match"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
                     config.createIriMapping("identifiers:mesh", "match"));

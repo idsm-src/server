@@ -26,7 +26,7 @@ public class Assay
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "assay_bases");
+            DatabaseTable table = new DatabaseTable(schema, "assays");
             TermMapping subject = config.createIriMapping("chembl:assay", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -34,13 +34,13 @@ public class Assay
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
                     config.createIriMapping("ontology:taxonomy", "taxonomy"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                    config.createIriMapping("reference:ncbi-taxonomy", "taxonomy"));
+                    config.createIriMapping("reference:ncbi_taxonomy", "taxonomy"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000205"),
                     config.createIriMapping("ontology:bao", "format_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasSource"),
-                    config.createIriMapping("chembl:chembl_source", "source"));
+                    config.createIriMapping("chembl:source", "source"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:assayXref"),
-                    config.createIriMapping("reference:pubchem-assay", "pubchem_assay"));
+                    config.createIriMapping("reference:pubchem_assay", "pubchem_assay"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasTarget"),
                     config.createIriMapping("chembl:target", "target"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasDocument"),
@@ -79,7 +79,7 @@ public class Assay
                     config.createLiteralMapping(xsdString, "category"));
             config.addQuadMapping(table, graph, config.createIriMapping("chembl:cell_line", "cell_line"),
                     config.createIriMapping("cco:isCellLineForAssay"), subject);
-            config.addQuadMapping(table, graph, config.createIriMapping("chembl:chembl_source", "source"),
+            config.addQuadMapping(table, graph, config.createIriMapping("chembl:source", "source"),
                     config.createIriMapping("cco:hasAssay"), subject);
             config.addQuadMapping(table, graph, config.createIriMapping("chembl:target", "target"),
                     config.createIriMapping("cco:hasAssay"), subject);
@@ -87,7 +87,7 @@ public class Assay
                     config.createIriMapping("cco:hasAssay"), subject);
 
             // an AID may be referenced by several assays
-            config.addQuadMapping(table, graph, config.createIriMapping("reference:pubchem-assay", "pubchem_assay"),
+            config.addQuadMapping(table, graph, config.createIriMapping("reference:pubchem_assay", "pubchem_assay"),
                     config.createIriMapping("rdf:type"), config.createIriMapping("cco:PubchemBioassayRef"),
                     config.createIsNotNullCondition(table, "pubchem_assay"), true);
 
@@ -101,12 +101,12 @@ public class Assay
         {
             DatabaseTable table = new DatabaseTable(schema, "assay_reference_labels");
 
-            config.addQuadMapping(table, graph, config.createIriMapping("reference:pubchem-assay", "reference"),
+            config.addQuadMapping(table, graph, config.createIriMapping("reference:pubchem_assay", "reference"),
                     config.createIriMapping("rdfs:label"), config.createLiteralMapping(xsdString, "label"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "activity_bases");
+            DatabaseTable table = new DatabaseTable(schema, "activities");
             TermMapping subject = config.createIriMapping("chembl:assay", "assay");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasActivity"),

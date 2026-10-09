@@ -1,7 +1,7 @@
-create index biocomponent_bases__chembl_id on chembl.biocomponent_bases(chembl_id);
-create index biocomponent_bases__type on chembl.biocomponent_bases(type);
-create index biocomponent_bases__description on chembl.biocomponent_bases(description);
-create index biocomponent_bases__organism on chembl.biocomponent_bases(organism);
-create index biocomponent_bases__taxonomy on chembl.biocomponent_bases(taxonomy);
-create index biocomponent_bases__sequence on chembl.biocomponent_bases using hash (sequence);
-grant select on chembl.biocomponent_bases to sparql;
+create index biocomponents__chembl_id on chembl.biocomponents(chembl_id);
+create index biocomponents__type on chembl.biocomponents(type);
+create index biocomponents__description on chembl.biocomponents(description);
+create index biocomponents__organism on chembl.biocomponents(organism);
+create index biocomponents__taxonomy on chembl.biocomponents(taxonomy);
+create index biocomponents__sequence on chembl.biocomponents using hash (sequence);
+grant select on chembl.biocomponents to sparql;

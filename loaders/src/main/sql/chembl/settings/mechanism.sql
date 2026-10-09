@@ -1,7 +1,7 @@
-create index mechanism_bases__chembl_id on chembl.mechanism_bases(chembl_id);
-create index mechanism_bases__molecule on chembl.mechanism_bases(molecule);
-create index mechanism_bases__target on chembl.mechanism_bases(target);
-create index mechanism_bases__binding_site on chembl.mechanism_bases(binding_site);
-create index mechanism_bases__description on chembl.mechanism_bases(description);
-create index mechanism_bases__action_type on chembl.mechanism_bases(action_type);
-grant select on chembl.mechanism_bases to sparql;
+create index mechanisms__chembl_id on chembl.mechanisms(chembl_id);
+create index mechanisms__molecule on chembl.mechanisms(molecule);
+create index mechanisms__target on chembl.mechanisms(target);
+create index mechanisms__binding_site on chembl.mechanisms(binding_site);
+create index mechanisms__description on chembl.mechanisms(description);
+create index mechanisms__action_type on chembl.mechanisms(action_type);
+grant select on chembl.mechanisms to sparql;

@@ -31,7 +31,7 @@ class Compound extends Updater
 
     private static void loadBases() throws IOException, SQLException
     {
-        load("select id from pubchem.compound_bases", oldCompounds);
+        load("select id from pubchem.compounds", oldCompounds);
     }
 
 
@@ -598,8 +598,8 @@ class Compound extends Updater
     {
         System.out.println("finish compounds ...");
 
-        store("delete from pubchem.compound_bases where id=?", oldCompounds);
-        store("insert into pubchem.compound_bases(id) values(?)", newCompounds);
+        store("delete from pubchem.compounds where id=?", oldCompounds);
+        store("insert into pubchem.compounds(id) values(?)", newCompounds);
 
         System.out.println();
     }

@@ -43,9 +43,9 @@ public class Transporter
                 "https://rdf.molmedb.upol.cz/transporter/endpoint_pIC50_tra"));
 
         config.addIriClass(
-                new IntegerUserIriClass("molmedb:target", INT4, "https://rdf.molmedb.upol.cz/transporter/target"));
+                new IntegerUserIriClass("molmedb:protein", INT4, "https://rdf.molmedb.upol.cz/transporter/target"));
 
-        config.addIriClass(new IntegerUserIriClass("molmedb:target_uniprot", INT4,
+        config.addIriClass(new IntegerUserIriClass("molmedb:protein_uniprot", INT4,
                 "https://rdf.molmedb.upol.cz/transporter/target", "_UniProt"));
 
         config.addIriClass(new StringUserIriClass("purl:uniprot", "http://purl.uniprot.org/uniprot/"));
@@ -63,26 +63,26 @@ public class Transporter
 
         // triples map #1
         {
-            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            DatabaseTable table = new DatabaseTable(schema, "transporters");
             TermMapping subject = config.createIriMapping("molmedb:transporter", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0003008")); // transporter assay
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090012"), // has participant
-                    config.createIriMapping("molmedb:substance", "substance_id"));
+                    config.createIriMapping("molmedb:substance", "substance"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090012"), // has participant
-                    config.createIriMapping("molmedb:target", "protein_id"));
+                    config.createIriMapping("molmedb:protein", "protein"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000209"), // has measure group
                     config.createIriMapping("molmedb:transporter_measure_group", "id"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("prov:wasQuotedFrom"),
-                    config.createIriMapping("molmedb:reference", "model_publication_id"));
+                    config.createIriMapping("molmedb:reference", "model_reference"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("prov:hadPrimarySource"),
-                    config.createIriMapping("molmedb:reference", "publication_id"));
+                    config.createIriMapping("molmedb:reference", "reference"));
         }
 
 
@@ -92,7 +92,7 @@ public class Transporter
 
         // triples map #2
         {
-            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            DatabaseTable table = new DatabaseTable(schema, "transporters");
             TermMapping subject = config.createIriMapping("molmedb:transporter_measure_group", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -115,10 +115,10 @@ public class Transporter
                     config.createIsNotNullCondition(table, "ic50"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090012"), // has participant
-                    config.createIriMapping("molmedb:substance", "substance_id"));
+                    config.createIriMapping("molmedb:substance", "substance"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0090012"), // has participant
-                    config.createIriMapping("molmedb:target", "protein_id"));
+                    config.createIriMapping("molmedb:protein", "protein"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bao:BAO_0000426"), // is measure group of
                     config.createIriMapping("molmedb:transporter", "id"));
@@ -134,8 +134,8 @@ public class Transporter
 
         // triples map #3
         {
-            DatabaseTable table = new DatabaseTable(schema, "protein_bases");
-            TermMapping subject = config.createIriMapping("molmedb:target", "id");
+            DatabaseTable table = new DatabaseTable(schema, "proteins");
+            TermMapping subject = config.createIriMapping("molmedb:protein", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("bao:BAO_0000283")); // transporter
@@ -147,13 +147,13 @@ public class Transporter
                     config.createIriMapping("purl:uniprot", "uniprot_id"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000008"),
-                    config.createIriMapping("molmedb:target_uniprot", "id"));
+                    config.createIriMapping("molmedb:protein_uniprot", "id"));
         }
 
         // triples map #4
         {
-            DatabaseTable table = new DatabaseTable(schema, "protein_bases");
-            TermMapping subject = config.createIriMapping("molmedb:target_uniprot", "id");
+            DatabaseTable table = new DatabaseTable(schema, "proteins");
+            TermMapping subject = config.createIriMapping("molmedb:protein_uniprot", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("edam:data_2291")); // UniProt ID //FIXME
@@ -169,7 +169,7 @@ public class Transporter
 
         // triples map #5
         {
-            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            DatabaseTable table = new DatabaseTable(schema, "transporters");
             Conditions cnd = config.createAreEqualCondition("category", "'512'::integer", "'513'::integer");
             TermMapping subject = config.createIriMapping("molmedb:endpoint_substrate", "id");
 
@@ -195,7 +195,7 @@ public class Transporter
 
         // triples map #6
         {
-            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            DatabaseTable table = new DatabaseTable(schema, "transporters");
             Conditions cnd = config.createAreEqualCondition("category", "'514'::integer", "'515'::integer");
             TermMapping subject = config.createIriMapping("molmedb:endpoint_inhibitor", "id");
 
@@ -221,7 +221,7 @@ public class Transporter
 
         // triples map #7
         {
-            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            DatabaseTable table = new DatabaseTable(schema, "transporters");
             Conditions cnd = config.createIsNotNullCondition(table, "km");
             TermMapping subject = config.createIriMapping("molmedb:endpoint_pkm", "id");
 
@@ -244,7 +244,7 @@ public class Transporter
 
         // triples map #8
         {
-            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            DatabaseTable table = new DatabaseTable(schema, "transporters");
             Conditions cnd = config.createIsNotNullCondition(table, "ec50");
             TermMapping subject = config.createIriMapping("molmedb:endpoint_pec50", "id");
 
@@ -266,7 +266,7 @@ public class Transporter
 
         // triples map #9
         {
-            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            DatabaseTable table = new DatabaseTable(schema, "transporters");
             Conditions cnd = config.createIsNotNullCondition(table, "ki");
             TermMapping subject = config.createIriMapping("molmedb:endpoint_pki", "id");
 
@@ -288,7 +288,7 @@ public class Transporter
 
         // triples map #10
         {
-            DatabaseTable table = new DatabaseTable(schema, "transporter_bases");
+            DatabaseTable table = new DatabaseTable(schema, "transporters");
             Conditions cnd = config.createIsNotNullCondition(table, "ic50");
             TermMapping subject = config.createIriMapping("molmedb:endpoint_pic50", "id");
 

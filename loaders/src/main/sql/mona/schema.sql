@@ -1,4 +1,4 @@
-create table mona.compound_bases
+create table mona.spectra
 (
     id              integer not null,
     created         date,
@@ -33,7 +33,7 @@ create table mona.compound_names
     primary key(compound, name)
 );
 
-create table mona.compound_classyfires
+create table mona.compound_classyfire_classes
 (
     compound        integer not null,
     class           integer not null,
@@ -204,7 +204,7 @@ create table mona.compound_pubchem_substance_ids
 create table mona.spectrum_annotations
 (
     id              integer not null,
-    compound        integer not null,
+    spectrum        integer not null,
     peak            real not null,
     value           varchar not null,
     primary key(id)
@@ -214,96 +214,96 @@ create table mona.spectrum_annotations
 create table mona.spectrum_tags
 (
     id              serial unique not null,
-    compound        integer not null,
+    spectrum        integer not null,
     tag             varchar not null,
-    primary key(compound, tag)
+    primary key(spectrum, tag)
 );
 
 
 create table mona.spectrum_normalized_entropies
 (
-    compound        integer not null,
+    spectrum        integer not null,
     entropy         real not null,
-    primary key(compound, entropy)
+    primary key(spectrum, entropy)
 );
 
 
 create table mona.spectrum_spectral_entropies
 (
-    compound        integer not null,
+    spectrum        integer not null,
     entropy         real not null,
-    primary key(compound, entropy)
+    primary key(spectrum, entropy)
 );
 
 
 create table mona.spectrum_retention_times
 (
     id              serial unique not null,
-    compound        integer not null,
+    spectrum        integer not null,
     time            real not null,
     unit            integer not null,
-    primary key(compound, time, unit)
+    primary key(spectrum, time, unit)
 );
 
 
 create table mona.spectrum_collision_energies
 (
     id              serial unique not null,
-    compound        integer not null,
+    spectrum        integer not null,
     energy          real not null,
     unit            integer not null,
-    primary key(compound, energy, unit)
+    primary key(spectrum, energy, unit)
 );
 
 
 create table mona.spectrum_collision_energy_ramps
 (
     id              serial unique not null,
-    compound        integer not null,
+    spectrum        integer not null,
     ramp_start      real not null,
     ramp_end        real not null,
     unit            integer not null,
-    primary key(compound, ramp_start, ramp_end, unit)
+    primary key(spectrum, ramp_start, ramp_end, unit)
 );
 
 
 create table mona.spectrum_instrument_types
 (
     id              serial unique not null,
-    compound        integer not null,
+    spectrum        integer not null,
     type            varchar not null,
-    primary key(compound, type)
+    primary key(spectrum, type)
 );
 
 
 create table mona.spectrum_instruments
 (
     id              serial unique not null,
-    compound        integer not null,
+    spectrum        integer not null,
     instrument      varchar not null,
-    primary key(compound, instrument)
+    primary key(spectrum, instrument)
 );
 
 
 create table mona.spectrum_precursor_types
 (
     id              serial unique not null,
-    compound        integer not null,
+    spectrum        integer not null,
     type            varchar not null,
-    primary key(compound, type)
+    primary key(spectrum, type)
 );
 
 
 create table mona.spectrum_precursor_mzs
 (
     id              serial unique not null,
-    compound        integer not null,
+    spectrum        integer not null,
     mz              real not null,
-    primary key(compound, mz)
+    primary key(spectrum, mz)
 );
 
 
-create table mona.library_bases
+create table mona.libraries
 (
     id              integer not null,
     name            varchar unique not null,
@@ -312,7 +312,7 @@ create table mona.library_bases
 );
 
 
-create table mona.submitter_bases
+create table mona.submitters
 (
     id              integer not null,
     email           varchar,

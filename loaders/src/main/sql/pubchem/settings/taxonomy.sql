@@ -1,6 +1,6 @@
-create index taxonomy_bases__id__varchar on pubchem.taxonomy_bases((id::varchar));
-create index taxonomy_bases__label on pubchem.taxonomy_bases(label);
-grant select on pubchem.taxonomy_bases to sparql;
+create index taxonomies__id__varchar on pubchem.taxonomies((id::varchar));
+create index taxonomies__label on pubchem.taxonomies(label);
+grant select on pubchem.taxonomies to sparql;
 
 --------------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ grant select on pubchem.taxonomy_patents to sparql;
 --------------------------------------------------------------------------------
 
 create index taxonomy_matches__taxonomy on pubchem.taxonomy_matches(taxonomy);
-create index taxonomy_matches__match on pubchem.taxonomy_matches(match_unit, match_id);
+create index taxonomy_matches__match_unit_match_id on pubchem.taxonomy_matches(match_unit, match_id);
 grant select on pubchem.taxonomy_matches to sparql;
 
 --------------------------------------------------------------------------------

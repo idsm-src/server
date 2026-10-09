@@ -1,4 +1,4 @@
-create table pubchem.source_bases
+create table pubchem.sources
 (
     id          smallint not null,
     iri         varchar unique not null,

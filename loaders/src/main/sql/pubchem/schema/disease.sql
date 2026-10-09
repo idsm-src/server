@@ -1,4 +1,4 @@
-create table pubchem.disease_bases
+create table pubchem.diseases
 (
     id            integer not null,
     label         varchar,

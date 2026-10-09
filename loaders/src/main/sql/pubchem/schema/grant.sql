@@ -1,4 +1,4 @@
-create table pubchem.grant_bases
+create table pubchem.grants
 (
     id              integer not null,
     iri             varchar unique not null,

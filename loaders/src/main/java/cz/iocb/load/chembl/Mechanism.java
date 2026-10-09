@@ -22,7 +22,7 @@ class Mechanism extends Updater
 {
     static final String prefix = ChEMBL.chembl + "drug_mechanism/CHEMBL_MEC_";
 
-    private static final EntityTable<Integer> mechanisms = new EntityTable<>("chembl.mechanism_bases", intKey("id"),
+    private static final EntityTable<Integer> mechanisms = new EntityTable<>("chembl.mechanisms", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), integer("molecule"), integer("target"), integer("binding_site"),
             varchar("description"), varchar("action_type"));
 

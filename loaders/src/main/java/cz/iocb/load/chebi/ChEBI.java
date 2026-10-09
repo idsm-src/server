@@ -310,7 +310,7 @@ public class ChEBI extends Updater
         IntPairSet newParents = new IntPairSet();
         IntPairSet oldParents = new IntPairSet();
 
-        load("select chebi,parent from chebi.parents", oldParents);
+        load("select class,parent from chebi.class_parents", oldParents);
 
         dispatcher.on(rdfs + "subClassOf", (subject, object) -> {
             if(!startsWith(subject, prefix) || !startsWith(object, prefix))
@@ -328,8 +328,8 @@ public class ChEBI extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from chebi.parents where chebi=? and parent=?", oldParents);
-            store("insert into chebi.parents(chebi,parent) values(?,?)", newParents);
+            store("delete from chebi.class_parents where class=? and parent=?", oldParents);
+            store("insert into chebi.class_parents(class,parent) values(?,?)", newParents);
         });
     }
 
@@ -340,7 +340,7 @@ public class ChEBI extends Updater
         IntIntMap newStars = new IntIntMap();
         IntIntMap oldStars = new IntIntMap();
 
-        load("select chebi,star from chebi.stars", oldStars);
+        load("select class,star_id from chebi.class_stars", oldStars);
 
         dispatcher.on(oboInOwl + "inSubset", (subject, object) -> {
             int chebiID = getEntityID(subject.getURI());
@@ -367,9 +367,9 @@ public class ChEBI extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from chebi.stars where chebi=? and star=?", oldStars);
-            store("insert into chebi.stars(chebi,star) values(?,?) on conflict(chebi) do update set star=EXCLUDED.star",
-                    newStars);
+            store("delete from chebi.class_stars where class=? and star_id=?", oldStars);
+            store("insert into chebi.class_stars(class,star_id) values(?,?) "
+                    + "on conflict(class) do update set star_id=EXCLUDED.star_id", newStars);
         });
     }
 
@@ -380,7 +380,7 @@ public class ChEBI extends Updater
         IntIntMap newReplacements = new IntIntMap();
         IntIntMap oldReplacements = new IntIntMap();
 
-        load("select chebi,replacement from chebi.replacements", oldReplacements);
+        load("select class,replacement from chebi.class_replacements", oldReplacements);
 
         dispatcher.on(obo + "IAO_0100001", (subject, object) -> {
             int chebiID = getEntityID(subject.getURI());
@@ -407,9 +407,9 @@ public class ChEBI extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from chebi.replacements where chebi=? and replacement=?", oldReplacements);
-            store("insert into chebi.replacements(chebi,replacement) values(?,?) "
-                    + "on conflict(chebi) do update set replacement=EXCLUDED.replacement", newReplacements);
+            store("delete from chebi.class_replacements where class=? and replacement=?", oldReplacements);
+            store("insert into chebi.class_replacements(class,replacement) values(?,?) "
+                    + "on conflict(class) do update set replacement=EXCLUDED.replacement", newReplacements);
         });
     }
 
@@ -420,7 +420,7 @@ public class ChEBI extends Updater
         IntIntMap newReasons = new IntIntMap();
         IntIntMap oldReasons = new IntIntMap();
 
-        load("select chebi,reason from chebi.obsolescence_reasons", oldReasons);
+        load("select class,reason_id from chebi.class_obsolescence_reasons", oldReasons);
 
         dispatcher.on(obo + "IAO_0000231", (subject, object) -> {
             int chebiID = getEntityID(subject.getURI());
@@ -447,9 +447,9 @@ public class ChEBI extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from chebi.obsolescence_reasons where chebi=? and reason=?", oldReasons);
-            store("insert into chebi.obsolescence_reasons(chebi,reason) values(?,?) "
-                    + "on conflict(chebi) do update set reason=EXCLUDED.reason", newReasons);
+            store("delete from chebi.class_obsolescence_reasons where class=? and reason_id=?", oldReasons);
+            store("insert into chebi.class_obsolescence_reasons(class,reason_id) values(?,?) "
+                    + "on conflict(class) do update set reason_id=EXCLUDED.reason_id", newReasons);
         });
     }
 
@@ -464,7 +464,7 @@ public class ChEBI extends Updater
         RestrictionIntMap newRestrictions = new RestrictionIntMap();
         RestrictionIntMap oldRestrictions = new RestrictionIntMap();
 
-        load("select chebi,value_restriction,property_unit,property_id,id from chebi.restrictions", oldRestrictions);
+        load("select class,value_restriction,property_unit,property_id,id from chebi.restrictions", oldRestrictions);
 
         HashSet<Node> restrictions = new HashSet<>();
         BlankNodes parts = new BlankNodes(dispatcher, owl + "onProperty", owl + "someValuesFrom");
@@ -513,9 +513,9 @@ public class ChEBI extends Updater
             }
 
             store("delete from chebi.restrictions "
-                    + "where chebi=? and value_restriction=? and property_unit=? and property_id=? and id=?",
+                    + "where class=? and value_restriction=? and property_unit=? and property_id=? and id=?",
                     oldRestrictions);
-            store("insert into chebi.restrictions(chebi,value_restriction,property_unit,property_id,id) "
+            store("insert into chebi.restrictions(class,value_restriction,property_unit,property_id,id) "
                     + "values(?,?,?,?,?)", newRestrictions);
         });
     }
@@ -532,7 +532,7 @@ public class ChEBI extends Updater
         AxiomIntMap newAxioms = new AxiomIntMap();
         AxiomIntMap oldAxioms = new AxiomIntMap();
 
-        load("select chebi,property_unit,property_id,target,type_id,reference,source,id from chebi.axioms", oldAxioms);
+        load("select class,property_unit,property_id,target,type_id,reference,source,id from chebi.axioms", oldAxioms);
 
         HashSet<Node> axioms = new HashSet<>();
         BlankNodes parts = new BlankNodes(dispatcher, owl + "annotatedProperty", owl + "annotatedSource",
@@ -560,10 +560,10 @@ public class ChEBI extends Updater
             }
 
             store("""
-                    delete from chebi.axioms where chebi=? and property_unit=? and property_id=? and target=? and \
+                    delete from chebi.axioms where class=? and property_unit=? and property_id=? and target=? and \
                     coalesce(type_id,-1)=coalesce(?,-1) and coalesce(reference,'')=coalesce(?,'') and \
                     coalesce(source,'')=coalesce(?,'') and id=?""", oldAxioms);
-            store("insert into chebi.axioms(chebi,property_unit,property_id,target,type_id,reference,source,id) "
+            store("insert into chebi.axioms(class,property_unit,property_id,target,type_id,reference,source,id) "
                     + "values(?,?,?,?,?,?,?,?)", newAxioms);
         });
     }
@@ -612,7 +612,7 @@ public class ChEBI extends Updater
         IntStringSet newValues = new IntStringSet();
         IntStringSet oldValues = new IntStringSet();
 
-        load("select chebi," + column + " from chebi." + table, oldValues);
+        load("select class," + column + " from chebi." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
             if(!startsWith(subject, prefix))
@@ -629,8 +629,8 @@ public class ChEBI extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from chebi." + table + " where chebi=? and " + column + "=?", oldValues);
-            store("insert into chebi." + table + "(chebi," + column + ") values(?,?)", newValues);
+            store("delete from chebi." + table + " where class=? and " + column + "=?", oldValues);
+            store("insert into chebi." + table + "(class," + column + ") values(?,?)", newValues);
         });
     }
 
@@ -642,7 +642,7 @@ public class ChEBI extends Updater
         IntStringMap newValues = new IntStringMap();
         IntStringMap oldValues = new IntStringMap();
 
-        load("select chebi," + column + " from chebi." + table, oldValues);
+        load("select class," + column + " from chebi." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
             if(!startsWith(subject, prefix))
@@ -672,8 +672,8 @@ public class ChEBI extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from chebi." + table + " where chebi=? and " + column + "=?", oldValues);
-            store("insert into chebi." + table + "(chebi," + column + ") values(?,?) on conflict(chebi) do update set "
+            store("delete from chebi." + table + " where class=? and " + column + "=?", oldValues);
+            store("insert into chebi." + table + "(class," + column + ") values(?,?) on conflict(class) do update set "
                     + column + "=EXCLUDED." + column, newValues);
         });
     }
@@ -686,7 +686,7 @@ public class ChEBI extends Updater
         IntIntMap newValues = new IntIntMap();
         IntIntMap oldValues = new IntIntMap();
 
-        load("select chebi," + column + "::integer from chebi." + table, oldValues);
+        load("select class," + column + "::integer from chebi." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
             if(!startsWith(subject, prefix))
@@ -716,9 +716,9 @@ public class ChEBI extends Updater
         });
 
         dispatcher.after(() -> {
-            store("delete from chebi." + table + " where chebi=? and " + column + "=?::boolean", oldValues);
-            store("insert into chebi." + table + "(chebi," + column + ") values(?,?::boolean) "
-                    + "on conflict(chebi) do update set " + column + "=EXCLUDED." + column, newValues);
+            store("delete from chebi." + table + " where class=? and " + column + "=?::boolean", oldValues);
+            store("insert into chebi." + table + "(class," + column + ") values(?,?::boolean) "
+                    + "on conflict(class) do update set " + column + "=EXCLUDED." + column, newValues);
         });
     }
 
@@ -771,7 +771,7 @@ public class ChEBI extends Updater
     private static void loadMolfiles() throws IOException, SQLException
     {
         String name = "chebi.sdf.gz";
-        StructureTable molfiles = new StructureTable("chebi.molfiles", "chebi", "molfile");
+        StructureTable molfiles = new StructureTable("chebi.class_molfiles", "class", "molfile");
         molfiles.load();
 
         try(BufferedReader reader = getReader("chebi/" + name))
@@ -814,24 +814,25 @@ public class ChEBI extends Updater
             loadRestrictions(dispatcher);
             loadAxioms(dispatcher);
 
-            loadMultiStringValues(dispatcher, oboInOwl + "hasDbXref", "references", "reference");
-            loadMultiStringValues(dispatcher, oboInOwl + "hasRelatedSynonym", "related_synonyms", "synonym");
-            loadMultiStringValues(dispatcher, oboInOwl + "hasExactSynonym", "exact_synonyms", "synonym");
-            loadMultiStringValues(dispatcher, chemrof + "generalized_empirical_formula", "formulas", "formula");
-            loadMultiStringValues(dispatcher, chemrof + "mass", "masses", "mass");
-            loadMultiStringValues(dispatcher, chemrof + "monoisotopic_mass", "monoisotopic_masses", "mass");
-            loadMultiStringValues(dispatcher, oboInOwl + "hasAlternativeId", "alternative_identifiers", "identifier");
-            loadStringValues(dispatcher, rdfs + "label", "labels", "label");
-            loadStringValues(dispatcher, oboInOwl + "id", "identifiers", "identifier");
-            loadStringValues(dispatcher, oboInOwl + "hasOBONamespace", "namespaces", "namespace");
-            loadStringValues(dispatcher, chemrof + "charge", "charges", "charge");
-            loadStringValues(dispatcher, chemrof + "smiles_string", "smiles_codes", "smiles");
-            loadStringValues(dispatcher, chemrof + "inchi_key_string", "inchikeys", "inchikey");
-            loadStringValues(dispatcher, chemrof + "inchi_string", "inchies", "inchi");
-            loadStringValues(dispatcher, obo + "IAO_0000115", "definitions", "definition");
-            loadStringValues(dispatcher, chemrof + "wurcs_representation", "wurcs_representations", "wurcs");
+            loadMultiStringValues(dispatcher, oboInOwl + "hasDbXref", "class_references", "reference");
+            loadMultiStringValues(dispatcher, oboInOwl + "hasRelatedSynonym", "class_related_synonyms", "synonym");
+            loadMultiStringValues(dispatcher, oboInOwl + "hasExactSynonym", "class_exact_synonyms", "synonym");
+            loadMultiStringValues(dispatcher, chemrof + "generalized_empirical_formula", "class_formulas", "formula");
+            loadMultiStringValues(dispatcher, chemrof + "mass", "class_masses", "mass");
+            loadMultiStringValues(dispatcher, chemrof + "monoisotopic_mass", "class_monoisotopic_masses", "mass");
+            loadMultiStringValues(dispatcher, oboInOwl + "hasAlternativeId", "class_alternative_identifiers",
+                    "identifier");
+            loadStringValues(dispatcher, rdfs + "label", "class_labels", "label");
+            loadStringValues(dispatcher, oboInOwl + "id", "class_identifiers", "identifier");
+            loadStringValues(dispatcher, oboInOwl + "hasOBONamespace", "class_namespaces", "namespace");
+            loadStringValues(dispatcher, chemrof + "charge", "class_charges", "charge");
+            loadStringValues(dispatcher, chemrof + "smiles_string", "class_smileses", "smiles");
+            loadStringValues(dispatcher, chemrof + "inchi_key_string", "class_inchikeys", "inchikey");
+            loadStringValues(dispatcher, chemrof + "inchi_string", "class_inchis", "inchi");
+            loadStringValues(dispatcher, obo + "IAO_0000115", "class_definitions", "definition");
+            loadStringValues(dispatcher, chemrof + "wurcs_representation", "class_wurcs_representations", "wurcs");
 
-            loadBooleanValues(dispatcher, owl + "deprecated", "deprecated_flags", "flag");
+            loadBooleanValues(dispatcher, owl + "deprecated", "class_deprecated_flags", "flag");
 
             dispatcher.load(file);
             missingEntities.settle();

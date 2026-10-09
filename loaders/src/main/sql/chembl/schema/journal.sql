@@ -1,4 +1,4 @@
-create table chembl.journal_bases
+create table chembl.journals
 (
     id           integer not null,
     chembl_id    varchar,

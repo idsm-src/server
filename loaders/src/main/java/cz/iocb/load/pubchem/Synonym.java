@@ -137,8 +137,8 @@ class Synonym extends Updater
         IntStringPairIntMap newValues = new IntStringPairIntMap();
         IntStringPairIntMap oldValues = new IntStringPairIntMap();
 
-        load("select md5,id from pubchem.synonym_bases", oldHashes);
-        load("select synonym,value,__ from pubchem.synonym_values", oldValues);
+        load("select md5,id from pubchem.synonyms", oldHashes);
+        load("select synonym,value,id from pubchem.synonym_values", oldValues);
 
         nextMd5ID = oldHashes.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
         nextValueID = oldValues.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
@@ -188,11 +188,11 @@ class Synonym extends Updater
             }
         });
 
-        store("delete from pubchem.synonym_bases where md5=? and id=?", oldHashes);
-        store("insert into pubchem.synonym_bases(md5,id) values(?,?)", newHashes);
+        store("delete from pubchem.synonyms where md5=? and id=?", oldHashes);
+        store("insert into pubchem.synonyms(md5,id) values(?,?)", newHashes);
 
-        store("delete from pubchem.synonym_values where synonym=? and value=? and __=?", oldValues);
-        store("insert into pubchem.synonym_values(synonym,value,__) values(?,?,?)", newValues);
+        store("delete from pubchem.synonym_values where synonym=? and value=? and id=?", oldValues);
+        store("insert into pubchem.synonym_values(synonym,value,id) values(?,?,?)", newValues);
     }
 
 

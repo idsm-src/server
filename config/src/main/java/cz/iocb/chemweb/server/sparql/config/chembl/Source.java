@@ -15,7 +15,7 @@ public class Source
 {
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("chembl:chembl_source", INT4,
+        config.addIriClass(new IntegerUserIriClass("chembl:source", INT4,
                 "http://rdf.ebi.ac.uk/resource/chembl/source/CHEMBL_SRC_"));
     }
 
@@ -24,8 +24,8 @@ public class Source
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
-        DatabaseTable table = new DatabaseTable(schema, "source_bases");
-        TermMapping subject = config.createIriMapping("chembl:chembl_source", "id");
+        DatabaseTable table = new DatabaseTable(schema, "sources");
+        TermMapping subject = config.createIriMapping("chembl:source", "id");
 
         config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                 config.createIriMapping("cco:Source"), config.createIsNotNullCondition(table, "chembl_id"));

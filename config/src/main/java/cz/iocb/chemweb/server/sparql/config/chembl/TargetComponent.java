@@ -18,7 +18,7 @@ public class TargetComponent
 
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
-        config.addIriClass(new IntegerUserIriClass("chembl:targetcomponent", INT4,
+        config.addIriClass(new IntegerUserIriClass("chembl:component", INT4,
                 "http://rdf.ebi.ac.uk/resource/chembl/targetcomponent/CHEMBL_TC_"));
     }
 
@@ -28,8 +28,8 @@ public class TargetComponent
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "target_component_bases");
-            TermMapping subject = config.createIriMapping("chembl:targetcomponent", "id");
+            DatabaseTable table = new DatabaseTable(schema, "components");
+            TermMapping subject = config.createIriMapping("chembl:component", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("cco:TargetComponent"),
@@ -37,7 +37,7 @@ public class TargetComponent
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
                     config.createIriMapping("ontology:taxonomy", "taxonomy"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
-                    config.createIriMapping("reference:ncbi-taxonomy", "taxonomy"));
+                    config.createIriMapping("reference:ncbi_taxonomy", "taxonomy"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:exactMatch"),
                     config.createIriMapping("purl:uniprot", "accession"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:chemblId"),
@@ -59,16 +59,16 @@ public class TargetComponent
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "target_component_alternatives");
-            TermMapping subject = config.createIriMapping("chembl:targetcomponent", "component");
+            DatabaseTable table = new DatabaseTable(schema, "component_alternatives");
+            TermMapping subject = config.createIriMapping("chembl:component", "component");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:altLabel"),
                     config.createLiteralMapping(xsdString, "alternative"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "target_component_references");
-            TermMapping subject = config.createIriMapping("chembl:targetcomponent", "component");
+            DatabaseTable table = new DatabaseTable(schema, "component_references");
+            TermMapping subject = config.createIriMapping("chembl:component", "component");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
                     config.createIriMapping("identifiers:obo.go", "reference"),
@@ -92,7 +92,7 @@ public class TargetComponent
                     config.createIriMapping("identifiers:pfam", "reference"),
                     config.createAreEqualCondition("type", "'PFAM'::" + componentReferenceType));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
-                    config.createIriMapping("identifiers:ec-code", "reference"),
+                    config.createIriMapping("identifiers:ec_code", "reference"),
                     config.createAreEqualCondition("type", "'ENZYME CLASS'::" + componentReferenceType));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
                     config.createIriMapping("identifiers:intact", "reference"),
@@ -101,7 +101,7 @@ public class TargetComponent
                     config.createIriMapping("purl:uniprot", "reference"),
                     config.createAreEqualCondition("type", "'UNIPROT'::" + componentReferenceType));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
-                    config.createIriMapping("reference:pharmgkb-gene", "reference"),
+                    config.createIriMapping("reference:pharmgkb_gene", "reference"),
                     config.createAreEqualCondition("type", "'PHARMGKB'::" + componentReferenceType));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:targetCmptXref"),
                     config.createIriMapping("reference:timbal", "reference"),
@@ -117,7 +117,7 @@ public class TargetComponent
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "target_component_references");
+            DatabaseTable table = new DatabaseTable(schema, "component_references");
 
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:obo.go", "reference"),
                     config.createIriMapping("rdf:type"), config.createIriMapping("cco:GoProcessRef"),
@@ -140,7 +140,7 @@ public class TargetComponent
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:pfam", "reference"),
                     config.createIriMapping("rdf:type"), config.createIriMapping("cco:PfamRef"),
                     config.createAreEqualCondition("type", "'PFAM'::" + componentReferenceType), true);
-            config.addQuadMapping(table, graph, config.createIriMapping("identifiers:ec-code", "reference"),
+            config.addQuadMapping(table, graph, config.createIriMapping("identifiers:ec_code", "reference"),
                     config.createIriMapping("rdf:type"), config.createIriMapping("cco:EnzymeClassRef"),
                     config.createAreEqualCondition("type", "'ENZYME CLASS'::" + componentReferenceType), true);
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:intact", "reference"),
@@ -149,7 +149,7 @@ public class TargetComponent
             config.addQuadMapping(table, graph, config.createIriMapping("purl:uniprot", "reference"),
                     config.createIriMapping("rdf:type"), config.createIriMapping("cco:UniprotRef"),
                     config.createAreEqualCondition("type", "'UNIPROT'::" + componentReferenceType), true);
-            config.addQuadMapping(table, graph, config.createIriMapping("reference:pharmgkb-gene", "reference"),
+            config.addQuadMapping(table, graph, config.createIriMapping("reference:pharmgkb_gene", "reference"),
                     config.createIriMapping("rdf:type"), config.createIriMapping("cco:PharmgkbRef"),
                     config.createAreEqualCondition("type", "'PHARMGKB'::" + componentReferenceType), true);
             config.addQuadMapping(table, graph, config.createIriMapping("reference:timbal", "reference"),
@@ -181,7 +181,7 @@ public class TargetComponent
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:pfam", "reference"),
                     config.createIriMapping("dc:identifier"), config.createLiteralMapping(xsdString, "reference"),
                     config.createAreEqualCondition("type", "'PFAM'::" + componentReferenceType), true);
-            config.addQuadMapping(table, graph, config.createIriMapping("identifiers:ec-code", "reference"),
+            config.addQuadMapping(table, graph, config.createIriMapping("identifiers:ec_code", "reference"),
                     config.createIriMapping("dc:identifier"), config.createLiteralMapping(xsdString, "reference"),
                     config.createAreEqualCondition("type", "'ENZYME CLASS'::" + componentReferenceType), true);
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:intact", "reference"),
@@ -190,7 +190,7 @@ public class TargetComponent
             config.addQuadMapping(table, graph, config.createIriMapping("purl:uniprot", "reference"),
                     config.createIriMapping("dc:identifier"), config.createLiteralMapping(xsdString, "reference"),
                     config.createAreEqualCondition("type", "'UNIPROT'::" + componentReferenceType), true);
-            config.addQuadMapping(table, graph, config.createIriMapping("reference:pharmgkb-gene", "reference"),
+            config.addQuadMapping(table, graph, config.createIriMapping("reference:pharmgkb_gene", "reference"),
                     config.createIriMapping("dc:identifier"), config.createLiteralMapping(xsdString, "reference"),
                     config.createAreEqualCondition("type", "'PHARMGKB'::" + componentReferenceType), true);
             config.addQuadMapping(table, graph, config.createIriMapping("reference:timbal", "reference"),
@@ -202,7 +202,7 @@ public class TargetComponent
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "target_component_reference_labels");
+            DatabaseTable table = new DatabaseTable(schema, "component_reference_labels");
 
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:obo.go", "reference"),
                     config.createIriMapping("rdfs:label"), config.createLiteralMapping(xsdString, "label"),
@@ -225,7 +225,7 @@ public class TargetComponent
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:pfam", "reference"),
                     config.createIriMapping("rdfs:label"), config.createLiteralMapping(xsdString, "label"),
                     config.createAreEqualCondition("type", "'PFAM'::" + componentReferenceType));
-            config.addQuadMapping(table, graph, config.createIriMapping("identifiers:ec-code", "reference"),
+            config.addQuadMapping(table, graph, config.createIriMapping("identifiers:ec_code", "reference"),
                     config.createIriMapping("rdfs:label"), config.createLiteralMapping(xsdString, "label"),
                     config.createAreEqualCondition("type", "'ENZYME CLASS'::" + componentReferenceType));
             config.addQuadMapping(table, graph, config.createIriMapping("identifiers:intact", "reference"),
@@ -234,7 +234,7 @@ public class TargetComponent
             config.addQuadMapping(table, graph, config.createIriMapping("purl:uniprot", "reference"),
                     config.createIriMapping("rdfs:label"), config.createLiteralMapping(xsdString, "label"),
                     config.createAreEqualCondition("type", "'UNIPROT'::" + componentReferenceType));
-            config.addQuadMapping(table, graph, config.createIriMapping("reference:pharmgkb-gene", "reference"),
+            config.addQuadMapping(table, graph, config.createIriMapping("reference:pharmgkb_gene", "reference"),
                     config.createIriMapping("rdfs:label"), config.createLiteralMapping(xsdString, "label"),
                     config.createAreEqualCondition("type", "'PHARMGKB'::" + componentReferenceType));
             config.addQuadMapping(table, graph, config.createIriMapping("reference:timbal", "reference"),

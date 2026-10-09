@@ -68,7 +68,7 @@ public class Ontology
 
         {
             DatabaseTable table = new DatabaseTable(schema, "classes");
-            TermMapping subject = config.createIriMapping("ontology:resource", "class_unit", "class_id");
+            TermMapping subject = config.createIriMapping("ontology:resource", "unit", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Class"));
@@ -76,7 +76,7 @@ public class Ontology
 
         {
             DatabaseTable table = new DatabaseTable(schema, "properties");
-            TermMapping subject = config.createIriMapping("ontology:resource", "property_unit", "property_id");
+            TermMapping subject = config.createIriMapping("ontology:resource", "unit", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("rdf:Property"));
@@ -84,7 +84,7 @@ public class Ontology
 
         {
             DatabaseTable table = new DatabaseTable(schema, "individuals");
-            TermMapping subject = config.createIriMapping("ontology:resource", "individual_unit", "individual_id");
+            TermMapping subject = config.createIriMapping("ontology:resource", "unit", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:NamedIndividual"));
@@ -133,7 +133,7 @@ public class Ontology
 
         {
             DatabaseTable table = new DatabaseTable(schema, "somevaluesfrom_restrictions");
-            TermMapping subject = config.createIriMapping("ontology:blank", "restriction_id");
+            TermMapping subject = config.createIriMapping("ontology:blank", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Restriction"));
@@ -145,7 +145,7 @@ public class Ontology
 
         {
             DatabaseTable table = new DatabaseTable(schema, "allvaluesfrom_restrictions");
-            TermMapping subject = config.createIriMapping("ontology:blank", "restriction_id");
+            TermMapping subject = config.createIriMapping("ontology:blank", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Restriction"));
@@ -157,7 +157,7 @@ public class Ontology
 
         {
             DatabaseTable table = new DatabaseTable(schema, "cardinality_restrictions");
-            TermMapping subject = config.createIriMapping("ontology:blank", "restriction_id");
+            TermMapping subject = config.createIriMapping("ontology:blank", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Restriction"));
@@ -169,7 +169,7 @@ public class Ontology
 
         {
             DatabaseTable table = new DatabaseTable(schema, "mincardinality_restrictions");
-            TermMapping subject = config.createIriMapping("ontology:blank", "restriction_id");
+            TermMapping subject = config.createIriMapping("ontology:blank", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Restriction"));
@@ -181,7 +181,7 @@ public class Ontology
 
         {
             DatabaseTable table = new DatabaseTable(schema, "maxcardinality_restrictions");
-            TermMapping subject = config.createIriMapping("ontology:blank", "restriction_id");
+            TermMapping subject = config.createIriMapping("ontology:blank", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Restriction"));

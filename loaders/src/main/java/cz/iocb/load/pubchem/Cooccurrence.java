@@ -192,7 +192,7 @@ public class Cooccurrence extends Updater
         IntPairIntMap newValues = new IntPairIntMap();
         IntPairIntMap oldValues = new IntPairIntMap();
 
-        load("select subject,object,value from pubchem.chemical_chemical_cooccurrences", oldValues);
+        load("select subject,object,value from pubchem.compound_compound_cooccurrences", oldValues);
 
         statements.on((subjectIri, objectIri, value) -> {
             Integer subject = Compound.getCompoundID(subjectIri);
@@ -221,9 +221,9 @@ public class Cooccurrence extends Updater
         });
 
         statements.after(() -> {
-            store("delete from pubchem.chemical_chemical_cooccurrences where subject=? and object=? and value=?",
+            store("delete from pubchem.compound_compound_cooccurrences where subject=? and object=? and value=?",
                     oldValues);
-            store("insert into pubchem.chemical_chemical_cooccurrences(subject,object,value) values(?,?,?) "
+            store("insert into pubchem.compound_compound_cooccurrences(subject,object,value) values(?,?,?) "
                     + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
         });
     }
@@ -235,7 +235,7 @@ public class Cooccurrence extends Updater
         IntPairIntMap newValues = new IntPairIntMap();
         IntPairIntMap oldValues = new IntPairIntMap();
 
-        load("select subject,object,value from pubchem.chemical_disease_cooccurrences", oldValues);
+        load("select subject,object,value from pubchem.compound_disease_cooccurrences", oldValues);
 
         statements.on((subjectIri, objectIri, value) -> {
             // workaround
@@ -268,9 +268,9 @@ public class Cooccurrence extends Updater
         });
 
         statements.after(() -> {
-            store("delete from pubchem.chemical_disease_cooccurrences where subject=? and object=? and value=?",
+            store("delete from pubchem.compound_disease_cooccurrences where subject=? and object=? and value=?",
                     oldValues);
-            store("insert into pubchem.chemical_disease_cooccurrences(subject,object,value) values(?,?,?) "
+            store("insert into pubchem.compound_disease_cooccurrences(subject,object,value) values(?,?,?) "
                     + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
         });
     }
@@ -282,7 +282,7 @@ public class Cooccurrence extends Updater
         IntPairIntMap newValues = new IntPairIntMap();
         IntPairIntMap oldValues = new IntPairIntMap();
 
-        load("select subject,object,value from pubchem.disease_chemical_cooccurrences", oldValues);
+        load("select subject,object,value from pubchem.disease_compound_cooccurrences", oldValues);
 
         statements.on((subjectIri, objectIri, value) -> {
             // workaround
@@ -315,9 +315,9 @@ public class Cooccurrence extends Updater
         });
 
         statements.after(() -> {
-            store("delete from pubchem.disease_chemical_cooccurrences where subject=? and object=? and value=?",
+            store("delete from pubchem.disease_compound_cooccurrences where subject=? and object=? and value=?",
                     oldValues);
-            store("insert into pubchem.disease_chemical_cooccurrences(subject,object,value) values(?,?,?) "
+            store("insert into pubchem.disease_compound_cooccurrences(subject,object,value) values(?,?,?) "
                     + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
         });
     }
@@ -376,8 +376,8 @@ public class Cooccurrence extends Updater
         IntPairIntMap newEnzymeValues = new IntPairIntMap();
         IntPairIntMap oldEnzymeValues = new IntPairIntMap();
 
-        load("select subject,object,value from pubchem.chemical_gene_cooccurrences", oldGeneValues);
-        load("select subject,object,value from pubchem.chemical_enzyme_cooccurrences", oldEnzymeValues);
+        load("select subject,object,value from pubchem.compound_genesymbol_cooccurrences", oldGeneValues);
+        load("select subject,object,value from pubchem.compound_enzyme_cooccurrences", oldEnzymeValues);
 
         statements.on((subjectIri, objectIri, value) -> {
             // workaround
@@ -443,14 +443,14 @@ public class Cooccurrence extends Updater
         });
 
         statements.after(() -> {
-            store("delete from pubchem.chemical_gene_cooccurrences where subject=? and object=? and value=?",
+            store("delete from pubchem.compound_genesymbol_cooccurrences where subject=? and object=? and value=?",
                     oldGeneValues);
-            store("insert into pubchem.chemical_gene_cooccurrences(subject,object,value) values(?,?,?) "
+            store("insert into pubchem.compound_genesymbol_cooccurrences(subject,object,value) values(?,?,?) "
                     + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
 
-            store("delete from pubchem.chemical_enzyme_cooccurrences where subject=? and object=? and value=?",
+            store("delete from pubchem.compound_enzyme_cooccurrences where subject=? and object=? and value=?",
                     oldEnzymeValues);
-            store("insert into pubchem.chemical_enzyme_cooccurrences(subject,object,value) values(?,?,?) "
+            store("insert into pubchem.compound_enzyme_cooccurrences(subject,object,value) values(?,?,?) "
                     + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
         });
     }
@@ -466,7 +466,7 @@ public class Cooccurrence extends Updater
         IntPairIntMap newEnzymeValues = new IntPairIntMap();
         IntPairIntMap oldEnzymeValues = new IntPairIntMap();
 
-        load("select subject,object,value from pubchem.disease_gene_cooccurrences", oldGeneValues);
+        load("select subject,object,value from pubchem.disease_genesymbol_cooccurrences", oldGeneValues);
         load("select subject,object,value from pubchem.disease_enzyme_cooccurrences", oldEnzymeValues);
 
         statements.on((subjectIri, objectIri, value) -> {
@@ -533,9 +533,9 @@ public class Cooccurrence extends Updater
         });
 
         statements.after(() -> {
-            store("delete from pubchem.disease_gene_cooccurrences where subject=? and object=? and value=?",
+            store("delete from pubchem.disease_genesymbol_cooccurrences where subject=? and object=? and value=?",
                     oldGeneValues);
-            store("insert into pubchem.disease_gene_cooccurrences(subject,object,value) values(?,?,?) "
+            store("insert into pubchem.disease_genesymbol_cooccurrences(subject,object,value) values(?,?,?) "
                     + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
 
             store("delete from pubchem.disease_enzyme_cooccurrences where subject=? and object=? and value=?",
@@ -556,8 +556,8 @@ public class Cooccurrence extends Updater
         IntPairIntMap newEnzymeValues = new IntPairIntMap();
         IntPairIntMap oldEnzymeValues = new IntPairIntMap();
 
-        load("select subject,object,value from pubchem.gene_chemical_cooccurrences", oldGeneValues);
-        load("select subject,object,value from pubchem.enzyme_chemical_cooccurrences", oldEnzymeValues);
+        load("select subject,object,value from pubchem.genesymbol_compound_cooccurrences", oldGeneValues);
+        load("select subject,object,value from pubchem.enzyme_compound_cooccurrences", oldEnzymeValues);
 
         statements.on((subjectIri, objectIri, value) -> {
             // workaround
@@ -623,14 +623,14 @@ public class Cooccurrence extends Updater
         });
 
         statements.after(() -> {
-            store("delete from pubchem.gene_chemical_cooccurrences where subject=? and object=? and value=?",
+            store("delete from pubchem.genesymbol_compound_cooccurrences where subject=? and object=? and value=?",
                     oldGeneValues);
-            store("insert into pubchem.gene_chemical_cooccurrences(subject,object,value) values(?,?,?) "
+            store("insert into pubchem.genesymbol_compound_cooccurrences(subject,object,value) values(?,?,?) "
                     + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
 
-            store("delete from pubchem.enzyme_chemical_cooccurrences where subject=? and object=? and value=?",
+            store("delete from pubchem.enzyme_compound_cooccurrences where subject=? and object=? and value=?",
                     oldEnzymeValues);
-            store("insert into pubchem.enzyme_chemical_cooccurrences(subject,object,value) values(?,?,?) "
+            store("insert into pubchem.enzyme_compound_cooccurrences(subject,object,value) values(?,?,?) "
                     + "on conflict(subject,object) do update set value=EXCLUDED.value", newEnzymeValues);
         });
     }
@@ -646,7 +646,7 @@ public class Cooccurrence extends Updater
         IntPairIntMap newEnzymeValues = new IntPairIntMap();
         IntPairIntMap oldEnzymeValues = new IntPairIntMap();
 
-        load("select subject,object,value from pubchem.gene_disease_cooccurrences", oldGeneValues);
+        load("select subject,object,value from pubchem.genesymbol_disease_cooccurrences", oldGeneValues);
         load("select subject,object,value from pubchem.enzyme_disease_cooccurrences", oldEnzymeValues);
 
         statements.on((subjectIri, objectIri, value) -> {
@@ -713,9 +713,9 @@ public class Cooccurrence extends Updater
         });
 
         statements.after(() -> {
-            store("delete from pubchem.gene_disease_cooccurrences where subject=? and object=? and value=?",
+            store("delete from pubchem.genesymbol_disease_cooccurrences where subject=? and object=? and value=?",
                     oldGeneValues);
-            store("insert into pubchem.gene_disease_cooccurrences(subject,object,value) values(?,?,?) "
+            store("insert into pubchem.genesymbol_disease_cooccurrences(subject,object,value) values(?,?,?) "
                     + "on conflict(subject,object) do update set value=EXCLUDED.value", newGeneValues);
 
             store("delete from pubchem.enzyme_disease_cooccurrences where subject=? and object=? and value=?",
@@ -732,7 +732,7 @@ public class Cooccurrence extends Updater
         IntPairIntMap newValues = new IntPairIntMap();
         IntPairIntMap oldValues = new IntPairIntMap();
 
-        load("select subject,object,value from pubchem.gene_gene_cooccurrences", oldValues);
+        load("select subject,object,value from pubchem.genesymbol_genesymbol_cooccurrences", oldValues);
 
         statements.on((subjectIri, objectIri, value) -> {
             Integer subject = Gene.getGeneSymbolID(subjectIri);
@@ -761,8 +761,9 @@ public class Cooccurrence extends Updater
         });
 
         statements.after(() -> {
-            store("delete from pubchem.gene_gene_cooccurrences where subject=? and object=? and value=?", oldValues);
-            store("insert into pubchem.gene_gene_cooccurrences(subject,object,value) values(?,?,?) "
+            store("delete from pubchem.genesymbol_genesymbol_cooccurrences where subject=? and object=? and value=?",
+                    oldValues);
+            store("insert into pubchem.genesymbol_genesymbol_cooccurrences(subject,object,value) values(?,?,?) "
                     + "on conflict(subject,object) do update set value=EXCLUDED.value", newValues);
         });
     }

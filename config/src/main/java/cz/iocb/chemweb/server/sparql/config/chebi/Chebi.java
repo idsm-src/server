@@ -41,7 +41,7 @@ public class Chebi
             DatabaseTable table = new DatabaseTable(schema, "restrictions");
             TermMapping subject = config.createIriMapping("chebi:restriction", "id");
 
-            config.addQuadMapping(table, graph, config.createIriMapping("ontology:chebi", "chebi"),
+            config.addQuadMapping(table, graph, config.createIriMapping("ontology:chebi", "class"),
                     config.createIriMapping("rdfs:subClassOf"), subject);
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Restriction"));
@@ -60,7 +60,7 @@ public class Chebi
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:annotatedProperty"),
                     config.createIriMapping("ontology:resource", "property_unit", "property_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:annotatedSource"),
-                    config.createIriMapping("ontology:chebi", "chebi"));
+                    config.createIriMapping("ontology:chebi", "class"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:annotatedTarget"),
                     config.createLiteralMapping(xsdString, "target"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("oboInOwl:hasSynonymType"),
@@ -72,64 +72,64 @@ public class Chebi
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "parents");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_parents");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:subClassOf"),
                     config.createIriMapping("ontology:chebi", "parent"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "stars");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_stars");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("oboInOwl:inSubset"),
-                    config.createIriMapping("ontology:star", "star"));
+                    config.createIriMapping("ontology:star", "star_id"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "replacements");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_replacements");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:IAO_0100001"),
                     config.createIriMapping("ontology:chebi", "replacement"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "obsolescence_reasons");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_obsolescence_reasons");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:IAO_0000231"),
-                    config.createIriMapping("ontology:iao", "reason"));
+                    config.createIriMapping("ontology:iao", "reason_id"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "references");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_references");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("oboInOwl:hasDbXref"),
                     config.createLiteralMapping(xsdString, "reference"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "related_synonyms");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_related_synonyms");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("oboInOwl:hasRelatedSynonym"),
                     config.createLiteralMapping(xsdString, "synonym"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "exact_synonyms");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_exact_synonyms");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("oboInOwl:hasExactSynonym"),
                     config.createLiteralMapping(xsdString, "synonym"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "formulas");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_formulas");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject,
                     config.createIriMapping("chemrof:generalized_empirical_formula"),
@@ -137,104 +137,104 @@ public class Chebi
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "masses");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_masses");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:mass"),
                     config.createLiteralMapping(xsdString, "mass"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "monoisotopic_masses");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_monoisotopic_masses");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:monoisotopic_mass"),
                     config.createLiteralMapping(xsdString, "mass"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "alternative_identifiers");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_alternative_identifiers");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("oboInOwl:hasAlternativeId"),
                     config.createLiteralMapping(xsdString, "identifier"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "labels");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_labels");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString, "label"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "identifiers");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_identifiers");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("oboInOwl:id"),
                     config.createLiteralMapping(xsdString, "identifier"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "namespaces");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_namespaces");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("oboInOwl:hasOBONamespace"),
                     config.createLiteralMapping(xsdString, "namespace"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "charges");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_charges");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:charge"),
                     config.createLiteralMapping(xsdString, "charge"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "smiles_codes");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_smileses");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:smiles_string"),
                     config.createLiteralMapping(xsdString, "smiles"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "inchikeys");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_inchikeys");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:inchi_key_string"),
                     config.createLiteralMapping(xsdString, "inchikey"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "inchies");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_inchis");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:inchi_string"),
                     config.createLiteralMapping(xsdString, "inchi"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "wurcs_representations");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_wurcs_representations");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:wurcs_representation"),
                     config.createLiteralMapping(xsdString, "wurcs"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "definitions");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_definitions");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:IAO_0000115"),
                     config.createLiteralMapping(xsdString, "definition"));
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "deprecated_flags");
-            TermMapping subject = config.createIriMapping("ontology:chebi", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_deprecated_flags");
+            TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:deprecated"),
                     config.createLiteralMapping(xsdBoolean, "flag"));
@@ -242,24 +242,24 @@ public class Chebi
 
         // extension
         {
-            DatabaseTable table = new DatabaseTable(schema, "molfiles");
-            TermMapping subject = config.createIriMapping("chebi:molfile", "chebi");
+            DatabaseTable table = new DatabaseTable(schema, "class_molfiles");
+            TermMapping subject = config.createIriMapping("chebi:molfile", "class");
             LiteralClass molfileLiteral = new StringSubsetLiteralClass("chebi-molfile");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_011120"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000011"),
-                    config.createIriMapping("ontology:chebi", "chebi"));
+                    config.createIriMapping("ontology:chebi", "class"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
                     config.createLiteralMapping(molfileLiteral, "molfile"));
 
             // extension
-            config.addQuadMapping(table, graph, config.createIriMapping("ontology:chebi", "chebi"),
+            config.addQuadMapping(table, graph, config.createIriMapping("ontology:chebi", "class"),
                     config.createIriMapping("sio:SIO_000008"), subject);
 
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:is-attribute-of"),
-                    config.createIriMapping("ontology:chebi", "chebi"));
+                    config.createIriMapping("ontology:chebi", "class"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-value"),
                     config.createLiteralMapping(molfileLiteral, "molfile"));
         }

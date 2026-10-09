@@ -241,7 +241,7 @@
     <servlet-name>ChebiCompoundPngImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-chebi</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from chebi.molfiles where chebi = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from chebi.class_molfiles where class = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>ChebiCompoundPngImage</servlet-name>
@@ -263,7 +263,7 @@
     <servlet-name>DrugbankCompoundPngImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-drugbank</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from drugbank.compound_bases where id = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from drugbank.compounds where id = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>DrugbankCompoundPngImage</servlet-name>
@@ -296,7 +296,7 @@
     <servlet-name>MonaCompoundPngImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-mona</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select s.structure from mona.compound_structures s, mona.compound_bases b where b.id = s.compound and b.accession = ?</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select s.structure from mona.compound_structures s, mona.spectra b where b.id = s.compound and b.accession = ?</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>MonaCompoundPngImage</servlet-name>
@@ -307,7 +307,7 @@
     <servlet-name>IsdbCompoundPngImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-isdb</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select smiles from isdb.compound_bases where accession = ?</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select smiles from isdb.compounds where accession = ?</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>IsdbCompoundPngImage</servlet-name>
@@ -318,7 +318,7 @@
     <servlet-name>MolmedbCompoundPngImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-molmedb</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select canonical_smiles from molmedb.substance_bases where identifier = ? and canonical_smiles is not null</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select canonical_smiles from molmedb.substances where identifier = ? and canonical_smiles is not null</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>MolmedbCompoundPngImage</servlet-name>
@@ -329,7 +329,7 @@
     <servlet-name>PdbCompoundPngImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundPngImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-pdb</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from pdb.compound_bases where name = ?</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from pdb.compounds where name = ?</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>PdbCompoundPngImage</servlet-name>
@@ -343,7 +343,7 @@
     <servlet-name>ChebiCompoundSvgImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-chebi</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from chebi.molfiles where chebi = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from chebi.class_molfiles where class = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>ChebiCompoundSvgImage</servlet-name>
@@ -365,7 +365,7 @@
     <servlet-name>DrugbankCompoundSvgImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-drugbank</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from drugbank.compound_bases where id = ?::integer</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from drugbank.compounds where id = ?::integer</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>DrugbankCompoundSvgImage</servlet-name>
@@ -398,7 +398,7 @@
     <servlet-name>MonaCompoundSvgImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-mona</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select s.structure from mona.compound_structures s, mona.compound_bases b where b.id = s.compound and b.accession = ?</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select s.structure from mona.compound_structures s, mona.spectra b where b.id = s.compound and b.accession = ?</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>MonaCompoundSvgImage</servlet-name>
@@ -409,7 +409,7 @@
     <servlet-name>IsdbCompoundSvgImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-isdb</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select smiles from isdb.compound_bases where accession = ?</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select smiles from isdb.compounds where accession = ?</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>IsdbCompoundSvgImage</servlet-name>
@@ -420,7 +420,7 @@
     <servlet-name>MolmedbCompoundSvgImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-molmedb</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select canonical_smiles from molmedb.substance_bases where identifier = ? and canonical_smiles is not null</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select canonical_smiles from molmedb.substances where identifier = ? and canonical_smiles is not null</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>MolmedbCompoundSvgImage</servlet-name>
@@ -431,7 +431,7 @@
     <servlet-name>PdbCompoundSvgImage</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.CompoundSvgImageServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:images-pdb</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select molfile from pdb.compound_bases where name = ?</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select molfile from pdb.compounds where name = ?</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>PdbCompoundSvgImage</servlet-name>
@@ -445,7 +445,7 @@
     <servlet-name>MonaSpectrumServlet</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.SpectrumServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:spectra-mona</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>select spectrum from mona.compound_bases where accession = ?</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>select spectrum from mona.spectra where accession = ?</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>MonaSpectrumServlet</servlet-name>
@@ -456,7 +456,7 @@
     <servlet-name>IsdbSpectrumServlet</servlet-name>
     <servlet-class>cz.iocb.chemweb.server.servlets.sources.SpectrumServlet</servlet-class>
     <init-param><param-name>resource</param-name><param-value>jdbc:spectra-isdb</param-value></init-param>
-    <init-param><param-name>access</param-name><param-value>with p as (select ? as v) select s.spectrum from isdb.spectrum_bases s, isdb.compound_bases c, p where s.id = c.id and c.accession = substr(p.v, 1, 14) and s.ionmode = substr(p.v, 15, 1)::char</param-value></init-param>
+    <init-param><param-name>access</param-name><param-value>with p as (select ? as v) select s.spectrum from isdb.spectra s, isdb.compounds c, p where s.compound = c.id and c.accession = substr(p.v, 1, 14) and s.ionmode = substr(p.v, 15, 1)::char</param-value></init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>IsdbSpectrumServlet</servlet-name>

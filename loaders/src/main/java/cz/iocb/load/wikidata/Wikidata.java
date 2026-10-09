@@ -128,15 +128,15 @@ public class Wikidata extends Updater
         {
             statement.execute("""
                     delete from wikidata.compound_structures where \
-                    not exists (select 1 from wikidata.isomeric_smiles \
+                    not exists (select 1 from wikidata.compound_isomeric_smileses \
                     where compound = compound_structures.compound) and \
-                    not exists (select 1 from wikidata.canonical_smiles \
+                    not exists (select 1 from wikidata.compound_canonical_smileses \
                     where compound = compound_structures.compound)""");
 
             statement.execute("""
                     insert into wikidata.compound_structures select distinct on (compound) compound, smiles from (\
-                    select compound, smiles, 1 as v from wikidata.isomeric_smiles union \
-                    select compound, smiles, 2 as v from wikidata.canonical_smiles) \
+                    select compound, smiles, 1 as v from wikidata.compound_isomeric_smileses union \
+                    select compound, smiles, 2 as v from wikidata.compound_canonical_smileses) \
                     order by compound, v, smiles \
                     on conflict (compound) do update set smiles=EXCLUDED.smiles \
                     where compound_structures.smiles != EXCLUDED.smiles""");
@@ -157,9 +157,9 @@ public class Wikidata extends Updater
             System.out.println();
 
             System.out.println("load compounds ...");
-            loadValues("isomeric_smiles.tsv", "isomeric_smiles", "smiles");
-            loadValues("canonical_smiles.tsv", "canonical_smiles", "smiles");
-            loadValues("inchis.tsv", "inchies", "inchi");
+            loadValues("isomeric_smiles.tsv", "compound_isomeric_smileses", "smiles");
+            loadValues("canonical_smiles.tsv", "compound_canonical_smileses", "smiles");
+            loadValues("inchis.tsv", "compound_inchis", "inchi");
             System.out.println();
 
             loadStructures();

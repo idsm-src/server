@@ -21,8 +21,8 @@ public class Reference
         config.addIriClass(
                 new IntegerUserIriClass("molmedb:reference", INT4, "https://rdf.molmedb.upol.cz/reference/ref"));
 
-        config.addIriClass(new ListUserIriClass("molmedb:reference_homepage",
-                new DatabaseTable(schema, "reference_bases"), new TableColumn("homepage", VARCHAR)));
+        config.addIriClass(new ListUserIriClass("molmedb:reference_homepage", new DatabaseTable(schema, "references"),
+                new TableColumn("homepage", VARCHAR)));
     }
 
 
@@ -33,7 +33,7 @@ public class Reference
         // triples map #1
         // triples map #2
         {
-            DatabaseTable table = new DatabaseTable(schema, "reference_bases");
+            DatabaseTable table = new DatabaseTable(schema, "references");
             TermMapping subject = config.createIriMapping("molmedb:reference", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
@@ -56,37 +56,37 @@ public class Reference
         // triples map #6
         {
             DatabaseTable table = new DatabaseTable(schema, "reference_substances");
-            TermMapping subject = config.createIriMapping("molmedb:reference", "reference_id");
+            TermMapping subject = config.createIriMapping("molmedb:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:subject"),
-                    config.createIriMapping("molmedb:substance", "substance_id"));
+                    config.createIriMapping("molmedb:substance", "substance"));
         }
 
         // triples map #7
         {
             DatabaseTable table = new DatabaseTable(schema, "reference_membranes");
-            TermMapping subject = config.createIriMapping("molmedb:reference", "reference_id");
+            TermMapping subject = config.createIriMapping("molmedb:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:subject"),
-                    config.createIriMapping("molmedb:membrane", "membrane_id"));
+                    config.createIriMapping("molmedb:membrane", "membrane"));
         }
 
         // triples map #8
         {
             DatabaseTable table = new DatabaseTable(schema, "reference_methods");
-            TermMapping subject = config.createIriMapping("molmedb:reference", "reference_id");
+            TermMapping subject = config.createIriMapping("molmedb:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:subject"),
-                    config.createIriMapping("molmedb:method", "method_id"));
+                    config.createIriMapping("molmedb:method", "method"));
         }
 
         // triples map #9
         {
             DatabaseTable table = new DatabaseTable(schema, "reference_proteins");
-            TermMapping subject = config.createIriMapping("molmedb:reference", "reference_id");
+            TermMapping subject = config.createIriMapping("molmedb:reference", "reference");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:subject"),
-                    config.createIriMapping("molmedb:target", "protein_id"));
+                    config.createIriMapping("molmedb:protein", "protein"));
         }
 
 
@@ -95,7 +95,7 @@ public class Reference
          */
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "reference_bases");
+            DatabaseTable table = new DatabaseTable(schema, "references");
             TermMapping subject = config.createIriMapping("molmedb:reference", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),

@@ -1,4 +1,4 @@
-create table pubchem.organization_bases
+create table pubchem.organizations
 (
     id              integer not null,
     iri             varchar unique not null,
@@ -25,6 +25,6 @@ create table pubchem.organization_formatted_names
 create table pubchem.organization_crossref_matches
 (
     organization    integer not null,
-    crossref        varchar not null,
-    primary key(organization, crossref)
+    match           varchar not null,
+    primary key(organization, match)
 );
