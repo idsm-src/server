@@ -497,7 +497,7 @@ public class Mona
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:CHEMINF_000405")); // ChemSpider identifier
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"), // has value
-                    config.createLiteralMapping(xsdString, "('' || chemspider)::varchar"));
+                    config.createLiteralMapping(xsdString, "chemspider"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000672"), // is identifier for
                     compound);

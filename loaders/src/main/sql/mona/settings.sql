@@ -82,12 +82,14 @@ grant select on mona.compound_cas_numbers to sparql;
 
 create index compound_hmdb_ids__compound on mona.compound_hmdb_ids(compound);
 create index compound_hmdb_ids__hmdb on mona.compound_hmdb_ids(hmdb);
+create index compound_hmdb_ids__hmdb__prefixed on mona.compound_hmdb_ids((('HMDB' || hmdb)::varchar));
 grant select on mona.compound_hmdb_ids to sparql;
 
 --------------------------------------------------------------------------------
 
 create index compound_chebi_ids__compound on mona.compound_chebi_ids(compound);
 create index compound_chebi_ids__chebi on mona.compound_chebi_ids(chebi);
+create index compound_chebi_ids__chebi__prefixed on mona.compound_chebi_ids((('CHEBI:' || chebi)::varchar));
 grant select on mona.compound_chebi_ids to sparql;
 
 --------------------------------------------------------------------------------
@@ -124,12 +126,14 @@ grant select on mona.compound_lipidmaps_ids to sparql;
 
 create index compound_pubchem_compound_ids__compound on mona.compound_pubchem_compound_ids(compound);
 create index compound_pubchem_compound_ids__cid on mona.compound_pubchem_compound_ids(cid);
+create index compound_pubchem_compound_ids__cid__prefixed on mona.compound_pubchem_compound_ids((('CID' || cid)::varchar));
 grant select on mona.compound_pubchem_compound_ids to sparql;
 
 --------------------------------------------------------------------------------
 
 create index compound_pubchem_substance_ids__compound on mona.compound_pubchem_substance_ids(compound);
 create index compound_pubchem_substance_ids__sid on mona.compound_pubchem_substance_ids(sid);
+create index compound_pubchem_substance_ids__sid__prefixed on mona.compound_pubchem_substance_ids((('SID' || sid)::varchar));
 grant select on mona.compound_pubchem_substance_ids to sparql;
 
 --------------------------------------------------------------------------------

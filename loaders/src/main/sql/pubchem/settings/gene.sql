@@ -1,9 +1,9 @@
-create index gene_symbol_bases__id__varchar on pubchem.gene_symbol_bases((id::varchar));
 create index gene_symbol_bases__symbol on pubchem.gene_symbol_bases(symbol);
 grant select on pubchem.gene_symbol_bases to sparql;
 
 --------------------------------------------------------------------------------
 
+create index gene_bases__id__varchar on pubchem.gene_bases((id::varchar));
 create index gene_bases__title on pubchem.gene_bases(title);
 create index gene_bases__title__english on pubchem.gene_bases using gin (to_tsvector('english', title));
 create index gene_bases__gene_symbol on pubchem.gene_bases(gene_symbol);
