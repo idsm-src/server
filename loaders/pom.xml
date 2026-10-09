@@ -453,6 +453,33 @@
             </configuration>
           </execution>
 
+          <!-- molmedb -->
+          <execution>
+            <id>molmedb-dbinit</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/molmedb/base.sql</argument>
+                <argument>src/main/sql/molmedb/schema/</argument>
+                <argument>src/main/sql/molmedb/sachem.sql</argument>
+                <argument>src/main/sql/molmedb/settings/</argument>
+                <argument>src/main/sql/molmedb/foreignkey.sql</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>molmedb-load</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/load-molmedb.sh</executable>
+            </configuration>
+          </execution>
+
           <!-- stats -->
           <execution>
             <id>stats-dbinit</id>
