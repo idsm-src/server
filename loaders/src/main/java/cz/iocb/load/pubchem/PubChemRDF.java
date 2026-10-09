@@ -1,5 +1,6 @@
 package cz.iocb.load.pubchem;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,6 +65,24 @@ public class PubChemRDF extends Updater
     }
 
 
+    /*
+     * Returns the date of the download of the given part of the PubChem dump, which stands for its version, as the
+     * download script has recorded it.
+     */
+    private static String getDownloadDate(String part) throws IOException
+    {
+        try(BufferedReader reader = getReader("pubchem/" + part + "/version.txt.gz"))
+        {
+            String date = reader.readLine();
+
+            if(date == null || date.isEmpty())
+                throw new IOException("the download date of pubchem/" + part + " is not known");
+
+            return date;
+        }
+    }
+
+
     public static void main(String[] args) throws SQLException, IOException
     {
         try
@@ -71,7 +90,10 @@ public class PubChemRDF extends Updater
             init();
 
             String version = getVersion();
-            System.out.println("=== load pubchem version " + version + " ===");
+            String bioassayVersion = getDownloadDate("Bioassay");
+            String molfileVersion = getDownloadDate("Compound");
+            System.out.println("=== load pubchem version " + version + " (bioassays " + bioassayVersion + ", molfiles "
+                    + molfileVersion + ") ===");
             System.out.println();
 
 
@@ -152,6 +174,8 @@ public class PubChemRDF extends Updater
             setCount("PubChem BioAssays", Bioassay.size());
 
             setVersion("PubChemRDF", version);
+            setVersion("PubChem BioAssays (XML)", bioassayVersion);
+            setVersion("PubChem Compounds (SDF)", molfileVersion);
 
             updateVersion();
             commit();
