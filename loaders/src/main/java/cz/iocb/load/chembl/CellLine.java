@@ -18,6 +18,7 @@ import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
+import cz.iocb.load.ontology.Ontology;
 
 
 
@@ -55,22 +56,13 @@ class CellLine extends Updater
                         case cco + "organismName" -> cellLines.set(id, "organism", getString(object));
                         case cco + "taxonomy" -> cellLines.set(id, "taxonomy", taxonomies.getTaxonomy(id, object));
                         case cco + "cellosaurusId" -> cellLines.set(id, "cellosaurus", getString(object));
-                        case cco + "hasCLO" ->
-                        {
-                            Pair<Integer, Integer> clo = ChEMBL.getOntologyId(subject, predicate, object, unitCLO);
-
-                            if(clo != null)
-                                cellLines.set(id, "clo_id", clo.getTwo());
-                        }
+                        case cco + "hasCLO" -> cellLines.set(id, "clo_id",
+                                Ontology.getResourceId(object, unitCLO).getTwo());
                         case cco + "hasEFO" ->
                         {
-                            Pair<Integer, Integer> efo = ChEMBL.getOntologyId(subject, predicate, object, null);
-
-                            if(efo != null)
-                            {
-                                cellLines.set(id, "efo_unit", efo.getOne());
-                                cellLines.set(id, "efo_id", efo.getTwo());
-                            }
+                            Pair<Integer, Integer> efo = Ontology.getResourceId(object, null);
+                            cellLines.set(id, "efo_unit", efo.getOne());
+                            cellLines.set(id, "efo_id", efo.getTwo());
                         }
                         default -> ChEMBL.unexpected(subject, predicate, object);
                     }

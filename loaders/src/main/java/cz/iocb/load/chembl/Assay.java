@@ -24,10 +24,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.EntityTable;
-import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
+import cz.iocb.load.ontology.Ontology;
 
 
 
@@ -136,13 +136,8 @@ class Assay extends Updater
                             assays.set(id, "cell_line", cellLineID);
                             cellLines.forward(id, cellLineID);
                         }
-                        case bao + "BAO_0000205" ->
-                        {
-                            Pair<Integer, Integer> format = ChEMBL.getOntologyId(subject, predicate, object, unitBAO);
-
-                            if(format != null)
-                                assays.set(id, "format_id", format.getTwo());
-                        }
+                        case bao + "BAO_0000205" -> assays.set(id, "format_id",
+                                Ontology.getResourceId(object, unitBAO).getTwo());
                         case cco + "organismName" -> assays.set(id, "organism", getString(object));
                         case cco + "taxonomy" -> assays.set(id, "taxonomy", taxonomies.getTaxonomy(id, object));
                         case cco + "assayCategory" -> assays.set(id, "category", getString(object));

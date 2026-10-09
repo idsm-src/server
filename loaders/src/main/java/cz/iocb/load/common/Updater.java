@@ -967,7 +967,7 @@ public class Updater
      * Updates the Sachem index of the given name according to the audited changes of its table: removes the stale
      * versions of the index and synchronises it. The cleanup has to precede the synchronisation, because after it the
      * cleanup would delete the previous version although the new one is not committed yet. Prints the size of the
-     * index and the molecules that the indexer has rejected meanwhile.
+     * index and reports the molecules that the indexer has rejected meanwhile as warnings.
      */
     protected static void syncIndex(String index, boolean optimize) throws SQLException
     {
@@ -1031,9 +1031,8 @@ public class Updater
             {
                 int errors = 0;
 
-                while(result.next())
-                    if(++errors <= 10)
-                        System.out.println("  error: " + result.getInt(1) + ": " + result.getString(2));
+                for(; result.next(); errors++)
+                    Problems.warning("structure refused by Sachem", result.getInt(1) + ": " + result.getString(2));
 
                 if(errors > 0)
                     System.out.println("  sachem.compound_errors -> count: " + errors);

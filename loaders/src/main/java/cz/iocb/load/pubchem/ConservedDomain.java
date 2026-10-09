@@ -13,6 +13,7 @@ import static cz.iocb.load.pubchem.PubChemRDF.rdfs;
 import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
@@ -139,7 +140,7 @@ class ConservedDomain extends Updater
     static Integer getDomainID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         Integer domainID = Integer.parseInt(value.substring(prefixLength));
 

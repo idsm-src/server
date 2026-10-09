@@ -1,5 +1,6 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGO;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
@@ -23,7 +24,7 @@ import static cz.iocb.load.pubchem.PubChemRDF.up;
 import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
-import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
@@ -254,7 +255,7 @@ class Gene extends Updater
                 return;
 
             Integer geneID = getGeneID(subject.getURI());
-            Pair<Integer, Integer> match = Ontology.getId(object.getURI());
+            Pair<Integer, Integer> match = Ontology.getResourceId(object, null);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(geneID, match);
 
@@ -670,14 +671,8 @@ class Gene extends Updater
         load("select gene,process_id from pubchem.gene_processes", oldProcesses);
 
         dispatcher.on(obo + "RO_0000056", (subject, object) -> {
-            if(!startsWith(object, "http://purl.obolibrary.org/obo/GO_"))
-                return;
-
             Integer geneID = getGeneID(subject.getURI());
-            Pair<Integer, Integer> process = Ontology.getId(object.getURI());
-
-            if(process.getOne() != OntologyResource.unitGO)
-                throw new IOException();
+            Pair<Integer, Integer> process = Ontology.getResourceId(object, unitGO);
 
             Pair<Integer, Integer> pair = Pair.getPair(geneID, process.getTwo());
 
@@ -704,10 +699,7 @@ class Gene extends Updater
 
         dispatcher.on(obo + "RO_0000085", (subject, object) -> {
             Integer geneID = getGeneID(subject.getURI());
-            Pair<Integer, Integer> function = Ontology.getId(object.getURI());
-
-            if(function.getOne() != OntologyResource.unitGO)
-                throw new IOException();
+            Pair<Integer, Integer> function = Ontology.getResourceId(object, unitGO);
 
             Pair<Integer, Integer> pair = Pair.getPair(geneID, function.getTwo());
 
@@ -734,10 +726,7 @@ class Gene extends Updater
 
         dispatcher.on(obo + "RO_0001025", (subject, object) -> {
             Integer geneID = getGeneID(subject.getURI());
-            Pair<Integer, Integer> location = Ontology.getId(object.getURI());
-
-            if(location.getOne() != OntologyResource.unitGO)
-                throw new IOException();
+            Pair<Integer, Integer> location = Ontology.getResourceId(object, unitGO);
 
             Pair<Integer, Integer> pair = Pair.getPair(geneID, location.getTwo());
 
@@ -842,7 +831,7 @@ class Gene extends Updater
     static Integer getGeneSymbolID(String value) throws IOException
     {
         if(!value.startsWith(symbolPrefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         String symbol = value.substring(symbolPrefixLength);
 
@@ -882,7 +871,7 @@ class Gene extends Updater
     static Integer getGeneID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         Integer geneID = Integer.parseInt(value.substring(prefixLength));
 
@@ -898,6 +887,6 @@ class Gene extends Updater
     private static void checkGeneID(int geneID) throws IOException
     {
         if(geneID == 4 || geneID == 7 || geneID == 8)
-            throw new IOException();
+            throw new DataException("unexpected gene", String.valueOf(geneID));
     }
 }

@@ -21,10 +21,10 @@ import java.util.BitSet;
 import java.util.Map.Entry;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.EntityTable;
-import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
+import cz.iocb.load.ontology.Ontology;
 
 
 
@@ -89,28 +89,12 @@ class Activity extends Updater
                             activities.set(id, "document", documentID);
                             documents.forward(id, documentID);
                         }
-                        case bao + "BAO_0000208" ->
-                        {
-                            Pair<Integer, Integer> endpoint = ChEMBL.getOntologyId(subject, predicate, object, unitBAO);
-
-                            if(endpoint != null)
-                                activities.set(id, "endpoint_id", endpoint.getTwo());
-                        }
-                        case cco + "hasUnitOnto" ->
-                        {
-                            Pair<Integer, Integer> unit = ChEMBL.getOntologyId(subject, predicate, object, unitUO);
-
-                            if(unit != null)
-                                activities.set(id, "unit_id", unit.getTwo());
-                        }
-                        case cco + "hasQUDT" ->
-                        {
-                            Pair<Integer, Integer> unit = ChEMBL.getOntologyId(subject, predicate, object,
-                                    unitUncategorized);
-
-                            if(unit != null)
-                                activities.set(id, "qudt_id", unit.getTwo());
-                        }
+                        case bao + "BAO_0000208" -> activities.set(id, "endpoint_id",
+                                Ontology.getResourceId(object, unitBAO).getTwo());
+                        case cco + "hasUnitOnto" -> activities.set(id, "unit_id",
+                                Ontology.getResourceId(object, unitUO).getTwo());
+                        case cco + "hasQUDT" -> activities.set(id, "qudt_id",
+                                Ontology.getResourceId(object, unitUncategorized).getTwo());
                         case cco + "type" -> activities.set(id, "type", getString(object));
                         case cco + "relation" -> activities.set(id, "relation", getString(object));
                         case cco + "value" -> activities.set(id, "value", getDouble(object));

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -151,10 +152,10 @@ class SubstanceDescriptor extends Updater
     private static Integer getDescriptorID(String value, String suffix) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         if(!value.endsWith(suffix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         Integer id = Integer.parseInt(value.substring(prefixLength, value.length() - suffix.length()));
 

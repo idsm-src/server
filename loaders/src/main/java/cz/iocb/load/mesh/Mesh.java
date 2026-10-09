@@ -1,9 +1,10 @@
 package cz.iocb.load.mesh;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
 import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleDispatcher.text;
 import static cz.iocb.load.common.TripleStreamProcessor.getBoolean;
 import static cz.iocb.load.common.TripleStreamProcessor.getInt;
-import static cz.iocb.load.common.TripleStreamProcessor.getLexicalForm;
 import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.BufferedReader;
@@ -11,14 +12,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import org.apache.jena.graph.Node;
-import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
@@ -41,15 +42,6 @@ public class Mesh extends Updater
     private static final MissingEntities<String> missingMeshes = new MissingEntities<>("mesh", true);
 
 
-    private static HashMap<String, Integer> zoneTable = new HashMap<>()
-    {
-        {
-            put("", -2147483648);
-            put("-04:00", -14400);
-            put("-05:00", -18000);
-        }
-    };
-
     private static final Pattern zonePattern = Pattern.compile("(Z|[+-][0-9]{2}:[0-9]{2})$");
 
 
@@ -68,7 +60,7 @@ public class Mesh extends Updater
                             "$1");
             }
 
-            throw new IOException();
+            throw new IOException("the version of MeSH is not known");
         }
     }
 
@@ -88,7 +80,12 @@ public class Mesh extends Updater
                 meshv + "pharmacologicalAction", meshv + "preferredMappedTo", meshv + "relatedConcept",
                 meshv + "seeAlso", meshv + "term", meshv + "treeNumber", meshv + "hasDescriptor",
                 meshv + "hasQualifier", meshv + "parentTreeNumber", meshv + "preferredConcept", meshv + "preferredTerm",
-                meshv + "useInstead");
+                meshv + "useInstead", meshv + "Concept");
+
+        // a few concepts are related by meshv:Concept, which the vocabulary does not define, so it is not loaded
+        dispatcher.on(meshv + "Concept", (subject, object) -> {
+            Problems.warning("ignored predicate " + meshv + "Concept", text(subject) + " " + text(object));
+        });
     }
 
 
@@ -103,10 +100,7 @@ public class Mesh extends Updater
 
         dispatcher.on(rdf + "type", (subject, object) -> {
             String meshID = getStringID(subject, prefix);
-            Pair<Integer, Integer> type = Ontology.getId(object.getURI());
-
-            if(type == null || type.getOne() != OntologyResource.unitUncategorized)
-                throw new IOException(object.getURI());
+            Pair<Integer, Integer> type = Ontology.getResourceId(object, unitUncategorized);
 
             // a reference may have added the mesh as a missing one already
             missingMeshes.described(meshID);
@@ -125,12 +119,14 @@ public class Mesh extends Updater
                 if(type.getTwo().equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of mesh.resources.type_id",
+                            meshID + ": " + keep + ", " + type.getTwo());
 
                 Integer put = newTypes.put(meshID, type.getTwo());
 
                 if(put != null && !type.getTwo().equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of mesh.resources.type_id",
+                            meshID + ": " + put + ", " + type.getTwo());
             }
         });
 
@@ -152,11 +148,15 @@ public class Mesh extends Updater
         load("select resource," + column + " from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
-            if(!object.isLiteral() || !object.getLiteralLanguage().equals(lang))
+            if(isTranslation(object, lang))
+            {
+                Problems.warning("ignored value of " + property + " in another language",
+                        text(subject) + " " + text(object));
                 return;
+            }
 
             String meshID = getMeshID(subject.getURI());
-            String value = getLexicalForm(object);
+            String value = getLiteral(object, lang);
 
             Pair<String, String> pair = Pair.getPair(meshID, value);
 
@@ -183,11 +183,15 @@ public class Mesh extends Updater
         load("select resource," + column + " from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
-            if(!object.isLiteral() || !object.getLiteralLanguage().equals(lang))
+            if(isTranslation(object, lang))
+            {
+                Problems.warning("ignored value of " + property + " in another language",
+                        text(subject) + " " + text(object));
                 return;
+            }
 
             String meshID = getMeshID(subject.getURI());
-            String value = getLexicalForm(object);
+            String value = getLiteral(object, lang);
 
             if(value.equals(oldValues.remove(meshID)))
             {
@@ -200,12 +204,14 @@ public class Mesh extends Updater
                 if(value.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of mesh." + table + "." + column,
+                            meshID + ": " + keep + ", " + value);
 
                 String put = newValues.put(meshID, value);
 
                 if(put != null && !value.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of mesh." + table + "." + column,
+                            meshID + ": " + put + ", " + value);
             }
         });
 
@@ -241,12 +247,14 @@ public class Mesh extends Updater
                 if(value.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of mesh." + table + "." + column,
+                            meshID + ": " + keep + ", " + value);
 
                 Integer put = newValues.put(meshID, value);
 
                 if(put != null && !value.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of mesh." + table + "." + column,
+                            meshID + ": " + put + ", " + value);
             }
         });
 
@@ -282,12 +290,14 @@ public class Mesh extends Updater
                 if(value.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of mesh." + table + "." + column,
+                            meshID + ": " + keep + ", " + value);
 
                 Integer put = newValues.put(meshID, value);
 
                 if(put != null && !value.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of mesh." + table + "." + column,
+                            meshID + ": " + put + ", " + value);
             }
         });
 
@@ -310,9 +320,7 @@ public class Mesh extends Updater
 
         dispatcher.on(property, (subject, object) -> {
             String meshID = getMeshID(subject.getURI());
-            String date = getDate(object).replaceFirst("-0[45]:00$", "");
-            Integer timezone = zoneTable.get(getZone(object));
-            Pair<String, Integer> value = Pair.getPair(date, timezone);
+            Pair<String, Integer> value = getDate(object);
 
             if(value.equals(oldValues.remove(meshID)))
             {
@@ -325,12 +333,14 @@ public class Mesh extends Updater
                 if(value.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of mesh." + table + ".date",
+                            meshID + ": " + keep + ", " + value);
 
                 Pair<String, Integer> put = newValues.put(meshID, value);
 
                 if(put != null && !value.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of mesh." + table + ".date",
+                            meshID + ": " + put + ", " + value);
             }
         });
 
@@ -394,12 +404,14 @@ public class Mesh extends Updater
                 if(valueID.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of mesh." + table + "." + column,
+                            meshID + ": " + keep + ", " + valueID);
 
                 String put = newValues.put(meshID, valueID);
 
                 if(put != null && !valueID.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of mesh." + table + "." + column,
+                            meshID + ": " + put + ", " + valueID);
             }
         });
 
@@ -412,26 +424,55 @@ public class Mesh extends Updater
 
 
     /*
-     * Returns the lexical form of an xsd:date literal.
+     * Tests whether the node is a literal in another language than the given one, i.e. a translation, which is not
+     * loaded.
      */
-    private static String getDate(Node node) throws IOException
+    private static boolean isTranslation(Node node, String lang)
     {
-        if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsd + "date"))
-            throw new IOException("unexpected value instead of an xsd:date literal: " + node);
+        return !lang.isEmpty() && node.isLiteral() && !node.getLiteralLanguage().isEmpty()
+                && !node.getLiteralLanguage().equals(lang);
+    }
+
+
+    /*
+     * Returns the value of a literal of the given language, or of a literal without a language if the language is
+     * empty; any other value is refused.
+     */
+    private static String getLiteral(Node node, String lang) throws IOException
+    {
+        if(!node.isLiteral() || !node.getLiteralLanguage().equals(lang))
+        {
+            String literal = lang.isEmpty() ? "a literal without a language" : "a literal in language " + lang;
+            throw new DataException("unexpected value instead of " + literal, text(node));
+        }
 
         return node.getLiteralLexicalForm();
     }
 
 
     /*
-     * Returns the timezone of an xsd:date literal as the SPARQL function tz() does, the empty string for a date
-     * without a timezone.
+     * Returns the date of an xsd:date literal without its timezone and the timezone in seconds, or the minimal
+     * integer for a date without a timezone.
      */
-    private static String getZone(Node node) throws IOException
+    private static Pair<String, Integer> getDate(Node node) throws IOException
     {
-        Matcher matcher = zonePattern.matcher(getDate(node));
+        if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsd + "date"))
+            throw new DataException("unexpected value instead of an xsd:date literal", text(node));
 
-        return matcher.find() ? matcher.group() : "";
+        String date = node.getLiteralLexicalForm();
+        Matcher matcher = zonePattern.matcher(date);
+
+        if(!matcher.find())
+            return Pair.getPair(date, Integer.MIN_VALUE);
+
+        String zone = matcher.group();
+
+        if(zone.equals("Z"))
+            return Pair.getPair(date.substring(0, matcher.start()), 0);
+
+        int seconds = Integer.parseInt(zone.substring(1, 3)) * 3600 + Integer.parseInt(zone.substring(4, 6)) * 60;
+
+        return Pair.getPair(date.substring(0, matcher.start()), zone.startsWith("-") ? -seconds : seconds);
     }
 
 
@@ -445,7 +486,7 @@ public class Mesh extends Updater
     static String getMeshID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         String meshID = value.substring(prefixLength);
 

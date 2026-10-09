@@ -17,6 +17,7 @@ import static cz.iocb.load.pubchem.PubChemRDF.skos;
 import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
@@ -167,7 +168,7 @@ public class Taxonomy extends Updater
                 return;
 
             Integer taxonomyID = getTaxonomyID(subject.getURI());
-            Pair<Integer, Integer> match = Ontology.getId(object.getURI());
+            Pair<Integer, Integer> match = Ontology.getResourceId(object, null);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(taxonomyID, match);
 
@@ -313,7 +314,7 @@ public class Taxonomy extends Updater
     static Integer getTaxonomyID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         Integer taxonomyID = Integer.parseInt(value.substring(prefixLength));
 

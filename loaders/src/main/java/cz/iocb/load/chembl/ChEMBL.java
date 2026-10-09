@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.MissingEntities;
-import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.TripleStreamProcessor;
@@ -149,24 +148,6 @@ public class ChEMBL extends Updater
     {
         checkValue(subject, predicate, object, value);
         return TripleStreamProcessor.getString(object);
-    }
-
-
-    /*
-     * Returns the (unit, id) of an ontology resource; an IRI that is not of the given unit (if any) is reported and
-     * ignored.
-     */
-    static Pair<Integer, Integer> getOntologyId(Node subject, Node predicate, Node object, Short unit)
-    {
-        Pair<Integer, Integer> id = object.isURI() ? Ontology.getId(object.getURI()) : null;
-
-        if(id == null || unit != null && id.getOne().intValue() != unit.intValue())
-        {
-            Problems.error("unexpected ontology resource of " + predicate.getURI(), text(subject) + " " + text(object));
-            return null;
-        }
-
-        return id;
     }
 
 

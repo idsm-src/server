@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
@@ -805,7 +806,7 @@ class Patent extends Updater
     static Integer getPatentID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         String patent = value.substring(prefixLength);
 
@@ -845,7 +846,7 @@ class Patent extends Updater
     private static String getInventorID(String value, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(inventorPrefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         String inventorID = value.substring(inventorPrefixLength);
 
@@ -877,7 +878,7 @@ class Patent extends Updater
     private static String getAssigneeID(String value, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(assigneePrefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         String assigneeID = value.substring(assigneePrefixLength);
 

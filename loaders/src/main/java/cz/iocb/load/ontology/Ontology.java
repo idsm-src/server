@@ -22,8 +22,11 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.BlankNodes;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
+import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
 
@@ -1175,6 +1178,10 @@ public class Ontology extends Updater
     }
 
 
+    /*
+     * Returns the (unit, id) of an IRI of a unit or of a built-in resource, which belongs to the uncategorized unit,
+     * and null for any other IRI.
+     */
     public static Pair<Integer, Integer> getId(String iri)
     {
         if(iri == null)
@@ -1191,6 +1198,34 @@ public class Ontology extends Updater
             return null;
 
         return Pair.getPair((int) unitUncategorized, resourceID);
+    }
+
+
+    /*
+     * Returns the (unit, id) of an IRI of the given unit, or of any unit if the unit is null; any other IRI is refused
+     * as data that cannot be loaded. The uncategorized unit holds only the built-in resources.
+     */
+    public static Pair<Integer, Integer> getResourceId(String iri, Short unit) throws DataException
+    {
+        Pair<Integer, Integer> id = getId(iri);
+
+        if(id == null || unit != null && id.getOne().intValue() != unit.intValue())
+            throw new DataException("unexpected ontology resource", iri);
+
+        return id;
+    }
+
+
+    /*
+     * Returns the (unit, id) of a node that is an IRI of the given unit, or of any unit if the unit is null; any other
+     * node is refused as data that cannot be loaded.
+     */
+    public static Pair<Integer, Integer> getResourceId(Node node, Short unit) throws DataException
+    {
+        if(!node.isURI())
+            throw new DataException("unexpected ontology resource", TripleStreamProcessor.text(node));
+
+        return getResourceId(node.getURI(), unit);
     }
 
 
@@ -1657,7 +1692,7 @@ public class Ontology extends Updater
 
         dispatcher.onType(owl + "Restriction", (subject, object) -> {
             if(!subject.isBlank())
-                throw new IOException("unexpected restriction " + subject);
+                throw new DataException("unexpected restriction", TripleStreamProcessor.text(subject));
         });
 
         loadValueRestrictions(dispatcher, restrictions, owl + "someValuesFrom", "somevaluesfrom_restrictions");
@@ -1701,12 +1736,12 @@ public class Ontology extends Updater
                             if(restriction.equals(keep))
                                 continue;
                             else if(keep != null)
-                                throw new IOException();
+                                reportConflict(table, node, property, value);
 
                             ValueRestriction put = newRestrictions.put(restrictionID, restriction);
 
                             if(put != null && !restriction.equals(put))
-                                throw new IOException();
+                                reportConflict(table, node, property, value);
                         }
                     }
                 }
@@ -1743,9 +1778,15 @@ public class Ontology extends Updater
                 {
                     for(Node value : restrictions.values(node, predicate))
                     {
+                        if(!value.isLiteral() || !(value.getLiteralValue() instanceof Number cardinality))
+                        {
+                            Problems.error("unexpected cardinality", TripleStreamProcessor.text(value));
+                            continue;
+                        }
+
                         Integer restrictionID = getId(node).getTwo();
                         CardinalityRestriction restriction = new CardinalityRestriction(getId(property),
-                                getCardinality(value));
+                                cardinality.intValue());
 
                         if(restriction.equals(oldRestrictions.remove(restrictionID)))
                         {
@@ -1758,12 +1799,12 @@ public class Ontology extends Updater
                             if(restriction.equals(keep))
                                 continue;
                             else if(keep != null)
-                                throw new IOException();
+                                reportConflict(table, node, property, value);
 
                             CardinalityRestriction put = newRestrictions.put(restrictionID, restriction);
 
                             if(put != null && !restriction.equals(put))
-                                throw new IOException();
+                                reportConflict(table, node, property, value);
                         }
                     }
                 }
@@ -1779,14 +1820,12 @@ public class Ontology extends Updater
 
 
     /*
-     * Returns the value of a cardinality, a literal of a numeric datatype.
+     * Reports a restriction with several values of a property that has only one.
      */
-    private static int getCardinality(Node node) throws IOException
+    private static void reportConflict(String table, Node restriction, Node property, Node value)
     {
-        if(!node.isLiteral() || !(node.getLiteralValue() instanceof Number number))
-            throw new IOException("unexpected cardinality " + node);
-
-        return number.intValue();
+        Problems.error("multiple values of ontology." + table, TripleStreamProcessor.text(restriction) + ": "
+                + TripleStreamProcessor.text(property) + " " + TripleStreamProcessor.text(value));
     }
 
 

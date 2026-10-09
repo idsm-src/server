@@ -4,6 +4,7 @@ import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.TripleDispatcher.all;
 import static cz.iocb.load.common.TripleDispatcher.str;
+import static cz.iocb.load.common.TripleDispatcher.text;
 import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
 import static cz.iocb.load.common.TripleStreamProcessor.getString;
 import static cz.iocb.load.pubchem.PubChemRDF.dcterms;
@@ -18,8 +19,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
 import org.apache.jena.graph.Node;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 
@@ -61,7 +64,8 @@ public class Journal extends Updater
                 for(String id : catalogIds.getOrDefault(entry.getKey(), new HashSet<>()))
                     for(String match : entry.getValue())
                         if(!id.equals(match.replaceAll("https://www.ncbi.nlm.nih.gov/nlmcatalog/", "")))
-                            dispatcher.missing(match);
+                            Problems.error("value of " + skos + "exactMatch not matching the NLM catalog id",
+                                    text(entry.getKey()) + " " + match);
         });
     }
 
@@ -169,7 +173,7 @@ public class Journal extends Updater
     static Integer getJournalID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         Integer journalID = Integer.parseInt(value.substring(prefixLength));
 

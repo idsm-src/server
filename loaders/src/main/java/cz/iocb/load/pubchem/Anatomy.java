@@ -15,6 +15,7 @@ import static cz.iocb.load.pubchem.PubChemRDF.skos;
 import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
@@ -108,7 +109,7 @@ public class Anatomy extends Updater
                 return;
 
             Integer anatomyID = getAnatomyID(subject.getURI());
-            Pair<Integer, Integer> match = Ontology.getId(object.getURI());
+            Pair<Integer, Integer> match = Ontology.getResourceId(object, null);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(anatomyID, match);
 
@@ -219,7 +220,7 @@ public class Anatomy extends Updater
     static Integer getAnatomyID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         Integer anatomyID = Integer.parseInt(value.substring(prefixLength));
 

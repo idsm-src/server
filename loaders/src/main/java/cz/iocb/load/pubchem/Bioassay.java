@@ -1,5 +1,6 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBAO;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
@@ -28,7 +29,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
@@ -307,10 +308,7 @@ class Bioassay extends Updater
 
         dispatcher.on(bao + "BAO_0000210", (subject, object) -> {
             Integer bioassayID = getBioassayID(subject.getURI());
-            Pair<Integer, Integer> stage = Ontology.getId(object.getURI());
-
-            if(stage.getOne() != OntologyResource.unitBAO)
-                throw new IOException();
+            Pair<Integer, Integer> stage = Ontology.getResourceId(object, unitBAO);
 
             if(stage.getTwo().equals(oldStages.remove(bioassayID)))
             {
@@ -323,12 +321,14 @@ class Bioassay extends Updater
                 if(stage.getTwo().equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of pubchem.bioassay_stages.stage_id",
+                            bioassayID + ": " + keep + ", " + stage.getTwo());
 
                 Integer put = newStages.put(bioassayID, stage.getTwo());
 
                 if(put != null && !stage.getTwo().equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of pubchem.bioassay_stages.stage_id",
+                            bioassayID + ": " + put + ", " + stage.getTwo());
             }
         });
 
@@ -466,7 +466,7 @@ class Bioassay extends Updater
     static Integer getBioassayID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         Integer bioassayID = Integer.parseInt(value.substring(prefixLength));
 

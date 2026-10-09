@@ -1,19 +1,21 @@
 package cz.iocb.load.pubchem;
 
 import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleDispatcher.text;
 import static cz.iocb.load.common.TripleStreamProcessor.getIntFromInteger;
 import static cz.iocb.load.pubchem.PubChemRDF.edam;
 import static cz.iocb.load.pubchem.PubChemRDF.rdf;
 import static cz.iocb.load.pubchem.PubChemRDF.sio;
 import static cz.iocb.load.pubchem.PubChemRDF.vocab;
-import static cz.iocb.load.pubchem.PubChemRDF.xsd;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.apache.jena.graph.Node;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.TripleDispatcher.Action;
 import cz.iocb.load.common.Updater;
@@ -53,8 +55,8 @@ public class Cooccurrence extends Updater
             dispatcher.on(sio + "SIO_000300", (subject, object) -> add(subject, 2, getIntFromInteger(object)));
 
             dispatcher.after(() -> {
-                if(!parts.isEmpty())
-                    System.out.println("    ignore " + parts.size() + " incomplete cooccurrences");
+                for(String key : parts.keySet())
+                    Problems.warning("incomplete cooccurrence", key);
             });
         }
 
@@ -108,7 +110,7 @@ public class Cooccurrence extends Updater
             Object[] row = parts.computeIfAbsent(key, k -> new Object[3]);
 
             if(row[index] != null && !row[index].equals(value))
-                throw new IOException("multiple values of a part of cooccurrence " + statement);
+                throw new DataException("multiple values of a part of a cooccurrence", text(statement));
 
             row[index] = value;
 
@@ -118,7 +120,16 @@ public class Cooccurrence extends Updater
             parts.remove(key);
 
             for(Handler handler : handlers)
-                handler.handle(decode(row[0]), decode(row[1]), (Integer) row[2]);
+            {
+                try
+                {
+                    handler.handle(decode(row[0]), decode(row[1]), (Integer) row[2]);
+                }
+                catch(DataException e)
+                {
+                    Problems.error(e.getKind(), e.getDetail());
+                }
+            }
         }
     }
 
@@ -129,18 +140,15 @@ public class Cooccurrence extends Updater
                 sio + "SIO_001157");
         dispatcher.checkTypes(all(), vocab + "Cooccurrence", sio + "SIO_001435");
         dispatcher.checkValues(sio + "SIO_001157", edam + "operation_0306");
-        dispatcher.checkDatatype(sio + "SIO_000300", xsd + "integer");
     }
 
 
-    @SuppressWarnings("unused")
     private static void checkChemicalToDisease(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), rdf + "type", rdf + "subject", rdf + "object", sio + "SIO_000300",
                 sio + "SIO_001157");
         dispatcher.checkTypes(all(), vocab + "Cooccurrence", sio + "SIO_000993");
         dispatcher.checkValues(sio + "SIO_001157", edam + "operation_0306");
-        dispatcher.checkDatatype(sio + "SIO_000300", xsd + "integer");
     }
 
 
@@ -150,29 +158,24 @@ public class Cooccurrence extends Updater
                 sio + "SIO_001157");
         dispatcher.checkTypes(all(), vocab + "Cooccurrence", sio + "SIO_001436");
         dispatcher.checkValues(sio + "SIO_001157", edam + "operation_0306");
-        dispatcher.checkDatatype(sio + "SIO_000300", xsd + "integer");
     }
 
 
-    @SuppressWarnings("unused")
     private static void checkChemicalToGene(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), rdf + "type", rdf + "subject", rdf + "object", sio + "SIO_000300",
                 sio + "SIO_001157");
         dispatcher.checkTypes(all(), vocab + "Cooccurrence", sio + "SIO_001257");
         dispatcher.checkValues(sio + "SIO_001157", edam + "operation_0306");
-        dispatcher.checkDatatype(sio + "SIO_000300", xsd + "integer");
     }
 
 
-    @SuppressWarnings("unused")
     private static void checkGeneToDisease(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), rdf + "type", rdf + "subject", rdf + "object", sio + "SIO_000300",
                 sio + "SIO_001157");
         dispatcher.checkTypes(all(), vocab + "Cooccurrence", sio + "SIO_000983");
         dispatcher.checkValues(sio + "SIO_001157", edam + "operation_0306");
-        dispatcher.checkDatatype(sio + "SIO_000300", xsd + "integer");
     }
 
 
@@ -182,7 +185,6 @@ public class Cooccurrence extends Updater
                 sio + "SIO_001157");
         dispatcher.checkTypes(all(), vocab + "Cooccurrence", sio + "SIO_001437");
         dispatcher.checkValues(sio + "SIO_001157", edam + "operation_0306");
-        dispatcher.checkDatatype(sio + "SIO_000300", xsd + "integer");
     }
 
 
@@ -211,12 +213,14 @@ public class Cooccurrence extends Updater
                 if(value.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of a cooccurrence",
+                            subjectIri + " " + objectIri + ": " + keep + ", " + value);
 
                 Integer put = newValues.put(pair, value);
 
                 if(put != null && !value.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of a cooccurrence",
+                            subjectIri + " " + objectIri + ": " + put + ", " + value);
             }
         });
 
@@ -258,12 +262,14 @@ public class Cooccurrence extends Updater
                 if(value.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of a cooccurrence",
+                            subjectIri + " " + objectIri + ": " + keep + ", " + value);
 
                 Integer put = newValues.put(pair, value);
 
                 if(put != null && !value.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of a cooccurrence",
+                            subjectIri + " " + objectIri + ": " + put + ", " + value);
             }
         });
 
@@ -305,12 +311,14 @@ public class Cooccurrence extends Updater
                 if(value.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of a cooccurrence",
+                            subjectIri + " " + objectIri + ": " + keep + ", " + value);
 
                 Integer put = newValues.put(pair, value);
 
                 if(put != null && !value.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of a cooccurrence",
+                            subjectIri + " " + objectIri + ": " + put + ", " + value);
             }
         });
 
@@ -348,12 +356,14 @@ public class Cooccurrence extends Updater
                 if(value.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of a cooccurrence",
+                            subjectIri + " " + objectIri + ": " + keep + ", " + value);
 
                 Integer put = newValues.put(pair, value);
 
                 if(put != null && !value.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of a cooccurrence",
+                            subjectIri + " " + objectIri + ": " + put + ", " + value);
             }
         });
 
@@ -402,12 +412,14 @@ public class Cooccurrence extends Updater
                     if(value.equals(keep))
                         return;
                     else if(keep != null)
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + keep + ", " + value);
 
                     Integer put = newGeneValues.put(pair, value);
 
                     if(put != null && !value.equals(put))
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + put + ", " + value);
                 }
             }
             else if(objectIri.startsWith(Protein.enzymePrefix))
@@ -428,17 +440,19 @@ public class Cooccurrence extends Updater
                     if(value.equals(keep))
                         return;
                     else if(keep != null)
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + keep + ", " + value);
 
                     Integer put = newEnzymeValues.put(pair, value);
 
                     if(put != null && !value.equals(put))
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + put + ", " + value);
                 }
             }
             else
             {
-                throw new IOException();
+                throw new DataException("unexpected participant of a cooccurrence", subjectIri + " " + objectIri);
             }
         });
 
@@ -492,12 +506,14 @@ public class Cooccurrence extends Updater
                     if(value.equals(keep))
                         return;
                     else if(keep != null)
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + keep + ", " + value);
 
                     Integer put = newGeneValues.put(pair, value);
 
                     if(put != null && !value.equals(put))
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + put + ", " + value);
                 }
             }
             else if(objectIri.startsWith(Protein.enzymePrefix))
@@ -518,17 +534,19 @@ public class Cooccurrence extends Updater
                     if(value.equals(keep))
                         return;
                     else if(keep != null)
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + keep + ", " + value);
 
                     Integer put = newEnzymeValues.put(pair, value);
 
                     if(put != null && !value.equals(put))
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + put + ", " + value);
                 }
             }
             else
             {
-                throw new IOException();
+                throw new DataException("unexpected participant of a cooccurrence", subjectIri + " " + objectIri);
             }
         });
 
@@ -582,12 +600,14 @@ public class Cooccurrence extends Updater
                     if(value.equals(keep))
                         return;
                     else if(keep != null)
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + keep + ", " + value);
 
                     Integer put = newGeneValues.put(pair, value);
 
                     if(put != null && !value.equals(put))
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + put + ", " + value);
                 }
             }
             else if(subjectIri.startsWith(Protein.enzymePrefix))
@@ -608,17 +628,19 @@ public class Cooccurrence extends Updater
                     if(value.equals(keep))
                         return;
                     else if(keep != null)
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + keep + ", " + value);
 
                     Integer put = newEnzymeValues.put(pair, value);
 
                     if(put != null && !value.equals(put))
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + put + ", " + value);
                 }
             }
             else
             {
-                throw new IOException();
+                throw new DataException("unexpected participant of a cooccurrence", subjectIri + " " + objectIri);
             }
         });
 
@@ -672,12 +694,14 @@ public class Cooccurrence extends Updater
                     if(value.equals(keep))
                         return;
                     else if(keep != null)
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + keep + ", " + value);
 
                     Integer put = newGeneValues.put(pair, value);
 
                     if(put != null && !value.equals(put))
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + put + ", " + value);
                 }
             }
             else if(subjectIri.startsWith(Protein.enzymePrefix))
@@ -698,17 +722,19 @@ public class Cooccurrence extends Updater
                     if(value.equals(keep))
                         return;
                     else if(keep != null)
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + keep + ", " + value);
 
                     Integer put = newEnzymeValues.put(pair, value);
 
                     if(put != null && !value.equals(put))
-                        throw new IOException();
+                        throw new DataException("multiple values of a cooccurrence",
+                                subjectIri + " " + objectIri + ": " + put + ", " + value);
                 }
             }
             else
             {
-                throw new IOException();
+                throw new DataException("unexpected participant of a cooccurrence", subjectIri + " " + objectIri);
             }
         });
 
@@ -751,12 +777,14 @@ public class Cooccurrence extends Updater
                 if(value.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of a cooccurrence",
+                            subjectIri + " " + objectIri + ": " + keep + ", " + value);
 
                 Integer put = newValues.put(pair, value);
 
                 if(put != null && !value.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of a cooccurrence",
+                            subjectIri + " " + objectIri + ": " + put + ", " + value);
             }
         });
 
@@ -788,7 +816,7 @@ public class Cooccurrence extends Updater
         TripleDispatcher dispatcher = new TripleDispatcher();
         Statements statements = new Statements(dispatcher);
 
-        //checkChemicalToDisease(dispatcher);
+        checkChemicalToDisease(dispatcher);
 
         loadChemicalToDiseaseValues(statements);
         loadDiseaseToChemicalValues(statements);
@@ -817,7 +845,7 @@ public class Cooccurrence extends Updater
         TripleDispatcher dispatcher = new TripleDispatcher();
         Statements statements = new Statements(dispatcher);
 
-        //checkChemicalToGene(dispatcher);
+        checkChemicalToGene(dispatcher);
 
         loadChemicalToGeneValues(statements);
         loadGeneToChemicalValues(statements);
@@ -832,7 +860,7 @@ public class Cooccurrence extends Updater
         TripleDispatcher dispatcher = new TripleDispatcher();
         Statements statements = new Statements(dispatcher);
 
-        //checkGeneToDisease(dispatcher);
+        checkGeneToDisease(dispatcher);
 
         loadGeneToDiseaseValues(statements);
         loadDiseaseToGeneValues(statements);

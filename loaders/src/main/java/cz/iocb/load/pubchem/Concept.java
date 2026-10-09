@@ -14,8 +14,10 @@ import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Set;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 
@@ -44,7 +46,7 @@ class Concept extends Updater
 
         dispatcher.onType(skos + "ConceptScheme", (subject, object) -> {
             if(!(subject.isURI() && schemes.contains(subject.getURI())))
-                dispatcher.missing(text(subject));
+                Problems.error("unexpected concept scheme", text(subject));
         });
     }
 
@@ -95,7 +97,7 @@ class Concept extends Updater
             // workaround
             if(conceptID == broaderID)
             {
-                System.out.println("    ignore " + getStringID(subject, prefix) + " for skos:broader");
+                Problems.warning("concept as its own skos:broader", text(subject));
                 return;
             }
 
@@ -139,7 +141,7 @@ class Concept extends Updater
     static Integer getConceptID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         String concept = value.substring(prefixLength);
 

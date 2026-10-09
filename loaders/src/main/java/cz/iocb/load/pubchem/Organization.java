@@ -10,6 +10,7 @@ import static cz.iocb.load.pubchem.PubChemRDF.vcard;
 import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleDispatcher;
@@ -166,7 +167,7 @@ public class Organization extends Updater
     static Integer getOrganizationID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         String organization = value.substring(prefixLength);
 

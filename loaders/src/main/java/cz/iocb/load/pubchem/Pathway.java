@@ -6,7 +6,9 @@ import static cz.iocb.load.common.EntityTable.typed;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.EntityTable.varchar;
 import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleDispatcher.is;
 import static cz.iocb.load.common.TripleDispatcher.startsWith;
+import static cz.iocb.load.common.TripleDispatcher.text;
 import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
 import static cz.iocb.load.common.TripleStreamProcessor.getString;
 import static cz.iocb.load.pubchem.PubChemRDF.bp;
@@ -21,9 +23,11 @@ import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 
@@ -87,7 +91,7 @@ class Pathway extends Updater
         dispatcher.checkTypes(all(), vocab + "Pathway", bp + "Pathway");
         dispatcher.checkPrefixes(all(), obo + "RO_0000057", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID",
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/");
-        // the values of rdfs:seeAlso are not checked
+        // the values of rdfs:seeAlso are checked by loadSameAsReferences()
     }
 
 
@@ -132,7 +136,10 @@ class Pathway extends Updater
 
             // workaround
             if(iri.startsWith("https://glycosmos.org/pathways/"))
+            {
+                Problems.warning("repaired value of " + rdfs + "seeAlso", text(subject) + " " + iri);
                 iri = iri.replaceFirst("^https://glycosmos\\.org/pathways/", "http://identifiers.org/reactome:");
+            }
 
             Description description = null;
 
@@ -141,7 +148,7 @@ class Pathway extends Updater
                     description = test;
 
             if(description == null)
-                throw new IOException(iri);
+                throw new DataException("unexpected reference", iri);
 
             pathways.set(pathwayID, "reference_type", description.name);
             pathways.set(pathwayID, "reference", iri.substring(description.prefix.length()));
@@ -153,8 +160,11 @@ class Pathway extends Updater
     {
         dispatcher.on(up + "organism", (subject, object) -> {
             // workaround
-            if(object.getURI().equals(Taxonomy.prefix))
+            if(is(object, Taxonomy.prefix))
+            {
+                Problems.warning("value of " + up + "organism without a taxonomy id", text(subject));
                 return;
+            }
 
             Integer pathwayID = getPathwayID(subject.getURI());
             Integer organismID = Taxonomy.getTaxonomyID(object.getURI());
@@ -377,7 +387,7 @@ class Pathway extends Updater
     static Integer getPathwayID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         Integer pathwayID = Integer.parseInt(value.substring(prefixLength));
 

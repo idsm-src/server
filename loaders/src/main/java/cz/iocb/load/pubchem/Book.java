@@ -14,6 +14,7 @@ import static cz.iocb.load.pubchem.PubChemRDF.skos;
 import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
@@ -186,7 +187,7 @@ public class Book extends Updater
     static Integer getBookID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         Integer bookID = Integer.parseInt(value.substring(prefixLength));
 

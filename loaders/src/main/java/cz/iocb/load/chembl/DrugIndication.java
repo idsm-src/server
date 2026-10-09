@@ -16,6 +16,7 @@ import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
+import cz.iocb.load.ontology.Ontology;
 
 
 
@@ -70,13 +71,9 @@ class DrugIndication extends Updater
                         case cco + "hasMeshHeading" -> indications.set(id, "mesh_heading", getString(object));
                         case cco + "hasEFO" ->
                         {
-                            Pair<Integer, Integer> efo = ChEMBL.getOntologyId(subject, predicate, object, null);
-
-                            if(efo != null)
-                            {
-                                indications.set(id, "efo_unit", efo.getOne());
-                                indications.set(id, "efo_id", efo.getTwo());
-                            }
+                            Pair<Integer, Integer> efo = Ontology.getResourceId(object, null);
+                            indications.set(id, "efo_unit", efo.getOne());
+                            indications.set(id, "efo_id", efo.getTwo());
                         }
                         case cco + "hasEFOName" -> indications.set(id, "efo_name", getString(object));
                         case cco + "highestDevelopmentPhase" -> indications.set(id, "phase", getInt(object));

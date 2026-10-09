@@ -1,5 +1,7 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBAO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.real;
 import static cz.iocb.load.common.EntityTable.varchar;
@@ -9,7 +11,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
-import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.EntityTable.Key;
 import cz.iocb.load.common.Pair;
@@ -128,10 +129,7 @@ class Endpoint extends Updater
                             throw new IOException();
 
                         EndpointID endpoint = parseEndpoint(subject);
-                        Pair<Integer, Integer> outcome = Ontology.getId(object.getURI());
-
-                        if(outcome.getOne() != OntologyResource.unitUncategorized)
-                            throw new IOException();
+                        Pair<Integer, Integer> outcome = Ontology.getResourceId(object, unitUncategorized);
 
                         endpoints.set(endpoint, "outcome_id", outcome.getTwo());
                     }
@@ -158,10 +156,7 @@ class Endpoint extends Updater
                             return;
 
                         EndpointID endpoint = parseEndpoint(subject);
-                        Pair<Integer, Integer> type = Ontology.getId(object.getURI());
-
-                        if(type.getOne() != OntologyResource.unitBAO)
-                            throw new IOException();
+                        Pair<Integer, Integer> type = Ontology.getResourceId(object, unitBAO);
 
                         measurements.set(endpoint, "endpoint_type_id", type.getTwo());
                     }

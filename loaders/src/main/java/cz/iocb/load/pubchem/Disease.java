@@ -3,6 +3,7 @@ package cz.iocb.load.pubchem;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.varchar;
 import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleDispatcher.text;
 import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
 import static cz.iocb.load.common.TripleStreamProcessor.getString;
 import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
@@ -12,9 +13,12 @@ import static cz.iocb.load.pubchem.PubChemRDF.skos;
 import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
+import org.apache.jena.graph.Node;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
@@ -31,16 +35,26 @@ public class Disease extends Updater
     private static final MissingEntities<Integer> missingDiseases = new MissingEntities<>("disease", true);
 
 
+    /*
+     * Tests whether the node is an incorrect match of a disease, an obo IRI without the prefix of an ontology, which is
+     * ignored.
+     */
+    private static boolean isIncorrect(Node node)
+    {
+        return node.isURI() && node.getURI().matches("http://purl\\.obolibrary\\.org/obo/[0-9]*");
+    }
+
+
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), rdf + "type", skos + "prefLabel", skos + "altLabel", skos + "closeMatch",
                 skos + "relatedMatch");
         dispatcher.checkTypes(all(), vocab + "Disease", sio + "SIO_010299");
-        dispatcher.checkPrefixes(all(), skos + "relatedMatch", "https://uts.nlm.nih.gov/uts/umls/concept/C",
-                "http://purl.obolibrary.org/obo/MONDO_", "http://purl.obolibrary.org/obo/HP_",
-                "https://omim.org/entry/", "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C",
-                "https://www.ncbi.nlm.nih.gov/medgen/C", "https://www.ncbi.nlm.nih.gov/medgen/CN",
-                "https://rarediseases.info.nih.gov/diseases/",
+        dispatcher.checkPrefixes(all(), skos + "relatedMatch", node -> !isIncorrect(node),
+                "https://uts.nlm.nih.gov/uts/umls/concept/C", "http://purl.obolibrary.org/obo/MONDO_",
+                "http://purl.obolibrary.org/obo/HP_", "https://omim.org/entry/",
+                "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C", "https://www.ncbi.nlm.nih.gov/medgen/C",
+                "https://www.ncbi.nlm.nih.gov/medgen/CN", "https://rarediseases.info.nih.gov/diseases/",
                 "https://www.guidetopharmacology.org/GRAC/DiseaseDisplayForward?diseaseId=",
                 "https://www.kegg.jp/entry/H", "http://nanbyodata.jp/ontology/NANDO_", "http://identifiers.org/DOID:",
                 "http://identifiers.org/kegg.disease:H", "http://identifiers.org/medgen:CN",
@@ -51,7 +65,7 @@ public class Disease extends Updater
                 "https://hpo.jax.org/app/browse/term/HP:", "https://www.orpha.net/en/disease/detail/",
                 "http://purl.obolibrary.org/obo/DOID:", "https://www.disease-ontology.org/?id=DOID:",
                 "https://monarchinitiative.org/disease/MONDO:", "https://glycosmos.org/diseases/DOID:");
-        dispatcher.checkPrefixes(all(), skos + "closeMatch", "http://id.nlm.nih.gov/mesh/",
+        dispatcher.checkPrefixes(all(), skos + "closeMatch", node -> !isIncorrect(node), "http://id.nlm.nih.gov/mesh/",
                 "http://identifiers.org/mesh:", "https://uts.nlm.nih.gov/uts/umls/concept/C",
                 "http://purl.obolibrary.org/obo/MONDO_", "http://purl.obolibrary.org/obo/HP_",
                 "https://omim.org/entry/", "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C",
@@ -132,14 +146,21 @@ public class Disease extends Updater
                 return;
 
             // workaround
-            if(iri.matches("http://purl\\.obolibrary\\.org/obo/[0-9]*"))
+            if(isIncorrect(object))
+            {
+                Problems.warning("incorrect value of " + skos + "closeMatch", text(subject) + " " + iri);
                 return;
+            }
 
             // workaround
-            iri = iri.replaceFirst("^(https://rarediseases.info.nih.gov/diseases/)0*([0-9]*/index)$", "$1$2");
+            if(iri.matches("https://rarediseases\\.info\\.nih\\.gov/diseases/0+[0-9]*/index"))
+            {
+                Problems.warning("repaired value of " + skos + "closeMatch", text(subject) + " " + iri);
+                iri = iri.replaceFirst("^(https://rarediseases.info.nih.gov/diseases/)0*([0-9]*/index)$", "$1$2");
+            }
 
             Integer diseaseID = getDiseaseID(subject.getURI());
-            Pair<Integer, Integer> match = Ontology.getId(iri);
+            Pair<Integer, Integer> match = Ontology.getResourceId(iri, null);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(diseaseID, match);
 
@@ -195,12 +216,15 @@ public class Disease extends Updater
         load("select disease,match_unit,match_id from pubchem.disease_related_matches", oldMatches);
 
         dispatcher.on(skos + "relatedMatch", (subject, object) -> {
-            //NOTE: workaround to prevent loading incorrect references
-            if(object.getURI().matches("http://purl\\.obolibrary\\.org/obo/[0-9]+"))
+            // workaround
+            if(isIncorrect(object))
+            {
+                Problems.warning("incorrect value of " + skos + "relatedMatch", text(subject) + " " + text(object));
                 return;
+            }
 
             Integer diseaseID = getDiseaseID(subject.getURI());
-            Pair<Integer, Integer> match = Ontology.getId(object.getURI());
+            Pair<Integer, Integer> match = Ontology.getResourceId(object, null);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(diseaseID, match);
 
@@ -255,7 +279,7 @@ public class Disease extends Updater
     static Integer getDiseaseID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         Integer diseaseID = Integer.parseInt(value.substring(prefixLength));
 

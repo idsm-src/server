@@ -1,5 +1,6 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -7,7 +8,7 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Arrays;
 import org.apache.jena.graph.Node;
-import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.SdfReader;
@@ -91,7 +92,7 @@ class Compound extends Updater
                         throw new IOException();
 
                     Integer compoundID = getCompoundID(subject.getURI(), false);
-                    Pair<Integer, Integer> ingredient = Ontology.getId(object.getURI());
+                    Pair<Integer, Integer> ingredient = Ontology.getResourceId(object, null);
 
                     Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(compoundID, ingredient);
 
@@ -283,10 +284,7 @@ class Compound extends Updater
 
                     Integer compoundID = getCompoundID(subject.getURI(), false);
 
-                    Pair<Integer, Integer> role = Ontology.getId(object.getURI());
-
-                    if(role.getOne() != OntologyResource.unitUncategorized)
-                        throw new IOException();
+                    Pair<Integer, Integer> role = Ontology.getResourceId(object, unitUncategorized);
 
                     Pair<Integer, Integer> pair = Pair.getPair(compoundID, role.getTwo());
 
@@ -326,7 +324,7 @@ class Compound extends Updater
                             return;
 
                         Integer compoundID = getCompoundID(subject.getURI(), false);
-                        Pair<Integer, Integer> type = Ontology.getId(object.getURI());
+                        Pair<Integer, Integer> type = Ontology.getResourceId(object, null);
 
                         Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(compoundID, type);
 
@@ -443,7 +441,7 @@ class Compound extends Updater
                         }
                         else
                         {
-                            Pair<Integer, Integer> match = Ontology.getId(object.getURI());
+                            Pair<Integer, Integer> match = Ontology.getResourceId(object, null);
                             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(compoundID, match);
 
                             synchronized(newMatches)
@@ -638,7 +636,7 @@ class Compound extends Updater
     private static Integer getCompoundID(String value, boolean verbose) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         Integer compoundID = Integer.parseInt(value.substring(prefixLength));
 

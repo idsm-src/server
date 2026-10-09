@@ -8,6 +8,7 @@ import static cz.iocb.load.common.TripleDispatcher.is;
 import static cz.iocb.load.common.TripleDispatcher.notStartingWith;
 import static cz.iocb.load.common.TripleDispatcher.startingWith;
 import static cz.iocb.load.common.TripleDispatcher.startsWith;
+import static cz.iocb.load.common.TripleDispatcher.text;
 import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
 import static cz.iocb.load.common.TripleStreamProcessor.getString;
 import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
@@ -24,9 +25,11 @@ import static cz.iocb.load.pubchem.PubChemRDF.up;
 import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
@@ -63,6 +66,8 @@ class Protein extends Updater
                 bao + "BAO_0002817", cito + "isDiscussedBy", dcterms + "identifier");
         dispatcher.checkPredicates(startingWith("http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_"), rdf + "type",
                 rdfs + "seeAlso", rdfs + "subClassOf", skos + "prefLabel", skos + "altLabel");
+        dispatcher.checkTypes(startingWith("http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_"), vocab + "Enzyme",
+                sio + "SIO_010343");
         dispatcher.checkIdentifier(dcterms + "identifier", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC");
         dispatcher.checkPrefixes(all(), obo + "RO_0002180",
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID",
@@ -206,7 +211,10 @@ class Protein extends Updater
 
             // workaround
             if(title.isEmpty())
+            {
+                Problems.warning("empty " + skos + "prefLabel", text(subject));
                 return;
+            }
 
             proteins.set(proteinID, "title", title);
         });
@@ -411,10 +419,7 @@ class Protein extends Updater
                 return;
 
             Integer proteinID = getProteinID(subject.getURI());
-            Pair<Integer, Integer> match = Ontology.getId(object.getURI());
-
-            if(match == null)
-                System.err.println("xxx " + object.getURI());
+            Pair<Integer, Integer> match = Ontology.getResourceId(object, null);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(proteinID, match);
 
@@ -1077,7 +1082,7 @@ class Protein extends Updater
                 return;
 
             Integer proteinID = getProteinID(subject.getURI());
-            Pair<Integer, Integer> type = Ontology.getId(object.getURI());
+            Pair<Integer, Integer> type = Ontology.getResourceId(object, null);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(proteinID, type);
 
@@ -1216,7 +1221,7 @@ class Protein extends Updater
     static Integer getEnzymeID(String value) throws IOException
     {
         if(!value.startsWith(enzymePrefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         String enzyme = value.substring(enzymePrefixLength);
 
@@ -1256,7 +1261,7 @@ class Protein extends Updater
     static Integer getProteinID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         String protein = value.substring(prefixLength);
 

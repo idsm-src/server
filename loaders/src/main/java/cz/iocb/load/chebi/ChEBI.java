@@ -1,8 +1,10 @@
 package cz.iocb.load.chebi;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
 import static cz.iocb.load.common.TripleDispatcher.except;
 import static cz.iocb.load.common.TripleDispatcher.is;
 import static cz.iocb.load.common.TripleDispatcher.startsWith;
+import static cz.iocb.load.common.TripleDispatcher.text;
 import static cz.iocb.load.common.TripleStreamProcessor.getBoolean;
 import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
 import static cz.iocb.load.common.TripleStreamProcessor.getLexicalForm;
@@ -23,10 +25,11 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.system.AsyncParser;
-import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.BlankNodes;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.SdfReader;
 import cz.iocb.load.common.StructureTable;
 import cz.iocb.load.common.TripleDispatcher;
@@ -209,9 +212,10 @@ public class ChEBI extends Updater
     static final String obo = "http://purl.obolibrary.org/obo/";
     static final String oboInOwl = "http://www.geneontology.org/formats/oboInOwl#";
     static final String chemrof = "https://w3id.org/chemrof/";
+    static final String dcterms = "http://purl.org/dc/terms/";
+    static final String foaf = "http://xmlns.com/foaf/0.1/";
 
     static final String prefix = "http://purl.obolibrary.org/obo/CHEBI_";
-    static final int prefixLength = prefix.length();
 
     private static final String file = "chebi/chebi.owl";
 
@@ -244,7 +248,7 @@ public class ChEBI extends Updater
                     String iri = triple.getObject().getURI();
 
                     if(!iri.matches("http://purl\\.obolibrary\\.org/obo/chebi/[^/]+/chebi\\.owl"))
-                        throw new IOException();
+                        throw new IOException("unexpected version IRI " + iri);
 
                     return iri.replaceFirst("^http://purl\\.obolibrary\\.org/obo/chebi/([^/]+)/chebi\\.owl$", "$1");
                 }
@@ -274,7 +278,8 @@ public class ChEBI extends Updater
                 oboInOwl + "saved-by", oboInOwl + "shorthand", oboInOwl + "source", obo + "IAO_0000115",
                 obo + "IAO_0000231", obo + "IAO_0100001", obo + "BFO_0000051", obo + "RO_0000087", obo + "RO_0018033",
                 obo + "RO_0018034", obo + "RO_0018036", obo + "RO_0018037", obo + "RO_0018038", obo + "RO_0018039",
-                obo + "RO_0018040", rdfs + "comment", rdfs + "label", owl + "deprecated");
+                obo + "RO_0018040", rdfs + "comment", rdfs + "label", owl + "deprecated", dcterms + "description",
+                dcterms + "license", dcterms + "title", foaf + "homepage");
 
         dispatcher.checkPredicates(subjects, rdf + "type", rdfs + "subClassOf", oboInOwl + "inSubset",
                 obo + "IAO_0100001", obo + "IAO_0000231", owl + "onProperty", owl + "someValuesFrom",
@@ -285,6 +290,7 @@ public class ChEBI extends Updater
                 chemrof + "inchi_string", chemrof + "mass", chemrof + "monoisotopic_mass", chemrof + "smiles_string",
                 chemrof + "wurcs_representation", rdfs + "label", oboInOwl + "id", oboInOwl + "hasOBONamespace",
                 obo + "IAO_0000115", owl + "deprecated");
+        dispatcher.checkTypes(subjects, owl + "Class", owl + "Restriction", owl + "Axiom");
     }
 
 
@@ -344,7 +350,12 @@ public class ChEBI extends Updater
 
         dispatcher.on(oboInOwl + "inSubset", (subject, object) -> {
             int chebiID = getEntityID(subject.getURI());
-            Integer star = Integer.parseInt(getStringID(object, obo + "chebi/").replaceFirst("_STAR", ""));
+            String subset = getStringID(object, obo + "chebi/");
+
+            if(!subset.matches("[1-9]_STAR"))
+                throw new DataException("unexpected subset", text(object));
+
+            Integer star = Integer.parseInt(subset.replaceFirst("_STAR", ""));
 
             if(star.equals(oldStars.remove(chebiID)))
             {
@@ -357,12 +368,14 @@ public class ChEBI extends Updater
                 if(star.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of chebi.class_stars.star_id",
+                            chebiID + ": " + keep + ", " + star);
 
                 Integer put = newStars.put(chebiID, star);
 
                 if(put != null && !star.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of chebi.class_stars.star_id",
+                            chebiID + ": " + put + ", " + star);
             }
         });
 
@@ -397,12 +410,14 @@ public class ChEBI extends Updater
                 if(replacementID.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of chebi.class_replacements.replacement",
+                            chebiID + ": " + keep + ", " + replacementID);
 
                 Integer put = newReplacements.put(chebiID, replacementID);
 
                 if(put != null && !replacementID.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of chebi.class_replacements.replacement",
+                            chebiID + ": " + put + ", " + replacementID);
             }
         });
 
@@ -437,12 +452,14 @@ public class ChEBI extends Updater
                 if(reasonID.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of chebi.class_obsolescence_reasons.reason_id",
+                            chebiID + ": " + keep + ", " + reasonID);
 
                 Integer put = newReasons.put(chebiID, reasonID);
 
                 if(put != null && !reasonID.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of chebi.class_obsolescence_reasons.reason_id",
+                            chebiID + ": " + put + ", " + reasonID);
             }
         });
 
@@ -472,7 +489,7 @@ public class ChEBI extends Updater
 
         dispatcher.onType(owl + "Restriction", (subject, object) -> {
             if(!subject.isBlank())
-                throw new IOException("unexpected restriction " + subject);
+                throw new DataException("unexpected restriction", text(subject));
 
             restrictions.add(subject);
         });
@@ -496,13 +513,22 @@ public class ChEBI extends Updater
                 {
                     for(Node values : parts.values(node, owl + "someValuesFrom"))
                     {
-                        int chebiID = getEntityID(superclass.getOne().getURI());
-                        int valueRestrictionID = getEntityID(values.getURI());
+                        Restriction restriction;
 
-                        Pair<Integer, Integer> propertyID = Ontology.getId(property.getURI());
+                        try
+                        {
+                            int chebiID = getEntityID(text(superclass.getOne()));
+                            int valueRestrictionID = getEntityID(text(values));
+                            Pair<Integer, Integer> propertyID = Ontology.getResourceId(property, null);
 
-                        Restriction restriction = new Restriction(chebiID, valueRestrictionID, propertyID.getOne(),
-                                propertyID.getTwo());
+                            restriction = new Restriction(chebiID, valueRestrictionID, propertyID.getOne(),
+                                    propertyID.getTwo());
+                        }
+                        catch(DataException e)
+                        {
+                            Problems.error(e.getKind() + " in " + owl + "Restriction", e.getDetail());
+                            continue;
+                        }
 
                         if(oldRestrictions.remove(restriction) != null)
                             keepRestrictions.add(restriction);
@@ -540,7 +566,7 @@ public class ChEBI extends Updater
 
         dispatcher.onType(owl + "Axiom", (subject, object) -> {
             if(!subject.isBlank())
-                throw new IOException("unexpected axiom " + subject);
+                throw new DataException("unexpected axiom", text(subject));
 
             axioms.add(subject);
         });
@@ -550,7 +576,19 @@ public class ChEBI extends Updater
 
             for(Node node : axioms)
             {
-                for(Axiom axiom : getAxioms(parts, node))
+                List<Axiom> list;
+
+                try
+                {
+                    list = getAxioms(parts, node);
+                }
+                catch(DataException e)
+                {
+                    Problems.error(e.getKind() + " in " + owl + "Axiom", e.getDetail());
+                    continue;
+                }
+
+                for(Axiom axiom : list)
                 {
                     if(oldAxioms.remove(axiom) != null)
                         keepAxioms.add(axiom);
@@ -592,12 +630,9 @@ public class ChEBI extends Updater
     private static Axiom getAxiom(Node chebi, Node property, Node target, Node type, Node reference, Node source)
             throws IOException
     {
-        int chebiID = getEntityID(chebi.getURI());
-        Pair<Integer, Integer> propertyID = Ontology.getId(property.getURI());
-        Pair<Integer, Integer> typeID = type == null ? null : Ontology.getId(type.getURI());
-
-        if(type != null && typeID == null || typeID != null && typeID.getOne() != OntologyResource.unitUncategorized)
-            throw new IOException(type.getURI());
+        int chebiID = getEntityID(text(chebi));
+        Pair<Integer, Integer> propertyID = Ontology.getResourceId(property, null);
+        Pair<Integer, Integer> typeID = type == null ? null : Ontology.getResourceId(type, unitUncategorized);
 
         return new Axiom(chebiID, propertyID.getOne(), propertyID.getTwo(), getLexicalForm(target),
                 typeID == null ? null : typeID.getTwo(), reference == null ? null : getLexicalForm(reference),
@@ -662,12 +697,14 @@ public class ChEBI extends Updater
                 if(value.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of chebi." + table + "." + column,
+                            chebiID + ": " + keep + ", " + value);
 
                 String put = newValues.put(chebiID, value);
 
                 if(put != null && !value.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of chebi." + table + "." + column,
+                            chebiID + ": " + put + ", " + value);
             }
         });
 
@@ -706,12 +743,14 @@ public class ChEBI extends Updater
                 if(value.equals(keep))
                     return;
                 else if(keep != null)
-                    throw new IOException();
+                    throw new DataException("multiple values of chebi." + table + "." + column,
+                            chebiID + ": " + keep + ", " + value);
 
                 Integer put = newValues.put(chebiID, value);
 
                 if(put != null && !value.equals(put))
-                    throw new IOException();
+                    throw new DataException("multiple values of chebi." + table + "." + column,
+                            chebiID + ": " + put + ", " + value);
             }
         });
 
@@ -749,10 +788,7 @@ public class ChEBI extends Updater
 
     private static Integer getEntityID(String value) throws IOException
     {
-        if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
-
-        return getEntityID(Integer.parseInt(value.substring(prefixLength)));
+        return getEntityID(getIntID(value, prefix));
     }
 
 
@@ -778,7 +814,7 @@ public class ChEBI extends Updater
         {
             SdfReader.read(name, reader, "ChEBI ID", (id, molfile) -> {
                 if(!id.startsWith("CHEBI:"))
-                    throw new IOException("unexpected entity " + id);
+                    throw new DataException("unexpected entity", id);
 
                 int entityID = getEntityID(Integer.parseInt(id.substring(6)));
 

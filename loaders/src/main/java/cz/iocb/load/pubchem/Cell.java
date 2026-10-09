@@ -4,7 +4,9 @@ import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.varchar;
 import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleDispatcher.is;
 import static cz.iocb.load.common.TripleDispatcher.startsWith;
+import static cz.iocb.load.common.TripleDispatcher.text;
 import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
 import static cz.iocb.load.common.TripleStreamProcessor.getString;
 import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
@@ -18,9 +20,11 @@ import static cz.iocb.load.pubchem.PubChemRDF.up;
 import static cz.iocb.load.pubchem.PubChemRDF.vocab;
 import java.io.IOException;
 import java.sql.SQLException;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
@@ -83,8 +87,11 @@ public class Cell extends Updater
     {
         dispatcher.on(up + "organism", (subject, object) -> {
             // workaround
-            if(object.getURI().equals(Taxonomy.prefix))
+            if(is(object, Taxonomy.prefix))
+            {
+                Problems.warning("value of " + up + "organism without a taxonomy id", text(subject));
                 return;
+            }
 
             Integer cellID = getCellID(subject.getURI());
             Integer organismID = Taxonomy.getTaxonomyID(object.getURI());
@@ -190,7 +197,7 @@ public class Cell extends Updater
                 return;
 
             Integer cellID = getCellID(subject.getURI());
-            Pair<Integer, Integer> match = Ontology.getId(object.getURI());
+            Pair<Integer, Integer> match = Ontology.getResourceId(object, null);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(cellID, match);
 
@@ -397,7 +404,7 @@ public class Cell extends Updater
     static Integer getCellID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
-            throw new IOException("unexpected IRI: " + value);
+            throw new DataException("unexpected IRI", value);
 
         Integer cellID = Integer.parseInt(value.substring(prefixLength));
 

@@ -54,7 +54,6 @@ public class TripleDispatcher extends Updater
     private final HashMap<String, List<Handler>> typeHandlers = new HashMap<>();
     private final List<TripleHandler> tripleHandlers = new ArrayList<>();
     private final List<Action> actions = new ArrayList<>();
-    private final HashSet<String> reported = new HashSet<>();
 
 
     /*
@@ -90,16 +89,6 @@ public class TripleDispatcher extends Updater
     public void after(Action action)
     {
         actions.add(action);
-    }
-
-
-    /*
-     * Reports an unexpected value of the data once.
-     */
-    public synchronized void missing(String value)
-    {
-        if(reported.add(value))
-            System.out.println("    missing " + value);
     }
 
 
@@ -165,9 +154,12 @@ public class TripleDispatcher extends Updater
     }
 
 
+    /*
+     * Selects the nodes that are not IRIs starting with the prefix, including the blank nodes.
+     */
     public static Predicate<Node> notStartingWith(String prefix)
     {
-        return node -> node.isURI() && !node.getURI().startsWith(prefix);
+        return node -> !node.isURI() || !node.getURI().startsWith(prefix);
     }
 
 
@@ -183,7 +175,7 @@ public class TripleDispatcher extends Updater
 
 
     /*
-     * Reports the predicates of the selected subjects other than the allowed ones.
+     * Reports the triples of the selected subjects whose predicates are other than the allowed ones as errors.
      */
     public void checkPredicates(Predicate<Node> subjects, String... allowed)
     {
@@ -191,13 +183,13 @@ public class TripleDispatcher extends Updater
 
         onEvery((subject, predicate, object) -> {
             if(subjects.test(subject) && !predicates.contains(predicate.getURI()))
-                missing(predicate.getURI());
+                Problems.error("unexpected predicate " + predicate.getURI(), text(subject) + " " + text(object));
         });
     }
 
 
     /*
-     * Reports the types of the selected subjects other than the allowed ones.
+     * Reports the types of the selected subjects other than the allowed ones as errors.
      */
     public void checkTypes(Predicate<Node> subjects, String... allowed)
     {
@@ -205,13 +197,13 @@ public class TripleDispatcher extends Updater
 
         on(typePredicate, (subject, object) -> {
             if(subjects.test(subject) && !(object.isURI() && types.contains(object.getURI())))
-                missing(text(object));
+                Problems.error("unexpected rdf:type " + text(object), text(subject));
         });
     }
 
 
     /*
-     * Reports the values of the predicate other than the allowed IRIs.
+     * Reports the values of the predicate other than the allowed IRIs as errors.
      */
     public void checkValues(String predicate, String... allowed)
     {
@@ -219,46 +211,56 @@ public class TripleDispatcher extends Updater
 
         on(predicate, (subject, object) -> {
             if(!(object.isURI() && values.contains(object.getURI())))
-                missing(text(object));
+                Problems.error("unexpected value of " + predicate, text(subject) + " " + text(object));
         });
     }
 
 
     /*
-     * Reports the values of the predicate at the selected subjects that start with none of the prefixes.
+     * Reports the values of the predicate at the selected subjects that start with none of the prefixes as errors.
      */
     public void checkPrefixes(Predicate<Node> subjects, String predicate, String... prefixes)
+    {
+        checkPrefixes(subjects, predicate, all(), prefixes);
+    }
+
+
+    /*
+     * Reports the selected values of the predicate at the selected subjects that start with none of the prefixes as
+     * errors.
+     */
+    public void checkPrefixes(Predicate<Node> subjects, String predicate, Predicate<Node> values, String... prefixes)
     {
         on(predicate, (subject, object) -> {
             String value = str(object);
 
-            if(value == null || !subjects.test(subject))
+            if(value == null || !subjects.test(subject) || !values.test(object))
                 return;
 
             for(String prefix : prefixes)
                 if(value.startsWith(prefix))
                     return;
 
-            missing(value);
+            Problems.error("unexpected value of " + predicate, text(subject) + " " + text(object));
         });
     }
 
 
     /*
-     * Reports the subjects whose IRI without the pattern differs from their value of the predicate.
+     * Reports the subjects whose IRI without the pattern differs from their value of the predicate as errors.
      */
     public void checkIdentifier(String predicate, String pattern)
     {
         on(predicate, (subject, object) -> {
             if(subject.isURI() && !subject.getURI().replaceAll(pattern, "").equals(str(object)))
-                missing(subject.getURI());
+                Problems.error("value of " + predicate + " not matching the IRI", text(subject) + " " + text(object));
         });
     }
 
 
     /*
      * Reports the selected values of the predicate at the selected subjects whose rest without the value pattern
-     * differs from the rest of the subject IRI without the subject pattern.
+     * differs from the rest of the subject IRI without the subject pattern as errors.
      */
     public void checkLink(Predicate<Node> subjects, String predicate, Predicate<Node> values, String subjectPattern,
             String valuePattern)
@@ -270,14 +272,14 @@ public class TripleDispatcher extends Updater
                 return;
 
             if(!subject.getURI().replaceAll(subjectPattern, "").equals(value.replaceAll(valuePattern, "")))
-                missing(value);
+                Problems.error("value of " + predicate + " not matching the IRI", text(subject) + " " + value);
         });
     }
 
 
     /*
      * Reports the values of the predicate that start with the prefix and lack a value with the pair prefix and the
-     * same rest at the same subject.
+     * same rest at the same subject as errors.
      */
     public void checkPaired(String predicate, String prefix, String pairPrefix)
     {
@@ -297,19 +299,8 @@ public class TripleDispatcher extends Updater
         after(() -> {
             for(Entry<Pair<Node, String>, String> entry : values.entrySet())
                 if(!pairs.contains(entry.getKey()))
-                    missing(entry.getValue());
-        });
-    }
-
-
-    /*
-     * Reports the literal values of the predicate whose datatype is not the given one.
-     */
-    public void checkDatatype(String predicate, String datatype)
-    {
-        on(predicate, (subject, object) -> {
-            if(object.isLiteral() && !object.getLiteralDatatypeURI().equals(datatype))
-                missing(text(object));
+                    Problems.error("value of " + predicate + " without its " + pairPrefix + " pair",
+                            text(entry.getKey().getOne()) + " " + entry.getValue());
         });
     }
 
@@ -424,11 +415,21 @@ public class TripleDispatcher extends Updater
 
 
     /*
-     * Runs the actions registered by after().
+     * Runs the actions registered by after(). A problem of the data that an action finds is reported, and the other
+     * actions still run.
      */
     public void finish() throws IOException, SQLException
     {
         for(Action action : actions)
-            action.run();
+        {
+            try
+            {
+                action.run();
+            }
+            catch(DataException e)
+            {
+                Problems.error(e.getKind(), e.getDetail());
+            }
+        }
     }
 }
