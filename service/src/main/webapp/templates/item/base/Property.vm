@@ -3,6 +3,8 @@
   {
     $entity rdfs:label ?LABEL.
   }
+  ORDER BY DESC(langMatches(lang(?LABEL), "en")) DESC(lang(?LABEL) = "") DESC(str(?LABEL))
+  LIMIT 1
 #end
 
 <table style="width:100%">

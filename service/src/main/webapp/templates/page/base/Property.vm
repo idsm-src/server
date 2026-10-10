@@ -1,10 +1,13 @@
 #macro(superlevelProperties $property $label $depth $count)
   #sparql($superproperties)
-    SELECT ?PROPERTY ?LABEL FROM dataset:ontology WHERE
+    SELECT ?PROPERTY
+        (substr(max(concat(if(langMatches(lang(?L), "en"), "2", if(lang(?L) = "", "1", "0")), str(?L))), 2) AS ?LABEL)
+    FROM dataset:ontology WHERE
     {
       $property rdfs:subPropertyOf ?PROPERTY.
-      ?PROPERTY rdfs:label ?LABEL.
+      ?PROPERTY rdfs:label ?L.
     }
+    GROUP BY ?PROPERTY
   #end
 
   #if($superproperties.count == 0)
@@ -31,11 +34,14 @@
 
 #macro(sublevelProperties $property $label $depth $count)
   #sparql($subproperties)
-    SELECT ?PROPERTY ?LABEL FROM dataset:ontology WHERE
+    SELECT ?PROPERTY
+        (substr(max(concat(if(langMatches(lang(?L), "en"), "2", if(lang(?L) = "", "1", "0")), str(?L))), 2) AS ?LABEL)
+    FROM dataset:ontology WHERE
     {
       ?PROPERTY rdfs:subPropertyOf $property.
-      ?PROPERTY rdfs:label ?LABEL.
+      ?PROPERTY rdfs:label ?L.
     }
+    GROUP BY ?PROPERTY
   #end
 
   #if($subproperties.count == 0)
@@ -65,6 +71,8 @@
   {
     $entity rdfs:label ?LABEL.
   }
+  ORDER BY DESC(langMatches(lang(?LABEL), "en")) DESC(lang(?LABEL) = "") DESC(str(?LABEL))
+  LIMIT 1
 #end
 
 #sparql($domains)
@@ -82,19 +90,25 @@
 #end
 
 #sparql($superproperties)
-  SELECT ?PROPERTY ?LABEL FROM dataset:ontology WHERE
+  SELECT ?PROPERTY
+      (substr(max(concat(if(langMatches(lang(?L), "en"), "2", if(lang(?L) = "", "1", "0")), str(?L))), 2) AS ?LABEL)
+  FROM dataset:ontology WHERE
   {
     $entity rdfs:subPropertyOf ?PROPERTY.
-    ?PROPERTY rdfs:label ?LABEL.
+    ?PROPERTY rdfs:label ?L.
   }
+  GROUP BY ?PROPERTY
 #end
 
 #sparql($subproperties)
-  SELECT ?PROPERTY ?LABEL FROM dataset:ontology WHERE
+  SELECT ?PROPERTY
+      (substr(max(concat(if(langMatches(lang(?L), "en"), "2", if(lang(?L) = "", "1", "0")), str(?L))), 2) AS ?LABEL)
+  FROM dataset:ontology WHERE
   {
     ?PROPERTY rdfs:subPropertyOf $entity.
-    ?PROPERTY rdfs:label ?LABEL.
+    ?PROPERTY rdfs:label ?L.
   }
+  GROUP BY ?PROPERTY
 #end
 
 #parse("common/label.vm")

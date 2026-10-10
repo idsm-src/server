@@ -1,11 +1,14 @@
 #macro(superlevelClasses $class $label $depth $count)
   #sparql($superclasses)
-    SELECT ?CLASS ?LABEL FROM dataset:ontology FROM ebi:chebi WHERE
+    SELECT ?CLASS
+        (substr(max(concat(if(langMatches(lang(?L), "en"), "2", if(lang(?L) = "", "1", "0")), str(?L))), 2) AS ?LABEL)
+    FROM dataset:ontology FROM ebi:chebi WHERE
     {
       $class rdfs:subClassOf ?CLASS.
-      ?CLASS rdfs:label ?LABEL.
+      ?CLASS rdfs:label ?L.
       FILTER (?CLASS != $class) #avoid simple type cycle
     }
+    GROUP BY ?CLASS
   #end
 
   #if($superclasses.count == 0)
@@ -32,13 +35,16 @@
 
 #macro(sublevelClasses $class $label $depth $count)
   #sparql($subclasses)
-    SELECT ?CLASS ?LABEL FROM dataset:ontology FROM ebi:chebi WHERE
+    SELECT ?CLASS
+        (substr(max(concat(if(langMatches(lang(?L), "en"), "2", if(lang(?L) = "", "1", "0")), str(?L))), 2) AS ?LABEL)
+    FROM dataset:ontology FROM ebi:chebi WHERE
     {
       ?CLASS rdfs:subClassOf $class.
-      ?CLASS rdfs:label ?LABEL.
+      ?CLASS rdfs:label ?L.
       FILTER (?CLASS != owl:Nothing)
       FILTER (?CLASS != $class) #avoid simple type cycle
     }
+    GROUP BY ?CLASS
   #end
 
   #if($subclasses.count == 0)
@@ -64,30 +70,39 @@
 #end
 
 #sparql($superclasses)
-  SELECT ?CLASS ?LABEL FROM dataset:ontology FROM ebi:chebi WHERE
+  SELECT ?CLASS
+      (substr(max(concat(if(langMatches(lang(?L), "en"), "2", if(lang(?L) = "", "1", "0")), str(?L))), 2) AS ?LABEL)
+  FROM dataset:ontology FROM ebi:chebi WHERE
   {
     $entity rdfs:subClassOf ?CLASS.
-    ?CLASS rdfs:label ?LABEL.
+    ?CLASS rdfs:label ?L.
     FILTER (?CLASS != $entity) #avoid simple type cycle
   }
+  GROUP BY ?CLASS
 #end
 
 #sparql($subclasses)
-  SELECT ?CLASS ?LABEL FROM dataset:ontology FROM ebi:chebi WHERE
+  SELECT ?CLASS
+      (substr(max(concat(if(langMatches(lang(?L), "en"), "2", if(lang(?L) = "", "1", "0")), str(?L))), 2) AS ?LABEL)
+  FROM dataset:ontology FROM ebi:chebi WHERE
   {
     ?CLASS rdfs:subClassOf $entity.
-    ?CLASS rdfs:label ?LABEL.
+    ?CLASS rdfs:label ?L.
     FILTER (?CLASS != owl:Nothing)
     FILTER (?CLASS != $entity) #avoid simple type cycle
   }
+  GROUP BY ?CLASS
 #end
 
 #sparql($properties)
-  SELECT ?PROPERTY ?LABEL FROM dataset:ontology WHERE
+  SELECT ?PROPERTY
+      (substr(max(concat(if(langMatches(lang(?L), "en"), "2", if(lang(?L) = "", "1", "0")), str(?L))), 2) AS ?LABEL)
+  FROM dataset:ontology WHERE
   {
     ?PROPERTY rdfs:domain $entity.
-    ?PROPERTY rdfs:label ?LABEL.
+    ?PROPERTY rdfs:label ?L.
   }
+  GROUP BY ?PROPERTY
 #end
 
 

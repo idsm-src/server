@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
@@ -224,13 +225,18 @@ public class Ontology extends Updater
 
     /*
      * A value of a predicate whose values are resources or strings: the (unit, id) of a resource, or a string with its
-     * language, if any.
+     * language, if any. A table has the columns of the resources and of the languages only if the values of its
+     * predicate can be resources and can have languages.
      */
     private static record Value(Integer unit, Integer id, String string, String language)
     {
-        static Value get(Node node, String... kinds) throws DataException
+        /*
+         * Returns the value of a node, which is a resource, if resources are allowed, or a literal of one of the
+         * allowed kinds.
+         */
+        static Value get(Node node, boolean resources, String... kinds) throws DataException
         {
-            if(node.isLiteral())
+            if(node.isLiteral() || !resources)
             {
                 LiteralValue literal = getLiteral(node, kinds);
 
@@ -243,40 +249,60 @@ public class Ontology extends Updater
         }
 
 
-        static Value read(ResultSet result, int index, boolean languages) throws SQLException
+        static Value read(ResultSet result, int index, boolean resources, boolean languages) throws SQLException
         {
-            int unit = result.getInt(index);
-            boolean literal = result.wasNull();
-            int id = result.getInt(index + 1);
+            if(resources)
+            {
+                int unit = result.getInt(index);
 
-            return literal ?
-                    new Value(null, null, result.getString(index + 2), languages ? result.getString(index + 3) : null) :
-                    new Value(unit, id, null, null);
+                if(!result.wasNull())
+                    return new Value(unit, result.getInt(index + 1), null, null);
+
+                index += 2;
+            }
+
+            return new Value(null, null, result.getString(index), languages ? result.getString(index + 1) : null);
         }
 
 
-        void write(PreparedStatement statement, int index, boolean languages) throws SQLException
+        void write(PreparedStatement statement, int index, boolean resources, boolean languages) throws SQLException
         {
-            statement.setObject(index, unit, Types.SMALLINT);
-            statement.setObject(index + 1, id, Types.INTEGER);
-            statement.setObject(index + 2, string, Types.VARCHAR);
+            if(resources)
+            {
+                statement.setObject(index++, unit, Types.SMALLINT);
+                statement.setObject(index++, id, Types.INTEGER);
+            }
+
+            statement.setObject(index, string, Types.VARCHAR);
 
             if(languages)
-                statement.setObject(index + 3, language, Types.VARCHAR);
+                statement.setObject(index + 1, language, Types.VARCHAR);
         }
     }
 
 
     /*
-     * The pairs of a resource and a value of its predicate, which is a resource or a string without a language.
+     * The pairs of a resource and a value of its predicate, see Value.
      */
     @SuppressWarnings("serial")
     private static class ResourceValueSet extends SqlSet<Pair<Pair<Integer, Integer>, Value>>
     {
+        private final boolean resources;
+        private final boolean languages;
+
+
+        ResourceValueSet(boolean resources, boolean languages)
+        {
+            this.resources = resources;
+            this.languages = languages;
+        }
+
+
         @Override
         public Pair<Pair<Integer, Integer>, Value> get(ResultSet result) throws SQLException
         {
-            return Pair.getPair(Pair.getPair(result.getInt(1), result.getInt(2)), Value.read(result, 3, false));
+            return Pair.getPair(Pair.getPair(result.getInt(1), result.getInt(2)),
+                    Value.read(result, 3, resources, languages));
         }
 
         @Override
@@ -284,7 +310,29 @@ public class Ontology extends Updater
         {
             statement.setInt(1, value.getOne().getOne());
             statement.setInt(2, value.getOne().getTwo());
-            value.getTwo().write(statement, 3, false);
+            value.getTwo().write(statement, 3, resources, languages);
+        }
+    }
+
+
+    /*
+     * The pairs of a resource and a boolean value of its predicate.
+     */
+    @SuppressWarnings("serial")
+    private static class ResourceFlagSet extends SqlSet<Pair<Pair<Integer, Integer>, Boolean>>
+    {
+        @Override
+        public Pair<Pair<Integer, Integer>, Boolean> get(ResultSet result) throws SQLException
+        {
+            return Pair.getPair(Pair.getPair(result.getInt(1), result.getInt(2)), result.getBoolean(3));
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Pair<Pair<Integer, Integer>, Boolean> value) throws SQLException
+        {
+            statement.setInt(1, value.getOne().getOne());
+            statement.setInt(2, value.getOne().getTwo());
+            statement.setBoolean(3, value.getTwo());
         }
     }
 
@@ -313,7 +361,7 @@ public class Ontology extends Updater
         public Relation get(ResultSet result) throws SQLException
         {
             return new Relation(Pair.getPair(result.getInt(1), result.getInt(2)), result.getString(3),
-                    Value.read(result, 4, true));
+                    Value.read(result, 4, true, true));
         }
 
         @Override
@@ -322,7 +370,7 @@ public class Ontology extends Updater
             statement.setInt(1, value.ontologyID().getOne());
             statement.setInt(2, value.ontologyID().getTwo());
             statement.setString(3, value.property());
-            value.target().write(statement, 4, true);
+            value.target().write(statement, 4, true, true);
         }
     }
 
@@ -394,14 +442,17 @@ public class Ontology extends Updater
             typed("value_integer", "numeric"), float8("value_double"));
 
     // the kinds of the literal values by the datatypes of the data; the integer datatypes are unified, as OWL 2
-    // compares the numbers by their values regardless of their datatypes, and a float is unified to a double where
-    // only doubles are kept
+    // compares the numbers by their values regardless of their datatypes, a float is unified to a double where only
+    // doubles are kept, and the string kinds other than langString are unified to xsd:string where they are allowed
     private static final Map<String, String> literalKinds = new HashMap<>();
 
     static
     {
         literalKinds.put(xsd + "string", "string");
         literalKinds.put(rdf + "langString", "langString");
+        literalKinds.put(rdf + "PlainLiteral", "plainLiteral");
+        literalKinds.put(rdf + "HTML", "html");
+        literalKinds.put(xsd + "anyURI", "anyURI");
         literalKinds.put(xsd + "boolean", "boolean");
         literalKinds.put(xsd + "float", "float");
         literalKinds.put(xsd + "double", "double");
@@ -419,6 +470,9 @@ public class Ontology extends Updater
             Map.entry(xsd + "minInclusive", "MIN_INCLUSIVE"), Map.entry(xsd + "maxInclusive", "MAX_INCLUSIVE"),
             Map.entry(xsd + "minExclusive", "MIN_EXCLUSIVE"), Map.entry(xsd + "maxExclusive", "MAX_EXCLUSIVE"),
             Map.entry(xsd + "totalDigits", "TOTAL_DIGITS"), Map.entry(xsd + "fractionDigits", "FRACTION_DIGITS"));
+
+    // the kinds of the literals that the annotations keep as strings
+    private static final String[] stringKinds = { "string", "langString", "plainLiteral", "html", "anyURI" };
 
     // the relations of the ontologies by their predicates
     private static final Map<String, String> ontologyRelations = Map.of(owl + "imports", "IMPORTS", owl + "versionIRI",
@@ -733,6 +787,8 @@ public class Ontology extends Updater
         builtinResources.put("http://www.w3.org/2002/07/owl#versionInfo", 6453);
         builtinResources.put("http://www.w3.org/2002/07/owl#versionIRI", 6454);
         builtinResources.put("http://www.w3.org/2002/07/owl#withRestrictions", 6455);
+        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#comment", 6456);
+        builtinResources.put("http://www.w3.org/2000/01/rdf-schema#isDefinedBy", 6457);
 
 
 
@@ -1669,61 +1725,118 @@ public class Ontology extends Updater
 
 
     /*
-     * Loads the labels of the resources: of the English labels and the labels without a language, the greatest one
-     * in the order of SPARQL, which prefers a label with a language and then the greater lexical form.
+     * Loads the annotations of the IRIs given by RDFS and OWL: their labels, comments, related resources, defining
+     * resources and deprecation flags. The annotations of the blank nodes are left out, as the blank nodes that have
+     * them belong to the structures that are not loaded, such as the annotated axioms or the SWRL rules.
      */
-    private static void loadResourceLabels(TripleDispatcher dispatcher) throws IOException, SQLException
+    private static void loadAnnotations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        IntPairStringMap keepLabels = new IntPairStringMap();
-        IntPairStringMap newLabels = new IntPairStringMap();
-        IntPairStringMap oldLabels = new IntPairStringMap();
+        loadAnnotations(dispatcher, rdfs + "label", "resource_labels", null, "label", "language");
+        loadAnnotations(dispatcher, rdfs + "comment", "resource_comments", null, "comment", "language");
+        loadAnnotations(dispatcher, rdfs + "seeAlso", "resource_see_alsos", "see_also", "see_also_string",
+                "see_also_language");
+        loadAnnotations(dispatcher, rdfs + "isDefinedBy", "resource_definers", "definer", "definer_string", null);
+        loadDeprecatedFlags(dispatcher);
+    }
 
-        load("select resource_unit,resource_id,label from ontology.resource_labels", oldLabels);
 
-        HashMap<Pair<Integer, Integer>, Node> labels = new HashMap<>();
+    /*
+     * Loads the values of an annotation property of the IRIs into the table: a resource into the columns of the
+     * resources, if the table has them, and a literal of a string kind as a string with its language, if the table
+     * has the column of the languages. A value that the table cannot hold is reported as a warning and left out, as
+     * the values of an annotation property are not restricted.
+     */
+    private static void loadAnnotations(TripleDispatcher dispatcher, String predicate, String table,
+            String resourceColumn, String stringColumn, String languageColumn) throws IOException, SQLException
+    {
+        boolean resources = resourceColumn != null;
+        boolean languages = languageColumn != null;
 
-        dispatcher.on(rdfs + "label", (subject, object) -> {
-            if(!object.isLiteral())
+        ResourceValueSet keepValues = new ResourceValueSet(resources, languages);
+        ResourceValueSet newValues = new ResourceValueSet(resources, languages);
+        ResourceValueSet oldValues = new ResourceValueSet(resources, languages);
+
+        List<String> columns = new ArrayList<>();
+
+        if(resources)
+            columns.addAll(List.of(resourceColumn + "_unit", resourceColumn + "_id"));
+
+        columns.add(stringColumn);
+
+        if(languages)
+            columns.add(languageColumn);
+
+        load("select resource_unit,resource_id," + String.join(",", columns) + " from ontology." + table, oldValues);
+
+        dispatcher.on(predicate, (subject, object) -> {
+            if(!subject.isURI())
                 return;
 
-            String language = object.getLiteralLanguage();
+            try
+            {
+                Value value = Value.get(object, resources, stringKinds);
 
-            if(language.isEmpty() || language.equals("en"))
-                labels.merge(getId(subject), object, (label, other) -> isGreater(other, label) ? other : label);
+                if(value.language() != null && !languages)
+                    throw new DataException("unexpected datatype of a literal", TripleStreamProcessor.text(object));
+
+                add(Pair.getPair(getId(subject), value), keepValues, newValues, oldValues);
+            }
+            catch(DataException e)
+            {
+                Problems.warning(e.getKind() + " in " + predicate,
+                        TripleStreamProcessor.text(subject) + " " + TripleStreamProcessor.text(object));
+            }
         });
 
         dispatcher.after(() -> {
-            for(Entry<Pair<Integer, Integer>, Node> entry : labels.entrySet())
-            {
-                Pair<Integer, Integer> resourceID = entry.getKey();
-                String label = entry.getValue().getLiteralLexicalForm();
+            String conditions = columns.stream().map(column -> " and " + column + " is not distinct from ?")
+                    .collect(Collectors.joining());
 
-                if(label.equals(oldLabels.remove(resourceID)))
-                    keepLabels.put(resourceID, label);
-                else
-                    newLabels.put(resourceID, label);
-            }
-
-            store("delete from ontology.resource_labels where resource_unit=? and resource_id=? and label=?",
-                    oldLabels);
-            store("insert into ontology.resource_labels(resource_unit,resource_id,label) values(?,?,?) "
-                    + "on conflict(resource_unit,resource_id) do update set label=EXCLUDED.label", newLabels);
+            store("delete from ontology." + table + " where resource_unit=? and resource_id=?" + conditions, oldValues);
+            store("insert into ontology." + table + "(resource_unit,resource_id," + String.join(",", columns)
+                    + ") values(?,?" + ",?".repeat(columns.size()) + ")", newValues);
         });
     }
 
 
     /*
-     * Tests whether a label is greater than another one: a label with a language is greater than one without it,
-     * otherwise the label with the greater lexical form is.
+     * Loads the deprecation flags of the IRIs; a flag written as a string is read as a boolean. A value that is not a
+     * boolean is reported as a warning and left out, as the values of an annotation property are not restricted.
      */
-    private static boolean isGreater(Node label, Node other)
+    private static void loadDeprecatedFlags(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        boolean tagged = !label.getLiteralLanguage().isEmpty();
+        ResourceFlagSet keepFlags = new ResourceFlagSet();
+        ResourceFlagSet newFlags = new ResourceFlagSet();
+        ResourceFlagSet oldFlags = new ResourceFlagSet();
 
-        if(tagged != !other.getLiteralLanguage().isEmpty())
-            return tagged;
+        load("select resource_unit,resource_id,flag from ontology.resource_deprecated_flags", oldFlags);
 
-        return label.getLiteralLexicalForm().compareTo(other.getLiteralLexicalForm()) > 0;
+        dispatcher.on(owl + "deprecated", (subject, object) -> {
+            if(!subject.isURI())
+                return;
+
+            try
+            {
+                LiteralValue literal = getLiteral(object, "boolean", "string");
+                boolean flag = literal.value() instanceof Boolean value ? value : getBoolean((String) literal.value());
+
+                add(Pair.getPair(getId(subject), flag), keepFlags, newFlags, oldFlags);
+            }
+            catch(DataException | NumberFormatException e)
+            {
+                String kind = e instanceof DataException data ? data.getKind() : "malformed literal";
+
+                Problems.warning(kind + " in " + owl + "deprecated",
+                        TripleStreamProcessor.text(subject) + " " + TripleStreamProcessor.text(object));
+            }
+        });
+
+        dispatcher.after(() -> {
+            store("delete from ontology.resource_deprecated_flags where resource_unit=? and resource_id=? and flag=?",
+                    oldFlags);
+            store("insert into ontology.resource_deprecated_flags(resource_unit,resource_id,flag) values(?,?,?)",
+                    newFlags);
+        });
     }
 
 
@@ -2173,15 +2286,15 @@ public class Ontology extends Updater
      */
     private static void loadSameIndividuals(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        ResourceValueSet keepValues = new ResourceValueSet();
-        ResourceValueSet newValues = new ResourceValueSet();
-        ResourceValueSet oldValues = new ResourceValueSet();
+        ResourceValueSet keepValues = new ResourceValueSet(true, false);
+        ResourceValueSet newValues = new ResourceValueSet(true, false);
+        ResourceValueSet oldValues = new ResourceValueSet(true, false);
 
         load("select individual_unit,individual_id,same_unit,same_id,same_string from ontology.same_individuals",
                 oldValues);
 
         dispatcher.on(owl + "sameAs", (subject, object) -> {
-            add(Pair.getPair(getId(subject), Value.get(object, "string")), keepValues, newValues, oldValues);
+            add(Pair.getPair(getId(subject), Value.get(object, true, "string")), keepValues, newValues, oldValues);
         });
 
         dispatcher.after(() -> {
@@ -2210,7 +2323,7 @@ public class Ontology extends Updater
         for(Entry<String, String> relation : ontologyRelations.entrySet())
         {
             dispatcher.on(relation.getKey(), (subject, object) -> {
-                add(new Relation(getId(subject), relation.getValue(), Value.get(object, "string", "langString")),
+                add(new Relation(getId(subject), relation.getValue(), Value.get(object, true, "string", "langString")),
                         keepRelations, newRelations, oldRelations);
             });
         }
@@ -2266,7 +2379,10 @@ public class Ontology extends Updater
     /*
      * Returns the canonical value of a literal of one of the allowed kinds, see literalKinds. A non-canonical lexical
      * form is converted, so that the database keeps only the value; a float is read as a double where only doubles
-     * are allowed.
+     * are allowed, a language tag is written in lower case, and the literals of the other string kinds are read as
+     * strings: an rdf:PlainLiteral as the text before its last @ with the language after it (a lexical form without
+     * @, which some tools write for a plain literal, as the whole text), an rdf:HTML literal as its lexical form and
+     * an xsd:anyURI literal as its lexical form with the whitespace collapsed.
      */
     private static LiteralValue getLiteral(Node node, String... kinds) throws DataException
     {
@@ -2287,14 +2403,11 @@ public class Ontology extends Updater
         {
             return switch(kind)
             {
-                case "string" -> new LiteralValue("string", lexical, null);
-                case "langString" -> new LiteralValue("string", lexical, node.getLiteralLanguage());
-                case "boolean" -> new LiteralValue(kind, switch(lexical.strip())
-                {
-                    case "true", "1" -> true;
-                    case "false", "0" -> false;
-                    default -> throw new NumberFormatException(lexical);
-                }, null);
+                case "string", "html" -> new LiteralValue("string", lexical, null);
+                case "langString" -> new LiteralValue("string", lexical, node.getLiteralLanguage().toLowerCase(ROOT));
+                case "plainLiteral" -> getPlainLiteral(lexical);
+                case "anyURI" -> new LiteralValue("string", collapse(lexical), null);
+                case "boolean" -> new LiteralValue(kind, getBoolean(lexical), null);
                 case "integer" -> new LiteralValue(kind, new BigInteger(lexical.strip()).toString(), null);
                 case "float" -> new LiteralValue(kind, Float.parseFloat(getJavaNumber(lexical.strip())), null);
                 default -> new LiteralValue(kind, Double.parseDouble(getJavaNumber(lexical.strip())), null);
@@ -2304,6 +2417,48 @@ public class Ontology extends Updater
         {
             throw new DataException("malformed literal", TripleStreamProcessor.text(node));
         }
+    }
+
+
+    /*
+     * Returns the value of an rdf:PlainLiteral as a string with its language, if the language is not empty.
+     */
+    private static LiteralValue getPlainLiteral(String lexical)
+    {
+        int separator = lexical.lastIndexOf('@');
+
+        if(separator < 0 || separator == lexical.length() - 1)
+            return new LiteralValue("string", separator < 0 ? lexical : lexical.substring(0, separator), null);
+
+        String language = lexical.substring(separator + 1);
+
+        if(!language.matches("[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*"))
+            throw new NumberFormatException(lexical);
+
+        return new LiteralValue("string", lexical.substring(0, separator), language.toLowerCase(ROOT));
+    }
+
+
+    /*
+     * Returns the text with its whitespace collapsed as XML Schema does it.
+     */
+    private static String collapse(String text)
+    {
+        return text.replaceAll("[ \t\n\r]+", " ").replaceAll("^ | $", "");
+    }
+
+
+    /*
+     * Returns the value of a lexical form of xsd:boolean.
+     */
+    private static boolean getBoolean(String lexical)
+    {
+        return switch(lexical.strip())
+        {
+            case "true", "1" -> true;
+            case "false", "0" -> false;
+            default -> throw new NumberFormatException(lexical);
+        };
     }
 
 
@@ -2349,7 +2504,7 @@ public class Ontology extends Updater
             loadProperties(dispatcher);
             loadIndividuals(dispatcher);
             loadResourceTypes(dispatcher);
-            loadResourceLabels(dispatcher);
+            loadAnnotations(dispatcher);
 
             loadSuperClasses(dispatcher);
 

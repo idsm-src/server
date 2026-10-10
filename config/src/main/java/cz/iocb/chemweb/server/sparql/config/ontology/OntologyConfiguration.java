@@ -5,15 +5,12 @@ import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.common.Common;
 import cz.iocb.chemweb.server.sparql.config.common.SparqlDatabaseOptimisedConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
-import cz.iocb.sparql.engine.mapping.classes.LangStringWithTagClass;
 
 
 
 public class OntologyConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
     static final String schema = "ontology";
-
-    public static final LangStringWithTagClass rdfLangStringEn = LangStringWithTagClass.get("en");
 
 
     public OntologyConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException

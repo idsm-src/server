@@ -92,9 +92,12 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
                 QueryServiceStub.cancel(runningQuery);
 
 
+            // a property with several labels is ordered by the preferred one: an English label, a label without a
+            // language, a label in another language, and otherwise the greatest one, as the ontology pages choose it
             String query = "SELECT ?Property ?Value WHERE { " + "<" + propertiesIri + "> ?Property ?Value. "
-                    + "OPTIONAL { ?Property rdf:type rdf:Property; rdfs:label ?Label. }} "
-                    + "ORDER BY (! bound(?Label)) str(?Label)";
+                    + "OPTIONAL { ?Property rdf:type rdf:Property; rdfs:label ?Label. }} GROUP BY ?Property ?Value "
+                    + "ORDER BY (count(?Label) = 0) (substr(max(concat(if(langMatches(lang(?Label), \"en\"), \"2\", "
+                    + "if(lang(?Label) = \"\", \"1\", \"0\")), str(?Label))), 2))";
 
             runningQuery = QueryServiceStub.query(query, start, length, new AsyncCallback<QueryResult>()
             {

@@ -5,6 +5,8 @@
   {
     $class rdfs:label ?LABEL.
   }
+  ORDER BY DESC(langMatches(lang(?LABEL), "en")) DESC(lang(?LABEL) = "") DESC(str(?LABEL))
+  LIMIT 1
 #end
 #if($info.LABEL)
 #escapeHTML($info.LABEL)##

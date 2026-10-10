@@ -25,6 +25,7 @@ import cz.iocb.sparql.engine.error.TranslateExceptions;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.QuadMapping;
 import cz.iocb.sparql.engine.rdf.Iri;
+import cz.iocb.sparql.engine.rdf.LangStringLiteral;
 import cz.iocb.sparql.engine.rdf.Literal;
 import cz.iocb.sparql.engine.rdf.RdfTerm;
 import cz.iocb.sparql.engine.rdf.Variable;
@@ -48,6 +49,7 @@ public class GenerateHints extends HttpServlet
         String type;
         String name;
         String info;
+        Literal label;
     }
 
 
@@ -156,6 +158,7 @@ public class GenerateHints extends HttpServlet
         PrintWriter out = new PrintWriter(stringWriter);
 
         LinkedHashMap<String, ArrayList<Item>> hints = new LinkedHashMap<>();
+        HashMap<String, Item> items = new HashMap<>();
         Engine engine = new Engine(sparqlConfig);
 
         try(Request request = engine.getRequest())
@@ -202,14 +205,25 @@ public class GenerateHints extends HttpServlet
                             continue;
                     }
 
-                    Item item = new Item();
-                    item.type = typeCode;
-                    item.name = iri.name;
+                    // a resource with several labels gets the preferred one
+                    String key = text.getValue() + " " + typeCode;
+                    Item item = items.get(key);
 
-                    if(label instanceof Literal literal)
+                    if(item == null)
+                    {
+                        item = new Item();
+                        item.type = typeCode;
+                        item.name = iri.name;
+
+                        items.put(key, item);
+                        list.add(item);
+                    }
+
+                    if(label instanceof Literal literal && (item.label == null || isPreferred(literal, item.label)))
+                    {
+                        item.label = literal;
                         item.info = literal.getValue().replaceAll("\"", "\\\"");
-
-                    list.add(item);
+                    }
                 }
             }
         }
@@ -258,6 +272,30 @@ public class GenerateHints extends HttpServlet
 
         out.close();
         return stringWriter.toString();
+    }
+
+
+    /*
+     * Tests whether a label is preferred to another one: an English label to a label without a language and that one
+     * to a label in another language, otherwise the label with the greater lexical form.
+     */
+    private static boolean isPreferred(Literal label, Literal other)
+    {
+        int rank = getRank(label);
+        int otherRank = getRank(other);
+
+        if(rank != otherRank)
+            return rank > otherRank;
+
+        return label.getValue().compareTo(other.getValue()) > 0;
+    }
+
+
+    private static int getRank(Literal label)
+    {
+        String language = label instanceof LangStringLiteral literal ? literal.getTag() : "";
+
+        return language.equals("en") || language.startsWith("en-") ? 2 : language.isEmpty() ? 1 : 0;
     }
 
 

@@ -24,10 +24,51 @@ create table ontology.individuals
 
 create table ontology.resource_labels
 (
-    resource_unit    smallint not null,
-    resource_id      integer not null,
-    label            varchar not null,
-    primary key(resource_unit, resource_id)
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    label             varchar not null,
+    language          varchar,
+    unique nulls not distinct (resource_unit, resource_id, label, language)
+);
+
+
+create table ontology.resource_comments
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    comment           varchar not null,
+    language          varchar
+);
+
+
+create table ontology.resource_see_alsos
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    see_also_unit     smallint,
+    see_also_id       integer,
+    see_also_string   varchar,
+    see_also_language varchar
+);
+
+
+create table ontology.resource_definers
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    definer_unit      smallint,
+    definer_id        integer,
+    definer_string    varchar,
+    unique nulls not distinct (resource_unit, resource_id, definer_unit, definer_id, definer_string)
+);
+
+
+create table ontology.resource_deprecated_flags
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    flag              boolean not null,
+    primary key(resource_unit, resource_id, flag)
 );
 
 

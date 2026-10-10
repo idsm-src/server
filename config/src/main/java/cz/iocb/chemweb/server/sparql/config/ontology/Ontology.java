@@ -1,6 +1,5 @@
 package cz.iocb.chemweb.server.sparql.config.ontology;
 
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyConfiguration.rdfLangStringEn;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyConfiguration.schema;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBAO;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBlank;
@@ -102,7 +101,50 @@ public class Ontology
             TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
-                    config.createLiteralMapping(rdfLangStringEn, "label"));
+                    config.createLiteralMapping(xsdString, "label"), config.createIsNullCondition(table, "language"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
+                    config.createLiteralMapping(rdfLangString, "label", "language"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "resource_comments");
+            TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:comment"),
+                    config.createLiteralMapping(xsdString, "comment"), config.createIsNullCondition(table, "language"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:comment"),
+                    config.createLiteralMapping(rdfLangString, "comment", "language"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "resource_see_alsos");
+            TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("ontology:resource", "see_also_unit", "see_also_id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createLiteralMapping(xsdString, "see_also_string"),
+                    config.createIsNullCondition(table, "see_also_language"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createLiteralMapping(rdfLangString, "see_also_string", "see_also_language"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "resource_definers");
+            TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:isDefinedBy"),
+                    config.createIriMapping("ontology:resource", "definer_unit", "definer_id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:isDefinedBy"),
+                    config.createLiteralMapping(xsdString, "definer_string"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "resource_deprecated_flags");
+            TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:deprecated"),
+                    config.createLiteralMapping(xsdBoolean, "flag"));
         }
 
         {

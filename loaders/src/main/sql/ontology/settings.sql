@@ -10,8 +10,35 @@ grant select on ontology.individuals to sparql;
 
 --------------------------------------------------------------------------------
 
+create index resource_labels__resource_unit_resource_id on ontology.resource_labels(resource_unit, resource_id);
 create index resource_labels__label on ontology.resource_labels(label);
 grant select on ontology.resource_labels to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_comments__resource_unit_resource_id on ontology.resource_comments(resource_unit, resource_id);
+create index resource_comments__comment on ontology.resource_comments using hash (comment);
+grant select on ontology.resource_comments to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_see_alsos__resource_unit_resource_id on ontology.resource_see_alsos(resource_unit, resource_id);
+create index resource_see_alsos__see_also_unit_see_also_id on ontology.resource_see_alsos(see_also_unit, see_also_id);
+create index resource_see_alsos__see_also_string on ontology.resource_see_alsos using hash (see_also_string);
+grant select on ontology.resource_see_alsos to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_definers__resource_unit_resource_id on ontology.resource_definers(resource_unit, resource_id);
+create index resource_definers__definer_unit_definer_id on ontology.resource_definers(definer_unit, definer_id);
+create index resource_definers__definer_string on ontology.resource_definers(definer_string);
+grant select on ontology.resource_definers to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_deprecated_flags__resource_unit_resource_id on ontology.resource_deprecated_flags(resource_unit, resource_id);
+create index resource_deprecated_flags__flag on ontology.resource_deprecated_flags(flag);
+grant select on ontology.resource_deprecated_flags to sparql;
 
 --------------------------------------------------------------------------------
 
