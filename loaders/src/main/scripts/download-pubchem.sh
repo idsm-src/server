@@ -17,9 +17,7 @@ fi
 output="$base/pubchem-$version"
 mkdir "$output"
 
-wget --progress=bar:force -P "$output" -r -l 3 -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF
-wget --progress=bar:force -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/compound/general
-wget --progress=bar:force -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF/descriptor
+wget --progress=bar:force -P "$output" -r -nH --cut-dirs=1 ftp://ftp.ncbi.nlm.nih.gov/pubchem/RDF
 
 # the bioassays and the molfiles have no version of their own, the date of their download stands for it
 date=$(date '+%Y-%m-%d')

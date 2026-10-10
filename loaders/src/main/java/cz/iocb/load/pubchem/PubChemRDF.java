@@ -16,6 +16,7 @@ public class PubChemRDF extends Updater
 {
     static final String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
     static final String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
+    static final String owl = "http://www.w3.org/2002/07/owl#";
     static final String xsd = "http://www.w3.org/2001/XMLSchema#";
     static final String skos = "http://www.w3.org/2004/02/skos/core#";
     static final String vcard = "http://www.w3.org/2006/vcard/ns#";
@@ -103,7 +104,9 @@ public class PubChemRDF extends Updater
             InchiKey.load(); // require Compound
             Synonym.load(); // require Compound, Concept
 
-            Patent.load(); // require Compound
+            PatentIpc.load();
+            PatentCpc.load(); // require PatentIpc
+            Patent.load(); // require Compound, PatentCpc, PatentIpc
 
             Substance.load(); // require Compound, Patent, Source, Synonym
 
@@ -153,6 +156,8 @@ public class PubChemRDF extends Updater
             Protein.finish();
             Pathway.finish();
 
+            PatentIpc.finish();
+            PatentCpc.finish();
             Patent.finish();
             Reference.finish();
 

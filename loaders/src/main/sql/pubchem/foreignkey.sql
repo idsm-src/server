@@ -210,12 +210,28 @@ alter table pubchem.patent_cpc_additional_classifications add foreign key (paten
 alter table pubchem.patent_cpc_inventive_classifications add foreign key (patent) references pubchem.patents(id) initially deferred;
 alter table pubchem.patent_ipc_additional_classifications add foreign key (patent) references pubchem.patents(id) initially deferred;
 alter table pubchem.patent_ipc_inventive_classifications add foreign key (patent) references pubchem.patents(id) initially deferred;
+alter table pubchem.patent_cpc_additional_classifications add foreign key (classification) references pubchem.patentcpcs(id) initially deferred;
+alter table pubchem.patent_cpc_inventive_classifications add foreign key (classification) references pubchem.patentcpcs(id) initially deferred;
+alter table pubchem.patent_ipc_additional_classifications add foreign key (classification) references pubchem.patentipcs(id) initially deferred;
+alter table pubchem.patent_ipc_inventive_classifications add foreign key (classification) references pubchem.patentipcs(id) initially deferred;
 alter table pubchem.patent_citations add foreign key (patent) references pubchem.patents(id) initially deferred;
 alter table pubchem.patent_citations add foreign key (citation) references pubchem.patents(id) initially deferred;
 alter table pubchem.patent_inventors add foreign key (patent) references pubchem.patents(id) initially deferred;
 alter table pubchem.patent_inventors add foreign key (inventor) references pubchem.inventors(id) initially deferred;
 alter table pubchem.patent_applicants add foreign key (patent) references pubchem.patents(id) initially deferred;
 alter table pubchem.patent_applicants add foreign key (applicant) references pubchem.applicants(id) initially deferred;
+
+
+-- patentcpc
+alter table pubchem.patentcpcs add foreign key (concordant_ipc) references pubchem.patentipcs(id) initially deferred;
+alter table pubchem.patentcpc_broaders add foreign key (patentcpc) references pubchem.patentcpcs(id) initially deferred;
+alter table pubchem.patentcpc_broaders add foreign key (broader) references pubchem.patentcpcs(id) initially deferred;
+alter table pubchem.patentcpc_modified_dates add foreign key (patentcpc) references pubchem.patentcpcs(id) initially deferred;
+
+
+-- patentipc
+alter table pubchem.patentipcs add foreign key (broader) references pubchem.patentipcs(id) initially deferred;
+alter table pubchem.patentipc_titles add foreign key (patentipc) references pubchem.patentipcs(id) initially deferred;
 
 
 -- pathway

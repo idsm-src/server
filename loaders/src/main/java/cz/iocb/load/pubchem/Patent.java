@@ -357,7 +357,7 @@ class Patent extends Updater
                             return;
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String classification = getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/patentcpc/");
+                        String classification = PatentCpc.getCpcID(object.getURI());
 
                         Pair<Integer, String> pair = Pair.getPair(patentID, classification);
 
@@ -401,7 +401,7 @@ class Patent extends Updater
                             return;
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String classification = getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/patentcpc/");
+                        String classification = PatentCpc.getCpcID(object.getURI());
 
                         Pair<Integer, String> pair = Pair.getPair(patentID, classification);
 
@@ -445,7 +445,7 @@ class Patent extends Updater
                             return;
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String classification = getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/patentipc/");
+                        String classification = PatentIpc.getIpcID(object.getURI());
 
                         Pair<Integer, String> pair = Pair.getPair(patentID, classification);
 
@@ -489,7 +489,7 @@ class Patent extends Updater
                             return;
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String classification = getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/patentipc/");
+                        String classification = PatentIpc.getIpcID(object.getURI());
 
                         Pair<Integer, String> pair = Pair.getPair(patentID, classification);
 

@@ -26,10 +26,6 @@ public class Patent
                 new StringUserIriClass("pubchem:inventor", "http://rdf.ncbi.nlm.nih.gov/pubchem/patentinventor/MD5_"));
         config.addIriClass(
                 new StringUserIriClass("pubchem:applicant", "http://rdf.ncbi.nlm.nih.gov/pubchem/patentassignee/MD5_"));
-        config.addIriClass(
-                new StringUserIriClass("pubchem:patentcpc", "http://rdf.ncbi.nlm.nih.gov/pubchem/patentcpc/"));
-        config.addIriClass(
-                new StringUserIriClass("pubchem:patentipc", "http://rdf.ncbi.nlm.nih.gov/pubchem/patentipc/"));
     }
 
 
@@ -91,7 +87,7 @@ public class Patent
             TermMapping subject = config.createIriMapping("pubchem:patent", "patent");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("epo:classificationIPCAdditional"),
-                    config.createIriMapping("pubchem:patentcpc", "classification"));
+                    config.createIriMapping("pubchem:patentipc", "classification"));
         }
 
         {
@@ -99,7 +95,7 @@ public class Patent
             TermMapping subject = config.createIriMapping("pubchem:patent", "patent");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("epo:classificationIPCInventive"),
-                    config.createIriMapping("pubchem:patentcpc", "classification"));
+                    config.createIriMapping("pubchem:patentipc", "classification"));
         }
 
         {

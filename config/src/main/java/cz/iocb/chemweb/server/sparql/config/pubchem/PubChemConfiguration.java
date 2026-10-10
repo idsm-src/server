@@ -70,6 +70,8 @@ public class PubChemConfiguration extends SparqlDatabaseOptimisedConfiguration
         addPrefix("measuregroup", "http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/");
         addPrefix("organization", "http://rdf.ncbi.nlm.nih.gov/pubchem/organization/");
         addPrefix("patent", "http://rdf.ncbi.nlm.nih.gov/pubchem/patent/");
+        addPrefix("patentcpc", "http://rdf.ncbi.nlm.nih.gov/pubchem/patentcpc/");
+        addPrefix("patentipc", "http://rdf.ncbi.nlm.nih.gov/pubchem/patentipc/");
         addPrefix("pathway", "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/");
         addPrefix("protein", "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/");
         addPrefix("reference", "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/");
@@ -110,6 +112,8 @@ public class PubChemConfiguration extends SparqlDatabaseOptimisedConfiguration
         addPrefix("prism", "http://prismstandard.org/namespaces/basic/3.0/");
         addPrefix("frapo", "http://purl.org/cerif/frapo/");
         addPrefix("epo", "http://data.epo.org/linked-data/def/patent/");
+        addPrefix("cpc", "http://data.epo.org/linked-data/def/cpc/");
+        addPrefix("ipc", "http://data.epo.org/linked-data/def/ipc/");
         addPrefix("edam", "http://edamontology.org/");
 
         // ChEMBL
@@ -163,6 +167,8 @@ public class PubChemConfiguration extends SparqlDatabaseOptimisedConfiguration
         Measuregroup.addResourceClasses(this);
         Organization.addResourceClasses(this);
         Patent.addResourceClasses(this);
+        PatentCpc.addResourceClasses(this);
+        PatentIpc.addResourceClasses(this);
         Pathway.addResourceClasses(this);
         Protein.addResourceClasses(this);
         Reference.addResourceClasses(this);
@@ -197,6 +203,8 @@ public class PubChemConfiguration extends SparqlDatabaseOptimisedConfiguration
         Measuregroup.addQuadMappings(this);
         Organization.addQuadMappings(this);
         Patent.addQuadMappings(this);
+        PatentCpc.addQuadMappings(this);
+        PatentIpc.addQuadMappings(this);
         Pathway.addQuadMappings(this);
         Protein.addQuadMappings(this);
         Reference.addQuadMappings(this);
