@@ -747,6 +747,14 @@ public class Updater
 
     protected static void init() throws SQLException, IOException
     {
+        // the limits of the XML parsers, which the defaults of the JDK set too low for the data, e.g. for the deep
+        // lists of the ontologies and the large files of ChEBI and of the bioassays; a limit given on the command line
+        // is kept
+        for(String limit : List.of("jdk.xml.maxGeneralEntitySizeLimit", "jdk.xml.totalEntitySizeLimit",
+                "jdk.xml.maxElementDepth", "jdk.xml.entityExpansionLimit"))
+            if(System.getProperty(limit) == null)
+                System.setProperty(limit, "0");
+
         Properties properties = new Properties();
 
         try(FileInputStream in = new FileInputStream("datasource.properties"))
