@@ -4,6 +4,14 @@ set -ueo pipefail
 
 source datasource.properties
 
+# the output is copied into a log file named by the start time, if datasource.properties name a log directory, the
+# same way as the Java loaders do it
+if [ -n "${logs:-}" ]; then
+    mkdir -p "$logs/molmedb"
+    log="$logs/molmedb/$(date +%Y-%m-%d_%H-%M-%S).log"
+    exec > >(tee -a "$log") 2> >(tee -a "$log" >&2)
+fi
+
 dump="$base/molmedb/molmedb.sql"
 
 if [ ! -f "$dump" ]; then

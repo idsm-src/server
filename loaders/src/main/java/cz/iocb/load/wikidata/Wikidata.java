@@ -186,7 +186,7 @@ public class Wikidata extends Updater
     {
         try
         {
-            init();
+            init("wikidata");
 
             String version = getReader("wikidata/version.txt.gz").readLine();
             System.out.println("=== load wikidata version " + version + " ===");

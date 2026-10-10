@@ -745,7 +745,11 @@ public class Updater
     }
 
 
-    protected static void init() throws SQLException, IOException
+    /*
+     * Connects to the database given by datasource.properties. If the properties name a log directory (logs), the
+     * output of the loader is copied into a log file in its subdirectory named by the loader, see Log.
+     */
+    protected static void init(String loader) throws SQLException, IOException
     {
         // the limits of the XML parsers, which the defaults of the JDK set too low for the data, e.g. for the deep
         // lists of the ontologies and the large files of ChEBI and of the bioassays; a limit given on the command line
@@ -761,6 +765,12 @@ public class Updater
         {
             properties.load(in);
         }
+
+        String logs = properties.getProperty("logs");
+        properties.remove("logs");
+
+        if(logs != null && !logs.isEmpty())
+            Log.start(Path.of(logs, loader));
 
         String url = properties.getProperty("url");
         properties.remove("url");

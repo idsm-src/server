@@ -269,7 +269,7 @@ public final class ISDB extends Updater
     {
         try
         {
-            init();
+            init("isdb");
 
             String version = getReader("isdb/version.txt.gz").readLine();
             System.out.println("=== load isdb version " + version + " ===");

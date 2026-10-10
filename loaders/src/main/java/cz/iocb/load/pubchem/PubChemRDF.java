@@ -83,7 +83,7 @@ public class PubChemRDF extends Updater
     {
         try
         {
-            init();
+            init("pubchem");
 
             String version = getVersion();
             String bioassayVersion = getDownloadDate("Bioassay");

@@ -446,7 +446,7 @@ public class GenerateVoid extends Updater
             /*
              * init pool and configuration
              */
-            init();
+            init("stats");
 
             Properties properties = new Properties();
 

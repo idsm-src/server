@@ -95,7 +95,7 @@ public final class PDB extends Updater
     {
         try
         {
-            init();
+            init("pdb");
 
             String version = getReader("pdb/version.txt.gz").readLine();
             System.out.println("=== load pdb version " + version + " ===");

@@ -836,7 +836,7 @@ public class ChEBI extends Updater
     {
         try
         {
-            init();
+            init("chebi");
             Ontology.loadCategories();
 
             String version = getVersion();

@@ -1840,7 +1840,7 @@ public class Ontology extends Updater
     {
         try
         {
-            init();
+            init("ontology");
             loadCategories();
 
             initSourceList();

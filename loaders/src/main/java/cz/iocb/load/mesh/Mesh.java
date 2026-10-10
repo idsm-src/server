@@ -527,7 +527,7 @@ public class Mesh extends Updater
 
         try
         {
-            init();
+            init("mesh");
             Ontology.loadCategories();
 
             String version = getVersion(file);

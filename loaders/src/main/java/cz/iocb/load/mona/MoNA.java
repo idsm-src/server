@@ -386,7 +386,7 @@ public class MoNA extends Updater
         SubmitterIntMap oldSubmitters = new SubmitterIntMap();
 
 
-        init();
+        init("mona");
 
         String version = getReader("mona/version.txt.gz").readLine();
 

@@ -62,7 +62,7 @@ public class DrugBank extends Updater
     {
         try
         {
-            init();
+            init("drugbank");
 
             String version = getReader("drugbank/version.txt.gz").readLine();
             System.out.println("=== load drugbank version " + version + " ===");

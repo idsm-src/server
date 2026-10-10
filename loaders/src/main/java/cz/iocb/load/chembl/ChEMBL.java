@@ -110,7 +110,7 @@ public class ChEMBL extends Updater
     {
         try
         {
-            init();
+            init("chembl");
 
             version = getVersion();
             System.out.println("=== load chembl version " + version + " ===");
