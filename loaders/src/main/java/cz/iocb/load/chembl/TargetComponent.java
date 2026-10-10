@@ -126,7 +126,7 @@ class TargetComponent extends Updater
                         }
                         else
                         {
-                            ChEMBL.unexpected(subject, predicate, object);
+                            unexpected(subject, predicate, object);
                         }
 
                         return;
@@ -136,7 +136,7 @@ class TargetComponent extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, cco + "TargetComponent");
+                        case rdfType -> checkType(subject, object, cco + "TargetComponent");
                         case chemblId -> components.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL_TC_" + id));
                         case rdfsLabel -> ChEMBL.checkValue(subject, predicate, object, "CHEMBL_TC_" + id);
@@ -147,7 +147,7 @@ class TargetComponent extends Updater
                         case cco + "proteinSequence" -> components.set(id, "sequence", getString(object));
                         case skos + "altLabel" -> alternatives.add(id, getString(object));
                         case cco + "targetCmptXref" -> xrefs.add(Pair.getPair(id, object.getURI()));
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);
@@ -232,7 +232,7 @@ class TargetComponent extends Updater
                     if(predicate.getURI().equals(skos + "exactMatch"))
                         components.set(getComponentID(subject), "accession", getStringID(object, uniprotPrefix));
                     else
-                        ChEMBL.unexpected(subject, predicate, object);
+                        unexpected(subject, predicate, object);
                 }
             }.load(stream);
         }

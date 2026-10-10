@@ -21,27 +21,23 @@ public class Submitter
 
         Submitter other = (Submitter) obj;
 
-        if(emailAddress == null && other.emailAddress != null
-                || emailAddress != null && !emailAddress.equals(other.emailAddress))
-            return false;
-
-        if(firstName == null && other.firstName != null || firstName != null && !firstName.equals(other.firstName))
-            return false;
-
-        if(lastName == null && other.lastName != null || lastName != null && !lastName.equals(other.lastName))
-            return false;
-
-        if(institution == null && other.institution != null
-                || institution != null && !institution.equals(other.institution))
-            return false;
-
-        return true;
+        return value(emailAddress).equals(value(other.emailAddress)) && value(firstName).equals(value(other.firstName))
+                && value(lastName).equals(value(other.lastName)) && value(institution).equals(value(other.institution));
     }
 
 
     @Override
     public int hashCode()
     {
-        return lastName.hashCode();
+        return value(lastName).hashCode();
+    }
+
+
+    /*
+     * Returns the value of a field; a missing value equals the empty one, as the database stores both as null.
+     */
+    private static String value(String field)
+    {
+        return field == null ? "" : field;
     }
 }

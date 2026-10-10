@@ -243,7 +243,7 @@ class Molecule extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, sio + descriptor.type);
+                        case rdfType -> checkType(subject, object, sio + descriptor.type);
                         case sio + "SIO_000300" ->
                         {
                             descriptor.table.set(id, descriptor.column,
@@ -251,7 +251,7 @@ class Molecule extends Updater
                             nodes.computeIfAbsent(name, k -> new BitSet()).set(id);
                         }
                         case rdfsLabel -> labels.set(id, name, getString(object));
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
 
@@ -268,9 +268,9 @@ class Molecule extends Updater
 
                         switch(predicate.getURI())
                         {
-                            case rdfType -> ChEMBL.checkType(subject, object, foaf + "Image");
+                            case rdfType -> checkType(subject, object, foaf + "Image");
                             case rdfsLabel -> labels.set(id, "image", getString(object));
-                            default -> ChEMBL.unexpected(subject, predicate, object);
+                            default -> unexpected(subject, predicate, object);
                         }
 
                         return;
@@ -376,7 +376,7 @@ class Molecule extends Updater
                             else
                                 Problems.error("unexpected descriptor", iri + " " + node);
                         }
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);
@@ -450,7 +450,7 @@ class Molecule extends Updater
                             parents.forward(id, parentID);
                         }
                         case cco + "hasChildMolecule" -> parents.inverse(getMoleculeID(object), id);
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);
@@ -475,7 +475,7 @@ class Molecule extends Updater
                     {
                         if(!predicate.getURI().equals(cco + "moleculeXref"))
                         {
-                            ChEMBL.unexpected(subject, predicate, object);
+                            unexpected(subject, predicate, object);
                             return;
                         }
 
@@ -497,10 +497,10 @@ class Molecule extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, cco + reference.rdfType);
+                        case rdfType -> checkType(subject, object, cco + reference.rdfType);
                         case rdfsLabel -> referenceLabels.add(reference.type, getValue(reference, iri),
                                 getString(object));
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);

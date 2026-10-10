@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.DataException;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -35,13 +36,18 @@ class InchiKey extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/SIO_000300"))
+                            return;
 
                         String inchikey = getStringID(subject, prefix);
 
                         if(!inchikey.equals(getString(object)))
-                            throw new IOException();
+                        {
+                            Problems.error("value of " + predicate.getURI() + " not matching the IRI",
+                                    text(subject) + " " + text(object));
+                            return;
+                        }
 
                         synchronized(newKeys)
                         {
@@ -78,8 +84,9 @@ class InchiKey extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000011"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/SIO_000011"))
+                            return;
 
                         Integer inchikeyID = getKeyID(subject.getURI());
                         Integer compoundID = Compound.getCompoundID(object.getURI());
@@ -87,7 +94,11 @@ class InchiKey extends Updater
                         // workaround
                         if(compoundID == 24405717
                                 && subject.getURI().substring(prefixLength).equals("AOKQBPHIDSLJFA-UHFFFAOYSA-N"))
+                        {
+                            Problems.warning("ignored conflicting InChIKey of a compound",
+                                    text(subject) + " " + text(object));
                             return;
+                        }
 
                         if(inchikeyID != null)
                         {
@@ -104,28 +115,71 @@ class InchiKey extends Updater
                                     if(inchikeyID.equals(keep))
                                         return;
                                     else if(keep != null)
-                                        throw new IOException();
+                                        throw new DataException(
+                                                "multiple values of pubchem.inchikey_compounds.inchikey",
+                                                compoundID + ": " + keep + ", " + inchikeyID);
 
                                     Integer put = newCompounds.put(compoundID, inchikeyID);
 
                                     if(put != null && !inchikeyID.equals(put))
-                                        throw new IOException();
+                                        throw new DataException(
+                                                "multiple values of pubchem.inchikey_compounds.inchikey",
+                                                compoundID + ": " + put + ", " + inchikeyID);
                                 }
                             }
                         }
                         else
                         {
-                            System.out.println(
-                                    "    missing inchikey " + getStringID(subject, prefix) + " for sio:SIO_000011");
+                            Problems.warning("ignored triple of an unknown InChIKey in " + predicate.getURI(),
+                                    text(subject) + " " + text(object));
                         }
                     }
                 }.load(stream);
             }
         });
 
+        checkCompoundKeys(keepCompounds, newCompounds);
+
         store("delete from pubchem.inchikey_compounds where compound=? and inchikey=?", oldCompounds);
         store("insert into pubchem.inchikey_compounds(compound,inchikey) values(?,?) "
                 + "on conflict(compound) do update set inchikey=EXCLUDED.inchikey", newCompounds);
+    }
+
+
+    /*
+     * Checks the InChIKeys that the files of the compounds state against the compounds of the InChIKeys.
+     */
+    private static void checkCompoundKeys(IntIntMap keepCompounds, IntIntMap newCompounds)
+            throws IOException, SQLException
+    {
+        processFiles("pubchem/RDF/compound/general", "pc_compound2inchikey_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#inchikey"))
+                            return;
+
+                        Integer compoundID = Compound.getCompoundID(subject.getURI());
+                        Integer inchikeyID = getKeyID(prefix + getString(object));
+                        Integer expected = keepCompounds.get(compoundID);
+
+                        if(expected == null)
+                            expected = newCompounds.get(compoundID);
+
+                        if(expected == null)
+                            throw new DataException("value without an InChIKey of the compound");
+
+                        if(!expected.equals(inchikeyID))
+                            throw new DataException("value different from the InChIKey of the compound");
+                    }
+                }.load(stream);
+            }
+        });
     }
 
 
@@ -144,8 +198,8 @@ class InchiKey extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://purl.org/dc/terms/subject"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/subject"))
+                        return;
 
                     // workaround
                     Integer inchikeyID = getKeyID(subject.getURI());
@@ -164,18 +218,20 @@ class InchiKey extends Updater
                             if(mesh.equals(keep))
                                 return;
                             else if(keep != null)
-                                throw new IOException();
+                                throw new DataException("multiple values of pubchem.inchikey_subjects.subject",
+                                        inchikeyID + ": " + keep + ", " + mesh);
 
                             String put = newSubjects.put(inchikeyID, mesh);
 
                             if(put != null && !mesh.equals(put))
-                                throw new IOException();
+                                throw new DataException("multiple values of pubchem.inchikey_subjects.subject",
+                                        inchikeyID + ": " + put + ", " + mesh);
                         }
                     }
                     else
                     {
-                        System.out.println(
-                                "    missing inchikey " + getStringID(subject, prefix) + " for dcterms:subject");
+                        Problems.warning("ignored triple of an unknown InChIKey in " + predicate.getURI(),
+                                text(subject) + " " + text(object));
                     }
                 }
             }.load(stream);
@@ -199,12 +255,12 @@ class InchiKey extends Updater
                     {
                         getStringID(subject, prefix);
 
-                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            return;
 
-                        if(!object.getURI().equals("http://semanticscience.org/resource/CHEMINF_000399")
-                                && !object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#InChIKey"))
-                            throw new IOException();
+                        checkType(subject, object, "http://semanticscience.org/resource/CHEMINF_000399",
+                                "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#InChIKey");
                     }
                 }.load(stream);
             }
@@ -228,7 +284,11 @@ class InchiKey extends Updater
     static Integer getKeyID(String value) throws IOException
     {
         // workaround
-        value = value.replaceFirst("/inichikey/", "/inchikey/");
+        if(value.contains("/inichikey/"))
+        {
+            Problems.warning("repaired IRI", value);
+            value = value.replaceFirst("/inichikey/", "/inchikey/");
+        }
 
         if(!value.startsWith(prefix))
             throw new DataException("unexpected IRI", value);

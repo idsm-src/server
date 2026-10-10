@@ -9,6 +9,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import cz.iocb.load.common.DataException;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.SdfReader;
 import cz.iocb.load.common.StructureTable;
 import cz.iocb.load.common.Updater;
@@ -18,28 +20,34 @@ import cz.iocb.load.common.Updater;
 public class DrugBank extends Updater
 {
     /*
-     * Loads the structures of the compounds from the SDF files of the open structures archive.
+     * Loads the structures of the compounds from the SDF files of the open structures archive; another entry of the
+     * archive is reported as an unknown file.
      */
     private static void loadCompounds() throws IOException, SQLException
     {
+        String file = "drugbank/drugbank_all_open_structures.sdf.zip";
+
         StructureTable compounds = new StructureTable("drugbank.compounds", "id", "molfile");
         compounds.load();
 
-        try(ZipInputStream zip = new ZipInputStream(getZipStream("drugbank/drugbank_all_open_structures.sdf.zip")))
+        try(ZipInputStream zip = new ZipInputStream(getZipStream(file)))
         {
             ZipEntry entry;
 
             while((entry = zip.getNextEntry()) != null)
             {
                 if(!entry.getName().endsWith(".sdf"))
+                {
+                    Problems.error("unknown file", file + "/" + entry.getName());
                     continue;
+                }
 
                 System.out.println("    " + entry.getName());
                 BufferedReader reader = new BufferedReader(new InputStreamReader(zip, StandardCharsets.UTF_8));
 
                 SdfReader.read(entry.getName(), reader, "DRUGBANK_ID", (id, molfile) -> {
                     if(!id.startsWith("DB"))
-                        throw new IOException("unexpected compound " + id);
+                        throw new DataException("unexpected compound", id);
 
                     compounds.put(Integer.parseInt(id.substring(2)), molfile);
                 });
@@ -77,6 +85,7 @@ public class DrugBank extends Updater
 
             updateVersion();
 
+            checkFiles("drugbank");
             checkProblems();
 
             syncIndex("drugbank", true);

@@ -11,6 +11,7 @@ import org.apache.jena.graph.Node;
 import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.SdfReader;
 import cz.iocb.load.common.StructureTable;
 import cz.iocb.load.common.TripleStreamProcessor;
@@ -51,8 +52,9 @@ class Compound extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://semanticscience.org/resource/CHEMINF_000480"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object,
+                            "http://semanticscience.org/resource/CHEMINF_000480"))
+                        return;
 
                     Integer compoundID = getCompoundID(subject.getURI(), false);
                     Integer componentID = getCompoundID(object.getURI(), false);
@@ -87,9 +89,9 @@ class Compound extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI()
-                            .equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#is_active_ingredient_of"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object,
+                            "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#is_active_ingredient_of"))
+                        return;
 
                     Integer compoundID = getCompoundID(subject.getURI(), false);
                     Pair<Integer, Integer> ingredient = Ontology.getResourceId(object, null);
@@ -126,8 +128,9 @@ class Compound extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://semanticscience.org/resource/CHEMINF_000455"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object,
+                            "http://semanticscience.org/resource/CHEMINF_000455"))
+                        return;
 
                     Integer compoundID = getCompoundID(subject.getURI(), false);
                     Integer isotopologueID = getCompoundID(object.getURI(), false);
@@ -162,8 +165,9 @@ class Compound extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#has_parent"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object,
+                            "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#has_parent"))
+                        return;
 
                     Integer compoundID = getCompoundID(subject.getURI(), false);
                     Integer parentID = getCompoundID(object.getURI(), false);
@@ -198,8 +202,9 @@ class Compound extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://semanticscience.org/resource/CHEMINF_000462"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object,
+                            "http://semanticscience.org/resource/CHEMINF_000462"))
+                        return;
 
                     Integer compoundID = getCompoundID(subject.getURI(), false);
                     Integer isomerID = getCompoundID(object.getURI(), false);
@@ -235,8 +240,9 @@ class Compound extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/CHEMINF_000461"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/CHEMINF_000461"))
+                            return;
 
                         Integer compoundID = getCompoundID(subject.getURI(), false);
                         Integer isomerID = getCompoundID(object.getURI(), false);
@@ -275,12 +281,16 @@ class Compound extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/RO_0000087"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object, "http://purl.obolibrary.org/obo/RO_0000087"))
+                        return;
 
                     // workaround
                     if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CIDNULL"))
+                    {
+                        Problems.warning("ignored triple of an invalid subject in " + predicate.getURI(),
+                                text(subject) + " " + text(object));
                         return;
+                    }
 
                     Integer compoundID = getCompoundID(subject.getURI(), false);
 
@@ -317,8 +327,9 @@ class Compound extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            return;
 
                         if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Compound"))
                             return;
@@ -361,8 +372,8 @@ class Compound extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://www.w3.org/2004/02/skos/core#prefLabel"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://www.w3.org/2004/02/skos/core#prefLabel"))
+                            return;
 
                         Integer compoundID = getCompoundID(subject.getURI(), false);
                         String label = getString(object);
@@ -380,12 +391,14 @@ class Compound extends Updater
                                 if(label.equals(keep))
                                     return;
                                 else if(keep != null)
-                                    throw new IOException();
+                                    throw new DataException("multiple values of pubchem.compound_labels.label",
+                                            compoundID + ": " + keep + ", " + label);
 
                                 String put = newLabels.put(compoundID, label);
 
                                 if(put != null && !label.equals(put))
-                                    throw new IOException();
+                                    throw new DataException("multiple values of pubchem.compound_labels.label",
+                                            compoundID + ": " + put + ", " + label);
                             }
                         }
                     }
@@ -420,8 +433,8 @@ class Compound extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://www.w3.org/2000/01/rdf-schema#seeAlso"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://www.w3.org/2000/01/rdf-schema#seeAlso"))
+                            return;
 
                         Integer compoundID = getCompoundID(subject.getURI(), false);
 
@@ -467,14 +480,14 @@ class Compound extends Updater
 
     /*
      * Checks that the molfile files cover the identifiers contiguously from the first one, so that an incomplete dump
-     * does not delete the structures it lacks.
+     * does not delete the structures it lacks. No molfile file at all is reported by processFiles().
      */
-    private static void checkMolfileFiles(String path, String pattern) throws IOException
+    private static void checkMolfileFiles(String path, String pattern)
     {
         String[] files = new File(baseDirectory + path).list((dir, file) -> file.matches(pattern));
 
-        if(files == null || files.length == 0)
-            throw new IOException("no molfile file in " + path);
+        if(files == null)
+            return;
 
         Arrays.sort(files);
         long next = 1;
@@ -485,7 +498,8 @@ class Compound extends Updater
             long to = Long.parseLong(file.substring(19, 28));
 
             if(from != next || to < from)
-                throw new IOException("unexpected molfile file " + file + " (expected the range from " + next + ")");
+                Problems.error("unexpected range of a molfile file",
+                        path + "/" + file + " (expected the range from " + next + ")");
 
             next = to + 1;
         }
@@ -534,8 +548,9 @@ class Compound extends Updater
                     {
                         getIntID(subject, prefix);
 
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000008"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/SIO_000008"))
+                            return;
 
                         getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID");
                     }
@@ -557,11 +572,12 @@ class Compound extends Updater
                     {
                         Integer compoundID = getIntID(subject, prefix);
 
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/identifier"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/identifier"))
+                            return;
 
-                        if(compoundID != Integer.parseInt(object.getLiteral().getLexicalForm()))
-                            throw new IOException();
+                        if(compoundID != Integer.parseInt(getLexicalForm(object)))
+                            Problems.error("value of " + predicate.getURI() + " not matching the IRI",
+                                    text(subject) + " " + text(object));
                     }
                 }.load(stream);
             }

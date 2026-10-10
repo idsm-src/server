@@ -4,6 +4,7 @@ import static cz.iocb.load.common.EntityTable.date;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.EntityTable.varchar;
+import static cz.iocb.load.common.TripleDispatcher.is;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -13,6 +14,7 @@ import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -60,11 +62,11 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/title"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/title"))
+                            return;
 
                         Integer referenceID = getIntID(subject, prefix);
                         String title = getString(object);
@@ -87,11 +89,12 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/publicationName"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://prismstandard.org/namespaces/basic/3.0/publicationName"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         String publication = getString(object);
@@ -114,11 +117,12 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/bibliographicCitation"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://purl.org/dc/terms/bibliographicCitation"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         String citation = getString(object);
@@ -141,11 +145,12 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/issueIdentifier"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://prismstandard.org/namespaces/basic/3.0/issueIdentifier"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         String issue = getString(object);
@@ -168,11 +173,12 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/startingPage"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://prismstandard.org/namespaces/basic/3.0/startingPage"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         String page = getString(object);
@@ -195,11 +201,12 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/endingPage"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://prismstandard.org/namespaces/basic/3.0/endingPage"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         String page = getString(object);
@@ -222,11 +229,12 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/pageRange"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://prismstandard.org/namespaces/basic/3.0/pageRange"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         String range = getString(object);
@@ -249,11 +257,11 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/language"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/language"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         String lang = getString(object);
@@ -276,19 +284,19 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/date"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/date"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
 
-                        switch(object.getLiteral().getDatatype().getURI())
+                        switch(object.isLiteral() ? object.getLiteralDatatypeURI() : "")
                         {
                             case "http://www.w3.org/2001/XMLSchema#date" ->
                             {
-                                String date = getLexicalForm(object).replaceFirst("-0[45]:00$", "");
+                                String date = getDate(object, "-04:00", "-05:00");
 
                                 references.set(referenceID, "dcdate", date);
                             }
@@ -298,10 +306,7 @@ class Reference extends Updater
 
                                 references.set(referenceID, "date", date);
                             }
-                            default ->
-                            {
-                                throw new IOException();
-                            }
+                            default -> unexpectedValue(subject, predicate, object);
                         }
                     }
                 }.load(stream);
@@ -326,11 +331,11 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://purl.org/spar/cito/discusses"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/spar/cito/discusses"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         String statementID = getStringID(object, "http://id.nlm.nih.gov/mesh/");
@@ -375,11 +380,11 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://purl.org/spar/fabio/hasSubjectTerm"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/spar/fabio/hasSubjectTerm"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
 
@@ -441,11 +446,12 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://purl.org/spar/fabio/hasPrimarySubjectTerm"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://purl.org/spar/fabio/hasPrimarySubjectTerm"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         String subjectID = getStringID(object, "http://id.nlm.nih.gov/mesh/");
@@ -485,11 +491,12 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/contentType"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://prismstandard.org/namespaces/basic/3.0/contentType"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         String type = getString(object);
@@ -529,11 +536,12 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/issn"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://prismstandard.org/namespaces/basic/3.0/issn"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         String issn = getString(object);
@@ -573,11 +581,12 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://prismstandard.org/namespaces/basic/3.0/isbn"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://prismstandard.org/namespaces/basic/3.0/isbn"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         String isbn = getString(object);
@@ -617,11 +626,11 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/creator"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/creator"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         Integer authorID = Author.getAuthorID(object.getURI());
@@ -661,11 +670,11 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://purl.org/cerif/frapo/isSupportedBy"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/cerif/frapo/isSupportedBy"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         Integer grantID = Grant.getGrantID(object.getURI());
@@ -705,11 +714,11 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://purl.org/cerif/frapo/hasFundingAgency"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/cerif/frapo/hasFundingAgency"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         Integer organizationID = Organization.getOrganizationID(object.getURI());
@@ -764,11 +773,11 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/isPartOf"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/isPartOf"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
 
@@ -830,7 +839,7 @@ class Reference extends Updater
                         }
                         else
                         {
-                            throw new IOException();
+                            unexpectedValue(subject, predicate, object);
                         }
                     }
                 }.load(stream);
@@ -882,12 +891,12 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals(
+                        if(!checkPredicate(subject, predicate, object,
                                 "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#discussesAsDerivedByTextMining"))
-                            throw new IOException();
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
 
@@ -949,7 +958,7 @@ class Reference extends Updater
                         }
                         else
                         {
-                            throw new IOException();
+                            unexpectedValue(subject, predicate, object);
                         }
                     }
                 }.load(stream);
@@ -986,11 +995,11 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/identifier"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/identifier"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
                         String identifier = getString(object);
@@ -1030,16 +1039,22 @@ class Reference extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                        if(isIgnored(subject, predicate, object))
                             return;
 
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/source"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/source"))
+                            return;
 
                         Integer referenceID = getReferenceID(subject.getURI());
-                        String issn = sources.get(object.getURI());
+                        String source = object.isURI() ? sources.get(object.getURI()) : null;
 
-                        Pair<Integer, String> pair = Pair.getPair(referenceID, issn);
+                        if(source == null)
+                        {
+                            unexpectedValue(subject, predicate, object);
+                            return;
+                        }
+
+                        Pair<Integer, String> pair = Pair.getPair(referenceID, source);
 
                         synchronized(newSources)
                         {
@@ -1069,16 +1084,15 @@ class Reference extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(subject.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/reference/"))
+                    if(isIgnored(subject, predicate, object))
                         return;
 
                     getStringID(subject, prefix);
 
-                    if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                        return;
 
-                    if(!object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Reference"))
-                        throw new IOException();
+                    checkType(subject, object, "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Reference");
                 }
             }.load(stream);
         }
@@ -1137,6 +1151,20 @@ class Reference extends Updater
         references.store();
 
         System.out.println();
+    }
+
+
+    /*
+     * Tests whether the triple belongs to the reference without an identifier, which is ignored with a warning.
+     */
+    private static boolean isIgnored(Node subject, Node predicate, Node object)
+    {
+        if(!is(subject, prefix))
+            return false;
+
+        Problems.warning("ignored triple of an invalid subject in " + predicate.getURI(),
+                TripleStreamProcessor.text(subject) + " " + TripleStreamProcessor.text(object));
+        return true;
     }
 
 

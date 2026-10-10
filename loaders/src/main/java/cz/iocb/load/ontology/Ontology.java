@@ -1879,6 +1879,7 @@ public class Ontology extends Updater
 
             updateVersion();
 
+            checkFiles("ontology");
             checkProblems();
 
             commit();

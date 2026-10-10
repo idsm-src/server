@@ -6,10 +6,11 @@ import static cz.iocb.load.common.TripleDispatcher.text;
 import static cz.iocb.load.common.TripleStreamProcessor.getBoolean;
 import static cz.iocb.load.common.TripleStreamProcessor.getInt;
 import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
+import static cz.iocb.load.common.TripleStreamProcessor.isDate;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.util.regex.Matcher;
@@ -45,10 +46,17 @@ public class Mesh extends Updater
     private static final Pattern zonePattern = Pattern.compile("(Z|[+-][0-9]{2}:[0-9]{2})$");
 
 
+    /*
+     * Returns the version of MeSH from the header of its dump; null stands for an unknown version.
+     */
     private static String getVersion(String file) throws IOException
     {
-        try(BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new GZIPInputStream(new FileInputStream(file), 65536), UTF_8)))
+        InputStream input = openFile(file);
+
+        if(input == null)
+            return null;
+
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(input, 65536), UTF_8)))
         {
             String line;
 
@@ -60,7 +68,7 @@ public class Mesh extends Updater
                             "$1");
             }
 
-            throw new IOException("the version of MeSH is not known");
+            return null;
         }
     }
 
@@ -461,18 +469,23 @@ public class Mesh extends Updater
 
         String date = node.getLiteralLexicalForm();
         Matcher matcher = zonePattern.matcher(date);
+        boolean zoned = matcher.find();
+        String day = zoned ? date.substring(0, matcher.start()) : date;
 
-        if(!matcher.find())
-            return Pair.getPair(date, Integer.MIN_VALUE);
+        if(!isDate(day))
+            throw new DataException("unexpected value instead of an xsd:date literal", text(node));
+
+        if(!zoned)
+            return Pair.getPair(day, Integer.MIN_VALUE);
 
         String zone = matcher.group();
 
         if(zone.equals("Z"))
-            return Pair.getPair(date.substring(0, matcher.start()), 0);
+            return Pair.getPair(day, 0);
 
         int seconds = Integer.parseInt(zone.substring(1, 3)) * 3600 + Integer.parseInt(zone.substring(4, 6)) * 60;
 
-        return Pair.getPair(date.substring(0, matcher.start()), zone.startsWith("-") ? -seconds : seconds);
+        return Pair.getPair(day, zone.startsWith("-") ? -seconds : seconds);
     }
 
 
@@ -517,7 +530,7 @@ public class Mesh extends Updater
             init();
             Ontology.loadCategories();
 
-            String version = getVersion(baseDirectory + file);
+            String version = getVersion(file);
             System.out.println("=== load MeSH version " + version + " ===");
             System.out.println();
 
@@ -596,6 +609,7 @@ public class Mesh extends Updater
 
             updateVersion();
 
+            checkFiles("mesh");
             MissingEntities.printSummary();
             checkProblems();
 

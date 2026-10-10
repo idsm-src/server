@@ -48,7 +48,7 @@ class DrugIndication extends Updater
                         if(predicate.getURI().equals(cco + "hasDrugIndication"))
                             molecules.inverse(getIndicationID(object), Molecule.getMoleculeID(subject));
                         else
-                            ChEMBL.unexpected(subject, predicate, object);
+                            unexpected(subject, predicate, object);
 
                         return;
                     }
@@ -57,7 +57,7 @@ class DrugIndication extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, cco + "DrugIndication");
+                        case rdfType -> checkType(subject, object, cco + "DrugIndication");
                         case chemblId -> indications.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL_IND_" + id));
                         case rdfsLabel -> ChEMBL.checkValue(subject, predicate, object, "CHEMBL_IND_" + id);
@@ -77,7 +77,7 @@ class DrugIndication extends Updater
                         }
                         case cco + "hasEFOName" -> indications.set(id, "efo_name", getString(object));
                         case cco + "highestDevelopmentPhase" -> indications.set(id, "phase", getInt(object));
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);

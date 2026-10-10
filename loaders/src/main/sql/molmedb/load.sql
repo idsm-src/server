@@ -1,7 +1,81 @@
 -- Synchronizes the schema molmedb with the dump loaded into the schema molmedb_tmp, inside the transaction of
 -- load-molmedb.sh. Each table is first filled into a temporary table of the same row type and primary key, so that
 -- the values get exactly the stored types and duplicate keys fail, and then merged into the table, which inserts,
--- updates or deletes only the differing rows.
+-- updates or deletes only the differing rows. The problems of the dump are reported as the other loaders report them:
+-- an error, i.e. a part of the dump that the load would leave out, fails the load at the end, so that incomplete data
+-- are neither indexed nor committed, a warning is only reported.
+
+
+--- problems ---
+
+create temporary table pg_temp.problems (id serial, error boolean not null, kind varchar not null, detail varchar) on commit drop;
+
+-- the files of the data directory, which load-molmedb.sh passes
+insert into pg_temp.problems(error, kind, detail)
+select true, 'no input file', file from regexp_split_to_table(:'missing_files', E'\n') as file where file != '';
+
+insert into pg_temp.problems(error, kind, detail)
+select true, 'unknown file', file from regexp_split_to_table(:'unknown_files', E'\n') as file where file != '';
+
+-- the codes that the data are selected by, which a new release may extend
+insert into pg_temp.problems(error, kind, detail)
+select true, 'unknown type of an identifier', id || ': ' || type
+from molmedb_tmp.identifiers
+where type not in (1, 4, 5, 6, 7, 8)
+order by id;
+
+insert into pg_temp.problems(error, kind, detail)
+select true, 'unknown state of an identifier', id || ': ' || state
+from molmedb_tmp.identifiers
+where state not in (0, 1, 3, 4)
+order by id;
+
+insert into pg_temp.problems(error, kind, detail)
+select true, 'unknown type or state of a protein identifier', id || ': ' || type || ', ' || state
+from molmedb_tmp.protein_identifiers
+where type != 1 or state != 2
+order by id;
+
+insert into pg_temp.problems(error, kind, detail)
+select true, 'unknown model type of a publication', model_id || ': ' || model_type
+from molmedb_tmp.model_has_publications
+where model_type != 'App\Models\Dataset'
+order by model_id;
+
+insert into pg_temp.problems(error, kind, detail)
+select true, 'unknown identifier source of a publication', id || ': ' || identifier_source
+from molmedb_tmp.publications
+where identifier_source not in ('MED', '')
+order by id;
+
+-- the interactions are loaded with the publication of their dataset, so an interaction without it would be left out
+insert into pg_temp.problems(error, kind, detail)
+select true, 'passive interaction without a published dataset', interactions.id::varchar
+from molmedb_tmp.interactions_passive as interactions
+where not exists (select 1 from molmedb_tmp.datasets as datasets, molmedb_tmp.model_has_publications as model_publications
+    where interactions.dataset_id = datasets.id and interactions.dataset_id = model_publications.model_id and model_publications.model_type = 'App\Models\Dataset')
+order by interactions.id;
+
+insert into pg_temp.problems(error, kind, detail)
+select true, 'fluorescent interaction without a published dataset', interactions.id::varchar
+from molmedb_tmp.fluorescent_properties as interactions
+where not exists (select 1 from molmedb_tmp.datasets as datasets, molmedb_tmp.model_has_publications as model_publications
+    where interactions.dataset_id = datasets.id and interactions.dataset_id = model_publications.model_id and model_publications.model_type = 'App\Models\Dataset')
+order by interactions.id;
+
+insert into pg_temp.problems(error, kind, detail)
+select true, 'active interaction without a published dataset', interactions.id::varchar
+from molmedb_tmp.interactions_active as interactions
+where not exists (select 1 from molmedb_tmp.datasets as datasets, molmedb_tmp.model_has_publications as model_publications
+    where interactions.dataset_id = datasets.id and interactions.dataset_id = model_publications.model_id and model_publications.model_type = 'App\Models\Dataset')
+order by interactions.id;
+
+-- a ChEMBL identifier given as a ChEBI one is left out
+insert into pg_temp.problems(error, kind, detail)
+select false, 'ignored ChEMBL identifier of the ChEBI type', id || ': ' || value
+from molmedb_tmp.identifiers
+where type = 6 and value like 'CHEMBL%' and state != 3
+order by id;
 
 
 --- substances ---
@@ -91,6 +165,32 @@ when not matched by source then
 
 --- substance_links ---
 
+-- the numbers of the linked identifiers; an identifier that is not a number is reported
+create temporary table pg_temp.identifier_numbers on commit drop as
+select
+    identifiers.id,
+    identifiers.structure_id,
+    identifiers.type,
+    identifiers.value,
+    case identifiers.type
+        when 4 then value
+        when 5 then replace(trim(identifiers.value), 'DB', '')
+        when 6 then replace(identifiers.value, 'CHEBI:', '')
+        when 8 then replace(upper(identifiers.value), 'CHEMBL', '')
+    end as number
+from molmedb_tmp.identifiers as identifiers
+where identifiers.state != 3 and identifiers.type in (4,5,6,8) and
+    not (identifiers.type = 5 and identifiers.value like 'DBMET%') and
+    not (identifiers.type = 6 and identifiers.value like 'CHEMBL%') and
+    not exists (select 1 from molmedb_tmp.structures as structures, molmedb_tmp.structure_links as links
+        where identifiers.structure_id = structures.id and links.identifier = structures.identifier);
+
+insert into pg_temp.problems(error, kind, detail)
+select true, 'malformed identifier', id || ': ' || value
+from pg_temp.identifier_numbers
+where not pg_input_is_valid(number, 'integer')
+order by id;
+
 create temporary table pg_temp.substance_links (like molmedb.substance_links, primary key(substance, type, value)) on commit drop;
 
 insert into pg_temp.substance_links
@@ -99,21 +199,9 @@ insert into pg_temp.substance_links
     type,
     value
 )
-select distinct
-    identifiers.structure_id,
-    identifiers.type,
-    case identifiers.type
-        when 4 then value
-        when 5 then replace(trim(identifiers.value), 'DB', '')
-        when 6 then replace(identifiers.value, 'CHEBI:', '')
-        when 8 then replace(upper(identifiers.value), 'CHEMBL', '')
-    end::integer
-from molmedb_tmp.identifiers as identifiers
-where identifiers.state != 3 and identifiers.type in (4,5,6,8) and
-    not (identifiers.type = 5 and identifiers.value like 'DBMET%') and
-    not (identifiers.type = 6 and identifiers.value like 'CHEMBL%') and
-    not exists (select 1 from molmedb_tmp.structures as structures, molmedb_tmp.structure_links as links
-        where identifiers.structure_id = structures.id and links.identifier = structures.identifier);
+select distinct structure_id, type, number::integer
+from pg_temp.identifier_numbers
+where pg_input_is_valid(number, 'integer');
 
 merge into molmedb.substance_links as t
 using pg_temp.substance_links as s on t.substance = s.substance and t.type = s.type and t.value = s.value
@@ -747,7 +835,118 @@ when not matched by source then
     delete;
 
 
+--- statistics ---
+
+set local molmedb.version to :'version';
+
+do $$
+begin
+    if current_setting('molmedb.version') = '' then
+        insert into pg_temp.problems(error, kind, detail) values (true, 'unknown version', 'MolMeDB');
+    end if;
+
+    -- a database without the tables of the statistics is left as it is, a missing row in it is an error
+    if to_regclass('idsm.stats') is not null then
+        update idsm.stats set count = (select count(*) from molmedb.substances) where name = 'MolMeDB Substances';
+
+        if not found then
+            insert into pg_temp.problems(error, kind, detail) values (true, 'count not set', 'MolMeDB Substances');
+        end if;
+    end if;
+
+    if to_regclass('idsm.sources') is not null then
+        update idsm.sources set version = current_setting('molmedb.version') where name = 'MolMeDB';
+
+        if not found then
+            insert into pg_temp.problems(error, kind, detail)
+            values (true, 'version not set', 'MolMeDB: ' || current_setting('molmedb.version'));
+        end if;
+    end if;
+
+    if to_regclass('idsm.version') is not null then
+        update idsm.version set date = greatest(date, date_trunc('second', now()));
+
+        if not found then
+            insert into pg_temp.problems(error, kind, detail) values (true, 'version date not set', null);
+        end if;
+    end if;
+end
+$$;
+
+
+--- problems ---
+
+-- the first occurrences of each kind, then the numbers of all the kinds, as the other loaders print them
+\set QUIET on
+\pset tuples_only on
+\pset format unaligned
+\set QUIET off
+
+with
+    counts as (select error, kind, count(*) as count, min(id) as first from pg_temp.problems group by error, kind),
+    numbered as (select error, kind, detail, row_number() over (partition by error, kind order by id) as n from pg_temp.problems)
+select line from
+(
+    select 0 as part, counts.first as rank, numbered.n as n,
+        '    ' || case when numbered.error then 'error' else 'warning' end || ': ' || numbered.kind || coalesce(': ' || numbered.detail, '') as line
+    from numbered join counts using (error, kind)
+    where numbered.n <= 10
+    union all
+    select 0, first, 11, '    ' || case when error then 'error' else 'warning' end || ': ' || kind || ': further occurrences are only counted'
+    from counts
+    where count > 10
+    union all
+    select 1, 0, 0, ''
+    union all
+    select 2, 0, 0, case when exists (select 1 from counts where error) then 'errors:' else 'no errors' end
+    union all
+    select 3, first, 0, '    ' || kind || ': ' || count from counts where error
+    union all
+    select 4, 0, 0, case when exists (select 1 from counts where not error) then 'warnings:' else 'no warnings' end
+    union all
+    select 5, first, 0, '    ' || kind || ': ' || count from counts where not error
+    union all
+    select 6, 0, 0, ''
+) as lines
+order by part, rank, n;
+
+-- an error fails the load, so that the incomplete data are neither indexed nor committed
+do $$
+begin
+    if exists (select 1 from pg_temp.problems where error) then
+        raise exception 'incomplete data cannot be committed';
+    end if;
+end
+$$;
+
+
 --- sachem index ---
 
-select sachem.cleanup('molmedb');
-select sachem.sync_data('molmedb', false, true);
+create temporary table pg_temp.sachem_errors on commit drop as
+select coalesce(max(errors.id), 0) as last
+from sachem.compound_errors as errors, sachem.configuration as configuration
+where errors.index = configuration.id and configuration.index_name = 'molmedb';
+
+do $$
+begin
+    perform sachem.cleanup('molmedb');
+    perform sachem.sync_data('molmedb', false, true);
+end
+$$;
+
+-- the structures that the index refuses are reported as warnings
+with refused as
+(
+    select errors.compound, errors.message, row_number() over (order by errors.id) as n
+    from sachem.compound_errors as errors, sachem.configuration as configuration, pg_temp.sachem_errors as start
+    where errors.index = configuration.id and configuration.index_name = 'molmedb' and errors.id > start.last
+)
+select line from
+(
+    select n, '    warning: structure refused by Sachem: ' || compound || ': ' || message as line from refused where n <= 10
+    union all
+    select 11, '    warning: structure refused by Sachem: further occurrences are only counted' from refused having count(*) > 10
+    union all
+    select 12, '  sachem.compound_errors -> count: ' || count(*) from refused having count(*) > 0
+) as lines
+order by n;

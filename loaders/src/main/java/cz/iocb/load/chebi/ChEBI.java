@@ -10,7 +10,6 @@ import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
 import static cz.iocb.load.common.TripleStreamProcessor.getLexicalForm;
 import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.PreparedStatement;
@@ -227,12 +226,15 @@ public class ChEBI extends Updater
 
     /*
      * Returns the version of the ontology from its version IRI, which the header of the file states, so that the file
-     * is read only up to it.
+     * is read only up to it; null stands for an unknown version.
      */
     private static String getVersion() throws IOException
     {
-        try(InputStream input = new FileInputStream(baseDirectory + file))
+        try(InputStream input = openFile(file))
         {
+            if(input == null)
+                return null;
+
             IteratorCloseable<Triple> triples = AsyncParser.asyncParseTriples(input, Lang.RDFXML, null);
 
             try
@@ -245,10 +247,14 @@ public class ChEBI extends Updater
                             || !triple.getPredicate().getURI().equals(owl + "versionIRI"))
                         continue;
 
-                    String iri = triple.getObject().getURI();
+                    Node object = triple.getObject();
+                    String iri = object.isURI() ? object.getURI() : null;
 
-                    if(!iri.matches("http://purl\\.obolibrary\\.org/obo/chebi/[^/]+/chebi\\.owl"))
-                        throw new IOException("unexpected version IRI " + iri);
+                    if(iri == null || !iri.matches("http://purl\\.obolibrary\\.org/obo/chebi/[^/]+/chebi\\.owl"))
+                    {
+                        Problems.error("unexpected version IRI", text(object));
+                        return null;
+                    }
 
                     return iri.replaceFirst("^http://purl\\.obolibrary\\.org/obo/chebi/([^/]+)/chebi\\.owl$", "$1");
                 }
@@ -259,7 +265,7 @@ public class ChEBI extends Updater
             }
         }
 
-        throw new IOException("unknown version of the ontology");
+        return null;
     }
 
 
@@ -883,6 +889,7 @@ public class ChEBI extends Updater
 
             updateVersion();
 
+            checkFiles("chebi");
             MissingEntities.printSummary();
             checkProblems();
 

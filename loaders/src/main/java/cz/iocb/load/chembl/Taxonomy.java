@@ -2,6 +2,7 @@ package cz.iocb.load.chembl;
 
 import static cz.iocb.load.chembl.ValueTable.column;
 import static cz.iocb.load.chembl.ValueTable.enumeration;
+import static cz.iocb.load.common.TripleStreamProcessor.unexpected;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.BitSet;
@@ -73,7 +74,7 @@ class Taxonomy
     static void addLabel(Node subject, Node predicate, Node object) throws IOException
     {
         if(!predicate.getURI().equals(ChEMBL.rdfsLabel))
-            ChEMBL.unexpected(subject, predicate, object);
+            unexpected(subject, predicate, object);
         else if(subject.getURI().startsWith(identifiersPrefix))
             labels.add(TripleStreamProcessor.getIntID(subject, identifiersPrefix), "IDENTIFIERS.ORG",
                     TripleStreamProcessor.getString(object));

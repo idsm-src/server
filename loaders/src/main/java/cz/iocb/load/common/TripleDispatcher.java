@@ -1,7 +1,6 @@
 package cz.iocb.load.common;
 
 import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -183,7 +182,7 @@ public class TripleDispatcher extends Updater
 
         onEvery((subject, predicate, object) -> {
             if(subjects.test(subject) && !predicates.contains(predicate.getURI()))
-                Problems.error("unexpected predicate " + predicate.getURI(), text(subject) + " " + text(object));
+                TripleStreamProcessor.unexpected(subject, predicate, object);
         });
     }
 
@@ -197,7 +196,7 @@ public class TripleDispatcher extends Updater
 
         on(typePredicate, (subject, object) -> {
             if(subjects.test(subject) && !(object.isURI() && types.contains(object.getURI())))
-                Problems.error("unexpected rdf:type " + text(object), text(subject));
+                TripleStreamProcessor.unexpectedType(subject, object);
         });
     }
 
@@ -317,7 +316,7 @@ public class TripleDispatcher extends Updater
             {
                 handler.handle(subject, predicate, object);
             }
-            catch(DataException | NumberFormatException e)
+            catch(DataException | NumberFormatException | UnsupportedOperationException e)
             {
                 TripleStreamProcessor.report(e, subject, predicate, object);
             }
@@ -333,7 +332,7 @@ public class TripleDispatcher extends Updater
                 {
                     handler.handle(subject, object);
                 }
-                catch(DataException | NumberFormatException e)
+                catch(DataException | NumberFormatException | UnsupportedOperationException e)
                 {
                     TripleStreamProcessor.report(e, subject, predicate, object);
                 }
@@ -352,7 +351,7 @@ public class TripleDispatcher extends Updater
                     {
                         handler.handle(subject, object);
                     }
-                    catch(DataException | NumberFormatException e)
+                    catch(DataException | NumberFormatException | UnsupportedOperationException e)
                     {
                         TripleStreamProcessor.report(e, subject, predicate, object);
                     }
@@ -365,7 +364,8 @@ public class TripleDispatcher extends Updater
     /*
      * Reads an RDF file: Turtle if its name ends with .ttl, N-Triples if it ends with .nt and RDF/XML otherwise,
      * gzipped if the name ends with .gz. Relative IRIs are resolved against file:/// followed by the path of the file
-     * in the data directory, so that they do not depend on the directory the loader runs in.
+     * in the data directory, so that they do not depend on the directory the loader runs in. A missing file is
+     * reported as an error.
      */
     public void load(String file) throws IOException, SQLException
     {
@@ -374,7 +374,10 @@ public class TripleDispatcher extends Updater
 
         System.out.println("  load " + file);
 
-        InputStream input = new FileInputStream(baseDirectory + file);
+        InputStream input = openFile(file);
+
+        if(input == null)
+            return;
 
         if(file.endsWith(".gz"))
             input = new GZIPInputStream(input, 65536);

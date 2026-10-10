@@ -1,8 +1,8 @@
 package cz.iocb.load.wikidata;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
@@ -10,7 +10,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.Updater;
 
 
@@ -23,10 +25,10 @@ public class Wikidata extends Updater
     /*
      * Returns the value of a string literal of a TSV query result, i.e. with the escape sequences decoded.
      */
-    private static String decode(String literal) throws IOException
+    private static String decode(String literal) throws DataException
     {
         if(literal.length() < 2 || !literal.startsWith("\"") || !literal.endsWith("\""))
-            throw new IOException("unexpected literal " + literal);
+            throw new DataException("unexpected literal", literal);
 
         StringBuilder value = new StringBuilder();
 
@@ -41,7 +43,7 @@ public class Wikidata extends Updater
             }
 
             if(++i == literal.length() - 1)
-                throw new IOException("unexpected literal " + literal);
+                throw new DataException("unexpected literal", literal);
 
             switch(literal.charAt(i))
             {
@@ -56,7 +58,7 @@ public class Wikidata extends Updater
                 case 'u' ->
                 {
                     if(i + 5 >= literal.length())
-                        throw new IOException("unexpected literal " + literal);
+                        throw new DataException("unexpected literal", literal);
 
                     value.appendCodePoint(Integer.parseInt(literal.substring(i + 1, i + 5), 16));
                     i += 4;
@@ -64,12 +66,17 @@ public class Wikidata extends Updater
                 case 'U' ->
                 {
                     if(i + 9 >= literal.length())
-                        throw new IOException("unexpected literal " + literal);
+                        throw new DataException("unexpected literal", literal);
 
-                    value.appendCodePoint(Integer.parseInt(literal.substring(i + 1, i + 9), 16));
+                    int codePoint = Integer.parseInt(literal.substring(i + 1, i + 9), 16);
+
+                    if(!Character.isValidCodePoint(codePoint))
+                        throw new DataException("unexpected literal", literal);
+
+                    value.appendCodePoint(codePoint);
                     i += 8;
                 }
-                default -> throw new IOException("unexpected literal " + literal);
+                default -> throw new DataException("unexpected literal", literal);
             }
         }
 
@@ -78,7 +85,8 @@ public class Wikidata extends Updater
 
 
     /*
-     * Loads the values of a property from the TSV result of its query into the given table.
+     * Loads the values of a property from the TSV result of its query into the given table; an unexpected line is
+     * reported as an error and skipped.
      */
     private static void loadValues(String file, String table, String column) throws IOException, SQLException
     {
@@ -89,26 +97,54 @@ public class Wikidata extends Updater
 
         System.out.println("  load wikidata/" + file);
 
-        try(BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new FileInputStream(baseDirectory + "wikidata/" + file), StandardCharsets.UTF_8)))
+        InputStream input = openFile("wikidata/" + file);
+
+        if(input == null)
+            return;
+
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8)))
         {
             String line = reader.readLine();
 
-            if(line == null)
-                throw new IOException(file + ": no header");
+            if(!("?entity\t?" + column).equals(line))
+            {
+                Problems.error("unexpected header", "wikidata/" + file + ": " + line);
+                return;
+            }
+
+            int values = 0;
 
             while((line = reader.readLine()) != null)
             {
-                String[] items = line.split("\t", 2);
-                Matcher matcher = entityPattern.matcher(items[0]);
+                try
+                {
+                    String[] items = line.split("\t", 2);
+                    Matcher matcher = entityPattern.matcher(items[0]);
 
-                if(items.length != 2 || !matcher.matches())
-                    throw new IOException(file + ": unexpected line " + line);
+                    if(items.length != 2 || !matcher.matches())
+                        throw new DataException("unexpected line", line);
 
-                Pair<Integer, String> pair = Pair.getPair(Integer.valueOf(matcher.group(1)), decode(items[1]));
+                    Pair<Integer, String> pair = Pair.getPair(Integer.valueOf(matcher.group(1)), decode(items[1]));
 
-                if(!oldValues.remove(pair))
-                    newValues.add(pair);
+                    if(!oldValues.remove(pair))
+                        newValues.add(pair);
+
+                    values++;
+                }
+                catch(DataException e)
+                {
+                    Problems.error(e.getKind(), "wikidata/" + file + ": " + e.getDetail());
+                }
+                catch(NumberFormatException e)
+                {
+                    Problems.error("malformed number", "wikidata/" + file + ": " + line);
+                }
+            }
+
+            if(values == 0)
+            {
+                Problems.error("no value", "wikidata/" + file);
+                return;
             }
         }
 
@@ -177,6 +213,7 @@ public class Wikidata extends Updater
 
             updateVersion();
 
+            checkFiles("wikidata");
             checkProblems();
 
             syncIndex("wikidata", true);

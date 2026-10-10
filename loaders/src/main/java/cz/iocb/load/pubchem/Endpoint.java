@@ -5,12 +5,14 @@ import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.uni
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.real;
 import static cz.iocb.load.common.EntityTable.varchar;
+import static cz.iocb.load.common.TripleDispatcher.is;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.EntityTable.Key;
 import cz.iocb.load.common.Pair;
@@ -124,9 +126,9 @@ class Endpoint extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI()
-                                .equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PubChemAssayOutcome"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PubChemAssayOutcome"))
+                            return;
 
                         EndpointID endpoint = parseEndpoint(subject);
                         Pair<Integer, Integer> outcome = Ontology.getResourceId(object, unitUncategorized);
@@ -149,8 +151,9 @@ class Endpoint extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            return;
 
                         if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Endpoint"))
                             return;
@@ -175,8 +178,8 @@ class Endpoint extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://www.w3.org/2000/01/rdf-schema#label"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object, "http://www.w3.org/2000/01/rdf-schema#label"))
+                        return;
 
                     String label = getString(object);
                     EndpointID endpoint = parseEndpoint(subject);
@@ -217,7 +220,7 @@ class Endpoint extends Updater
                     }
                     else
                     {
-                        throw new IOException();
+                        unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);
@@ -245,8 +248,8 @@ class Endpoint extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://purl.org/spar/cito/citesAsDataSource"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object, "http://purl.org/spar/cito/citesAsDataSource"))
+                        return;
 
                     if(object.getURI().startsWith(Reference.prefix))
                     {
@@ -274,7 +277,7 @@ class Endpoint extends Updater
                     }
                     else
                     {
-                        throw new IOException();
+                        unexpectedValue(subject, predicate, object);
                     }
                 }
             }.load(stream);
@@ -301,11 +304,11 @@ class Endpoint extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000221"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object, "http://semanticscience.org/resource/SIO_000221"))
+                        return;
 
-                    if(!object.getURI().equals("http://purl.obolibrary.org/obo/UO_0000064"))
-                        throw new IOException();
+                    if(!is(object, "http://purl.obolibrary.org/obo/UO_0000064"))
+                        unexpectedValue(subject, predicate, object);
                 }
             }.load(stream);
         }
@@ -324,8 +327,8 @@ class Endpoint extends Updater
                     {
                         getStringID(subject, prefix);
 
-                        if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/IAO_0000136"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.obolibrary.org/obo/IAO_0000136"))
+                            return;
 
                         getIntID(object, Substance.prefix);
                     }
@@ -366,13 +369,13 @@ class Endpoint extends Updater
         String iri = node.getURI();
 
         if(!iri.startsWith(prefix))
-            throw new IOException();
+            throw new DataException("unexpected IRI", iri);
 
         int aid = iri.indexOf("_AID", prefixLength);
         int val = iri.indexOf("_VALUE", prefixLength);
 
         if(aid == -1 || val == -1 || val < aid)
-            throw new IOException();
+            throw new DataException("unexpected IRI", iri);
 
         int grp = iri.indexOf("_", aid + 1);
 
@@ -394,7 +397,7 @@ class Endpoint extends Updater
                 measuregroup = -Integer.parseInt(part);
 
                 if(measuregroup == -2147483647 || measuregroup == 0)
-                    throw new IOException();
+                    throw new DataException("unexpected IRI", iri);
             }
         }
         else if(grp != val)
@@ -402,7 +405,7 @@ class Endpoint extends Updater
             measuregroup = Integer.parseInt(iri.substring(grp + 1, val));
 
             if(measuregroup == 2147483647)
-                throw new IOException();
+                throw new DataException("unexpected IRI", iri);
         }
         else
         {

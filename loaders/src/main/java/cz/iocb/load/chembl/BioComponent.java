@@ -51,7 +51,7 @@ class BioComponent extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, cco + "BioComponent");
+                        case rdfType -> checkType(subject, object, cco + "BioComponent");
                         case chemblId -> biocomponents.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL_BC_" + id));
                         case rdfsLabel -> ChEMBL.checkValue(subject, predicate, object, "CHEMBL_BC_" + id);
@@ -60,7 +60,7 @@ class BioComponent extends Updater
                         case cco + "organismName" -> biocomponents.set(id, "organism", getString(object));
                         case cco + "taxonomy" -> biocomponents.set(id, "taxonomy", taxonomies.getTaxonomy(id, object));
                         case cco + "proteinSequence" -> biocomponents.set(id, "sequence", getString(object));
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);

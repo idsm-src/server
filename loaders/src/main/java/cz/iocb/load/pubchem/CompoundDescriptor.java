@@ -4,12 +4,14 @@ import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.real;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
+import static cz.iocb.load.common.TripleDispatcher.is;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -39,8 +41,9 @@ class CompoundDescriptor extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/SIO_000300"))
+                            return;
 
                         Integer id = getDescriptorID(subject.getURI(), suffix);
                         Integer value = getIntFromInteger(object);
@@ -61,14 +64,15 @@ class CompoundDescriptor extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals(property))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, property))
+                            return;
 
                         Integer id = Compound.getCompoundID(subject.getURI());
                         Integer value = getIntFromInteger(object);
 
                         if(!value.equals(descriptors.get(id, field)))
-                            throw new IOException();
+                            throw new DataException("value different from the descriptor",
+                                    "descriptor " + descriptors.get(id, field));
                     }
                 }.load(stream);
             }
@@ -86,8 +90,9 @@ class CompoundDescriptor extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/SIO_000300"))
+                            return;
 
                         Integer id = getDescriptorID(subject.getURI(), suffix);
                         Float value = getFloatFromDecimal(object);
@@ -108,14 +113,15 @@ class CompoundDescriptor extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals(property))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, property))
+                            return;
 
                         Integer id = Compound.getCompoundID(subject.getURI());
                         Float value = getFloatFromDecimal(object);
 
                         if(!value.equals(descriptors.get(id, field)))
-                            throw new IOException();
+                            throw new DataException("value different from the descriptor",
+                                    "descriptor " + descriptors.get(id, field));
                     }
                 }.load(stream);
             }
@@ -133,8 +139,9 @@ class CompoundDescriptor extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/SIO_000300"))
+                            return;
 
                         Float value = getFloatFromDecimal(object);
 
@@ -163,8 +170,9 @@ class CompoundDescriptor extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#xlogp3"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#xlogp3"))
+                            return;
 
                         Integer id = Compound.getCompoundID(subject.getURI());
                         Float value = getFloatFromDecimal(object);
@@ -173,13 +181,13 @@ class CompoundDescriptor extends Updater
                         Float keep = (Float) descriptors.get(id, "xlogp3");
 
                         if(keepAA == null && keep == null)
-                            throw new IOException();
+                            throw new DataException("value without a descriptor");
 
                         if(keepAA != null && !value.equals(keepAA))
-                            throw new IOException();
+                            throw new DataException("value different from the descriptor", "descriptor " + keepAA);
 
                         if(keep != null && !value.equals(keep))
-                            throw new IOException();
+                            throw new DataException("value different from the descriptor", "descriptor " + keep);
                     }
                 }.load(stream);
             }
@@ -201,8 +209,9 @@ class CompoundDescriptor extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/SIO_000300"))
+                            return;
 
                         Integer id = getDescriptorID(subject.getURI(), suffix);
                         String value = getString(object);
@@ -223,14 +232,15 @@ class CompoundDescriptor extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals(property))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, property))
+                            return;
 
                         Integer id = Compound.getCompoundID(subject.getURI());
                         String value = getString(object);
 
                         if(!value.equals(values.get(id, field)))
-                            throw new IOException();
+                            throw new DataException("value different from the descriptor",
+                                    "descriptor " + values.get(id, field));
                     }
                 }.load(stream);
             }
@@ -254,11 +264,12 @@ class CompoundDescriptor extends Updater
                     {
                         getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
 
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000221"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/SIO_000221"))
+                            return;
 
-                        if(!object.getURI().equals(unit))
-                            throw new IOException();
+                        if(!is(object, unit))
+                            unexpectedValue(subject, predicate, object);
                     }
                 }.load(stream);
             }
@@ -279,11 +290,13 @@ class CompoundDescriptor extends Updater
                         int id = getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
                         String value = getString(object);
 
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/SIO_000300"))
+                            return;
 
                         if(!value.equals(Integer.toString(id)))
-                            throw new IOException();
+                            Problems.error("value of " + predicate.getURI() + " not matching the IRI",
+                                    text(subject) + " " + text(object));
                     }
                 }.load(stream);
             }
@@ -307,11 +320,11 @@ class CompoundDescriptor extends Updater
                     {
                         getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", suffix);
 
-                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            return;
 
-                        if(!object.getURI().equals(type) && !object.getURI().equals(vocab))
-                            throw new IOException();
+                        checkType(subject, object, type, vocab);
                     }
                 }.load(stream);
             }
@@ -337,11 +350,11 @@ class CompoundDescriptor extends Updater
                         else
                             getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID", "_XLogP3");
 
-                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            return;
 
-                        if(!object.getURI().equals(type) && !object.getURI().equals(vocab))
-                            throw new IOException();
+                        checkType(subject, object, type, vocab);
                     }
                 }.load(stream);
             }

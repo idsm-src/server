@@ -91,13 +91,13 @@ class Assay extends Updater
                             cellLines.inverse(getAssayID(object), CellLine.getCellLineID(subject));
                         else if(iri.startsWith(pubchemPrefix) && predicate.getURI().equals(rdfType))
                         {
-                            ChEMBL.checkType(subject, object, cco + "PubchemBioassayRef");
+                            checkType(subject, object, cco + "PubchemBioassayRef");
                             xrefTypes.add(getIntID(subject, pubchemPrefix));
                         }
                         else if(iri.startsWith(pubchemPrefix) && predicate.getURI().equals(rdfsLabel))
                             referenceLabels.add(getIntID(subject, pubchemPrefix), getString(object));
                         else
-                            ChEMBL.unexpected(subject, predicate, object);
+                            unexpected(subject, predicate, object);
 
                         return;
                     }
@@ -106,7 +106,7 @@ class Assay extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, cco + "Assay");
+                        case rdfType -> checkType(subject, object, cco + "Assay");
                         case chemblId -> assays.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL" + id));
                         case rdfsLabel -> ChEMBL.checkValue(subject, predicate, object, "CHEMBL" + id);
@@ -152,7 +152,7 @@ class Assay extends Updater
                         case cco + "targetConfDesc" -> assays.set(id, "confidence_desc", getString(object));
                         case cco + "assayXref" -> assays.set(id, "pubchem_assay", getIntID(object, pubchemPrefix));
                         case cco + "hasActivity" -> activities.inverse(Activity.getActivityID(object), id);
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);

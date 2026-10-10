@@ -6,7 +6,6 @@ import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.EntityTable.varchar;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,8 +24,10 @@ import java.util.TimeZone;
 import java.util.zip.ZipInputStream;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.SpectrumLiteral;
 import cz.iocb.load.common.Updater;
 
@@ -106,6 +107,100 @@ public class MoNA extends Updater
     static
     {
         df.setTimeZone(tz);
+    }
+
+
+    /*
+     * Returns the value of a number of a metadata item; a malformed number refuses the spectrum.
+     */
+    private static float getFloat(MetaData item, String number) throws DataException
+    {
+        try
+        {
+            return Float.parseFloat(number);
+        }
+        catch(NumberFormatException e)
+        {
+            throw new DataException("malformed number in " + item.name, item.value);
+        }
+    }
+
+
+    /*
+     * Returns the value of an integer of a metadata item; a malformed integer refuses the spectrum.
+     */
+    private static int getInt(MetaData item, String number) throws DataException
+    {
+        try
+        {
+            return Integer.parseInt(number);
+        }
+        catch(NumberFormatException e)
+        {
+            throw new DataException("malformed number in " + item.name, item.value);
+        }
+    }
+
+
+    /*
+     * Refuses a spectrum without the given item, as an export of another format would miss it.
+     */
+    private static void require(Object value, String name) throws DataException
+    {
+        if(value == null)
+            throw new DataException("missing item of a spectrum", name);
+    }
+
+
+    /*
+     * Checks that a spectrum has the items that the loader reads.
+     */
+    private static void checkItems(Spectrum spectrum) throws DataException
+    {
+        require(spectrum.spectrum, "spectrum");
+        require(spectrum.compound, "compound");
+        require(spectrum.metaData, "metaData");
+        require(spectrum.annotations, "annotations");
+        require(spectrum.tags, "tags");
+
+        for(MetaData item : spectrum.metaData)
+            require(item.name, "metaData.name");
+
+        for(Annotation annotation : spectrum.annotations)
+            require(annotation.name, "annotations.name");
+
+        for(Tag tag : spectrum.tags)
+            require(tag.text, "tags.text");
+
+        if(spectrum.library != null)
+            require(spectrum.library.library, "library.library");
+
+        for(Compound compound : spectrum.compound)
+        {
+            require(compound.names, "compound.names");
+            require(compound.classification, "compound.classification");
+            require(compound.metaData, "compound.metaData");
+
+            for(Name name : compound.names)
+                require(name.name, "compound.names.name");
+
+            for(Classification classification : compound.classification)
+                require(classification.name, "compound.classification.name");
+
+            for(MetaData item : compound.metaData)
+                require(item.name, "compound.metaData.name");
+        }
+    }
+
+
+    /*
+     * Reports a value of a metadata item of a spectrum that the loader leaves out, e.g. a malformed identifier, as a
+     * warning; an empty value, which carries no data, is left out silently.
+     */
+    private static void ignoreValue(Spectrum spectrum, MetaData item, String value)
+    {
+        if(!value.isEmpty())
+            Problems.warning("ignored value of " + item.name, spectrum.id + ": " + value);
     }
 
 
@@ -345,13 +440,11 @@ public class MoNA extends Updater
         int nextAnnotationID = oldAnnotations.values().stream().max(Integer::compare).orElse(-1).intValue() + 1;
 
 
-        String[] files = new File(baseDirectory + "mona").list((dir, file) -> file.matches(".*-json\\.zip"));
+        ZipInputStream zipStream = new ZipInputStream(getZipStream("mona/MoNA-export-All_Spectra-json.zip"));
 
-        for(String file : files)
+        // a missing file, which getZipStream() has reported, has no entry
+        if(zipStream.getNextEntry() != null)
         {
-            ZipInputStream zipStream = new ZipInputStream(getZipStream("mona/" + file));
-            zipStream.getNextEntry();
-
             BufferedReader in = new BufferedReader(new InputStreamReader(zipStream));
             JsonReader reader = new JsonReader(in);
 
@@ -361,790 +454,867 @@ public class MoNA extends Updater
             {
                 Spectrum item = new Gson().fromJson(reader, Spectrum.class);
 
-                if(item.compound.length != 1)
-                    throw new IOException();
-
-
-                Integer id = compoundIDs.get(item.id);
-
-                if(id == null)
-                    compoundIDs.put(item.id, id = nextCompoundID++);
-
-                compounds.set(id, "accession", item.id);
-
-
-                if(item.dateCreated != null)
+                try
                 {
-                    String date = df.format(new Date((item.dateCreated)));
+                    checkItems(item);
 
-                    compounds.set(id, "created", date);
-                }
-
-
-                if(item.lastCurated != null)
-                {
-                    String date = df.format(new Date((item.lastCurated)));
-
-                    compounds.set(id, "curated", date);
-                }
+                    if(item.compound.length != 1)
+                        throw new DataException("unexpected number of compounds of a spectrum",
+                                String.valueOf(item.compound.length));
 
 
-                if(item.lastUpdated != null)
-                {
-                    String date = df.format(new Date((item.lastUpdated)));
+                    Integer id = compoundIDs.get(item.id);
 
-                    compounds.set(id, "updated", date);
-                }
+                    if(id == null)
+                        compoundIDs.put(item.id, id = nextCompoundID++);
 
-
-                String spectrum = item.spectrum.replaceFirst("^Scan:#[0-9]+ m/z:Intensity ", "").trim();
-
-                if(Arrays.stream(spectrum.split(" ")).allMatch(p -> p.matches(peakPattern)))
-                {
-                    compounds.set(id, "spectrum", spectrum);
-                }
-                else
-                {
-                    System.err.println(item.id + ": skip malformed spectrum literal");
-                }
+                    compounds.set(id, "accession", item.id);
 
 
-                if(item.splash != null)
-                {
-                    String splash = item.splash.splash;
-
-                    compounds.set(id, "splash", splash);
-                }
-
-
-                if(item.compound[0].molFile != null && !item.compound[0].molFile.isEmpty())
-                {
-                    String structure = item.compound[0].molFile;
-
-                    if(structure.equals(oldStructures.remove(id)))
+                    if(item.dateCreated != null)
                     {
-                        keepStructures.put(id, structure);
+                        String date = df.format(new Date((item.dateCreated)));
+
+                        compounds.set(id, "created", date);
+                    }
+
+
+                    if(item.lastCurated != null)
+                    {
+                        String date = df.format(new Date((item.lastCurated)));
+
+                        compounds.set(id, "curated", date);
+                    }
+
+
+                    if(item.lastUpdated != null)
+                    {
+                        String date = df.format(new Date((item.lastUpdated)));
+
+                        compounds.set(id, "updated", date);
+                    }
+
+
+                    String spectrum = item.spectrum.replaceFirst("^Scan:#[0-9]+ m/z:Intensity ", "").trim();
+
+                    if(Arrays.stream(spectrum.split(" ")).allMatch(p -> p.matches(peakPattern)))
+                    {
+                        compounds.set(id, "spectrum", spectrum);
                     }
                     else
                     {
-                        String keep = keepStructures.get(id);
-
-                        if(!structure.equals(keep))
-                        {
-                            if(keep != null)
-                                throw new IOException();
-
-                            String put = newStructures.put(id, structure);
-
-                            if(put != null && !structure.equals(put))
-                                throw new IOException();
-                        }
-                    }
-                }
-
-
-                for(Name name : item.compound[0].names)
-                {
-                    if(name.name.isEmpty())
-                        continue;
-
-                    Pair<Integer, String> pair = Pair.getPair(id, name.name);
-
-                    if(oldNames.remove(pair))
-                        keepNames.add(pair);
-                    else if(!keepNames.contains(pair))
-                        newNames.add(pair);
-                }
-
-
-                for(Classification c : item.compound[0].classification)
-                {
-                    if(c.name.matches("ClassyFire Query ID|predicted lipidmaps|substituents"))
-                        continue;
-
-                    ClassyFire cf = classyFires.get(c.value);
-
-                    if(cf == null)
-                        throw new IOException();
-
-                    for(Integer chebi : cf.chebi)
-                    {
-                        Pair<Integer, Integer> pair = Pair.getPair(id, chebi);
-
-                        if(oldChebiClasses.remove(pair))
-                            keepChebiClasses.add(pair);
-                        else if(!keepChebiClasses.contains(pair))
-                            newChebiClasses.add(pair);
+                        Problems.warning("ignored malformed spectrum literal", item.id);
                     }
 
-                    for(String mesh : cf.mesh)
-                    {
-                        Pair<Integer, String> pair = Pair.getPair(id, mesh);
 
-                        if(oldMeshClasses.remove(pair))
-                            keepMeshClasses.add(pair);
-                        else if(!keepMeshClasses.contains(pair))
-                            newMeshClasses.add(pair);
+                    if(item.splash != null)
+                    {
+                        String splash = item.splash.splash;
+
+                        compounds.set(id, "splash", splash);
                     }
 
-                    Pair<Integer, Integer> pair = Pair.getPair(id, cf.id);
 
-                    if(oldClassyFires.remove(pair))
-                        keepClassyFires.add(pair);
-                    else if(!keepClassyFires.contains(pair))
-                        newClassyFires.add(pair);
-                }
-
-
-                for(MetaData a : item.compound[0].metaData)
-                {
-                    if("theoretical adduct".equals(a.category))
-                        continue;
-
-                    switch(a.name)
+                    if(item.compound[0].molFile != null && !item.compound[0].molFile.isEmpty())
                     {
-                        case "InChI":
+                        String structure = item.compound[0].molFile;
+
+                        if(structure.equals(oldStructures.remove(id)))
                         {
-                            if(!a.value.matches("InChI=1[^ ]*"))
-                                break;
-
-                            Pair<Integer, String> pair = Pair.getPair(id, a.value);
-                            Integer inchiID = oldInchis.remove(pair);
-
-                            if(inchiID != null)
-                                keepInchis.put(pair, inchiID);
-                            else if(!keepInchis.containsKey(pair))
-                                newInchis.put(pair, nextInchiID++);
-
-                            break;
+                            keepStructures.put(id, structure);
                         }
-
-                        case "InChIKey":
+                        else
                         {
-                            if(!a.value.matches("[A-Z]{14}-[A-Z]{10}-[A-Z]"))
-                                break;
+                            String keep = keepStructures.get(id);
 
-                            Pair<Integer, String> pair = Pair.getPair(id, a.value);
-
-                            if(oldInchiKeys.remove(pair))
-                                keepInchiKeys.add(pair);
-                            else if(!keepInchiKeys.contains(pair))
-                                newInchiKeys.add(pair);
-
-                            break;
-                        }
-
-                        case "molecular formula":
-                        {
-                            if(a.value.contains(" "))
-                                break;
-
-                            Pair<Integer, String> pair = Pair.getPair(id, a.value);
-
-                            if(oldFormulas.remove(pair))
-                                keepFormulas.add(pair);
-                            else if(!keepFormulas.contains(pair))
-                                newFormulas.add(pair);
-
-                            break;
-                        }
-
-                        case "SMILES":
-                        case "smiles":
-                        {
-                            for(String smiles : a.value.split(", +"))
+                            if(!structure.equals(keep))
                             {
-                                if(!smiles.contains(" "))
+                                if(keep != null)
+                                    throw new DataException("multiple values of mona.compound_structures.structure");
+
+                                String put = newStructures.put(id, structure);
+
+                                if(put != null && !structure.equals(put))
+                                    throw new DataException("multiple values of mona.compound_structures.structure");
+                            }
+                        }
+                    }
+
+
+                    for(Name name : item.compound[0].names)
+                    {
+                        if(name.name.isEmpty())
+                            continue;
+
+                        Pair<Integer, String> pair = Pair.getPair(id, name.name);
+
+                        if(oldNames.remove(pair))
+                            keepNames.add(pair);
+                        else if(!keepNames.contains(pair))
+                            newNames.add(pair);
+                    }
+
+
+                    for(Classification c : item.compound[0].classification)
+                    {
+                        if(c.name.matches("ClassyFire Query ID|predicted lipidmaps|substituents"))
+                            continue;
+
+                        ClassyFire cf = classyFires.get(c.value);
+
+                        if(cf == null)
+                            throw new DataException("unknown ClassyFire class", c.value);
+
+                        for(Integer chebi : cf.chebi)
+                        {
+                            Pair<Integer, Integer> pair = Pair.getPair(id, chebi);
+
+                            if(oldChebiClasses.remove(pair))
+                                keepChebiClasses.add(pair);
+                            else if(!keepChebiClasses.contains(pair))
+                                newChebiClasses.add(pair);
+                        }
+
+                        for(String mesh : cf.mesh)
+                        {
+                            Pair<Integer, String> pair = Pair.getPair(id, mesh);
+
+                            if(oldMeshClasses.remove(pair))
+                                keepMeshClasses.add(pair);
+                            else if(!keepMeshClasses.contains(pair))
+                                newMeshClasses.add(pair);
+                        }
+
+                        Pair<Integer, Integer> pair = Pair.getPair(id, cf.id);
+
+                        if(oldClassyFires.remove(pair))
+                            keepClassyFires.add(pair);
+                        else if(!keepClassyFires.contains(pair))
+                            newClassyFires.add(pair);
+                    }
+
+
+                    for(MetaData a : item.compound[0].metaData)
+                    {
+                        if("theoretical adduct".equals(a.category))
+                            continue;
+
+                        switch(a.name)
+                        {
+                            case "InChI":
+                            {
+                                if(!a.value.matches("InChI=1[^ ]*"))
                                 {
-                                    Pair<Integer, String> pair = Pair.getPair(id, smiles);
-
-                                    if(oldSmiles.remove(pair))
-                                        keepSmiles.add(pair);
-                                    else if(!keepSmiles.contains(pair))
-                                        newSmiles.add(pair);
+                                    ignoreValue(item, a, a.value);
+                                    break;
                                 }
+
+                                Pair<Integer, String> pair = Pair.getPair(id, a.value);
+                                Integer inchiID = oldInchis.remove(pair);
+
+                                if(inchiID != null)
+                                    keepInchis.put(pair, inchiID);
+                                else if(!keepInchis.containsKey(pair))
+                                    newInchis.put(pair, nextInchiID++);
+
+                                break;
                             }
 
-                            break;
-                        }
+                            case "InChIKey":
+                            {
+                                if(!a.value.matches("[A-Z]{14}-[A-Z]{10}-[A-Z]"))
+                                {
+                                    ignoreValue(item, a, a.value);
+                                    break;
+                                }
 
-                        case "total exact mass":
-                        case "exact mass":
-                        {
-                            Pair<Integer, Float> pair = Pair.getPair(id, Float.valueOf(a.value));
+                                Pair<Integer, String> pair = Pair.getPair(id, a.value);
 
-                            if(oldExactMasses.remove(pair))
-                                keepExactMasses.add(pair);
-                            else if(!keepExactMasses.contains(pair))
-                                newExactMasses.add(pair);
-                        }
-                            break;
+                                if(oldInchiKeys.remove(pair))
+                                    keepInchiKeys.add(pair);
+                                else if(!keepInchiKeys.contains(pair))
+                                    newInchiKeys.add(pair);
 
-                        case "monoisotopic mass":
-                        {
-                            Pair<Integer, Float> pair = Pair.getPair(id, Float.valueOf(a.value));
+                                break;
+                            }
 
-                            if(oldMonoisotopicMasses.remove(pair))
-                                keepMonoisotopicMasses.add(pair);
-                            else if(!keepMonoisotopicMasses.contains(pair))
-                                newMonoisotopicMasses.add(pair);
-                        }
-                            break;
+                            case "molecular formula":
+                            {
+                                if(a.value.contains(" "))
+                                {
+                                    ignoreValue(item, a, a.value);
+                                    break;
+                                }
 
-                        case "cas":
-                        case "cas number":
-                        {
-                            if(a.value.equals("n/a") || a.value.equals("NA") || a.value.equals(""))
+                                Pair<Integer, String> pair = Pair.getPair(id, a.value);
+
+                                if(oldFormulas.remove(pair))
+                                    keepFormulas.add(pair);
+                                else if(!keepFormulas.contains(pair))
+                                    newFormulas.add(pair);
+
+                                break;
+                            }
+
+                            case "SMILES":
+                            case "smiles":
+                            {
+                                for(String smiles : a.value.split(", +"))
+                                {
+                                    if(!smiles.contains(" "))
+                                    {
+                                        Pair<Integer, String> pair = Pair.getPair(id, smiles);
+
+                                        if(oldSmiles.remove(pair))
+                                            keepSmiles.add(pair);
+                                        else if(!keepSmiles.contains(pair))
+                                            newSmiles.add(pair);
+                                    }
+                                    else
+                                    {
+                                        ignoreValue(item, a, smiles);
+                                    }
+                                }
+
+                                break;
+                            }
+
+                            case "total exact mass":
+                            case "exact mass":
+                            {
+                                Pair<Integer, Float> pair = Pair.getPair(id, getFloat(a, a.value));
+
+                                if(oldExactMasses.remove(pair))
+                                    keepExactMasses.add(pair);
+                                else if(!keepExactMasses.contains(pair))
+                                    newExactMasses.add(pair);
+                            }
                                 break;
 
-                            for(String cas : a.value.replaceAll("\\([^()]+\\)", "").split("[ ,]+"))
+                            case "monoisotopic mass":
                             {
-                                if(!cas.matches("[0-9]+-[0-9]+-[0-9]+"))
-                                    continue;
+                                Pair<Integer, Float> pair = Pair.getPair(id, getFloat(a, a.value));
 
-                                Pair<Integer, String> pair = Pair.getPair(id, cas);
-
-                                if(oldCasNumbers.remove(pair))
-                                    keepCasNumbers.add(pair);
-                                else if(!keepCasNumbers.contains(pair))
-                                    newCasNumbers.add(pair);
+                                if(oldMonoisotopicMasses.remove(pair))
+                                    keepMonoisotopicMasses.add(pair);
+                                else if(!keepMonoisotopicMasses.contains(pair))
+                                    newMonoisotopicMasses.add(pair);
                             }
-
-                            break;
-                        }
-
-                        case "hmdb":
-                        {
-                            for(String hmdb : a.value.split("[ ,]+"))
-                            {
-                                Pair<Integer, String> pair = Pair.getPair(id, hmdb);
-
-                                if(oldHmdbIdentifiers.remove(pair))
-                                    keepHmdbIdentifiers.add(pair);
-                                else if(!keepHmdbIdentifiers.contains(pair))
-                                    newHmdbIdentifiers.add(pair);
-                            }
-
-                            break;
-                        }
-
-                        case "chebi":
-                        {
-                            for(String chebi : a.value.split("[ ,]+"))
-                            {
-                                Pair<Integer, Integer> pair = Pair.getPair(id,
-                                        Integer.valueOf(chebi.replaceFirst("^CHEBI:", "")));
-
-                                if(oldChebiIdentifiers.remove(pair))
-                                    keepChebiIdentifiers.add(pair);
-                                else if(!keepChebiIdentifiers.contains(pair))
-                                    newChebiIdentifiers.add(pair);
-                            }
-
-                            break;
-                        }
-
-                        case "chemspider":
-                        {
-                            for(String chemspider : a.value.split(" "))
-                            {
-                                Pair<Integer, String> pair = Pair.getPair(id, chemspider);
-
-                                if(oldChemspiderIdentifiers.remove(pair))
-                                    keepChemspiderIdentifiers.add(pair);
-                                else if(!keepChemspiderIdentifiers.contains(pair))
-                                    newChemspiderIdentifiers.add(pair);
-                            }
-
-                            break;
-                        }
-
-                        case "kegg":
-                        {
-                            for(String kegg : a.value.split(" "))
-                            {
-                                if(!kegg.matches("[A-Z][0-9]{5}"))
-                                    continue;
-
-                                Pair<Integer, String> pair = Pair.getPair(id, kegg);
-
-                                if(oldKeggIdentifiers.remove(pair))
-                                    keepKeggIdentifiers.add(pair);
-                                else if(!keepKeggIdentifiers.contains(pair))
-                                    newKeggIdentifiers.add(pair);
-                            }
-
-                            break;
-                        }
-
-                        case "knapsack":
-                        {
-                            for(String knapsack : a.value.trim().replaceAll("\\([^()]+\\)", "").split("[ ;]+"))
-                            {
-                                if(!knapsack.matches("C[0-9]{8}"))
-                                    continue;
-
-                                Pair<Integer, String> pair = Pair.getPair(id, knapsack);
-
-                                if(oldKnapsackIdentifiers.remove(pair))
-                                    keepKnapsackIdentifiers.add(pair);
-                                else if(!keepKnapsackIdentifiers.contains(pair))
-                                    newKnapsackIdentifiers.add(pair);
-                            }
-
-                            break;
-                        }
-
-                        case "lipidbank":
-                        {
-                            for(String lipidbank : a.value.split(" "))
-                            {
-                                if(!lipidbank.matches("[A-Z]{3}[0-9]{4,5}"))
-                                    continue;
-
-                                Pair<Integer, String> pair = Pair.getPair(id, lipidbank);
-
-                                if(oldLipidBankIdentifiers.remove(pair))
-                                    keepLipidBankIdentifiers.add(pair);
-                                else if(!keepLipidBankIdentifiers.contains(pair))
-                                    newLipidBankIdentifiers.add(pair);
-                            }
-
-                            break;
-                        }
-
-                        case "lipidmaps":
-                        {
-                            for(String lipidmaps : a.value.split(" "))
-                            {
-                                if(!lipidmaps.matches("LM[A-Z0-9]+"))
-                                    continue;
-
-                                Pair<Integer, String> pair = Pair.getPair(id, lipidmaps);
-
-                                if(oldLipidMapsIdentifiers.remove(pair))
-                                    keepLipidMapsIdentifiers.add(pair);
-                                else if(!keepLipidMapsIdentifiers.contains(pair))
-                                    newLipidMapsIdentifiers.add(pair);
-                            }
-
-                            break;
-                        }
-
-                        case "pubchem":
-                        case "PubChem":
-                        case "PubChem ID":
-                        case "pubmed id":
-                        case "pubchem cid":
-                        {
-                            if(a.value.equals("n/a") || a.value.equals("na") || a.value.equals("NA")
-                                    || a.value.equals(""))
                                 break;
 
-                            for(String pubchem : a.value.trim().replaceAll("ID:? ", "ID:").split(" "))
+                            case "cas":
+                            case "cas number":
                             {
-                                if(pubchem.matches("SID:?[0-9]+"))
-                                {
-                                    Integer sid = Integer.valueOf(pubchem.replaceFirst("^SID:?", ""));
-                                    Pair<Integer, Integer> pair = Pair.getPair(id, sid);
+                                if(a.value.equals("n/a") || a.value.equals("NA") || a.value.equals(""))
+                                    break;
 
-                                    if(oldPubchemSubstanceIdentifiers.remove(pair))
-                                        keepPubchemSubstanceIdentifiers.add(pair);
-                                    else if(!keepPubchemSubstanceIdentifiers.contains(pair))
-                                        newPubchemSubstanceIdentifiers.add(pair);
-                                }
-                                else if(pubchem.matches("(CID:?)?[0-9]+(\\.0)?"))
+                                for(String cas : a.value.replaceAll("\\([^()]+\\)", "").split("[ ,]+"))
                                 {
-                                    Integer cid = Integer
-                                            .valueOf(pubchem.replaceFirst("^(CID:?)?([0-9]+)(\\.0)?$", "$2"));
-                                    Pair<Integer, Integer> pair = Pair.getPair(id, cid);
+                                    if(!cas.matches("[0-9]+-[0-9]+-[0-9]+"))
+                                    {
+                                        ignoreValue(item, a, cas);
+                                        continue;
+                                    }
 
-                                    if(oldPubchemCompoundIdentifiers.remove(pair))
-                                        keepPubchemCompoundIdentifiers.add(pair);
-                                    else if(!keepPubchemCompoundIdentifiers.contains(pair))
-                                        newPubchemCompoundIdentifiers.add(pair);
+                                    Pair<Integer, String> pair = Pair.getPair(id, cas);
+
+                                    if(oldCasNumbers.remove(pair))
+                                        keepCasNumbers.add(pair);
+                                    else if(!keepCasNumbers.contains(pair))
+                                        newCasNumbers.add(pair);
                                 }
+
+                                break;
                             }
 
-                            break;
-                        }
-
-                        case "pubchem sid":
-                        {
-                            for(String pubchem : a.value.split(" "))
+                            case "hmdb":
                             {
-                                if(pubchem.matches("CID:[0-9]+"))
+                                for(String hmdb : a.value.split("[ ,]+"))
                                 {
-                                    Integer cid = Integer.valueOf(pubchem.replaceFirst("^CID:", ""));
-                                    Pair<Integer, Integer> pair = Pair.getPair(id, cid);
+                                    Pair<Integer, String> pair = Pair.getPair(id, hmdb);
 
-                                    if(oldPubchemCompoundIdentifiers.remove(pair))
-                                        keepPubchemCompoundIdentifiers.add(pair);
-                                    else if(!keepPubchemCompoundIdentifiers.contains(pair))
-                                        newPubchemCompoundIdentifiers.add(pair);
+                                    if(oldHmdbIdentifiers.remove(pair))
+                                        keepHmdbIdentifiers.add(pair);
+                                    else if(!keepHmdbIdentifiers.contains(pair))
+                                        newHmdbIdentifiers.add(pair);
                                 }
+
+                                break;
+                            }
+
+                            case "chebi":
+                            {
+                                for(String chebi : a.value.split("[ ,]+"))
+                                {
+                                    Pair<Integer, Integer> pair = Pair.getPair(id,
+                                            getInt(a, chebi.replaceFirst("^CHEBI:", "")));
+
+                                    if(oldChebiIdentifiers.remove(pair))
+                                        keepChebiIdentifiers.add(pair);
+                                    else if(!keepChebiIdentifiers.contains(pair))
+                                        newChebiIdentifiers.add(pair);
+                                }
+
+                                break;
+                            }
+
+                            case "chemspider":
+                            {
+                                for(String chemspider : a.value.split(" "))
+                                {
+                                    Pair<Integer, String> pair = Pair.getPair(id, chemspider);
+
+                                    if(oldChemspiderIdentifiers.remove(pair))
+                                        keepChemspiderIdentifiers.add(pair);
+                                    else if(!keepChemspiderIdentifiers.contains(pair))
+                                        newChemspiderIdentifiers.add(pair);
+                                }
+
+                                break;
+                            }
+
+                            case "kegg":
+                            {
+                                for(String kegg : a.value.split(" "))
+                                {
+                                    if(!kegg.matches("[A-Z][0-9]{5}"))
+                                    {
+                                        ignoreValue(item, a, kegg);
+                                        continue;
+                                    }
+
+                                    Pair<Integer, String> pair = Pair.getPair(id, kegg);
+
+                                    if(oldKeggIdentifiers.remove(pair))
+                                        keepKeggIdentifiers.add(pair);
+                                    else if(!keepKeggIdentifiers.contains(pair))
+                                        newKeggIdentifiers.add(pair);
+                                }
+
+                                break;
+                            }
+
+                            case "knapsack":
+                            {
+                                for(String knapsack : a.value.trim().replaceAll("\\([^()]+\\)", "").split("[ ;]+"))
+                                {
+                                    if(!knapsack.matches("C[0-9]{8}"))
+                                    {
+                                        ignoreValue(item, a, knapsack);
+                                        continue;
+                                    }
+
+                                    Pair<Integer, String> pair = Pair.getPair(id, knapsack);
+
+                                    if(oldKnapsackIdentifiers.remove(pair))
+                                        keepKnapsackIdentifiers.add(pair);
+                                    else if(!keepKnapsackIdentifiers.contains(pair))
+                                        newKnapsackIdentifiers.add(pair);
+                                }
+
+                                break;
+                            }
+
+                            case "lipidbank":
+                            {
+                                for(String lipidbank : a.value.split(" "))
+                                {
+                                    if(!lipidbank.matches("[A-Z]{3}[0-9]{4,5}"))
+                                    {
+                                        ignoreValue(item, a, lipidbank);
+                                        continue;
+                                    }
+
+                                    Pair<Integer, String> pair = Pair.getPair(id, lipidbank);
+
+                                    if(oldLipidBankIdentifiers.remove(pair))
+                                        keepLipidBankIdentifiers.add(pair);
+                                    else if(!keepLipidBankIdentifiers.contains(pair))
+                                        newLipidBankIdentifiers.add(pair);
+                                }
+
+                                break;
+                            }
+
+                            case "lipidmaps":
+                            {
+                                for(String lipidmaps : a.value.split(" "))
+                                {
+                                    if(!lipidmaps.matches("LM[A-Z0-9]+"))
+                                    {
+                                        ignoreValue(item, a, lipidmaps);
+                                        continue;
+                                    }
+
+                                    Pair<Integer, String> pair = Pair.getPair(id, lipidmaps);
+
+                                    if(oldLipidMapsIdentifiers.remove(pair))
+                                        keepLipidMapsIdentifiers.add(pair);
+                                    else if(!keepLipidMapsIdentifiers.contains(pair))
+                                        newLipidMapsIdentifiers.add(pair);
+                                }
+
+                                break;
+                            }
+
+                            case "pubchem":
+                            case "PubChem":
+                            case "PubChem ID":
+                            case "pubmed id":
+                            case "pubchem cid":
+                            {
+                                if(a.value.equals("n/a") || a.value.equals("na") || a.value.equals("NA")
+                                        || a.value.equals(""))
+                                    break;
+
+                                for(String pubchem : a.value.trim().replaceAll("ID:? ", "ID:").split(" "))
+                                {
+                                    if(pubchem.matches("SID:?[0-9]+"))
+                                    {
+                                        Integer sid = getInt(a, pubchem.replaceFirst("^SID:?", ""));
+                                        Pair<Integer, Integer> pair = Pair.getPair(id, sid);
+
+                                        if(oldPubchemSubstanceIdentifiers.remove(pair))
+                                            keepPubchemSubstanceIdentifiers.add(pair);
+                                        else if(!keepPubchemSubstanceIdentifiers.contains(pair))
+                                            newPubchemSubstanceIdentifiers.add(pair);
+                                    }
+                                    else if(pubchem.matches("(CID:?)?[0-9]+(\\.0)?"))
+                                    {
+                                        Integer cid = Integer
+                                                .valueOf(pubchem.replaceFirst("^(CID:?)?([0-9]+)(\\.0)?$", "$2"));
+                                        Pair<Integer, Integer> pair = Pair.getPair(id, cid);
+
+                                        if(oldPubchemCompoundIdentifiers.remove(pair))
+                                            keepPubchemCompoundIdentifiers.add(pair);
+                                        else if(!keepPubchemCompoundIdentifiers.contains(pair))
+                                            newPubchemCompoundIdentifiers.add(pair);
+                                    }
+                                    else
+                                    {
+                                        ignoreValue(item, a, pubchem);
+                                    }
+                                }
+
+                                break;
+                            }
+
+                            case "pubchem sid":
+                            {
+                                for(String pubchem : a.value.split(" "))
+                                {
+                                    if(pubchem.matches("CID:[0-9]+"))
+                                    {
+                                        Integer cid = getInt(a, pubchem.replaceFirst("^CID:", ""));
+                                        Pair<Integer, Integer> pair = Pair.getPair(id, cid);
+
+                                        if(oldPubchemCompoundIdentifiers.remove(pair))
+                                            keepPubchemCompoundIdentifiers.add(pair);
+                                        else if(!keepPubchemCompoundIdentifiers.contains(pair))
+                                            newPubchemCompoundIdentifiers.add(pair);
+                                    }
+                                    else
+                                    {
+                                        Integer sid = getInt(a, pubchem);
+                                        Pair<Integer, Integer> pair = Pair.getPair(id, sid);
+
+                                        if(oldPubchemSubstanceIdentifiers.remove(pair))
+                                            keepPubchemSubstanceIdentifiers.add(pair);
+                                        else if(!keepPubchemSubstanceIdentifiers.contains(pair))
+                                            newPubchemSubstanceIdentifiers.add(pair);
+                                    }
+                                }
+
+                                break;
+                            }
+
+                            case "kind":
+                            case "compound class":
+                                // skip
+                                break;
+
+                            default:
+                                Problems.error("unexpected compound metadata " + a.name,
+                                        item.id + " (" + a.category + ")");
+                                break;
+                        }
+                    }
+
+
+                    for(Annotation annotation : item.annotations)
+                    {
+                        Pair<Integer, Annotation> pair = Pair.getPair(id, annotation);
+
+                        Integer annotationID = oldAnnotations.remove(pair);
+
+                        if(annotationID != null)
+                            keepAnnotations.put(pair, annotationID);
+                        else if(!keepAnnotations.containsKey(pair))
+                            newAnnotations.put(pair, nextAnnotationID++);
+                    }
+
+
+                    for(Tag tag : item.tags)
+                    {
+                        Pair<Integer, String> pair = Pair.getPair(id, tag.text);
+
+                        if(oldTags.remove(pair))
+                            keepTags.add(pair);
+                        else if(!keepTags.contains(pair))
+                            newTags.add(pair);
+                    }
+
+
+                    for(MetaData a : item.metaData)
+                    {
+                        switch(a.name)
+                        {
+                            case "ionization mode":
+                            {
+                                String mode;
+
+                                if(a.value.matches("[Nn]egative"))
+                                    mode = "N";
+                                else if(a.value.matches("[Pp]ositive|POSITIVE"))
+                                    mode = "P";
                                 else
                                 {
-                                    Integer sid = Integer.valueOf(pubchem);
-                                    Pair<Integer, Integer> pair = Pair.getPair(id, sid);
-
-                                    if(oldPubchemSubstanceIdentifiers.remove(pair))
-                                        keepPubchemSubstanceIdentifiers.add(pair);
-                                    else if(!keepPubchemSubstanceIdentifiers.contains(pair))
-                                        newPubchemSubstanceIdentifiers.add(pair);
+                                    ignoreValue(item, a, a.value);
+                                    break;
                                 }
+
+                                compounds.set(id, "ionization_mode", mode);
+
+                                break;
                             }
 
-                            break;
-                        }
-
-                        case "kind":
-                        case "compound class":
-                            // skip
-                            break;
-
-                        default:
-                            System.err.println("unknovn item: " + a.name + " (" + a.category + ")");
-                            break;
-                    }
-                }
-
-
-                for(Annotation annotation : item.annotations)
-                {
-                    Pair<Integer, Annotation> pair = Pair.getPair(id, annotation);
-
-                    Integer annotationID = oldAnnotations.remove(pair);
-
-                    if(annotationID != null)
-                        keepAnnotations.put(pair, annotationID);
-                    else if(!keepAnnotations.containsKey(pair))
-                        newAnnotations.put(pair, nextAnnotationID++);
-                }
-
-
-                for(Tag tag : item.tags)
-                {
-                    Pair<Integer, String> pair = Pair.getPair(id, tag.text);
-
-                    if(oldTags.remove(pair))
-                        keepTags.add(pair);
-                    else if(!keepTags.contains(pair))
-                        newTags.add(pair);
-                }
-
-
-                for(MetaData a : item.metaData)
-                {
-                    switch(a.name)
-                    {
-                        case "ionization mode":
-                        {
-                            String mode;
-
-                            if(a.value.matches("[Nn]egative"))
-                                mode = "N";
-                            else if(a.value.matches("[Pp]ositive|POSITIVE"))
-                                mode = "P";
-                            else
-                                break;
-
-                            compounds.set(id, "ionization_mode", mode);
-
-                            break;
-                        }
-
-                        case "ionization": // a parameter of the source element
-                        {
-                            Integer value = null;
-
-                            // childs of MS:1000008
-                            switch(a.value)
+                            case "ionization": // a parameter of the source element
                             {
-                                case "ESI":
-                                case "Electrospray Ionization (ESI)":
-                                    value = 1000073;
+                                Integer value = null;
+
+                                // childs of MS:1000008
+                                switch(a.value)
+                                {
+                                    case "ESI":
+                                    case "Electrospray Ionization (ESI)":
+                                        value = 1000073;
+                                        break;
+
+                                    case "MALDI":
+                                    case "Matrix Assisted Laser Desorption Ionization (MALDI)":
+                                        value = 1000075;
+                                        break;
+
+                                    case "CI":
+                                    case "Chemical Ionization (CI)":
+                                        value = 1000071;
+                                        break;
+
+                                    case "EI":
+                                    case "Electron Impact (EI)":
+                                        value = 1000389;
+                                        break;
+
+                                    case "FAB":
+                                        value = 1000074;
+                                        break;
+
+                                    case "APCI":
+                                        value = 1000070;
+                                        break;
+
+                                    case "nano-ESI": //4x
+                                        value = 1000398;
+                                        break;
+
+                                    case "FI"://6x
+                                        value = 1000258;
+                                        break;
+
+                                    case "SSI (Sonic spray ionization)":
+                                    case "SIMS":
+                                    default:
+                                        ignoreValue(item, a, a.value);
+                                        break;
+                                }
+
+                                if(value == null)
                                     break;
 
-                                case "MALDI":
-                                case "Matrix Assisted Laser Desorption Ionization (MALDI)":
-                                    value = 1000075;
-                                    break;
+                                compounds.set(id, "ionization_type", value);
 
-                                case "CI":
-                                case "Chemical Ionization (CI)":
-                                    value = 1000071;
-                                    break;
-
-                                case "EI":
-                                case "Electron Impact (EI)":
-                                    value = 1000389;
-                                    break;
-
-                                case "FAB":
-                                    value = 1000074;
-                                    break;
-
-                                case "APCI":
-                                    value = 1000070;
-                                    break;
-
-                                case "nano-ESI": //4x
-                                    value = 1000398;
-                                    break;
-
-                                case "FI"://6x
-                                    value = 1000258;
-                                    break;
-
-                                case "SSI (Sonic spray ionization)":
-                                case "SIMS":
-                                default:
-                                    break;
+                                break;
                             }
 
-                            if(value == null)
-                                break;
-
-                            compounds.set(id, "ionization_type", value);
-
-                            break;
-                        }
-
-                        case "ms level":
-                        {
-                            if(a.value.matches("MS[1-5]-MS[1-5] Composite|MS"))
-                                break;
-
-                            Integer level = Integer.valueOf(a.value.replaceFirst("^MS", ""));
-
-                            compounds.set(id, "level", level);
-
-                            break;
-                        }
-
-                        case "normalized entropy":
-                        {
-                            Pair<Integer, Float> pair = Pair.getPair(id, Float.valueOf(a.value));
-
-                            if(oldNormalizedEntropies.remove(pair))
-                                keepNormalizedEntropies.add(pair);
-                            else if(!keepNormalizedEntropies.contains(pair))
-                                newNormalizedEntropies.add(pair);
-
-                            break;
-                        }
-
-                        case "spectral entropy":
-                        {
-                            Pair<Integer, Float> pair = Pair.getPair(id, Float.valueOf(a.value));
-
-                            if(oldSpectralEntropies.remove(pair))
-                                keepSpectralEntropies.add(pair);
-                            else if(!keepSpectralEntropies.contains(pair))
-                                newSpectralEntropies.add(pair);
-
-                            break;
-                        }
-
-                        case "retention time":
-                        {
-                            if(a.value.matches("N/A min|nan|-1|CCS:"))
-                                break;
-
-                            String time = a.value.replaceFirst(" \\((in paper|MSMS).*", "");
-                            Pair<Float, Integer> value;
-
-                            if(time.matches("[0-9]*(\\.[0-9]+)? ?min(ute)?s?")) // obo:UO_0000031
-                                value = Pair.getPair(Float.valueOf(time.replaceFirst(" ?m.*", "")), 31);
-                            else if(time.matches("[0-9]*(\\.[0-9]+)? +s(ec)?")) // obo:UO_0000010
-                                value = Pair.getPair(Float.valueOf(time.replaceFirst(" .*", "")), 10);
-                            else if(time.matches("[0-9.]+-[0-9.]+ min"))
-                                break;//skip
-                            else
-                                value = Pair.getPair(Float.valueOf(time), 0); // null
-
-                            Pair<Integer, Pair<Float, Integer>> pair = Pair.getPair(id, value);
-
-                            if(oldRetentionTimes.remove(pair))
-                                keepRetentionTimes.add(pair);
-                            else if(!keepRetentionTimes.contains(pair))
-                                newRetentionTimes.add(pair);
-
-                            break;
-                        }
-
-                        case "collision energy":
-                        {
-                            if(a.value.equals("") || a.value.equals("--"))
-                                break;
-
-                            if(a.value.startsWith("Ramp") || a.value.startsWith("RAMP") || a.value.matches(".*[-–]>.*"))
+                            case "ms level":
                             {
-                                if(a.value.equals("Ramp 22,9-34.3 eV") || a.value.equals("Ramp 17.2-25.8 eV 30 eV"))
+                                if(a.value.matches("MS[1-5]-MS[1-5] Composite|MS"))
+                                {
+                                    ignoreValue(item, a, a.value);
+                                    break;
+                                }
+
+                                Integer level = getInt(a, a.value.replaceFirst("^MS", ""));
+
+                                compounds.set(id, "level", level);
+
+                                break;
+                            }
+
+                            case "normalized entropy":
+                            {
+                                Pair<Integer, Float> pair = Pair.getPair(id, getFloat(a, a.value));
+
+                                if(oldNormalizedEntropies.remove(pair))
+                                    keepNormalizedEntropies.add(pair);
+                                else if(!keepNormalizedEntropies.contains(pair))
+                                    newNormalizedEntropies.add(pair);
+
+                                break;
+                            }
+
+                            case "spectral entropy":
+                            {
+                                Pair<Integer, Float> pair = Pair.getPair(id, getFloat(a, a.value));
+
+                                if(oldSpectralEntropies.remove(pair))
+                                    keepSpectralEntropies.add(pair);
+                                else if(!keepSpectralEntropies.contains(pair))
+                                    newSpectralEntropies.add(pair);
+
+                                break;
+                            }
+
+                            case "retention time":
+                            {
+                                if(a.value.matches("N/A min|nan|-1|CCS:"))
                                     break;
 
-                                String str = a.value.replaceFirst("^(Ramp|RAMP) ", "").replaceFirst(" *(eV|V|%) *$",
-                                        "");
-                                String[] vals = str.split("[-–]>|-", 2);
-                                Pair<Float, Float> ramp = Pair.getPair(Float.valueOf(vals[0]), Float.valueOf(vals[1]));
+                                String time = a.value.replaceFirst(" \\((in paper|MSMS).*", "");
+                                Pair<Float, Integer> value;
 
-                                Pair<Pair<Float, Float>, Integer> value;
-
-                                if(a.value.matches(".*[0-9 ]eV *$"))
-                                    value = Pair.getPair(ramp, 266);
-                                else if(a.value.matches(".*[0-9 ]V *$"))
-                                    value = Pair.getPair(ramp, 218);
-                                else if(a.value.matches(".*% *$"))
-                                    value = Pair.getPair(ramp, 190);
+                                if(time.matches("[0-9]*(\\.[0-9]+)? ?min(ute)?s?")) // obo:UO_0000031
+                                    value = Pair.getPair(getFloat(a, time.replaceFirst(" ?m.*", "")), 31);
+                                else if(time.matches("[0-9]*(\\.[0-9]+)? +s(ec)?")) // obo:UO_0000010
+                                    value = Pair.getPair(getFloat(a, time.replaceFirst(" .*", "")), 10);
+                                else if(time.matches("[0-9.]+-[0-9.]+ min"))
+                                {
+                                    ignoreValue(item, a, a.value);
+                                    break;
+                                }
                                 else
-                                    throw new IOException();
-
-                                Pair<Integer, Pair<Pair<Float, Float>, Integer>> pair = Pair.getPair(id, value);
-
-                                if(oldCollisionEnergyRamps.remove(pair))
-                                    keepCollisionEnergyRamps.add(pair);
-                                else if(!keepCollisionEnergyRamps.contains(pair))
-                                    newCollisionEnergyRamps.add(pair);
-                            }
-                            else
-                            {
-                                Pair<Float, Integer> value = null;
-
-                                if(a.value.matches("-?[0-9.]+ ?e[Vv] ?( [FI]T-MS( II)?)?")) // obo:UO_0000266
-                                    value = Pair.getPair(Float.valueOf(a.value.replaceFirst(" ?e[Vv].*", "")), 266);
-                                else if(a.value.matches("-?[0-9.]+ ?V")) // obo:UO_0000218
-                                    value = Pair.getPair(Float.valueOf(a.value.replaceFirst(" ?V", "")), 218);
-                                else if(a.value.matches("[0-9]+ ?kV")) // obo:UO_0000248
-                                    value = Pair.getPair(Float.valueOf(a.value.replaceFirst(" ?kV", "")), 248);
-                                else if(a.value.matches("[0-9]+ +\\(nominal\\)"))
-                                    value = Pair.getPair(Float.valueOf(a.value.replaceFirst(" .*", "")), 0);
-                                else if(a.value.matches("CE[0-9]+"))
-                                    value = Pair.getPair(Float.valueOf(a.value.replaceFirst("^CE", "")), 0);
-                                else if(a.value.matches("-?[0-9.]+"))
-                                    value = Pair.getPair(Float.valueOf(a.value), 0);
-                                else if(a.value.matches("[0-9.]+ ?%( \\(nominal\\))?")) // obo:UO_0000190
-                                    value = Pair.getPair(Float.valueOf(a.value.replaceFirst(" ?%.*", "")), 190);
-                                else if(a.value.matches("[0-9.]+ *\\(?NCE\\)?")) // obo:UO_0000190
-                                    value = Pair.getPair(Float.valueOf(a.value.replaceFirst(" *\\(?NCE\\)?", "")), 190);
-                                else if(a.value.matches("NCE [0-9]+%")) // obo:UO_0000190
-                                    value = Pair.getPair(Float.valueOf(a.value.replaceFirst("NCE (.*)%", "$1")), 190);
-                                else
-                                    break;
+                                    value = Pair.getPair(getFloat(a, time), 0); // null
 
                                 Pair<Integer, Pair<Float, Integer>> pair = Pair.getPair(id, value);
 
-                                if(oldCollisionEnergies.remove(pair))
-                                    keepCollisionEnergies.add(pair);
-                                else if(!keepCollisionEnergies.contains(pair))
-                                    newCollisionEnergies.add(pair);
+                                if(oldRetentionTimes.remove(pair))
+                                    keepRetentionTimes.add(pair);
+                                else if(!keepRetentionTimes.contains(pair))
+                                    newRetentionTimes.add(pair);
+
+                                break;
                             }
 
-                            break;
-                        }
+                            case "collision energy":
+                            {
+                                if(a.value.equals("") || a.value.equals("--"))
+                                    break;
 
-                        case "instrument type":
-                        {
-                            Pair<Integer, String> pair = Pair.getPair(id, a.value);
+                                if(a.value.startsWith("Ramp") || a.value.startsWith("RAMP")
+                                        || a.value.matches(".*[-–]>.*"))
+                                {
+                                    if(a.value.equals("Ramp 22,9-34.3 eV") || a.value.equals("Ramp 17.2-25.8 eV 30 eV"))
+                                    {
+                                        ignoreValue(item, a, a.value);
+                                        break;
+                                    }
 
-                            if(oldInstrumentTypes.remove(pair))
-                                keepInstrumentTypes.add(pair);
-                            else if(!keepInstrumentTypes.contains(pair))
-                                newInstrumentTypes.add(pair);
+                                    String str = a.value.replaceFirst("^(Ramp|RAMP) ", "").replaceFirst(" *(eV|V|%) *$",
+                                            "");
+                                    String[] vals = str.split("[-–]>|-", 2);
 
-                            break;
-                        }
+                                    if(vals.length != 2)
+                                        throw new DataException("malformed collision energy ramp", a.value);
 
-                        case "instrument":
-                        {
-                            Pair<Integer, String> pair = Pair.getPair(id, a.value);
+                                    Pair<Float, Float> ramp = Pair.getPair(getFloat(a, vals[0]), getFloat(a, vals[1]));
 
-                            if(oldInstruments.remove(pair))
-                                keepInstruments.add(pair);
-                            else if(!keepInstruments.contains(pair))
-                                newInstruments.add(pair);
+                                    Pair<Pair<Float, Float>, Integer> value;
 
-                            break;
-                        }
+                                    if(a.value.matches(".*[0-9 ]eV *$"))
+                                        value = Pair.getPair(ramp, 266);
+                                    else if(a.value.matches(".*[0-9 ]V *$"))
+                                        value = Pair.getPair(ramp, 218);
+                                    else if(a.value.matches(".*% *$"))
+                                        value = Pair.getPair(ramp, 190);
+                                    else
+                                        throw new DataException("unexpected unit of a collision energy ramp", a.value);
 
-                        case "precursor type":
-                        {
-                            Pair<Integer, String> pair = Pair.getPair(id, a.value);
+                                    Pair<Integer, Pair<Pair<Float, Float>, Integer>> pair = Pair.getPair(id, value);
 
-                            if(oldPrecursorTypes.remove(pair))
-                                keepPrecursorTypes.add(pair);
-                            else if(!keepPrecursorTypes.contains(pair))
-                                newPrecursorTypes.add(pair);
+                                    if(oldCollisionEnergyRamps.remove(pair))
+                                        keepCollisionEnergyRamps.add(pair);
+                                    else if(!keepCollisionEnergyRamps.contains(pair))
+                                        newCollisionEnergyRamps.add(pair);
+                                }
+                                else
+                                {
+                                    Pair<Float, Integer> value = null;
 
-                            break;
-                        }
+                                    if(a.value.matches("-?[0-9.]+ ?e[Vv] ?( [FI]T-MS( II)?)?")) // obo:UO_0000266
+                                        value = Pair.getPair(getFloat(a, a.value.replaceFirst(" ?e[Vv].*", "")), 266);
+                                    else if(a.value.matches("-?[0-9.]+ ?V")) // obo:UO_0000218
+                                        value = Pair.getPair(getFloat(a, a.value.replaceFirst(" ?V", "")), 218);
+                                    else if(a.value.matches("[0-9]+ ?kV")) // obo:UO_0000248
+                                        value = Pair.getPair(getFloat(a, a.value.replaceFirst(" ?kV", "")), 248);
+                                    else if(a.value.matches("[0-9]+ +\\(nominal\\)"))
+                                        value = Pair.getPair(getFloat(a, a.value.replaceFirst(" .*", "")), 0);
+                                    else if(a.value.matches("CE[0-9]+"))
+                                        value = Pair.getPair(getFloat(a, a.value.replaceFirst("^CE", "")), 0);
+                                    else if(a.value.matches("-?[0-9.]+"))
+                                        value = Pair.getPair(getFloat(a, a.value), 0);
+                                    else if(a.value.matches("[0-9.]+ ?%( \\(nominal\\))?")) // obo:UO_0000190
+                                        value = Pair.getPair(getFloat(a, a.value.replaceFirst(" ?%.*", "")), 190);
+                                    else if(a.value.matches("[0-9.]+ *\\(?NCE\\)?")) // obo:UO_0000190
+                                        value = Pair.getPair(getFloat(a, a.value.replaceFirst(" *\\(?NCE\\)?", "")),
+                                                190);
+                                    else if(a.value.matches("NCE [0-9]+%")) // obo:UO_0000190
+                                        value = Pair.getPair(getFloat(a, a.value.replaceFirst("NCE (.*)%", "$1")), 190);
+                                    else
+                                    {
+                                        ignoreValue(item, a, a.value);
+                                        break;
+                                    }
 
-                        case "precursor m/z":
-                        {
-                            Pair<Integer, Float> pair = Pair.getPair(id, Float.valueOf(a.value.replaceFirst(",", ".")));
+                                    Pair<Integer, Pair<Float, Integer>> pair = Pair.getPair(id, value);
 
-                            if(oldPrecursorMZs.remove(pair))
-                                keepPrecursorMZs.add(pair);
-                            else if(!keepPrecursorMZs.contains(pair))
-                                newPrecursorMZs.add(pair);
+                                    if(oldCollisionEnergies.remove(pair))
+                                        keepCollisionEnergies.add(pair);
+                                    else if(!keepCollisionEnergies.contains(pair))
+                                        newCollisionEnergies.add(pair);
+                                }
 
-                            break;
+                                break;
+                            }
+
+                            case "instrument type":
+                            {
+                                Pair<Integer, String> pair = Pair.getPair(id, a.value);
+
+                                if(oldInstrumentTypes.remove(pair))
+                                    keepInstrumentTypes.add(pair);
+                                else if(!keepInstrumentTypes.contains(pair))
+                                    newInstrumentTypes.add(pair);
+
+                                break;
+                            }
+
+                            case "instrument":
+                            {
+                                Pair<Integer, String> pair = Pair.getPair(id, a.value);
+
+                                if(oldInstruments.remove(pair))
+                                    keepInstruments.add(pair);
+                                else if(!keepInstruments.contains(pair))
+                                    newInstruments.add(pair);
+
+                                break;
+                            }
+
+                            case "precursor type":
+                            {
+                                Pair<Integer, String> pair = Pair.getPair(id, a.value);
+
+                                if(oldPrecursorTypes.remove(pair))
+                                    keepPrecursorTypes.add(pair);
+                                else if(!keepPrecursorTypes.contains(pair))
+                                    newPrecursorTypes.add(pair);
+
+                                break;
+                            }
+
+                            case "precursor m/z":
+                            {
+                                // the precursors of the stages of an MSn spectrum are separated by commas
+                                for(String mz : a.value.split(", +"))
+                                {
+                                    Pair<Integer, Float> pair = Pair.getPair(id,
+                                            getFloat(a, mz.replaceFirst(",", ".")));
+
+                                    if(oldPrecursorMZs.remove(pair))
+                                        keepPrecursorMZs.add(pair);
+                                    else if(!keepPrecursorMZs.contains(pair))
+                                        newPrecursorMZs.add(pair);
+                                }
+
+                                break;
+                            }
                         }
                     }
-                }
 
 
-                if(item.library != null)
-                {
-                    Integer library = libraryIDs.get(item.library.library);
-
-                    if(library == null)
-                        libraryIDs.put(item.library.library, library = nextLibraryID++);
-
-                    libraries.set(library, "name", item.library.library);
-
-
-                    compounds.set(id, "library", library);
-
-
-                    String description = item.library.description;
-
-                    libraries.set(library, "description", description);
-
-
-                    if(!item.library.link.isEmpty())
+                    if(item.library != null)
                     {
-                        String link = item.library.link;
+                        Integer library = libraryIDs.get(item.library.library);
 
-                        compounds.set(id, "link", link);
+                        if(library == null)
+                            libraryIDs.put(item.library.library, library = nextLibraryID++);
+
+                        libraries.set(library, "name", item.library.library);
+
+
+                        compounds.set(id, "library", library);
+
+
+                        String description = item.library.description;
+
+                        libraries.set(library, "description", description);
+
+
+                        if(item.library.link != null && !item.library.link.isEmpty())
+                        {
+                            String link = item.library.link;
+
+                            compounds.set(id, "link", link);
+                        }
                     }
-                }
 
 
-                if(item.submitter != null)
-                {
-                    Integer submitter = keepSubmitters.get(item.submitter);
-
-                    if(submitter == null)
+                    if(item.submitter != null)
                     {
-                        submitter = newSubmitters.get(item.submitter);
+                        Integer submitter = keepSubmitters.get(item.submitter);
 
                         if(submitter == null)
                         {
-                            if((submitter = oldSubmitters.remove(item.submitter)) == null)
-                                newSubmitters.put(item.submitter, submitter = nextSubmitterID++);
-                            else
-                                keepSubmitters.put(item.submitter, submitter);
+                            submitter = newSubmitters.get(item.submitter);
+
+                            if(submitter == null)
+                            {
+                                if((submitter = oldSubmitters.remove(item.submitter)) == null)
+                                    newSubmitters.put(item.submitter, submitter = nextSubmitterID++);
+                                else
+                                    keepSubmitters.put(item.submitter, submitter);
+                            }
                         }
+
+
+                        compounds.set(id, "submitter", submitter);
                     }
-
-
-                    compounds.set(id, "submitter", submitter);
+                }
+                catch(DataException e)
+                {
+                    Problems.error(e.getKind(), item.id + (e.getDetail() == null ? "" : ": " + e.getDetail()));
+                }
+                catch(NumberFormatException e)
+                {
+                    Problems.error("malformed number", item.id + ": " + e.getMessage());
                 }
             }
 
             reader.endArray();
         }
+
+        if(compounds.size() == 0)
+            Problems.error("no spectrum", "mona");
 
 
         compounds.store();
@@ -1275,6 +1445,7 @@ public class MoNA extends Updater
 
         updateVersion();
 
+        checkFiles("mona");
         checkProblems();
 
         syncIndex("mona", true);

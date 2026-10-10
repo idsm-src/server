@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
+import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.TripleStreamProcessor;
@@ -42,12 +43,11 @@ class Measuregroup extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                        return;
 
-                    if(!object.getURI().equals("http://www.bioassayontology.org/bao#BAO_0000040")
-                            && !object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MeasureGroup"))
-                        throw new IOException();
+                    checkType(subject, object, "http://www.bioassayontology.org/bao#BAO_0000040",
+                            "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#MeasureGroup");
 
                     parseMeasuregroup(subject);
                 }
@@ -65,8 +65,8 @@ class Measuregroup extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://purl.org/dc/terms/source"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/source"))
+                        return;
 
                     Pair<Integer, Integer> measuregroup = parseMeasuregroup(subject);
                     Integer sourceID = Source.getSourceID(object.getURI());
@@ -87,8 +87,8 @@ class Measuregroup extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://purl.org/dc/terms/title"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/title"))
+                        return;
 
                     Pair<Integer, Integer> measuregroup = parseMeasuregroup(subject);
                     String title = getString(object);
@@ -135,8 +135,8 @@ class Measuregroup extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/RO_0000057"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object, "http://purl.obolibrary.org/obo/RO_0000057"))
+                        return;
 
                     if(object.getURI().startsWith(Protein.prefix))
                     {
@@ -200,7 +200,7 @@ class Measuregroup extends Updater
                     }
                     else
                     {
-                        throw new IOException();
+                        unexpectedValue(subject, predicate, object);
                     }
                 }
             }.load(stream);
@@ -241,8 +241,8 @@ class Measuregroup extends Updater
                     {
                         getStringID(subject, prefix);
 
-                        if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/OBI_0000299"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.obolibrary.org/obo/OBI_0000299"))
+                            return;
 
                         getStringID(object, Endpoint.prefix);
                     }
@@ -314,7 +314,7 @@ class Measuregroup extends Updater
         Integer measuregroup;
 
         if(!iri.startsWith(prefix))
-            throw new IOException();
+            throw new DataException("unexpected IRI", iri);
 
         int grp = iri.indexOf("_", prefixLength + 1);
 
@@ -332,7 +332,7 @@ class Measuregroup extends Updater
                 measuregroup = -Integer.parseInt(part);
 
                 if(measuregroup == -2147483647 || measuregroup == 0)
-                    throw new IOException();
+                    throw new DataException("unexpected IRI", iri);
             }
         }
         else if(grp != -1 && grp != iri.length() - 1)
@@ -341,7 +341,7 @@ class Measuregroup extends Updater
             measuregroup = Integer.parseInt(iri.substring(grp + 1));
 
             if(measuregroup > 2147483645)
-                throw new IOException();
+                throw new DataException("unexpected IRI", iri);
         }
         else if(grp != -1)
         {

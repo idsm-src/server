@@ -101,7 +101,7 @@ class Target extends Updater
                         if(predicate.getURI().equals(cco + "hasTarget"))
                             targetComponents.inverse(getTargetID(object), TargetComponent.getComponentID(subject));
                         else
-                            ChEMBL.unexpected(subject, predicate, object);
+                            unexpected(subject, predicate, object);
 
                         return;
                     }
@@ -111,7 +111,7 @@ class Target extends Updater
                         if(predicate.getURI().equals(cco + "isCellLineForTarget"))
                             cellLines.inverse(getTargetID(object), CellLine.getCellLineID(subject));
                         else
-                            ChEMBL.unexpected(subject, predicate, object);
+                            unexpected(subject, predicate, object);
 
                         return;
                     }
@@ -145,7 +145,7 @@ class Target extends Updater
                             components.add(id, componentID);
                             targetComponents.forward(id, componentID);
                         }
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);
@@ -197,7 +197,7 @@ class Target extends Updater
                     if(predicate.getURI().equals(property))
                         table.add(getTargetID(subject), TargetComponent.getComponentID(object));
                     else
-                        ChEMBL.unexpected(subject, predicate, object);
+                        unexpected(subject, predicate, object);
                 }
             }.load(stream);
         }
@@ -225,7 +225,7 @@ class Target extends Updater
                     if(relationship != null)
                         relations.add(getTargetID(subject), relationship, getTargetID(object));
                     else
-                        ChEMBL.unexpected(subject, predicate, object);
+                        unexpected(subject, predicate, object);
                 }
             }.load(stream);
         }

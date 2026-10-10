@@ -32,8 +32,9 @@ class SubstanceDescriptor extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/SIO_000300"))
+                            return;
 
                         Integer id = getDescriptorID(subject.getURI(), "_Substance_Version");
                         Integer value = getIntFromInteger(object);
@@ -52,12 +53,14 @@ class SubstanceDescriptor extends Updater
                                 if(value.equals(keep))
                                     return;
                                 else if(keep != null)
-                                    throw new IOException();
+                                    throw new DataException("multiple values of pubchem.substance_versions.version",
+                                            id + ": " + keep + ", " + value);
 
                                 Integer put = newValues.put(id, value);
 
                                 if(put != null && !value.equals(put))
-                                    throw new IOException();
+                                    throw new DataException("multiple values of pubchem.substance_versions.version",
+                                            id + ": " + put + ", " + value);
                             }
                         }
                     }
@@ -73,9 +76,9 @@ class SubstanceDescriptor extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI()
-                                .equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#substance_version"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#substance_version"))
+                            return;
 
                         Integer id = Substance.getSubstanceID(subject.getURI());
                         Integer value = getIntFromInteger(object);
@@ -94,12 +97,14 @@ class SubstanceDescriptor extends Updater
                                 if(value.equals(keep))
                                     return;
                                 else if(keep != null)
-                                    throw new IOException();
+                                    throw new DataException("multiple values of pubchem.substance_versions.version",
+                                            id + ": " + keep + ", " + value);
 
                                 Integer put = newValues.put(id, value);
 
                                 if(put != null && !value.equals(put))
-                                    throw new IOException();
+                                    throw new DataException("multiple values of pubchem.substance_versions.version",
+                                            id + ": " + put + ", " + value);
                             }
                         }
                     }
@@ -125,12 +130,12 @@ class SubstanceDescriptor extends Updater
                     {
                         getIntID(subject, "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/SID", "_Substance_Version");
 
-                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            return;
 
-                        if(!object.getURI().equals("http://purl.obolibrary.org/obo/IAO_0000129") && !object.getURI()
-                                .equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#SubstanceVersion"))
-                            throw new IOException();
+                        checkType(subject, object, "http://purl.obolibrary.org/obo/IAO_0000129",
+                                "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#SubstanceVersion");
                     }
                 }.load(stream);
             }

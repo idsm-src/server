@@ -44,7 +44,7 @@ class BindingSite extends Updater
                         if(predicate.getURI().equals(cco + "hasBindingSite"))
                             targets.inverse(getSiteID(object), Target.getTargetID(subject));
                         else
-                            ChEMBL.unexpected(subject, predicate, object);
+                            unexpected(subject, predicate, object);
 
                         return;
                     }
@@ -53,7 +53,7 @@ class BindingSite extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, cco + "BindingSite");
+                        case rdfType -> checkType(subject, object, cco + "BindingSite");
                         case chemblId -> sites.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL_BS_" + id));
                         case rdfsLabel -> ChEMBL.checkValue(subject, predicate, object, "CHEMBL_BS_" + id);
@@ -64,7 +64,7 @@ class BindingSite extends Updater
                             sites.set(id, "target", targetID);
                             targets.forward(id, targetID);
                         }
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);

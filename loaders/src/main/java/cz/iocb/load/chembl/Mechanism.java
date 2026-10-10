@@ -54,7 +54,7 @@ class Mechanism extends Updater
                                 && predicate.getURI().equals(cco + "isBindingSiteForMechanism"))
                             sites.inverse(getMechanismID(object), BindingSite.getSiteID(subject));
                         else
-                            ChEMBL.unexpected(subject, predicate, object);
+                            unexpected(subject, predicate, object);
 
                         return;
                     }
@@ -63,7 +63,7 @@ class Mechanism extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, cco + "Mechanism");
+                        case rdfType -> checkType(subject, object, cco + "Mechanism");
                         case chemblId -> mechanisms.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL_MEC_" + id));
                         case rdfsLabel -> ChEMBL.checkValue(subject, predicate, object, "CHEMBL_MEC_" + id);
@@ -87,7 +87,7 @@ class Mechanism extends Updater
                         }
                         case cco + "mechanismDescription" -> mechanisms.set(id, "description", getString(object));
                         case cco + "mechanismActionType" -> mechanisms.set(id, "action_type", getString(object));
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);

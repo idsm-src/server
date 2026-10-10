@@ -64,7 +64,7 @@ class Activity extends Updater
                                 && predicate.getURI().equals(cco + "hasActivity"))
                             molecules.inverse(getActivityID(object), Molecule.getMoleculeID(subject));
                         else
-                            ChEMBL.unexpected(subject, predicate, object);
+                            unexpected(subject, predicate, object);
 
                         return;
                     }
@@ -73,7 +73,7 @@ class Activity extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, cco + "Activity");
+                        case rdfType -> checkType(subject, object, cco + "Activity");
                         case chemblId -> activities.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL_ACT_" + id));
                         case rdfsLabel -> ChEMBL.checkValue(subject, predicate, object, "CHEMBL_ACT_" + id);
@@ -115,7 +115,7 @@ class Activity extends Updater
                         }
                         case cco + "potentialDuplicate" -> activities.set(id, "potential_duplicate",
                                 getBoolean(object));
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);

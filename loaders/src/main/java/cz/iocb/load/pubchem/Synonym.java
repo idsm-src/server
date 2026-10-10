@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -152,8 +153,9 @@ class Synonym extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/SIO_000300"))
+                            return;
 
                         String value = getString(object);
                         MD5 md5 = getSynonymMD5(subject.getURI());
@@ -213,8 +215,9 @@ class Synonym extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws IOException
                     {
-                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            return;
 
                         if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Synonym"))
                             return;
@@ -236,8 +239,8 @@ class Synonym extends Updater
                         }
                         else
                         {
-                            System.out.println(
-                                    "    ignore md5 synonym " + getSynonymMD5(subject.getURI()) + " for rdf:type");
+                            Problems.warning("ignored triple of an unknown synonym in " + predicate.getURI(),
+                                    text(subject) + " " + text(object));
                         }
                     }
                 }.load(stream);
@@ -265,8 +268,9 @@ class Synonym extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000011"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/SIO_000011"))
+                            return;
 
                         Integer md5ID = getSynonymID(subject.getURI());
 
@@ -286,8 +290,8 @@ class Synonym extends Updater
                         }
                         else
                         {
-                            System.out.println("    ignore md5 synonym " + getSynonymMD5(subject.getURI())
-                                    + " for sio:SIO_000011");
+                            Problems.warning("ignored triple of an unknown synonym in " + predicate.getURI(),
+                                    text(subject) + " " + text(object));
                         }
                     }
                 }.load(stream);
@@ -319,16 +323,16 @@ class Synonym extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws IOException
                 {
-                    if(!predicate.getURI().equals("http://purl.org/dc/terms/subject"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/subject"))
+                        return;
 
                     Integer md5ID = getSynonymID(subject.getURI());
                     String value = object.getURI();
 
                     if(md5ID == null)
                     {
-                        System.out.println(
-                                "    ignore md5 synonym " + getSynonymMD5(subject.getURI()) + " for dcterms:subject");
+                        Problems.warning("ignored triple of an unknown synonym in " + predicate.getURI(),
+                                text(subject) + " " + text(object));
                     }
                     else if(value.startsWith(Concept.prefix))
                     {
@@ -379,7 +383,7 @@ class Synonym extends Updater
 
     private static MD5 getSynonymMD5(String value) throws IOException
     {
-        if(!value.startsWith(prefix))
+        if(!value.startsWith(prefix) || !value.substring(prefixLength).matches("[0-9a-f]{32}"))
             throw new DataException("unexpected IRI", value);
 
         return new MD5(value, prefixLength);

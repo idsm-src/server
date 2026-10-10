@@ -17,6 +17,8 @@ import java.util.regex.Pattern;
  * (lines starting with #, ;, ! or /) are skipped. The peaks of a record are returned in the text form of a pgms
  * spectrum, i.e. as m/z:intensity pairs separated by spaces, with the numbers converted to single precision as the
  * extension stores them; a number the extension would refuse (out of the range of single precision) is refused here.
+ * A malformed record, i.e. one with a malformed peak or a repeated parameter or one without its END IONS, and a line
+ * outside the records that is not a global parameter are reported as errors and skipped, so that the reading goes on.
  */
 public class MgfReader implements Closeable
 {
@@ -37,6 +39,7 @@ public class MgfReader implements Closeable
     private final HashMap<String, String> global = new HashMap<>();
     private int lineNumber;
     private boolean started;
+    private boolean pending;
 
 
     public MgfReader(String name, BufferedReader reader)
@@ -57,12 +60,6 @@ public class MgfReader implements Closeable
     }
 
 
-    private IOException error(String message)
-    {
-        return new IOException(name + ":" + lineNumber + ": " + message);
-    }
-
-
     private static boolean isComment(String line)
     {
         char c = line.charAt(0);
@@ -72,18 +69,18 @@ public class MgfReader implements Closeable
 
     /*
      * Converts the text of a number to single precision; the values that overflow or underflow it are refused as
-     * the extension refuses them.
+     * the extension refuses them, null stands for a refused number.
      */
-    private float number(String text) throws IOException
+    private static Float number(String text)
     {
         if(!numberPattern.matcher(text).matches())
-            throw error("malformed peak");
+            return null;
 
         float value = Float.parseFloat(text);
         boolean zero = !text.split("[eE]", 2)[0].matches(".*[1-9].*");
 
         if(Float.isInfinite(value) || value == 0 && !zero || value != 0 && Math.abs(value) < Float.MIN_NORMAL)
-            throw error("malformed peak");
+            return null;
 
         return value;
     }
@@ -94,6 +91,27 @@ public class MgfReader implements Closeable
      */
     public Record next() throws IOException
     {
+        while(true)
+        {
+            if(!pending && !findRecord())
+                return null;
+
+            pending = false;
+            started = true;
+
+            Record record = readRecord();
+
+            if(record != null)
+                return record;
+        }
+    }
+
+
+    /*
+     * Reads the lines up to the next BEGIN IONS; returns false at the end of the file.
+     */
+    private boolean findRecord() throws IOException
+    {
         String line;
 
         while((line = readLine()) != null)
@@ -102,39 +120,51 @@ public class MgfReader implements Closeable
                 continue;
 
             if(line.equals("BEGIN IONS"))
-                break;
+                return true;
 
             int separator = started ? -1 : line.indexOf('=');
 
             if(separator < 0)
-                throw error("unexpected line");
-
-            global.put(line.substring(0, separator), line.substring(separator + 1));
+                Problems.error("unexpected line of an MGF file", name + ":" + lineNumber);
+            else
+                global.put(line.substring(0, separator), line.substring(separator + 1));
         }
 
-        if(line == null)
-            return null;
+        return false;
+    }
 
-        started = true;
 
+    /*
+     * Reads the record following its BEGIN IONS; returns null for a malformed record, which is reported.
+     */
+    private Record readRecord() throws IOException
+    {
         int begin = lineNumber;
         HashMap<String, String> parameters = new HashMap<>(global);
         HashSet<String> own = new HashSet<>();
         StringBuilder spectrum = new StringBuilder();
+        boolean malformed = false;
         int peaks = 0;
 
         while(true)
         {
-            line = readLine();
+            String line = readLine();
 
             if(line == null || line.equals("BEGIN IONS"))
-                throw error("unterminated record");
+            {
+                Problems.error("unterminated MGF record", name + ":" + begin);
+                pending = line != null;
+                return null;
+            }
 
             if(line.isBlank() || isComment(line))
                 continue;
 
             if(line.equals("END IONS"))
                 break;
+
+            if(malformed)
+                continue;
 
             int separator = peaks == 0 ? line.indexOf('=') : -1;
 
@@ -143,25 +173,35 @@ public class MgfReader implements Closeable
                 String parameter = line.substring(0, separator);
 
                 if(!own.add(parameter))
-                    throw error("repeated parameter " + parameter);
+                {
+                    Problems.error("repeated parameter " + parameter + " of an MGF record", name + ":" + lineNumber);
+                    malformed = true;
+                    continue;
+                }
 
                 parameters.put(parameter, line.substring(separator + 1));
             }
             else
             {
                 String[] values = line.trim().split("\\s+");
+                Float mz = values.length == 2 ? number(values[0]) : null;
+                Float intensity = values.length == 2 ? number(values[1]) : null;
 
-                if(values.length != 2)
-                    throw error("malformed peak");
+                if(mz == null || intensity == null)
+                {
+                    Problems.error("malformed peak of an MGF record", name + ":" + lineNumber);
+                    malformed = true;
+                    continue;
+                }
 
                 if(peaks++ > 0)
                     spectrum.append(' ');
 
-                spectrum.append(number(values[0])).append(':').append(number(values[1]));
+                spectrum.append(mz).append(':').append(intensity);
             }
         }
 
-        return new Record(begin, parameters, spectrum.toString(), peaks);
+        return malformed ? null : new Record(begin, parameters, spectrum.toString(), peaks);
     }
 
 

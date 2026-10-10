@@ -1,7 +1,6 @@
 package cz.iocb.load.pubchem;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -37,7 +36,8 @@ public class PubChemRDF extends Updater
 
 
     /*
-     * Returns the date of the last modification of the PubChemRDF dataset, as its VoID description states it.
+     * Returns the date of the last modification of the PubChemRDF dataset, as its VoID description states it; null
+     * stands for an unknown version.
      */
     private static String getVersion() throws IOException
     {
@@ -45,40 +45,35 @@ public class PubChemRDF extends Updater
         String modified = "http://purl.org/dc/terms/modified";
         StringBuilder version = new StringBuilder();
 
-        try(InputStream in = new FileInputStream(baseDirectory + "pubchem/RDF/void.ttl"))
+        try(InputStream in = openFile("pubchem/RDF/void.ttl"))
         {
-            new TripleStreamProcessor()
+            if(in != null)
             {
-                @Override
-                protected void parse(Node subject, Node predicate, Node object) throws IOException
+                new TripleStreamProcessor()
                 {
-                    if(subject.isURI() && subject.getURI().equals(dataset) && predicate.getURI().equals(modified))
-                        version.append(getLexicalForm(object));
-                }
-            }.load(in);
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws IOException
+                    {
+                        if(subject.isURI() && subject.getURI().equals(dataset) && predicate.getURI().equals(modified))
+                            version.append(getLexicalForm(object));
+                    }
+                }.load(in);
+            }
         }
 
-        if(version.isEmpty())
-            throw new IOException("the version of PubChemRDF is not known");
-
-        return version.toString();
+        return version.isEmpty() ? null : version.toString();
     }
 
 
     /*
      * Returns the date of the download of the given part of the PubChem dump, which stands for its version, as the
-     * download script has recorded it.
+     * download script has recorded it; null stands for an unknown date.
      */
     private static String getDownloadDate(String part) throws IOException
     {
         try(BufferedReader reader = getReader("pubchem/" + part + "/version.txt.gz"))
         {
-            String date = reader.readLine();
-
-            if(date == null || date.isEmpty())
-                throw new IOException("the download date of pubchem/" + part + " is not known");
-
-            return date;
+            return reader.readLine();
         }
     }
 
@@ -99,7 +94,8 @@ public class PubChemRDF extends Updater
 
             Ontology.loadCategories();
 
-            Reference.preload(); // required by Cell, ConservedDomain, Endpoint, Gene, Pathway, Protein, Substance, Taxonomy
+            // required by Cell, ConservedDomain, Endpoint, Gene, Pathway, Protein, Substance, Taxonomy
+            Reference.preload();
 
             Concept.load();
             Source.load(); // require Concept
@@ -175,6 +171,9 @@ public class PubChemRDF extends Updater
 
             updateVersion();
 
+            // the documentation and the checksums of the dump
+            checkFiles("pubchem", "RDF/README", "RDF/schema/.*", "Bioassay/XML/README",
+                    "Compound/CURRENT-Full/SDF/README-Compound-SDF", "Compound/CURRENT-Full/SDF/.*\\.md5");
             MissingEntities.printSummary();
             checkProblems();
 

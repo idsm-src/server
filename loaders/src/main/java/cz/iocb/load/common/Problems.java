@@ -65,6 +65,15 @@ public final class Problems
 
 
     /*
+     * Tests whether a problem, an error or a warning, has been reported.
+     */
+    public static synchronized boolean hasProblems()
+    {
+        return !errors.isEmpty() || !warnings.isEmpty();
+    }
+
+
+    /*
      * Prints the numbers of the errors and the warnings of each kind.
      */
     public static synchronized void printSummary()

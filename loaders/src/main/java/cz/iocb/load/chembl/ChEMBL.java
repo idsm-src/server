@@ -2,14 +2,11 @@ package cz.iocb.load.chembl;
 
 import static cz.iocb.load.common.TripleStreamProcessor.text;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Stream;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Problems;
@@ -39,7 +36,6 @@ public class ChEMBL extends Updater
     static final String chemblId = cco + "chemblId";
     static final String voidInDataset = "http://rdfs.org/ns/void#inDataset";
 
-    private static final HashSet<String> files = new HashSet<>();
     private static String version;
 
 
@@ -81,11 +77,10 @@ public class ChEMBL extends Updater
 
 
     /*
-     * Returns the path of an RDF file of the release and records that the loader reads it.
+     * Returns the path of an RDF file of the release.
      */
     private static String rdfFile(String name)
     {
-        files.add(name);
         return "chembl/rdf/" + name;
     }
 
@@ -93,46 +88,6 @@ public class ChEMBL extends Updater
     static String file(String part)
     {
         return rdfFile("chembl_" + version + "_" + part + ".ttl.gz");
-    }
-
-
-    /*
-     * Reports the RDF files of the release that the loader has not read, such as a part that a new release adds, as
-     * errors. The ChEMBL ontology, which comes with the release, is loaded by the ontology loader.
-     */
-    private static void checkFiles() throws IOException
-    {
-        System.out.println("check files ...");
-
-        List<String> names;
-
-        try(Stream<Path> paths = Files.list(Path.of(baseDirectory, "chembl", "rdf")))
-        {
-            names = paths.map(path -> path.getFileName().toString()).filter(name -> name.endsWith(".ttl.gz")).sorted()
-                    .toList();
-        }
-
-        for(String name : names)
-            if(!name.equals("cco.ttl.gz") && !files.contains(name))
-                Problems.error("unknown file", name);
-
-        System.out.println();
-    }
-
-
-    /*
-     * Reports a triple whose predicate the loader does not know, i.e. a triple that the mapping does not reproduce.
-     */
-    static void unexpected(Node subject, Node predicate, Node object)
-    {
-        Problems.error("unexpected predicate " + predicate.getURI(), text(subject) + " " + text(object));
-    }
-
-
-    static void checkType(Node subject, Node object, String type)
-    {
-        if(!object.isURI() || !object.getURI().equals(type))
-            Problems.error("unexpected rdf:type " + text(object), text(subject));
     }
 
 
@@ -209,7 +164,9 @@ public class ChEMBL extends Updater
 
             updateVersion();
 
-            checkFiles();
+            // the ChEMBL ontology, which comes with the release, is loaded by the ontology loader, and the checksums of
+            // the SDF file are checked by the download script
+            checkFiles("chembl", "rdf/cco\\.ttl\\.gz", "sdf/checksums\\.txt");
             MissingEntities.printSummary();
             checkProblems();
 

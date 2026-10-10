@@ -41,12 +41,12 @@ class Source extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, cco + "Source");
+                        case rdfType -> checkType(subject, object, cco + "Source");
                         case chemblId -> sources.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL_SRC_" + id));
                         case rdfsLabel -> sources.set(id, "label", getString(object));
                         case dcterms + "description" -> sources.set(id, "description", getString(object));
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);

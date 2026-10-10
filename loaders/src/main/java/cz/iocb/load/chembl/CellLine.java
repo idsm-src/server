@@ -48,7 +48,7 @@ class CellLine extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, cco + "CellLine");
+                        case rdfType -> checkType(subject, object, cco + "CellLine");
                         case chemblId -> cellLines.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL" + id));
                         case rdfsLabel -> cellLines.set(id, "label", getString(object));
@@ -64,7 +64,7 @@ class CellLine extends Updater
                             cellLines.set(id, "efo_unit", efo.getOne());
                             cellLines.set(id, "efo_id", efo.getTwo());
                         }
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);

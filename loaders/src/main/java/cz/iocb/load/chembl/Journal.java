@@ -44,7 +44,7 @@ class Journal extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, cco + "Journal");
+                        case rdfType -> checkType(subject, object, cco + "Journal");
                         case chemblId -> journals.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL_JRN_" + id));
                         case rdfsLabel -> journals.set(id, "label", getString(object));
@@ -52,7 +52,7 @@ class Journal extends Updater
                         case bibo + "shortTitle" -> journals.set(id, "short_title", getString(object));
                         case bibo + "issn" -> journals.set(id, "issn", getString(object));
                         case bibo + "eissn" -> journals.set(id, "eissn", getString(object));
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);

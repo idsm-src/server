@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -33,6 +34,7 @@ import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
@@ -88,12 +90,17 @@ class Bioassay extends Updater
     }
 
 
-    private static String getSingleNodeValue(XPathExpression path, Node node) throws XPathExpressionException
+    /*
+     * Returns the value of the single element given by the path; no element or several elements of the given name are
+     * refused.
+     */
+    private static String getSingleNodeValue(XPathExpression path, Node node, String name)
+            throws XPathExpressionException, DataException
     {
         NodeList nodes = (NodeList) path.evaluate(node, XPathConstants.NODESET);
 
         if(nodes.getLength() != 1)
-            new IOException("missing path value");
+            throw new DataException("not a single element " + name, nodes.getLength() + " elements");
 
         return nodes.item(0).getTextContent();
     }
@@ -158,9 +165,13 @@ class Bioassay extends Updater
             InputStream fileStream = getZipStream(file);
             MyZipInputStream zipStream = new MyZipInputStream(fileStream);
 
-            while(zipStream.getNextEntry() != null)
+            ZipEntry entry;
+
+            while((entry = zipStream.getNextEntry()) != null)
             {
-                try(InputStream gzipStream = new FilteredInputStream(new GZIPInputStream(zipStream)))
+                String name = file + "/" + entry.getName();
+
+                try(InputStream gzipStream = new FilteredInputStream(new GZIPInputStream(zipStream), name))
                 {
                     DocumentBuilder db = dbf.newDocumentBuilder();
                     Document document = db.parse(gzipStream);
@@ -168,21 +179,21 @@ class Bioassay extends Updater
                     Node baseNode = (Node) basePath.evaluate(document.getDocumentElement(), XPathConstants.NODE);
 
                     if(baseNode == null)
-                        throw new IOException("base node not found");
+                        throw new DataException("no element PC-AssayDescription");
 
 
-                    Integer bioassayID = Integer.parseInt(getSingleNodeValue(idPath, baseNode));
+                    Integer bioassayID = Integer.parseInt(getSingleNodeValue(idPath, baseNode, "PC-ID_id"));
 
                     bioassays.reference(bioassayID);
 
 
-                    String sourceName = getSingleNodeValue(sourceNamePath, baseNode);
+                    String sourceName = getSingleNodeValue(sourceNamePath, baseNode, "PC-DBTracking_name");
                     Integer sourceID = Source.registerSourceID(createSourceID(sourceName), sourceName);
 
                     bioassays.set(bioassayID, "source", sourceID);
 
 
-                    String title = getSingleNodeValue(titlePath, baseNode);
+                    String title = getSingleNodeValue(titlePath, baseNode, "PC-AssayDescription_name");
 
                     bioassays.set(bioassayID, "title", title);
 
@@ -225,7 +236,7 @@ class Bioassay extends Updater
 
                     if(sourceName.equals("ChEMBL"))
                     {
-                        String chemblSource = getSingleNodeValue(trackingSourcePath, baseNode);
+                        String chemblSource = getSingleNodeValue(trackingSourcePath, baseNode, "Object-id_str");
 
                         if(chemblSource.startsWith("drug_mech_"))
                         {
@@ -249,9 +260,21 @@ class Bioassay extends Updater
                         }
                         else
                         {
-                            throw new IOException();
+                            throw new DataException("unexpected ChEMBL source", chemblSource);
                         }
                     }
+                }
+                catch(DataException e)
+                {
+                    Problems.error(e.getKind(), name + (e.getDetail() == null ? "" : ": " + e.getDetail()));
+                }
+                catch(NumberFormatException e)
+                {
+                    Problems.error("malformed number", name + ": " + e.getMessage());
+                }
+                catch(SAXException e)
+                {
+                    Problems.error("malformed XML", name + ": " + e.getMessage());
                 }
 
                 zipStream.closeEntry();
@@ -485,46 +508,54 @@ class Bioassay extends Updater
     static class FilteredInputStream extends InputStream
     {
         private final InputStream inputStream;
+        private final String name;
         private final int[] buffer = new int[3];
         private int bufferPosition = 0;
         private int pushBackChar = -1;
 
-        public FilteredInputStream(InputStream inputStream)
+        public FilteredInputStream(InputStream inputStream, String name)
         {
             this.inputStream = new BufferedInputStream(inputStream);
+            this.name = name;
         }
 
+        /*
+         * Returns the next byte of a valid UTF-8 sequence; the bytes of an invalid sequence are skipped with a
+         * warning, and the byte that has ended it prematurely is read again.
+         */
         @Override
         public int read() throws IOException
         {
-            if(bufferPosition > 0)
-                return buffer[--bufferPosition];
-
-            int byteRead = pushBackChar != -1 ? pushBackChar : inputStream.read();
-
-            if(byteRead <= 0b01111111)
-                return byteRead;
-
-            if(byteRead <= 0b10111111)
+            while(true)
             {
-                System.err.println("  wrong UTF-8 codding");
-                return read();
+                if(bufferPosition > 0)
+                    return buffer[--bufferPosition];
+
+                int byteRead = pushBackChar;
+
+                if(byteRead != -1)
+                    pushBackChar = -1;
+                else
+                    byteRead = inputStream.read();
+
+                if(byteRead <= 0b01111111)
+                    return byteRead;
+
+                if(byteRead <= 0b10111111 || byteRead > 0b11110111)
+                {
+                    Problems.warning("invalid UTF-8 sequence skipped", name);
+                    continue;
+                }
+
+                int size = byteRead <= 0b11011111 ? 0 : byteRead <= 0b11101111 ? 1 : 2;
+                boolean complete = true;
+
+                for(int i = size; i >= 0 && complete; i--)
+                    complete = valid(buffer[i] = inputStream.read());
+
+                if(complete)
+                    return byteRead;
             }
-
-            int size = 0;
-
-            if(byteRead <= 0b11011111)
-                size = 0;
-            else if(byteRead <= 0b11101111)
-                size = 1;
-            else if(byteRead <= 0b11110111)
-                size = 2;
-
-            for(int i = size; i >= 0; i--)
-                if(!valid(buffer[i] = inputStream.read()))
-                    return read();
-
-            return byteRead;
         }
 
         private boolean valid(int i)
@@ -538,7 +569,7 @@ class Bioassay extends Updater
             {
                 bufferPosition = 0;
                 pushBackChar = i;
-                System.err.println("  wrong UTF-8 codding");
+                Problems.warning("invalid UTF-8 sequence skipped", name);
                 return false;
             }
         }

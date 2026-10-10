@@ -8,9 +8,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -21,7 +24,11 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathException;
@@ -600,6 +607,8 @@ public class Updater
     protected static final int batchSize = 100000;
     protected static String baseDirectory = null;
     protected static Connection connection;
+    private static final Set<String> readFiles = ConcurrentHashMap.newKeySet();
+    private static boolean summarized = false;
     private static int count;
     private static final boolean dryRun = false;
 
@@ -765,11 +774,70 @@ public class Updater
     }
 
 
+    /*
+     * Opens a file of the data directory and records that the loader reads it, see checkFiles(). A missing file is
+     * reported as an error and null is returned, so that the load goes on without its data.
+     */
+    protected static InputStream openFile(String file) throws IOException
+    {
+        boolean first = readFiles.add(Path.of(file).normalize().toString());
+
+        if(!Files.isRegularFile(Path.of(baseDirectory, file)))
+        {
+            if(first)
+                Problems.error("no input file", file);
+
+            return null;
+        }
+
+        return new FileInputStream(baseDirectory + file);
+    }
+
+
+    /*
+     * Reports the files of the given directory of the data directory, including its subdirectories, that the loader
+     * has not read as errors, as their data would be left out, e.g. a new part of a release. The files whose paths
+     * relative to the directory match one of the given patterns are known not to be data of the loader.
+     */
+    protected static void checkFiles(String directory, String... ignored) throws IOException
+    {
+        System.out.println("check files ...");
+
+        Path start = Path.of(baseDirectory, directory);
+        List<Path> paths = List.of();
+
+        if(Files.isDirectory(start))
+        {
+            start = start.toRealPath();
+
+            try(Stream<Path> stream = Files.walk(start))
+            {
+                paths = stream.filter(Files::isRegularFile).sorted().toList();
+            }
+        }
+
+        for(Path path : paths)
+        {
+            String name = start.relativize(path).toString();
+            String file = Path.of(directory, name).toString();
+
+            if(!readFiles.contains(file) && Arrays.stream(ignored).noneMatch(name::matches))
+                Problems.error("unknown file", file);
+        }
+
+        System.out.println();
+    }
+
+
     protected static InputStream getZipStream(String file) throws IOException
     {
         System.out.println("  load " + file);
 
-        InputStream fis = new FileInputStream(baseDirectory + file);
+        InputStream fis = openFile(file);
+
+        if(fis == null)
+            return InputStream.nullInputStream();
+
         return new BufferedInputStream(fis);
     }
 
@@ -778,7 +846,10 @@ public class Updater
     {
         System.out.println("  load " + file);
 
-        InputStream fis = new FileInputStream(baseDirectory + file);
+        InputStream fis = openFile(file);
+
+        if(fis == null)
+            return InputStream.nullInputStream();
 
         fis = new GZIPInputStream(fis, 65536);
 
@@ -790,10 +861,24 @@ public class Updater
     {
         System.out.println("  load " + file);
 
-        FileInputStream fis = new FileInputStream(baseDirectory + file);
+        InputStream fis = openFile(file);
+
+        if(fis == null)
+            return new BufferedReader(Reader.nullReader());
+
         GZIPInputStream gis = new GZIPInputStream(fis, 65536);
         InputStreamReader isr = new InputStreamReader(gis, Charset.forName("UTF-8"));
         return new BufferedReader(isr);
+    }
+
+
+    /*
+     * Returns the names of the files, not of the subdirectories, of the directory that match the pattern; null stands
+     * for a missing directory.
+     */
+    private static String[] listFiles(String path, String name)
+    {
+        return new File(baseDirectory + path).list((dir, file) -> file.matches(name) && new File(dir, file).isFile());
     }
 
 
@@ -804,7 +889,7 @@ public class Updater
     protected static void processFiles(String path, String name, FileNameSqlFunction func)
             throws IOException, SQLException
     {
-        String[] files = new File(baseDirectory + path).list((dir, file) -> file.matches(name));
+        String[] files = listFiles(path, name);
 
         if(files == null || files.length == 0)
         {
@@ -840,7 +925,7 @@ public class Updater
     protected static void processXmlFiles(String path, String name, FileNameXmlFunction func)
             throws IOException, XPathException, ParserConfigurationException, SAXException, SQLException
     {
-        String[] files = new File(baseDirectory + path).list((dir, file) -> file.matches(name));
+        String[] files = listFiles(path, name);
 
         if(files == null || files.length == 0)
         {
@@ -907,11 +992,14 @@ public class Updater
 
 
     /*
-     * Sets the version of the given source. A database without the table of the sources is left as it is, a missing
-     * source in it is an error.
+     * Sets the version of the given source; an unknown version is an error. A database without the table of the
+     * sources is left as it is, a missing source in it is an error.
      */
     protected static void setVersion(String name, String version) throws SQLException
     {
+        if(version == null || version.isEmpty())
+            Problems.error("unknown version", name);
+
         if(dryRun)
             return;
 
@@ -1079,6 +1167,7 @@ public class Updater
      */
     protected static void checkProblems()
     {
+        summarized = true;
         Problems.printSummary();
 
         if(Problems.hasErrors())
@@ -1087,13 +1176,18 @@ public class Updater
 
 
     /*
-     * Fails the load: prints the exception, if any, rolls the data back and exits with a non-zero status, so that the
-     * scripts running the loaders can tell the failure.
+     * Fails the load: prints the exception, if any, with the summary of the problems reported before it, rolls the
+     * data back and exits with a non-zero status, so that the scripts running the loaders can tell the failure.
      */
     protected static void fail(Throwable exception)
     {
         if(exception != null)
+        {
             exception.printStackTrace();
+
+            if(!summarized && Problems.hasProblems())
+                Problems.printSummary();
+        }
 
         try
         {

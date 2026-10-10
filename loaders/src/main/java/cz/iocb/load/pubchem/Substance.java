@@ -17,6 +17,7 @@ import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -42,8 +43,9 @@ class Substance extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/CHEMINF_000477"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/CHEMINF_000477"))
+                            return;
 
                         Integer substanceID = getSubstanceID(subject.getURI(), false);
                         Integer compoundID = Compound.getCompoundID(object.getURI());
@@ -90,8 +92,9 @@ class Substance extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            return;
 
                         if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Substance"))
                             return;
@@ -154,11 +157,11 @@ class Substance extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/available"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/available"))
+                            return;
 
                         Integer substanceID = getSubstanceID(subject.getURI(), false);
-                        String date = getLexicalForm(object).replaceFirst("-0[45]:00$", "");
+                        String date = getDate(object, "-04:00", "-05:00");
 
                         substances.set(substanceID, "available", date);
                     }
@@ -178,11 +181,11 @@ class Substance extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/modified"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/modified"))
+                            return;
 
                         Integer substanceID = getSubstanceID(subject.getURI(), false);
-                        String date = getLexicalForm(object).replaceFirst("-0[45]:00$", "");
+                        String date = getDate(object, "-04:00", "-05:00");
 
                         substances.set(substanceID, "modified", date);
                     }
@@ -202,8 +205,8 @@ class Substance extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/source"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/source"))
+                            return;
 
                         Integer substanceID = getSubstanceID(subject.getURI(), false);
                         Integer sourceID = Source.getSourceID(object.getURI());
@@ -237,8 +240,8 @@ class Substance extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://www.w3.org/2000/01/rdf-schema#seeAlso"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://www.w3.org/2000/01/rdf-schema#seeAlso"))
+                            return;
 
                         String value = object.getURI();
 
@@ -279,12 +282,16 @@ class Substance extends Updater
                                     if(match.equals(keep))
                                         return;
                                     else if(keep != null)
-                                        throw new IOException();
+                                        throw new DataException(
+                                                "multiple values of pubchem.substance_glytoucan_matches.match",
+                                                substanceID + ": " + keep + ", " + match);
 
                                     String put = newGlytoucanMatches.put(substanceID, match);
 
                                     if(put != null && !match.equals(put))
-                                        throw new IOException();
+                                        throw new DataException(
+                                                "multiple values of pubchem.substance_glytoucan_matches.match",
+                                                substanceID + ": " + put + ", " + match);
                                 }
                             }
                         }
@@ -317,8 +324,9 @@ class Substance extends Updater
                 @Override
                 protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                 {
-                    if(!predicate.getURI().equals("http://rdf.wwpdb.org/schema/pdbx-v50.owl#link_to_pdb"))
-                        throw new IOException();
+                    if(!checkPredicate(subject, predicate, object,
+                            "http://rdf.wwpdb.org/schema/pdbx-v50.owl#link_to_pdb"))
+                        return;
 
                     Integer substanceID = getSubstanceID(subject.getURI(), false);
                     String link = getStringID(object, "http://rdf.wwpdb.org/pdb/");
@@ -331,6 +339,11 @@ class Substance extends Updater
                             keepLinks.add(pair);
                         else if(!keepLinks.contains(pair))
                             newLinks.add(pair);
+                    }
+                    else
+                    {
+                        Problems.warning("ignored value of " + predicate.getURI() + " without an identifier",
+                                text(subject) + " " + text(object));
                     }
                 }
             }.load(stream);
@@ -362,8 +375,8 @@ class Substance extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://purl.org/spar/cito/isDiscussedBy"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/spar/cito/isDiscussedBy"))
+                            return;
 
                         Integer substanceID = getSubstanceID(subject.getURI(), false);
 
@@ -424,8 +437,9 @@ class Substance extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://semanticscience.org/resource/SIO_000008"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://semanticscience.org/resource/SIO_000008"))
+                            return;
 
                         if(object.getURI().startsWith("http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/SID"))
                             return;
@@ -447,7 +461,8 @@ class Substance extends Updater
                         }
                         else
                         {
-                            System.out.println("    ignore synonym " + object.getURI() + " for sio:SIO_000008");
+                            Problems.warning("ignored triple of an unknown synonym in " + predicate.getURI(),
+                                    text(subject) + " " + text(object));
                         }
                     }
                 }.load(stream);
@@ -471,8 +486,8 @@ class Substance extends Updater
                     {
                         getIntID(subject, prefix);
 
-                        if(!predicate.getURI().equals("http://purl.obolibrary.org/obo/RO_0000056"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.obolibrary.org/obo/RO_0000056"))
+                            return;
 
                         getStringID(object, Measuregroup.prefix);
                     }
@@ -494,11 +509,12 @@ class Substance extends Updater
                     {
                         Integer substanceID = getIntID(subject, prefix);
 
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/identifier"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/identifier"))
+                            return;
 
-                        if(substanceID != Integer.parseInt(object.getLiteral().getLexicalForm()))
-                            throw new IOException();
+                        if(substanceID != Integer.parseInt(getLexicalForm(object)))
+                            Problems.error("value of " + predicate.getURI() + " not matching the IRI",
+                                    text(subject) + " " + text(object));
                     }
                 }.load(stream);
             }

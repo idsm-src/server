@@ -52,7 +52,7 @@ class Document extends Updater
                     {
                         if(!predicate.getURI().equals(cco + "hasDocument"))
                         {
-                            ChEMBL.unexpected(subject, predicate, object);
+                            unexpected(subject, predicate, object);
                             return;
                         }
 
@@ -65,7 +65,7 @@ class Document extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, cco + "Document");
+                        case rdfType -> checkType(subject, object, cco + "Document");
                         case chemblId -> documents.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL" + id));
                         case rdfsLabel -> ChEMBL.checkValue(subject, predicate, object, "CHEMBL" + id);
@@ -89,7 +89,7 @@ class Document extends Updater
 
                             journals.forward(id, journalID == null ? -1 : journalID);
                         }
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);

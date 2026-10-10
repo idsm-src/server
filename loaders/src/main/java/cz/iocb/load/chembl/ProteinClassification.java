@@ -62,7 +62,7 @@ class ProteinClassification extends Updater
                         if(predicate.getURI().equals(cco + "hasProteinClassification"))
                             targets.inverse(getClassID(object), Target.getTargetID(subject));
                         else
-                            ChEMBL.unexpected(subject, predicate, object);
+                            unexpected(subject, predicate, object);
 
                         return;
                     }
@@ -72,7 +72,7 @@ class ProteinClassification extends Updater
                         if(predicate.getURI().equals(cco + "hasProteinClassification"))
                             components.inverse(getClassID(object), TargetComponent.getComponentID(subject));
                         else
-                            ChEMBL.unexpected(subject, predicate, object);
+                            unexpected(subject, predicate, object);
 
                         return;
                     }
@@ -81,7 +81,7 @@ class ProteinClassification extends Updater
 
                     switch(predicate.getURI())
                     {
-                        case rdfType -> ChEMBL.checkType(subject, object, cco + "ProteinClassification");
+                        case rdfType -> checkType(subject, object, cco + "ProteinClassification");
                         case chemblId -> classes.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL_PC_" + id));
                         case rdfsLabel -> classes.set(id, "label", getString(object));
@@ -108,7 +108,7 @@ class ProteinClassification extends Updater
                             targetDescendants.add(id, targetID);
                             targets.forward(id, targetID);
                         }
-                        default -> ChEMBL.unexpected(subject, predicate, object);
+                        default -> unexpected(subject, predicate, object);
                     }
                 }
             }.load(stream);

@@ -11,6 +11,7 @@ import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.MissingEntities;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -62,26 +63,26 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                            return;
 
                         switch(subject.getURI().replaceFirst("[^/_]*$", ""))
                         {
                             case prefix ->
                             {
-                                if(!object.getURI().equals("http://data.epo.org/linked-data/def/patent/Publication")
-                                        && !object.getURI()
-                                                .equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Patent"))
-                                    throw new IOException();
+                                if(!checkType(subject, object, "http://data.epo.org/linked-data/def/patent/Publication",
+                                        "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Patent"))
+                                    return;
 
                                 addPatent(getStringID(subject, prefix));
                             }
 
                             case inventorPrefix ->
                             {
-                                if(!object.getURI()
-                                        .equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PatentInventor"))
-                                    throw new IOException();
+                                if(!checkType(subject, object,
+                                        "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PatentInventor"))
+                                    return;
 
                                 String inventorID = subject.getURI().substring(inventorPrefixLength);
 
@@ -96,9 +97,9 @@ class Patent extends Updater
 
                             case assigneePrefix ->
                             {
-                                if(!object.getURI()
-                                        .equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PatentAssignee"))
-                                    throw new IOException();
+                                if(!checkType(subject, object,
+                                        "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#PatentAssignee"))
+                                    return;
 
                                 String assigneeID = subject.getURI().substring(assigneePrefixLength);
 
@@ -110,6 +111,8 @@ class Patent extends Updater
                                         newAssignees.add(assigneeID);
                                 }
                             }
+
+                            default -> throw new DataException("unexpected IRI", text(subject));
                         }
                     }
                 }.load(stream);
@@ -128,8 +131,9 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/titleOfInvention"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://data.epo.org/linked-data/def/patent/titleOfInvention"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
                         String title = getString(object);
@@ -152,8 +156,8 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://purl.org/dc/terms/abstract"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/dc/terms/abstract"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
                         String value = getString(object);
@@ -176,8 +180,9 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/publicationNumber"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://data.epo.org/linked-data/def/patent/publicationNumber"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
                         String number = getString(object);
@@ -200,11 +205,12 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/filingDate"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://data.epo.org/linked-data/def/patent/filingDate"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String date = getLexicalForm(object).replaceFirst("-0[45]:00$", "");
+                        String date = getDate(object, "-04:00", "-05:00");
 
                         patents.set(patentID, "filing_date", date);
                     }
@@ -224,12 +230,12 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        // workaround
-                        if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/grantDate"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://data.epo.org/linked-data/def/patent/grantDate"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String date = getLexicalForm(object).replaceFirst("-0[45]:00$", "");
+                        String date = getDate(object, "-04:00", "-05:00");
 
                         patents.set(patentID, "grant_date", date);
                     }
@@ -249,11 +255,12 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/publicationDate"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://data.epo.org/linked-data/def/patent/publicationDate"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String date = getLexicalForm(object).replaceFirst("-0[45]:00$", "");
+                        String date = getDate(object, "-04:00", "-05:00");
 
                         patents.set(patentID, "publication_date", date);
                     }
@@ -273,11 +280,12 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#priorityDate"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#priorityDate"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String date = getLexicalForm(object).replaceFirst("-0[45]:00$", "");
+                        String date = getDate(object, "-04:00", "-05:00");
 
                         patents.set(patentID, "priority_date", date);
                     }
@@ -303,8 +311,8 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://purl.org/spar/cito/isCitedBy"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://purl.org/spar/cito/isCitedBy"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
                         Integer citationID = getPatentID(object.getURI());
@@ -344,9 +352,9 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI()
-                                .equals("http://data.epo.org/linked-data/def/patent/classificationCPCAdditional"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://data.epo.org/linked-data/def/patent/classificationCPCAdditional"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
                         String classification = getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/patentcpc/");
@@ -388,9 +396,9 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI()
-                                .equals("http://data.epo.org/linked-data/def/patent/classificationCPCInventive"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://data.epo.org/linked-data/def/patent/classificationCPCInventive"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
                         String classification = getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/patentcpc/");
@@ -432,9 +440,9 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI()
-                                .equals("http://data.epo.org/linked-data/def/patent/classificationIPCAdditional"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://data.epo.org/linked-data/def/patent/classificationIPCAdditional"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
                         String classification = getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/patentipc/");
@@ -476,9 +484,9 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI()
-                                .equals("http://data.epo.org/linked-data/def/patent/classificationIPCInventive"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://data.epo.org/linked-data/def/patent/classificationIPCInventive"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
                         String classification = getStringID(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/patentipc/");
@@ -520,8 +528,9 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/inventorVC"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://data.epo.org/linked-data/def/patent/inventorVC"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
                         String inventorID = getInventorID(object.getURI(), false);
@@ -561,8 +570,9 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://data.epo.org/linked-data/def/patent/applicantVC"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object,
+                                "http://data.epo.org/linked-data/def/patent/applicantVC"))
+                            return;
 
                         Integer patentID = getPatentID(subject.getURI());
                         String assigneeID = getAssigneeID(object.getURI(), false);
@@ -610,8 +620,8 @@ class Patent extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        if(!predicate.getURI().equals("http://www.w3.org/2006/vcard/ns#fn"))
-                            throw new IOException();
+                        if(!checkPredicate(subject, predicate, object, "http://www.w3.org/2006/vcard/ns#fn"))
+                            return;
 
                         if(subject.getURI().startsWith(inventorPrefix))
                         {
@@ -648,8 +658,6 @@ class Patent extends Updater
                                     {
                                         if(!isNameBetter(name, keep))
                                             return;
-
-                                        //throw new IOException(inventorID);
                                     }
 
                                     String put = newInventorNames.put(inventorID, name);
@@ -658,8 +666,6 @@ class Patent extends Updater
                                     {
                                         if(!isNameBetter(name, put))
                                             newInventorNames.put(inventorID, put);
-
-                                        //throw new IOException(inventorID);
                                     }
                                 }
                             }
@@ -699,8 +705,6 @@ class Patent extends Updater
                                     {
                                         if(!isNameBetter(name, keep))
                                             return;
-
-                                        //throw new IOException(assigneeID);
                                     }
 
                                     String put = newAssigneeNames.put(assigneeID, name);
@@ -709,8 +713,6 @@ class Patent extends Updater
                                     {
                                         if(!isNameBetter(name, put))
                                             newAssigneeNames.put(assigneeID, put);
-
-                                        //throw new IOException(assigneeID);
                                     }
                                 }
                             }
@@ -754,7 +756,8 @@ class Patent extends Updater
         else
             result = false;
 
-        System.out.format("    prefere fn \"%s\"\n    instead of \"%s\"\n", result ? a : b, result ? b : a);
+        Problems.warning("conflicting names of an inventor or an assignee",
+                "\"" + (result ? a : b) + "\" chosen instead of \"" + (result ? b : a) + "\"");
 
         return result;
     }

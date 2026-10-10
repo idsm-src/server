@@ -185,7 +185,7 @@ public class Anatomy extends Updater
 
     static void load() throws IOException, SQLException
     {
-        System.out.println("load anatomys ...");
+        System.out.println("load anatomies ...");
 
         TripleDispatcher dispatcher = new TripleDispatcher();
 

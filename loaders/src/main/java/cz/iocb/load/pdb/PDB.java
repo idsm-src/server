@@ -1,8 +1,8 @@
 package cz.iocb.load.pdb;
 
 import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
@@ -13,6 +13,7 @@ import java.sql.Statement;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.Updater;
 
 
@@ -30,8 +31,13 @@ public final class PDB extends Updater
 
         load("select name,molfile from pdb.compounds", oldCompounds);
 
-        try(TarArchiveInputStream tar = new TarArchiveInputStream(new GzipCompressorInputStream(
-                new BufferedInputStream(new FileInputStream(baseDirectory + "pdb/ccd.tar.gz")))))
+        InputStream input = openFile("pdb/ccd.tar.gz");
+
+        if(input == null)
+            return;
+
+        try(TarArchiveInputStream tar = new TarArchiveInputStream(
+                new GzipCompressorInputStream(new BufferedInputStream(input))))
         {
             TarArchiveEntry entry;
 
@@ -56,16 +62,26 @@ public final class PDB extends Updater
                         String keep = keepCompounds.get(id);
 
                         if(molfile.equals(keep))
-                            return;
-                        else if(keep != null)
-                            throw new IOException();
+                            continue;
+
+                        if(keep != null)
+                        {
+                            Problems.error("multiple values of pdb.compounds.molfile", id);
+                            continue;
+                        }
 
                         String put = newCompounds.put(id, molfile);
 
                         if(put != null && !molfile.equals(put))
-                            throw new IOException();
+                            Problems.error("multiple values of pdb.compounds.molfile", id);
                     }
                 }
+            }
+
+            if(keepCompounds.isEmpty() && newCompounds.isEmpty())
+            {
+                Problems.error("no structure", "pdb.compounds");
+                return;
             }
 
             store("delete from pdb.compounds where name=? and molfile=?", oldCompounds);
@@ -100,6 +116,7 @@ public final class PDB extends Updater
 
             updateVersion();
 
+            checkFiles("pdb");
             checkProblems();
 
             syncIndex("pdb", true);

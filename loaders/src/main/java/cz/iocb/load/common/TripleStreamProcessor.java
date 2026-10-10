@@ -3,6 +3,11 @@ package cz.iocb.load.common;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.Lang;
@@ -13,7 +18,8 @@ import org.apache.jena.riot.RDFParserBuilder;
 
 /*
  * Reads a stream of triples and passes every triple to parse(). A problem of the data of a triple, i.e. a
- * DataException or a malformed number, is reported as an error and the triple is skipped, so that the reading goes on.
+ * DataException, a malformed number or a node of an unexpected kind, such as a literal in place of an IRI, is reported
+ * as an error and the triple is skipped, so that the reading goes on.
  */
 public abstract class TripleStreamProcessor
 {
@@ -25,6 +31,9 @@ public abstract class TripleStreamProcessor
     private static final String xsdBoolean = xsd + "boolean";
     private static final String xsdFloat = xsd + "float";
     private static final String xsdDecimal = xsd + "decimal";
+    private static final String xsdDate = xsd + "date";
+    private static final Pattern zonePattern = Pattern.compile("(Z|[+-][0-9]{2}:[0-9]{2})$");
+    private static final Pattern datePattern = Pattern.compile("([0-9]{4})-([0-9]{2})-([0-9]{2})");
 
 
     public void load(InputStream stream) throws IOException
@@ -55,7 +64,7 @@ public abstract class TripleStreamProcessor
                     {
                         parse(triple.getSubject(), triple.getPredicate(), triple.getObject());
                     }
-                    catch(DataException | NumberFormatException e)
+                    catch(DataException | NumberFormatException | UnsupportedOperationException e)
                     {
                         report(e, triple.getSubject(), triple.getPredicate(), triple.getObject());
                     }
@@ -84,7 +93,8 @@ public abstract class TripleStreamProcessor
      */
     public static void report(Exception e, Node subject, Node predicate, Node object)
     {
-        String kind = e instanceof DataException data ? data.getKind() : "malformed number";
+        String kind = e instanceof DataException data ? data.getKind() :
+                e instanceof UnsupportedOperationException ? "unexpected kind of a node" : "malformed number";
         String detail = e instanceof DataException data ? data.getDetail() : e.getMessage();
         String triple = text(subject) + " " + text(object);
 
@@ -92,6 +102,76 @@ public abstract class TripleStreamProcessor
             triple += " (" + detail + ")";
 
         Problems.error(kind + " in " + predicate.getURI(), triple);
+    }
+
+
+    /*
+     * Reports a triple whose predicate the loader does not know, i.e. a triple that it does not load, as an error.
+     */
+    public static void unexpected(Node subject, Node predicate, Node object)
+    {
+        Problems.error("unexpected predicate " + predicate.getURI(), text(subject) + " " + text(object));
+    }
+
+
+    /*
+     * Tests whether the triple has the expected predicate; a triple with another predicate is reported as an error.
+     */
+    public static boolean checkPredicate(Node subject, Node predicate, Node object, String expected)
+    {
+        if(predicate.getURI().equals(expected))
+            return true;
+
+        unexpected(subject, predicate, object);
+        return false;
+    }
+
+
+    /*
+     * Tests whether the triple has one of the expected predicates; a triple with another predicate is reported as an
+     * error.
+     */
+    public static boolean checkPredicate(Node subject, Node predicate, Node object, String... expected)
+    {
+        for(String iri : expected)
+            if(predicate.getURI().equals(iri))
+                return true;
+
+        unexpected(subject, predicate, object);
+        return false;
+    }
+
+
+    /*
+     * Reports a value of a predicate that the loader does not expect as an error.
+     */
+    public static void unexpectedValue(Node subject, Node predicate, Node object)
+    {
+        Problems.error("unexpected value of " + predicate.getURI(), text(subject) + " " + text(object));
+    }
+
+
+    /*
+     * Reports a type of a subject that the loader does not know as an error.
+     */
+    public static void unexpectedType(Node subject, Node type)
+    {
+        Problems.error("unexpected rdf:type " + text(type), text(subject));
+    }
+
+
+    /*
+     * Tests whether the type is one of the expected ones; another type is reported as an error.
+     */
+    public static boolean checkType(Node subject, Node type, String... expected)
+    {
+        if(type.isURI())
+            for(String iri : expected)
+                if(type.getURI().equals(iri))
+                    return true;
+
+        unexpectedType(subject, type);
+        return false;
     }
 
 
@@ -167,7 +247,7 @@ public abstract class TripleStreamProcessor
     }
 
 
-    private static DataException unexpectedValue(Node node, String datatype)
+    private static DataException unexpectedLiteral(Node node, String datatype)
     {
         return new DataException("unexpected value instead of an " + datatype + " literal", text(node));
     }
@@ -185,9 +265,60 @@ public abstract class TripleStreamProcessor
     public static String getString(Node node) throws IOException
     {
         if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsdString))
-            throw unexpectedValue(node, "xsd:string");
+            throw unexpectedLiteral(node, "xsd:string");
 
         return node.getLiteralLexicalForm();
+    }
+
+
+    /*
+     * Returns the date of an xsd:date literal; a timezone of the date is accepted only when it is one of the given
+     * timezones, and it is cut off.
+     */
+    public static String getDate(Node node, String... zones) throws IOException
+    {
+        if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsdDate))
+            throw unexpectedLiteral(node, "xsd:date");
+
+        String date = node.getLiteralLexicalForm();
+        Matcher matcher = zonePattern.matcher(date);
+
+        if(matcher.find())
+        {
+            if(!List.of(zones).contains(matcher.group()))
+                throw new DataException("unexpected timezone of an xsd:date literal", text(node));
+
+            date = date.substring(0, matcher.start());
+        }
+
+        if(!isDate(date))
+            throw unexpectedLiteral(node, "xsd:date");
+
+        return date;
+    }
+
+
+    /*
+     * Tests whether the text is a date that the database can store: a day of the years 1 to 9999 written as the
+     * lexical form of an xsd:date literal without its timezone.
+     */
+    public static boolean isDate(String text)
+    {
+        Matcher matcher = datePattern.matcher(text);
+
+        if(!matcher.matches() || Integer.parseInt(matcher.group(1)) == 0)
+            return false;
+
+        try
+        {
+            LocalDate.of(Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2)),
+                    Integer.parseInt(matcher.group(3)));
+            return true;
+        }
+        catch(DateTimeException e)
+        {
+            return false;
+        }
     }
 
 
@@ -206,7 +337,7 @@ public abstract class TripleStreamProcessor
     public static int getIntFromInteger(Node node) throws IOException
     {
         if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsdInteger))
-            throw unexpectedValue(node, "xsd:integer");
+            throw unexpectedLiteral(node, "xsd:integer");
 
         try
         {
@@ -222,7 +353,7 @@ public abstract class TripleStreamProcessor
     public static int getInt(Node node) throws IOException
     {
         if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsdInt))
-            throw unexpectedValue(node, "xsd:int");
+            throw unexpectedLiteral(node, "xsd:int");
 
         try
         {
@@ -238,7 +369,7 @@ public abstract class TripleStreamProcessor
     public static double getDouble(Node node) throws IOException
     {
         if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsdDouble))
-            throw unexpectedValue(node, "xsd:double");
+            throw unexpectedLiteral(node, "xsd:double");
 
         try
         {
@@ -254,7 +385,7 @@ public abstract class TripleStreamProcessor
     public static boolean getBoolean(Node node) throws IOException
     {
         if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsdBoolean))
-            throw unexpectedValue(node, "xsd:boolean");
+            throw unexpectedLiteral(node, "xsd:boolean");
 
         return switch(node.getLiteralLexicalForm())
         {
@@ -268,7 +399,7 @@ public abstract class TripleStreamProcessor
     public static float getFloat(Node node) throws IOException
     {
         if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(xsdFloat))
-            throw unexpectedValue(node, "xsd:float");
+            throw unexpectedLiteral(node, "xsd:float");
 
         try
         {
@@ -285,7 +416,7 @@ public abstract class TripleStreamProcessor
     {
         if(!node.isLiteral()
                 || !node.getLiteralDatatypeURI().equals(xsdInteger) && !node.getLiteralDatatypeURI().equals(xsdDecimal))
-            throw unexpectedValue(node, "xsd:decimal");
+            throw unexpectedLiteral(node, "xsd:decimal");
 
         try
         {
