@@ -272,8 +272,8 @@ public abstract class TripleStreamProcessor
 
 
     /*
-     * Returns the date of an xsd:date literal; a timezone of the date is accepted only when it is one of the given
-     * timezones, and it is cut off.
+     * Returns the date of an xsd:date literal without its timezone. The date has to have one of the given timezones,
+     * or no timezone when none is given, because the mapping gives all dates of a property the same timezone or none.
      */
     public static String getDate(Node node, String... zones) throws IOException
     {
@@ -289,6 +289,10 @@ public abstract class TripleStreamProcessor
                 throw new DataException("unexpected timezone of an xsd:date literal", text(node));
 
             date = date.substring(0, matcher.start());
+        }
+        else if(zones.length > 0)
+        {
+            throw new DataException("missing timezone of an xsd:date literal", text(node));
         }
 
         if(!isDate(date))

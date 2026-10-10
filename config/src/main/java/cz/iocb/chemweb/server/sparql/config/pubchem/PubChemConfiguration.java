@@ -31,7 +31,7 @@ public class PubChemConfiguration extends SparqlDatabaseOptimisedConfiguration
     static final String schema = "pubchem";
 
     public static final LangStringWithTagClass rdfLangStringEn = LangStringWithTagClass.get("en");
-    public static final DateInZoneClass xsdDateM4 = DateInZoneClass.get(-4 * 60 * 60);
+    public static final DateInZoneClass xsdDateNoZone = DateInZoneClass.get(Integer.MIN_VALUE);
 
 
     public PubChemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException

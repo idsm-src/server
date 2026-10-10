@@ -210,7 +210,7 @@ class Patent extends Updater
                             return;
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String date = getDate(object, "-04:00", "-05:00");
+                        String date = getDate(object);
 
                         patents.set(patentID, "filing_date", date);
                     }
@@ -235,7 +235,7 @@ class Patent extends Updater
                             return;
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String date = getDate(object, "-04:00", "-05:00");
+                        String date = getDate(object);
 
                         patents.set(patentID, "grant_date", date);
                     }
@@ -260,7 +260,7 @@ class Patent extends Updater
                             return;
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String date = getDate(object, "-04:00", "-05:00");
+                        String date = getDate(object);
 
                         patents.set(patentID, "publication_date", date);
                     }
@@ -285,7 +285,7 @@ class Patent extends Updater
                             return;
 
                         Integer patentID = getPatentID(subject.getURI());
-                        String date = getDate(object, "-04:00", "-05:00");
+                        String date = getDate(object);
 
                         patents.set(patentID, "priority_date", date);
                     }

@@ -1,7 +1,7 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
-import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.xsdDateM4;
+import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.xsdDateNoZone;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
@@ -34,7 +34,7 @@ public class Reference
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:title"),
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:date"),
-                    config.createLiteralMapping(xsdDateM4, "dcdate"));
+                    config.createLiteralMapping(xsdDateNoZone, "dcdate"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:date"),
                     config.createLiteralMapping(xsdString, "date"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:bibliographicCitation"),

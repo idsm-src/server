@@ -161,7 +161,7 @@ class Substance extends Updater
                             return;
 
                         Integer substanceID = getSubstanceID(subject.getURI(), false);
-                        String date = getDate(object, "-04:00", "-05:00");
+                        String date = getDate(object);
 
                         substances.set(substanceID, "available", date);
                     }
@@ -185,7 +185,7 @@ class Substance extends Updater
                             return;
 
                         Integer substanceID = getSubstanceID(subject.getURI(), false);
-                        String date = getDate(object, "-04:00", "-05:00");
+                        String date = getDate(object);
 
                         substances.set(substanceID, "modified", date);
                     }

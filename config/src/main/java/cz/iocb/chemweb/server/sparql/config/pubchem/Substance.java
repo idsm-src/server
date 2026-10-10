@@ -1,7 +1,7 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
-import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.xsdDateM4;
+import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.xsdDateNoZone;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
@@ -33,11 +33,11 @@ public class Substance
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("vocab:Substance"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:available"),
-                    config.createLiteralMapping(xsdDateM4, "available"));
+                    config.createLiteralMapping(xsdDateNoZone, "available"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:source"),
                     config.createIriMapping("pubchem:source", "source"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:modified"),
-                    config.createLiteralMapping(xsdDateM4, "modified"));
+                    config.createLiteralMapping(xsdDateNoZone, "modified"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:CHEMINF_000477"),
                     config.createIriMapping("pubchem:compound", "compound"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),

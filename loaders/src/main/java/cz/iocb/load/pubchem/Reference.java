@@ -296,7 +296,7 @@ class Reference extends Updater
                         {
                             case "http://www.w3.org/2001/XMLSchema#date" ->
                             {
-                                String date = getDate(object, "-04:00", "-05:00");
+                                String date = getDate(object);
 
                                 references.set(referenceID, "dcdate", date);
                             }

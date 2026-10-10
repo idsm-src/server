@@ -1,7 +1,7 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
-import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.xsdDateM4;
+import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.xsdDateNoZone;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
@@ -52,13 +52,13 @@ public class Patent
             config.addQuadMapping(table, graph, subject, config.createIriMapping("epo:publicationNumber"),
                     config.createLiteralMapping(xsdString, "publication_number"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("epo:filingDate"),
-                    config.createLiteralMapping(xsdDateM4, "filing_date"));
+                    config.createLiteralMapping(xsdDateNoZone, "filing_date"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("epo:grantDate"),
-                    config.createLiteralMapping(xsdDateM4, "grant_date"));
+                    config.createLiteralMapping(xsdDateNoZone, "grant_date"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("epo:publicationDate"),
-                    config.createLiteralMapping(xsdDateM4, "publication_date"));
+                    config.createLiteralMapping(xsdDateNoZone, "publication_date"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:priorityDate"),
-                    config.createLiteralMapping(xsdDateM4, "priority_date"));
+                    config.createLiteralMapping(xsdDateNoZone, "priority_date"));
         }
 
         {
