@@ -4,25 +4,40 @@ import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.bui
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBlank;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCHEBI;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
+import static cz.iocb.load.common.EntityTable.bool;
+import static cz.iocb.load.common.EntityTable.float8;
+import static cz.iocb.load.common.EntityTable.intKey;
+import static cz.iocb.load.common.EntityTable.intPairKey;
+import static cz.iocb.load.common.EntityTable.integer;
+import static cz.iocb.load.common.EntityTable.real;
+import static cz.iocb.load.common.EntityTable.typed;
+import static cz.iocb.load.common.EntityTable.varchar;
 import static cz.iocb.load.common.TripleDispatcher.is;
+import static java.util.Locale.ROOT;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Pattern;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource;
 import cz.iocb.load.common.BlankNodes;
 import cz.iocb.load.common.DataException;
+import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
 import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
@@ -207,122 +222,107 @@ public class Ontology extends Updater
     }
 
 
-    private static class ValueRestriction
+    /*
+     * A value of a predicate whose values are resources or strings: the (unit, id) of a resource, or a string with its
+     * language, if any.
+     */
+    private static record Value(Integer unit, Integer id, String string, String language)
     {
-        public final Pair<Integer, Integer> propertyID;
-        public final Pair<Integer, Integer> classID;
-
-        public ValueRestriction(Pair<Integer, Integer> propertyID, Pair<Integer, Integer> classID)
+        static Value get(Node node, String... kinds) throws DataException
         {
-            this.propertyID = propertyID;
-            this.classID = classID;
+            if(node.isLiteral())
+            {
+                LiteralValue literal = getLiteral(node, kinds);
+
+                return new Value(null, null, (String) literal.value(), literal.language());
+            }
+
+            Pair<Integer, Integer> resourceID = getId(node);
+
+            return new Value(resourceID.getOne(), resourceID.getTwo(), null, null);
         }
 
-        @Override
-        public boolean equals(Object obj)
+
+        static Value read(ResultSet result, int index, boolean languages) throws SQLException
         {
-            if(obj == this)
-                return true;
+            int unit = result.getInt(index);
+            boolean literal = result.wasNull();
+            int id = result.getInt(index + 1);
 
-            if(obj == null || obj.getClass() != this.getClass())
-                return false;
-
-            ValueRestriction other = (ValueRestriction) obj;
-
-            return propertyID.equals(other.propertyID) && classID.equals(other.classID);
+            return literal ?
+                    new Value(null, null, result.getString(index + 2), languages ? result.getString(index + 3) : null) :
+                    new Value(unit, id, null, null);
         }
 
-        @Override
-        public int hashCode()
+
+        void write(PreparedStatement statement, int index, boolean languages) throws SQLException
         {
-            return propertyID.hashCode() + classID.hashCode();
+            statement.setObject(index, unit, Types.SMALLINT);
+            statement.setObject(index + 1, id, Types.INTEGER);
+            statement.setObject(index + 2, string, Types.VARCHAR);
+
+            if(languages)
+                statement.setObject(index + 3, language, Types.VARCHAR);
         }
     }
 
 
-    private static class CardinalityRestriction
+    /*
+     * The pairs of a resource and a value of its predicate, which is a resource or a string without a language.
+     */
+    @SuppressWarnings("serial")
+    private static class ResourceValueSet extends SqlSet<Pair<Pair<Integer, Integer>, Value>>
     {
-        public final Pair<Integer, Integer> propertyID;
-        public final Integer cardinality;
-
-        public CardinalityRestriction(Pair<Integer, Integer> propertyID, Integer cardinality)
+        @Override
+        public Pair<Pair<Integer, Integer>, Value> get(ResultSet result) throws SQLException
         {
-            this.propertyID = propertyID;
-            this.cardinality = cardinality;
+            return Pair.getPair(Pair.getPair(result.getInt(1), result.getInt(2)), Value.read(result, 3, false));
         }
 
         @Override
-        public boolean equals(Object obj)
+        public void set(PreparedStatement statement, Pair<Pair<Integer, Integer>, Value> value) throws SQLException
         {
-            if(obj == this)
-                return true;
-
-            if(obj == null || obj.getClass() != this.getClass())
-                return false;
-
-            CardinalityRestriction other = (CardinalityRestriction) obj;
-
-            return propertyID.equals(other.propertyID) && cardinality.equals(other.cardinality);
+            statement.setInt(1, value.getOne().getOne());
+            statement.setInt(2, value.getOne().getTwo());
+            value.getTwo().write(statement, 3, false);
         }
+    }
 
-        @Override
-        public int hashCode()
-        {
-            return propertyID.hashCode() + cardinality.hashCode();
-        }
+
+    /*
+     * The canonical value of a literal: a string with its language, if any, a boolean, the text of the canonical form
+     * of an integer, or a floating-point number; the kind names the column of the value.
+     */
+    private static record LiteralValue(String kind, Object value, String language)
+    {
+    }
+
+
+    /*
+     * A relation of an ontology given by an ontology property, such as owl:imports, or by owl:versionInfo.
+     */
+    private static record Relation(Pair<Integer, Integer> ontologyID, String property, Value target)
+    {
     }
 
 
     @SuppressWarnings("serial")
-    public static class IntValueRestrictionMap extends SqlMap<Integer, ValueRestriction>
+    private static class RelationSet extends SqlSet<Relation>
     {
         @Override
-        public Integer getKey(ResultSet result) throws SQLException
+        public Relation get(ResultSet result) throws SQLException
         {
-            return result.getInt(1);
+            return new Relation(Pair.getPair(result.getInt(1), result.getInt(2)), result.getString(3),
+                    Value.read(result, 4, true));
         }
 
         @Override
-        public ValueRestriction getValue(ResultSet result) throws SQLException
+        public void set(PreparedStatement statement, Relation value) throws SQLException
         {
-            return new ValueRestriction(Pair.getPair(result.getInt(2), result.getInt(3)),
-                    Pair.getPair(result.getInt(4), result.getInt(5)));
-        }
-
-        @Override
-        public void set(PreparedStatement statement, Integer key, ValueRestriction value) throws SQLException
-        {
-            statement.setInt(1, key);
-            statement.setInt(2, value.propertyID.getOne());
-            statement.setInt(3, value.propertyID.getTwo());
-            statement.setInt(4, value.classID.getOne());
-            statement.setInt(5, value.classID.getTwo());
-        }
-    }
-
-
-    @SuppressWarnings("serial")
-    public static class IntCardinalityRestrictionMap extends SqlMap<Integer, CardinalityRestriction>
-    {
-        @Override
-        public Integer getKey(ResultSet result) throws SQLException
-        {
-            return result.getInt(1);
-        }
-
-        @Override
-        public CardinalityRestriction getValue(ResultSet result) throws SQLException
-        {
-            return new CardinalityRestriction(Pair.getPair(result.getInt(2), result.getInt(3)), result.getInt(4));
-        }
-
-        @Override
-        public void set(PreparedStatement statement, Integer key, CardinalityRestriction value) throws SQLException
-        {
-            statement.setInt(1, key);
-            statement.setInt(2, value.propertyID.getOne());
-            statement.setInt(3, value.propertyID.getTwo());
-            statement.setInt(4, value.cardinality);
+            statement.setInt(1, value.ontologyID().getOne());
+            statement.setInt(2, value.ontologyID().getTwo());
+            statement.setString(3, value.property());
+            value.target().write(statement, 4, true);
         }
     }
 
@@ -331,6 +331,7 @@ public class Ontology extends Updater
     static final String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
     static final String owl = "http://www.w3.org/2002/07/owl#";
     static final String doap = "http://usefulinc.com/ns/doap#";
+    static final String xsd = "http://www.w3.org/2001/XMLSchema#";
 
     private static final List<Source> sources = new ArrayList<>();
 
@@ -348,6 +349,82 @@ public class Ontology extends Updater
     private static final StringIntMap newResources = new StringIntMap();
     private static final StringIntMap oldResources = new StringIntMap();
 
+    private static final EntityTable<Pair<Integer, Integer>> lists = new EntityTable<>("ontology.lists",
+            intPairKey("unit", "id"), null, integer("first_unit"), integer("first_id"), varchar("first_string"),
+            typed("first_integer", "numeric"), real("first_float"), integer("rest_unit"), integer("rest_id"));
+
+    // the tables of the restrictions by the predicates of their fillers
+    private static final LinkedHashMap<String, EntityTable<Integer>> restrictionTables = new LinkedHashMap<>();
+
+    static
+    {
+        for(String kind : List.of("someValuesFrom", "allValuesFrom"))
+            restrictionTables.put(owl + kind,
+                    new EntityTable<>("ontology." + kind.toLowerCase(ROOT) + "_restrictions", intKey("id"), null,
+                            integer("property_unit"), integer("property_id"), integer("class_unit"),
+                            integer("class_id")));
+
+        restrictionTables.put(owl + "hasValue",
+                new EntityTable<>("ontology.hasvalue_restrictions", intKey("id"), null, integer("property_unit"),
+                        integer("property_id"), integer("value_unit"), integer("value_id"), varchar("value_string"),
+                        typed("value_integer", "numeric"), real("value_float"), bool("value_boolean")));
+
+        restrictionTables.put(owl + "hasSelf", new EntityTable<>("ontology.hasself_restrictions", intKey("id"), null,
+                integer("property_unit"), integer("property_id"), bool("value")));
+
+        for(String kind : List.of("cardinality", "minCardinality", "maxCardinality", "qualifiedCardinality",
+                "minQualifiedCardinality", "maxQualifiedCardinality"))
+            restrictionTables.put(owl + kind,
+                    new EntityTable<>("ontology." + kind.toLowerCase(ROOT) + "_restrictions", intKey("id"), null,
+                            integer("property_unit"), integer("property_id"), typed("cardinality", "numeric")));
+    }
+
+    // the restrictions without a filler, and the classes and data ranges of the qualified cardinality restrictions
+    private static final EntityTable<Integer> incompleteRestrictions = new EntityTable<>(
+            "ontology.incomplete_restrictions", intKey("id"), null, integer("property_unit"), integer("property_id"));
+    private static final EntityTable<Integer> restrictionClasses = new EntityTable<>("ontology.restriction_classes",
+            intKey("restriction"), null, integer("class_unit"), integer("class_id"));
+    private static final EntityTable<Integer> restrictionDataRanges = new EntityTable<>(
+            "ontology.restriction_dataranges", intKey("restriction"), null, integer("datarange_unit"),
+            integer("datarange_id"));
+
+    private static final EntityTable<Pair<Integer, Integer>> facetRestrictions = new EntityTable<>(
+            "ontology.facet_restrictions", intPairKey("restriction_unit", "restriction_id"), null,
+            typed("facet", "ontology.facet_restriction_facet_type"), varchar("value_string"),
+            typed("value_integer", "numeric"), float8("value_double"));
+
+    // the kinds of the literal values by the datatypes of the data; the integer datatypes are unified, as OWL 2
+    // compares the numbers by their values regardless of their datatypes, and a float is unified to a double where
+    // only doubles are kept
+    private static final Map<String, String> literalKinds = new HashMap<>();
+
+    static
+    {
+        literalKinds.put(xsd + "string", "string");
+        literalKinds.put(rdf + "langString", "langString");
+        literalKinds.put(xsd + "boolean", "boolean");
+        literalKinds.put(xsd + "float", "float");
+        literalKinds.put(xsd + "double", "double");
+
+        for(String datatype : List.of("integer", "long", "int", "short", "byte", "nonNegativeInteger",
+                "positiveInteger", "nonPositiveInteger", "negativeInteger", "unsignedLong", "unsignedInt",
+                "unsignedShort", "unsignedByte"))
+            literalKinds.put(xsd + datatype, "integer");
+    }
+
+    // the facets of the datatype restrictions by their predicates
+    private static final Map<String, String> facets = Map.ofEntries(Map.entry(xsd + "length", "LENGTH"),
+            Map.entry(xsd + "minLength", "MIN_LENGTH"), Map.entry(xsd + "maxLength", "MAX_LENGTH"),
+            Map.entry(xsd + "pattern", "PATTERN"), Map.entry(rdf + "langRange", "LANG_RANGE"),
+            Map.entry(xsd + "minInclusive", "MIN_INCLUSIVE"), Map.entry(xsd + "maxInclusive", "MAX_INCLUSIVE"),
+            Map.entry(xsd + "minExclusive", "MIN_EXCLUSIVE"), Map.entry(xsd + "maxExclusive", "MAX_EXCLUSIVE"),
+            Map.entry(xsd + "totalDigits", "TOTAL_DIGITS"), Map.entry(xsd + "fractionDigits", "FRACTION_DIGITS"));
+
+    // the relations of the ontologies by their predicates
+    private static final Map<String, String> ontologyRelations = Map.of(owl + "imports", "IMPORTS", owl + "versionIRI",
+            "VERSION_IRI", owl + "versionInfo", "VERSION_INFO", owl + "priorVersion", "PRIOR_VERSION",
+            owl + "backwardCompatibleWith", "BACKWARD_COMPATIBLE_WITH", owl + "incompatibleWith", "INCOMPATIBLE_WITH");
+
 
     private static void initSourceList()
     {
@@ -355,7 +432,7 @@ public class Ontology extends Updater
         sources.add(new OwlSource("Protein Ontology (PRO)", "http://purl.obolibrary.org/obo/pr.owl"));
         sources.add(new OwlSource("Gene Ontology (GO)", "http://purl.obolibrary.org/obo/go.owl"));
         sources.add(new OwlSource("Sequence Ontology (SO)", "http://purl.obolibrary.org/obo/so.owl"));
-        sources.add(new OwlSource("Cell Line Ontology (CLO)", "http://purl.obolibrary.org/obo/clo/clo_merged.owl"));
+        sources.add(new OwlSource("Cell Line Ontology (CLO)", "http://purl.obolibrary.org/obo/clo.owl"));
         sources.add(new OwlSource("Cell Ontology (CL)", "http://purl.obolibrary.org/obo/cl.owl"));
         sources.add(new OwlSource("The BRENDA Tissue Ontology (BTO)", "http://purl.obolibrary.org/obo/bto.owl"));
         sources.add(new OwlSource("Human Disease Ontology (DO)", "http://purl.obolibrary.org/obo/doid.owl"));
@@ -612,6 +689,50 @@ public class Ontology extends Updater
         builtinResources.put("http://www.w3.org/2002/07/owl#minCardinality", 6409);
         builtinResources.put("http://www.w3.org/2002/07/owl#onProperty", 6410);
         builtinResources.put("http://www.w3.org/2002/07/owl#someValuesFrom", 6411);
+        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#first", 6412);
+        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#langRange", 6413);
+        builtinResources.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#rest", 6414);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#fractionDigits", 6415);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#length", 6416);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#maxExclusive", 6417);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#maxInclusive", 6418);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#maxLength", 6419);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#minExclusive", 6420);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#minInclusive", 6421);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#minLength", 6422);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#pattern", 6423);
+        builtinResources.put("http://www.w3.org/2001/XMLSchema#totalDigits", 6424);
+        builtinResources.put("http://www.w3.org/2002/07/owl#backwardCompatibleWith", 6425);
+        builtinResources.put("http://www.w3.org/2002/07/owl#complementOf", 6426);
+        builtinResources.put("http://www.w3.org/2002/07/owl#differentFrom", 6427);
+        builtinResources.put("http://www.w3.org/2002/07/owl#disjointUnionOf", 6428);
+        builtinResources.put("http://www.w3.org/2002/07/owl#disjointWith", 6429);
+        builtinResources.put("http://www.w3.org/2002/07/owl#distinctMembers", 6430);
+        builtinResources.put("http://www.w3.org/2002/07/owl#equivalentClass", 6431);
+        builtinResources.put("http://www.w3.org/2002/07/owl#equivalentProperty", 6432);
+        builtinResources.put("http://www.w3.org/2002/07/owl#hasKey", 6433);
+        builtinResources.put("http://www.w3.org/2002/07/owl#hasSelf", 6434);
+        builtinResources.put("http://www.w3.org/2002/07/owl#hasValue", 6435);
+        builtinResources.put("http://www.w3.org/2002/07/owl#imports", 6436);
+        builtinResources.put("http://www.w3.org/2002/07/owl#incompatibleWith", 6437);
+        builtinResources.put("http://www.w3.org/2002/07/owl#intersectionOf", 6438);
+        builtinResources.put("http://www.w3.org/2002/07/owl#inverseOf", 6439);
+        builtinResources.put("http://www.w3.org/2002/07/owl#maxQualifiedCardinality", 6440);
+        builtinResources.put("http://www.w3.org/2002/07/owl#members", 6441);
+        builtinResources.put("http://www.w3.org/2002/07/owl#minQualifiedCardinality", 6442);
+        builtinResources.put("http://www.w3.org/2002/07/owl#onClass", 6443);
+        builtinResources.put("http://www.w3.org/2002/07/owl#onDataRange", 6444);
+        builtinResources.put("http://www.w3.org/2002/07/owl#onDatatype", 6445);
+        builtinResources.put("http://www.w3.org/2002/07/owl#oneOf", 6446);
+        builtinResources.put("http://www.w3.org/2002/07/owl#priorVersion", 6447);
+        builtinResources.put("http://www.w3.org/2002/07/owl#propertyChainAxiom", 6448);
+        builtinResources.put("http://www.w3.org/2002/07/owl#propertyDisjointWith", 6449);
+        builtinResources.put("http://www.w3.org/2002/07/owl#qualifiedCardinality", 6450);
+        builtinResources.put("http://www.w3.org/2002/07/owl#sameAs", 6451);
+        builtinResources.put("http://www.w3.org/2002/07/owl#unionOf", 6452);
+        builtinResources.put("http://www.w3.org/2002/07/owl#versionInfo", 6453);
+        builtinResources.put("http://www.w3.org/2002/07/owl#versionIRI", 6454);
+        builtinResources.put("http://www.w3.org/2002/07/owl#withRestrictions", 6455);
 
 
 
@@ -1370,24 +1491,59 @@ public class Ontology extends Updater
 
 
     /*
-     * Returns the types whose instances are classes, which are rdfs:Class and its direct and indirect subclasses.
+     * Returns the types whose instances are classes, which are rdfs:Class and its direct and indirect subclasses; the
+     * OWL classes of classes are among them even without the OWL vocabulary in the data.
      */
     private static List<Node> getClassTypes()
     {
-        Pair<Integer, Integer> classID = findId(NodeFactory.createURI(rdfs + "Class"));
-        HashSet<Long> metaclasses = classID == null ? new HashSet<>() : subclassPairs.getSubclasses(classID);
+        return getSubtypes(rdfs + "Class", owl + "Class", owl + "Restriction");
+    }
 
-        List<Node> types = new ArrayList<>();
+
+    /*
+     * Returns the types whose instances are properties, which are rdf:Property and its direct and indirect
+     * subclasses; the OWL classes of properties are among them even without the OWL vocabulary in the data.
+     */
+    private static List<Node> getPropertyTypes()
+    {
+        return getSubtypes(rdf + "Property", owl + "ObjectProperty", owl + "DatatypeProperty",
+                owl + "AnnotationProperty");
+    }
+
+
+    /*
+     * Returns the types of the instances that are the root type, one of the given types or their direct or indirect
+     * subclass.
+     */
+    private static List<Node> getSubtypes(String root, String... types)
+    {
+        List<Node> roots = new ArrayList<>();
+        roots.add(NodeFactory.createURI(root));
+
+        for(String type : types)
+            roots.add(NodeFactory.createURI(type));
+
+        HashSet<Long> subtypes = new HashSet<>();
+
+        for(Node node : roots)
+        {
+            Pair<Integer, Integer> typeID = findId(node);
+
+            if(typeID != null)
+                subtypes.addAll(subclassPairs.getSubclasses(typeID));
+        }
+
+        List<Node> result = new ArrayList<>();
 
         for(Node type : instances.keySet())
         {
             Pair<Integer, Integer> typeID = findId(type);
 
-            if(is(type, rdfs + "Class") || typeID != null && metaclasses.contains(SubclassPairs.encode(typeID)))
-                types.add(type);
+            if(roots.contains(type) || typeID != null && subtypes.contains(SubclassPairs.encode(typeID)))
+                result.add(type);
         }
 
-        return types;
+        return result;
     }
 
 
@@ -1411,7 +1567,9 @@ public class Ontology extends Updater
 
     /*
      * Loads the classes: the instances of the classes of classes, the classes in the class hierarchy, the domains and
-     * the ranges of the properties and the classes of the values of the value restrictions.
+     * the ranges of the properties, the classes of the values of the restrictions, the classes in the class axioms
+     * and class expressions, and the datatypes restricted by facets, which the RDF-based semantics of OWL entails to
+     * be classes.
      */
     private static void loadClasses(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -1426,9 +1584,18 @@ public class Ontology extends Updater
             add(getId(object), keepClasses, newClasses, oldClasses);
         });
 
-        for(String predicate : List.of(rdfs + "domain", rdfs + "range", owl + "someValuesFrom", owl + "allValuesFrom"))
+        for(String predicate : List.of(rdfs + "domain", rdfs + "range", owl + "someValuesFrom", owl + "allValuesFrom",
+                owl + "onClass", owl + "onDataRange", owl + "equivalentClass", owl + "disjointWith",
+                owl + "complementOf", owl + "onDatatype"))
             dispatcher.on(predicate, (subject, object) -> {
                 add(getId(object), keepClasses, newClasses, oldClasses);
+            });
+
+        for(String predicate : List.of(owl + "equivalentClass", owl + "disjointWith", owl + "complementOf",
+                owl + "intersectionOf", owl + "unionOf", owl + "oneOf", owl + "disjointUnionOf", owl + "hasKey",
+                owl + "onDatatype", owl + "withRestrictions"))
+            dispatcher.on(predicate, (subject, object) -> {
+                add(getId(subject), keepClasses, newClasses, oldClasses);
             });
 
         dispatcher.after(() -> {
@@ -1443,8 +1610,9 @@ public class Ontology extends Updater
 
 
     /*
-     * Loads the properties: the instances of the property types, the properties in the property hierarchy, the
-     * properties with a domain or a range and the properties of the restrictions.
+     * Loads the properties: the instances of the classes of properties, the properties in the property hierarchy and
+     * in the other property axioms, the properties with a domain or a range and the properties of the restrictions,
+     * which the RDF-based semantics of OWL entails to be properties.
      */
     private static void loadProperties(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -1454,18 +1622,14 @@ public class Ontology extends Updater
 
         load("select unit,id from ontology.properties", oldProperties);
 
-        for(String type : List.of(owl + "ObjectProperty", owl + "DatatypeProperty", owl + "AnnotationProperty",
-                rdf + "Property"))
-            dispatcher.onType(type, (subject, object) -> {
+        for(String predicate : List.of(rdfs + "subPropertyOf", owl + "inverseOf", owl + "equivalentProperty",
+                owl + "propertyDisjointWith"))
+            dispatcher.on(predicate, (subject, object) -> {
                 add(getId(subject), keepProperties, newProperties, oldProperties);
+                add(getId(object), keepProperties, newProperties, oldProperties);
             });
 
-        dispatcher.on(rdfs + "subPropertyOf", (subject, object) -> {
-            add(getId(subject), keepProperties, newProperties, oldProperties);
-            add(getId(object), keepProperties, newProperties, oldProperties);
-        });
-
-        for(String predicate : List.of(rdfs + "domain", rdfs + "range"))
+        for(String predicate : List.of(rdfs + "domain", rdfs + "range", owl + "propertyChainAxiom"))
             dispatcher.on(predicate, (subject, object) -> {
                 add(getId(subject), keepProperties, newProperties, oldProperties);
             });
@@ -1475,6 +1639,10 @@ public class Ontology extends Updater
         });
 
         dispatcher.after(() -> {
+            for(Node type : getPropertyTypes())
+                for(Node instance : instances.get(type))
+                    add(getId(instance), keepProperties, newProperties, oldProperties);
+
             store("delete from ontology.properties where unit=? and id=?", oldProperties);
             store("insert into ontology.properties(unit,id) values(?,?)", newProperties);
         });
@@ -1682,150 +1850,475 @@ public class Ontology extends Updater
 
 
     /*
+     * Loads the triples of the predicate, whose subjects and objects are resources, into the table as pairs of the
+     * (unit, id) of their subject and object.
+     */
+    private static void loadPairs(TripleDispatcher dispatcher, String predicate, String table, String subject,
+            String object) throws IOException, SQLException
+    {
+        IntPairIntPairSet keepPairs = new IntPairIntPairSet();
+        IntPairIntPairSet newPairs = new IntPairIntPairSet();
+        IntPairIntPairSet oldPairs = new IntPairIntPairSet();
+
+        String columns = subject + "_unit," + subject + "_id," + object + "_unit," + object + "_id";
+
+        load("select " + columns + " from ontology." + table, oldPairs);
+
+        dispatcher.on(predicate, (s, o) -> {
+            add(Pair.getPair(getId(s), getId(o)), keepPairs, newPairs, oldPairs);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from ontology." + table + " where " + subject + "_unit=? and " + subject + "_id=? and "
+                    + object + "_unit=? and " + object + "_id=?", oldPairs);
+            store("insert into ontology." + table + "(" + columns + ") values(?,?,?,?)", newPairs);
+        });
+    }
+
+
+    /*
+     * Loads the class axioms and the class expressions other than the restrictions, the property axioms other than the
+     * hierarchy, domains and ranges, and the axioms of the individuals; their members are given by lists.
+     */
+    private static void loadAxioms(TripleDispatcher dispatcher) throws IOException, SQLException
+    {
+        loadPairs(dispatcher, owl + "equivalentClass", "class_equivalents", "class", "equivalent");
+        loadPairs(dispatcher, owl + "disjointWith", "class_disjoints", "class", "disjoint");
+        loadPairs(dispatcher, owl + "complementOf", "class_complements", "class", "complement");
+        loadPairs(dispatcher, owl + "intersectionOf", "class_intersections", "class", "list");
+        loadPairs(dispatcher, owl + "unionOf", "class_unions", "class", "list");
+        loadPairs(dispatcher, owl + "oneOf", "class_enumerations", "class", "list");
+        loadPairs(dispatcher, owl + "disjointUnionOf", "class_disjoint_unions", "class", "list");
+        loadPairs(dispatcher, owl + "hasKey", "class_keys", "class", "list");
+
+        loadPairs(dispatcher, owl + "inverseOf", "property_inverses", "property", "inverse");
+        loadPairs(dispatcher, owl + "equivalentProperty", "property_equivalents", "property", "equivalent");
+        loadPairs(dispatcher, owl + "propertyDisjointWith", "property_disjoints", "property", "disjoint");
+        loadPairs(dispatcher, owl + "propertyChainAxiom", "property_chains", "property", "list");
+
+        loadPairs(dispatcher, owl + "differentFrom", "different_individuals", "individual", "different");
+        loadPairs(dispatcher, owl + "members", "resource_members", "resource", "list");
+        loadPairs(dispatcher, owl + "distinctMembers", "resource_distinct_members", "resource", "list");
+
+        loadPairs(dispatcher, owl + "onDatatype", "datatype_bases", "datatype", "base");
+        loadPairs(dispatcher, owl + "withRestrictions", "datatype_restrictions", "datatype", "list");
+    }
+
+
+    /*
+     * Loads the types of the resources other than those given by the tables of the classes, the properties, the
+     * individuals and the restrictions. A blank node gets only the types of the RDF, RDFS and OWL vocabularies, as the
+     * blank nodes of the other structures, such as the annotated axioms or the SWRL rules, are not loaded.
+     */
+    private static void loadResourceTypes(TripleDispatcher dispatcher) throws IOException, SQLException
+    {
+        IntPairIntPairSet keepTypes = new IntPairIntPairSet();
+        IntPairIntPairSet newTypes = new IntPairIntPairSet();
+        IntPairIntPairSet oldTypes = new IntPairIntPairSet();
+
+        load("select resource_unit,resource_id,type_unit,type_id from ontology.resource_types", oldTypes);
+
+        Set<String> skipped = Set.of(owl + "Class", rdf + "Property", owl + "NamedIndividual", owl + "Restriction",
+                owl + "Axiom");
+
+        dispatcher.on(rdf + "type", (subject, object) -> {
+            String type = object.isURI() ? object.getURI() : null;
+
+            if(type != null && skipped.contains(type) || subject.isBlank()
+                    && (type == null || !type.startsWith(rdf) && !type.startsWith(rdfs) && !type.startsWith(owl)))
+                return;
+
+            add(Pair.getPair(getId(subject), getId(object)), keepTypes, newTypes, oldTypes);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from ontology.resource_types "
+                    + "where resource_unit=? and resource_id=? and type_unit=? and type_id=?", oldTypes);
+            store("insert into ontology.resource_types(resource_unit,resource_id,type_unit,type_id) values(?,?,?,?)",
+                    newTypes);
+        });
+    }
+
+
+    /*
+     * Loads the cells of the RDF lists, which hold the members of the class expressions and of the other constructs
+     * built on lists.
+     */
+    private static void loadLists(TripleDispatcher dispatcher)
+    {
+        dispatcher.on(rdf + "first", (subject, object) -> {
+            Pair<Integer, Integer> listID = getId(subject);
+
+            if(object.isLiteral())
+            {
+                LiteralValue literal = getLiteral(object, "string", "integer", "float");
+
+                lists.set(listID, "first_" + literal.kind(), literal.value());
+            }
+            else
+            {
+                Pair<Integer, Integer> firstID = getId(object);
+                lists.set(listID, "first_unit", firstID.getOne());
+                lists.set(listID, "first_id", firstID.getTwo());
+            }
+        });
+
+        dispatcher.on(rdf + "rest", (subject, object) -> {
+            Pair<Integer, Integer> listID = getId(subject);
+            Pair<Integer, Integer> restID = getId(object);
+
+            lists.set(listID, "rest_unit", restID.getOne());
+            lists.set(listID, "rest_id", restID.getTwo());
+        });
+
+        dispatcher.after(() -> lists.store());
+    }
+
+
+    /*
      * Loads the restrictions. A restriction is a blank node, so its triples are collected and the restrictions are
      * assembled once all the files have been read.
      */
-    private static void loadRestrictions(TripleDispatcher dispatcher) throws IOException, SQLException
+    private static void loadRestrictions(TripleDispatcher dispatcher)
     {
-        BlankNodes restrictions = new BlankNodes(dispatcher, owl + "onProperty", owl + "someValuesFrom",
-                owl + "allValuesFrom", owl + "cardinality", owl + "minCardinality", owl + "maxCardinality");
+        List<String> predicates = new ArrayList<>(restrictionTables.keySet());
+        predicates.addAll(List.of(owl + "onProperty", owl + "onClass", owl + "onDataRange"));
+
+        BlankNodes restrictions = new BlankNodes(dispatcher, predicates.toArray(String[]::new));
 
         dispatcher.onType(owl + "Restriction", (subject, object) -> {
             if(!subject.isBlank())
                 throw new DataException("unexpected restriction", TripleStreamProcessor.text(subject));
         });
 
-        loadValueRestrictions(dispatcher, restrictions, owl + "someValuesFrom", "somevaluesfrom_restrictions");
-        loadValueRestrictions(dispatcher, restrictions, owl + "allValuesFrom", "allvaluesfrom_restrictions");
-        loadCardinalityRestrictions(dispatcher, restrictions, owl + "cardinality", "cardinality_restrictions");
-        loadCardinalityRestrictions(dispatcher, restrictions, owl + "minCardinality", "mincardinality_restrictions");
-        loadCardinalityRestrictions(dispatcher, restrictions, owl + "maxCardinality", "maxcardinality_restrictions");
-    }
-
-
-    /*
-     * Loads the restrictions whose class of values is given by the predicate.
-     */
-    private static void loadValueRestrictions(TripleDispatcher dispatcher, BlankNodes restrictions, String predicate,
-            String table) throws IOException, SQLException
-    {
-        IntValueRestrictionMap keepRestrictions = new IntValueRestrictionMap();
-        IntValueRestrictionMap oldRestrictions = new IntValueRestrictionMap();
-        IntValueRestrictionMap newRestrictions = new IntValueRestrictionMap();
-
-        load("select id,property_unit,property_id,class_unit,class_id from ontology." + table, oldRestrictions);
-
         dispatcher.after(() -> {
             for(Node node : getInstances(owl + "Restriction"))
             {
-                for(Node property : restrictions.values(node, owl + "onProperty"))
+                try
                 {
-                    for(Node value : restrictions.values(node, predicate))
-                    {
-                        Integer restrictionID = getId(node).getTwo();
-                        ValueRestriction restriction = new ValueRestriction(getId(property), getId(value));
-
-                        if(restriction.equals(oldRestrictions.remove(restrictionID)))
-                        {
-                            keepRestrictions.put(restrictionID, restriction);
-                        }
-                        else
-                        {
-                            ValueRestriction keep = keepRestrictions.get(restrictionID);
-
-                            if(restriction.equals(keep))
-                                continue;
-                            else if(keep != null)
-                                reportConflict(table, node, property, value);
-
-                            ValueRestriction put = newRestrictions.put(restrictionID, restriction);
-
-                            if(put != null && !restriction.equals(put))
-                                reportConflict(table, node, property, value);
-                        }
-                    }
+                    loadRestriction(restrictions, node);
+                }
+                catch(DataException e)
+                {
+                    Problems.error(e.getKind(), e.getDetail());
                 }
             }
 
-            store("delete from ontology." + table
-                    + " where id=? and property_unit=? and property_id=? and class_unit=? and class_id=?",
-                    oldRestrictions);
-            store("insert into ontology." + table
-                    + "(id,property_unit,property_id,class_unit,class_id) values(?,?,?,?,?) "
-                    + "on conflict(id) do update set property_unit=EXCLUDED.property_unit, "
-                    + "property_id=EXCLUDED.property_id, class_unit=EXCLUDED.class_unit, class_id=EXCLUDED.class_id",
-                    newRestrictions);
+            for(EntityTable<Integer> table : restrictionTables.values())
+                table.store();
+
+            incompleteRestrictions.store();
+            restrictionClasses.store();
+            restrictionDataRanges.store();
         });
     }
 
 
     /*
-     * Loads the restrictions whose cardinality is given by the predicate.
+     * Loads a restriction into the table of its kind, which is given by the predicate of its filler: of the class of
+     * the values, of the value, of the local reflexivity or of the cardinality. The class or the data range of a
+     * qualified cardinality restriction has a table of its own; a restriction without a filler, which the data
+     * contain, is kept in a table of its own too, so that all of its triples are loaded.
      */
-    private static void loadCardinalityRestrictions(TripleDispatcher dispatcher, BlankNodes restrictions,
-            String predicate, String table) throws IOException, SQLException
+    private static void loadRestriction(BlankNodes restrictions, Node node) throws IOException
     {
-        IntCardinalityRestrictionMap keepRestrictions = new IntCardinalityRestrictionMap();
-        IntCardinalityRestrictionMap oldRestrictions = new IntCardinalityRestrictionMap();
-        IntCardinalityRestrictionMap newRestrictions = new IntCardinalityRestrictionMap();
+        String filler = null;
 
-        load("select id,property_unit,property_id,cardinality from ontology." + table, oldRestrictions);
+        for(String predicate : restrictionTables.keySet())
+        {
+            if(restrictions.values(node, predicate).isEmpty())
+                continue;
+
+            if(filler != null)
+                throw new DataException("restriction of several kinds", TripleStreamProcessor.text(node));
+
+            filler = predicate;
+        }
+
+        List<Node> classes = restrictions.values(node, owl + "onClass");
+        List<Node> dataRanges = restrictions.values(node, owl + "onDataRange");
+
+        if(classes.size() > 1 || dataRanges.size() > 1)
+            throw new DataException("restriction with multiple classes", TripleStreamProcessor.text(node));
+
+        // all the values are checked before any column of the restriction is set
+        Integer restrictionID = getId(node).getTwo();
+        Pair<Integer, Integer> propertyID = getNonLiteralId(getSingleValue(restrictions, node, owl + "onProperty"));
+        Pair<Integer, Integer> classID = classes.isEmpty() ? null : getNonLiteralId(classes.get(0));
+        Pair<Integer, Integer> dataRangeID = dataRanges.isEmpty() ? null : getNonLiteralId(dataRanges.get(0));
+        String kind = filler == null ? "" : filler.substring(owl.length());
+        Node value = filler == null ? null : getSingleValue(restrictions, node, filler);
+        Pair<Integer, Integer> valueID = null;
+        String column = null;
+        LiteralValue literal = null;
+
+        switch(kind)
+        {
+            case "" -> Problems.warning("restriction without a filler", TripleStreamProcessor.text(node));
+            case "someValuesFrom", "allValuesFrom" -> valueID = getNonLiteralId(value);
+            case "hasValue" ->
+            {
+                if(value.isLiteral())
+                    literal = getLiteral(value, "string", "integer", "float", "boolean");
+                else
+                    valueID = getNonLiteralId(value);
+
+                column = literal == null ? null : "value_" + literal.kind();
+            }
+            case "hasSelf" ->
+            {
+                literal = getLiteral(value, "boolean");
+                column = "value";
+            }
+            default ->
+            {
+                // the cardinalities are unified to xsd:nonNegativeInteger, the datatype that OWL gives them
+                literal = getLiteral(value, "integer");
+                column = "cardinality";
+
+                if(((String) literal.value()).startsWith("-"))
+                    throw new DataException("negative cardinality", TripleStreamProcessor.text(node));
+            }
+        }
+
+        boolean cardinality = kind.endsWith("ardinality");
+        boolean qualified = kind.endsWith("QualifiedCardinality") || kind.equals("qualifiedCardinality");
+
+        if((classID != null || dataRangeID != null) && !cardinality && !kind.isEmpty())
+            throw new DataException("class of a restriction other than a cardinality restriction",
+                    TripleStreamProcessor.text(node));
+
+        if((classID != null || dataRangeID != null) && cardinality && !qualified)
+            Problems.warning("class of an unqualified cardinality restriction", TripleStreamProcessor.text(node));
+
+        EntityTable<Integer> table = kind.isEmpty() ? incompleteRestrictions : restrictionTables.get(filler);
+
+        setResource(table, restrictionID, "property", propertyID);
+
+        if(valueID != null)
+            setResource(table, restrictionID, kind.equals("hasValue") ? "value" : "class", valueID);
+
+        if(literal != null)
+            table.set(restrictionID, column, literal.value());
+
+        if(classID != null)
+            setResource(restrictionClasses, restrictionID, "class", classID);
+
+        if(dataRangeID != null)
+            setResource(restrictionDataRanges, restrictionID, "datarange", dataRangeID);
+    }
+
+
+    /*
+     * Returns the (unit, id) of a node that is a resource; a literal is refused.
+     */
+    private static Pair<Integer, Integer> getNonLiteralId(Node node) throws DataException
+    {
+        if(node.isLiteral())
+            throw new DataException("unexpected literal instead of a resource", TripleStreamProcessor.text(node));
+
+        return getId(node);
+    }
+
+
+    /*
+     * Returns the only value of the predicate at the blank node.
+     */
+    private static Node getSingleValue(BlankNodes nodes, Node node, String predicate) throws DataException
+    {
+        List<Node> values = nodes.values(node, predicate);
+
+        if(values.size() != 1)
+            throw new DataException((values.isEmpty() ? "missing value of " : "multiple values of ") + predicate,
+                    TripleStreamProcessor.text(node));
+
+        return values.get(0);
+    }
+
+
+    /*
+     * Sets the columns of the resource with the given prefix of their names to the (unit, id) of the resource.
+     */
+    private static <K> void setResource(EntityTable<K> table, K key, String column, Pair<Integer, Integer> resourceID)
+            throws IOException
+    {
+        table.set(key, column + "_unit", resourceID.getOne());
+        table.set(key, column + "_id", resourceID.getTwo());
+    }
+
+
+    /*
+     * Loads the facets of the datatype restrictions; a facet restriction is a blank node with one facet.
+     */
+    private static void loadFacets(TripleDispatcher dispatcher)
+    {
+        for(Entry<String, String> facet : facets.entrySet())
+        {
+            dispatcher.on(facet.getKey(), (subject, object) -> {
+                Pair<Integer, Integer> restrictionID = getId(subject);
+
+                LiteralValue value = getLiteral(object, "string", "integer", "double");
+
+                facetRestrictions.set(restrictionID, "facet", facet.getValue());
+                facetRestrictions.set(restrictionID, "value_" + value.kind(), value.value());
+            });
+        }
+
+        dispatcher.after(() -> facetRestrictions.store());
+    }
+
+
+    /*
+     * Loads the identities of the individuals; the value of owl:sameAs can be a string in the data.
+     */
+    private static void loadSameIndividuals(TripleDispatcher dispatcher) throws IOException, SQLException
+    {
+        ResourceValueSet keepValues = new ResourceValueSet();
+        ResourceValueSet newValues = new ResourceValueSet();
+        ResourceValueSet oldValues = new ResourceValueSet();
+
+        load("select individual_unit,individual_id,same_unit,same_id,same_string from ontology.same_individuals",
+                oldValues);
+
+        dispatcher.on(owl + "sameAs", (subject, object) -> {
+            add(Pair.getPair(getId(subject), Value.get(object, "string")), keepValues, newValues, oldValues);
+        });
 
         dispatcher.after(() -> {
-            for(Node node : getInstances(owl + "Restriction"))
-            {
-                for(Node property : restrictions.values(node, owl + "onProperty"))
-                {
-                    for(Node value : restrictions.values(node, predicate))
-                    {
-                        if(!value.isLiteral() || !(value.getLiteralValue() instanceof Number cardinality))
-                        {
-                            Problems.error("unexpected cardinality", TripleStreamProcessor.text(value));
-                            continue;
-                        }
-
-                        Integer restrictionID = getId(node).getTwo();
-                        CardinalityRestriction restriction = new CardinalityRestriction(getId(property),
-                                cardinality.intValue());
-
-                        if(restriction.equals(oldRestrictions.remove(restrictionID)))
-                        {
-                            keepRestrictions.put(restrictionID, restriction);
-                        }
-                        else
-                        {
-                            CardinalityRestriction keep = keepRestrictions.get(restrictionID);
-
-                            if(restriction.equals(keep))
-                                continue;
-                            else if(keep != null)
-                                reportConflict(table, node, property, value);
-
-                            CardinalityRestriction put = newRestrictions.put(restrictionID, restriction);
-
-                            if(put != null && !restriction.equals(put))
-                                reportConflict(table, node, property, value);
-                        }
-                    }
-                }
-            }
-
-            store("delete from ontology." + table
-                    + " where id=? and property_unit=? and property_id=? and cardinality=?", oldRestrictions);
-            store("insert into ontology." + table + "(id,property_unit,property_id,cardinality) "
-                    + "values(?,?,?,?) on conflict(id) do update set property_unit=EXCLUDED.property_unit, "
-                    + "property_id=EXCLUDED.property_id, cardinality=EXCLUDED.cardinality", newRestrictions);
+            store("""
+                    delete from ontology.same_individuals where individual_unit=? and individual_id=? \
+                    and same_unit is not distinct from ? and same_id is not distinct from ? \
+                    and same_string is not distinct from ?""", oldValues);
+            store("insert into ontology.same_individuals(individual_unit,individual_id,same_unit,same_id,same_string) "
+                    + "values(?,?,?,?,?)", newValues);
         });
     }
 
 
     /*
-     * Reports a restriction with several values of a property that has only one.
+     * Loads the relations of the ontologies: their imports, versions and compatibility.
      */
-    private static void reportConflict(String table, Node restriction, Node property, Node value)
+    private static void loadOntologyRelations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        Problems.error("multiple values of ontology." + table, TripleStreamProcessor.text(restriction) + ": "
-                + TripleStreamProcessor.text(property) + " " + TripleStreamProcessor.text(value));
+        RelationSet keepRelations = new RelationSet();
+        RelationSet newRelations = new RelationSet();
+        RelationSet oldRelations = new RelationSet();
+
+        load("select ontology_unit,ontology_id,property::varchar,target_unit,target_id,target_string,target_language "
+                + "from ontology.ontology_relations", oldRelations);
+
+        for(Entry<String, String> relation : ontologyRelations.entrySet())
+        {
+            dispatcher.on(relation.getKey(), (subject, object) -> {
+                add(new Relation(getId(subject), relation.getValue(), Value.get(object, "string", "langString")),
+                        keepRelations, newRelations, oldRelations);
+            });
+        }
+
+        dispatcher.after(() -> {
+            store("""
+                    delete from ontology.ontology_relations where ontology_unit=? and ontology_id=? \
+                    and property=?::ontology.ontology_relation_property_type \
+                    and target_unit is not distinct from ? and target_id is not distinct from ? \
+                    and target_string is not distinct from ? and target_language is not distinct from ?""",
+                    oldRelations);
+            store("""
+                    insert into ontology.ontology_relations\
+                    (ontology_unit,ontology_id,property,target_unit,target_id,target_string,target_language) \
+                    values(?,?,?::ontology.ontology_relation_property_type,?,?,?,?)""", newRelations);
+        });
+    }
+
+
+    /*
+     * Reports the predicates of the RDF, RDFS, OWL and XSD vocabularies that the loader does not load as errors, so
+     * that a construct used by a new version of an ontology is not left out unnoticed. The annotations of axioms are
+     * not loaded on purpose, owl:ontologyIRI of MADS/RDF is not a term of OWL.
+     */
+    private static void checkPredicates(TripleDispatcher dispatcher)
+    {
+        Set<String> known = new HashSet<>(List.of(rdf + "type", rdf + "first", rdf + "rest", rdfs + "subClassOf",
+                rdfs + "subPropertyOf", rdfs + "domain", rdfs + "range", rdfs + "label", rdfs + "comment",
+                rdfs + "seeAlso", rdfs + "isDefinedBy", owl + "onProperty", owl + "onClass", owl + "onDataRange",
+                owl + "deprecated", owl + "annotatedSource", owl + "annotatedProperty", owl + "annotatedTarget",
+                owl + "ontologyIRI"));
+
+        known.addAll(restrictionTables.keySet());
+        known.addAll(facets.keySet());
+        known.addAll(ontologyRelations.keySet());
+
+        for(String predicate : List.of("equivalentClass", "disjointWith", "complementOf", "intersectionOf", "unionOf",
+                "oneOf", "disjointUnionOf", "hasKey", "inverseOf", "equivalentProperty", "propertyDisjointWith",
+                "propertyChainAxiom", "sameAs", "differentFrom", "members", "distinctMembers", "onDatatype",
+                "withRestrictions"))
+            known.add(owl + predicate);
+
+        dispatcher.onEvery((subject, predicate, object) -> {
+            String iri = predicate.getURI();
+
+            if((iri.startsWith(rdf) || iri.startsWith(rdfs) || iri.startsWith(owl) || iri.startsWith(xsd))
+                    && !known.contains(iri))
+                TripleStreamProcessor.unexpected(subject, predicate, object);
+        });
+    }
+
+
+    /*
+     * Returns the canonical value of a literal of one of the allowed kinds, see literalKinds. A non-canonical lexical
+     * form is converted, so that the database keeps only the value; a float is read as a double where only doubles
+     * are allowed.
+     */
+    private static LiteralValue getLiteral(Node node, String... kinds) throws DataException
+    {
+        if(!node.isLiteral())
+            throw new DataException("unexpected value instead of a literal", TripleStreamProcessor.text(node));
+
+        String kind = literalKinds.get(node.getLiteralDatatypeURI());
+
+        if("float".equals(kind) && !List.of(kinds).contains(kind))
+            kind = "double";
+
+        if(kind == null || !List.of(kinds).contains(kind))
+            throw new DataException("unexpected datatype of a literal", TripleStreamProcessor.text(node));
+
+        String lexical = node.getLiteralLexicalForm();
+
+        try
+        {
+            return switch(kind)
+            {
+                case "string" -> new LiteralValue("string", lexical, null);
+                case "langString" -> new LiteralValue("string", lexical, node.getLiteralLanguage());
+                case "boolean" -> new LiteralValue(kind, switch(lexical.strip())
+                {
+                    case "true", "1" -> true;
+                    case "false", "0" -> false;
+                    default -> throw new NumberFormatException(lexical);
+                }, null);
+                case "integer" -> new LiteralValue(kind, new BigInteger(lexical.strip()).toString(), null);
+                case "float" -> new LiteralValue(kind, Float.parseFloat(getJavaNumber(lexical.strip())), null);
+                default -> new LiteralValue(kind, Double.parseDouble(getJavaNumber(lexical.strip())), null);
+            };
+        }
+        catch(NumberFormatException e)
+        {
+            throw new DataException("malformed literal", TripleStreamProcessor.text(node));
+        }
+    }
+
+
+    /*
+     * Returns the lexical form of a floating-point number in the form that Java parses: the special values of XSD
+     * are written differently.
+     */
+    private static String getJavaNumber(String lexical)
+    {
+        return switch(lexical)
+        {
+            case "INF", "+INF" -> "Infinity";
+            case "-INF" -> "-Infinity";
+            default -> lexical;
+        };
     }
 
 
@@ -1849,11 +2342,13 @@ public class Ontology extends Updater
 
             loadVersions(dispatcher);
             loadTypes(dispatcher);
+            checkPredicates(dispatcher);
 
             loadBases();
             loadClasses(dispatcher);
             loadProperties(dispatcher);
             loadIndividuals(dispatcher);
+            loadResourceTypes(dispatcher);
             loadResourceLabels(dispatcher);
 
             loadSuperClasses(dispatcher);
@@ -1862,7 +2357,12 @@ public class Ontology extends Updater
             loadDomains(dispatcher);
             loadRanges(dispatcher);
 
+            loadAxioms(dispatcher);
+            loadLists(dispatcher);
             loadRestrictions(dispatcher);
+            loadFacets(dispatcher);
+            loadSameIndividuals(dispatcher);
+            loadOntologyRelations(dispatcher);
 
             dispatcher.load("ontology", ".*");
 

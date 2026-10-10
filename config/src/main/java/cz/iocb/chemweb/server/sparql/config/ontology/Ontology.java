@@ -22,9 +22,16 @@ import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.uni
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUO;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUberon;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
-import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.rdfLangString;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdBoolean;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDouble;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInteger;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdNonNegativeInteger;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import java.sql.SQLException;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
+import cz.iocb.sparql.engine.database.Conditions;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.TermMapping;
@@ -164,7 +171,7 @@ public class Ontology
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:onProperty"),
                     config.createIriMapping("ontology:resource", "property_unit", "property_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:cardinality"),
-                    config.createLiteralMapping(xsdInt, "cardinality"));
+                    config.createLiteralMapping(xsdNonNegativeInteger, "cardinality"));
         }
 
         {
@@ -176,7 +183,7 @@ public class Ontology
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:onProperty"),
                     config.createIriMapping("ontology:resource", "property_unit", "property_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:minCardinality"),
-                    config.createLiteralMapping(xsdInt, "cardinality"));
+                    config.createLiteralMapping(xsdNonNegativeInteger, "cardinality"));
         }
 
         {
@@ -188,7 +195,315 @@ public class Ontology
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:onProperty"),
                     config.createIriMapping("ontology:resource", "property_unit", "property_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:maxCardinality"),
-                    config.createLiteralMapping(xsdInt, "cardinality"));
+                    config.createLiteralMapping(xsdNonNegativeInteger, "cardinality"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "resource_types");
+            TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("ontology:resource", "type_unit", "type_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "class_equivalents");
+            TermMapping subject = config.createIriMapping("ontology:resource", "class_unit", "class_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:equivalentClass"),
+                    config.createIriMapping("ontology:resource", "equivalent_unit", "equivalent_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "class_disjoints");
+            TermMapping subject = config.createIriMapping("ontology:resource", "class_unit", "class_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:disjointWith"),
+                    config.createIriMapping("ontology:resource", "disjoint_unit", "disjoint_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "class_complements");
+            TermMapping subject = config.createIriMapping("ontology:resource", "class_unit", "class_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:complementOf"),
+                    config.createIriMapping("ontology:resource", "complement_unit", "complement_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "class_intersections");
+            TermMapping subject = config.createIriMapping("ontology:resource", "class_unit", "class_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:intersectionOf"),
+                    config.createIriMapping("ontology:resource", "list_unit", "list_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "class_unions");
+            TermMapping subject = config.createIriMapping("ontology:resource", "class_unit", "class_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:unionOf"),
+                    config.createIriMapping("ontology:resource", "list_unit", "list_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "class_enumerations");
+            TermMapping subject = config.createIriMapping("ontology:resource", "class_unit", "class_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:oneOf"),
+                    config.createIriMapping("ontology:resource", "list_unit", "list_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "class_disjoint_unions");
+            TermMapping subject = config.createIriMapping("ontology:resource", "class_unit", "class_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:disjointUnionOf"),
+                    config.createIriMapping("ontology:resource", "list_unit", "list_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "class_keys");
+            TermMapping subject = config.createIriMapping("ontology:resource", "class_unit", "class_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:hasKey"),
+                    config.createIriMapping("ontology:resource", "list_unit", "list_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "property_inverses");
+            TermMapping subject = config.createIriMapping("ontology:resource", "property_unit", "property_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:inverseOf"),
+                    config.createIriMapping("ontology:resource", "inverse_unit", "inverse_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "property_equivalents");
+            TermMapping subject = config.createIriMapping("ontology:resource", "property_unit", "property_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:equivalentProperty"),
+                    config.createIriMapping("ontology:resource", "equivalent_unit", "equivalent_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "property_disjoints");
+            TermMapping subject = config.createIriMapping("ontology:resource", "property_unit", "property_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:propertyDisjointWith"),
+                    config.createIriMapping("ontology:resource", "disjoint_unit", "disjoint_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "property_chains");
+            TermMapping subject = config.createIriMapping("ontology:resource", "property_unit", "property_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:propertyChainAxiom"),
+                    config.createIriMapping("ontology:resource", "list_unit", "list_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "same_individuals");
+            TermMapping subject = config.createIriMapping("ontology:resource", "individual_unit", "individual_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:sameAs"),
+                    config.createIriMapping("ontology:resource", "same_unit", "same_id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:sameAs"),
+                    config.createLiteralMapping(xsdString, "same_string"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "different_individuals");
+            TermMapping subject = config.createIriMapping("ontology:resource", "individual_unit", "individual_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:differentFrom"),
+                    config.createIriMapping("ontology:resource", "different_unit", "different_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "resource_members");
+            TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:members"),
+                    config.createIriMapping("ontology:resource", "list_unit", "list_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "resource_distinct_members");
+            TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:distinctMembers"),
+                    config.createIriMapping("ontology:resource", "list_unit", "list_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "lists");
+            TermMapping subject = config.createIriMapping("ontology:resource", "unit", "id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:first"),
+                    config.createIriMapping("ontology:resource", "first_unit", "first_id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:first"),
+                    config.createLiteralMapping(xsdString, "first_string"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:first"),
+                    config.createLiteralMapping(xsdInteger, "first_integer"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:first"),
+                    config.createLiteralMapping(xsdFloat, "first_float"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:rest"),
+                    config.createIriMapping("ontology:resource", "rest_unit", "rest_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "datatype_bases");
+            TermMapping subject = config.createIriMapping("ontology:resource", "datatype_unit", "datatype_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:onDatatype"),
+                    config.createIriMapping("ontology:resource", "base_unit", "base_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "datatype_restrictions");
+            TermMapping subject = config.createIriMapping("ontology:resource", "datatype_unit", "datatype_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:withRestrictions"),
+                    config.createIriMapping("ontology:resource", "list_unit", "list_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "facet_restrictions");
+            TermMapping subject = config.createIriMapping("ontology:resource", "restriction_unit", "restriction_id");
+
+            for(String[] facet : new String[][] { { "LENGTH", "xsd:length" }, { "MIN_LENGTH", "xsd:minLength" },
+                    { "MAX_LENGTH", "xsd:maxLength" }, { "PATTERN", "xsd:pattern" }, { "LANG_RANGE", "rdf:langRange" },
+                    { "MIN_INCLUSIVE", "xsd:minInclusive" }, { "MAX_INCLUSIVE", "xsd:maxInclusive" },
+                    { "MIN_EXCLUSIVE", "xsd:minExclusive" }, { "MAX_EXCLUSIVE", "xsd:maxExclusive" },
+                    { "TOTAL_DIGITS", "xsd:totalDigits" }, { "FRACTION_DIGITS", "xsd:fractionDigits" } })
+            {
+                Conditions condition = config.createAreEqualCondition("facet",
+                        "'" + facet[0] + "'::" + schema + ".facet_restriction_facet_type");
+
+                config.addQuadMapping(table, graph, subject, config.createIriMapping(facet[1]),
+                        config.createLiteralMapping(xsdString, "value_string"), condition);
+                config.addQuadMapping(table, graph, subject, config.createIriMapping(facet[1]),
+                        config.createLiteralMapping(xsdInteger, "value_integer"), condition);
+                config.addQuadMapping(table, graph, subject, config.createIriMapping(facet[1]),
+                        config.createLiteralMapping(xsdDouble, "value_double"), condition);
+            }
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "ontology_relations");
+            TermMapping subject = config.createIriMapping("ontology:resource", "ontology_unit", "ontology_id");
+
+            for(String[] relation : new String[][] { { "IMPORTS", "owl:imports" }, { "VERSION_IRI", "owl:versionIRI" },
+                    { "VERSION_INFO", "owl:versionInfo" }, { "PRIOR_VERSION", "owl:priorVersion" },
+                    { "BACKWARD_COMPATIBLE_WITH", "owl:backwardCompatibleWith" },
+                    { "INCOMPATIBLE_WITH", "owl:incompatibleWith" } })
+            {
+                Conditions condition = config.createAreEqualCondition("property",
+                        "'" + relation[0] + "'::" + schema + ".ontology_relation_property_type");
+
+                config.addQuadMapping(table, graph, subject, config.createIriMapping(relation[1]),
+                        config.createIriMapping("ontology:resource", "target_unit", "target_id"), condition);
+                config.addQuadMapping(table, graph, subject, config.createIriMapping(relation[1]),
+                        config.createLiteralMapping(xsdString, "target_string"),
+                        Conditions.and(condition, config.createIsNullCondition(table, "target_language")));
+                config.addQuadMapping(table, graph, subject, config.createIriMapping(relation[1]),
+                        config.createLiteralMapping(rdfLangString, "target_string", "target_language"), condition);
+            }
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "hasvalue_restrictions");
+            TermMapping subject = config.createIriMapping("ontology:blank", "id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("owl:Restriction"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:onProperty"),
+                    config.createIriMapping("ontology:resource", "property_unit", "property_id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:hasValue"),
+                    config.createIriMapping("ontology:resource", "value_unit", "value_id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:hasValue"),
+                    config.createLiteralMapping(xsdString, "value_string"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:hasValue"),
+                    config.createLiteralMapping(xsdInteger, "value_integer"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:hasValue"),
+                    config.createLiteralMapping(xsdFloat, "value_float"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:hasValue"),
+                    config.createLiteralMapping(xsdBoolean, "value_boolean"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "hasself_restrictions");
+            TermMapping subject = config.createIriMapping("ontology:blank", "id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("owl:Restriction"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:onProperty"),
+                    config.createIriMapping("ontology:resource", "property_unit", "property_id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:hasSelf"),
+                    config.createLiteralMapping(xsdBoolean, "value"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "qualifiedcardinality_restrictions");
+            TermMapping subject = config.createIriMapping("ontology:blank", "id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("owl:Restriction"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:onProperty"),
+                    config.createIriMapping("ontology:resource", "property_unit", "property_id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:qualifiedCardinality"),
+                    config.createLiteralMapping(xsdNonNegativeInteger, "cardinality"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "minqualifiedcardinality_restrictions");
+            TermMapping subject = config.createIriMapping("ontology:blank", "id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("owl:Restriction"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:onProperty"),
+                    config.createIriMapping("ontology:resource", "property_unit", "property_id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:minQualifiedCardinality"),
+                    config.createLiteralMapping(xsdNonNegativeInteger, "cardinality"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "maxqualifiedcardinality_restrictions");
+            TermMapping subject = config.createIriMapping("ontology:blank", "id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("owl:Restriction"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:onProperty"),
+                    config.createIriMapping("ontology:resource", "property_unit", "property_id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:maxQualifiedCardinality"),
+                    config.createLiteralMapping(xsdNonNegativeInteger, "cardinality"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "incomplete_restrictions");
+            TermMapping subject = config.createIriMapping("ontology:blank", "id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("owl:Restriction"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:onProperty"),
+                    config.createIriMapping("ontology:resource", "property_unit", "property_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "restriction_classes");
+            TermMapping subject = config.createIriMapping("ontology:blank", "restriction");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:onClass"),
+                    config.createIriMapping("ontology:resource", "class_unit", "class_id"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "restriction_dataranges");
+            TermMapping subject = config.createIriMapping("ontology:blank", "restriction");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:onDataRange"),
+                    config.createIriMapping("ontology:resource", "datarange_unit", "datarange_id"));
         }
     }
 }

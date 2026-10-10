@@ -98,7 +98,7 @@ create table ontology.cardinality_restrictions
     id                integer not null,
     property_unit     smallint not null,
     property_id       integer not null,
-    cardinality       integer not null,
+    cardinality       numeric not null,
     primary key(id)
 );
 
@@ -108,7 +108,7 @@ create table ontology.mincardinality_restrictions
     id                integer not null,
     property_unit     smallint not null,
     property_id       integer not null,
-    cardinality       integer not null,
+    cardinality       numeric not null,
     primary key(id)
 );
 
@@ -118,8 +118,349 @@ create table ontology.maxcardinality_restrictions
     id                integer not null,
     property_unit     smallint not null,
     property_id       integer not null,
-    cardinality       integer not null,
+    cardinality       numeric not null,
     primary key(id)
+);
+
+
+create table ontology.resource_types
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    type_unit         smallint not null,
+    type_id           integer not null,
+    primary key(resource_unit, resource_id, type_unit, type_id)
+);
+
+
+create table ontology.class_equivalents
+(
+    class_unit        smallint not null,
+    class_id          integer not null,
+    equivalent_unit   smallint not null,
+    equivalent_id     integer not null,
+    primary key(class_unit, class_id, equivalent_unit, equivalent_id)
+);
+
+
+create table ontology.class_disjoints
+(
+    class_unit        smallint not null,
+    class_id          integer not null,
+    disjoint_unit     smallint not null,
+    disjoint_id       integer not null,
+    primary key(class_unit, class_id, disjoint_unit, disjoint_id)
+);
+
+
+create table ontology.class_complements
+(
+    class_unit        smallint not null,
+    class_id          integer not null,
+    complement_unit   smallint not null,
+    complement_id     integer not null,
+    primary key(class_unit, class_id, complement_unit, complement_id)
+);
+
+
+create table ontology.class_intersections
+(
+    class_unit        smallint not null,
+    class_id          integer not null,
+    list_unit         smallint not null,
+    list_id           integer not null,
+    primary key(class_unit, class_id, list_unit, list_id)
+);
+
+
+create table ontology.class_unions
+(
+    class_unit        smallint not null,
+    class_id          integer not null,
+    list_unit         smallint not null,
+    list_id           integer not null,
+    primary key(class_unit, class_id, list_unit, list_id)
+);
+
+
+create table ontology.class_enumerations
+(
+    class_unit        smallint not null,
+    class_id          integer not null,
+    list_unit         smallint not null,
+    list_id           integer not null,
+    primary key(class_unit, class_id, list_unit, list_id)
+);
+
+
+create table ontology.class_disjoint_unions
+(
+    class_unit        smallint not null,
+    class_id          integer not null,
+    list_unit         smallint not null,
+    list_id           integer not null,
+    primary key(class_unit, class_id, list_unit, list_id)
+);
+
+
+create table ontology.class_keys
+(
+    class_unit        smallint not null,
+    class_id          integer not null,
+    list_unit         smallint not null,
+    list_id           integer not null,
+    primary key(class_unit, class_id, list_unit, list_id)
+);
+
+
+create table ontology.property_inverses
+(
+    property_unit     smallint not null,
+    property_id       integer not null,
+    inverse_unit      smallint not null,
+    inverse_id        integer not null,
+    primary key(property_unit, property_id, inverse_unit, inverse_id)
+);
+
+
+create table ontology.property_equivalents
+(
+    property_unit     smallint not null,
+    property_id       integer not null,
+    equivalent_unit   smallint not null,
+    equivalent_id     integer not null,
+    primary key(property_unit, property_id, equivalent_unit, equivalent_id)
+);
+
+
+create table ontology.property_disjoints
+(
+    property_unit     smallint not null,
+    property_id       integer not null,
+    disjoint_unit     smallint not null,
+    disjoint_id       integer not null,
+    primary key(property_unit, property_id, disjoint_unit, disjoint_id)
+);
+
+
+create table ontology.property_chains
+(
+    property_unit     smallint not null,
+    property_id       integer not null,
+    list_unit         smallint not null,
+    list_id           integer not null,
+    primary key(property_unit, property_id, list_unit, list_id)
+);
+
+
+create table ontology.different_individuals
+(
+    individual_unit   smallint not null,
+    individual_id     integer not null,
+    different_unit    smallint not null,
+    different_id      integer not null,
+    primary key(individual_unit, individual_id, different_unit, different_id)
+);
+
+
+create table ontology.resource_members
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    list_unit         smallint not null,
+    list_id           integer not null,
+    primary key(resource_unit, resource_id, list_unit, list_id)
+);
+
+
+create table ontology.resource_distinct_members
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    list_unit         smallint not null,
+    list_id           integer not null,
+    primary key(resource_unit, resource_id, list_unit, list_id)
+);
+
+
+create table ontology.datatype_bases
+(
+    datatype_unit     smallint not null,
+    datatype_id       integer not null,
+    base_unit         smallint not null,
+    base_id           integer not null,
+    primary key(datatype_unit, datatype_id, base_unit, base_id)
+);
+
+
+create table ontology.datatype_restrictions
+(
+    datatype_unit     smallint not null,
+    datatype_id       integer not null,
+    list_unit         smallint not null,
+    list_id           integer not null,
+    primary key(datatype_unit, datatype_id, list_unit, list_id)
+);
+
+
+create table ontology.same_individuals
+(
+    individual_unit   smallint not null,
+    individual_id     integer not null,
+    same_unit         smallint,
+    same_id           integer,
+    same_string       varchar,
+    unique nulls not distinct (individual_unit, individual_id, same_unit, same_id, same_string)
+);
+
+
+create table ontology.lists
+(
+    unit              smallint not null,
+    id                integer not null,
+    first_unit        smallint,
+    first_id          integer,
+    first_string      varchar,
+    first_integer     numeric,
+    first_float       real,
+    rest_unit         smallint,
+    rest_id           integer,
+    primary key(unit, id)
+);
+
+
+create table ontology.hasvalue_restrictions
+(
+    id                integer not null,
+    property_unit     smallint not null,
+    property_id       integer not null,
+    value_unit        smallint,
+    value_id          integer,
+    value_string      varchar,
+    value_integer     numeric,
+    value_float       real,
+    value_boolean     boolean,
+    primary key(id)
+);
+
+
+create table ontology.hasself_restrictions
+(
+    id                integer not null,
+    property_unit     smallint not null,
+    property_id       integer not null,
+    value             boolean not null,
+    primary key(id)
+);
+
+
+create table ontology.qualifiedcardinality_restrictions
+(
+    id                integer not null,
+    property_unit     smallint not null,
+    property_id       integer not null,
+    cardinality       numeric not null,
+    primary key(id)
+);
+
+
+create table ontology.minqualifiedcardinality_restrictions
+(
+    id                integer not null,
+    property_unit     smallint not null,
+    property_id       integer not null,
+    cardinality       numeric not null,
+    primary key(id)
+);
+
+
+create table ontology.maxqualifiedcardinality_restrictions
+(
+    id                integer not null,
+    property_unit     smallint not null,
+    property_id       integer not null,
+    cardinality       numeric not null,
+    primary key(id)
+);
+
+
+create table ontology.incomplete_restrictions
+(
+    id                integer not null,
+    property_unit     smallint not null,
+    property_id       integer not null,
+    primary key(id)
+);
+
+
+create table ontology.restriction_classes
+(
+    restriction       integer not null,
+    class_unit        smallint not null,
+    class_id          integer not null,
+    primary key(restriction)
+);
+
+
+create table ontology.restriction_dataranges
+(
+    restriction       integer not null,
+    datarange_unit    smallint not null,
+    datarange_id      integer not null,
+    primary key(restriction)
+);
+
+
+create type ontology.facet_restriction_facet_type as enum
+(
+    'LENGTH',
+    'MIN_LENGTH',
+    'MAX_LENGTH',
+    'PATTERN',
+    'LANG_RANGE',
+    'MIN_INCLUSIVE',
+    'MAX_INCLUSIVE',
+    'MIN_EXCLUSIVE',
+    'MAX_EXCLUSIVE',
+    'TOTAL_DIGITS',
+    'FRACTION_DIGITS'
+);
+
+
+create table ontology.facet_restrictions
+(
+    restriction_unit  smallint not null,
+    restriction_id    integer not null,
+    facet             ontology.facet_restriction_facet_type not null,
+    value_string      varchar,
+    value_integer     numeric,
+    value_double      double precision,
+    primary key(restriction_unit, restriction_id)
+);
+
+
+create type ontology.ontology_relation_property_type as enum
+(
+    'IMPORTS',
+    'VERSION_IRI',
+    'VERSION_INFO',
+    'PRIOR_VERSION',
+    'BACKWARD_COMPATIBLE_WITH',
+    'INCOMPATIBLE_WITH'
+);
+
+
+create table ontology.ontology_relations
+(
+    ontology_unit     smallint not null,
+    ontology_id       integer not null,
+    property          ontology.ontology_relation_property_type not null,
+    target_unit       smallint,
+    target_id         integer,
+    target_string     varchar,
+    target_language   varchar,
+    unique nulls not distinct (ontology_unit, ontology_id, property, target_unit, target_id, target_string,
+            target_language)
 );
 
 
