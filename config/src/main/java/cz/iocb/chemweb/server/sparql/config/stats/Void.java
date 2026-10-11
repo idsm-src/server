@@ -330,11 +330,15 @@ public class Void
                     config.createIriMapping("void:class_partition", "subject_graph", "subject_unit", "subject_id"),
                     cnd);
 
+            // the target of the objects unless it is the target of the subjects stated above
+            Conditions otherGraph = config.createAreNotEqualCondition(table, "subject_graph", "object_graph");
+            Conditions otherUnit = config.createAreNotEqualCondition(table, "subject_unit", "object_unit");
+            Conditions otherId = config.createAreNotEqualCondition(table, "subject_id", "object_id");
+            Conditions otherTarget = Conditions.or(Conditions.or(otherGraph, otherUnit), otherId);
+
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("void:target"),
                     config.createIriMapping("void:class_partition", "object_graph", "object_unit", "object_id"),
-                    Conditions.and(config.createAreNotEqualCondition(table, "subject_graph", "object_graph"),
-                            config.createAreNotEqualCondition(table, "subject_unit", "object_unit"),
-                            config.createAreNotEqualCondition(table, "subject_id", "object_id"), cnd));
+                    Conditions.and(otherTarget, cnd));
 
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("void:objectsTarget"),
                     config.createIriMapping("void:class_partition", "object_graph", "object_unit", "object_id"), cnd);
