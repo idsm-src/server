@@ -249,6 +249,7 @@ alter table pubchem.pathway_related_pathways add foreign key (pathway) reference
 alter table pubchem.pathway_related_pathways add foreign key (related) references pubchem.pathways(id) initially deferred;
 alter table pubchem.pathway_references add foreign key (pathway) references pubchem.pathways(id) initially deferred;
 alter table pubchem.pathway_references add foreign key (reference) references pubchem.references(id) initially deferred;
+alter table pubchem.pathway_glycosmos_matches add foreign key (pathway) references pubchem.pathways(id) initially deferred;
 
 
 -- protein

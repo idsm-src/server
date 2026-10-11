@@ -11,6 +11,7 @@ import static cz.iocb.load.common.TripleDispatcher.startsWith;
 import static cz.iocb.load.common.TripleDispatcher.text;
 import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
 import static cz.iocb.load.common.TripleStreamProcessor.getString;
+import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
 import static cz.iocb.load.pubchem.PubChemRDF.bp;
 import static cz.iocb.load.pubchem.PubChemRDF.cito;
 import static cz.iocb.load.pubchem.PubChemRDF.dcterms;
@@ -76,6 +77,7 @@ class Pathway extends Updater
 
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID";
     static final int prefixLength = prefix.length();
+    static final String glycosmosPrefix = "https://glycosmos.org/pathways/";
 
     private static final EntityTable<Integer> pathways = new EntityTable<>("pubchem.pathways", intKey("id"), null,
             integer("source"), uniqueVarchar("title"), typed("reference_type", "pubchem.pathway_reference_type"),
@@ -91,7 +93,7 @@ class Pathway extends Updater
         dispatcher.checkTypes(all(), vocab + "Pathway", bp + "Pathway");
         dispatcher.checkPrefixes(all(), obo + "RO_0000057", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID",
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/", "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/");
-        // the values of rdfs:seeAlso are checked by loadSameAsReferences()
+        // the values of rdfs:seeAlso are checked by loadSameAsReferences() and loadGlycosmosMatches()
     }
 
 
@@ -131,16 +133,11 @@ class Pathway extends Updater
     private static void loadSameAsReferences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(startsWith(object, glycosmosPrefix))
+                return;
+
             Integer pathwayID = getPathwayID(subject.getURI());
             String iri = object.getURI();
-
-            // workaround
-            if(iri.startsWith("https://glycosmos.org/pathways/"))
-            {
-                Problems.warning("repaired value of " + rdfs + "seeAlso", text(subject) + " " + iri);
-                iri = iri.replaceFirst("^https://glycosmos\\.org/pathways/", "http://identifiers.org/reactome:");
-            }
-
             Description description = null;
 
             for(Description test : descriptions)
@@ -152,6 +149,39 @@ class Pathway extends Updater
 
             pathways.set(pathwayID, "reference_type", description.name);
             pathways.set(pathwayID, "reference", iri.substring(description.prefix.length()));
+        });
+    }
+
+
+    private static void loadGlycosmosMatches(TripleDispatcher dispatcher) throws IOException, SQLException
+    {
+        IntStringSet keepMatches = new IntStringSet();
+        IntStringSet newMatches = new IntStringSet();
+        IntStringSet oldMatches = new IntStringSet();
+
+        load("select pathway,match from pubchem.pathway_glycosmos_matches", oldMatches);
+
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            if(!startsWith(object, glycosmosPrefix))
+                return;
+
+            Integer pathwayID = getPathwayID(subject.getURI());
+            String match = getStringID(object, glycosmosPrefix);
+
+            if(!match.matches("R-[A-Z]{3}-[1-9][0-9]*"))
+                throw new DataException("unexpected reference", object.getURI());
+
+            Pair<Integer, String> pair = Pair.getPair(pathwayID, match);
+
+            if(oldMatches.remove(pair))
+                keepMatches.add(pair);
+            else if(!keepMatches.contains(pair))
+                newMatches.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from pubchem.pathway_glycosmos_matches where pathway=? and match=?", oldMatches);
+            store("insert into pubchem.pathway_glycosmos_matches(pathway,match) values(?,?)", newMatches);
         });
     }
 
@@ -356,6 +386,7 @@ class Pathway extends Updater
         loadTitles(dispatcher);
         loadSources(dispatcher);
         loadSameAsReferences(dispatcher);
+        loadGlycosmosMatches(dispatcher);
         loadOrganisms(dispatcher);
         loadCompounds(dispatcher);
         loadProteins(dispatcher);

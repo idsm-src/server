@@ -97,6 +97,7 @@ class Protein extends Updater
         dispatcher.checkLink(all(), rdfs + "seeAlso", startingWith("http://identifiers.org/ncbiprotein:"),
                 "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC", "http://identifiers.org/ncbiprotein:");
         dispatcher.checkPaired(rdfs + "seeAlso", "http://identifiers.org/uniprot:", "http://purl.uniprot.org/uniprot/");
+        dispatcher.checkPaired(rdfs + "seeAlso", "http://purl.uniprot.org/uniprot/", "http://identifiers.org/uniprot:");
         dispatcher.checkPaired(rdfs + "seeAlso", "http://identifiers.org/mesh:", "http://id.nlm.nih.gov/mesh/");
     }
 

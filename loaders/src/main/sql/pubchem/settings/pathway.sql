@@ -40,3 +40,9 @@ grant select on pubchem.pathway_related_pathways to sparql;
 create index pathway_references__pathway on pubchem.pathway_references(pathway);
 create index pathway_references__reference on pubchem.pathway_references(reference);
 grant select on pubchem.pathway_references to sparql;
+
+--------------------------------------------------------------------------------
+
+create index pathway_glycosmos_matches__pathway on pubchem.pathway_glycosmos_matches(pathway);
+create index pathway_glycosmos_matches__match on pubchem.pathway_glycosmos_matches(match);
+grant select on pubchem.pathway_glycosmos_matches to sparql;

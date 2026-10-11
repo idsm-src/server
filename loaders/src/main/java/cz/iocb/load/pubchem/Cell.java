@@ -58,6 +58,7 @@ public class Cell extends Updater
                 "http://identifiers.org/cellosaurus:CVCL_", "https://lincs.hms.harvard.edu/db/cells/",
                 "https://glyconnect.expasy.org/all/cell_lines/");
         dispatcher.checkPaired(rdfs + "seeAlso", "http://identifiers.org/mesh:", "http://id.nlm.nih.gov/mesh/");
+        dispatcher.checkPaired(rdfs + "seeAlso", "http://id.nlm.nih.gov/mesh/", "http://identifiers.org/mesh:");
     }
 
 

@@ -297,7 +297,7 @@ public class TripleDispatcher extends Updater
 
     /*
      * Reports the values of the predicate that start with the prefix and lack a value with the pair prefix and the
-     * same rest at the same subject as errors.
+     * same rest at the same subject as errors; a pairing in both directions is checked by two calls.
      */
     public void checkPaired(String predicate, String prefix, String pairPrefix)
     {
@@ -308,10 +308,10 @@ public class TripleDispatcher extends Updater
             String value = str(object);
 
             if(value != null && value.startsWith(prefix))
-                values.put(Pair.getPair(subject, value.replaceAll(prefix, "")), value);
+                values.put(Pair.getPair(subject, value.substring(prefix.length())), value);
 
             if(value != null && value.startsWith(pairPrefix))
-                pairs.add(Pair.getPair(subject, value.replaceAll(pairPrefix, "")));
+                pairs.add(Pair.getPair(subject, value.substring(pairPrefix.length())));
         });
 
         after(() -> {

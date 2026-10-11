@@ -47,6 +47,7 @@ public class Anatomy extends Updater
                 "http://id.nlm.nih.gov/mesh/", "http://identifiers.org/mesh:", "http://purl.obolibrary.org/obo/UBERON_",
                 "http://identifiers.org/UBERON:");
         dispatcher.checkPaired(rdfs + "seeAlso", "http://identifiers.org/mesh:", "http://id.nlm.nih.gov/mesh/");
+        dispatcher.checkPaired(rdfs + "seeAlso", "http://id.nlm.nih.gov/mesh/", "http://identifiers.org/mesh:");
     }
 
 

@@ -84,7 +84,10 @@ class Gene extends Updater
                 "http://identifiers.org/ncbigene:", "http://www.wikidata.org/entity/Q");
         dispatcher.checkPaired(rdfs + "seeAlso", "http://identifiers.org/ensembl:",
                 "http://rdf.ebi.ac.uk/resource/ensembl/");
+        dispatcher.checkPaired(rdfs + "seeAlso", "http://rdf.ebi.ac.uk/resource/ensembl/",
+                "http://identifiers.org/ensembl:");
         dispatcher.checkPaired(rdfs + "seeAlso", "http://identifiers.org/mesh:", "http://id.nlm.nih.gov/mesh/");
+        dispatcher.checkPaired(rdfs + "seeAlso", "http://id.nlm.nih.gov/mesh/", "http://identifiers.org/mesh:");
     }
 
 

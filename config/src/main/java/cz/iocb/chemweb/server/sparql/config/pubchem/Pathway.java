@@ -137,5 +137,13 @@ public class Pathway
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:related"),
                     config.createIriMapping("pubchem:pathway", "related"));
         }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "pathway_glycosmos_matches");
+            TermMapping subject = config.createIriMapping("pubchem:pathway", "pathway");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
+                    config.createIriMapping("reference:glycosmos_pathway", "match"));
+        }
     }
 }

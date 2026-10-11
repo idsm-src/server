@@ -72,3 +72,11 @@ create table pubchem.pathway_references
     reference   integer not null,
     primary key(pathway, reference)
 );
+
+
+create table pubchem.pathway_glycosmos_matches
+(
+    pathway     integer not null,
+    match       varchar not null,
+    primary key(pathway, match)
+);

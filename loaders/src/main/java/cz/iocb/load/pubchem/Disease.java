@@ -82,6 +82,7 @@ public class Disease extends Updater
                 "http://purl.obolibrary.org/obo/DOID:", "https://www.disease-ontology.org/?id=DOID:",
                 "https://monarchinitiative.org/disease/MONDO:", "https://glycosmos.org/diseases/DOID:");
         dispatcher.checkPaired(skos + "closeMatch", "http://identifiers.org/mesh:", "http://id.nlm.nih.gov/mesh/");
+        dispatcher.checkPaired(skos + "closeMatch", "http://id.nlm.nih.gov/mesh/", "http://identifiers.org/mesh:");
     }
 
 

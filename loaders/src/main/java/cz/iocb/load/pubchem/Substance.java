@@ -3,6 +3,7 @@ package cz.iocb.load.pubchem;
 import static cz.iocb.load.common.EntityTable.date;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
+import static cz.iocb.load.pubchem.PubChemRDF.rdfs;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -229,6 +230,11 @@ class Substance extends Updater
         IntStringMap newGlytoucanMatches = new IntStringMap();
         IntStringMap oldGlytoucanMatches = new IntStringMap();
 
+        // the forms in which the links occur (1: identifiers.org, 2: the other one), because the mapping publishes both
+        // forms of every stored link
+        HashMap<Pair<Integer, Integer>, Integer> chemblForms = new HashMap<>();
+        HashMap<Pair<Integer, String>, Integer> glytoucanForms = new HashMap<>();
+
         load("select substance,match from pubchem.substance_chembl_matches", oldChemblMatches);
         load("select substance,match from pubchem.substance_glytoucan_matches", oldGlytoucanMatches);
 
@@ -256,6 +262,9 @@ class Substance extends Updater
 
                             synchronized(newChemblMatches)
                             {
+                                chemblForms.merge(pair, value.startsWith("http://identifiers.org") ? 1 : 2,
+                                        (a, b) -> a | b);
+
                                 if(oldChemblMatches.remove(pair))
                                     keepChemblMatches.add(pair);
                                 else if(!keepChemblMatches.contains(pair))
@@ -271,6 +280,9 @@ class Substance extends Updater
 
                             synchronized(newGlytoucanMatches)
                             {
+                                glytoucanForms.merge(Pair.getPair(substanceID, match),
+                                        value.startsWith("http://identifiers.org") ? 1 : 2, (a, b) -> a | b);
+
                                 if(match.equals(oldGlytoucanMatches.remove(substanceID)))
                                 {
                                     keepGlytoucanMatches.put(substanceID, match);
@@ -300,12 +312,35 @@ class Substance extends Updater
             }
         });
 
+        checkForms(chemblForms, "http://identifiers.org/chembl.compound:CHEMBL",
+                "http://rdf.ebi.ac.uk/resource/chembl/molecule/CHEMBL");
+        checkForms(glytoucanForms, "http://identifiers.org/glytoucan:", "http://rdf.glycoinfo.org/glycan/");
+
         store("delete from pubchem.substance_chembl_matches where substance=? and match=?", oldChemblMatches);
         store("insert into pubchem.substance_chembl_matches(substance,match) values(?,?)", newChemblMatches);
 
         store("delete from pubchem.substance_glytoucan_matches where substance=? and match=?", oldGlytoucanMatches);
         store("insert into pubchem.substance_glytoucan_matches(substance,match) values(?,?) "
                 + "on conflict(substance) do update set match=EXCLUDED.match", newGlytoucanMatches);
+    }
+
+
+    /*
+     * Reports the rdfs:seeAlso links that occur in one form only (1: the identifiers.org form, 2: the other one).
+     */
+    private static <T> void checkForms(Map<Pair<Integer, T>, Integer> forms, String prefix, String pairPrefix)
+    {
+        for(Entry<Pair<Integer, T>, Integer> entry : forms.entrySet())
+        {
+            String subject = Substance.prefix + entry.getKey().getOne();
+
+            if(entry.getValue() == 1)
+                Problems.error("value of " + rdfs + "seeAlso without its " + pairPrefix + " pair",
+                        subject + " " + prefix + entry.getKey().getTwo());
+            else if(entry.getValue() == 2)
+                Problems.error("value of " + rdfs + "seeAlso without its " + prefix + " pair",
+                        subject + " " + pairPrefix + entry.getKey().getTwo());
+        }
     }
 
 
