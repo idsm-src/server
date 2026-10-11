@@ -509,29 +509,6 @@ class Substance extends Updater
     }
 
 
-    private static void checkMeasuregroups() throws IOException, SQLException
-    {
-        processFiles("pubchem/RDF/substance", "pc_substance2measuregroup_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getTtlStream(file))
-            {
-                new TripleStreamProcessor()
-                {
-                    @Override
-                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
-                    {
-                        getIntID(subject, prefix);
-
-                        if(!checkPredicate(subject, predicate, object, "http://purl.obolibrary.org/obo/RO_0000056"))
-                            return;
-
-                        getStringID(object, Measuregroup.prefix);
-                    }
-                }.load(stream);
-            }
-        });
-    }
-
-
     private static void checkIdentifiers() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/substance", "pc_substance_identifier_[0-9]+\\.ttl\\.gz", file -> {
@@ -569,7 +546,6 @@ class Substance extends Updater
         loadPdbLinks();
         loadReferences();
         loadSynonyms();
-        checkMeasuregroups();
         checkIdentifiers();
 
         substances.flush();

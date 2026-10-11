@@ -131,6 +131,7 @@ public class PubChemRDF extends Updater
             Bioassay.load(); // require Patent, Source
             Measuregroup.load(); // require Anatomy, Bioassay, Cell, Gene, Protein, Source, Taxonomy
             Endpoint.load(); // require Bioassay, Measuregroup, Substance
+            Measuregroup.loadSubstances(); // require Endpoint
 
             CompoundDescriptor.load(); // require Compound
             SubstanceDescriptor.load(); // require Substance

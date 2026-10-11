@@ -5,6 +5,10 @@ import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.TripleDispatcher.all;
+import static cz.iocb.load.common.TripleDispatcher.startsWith;
+import static cz.iocb.load.common.TripleDispatcher.text;
+import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
+import static cz.iocb.load.common.TripleStreamProcessor.getString;
 import static cz.iocb.load.pubchem.PubChemRDF.bao;
 import static cz.iocb.load.pubchem.PubChemRDF.dcterms;
 import static cz.iocb.load.pubchem.PubChemRDF.rdf;
@@ -115,7 +119,11 @@ class Bioassay extends Updater
     }
 
 
-    private static void loadBioassays()
+    /*
+     * Loads the bioassays described by the XML; the ChEMBL assays and mechanisms of all of them are also put into the
+     * given maps, against which pc_bioassay is checked.
+     */
+    private static void loadBioassays(IntIntMap chemblAssays, IntIntMap chemblMechanisms)
             throws SQLException, IOException, XPathException, ParserConfigurationException, SAXException
     {
         IntStringMap newDescriptions = new IntStringMap();
@@ -246,6 +254,8 @@ class Bioassay extends Updater
                             {
                                 if(!chemblID.equals(oldMechanisms.remove(bioassayID)))
                                     newMechanisms.put(bioassayID, chemblID);
+
+                                chemblMechanisms.put(bioassayID, chemblID);
                             }
                         }
                         else if(chemblSource.startsWith("CHEMBL"))
@@ -256,6 +266,8 @@ class Bioassay extends Updater
                             {
                                 if(!chemblID.equals(oldAssays.remove(bioassayID)))
                                     newAssays.put(bioassayID, chemblID);
+
+                                chemblAssays.put(bioassayID, chemblID);
                             }
                         }
                         else
@@ -318,6 +330,86 @@ class Bioassay extends Updater
         dispatcher.checkIdentifier(dcterms + "identifier", "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID");
         dispatcher.checkPrefixes(all(), rdfs + "seeAlso", "http://rdf.ebi.ac.uk/resource/chembl/assay/CHEMBL",
                 "http://rdf.ebi.ac.uk/resource/chembl/assay/drug_mech_");
+    }
+
+
+    /*
+     * Checks that the title, the source and the ChEMBL assay or mechanism of a bioassay in pc_bioassay are those of its
+     * XML description, which are published. PubChem escapes some titles in pc_bioassay once more: every backslash and
+     * quotation mark of the XML title is preceded by a backslash. The XML is newer than pc_bioassay, so it describes
+     * also the bioassays added since and its values are not checked against pc_bioassay; a title edited since is only
+     * a warning.
+     */
+    private static void checkDescriptions(TripleDispatcher dispatcher, IntIntMap chemblAssays,
+            IntIntMap chemblMechanisms)
+    {
+        dispatcher.on(dcterms + "title", (subject, object) -> {
+            Integer bioassayID = getBioassayID(subject.getURI());
+            String title = (String) bioassays.get(bioassayID, "title");
+            String value = getString(object);
+
+            if(title == null)
+                throw new DataException("bioassay without its XML description");
+
+            if(!value.equals(title) && !value.equals(title.replace("\\", "\\\\").replace("\"", "\\\"")))
+                Problems.warning("value different from the XML in " + dcterms + "title",
+                        text(subject) + " " + text(object) + " (" + title + ")");
+        });
+
+        dispatcher.on(dcterms + "source", (subject, object) -> {
+            Integer bioassayID = getBioassayID(subject.getURI());
+            Integer sourceID = Source.getSourceID(object.getURI());
+
+            if(bioassays.get(bioassayID, "title") == null)
+                throw new DataException("bioassay without its XML description");
+
+            if(!sourceID.equals(bioassays.get(bioassayID, "source")))
+                throw new DataException("value different from the XML");
+        });
+
+        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
+            Integer bioassayID = getBioassayID(subject.getURI());
+            Integer chemblID;
+            Integer described;
+
+            if(startsWith(object, "http://rdf.ebi.ac.uk/resource/chembl/assay/CHEMBL"))
+            {
+                chemblID = getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/assay/CHEMBL");
+                described = chemblAssays.get(bioassayID);
+            }
+            else if(startsWith(object, "http://rdf.ebi.ac.uk/resource/chembl/assay/drug_mech_"))
+            {
+                chemblID = getIntID(object, "http://rdf.ebi.ac.uk/resource/chembl/assay/drug_mech_");
+                described = chemblMechanisms.get(bioassayID);
+            }
+            else
+            {
+                return;
+            }
+
+            if(bioassays.get(bioassayID, "title") == null)
+                throw new DataException("bioassay without its XML description");
+
+            if(!chemblID.equals(described))
+                throw new DataException("value different from the XML");
+        });
+    }
+
+
+    /*
+     * Registers the measuregroups of the bioassays. A measuregroup is published as one of the bioassay in its IRI, so
+     * this has to be the bioassay that the measuregroup is stated for.
+     */
+    private static void loadMeasuregroups(TripleDispatcher dispatcher)
+    {
+        dispatcher.on(bao + "BAO_0000209", (subject, object) -> {
+            Integer bioassayID = getBioassayID(subject.getURI());
+            Pair<Integer, Integer> measuregroup = Measuregroup.parseMeasuregroup(object);
+
+            if(!measuregroup.getOne().equals(bioassayID))
+                Problems.error("value of " + bao + "BAO_0000209 not matching the IRI",
+                        text(subject) + " " + text(object));
+        });
     }
 
 
@@ -450,15 +542,20 @@ class Bioassay extends Updater
     {
         System.out.println("load bioassays ...");
 
-        loadBioassays();
+        IntIntMap chemblAssays = new IntIntMap();
+        IntIntMap chemblMechanisms = new IntIntMap();
+
+        loadBioassays(chemblAssays, chemblMechanisms);
 
         TripleDispatcher dispatcher = new TripleDispatcher();
 
         check(dispatcher);
+        checkDescriptions(dispatcher, chemblAssays, chemblMechanisms);
         loadStages(dispatcher);
         loadConfirmatoryAssays(dispatcher);
         loadPrimaryAssays(dispatcher);
         loadSummaryAssays(dispatcher);
+        loadMeasuregroups(dispatcher);
 
         dispatcher.load("pubchem/RDF/bioassay/pc_bioassay.ttl.gz");
         dispatcher.finish();

@@ -81,7 +81,6 @@ public class Bioassay
                     config.createIriMapping("pubchem:bioassay", "bioassay"));
         }
 
-        // extensions
         {
             DatabaseTable table = new DatabaseTable(schema, "bioassay_chembl_assays");
             TermMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");
@@ -90,6 +89,7 @@ public class Bioassay
                     config.createIriMapping("chembl:assay", "chembl_assay"));
         }
 
+        // extensions
         {
             DatabaseTable table = new DatabaseTable(schema, "bioassay_chembl_mechanisms");
             TermMapping subject = config.createIriMapping("pubchem:bioassay", "bioassay");

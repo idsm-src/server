@@ -11,11 +11,13 @@ import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.EntityTable.Key;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 import cz.iocb.load.ontology.Ontology;
@@ -141,8 +143,13 @@ class Endpoint extends Updater
     }
 
 
-    private static void loadTypes() throws IOException, SQLException
+    /*
+     * Loads the types of the endpoints; returns the number of the vocab:Endpoint types.
+     */
+    private static long loadTypes() throws IOException, SQLException
     {
+        AtomicLong count = new AtomicLong();
+
         processFiles("pubchem/RDF/endpoint", "pc_endpoint_type_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -155,10 +162,14 @@ class Endpoint extends Updater
                                 "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
                             return;
 
-                        if(object.getURI().equals("http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Endpoint"))
-                            return;
-
                         EndpointID endpoint = parseEndpoint(subject);
+
+                        if(is(object, "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Endpoint"))
+                        {
+                            count.incrementAndGet();
+                            return;
+                        }
+
                         Pair<Integer, Integer> type = Ontology.getResourceId(object, unitBAO);
 
                         measurements.set(endpoint, "endpoint_type_id", type.getTwo());
@@ -166,6 +177,8 @@ class Endpoint extends Updater
                 }.load(stream);
             }
         });
+
+        return count.get();
     }
 
 
@@ -315,8 +328,14 @@ class Endpoint extends Updater
     }
 
 
-    private static void checkSubstances() throws IOException, SQLException
+    /*
+     * Checks that the substance of an endpoint is the one in its IRI, which is published; returns the number of the
+     * triples.
+     */
+    private static long checkSubstances() throws IOException, SQLException
     {
+        AtomicLong count = new AtomicLong();
+
         processFiles("pubchem/RDF/endpoint", "pc_endpoint2substance_[0-9]+\\.ttl\\.gz", file -> {
             try(InputStream stream = getTtlStream(file))
             {
@@ -325,16 +344,68 @@ class Endpoint extends Updater
                     @Override
                     protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
                     {
-                        getStringID(subject, prefix);
-
                         if(!checkPredicate(subject, predicate, object, "http://purl.obolibrary.org/obo/IAO_0000136"))
                             return;
 
-                        getIntID(object, Substance.prefix);
+                        EndpointID endpoint = parseEndpoint(subject);
+                        count.incrementAndGet();
+
+                        if(getIntID(object, Substance.prefix) != endpoint.substance)
+                            Problems.error("value of " + predicate.getURI() + " not matching the IRI",
+                                    text(subject) + " " + text(object));
                     }
                 }.load(stream);
             }
         });
+
+        return count.get();
+    }
+
+
+    /*
+     * Checks that the measuregroup of an endpoint is the one in its IRI, which is published; returns the number of the
+     * triples.
+     */
+    private static long checkMeasuregroups() throws IOException, SQLException
+    {
+        AtomicLong count = new AtomicLong();
+
+        processFiles("pubchem/RDF/measuregroup", "pc_measuregroup2endpoint_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(!checkPredicate(subject, predicate, object, "http://purl.obolibrary.org/obo/OBI_0000299"))
+                            return;
+
+                        EndpointID endpoint = parseEndpoint(object);
+                        Pair<Integer, Integer> measuregroup = Measuregroup.parseMeasuregroup(subject);
+                        count.incrementAndGet();
+
+                        if(!measuregroup.equals(Pair.getPair(endpoint.bioassay, endpoint.measuregroup)))
+                            Problems.error("value of " + predicate.getURI() + " not matching the IRI",
+                                    text(subject) + " " + text(object));
+                    }
+                }.load(stream);
+            }
+        });
+
+        return count.get();
+    }
+
+
+    /*
+     * Reports the endpoints without one of the given triples. The source states the triple for every endpoint and
+     * states each just once, so the numbers differ whenever an endpoint lacks the triple.
+     */
+    private static void checkCount(String triples, long count)
+    {
+        if(count != endpoints.size())
+            Problems.error("number of " + triples + " different from the number of the endpoints",
+                    count + " triples, " + endpoints.size() + " endpoints");
     }
 
 
@@ -343,12 +414,17 @@ class Endpoint extends Updater
         System.out.println("load endpoints ...");
 
         loadOutcomes();
-        loadTypes();
+        long types = loadTypes();
         loadLabels();
         loadMeasuredValues();
         loadReferences();
         checkUnits();
-        checkSubstances();
+        long substances = checkSubstances();
+        long measuregroups = checkMeasuregroups();
+
+        checkCount("the types http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#Endpoint", types);
+        checkCount("the triples of http://purl.obolibrary.org/obo/IAO_0000136", substances);
+        checkCount("the triples of http://purl.obolibrary.org/obo/OBI_0000299", measuregroups);
 
         // nothing loaded later refers to the endpoints, so they are stored at once without keeping their keys
         measurements.store();

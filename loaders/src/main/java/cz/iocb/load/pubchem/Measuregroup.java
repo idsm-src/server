@@ -6,10 +6,12 @@ import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.EntityTable;
 import cz.iocb.load.common.Pair;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
 
@@ -229,29 +231,6 @@ class Measuregroup extends Updater
     }
 
 
-    private static void checkEndpoints() throws IOException, SQLException
-    {
-        processFiles("pubchem/RDF/measuregroup", "pc_measuregroup2endpoint_[0-9]+\\.ttl\\.gz", file -> {
-            try(InputStream stream = getTtlStream(file))
-            {
-                new TripleStreamProcessor()
-                {
-                    @Override
-                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
-                    {
-                        getStringID(subject, prefix);
-
-                        if(!checkPredicate(subject, predicate, object, "http://purl.obolibrary.org/obo/OBI_0000299"))
-                            return;
-
-                        getStringID(object, Endpoint.prefix);
-                    }
-                }.load(stream);
-            }
-        });
-    }
-
-
     static void load() throws IOException, SQLException
     {
         System.out.println("load measuregroups ...");
@@ -261,9 +240,53 @@ class Measuregroup extends Updater
         loadSources();
         loadTitles();
         loadProteinsAndGenes();
-        checkEndpoints();
 
         measuregroups.flush();
+
+        System.out.println();
+    }
+
+
+    /*
+     * Loads the measuregroups of the substances, to which the endpoints have already added the measuregroups of their
+     * substances. The source states the measuregroup of every substance with an endpoint and states each just once,
+     * so the number of its triples differs from the number of the pairs whenever an endpoint has added a pair that the
+     * source does not state.
+     */
+    static void loadSubstances() throws IOException, SQLException
+    {
+        System.out.println("load measuregroup substances ...");
+
+        AtomicLong count = new AtomicLong();
+
+        processFiles("pubchem/RDF/substance", "pc_substance2measuregroup_[0-9]+\\.ttl\\.gz", file -> {
+            try(InputStream stream = getTtlStream(file))
+            {
+                new TripleStreamProcessor()
+                {
+                    @Override
+                    protected void parse(Node subject, Node predicate, Node object) throws SQLException, IOException
+                    {
+                        if(!checkPredicate(subject, predicate, object, "http://purl.obolibrary.org/obo/RO_0000056"))
+                            return;
+
+                        Integer substanceID = Substance.getSubstanceID(subject.getURI());
+                        Pair<Integer, Integer> measuregroup = parseMeasuregroup(object);
+
+                        addMeasuregroupSubstance(measuregroup.getOne(), measuregroup.getTwo(), substanceID);
+                        count.incrementAndGet();
+                    }
+                }.load(stream);
+            }
+        });
+
+        long pairs = (long) keepSubstances.size() + newSubstances.size();
+
+        if(count.get() != pairs)
+            Problems.error(
+                    "number of the triples of http://purl.obolibrary.org/obo/RO_0000056 different from the "
+                            + "number of the measuregroups of substances",
+                    count.get() + " triples, " + pairs + " pairs");
 
         System.out.println();
     }
@@ -307,7 +330,7 @@ class Measuregroup extends Updater
     }
 
 
-    private static Pair<Integer, Integer> parseMeasuregroup(Node node) throws IOException
+    static Pair<Integer, Integer> parseMeasuregroup(Node node) throws IOException
     {
         String iri = node.getURI();
         Integer bioassay;
