@@ -2229,9 +2229,9 @@ public class Ontology extends Updater
 
 
     /*
-     * Loads the superclasses: the superclasses of the class hierarchy other than owl:Thing, except those between two
-     * ChEBI classes, and owl:Thing as the superclass of the classes without a superclass (except blank nodes,
-     * owl:Thing and rdfs:Resource).
+     * Loads the superclasses: the superclasses of the class hierarchy, except those between two ChEBI classes, and
+     * owl:Thing as the superclass of the classes without a superclass (except blank nodes, owl:Thing and
+     * rdfs:Resource).
      */
     private static void loadSuperClasses(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -2251,7 +2251,7 @@ public class Ontology extends Updater
             subclasses.add(classID);
             classes.add(superclassID);
 
-            if(is(object, owl + "Thing") || classID.getOne() == unitCHEBI && superclassID.getOne() == unitCHEBI)
+            if(classID.getOne() == unitCHEBI && superclassID.getOne() == unitCHEBI)
                 return;
 
             add(Pair.getPair(classID, superclassID), keepSuperClasses, newSuperClasses, oldSuperClasses);
