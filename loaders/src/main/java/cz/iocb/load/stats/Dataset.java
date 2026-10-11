@@ -65,19 +65,21 @@ public class Dataset
     }
 
 
-    private static void processNodeMapping(DatabaseSchema schema, SourceTable table, TermMapping nodemap, Variable name,
+    private static void processNodeMapping(Request request, SourceTable table, TermMapping nodemap, Variable name,
             VariableBindings bindings, Condition condition)
     {
-        List<Column> columns = nodemap.getColumns(null);
+        DatabaseSchema schema = request.getConfiguration().getDatabaseSchema();
+        ResourceClass resourceClass = nodemap.getResourceClass(request);
+        List<Column> columns = nodemap.getColumns(request);
 
-        for(Column column : columns)
-            if(schema.isNullableColumn(table, column))
-                condition.addIsNotNull(column);
+        // the optional columns of the class may be null
+        for(int i = 0; i < columns.size(); i++)
+            if(!resourceClass.isOptionalColumn(i) && schema.isNullableColumn(table, columns.get(i)))
+                condition.addIsNotNull(columns.get(i));
 
         if(name == null)
             return;
 
-        ResourceClass resourceClass = nodemap.getResourceClass(null);
         bindings.add(new VariableBinding(name, resourceClass, columns, false));
     }
 
@@ -97,8 +99,6 @@ public class Dataset
 
     public SqlIntercode translate(Request request, Variable subject, Variable object)
     {
-        DatabaseSchema schema = request.getConfiguration().getDatabaseSchema();
-
         List<SqlIntercode> branches = new ArrayList<>();
 
         for(QuadMapping mapping : mappings)
@@ -111,8 +111,8 @@ public class Dataset
                     Condition condition = new Condition();
                     VariableBindings bindings = new VariableBindings();
 
-                    processNodeMapping(schema, table, map.getSubject(), subject, bindings, condition);
-                    processNodeMapping(schema, table, map.getObject(), object, bindings, condition);
+                    processNodeMapping(request, table, map.getSubject(), subject, bindings, condition);
+                    processNodeMapping(request, table, map.getObject(), object, bindings, condition);
 
                     Conditions conditions = Conditions.and(map.getConditions(), condition);
 
@@ -137,16 +137,16 @@ public class Dataset
                         VariableBindings bindings = new VariableBindings();
 
                         if(i == map.getSubjectTableIdx())
-                            processNodeMapping(schema, table, map.getSubject(), subject, bindings, condition);
+                            processNodeMapping(request, table, map.getSubject(), subject, bindings, condition);
 
                         if(i == map.getObjectTableIdx())
-                            processNodeMapping(schema, table, map.getObject(), object, bindings, condition);
+                            processNodeMapping(request, table, map.getObject(), object, bindings, condition);
 
                         if(i > 0)
                         {
                             List<Column> columns = joinColumnsPairs.get(i - 1).getRightColumns();
                             TermMapping nodeMapping = new InternalNodeMapping(resourceClass, columns);
-                            processNodeMapping(schema, table, nodeMapping, node, bindings, condition);
+                            processNodeMapping(request, table, nodeMapping, node, bindings, condition);
                         }
 
                         if(i < tables.size() - 1)
@@ -155,7 +155,7 @@ public class Dataset
                             resourceClass = new InternalResourceClass(columns.stream().map(Column::getType).toList());
                             TermMapping nodeMapping = new InternalNodeMapping(resourceClass, columns);
                             node = new Variable("@var" + i);
-                            processNodeMapping(schema, table, nodeMapping, node, bindings, condition);
+                            processNodeMapping(request, table, nodeMapping, node, bindings, condition);
                         }
 
                         Conditions conditions = Conditions.and(map.getConditions().get(i), condition);
@@ -170,7 +170,7 @@ public class Dataset
 
                 default ->
                 {
-                    throw new UnsupportedOperationException();
+                    throw new UnsupportedOperationException(mapping.getClass().getName());
                 }
             }
         }
