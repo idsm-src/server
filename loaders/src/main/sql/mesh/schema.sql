@@ -217,6 +217,24 @@ create table mesh.resource_established_dates
 );
 
 
+create table mesh.resource_introduced_dates
+(
+    resource    varchar not null,
+    date        date not null,
+    timezone    integer not null,
+    primary key(resource)
+);
+
+
+create table mesh.resource_last_updated_dates
+(
+    resource    varchar not null,
+    date        date not null,
+    timezone    integer not null,
+    primary key(resource)
+);
+
+
 create table mesh.resource_active_flags
 (
     resource    varchar not null,

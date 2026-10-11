@@ -139,6 +139,16 @@ grant select on mesh.resource_established_dates to sparql;
 
 --------------------------------------------------------------------------------
 
+create index resource_introduced_dates__date_timezone on mesh.resource_introduced_dates(date, timezone);
+grant select on mesh.resource_introduced_dates to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_last_updated_dates__date_timezone on mesh.resource_last_updated_dates(date, timezone);
+grant select on mesh.resource_last_updated_dates to sparql;
+
+--------------------------------------------------------------------------------
+
 create index resource_active_flags__flag on mesh.resource_active_flags(flag);
 grant select on mesh.resource_active_flags to sparql;
 

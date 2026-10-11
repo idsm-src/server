@@ -7,15 +7,11 @@ import static cz.iocb.load.common.TripleStreamProcessor.getBoolean;
 import static cz.iocb.load.common.TripleStreamProcessor.getInt;
 import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
 import static cz.iocb.load.common.TripleStreamProcessor.isDate;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.DataException;
 import cz.iocb.load.common.MissingEntities;
@@ -35,40 +31,29 @@ public class Mesh extends Updater
     static final String meshv = "http://id.nlm.nih.gov/mesh/vocab#";
 
     static final String prefix = "http://id.nlm.nih.gov/mesh/";
-    static final int prefixLength = prefix.length();
 
     private static final StringSet keepMeshes = new StringSet();
     private static final StringSet newMeshes = new StringSet();
     private static final StringSet oldMeshes = new StringSet();
     private static final MissingEntities<String> missingMeshes = new MissingEntities<>("mesh", true);
 
+    // the year of the versioned IRIs of the dump, an empty string for non-versioned IRIs, null before the first IRI
+    private static String year;
+
 
     private static final Pattern zonePattern = Pattern.compile("(Z|[+-][0-9]{2}:[0-9]{2})$");
+    private static final Pattern versionedPattern = Pattern.compile("(20[0-9]{2})/(.*)");
 
 
     /*
-     * Returns the version of MeSH from the header of its dump; null stands for an unknown version.
+     * Returns the version of MeSH, the date of the last update of its dump, as the download script has recorded it;
+     * null stands for an unknown version.
      */
-    private static String getVersion(String file) throws IOException
+    private static String getVersion() throws IOException
     {
-        InputStream input = openFile(file);
-
-        if(input == null)
-            return null;
-
-        try(BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(input, 65536), UTF_8)))
+        try(BufferedReader reader = getReader("mesh/version.txt.gz"))
         {
-            String line;
-
-            while((line = reader.readLine()) != null)
-            {
-                if(line.matches("# <http://id\\.nlm\\.nih\\.gov/mesh> exported at 20[0-9]{2}-[0-9]{2}-[0-9]{2} .*"))
-                    return line.replaceFirst(
-                            "^# <http://id\\.nlm\\.nih\\.gov/mesh> exported at (20[0-9]{2}-[0-9]{2}-[0-9]{2}) .*$",
-                            "$1");
-            }
-
-            return null;
+            return reader.readLine();
         }
     }
 
@@ -82,13 +67,13 @@ public class Mesh extends Updater
                 meshv + "prefLabel", meshv + "publicMeSHNote", meshv + "scopeNote", meshv + "sortVersion",
                 meshv + "relatedRegistryNumber", meshv + "identifier", meshv + "nlmClassificationNumber",
                 meshv + "registryNumber", meshv + "active", meshv + "frequency", meshv + "dateCreated",
-                meshv + "dateRevised", meshv + "dateEstablished", meshv + "allowableQualifier",
-                meshv + "broaderConcept", meshv + "broaderDescriptor", meshv + "broaderQualifier", meshv + "concept",
-                meshv + "indexerConsiderAlso", meshv + "mappedTo", meshv + "narrowerConcept",
-                meshv + "pharmacologicalAction", meshv + "preferredMappedTo", meshv + "relatedConcept",
-                meshv + "seeAlso", meshv + "term", meshv + "treeNumber", meshv + "hasDescriptor",
-                meshv + "hasQualifier", meshv + "parentTreeNumber", meshv + "preferredConcept", meshv + "preferredTerm",
-                meshv + "useInstead", meshv + "Concept");
+                meshv + "dateRevised", meshv + "dateEstablished", meshv + "dateIntroduced", meshv + "lastUpdated",
+                meshv + "allowableQualifier", meshv + "broaderConcept", meshv + "broaderDescriptor",
+                meshv + "broaderQualifier", meshv + "concept", meshv + "indexerConsiderAlso", meshv + "mappedTo",
+                meshv + "narrowerConcept", meshv + "pharmacologicalAction", meshv + "preferredMappedTo",
+                meshv + "relatedConcept", meshv + "seeAlso", meshv + "term", meshv + "treeNumber",
+                meshv + "hasDescriptor", meshv + "hasQualifier", meshv + "parentTreeNumber", meshv + "preferredConcept",
+                meshv + "preferredTerm", meshv + "useInstead", meshv + "Concept");
 
         // a few concepts are related by meshv:Concept, which the vocabulary does not define, so it is not loaded
         dispatcher.on(meshv + "Concept", (subject, object) -> {
@@ -107,7 +92,7 @@ public class Mesh extends Updater
         load("select id,type_id from mesh.resources where type_id is not null", oldTypes);
 
         dispatcher.on(rdf + "type", (subject, object) -> {
-            String meshID = getStringID(subject, prefix);
+            String meshID = getResourceID(subject);
             Pair<Integer, Integer> type = Ontology.getResourceId(object, unitUncategorized);
 
             // a reference may have added the mesh as a missing one already
@@ -163,7 +148,7 @@ public class Mesh extends Updater
                 return;
             }
 
-            String meshID = getMeshID(subject.getURI());
+            String meshID = getMeshID(subject);
             String value = getLiteral(object, lang);
 
             Pair<String, String> pair = Pair.getPair(meshID, value);
@@ -198,7 +183,7 @@ public class Mesh extends Updater
                 return;
             }
 
-            String meshID = getMeshID(subject.getURI());
+            String meshID = getMeshID(subject);
             String value = getLiteral(object, lang);
 
             if(value.equals(oldValues.remove(meshID)))
@@ -241,7 +226,7 @@ public class Mesh extends Updater
         load("select resource," + column + "::integer from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
-            String meshID = getMeshID(subject.getURI());
+            String meshID = getMeshID(subject);
             Integer value = getBoolean(object) ? 1 : 0;
 
             if(value.equals(oldValues.remove(meshID)))
@@ -284,7 +269,7 @@ public class Mesh extends Updater
         load("select resource," + column + " from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
-            String meshID = getMeshID(subject.getURI());
+            String meshID = getMeshID(subject);
             Integer value = getInt(object);
 
             if(value.equals(oldValues.remove(meshID)))
@@ -327,7 +312,7 @@ public class Mesh extends Updater
         load("select resource,date::varchar,timezone from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
-            String meshID = getMeshID(subject.getURI());
+            String meshID = getMeshID(subject);
             Pair<String, Integer> value = getDate(object);
 
             if(value.equals(oldValues.remove(meshID)))
@@ -370,8 +355,8 @@ public class Mesh extends Updater
         load("select resource," + column + " from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
-            String meshID = getMeshID(subject.getURI());
-            String valueID = getMeshID(object.getURI());
+            String meshID = getMeshID(subject);
+            String valueID = getMeshID(object);
 
             Pair<String, String> pair = Pair.getPair(meshID, valueID);
 
@@ -398,8 +383,8 @@ public class Mesh extends Updater
         load("select resource," + column + " from mesh." + table, oldValues);
 
         dispatcher.on(property, (subject, object) -> {
-            String meshID = getMeshID(subject.getURI());
-            String valueID = getMeshID(object.getURI());
+            String meshID = getMeshID(subject);
+            String valueID = getMeshID(object);
 
             if(valueID.equals(oldValues.remove(meshID)))
             {
@@ -496,12 +481,31 @@ public class Mesh extends Updater
     }
 
 
-    static String getMeshID(String value) throws IOException
+    /*
+     * Returns the id of a MeSH resource. The dump of a production year identifies the resources by the versioned IRIs
+     * of the year (http://id.nlm.nih.gov/mesh/2026/D000001), whose data mirror the current resources with
+     * non-versioned IRIs (http://id.nlm.nih.gov/mesh/D000001), which the mapping publishes; all the IRIs of a dump must
+     * be of the same year, or all non-versioned.
+     */
+    private static synchronized String getResourceID(Node node) throws IOException
     {
-        if(!value.startsWith(prefix))
-            throw new DataException("unexpected IRI", value);
+        String id = getStringID(node, prefix);
+        Matcher matcher = versionedPattern.matcher(id);
+        boolean versioned = matcher.matches();
+        String version = versioned ? matcher.group(1) : "";
 
-        String meshID = value.substring(prefixLength);
+        if(year == null)
+            year = version;
+        else if(!year.equals(version))
+            throw new DataException("unexpected IRI", text(node));
+
+        return versioned ? matcher.group(2) : id;
+    }
+
+
+    static String getMeshID(Node node) throws IOException
+    {
+        String meshID = getResourceID(node);
 
         synchronized(newMeshes)
         {
@@ -530,7 +534,7 @@ public class Mesh extends Updater
             init("mesh");
             Ontology.loadCategories();
 
-            String version = getVersion(file);
+            String version = getVersion();
             System.out.println("=== load MeSH version " + version + " ===");
             System.out.println();
 
@@ -574,6 +578,8 @@ public class Mesh extends Updater
             loadDateValues(dispatcher, meshv + "dateCreated", "resource_created_dates");
             loadDateValues(dispatcher, meshv + "dateRevised", "resource_revised_dates");
             loadDateValues(dispatcher, meshv + "dateEstablished", "resource_established_dates");
+            loadDateValues(dispatcher, meshv + "dateIntroduced", "resource_introduced_dates");
+            loadDateValues(dispatcher, meshv + "lastUpdated", "resource_last_updated_dates");
 
             loadMultiMeshValues(dispatcher, meshv + "allowableQualifier", "resource_allowable_qualifiers", "qualifier");
             loadMultiMeshValues(dispatcher, meshv + "broaderConcept", "resource_broader_concepts", "concept");

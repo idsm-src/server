@@ -431,6 +431,7 @@ cp "$data/ero.owl" "$output"
 
 # other ontologies
 cp "$data/base.owl" "$output"
+cp "$data/mesh-missing.ttl" "$output"
 cp "$data/pubchem-missing.ttl" "$output"
 cp "$data/xsd.owl" "$output"
 cp "$data/ChemOnt_2_1.owl" "$output"

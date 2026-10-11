@@ -260,6 +260,22 @@ public class Mesh
         }
 
         {
+            DatabaseTable table = new DatabaseTable(schema, "resource_introduced_dates");
+            TermMapping subject = config.createIriMapping("mesh:resource", "resource");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("meshv:dateIntroduced"),
+                    config.createLiteralMapping(xsdDate, "date", "timezone"));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "resource_last_updated_dates");
+            TermMapping subject = config.createIriMapping("mesh:resource", "resource");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("meshv:lastUpdated"),
+                    config.createLiteralMapping(xsdDate, "date", "timezone"));
+        }
+
+        {
             DatabaseTable table = new DatabaseTable(schema, "resource_allowable_qualifiers");
             TermMapping subject = config.createIriMapping("mesh:resource", "resource");
 

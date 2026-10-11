@@ -24,6 +24,8 @@ alter table mesh.resource_registry_numbers add foreign key (resource) references
 alter table mesh.resource_created_dates add foreign key (resource) references mesh.resources(id) initially deferred;
 alter table mesh.resource_revised_dates add foreign key (resource) references mesh.resources(id) initially deferred;
 alter table mesh.resource_established_dates add foreign key (resource) references mesh.resources(id) initially deferred;
+alter table mesh.resource_introduced_dates add foreign key (resource) references mesh.resources(id) initially deferred;
+alter table mesh.resource_last_updated_dates add foreign key (resource) references mesh.resources(id) initially deferred;
 alter table mesh.resource_active_flags add foreign key (resource) references mesh.resources(id) initially deferred;
 alter table mesh.resource_frequencies add foreign key (resource) references mesh.resources(id) initially deferred;
 alter table mesh.resource_allowable_qualifiers add foreign key (resource) references mesh.resources(id) initially deferred;
