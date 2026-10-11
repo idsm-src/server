@@ -860,7 +860,6 @@ public class MoNA extends Updater
                             case "pubchem":
                             case "PubChem":
                             case "PubChem ID":
-                            case "pubmed id":
                             case "pubchem cid":
                             {
                                 if(a.value.equals("n/a") || a.value.equals("na") || a.value.equals("NA")
@@ -930,6 +929,8 @@ public class MoNA extends Updater
 
                             case "kind":
                             case "compound class":
+                                // the Pubmed_ID of GNPS mixes PubChem CIDs, PubMed ids and other identifiers
+                            case "pubmed id":
                                 // skip
                                 break;
 
@@ -1145,7 +1146,7 @@ public class MoNA extends Updater
                                     else if(a.value.matches(".*[0-9 ]V *$"))
                                         value = Pair.getPair(ramp, 218);
                                     else if(a.value.matches(".*% *$"))
-                                        value = Pair.getPair(ramp, 190);
+                                        value = Pair.getPair(ramp, 187);
                                     else
                                         throw new DataException("unexpected unit of a collision energy ramp", a.value);
 
@@ -1172,13 +1173,13 @@ public class MoNA extends Updater
                                         value = Pair.getPair(getFloat(a, a.value.replaceFirst("^CE", "")), 0);
                                     else if(a.value.matches("-?[0-9.]+"))
                                         value = Pair.getPair(getFloat(a, a.value), 0);
-                                    else if(a.value.matches("[0-9.]+ ?%( \\(nominal\\))?")) // obo:UO_0000190
-                                        value = Pair.getPair(getFloat(a, a.value.replaceFirst(" ?%.*", "")), 190);
-                                    else if(a.value.matches("[0-9.]+ *\\(?NCE\\)?")) // obo:UO_0000190
+                                    else if(a.value.matches("[0-9.]+ ?%( \\(nominal\\))?")) // obo:UO_0000187
+                                        value = Pair.getPair(getFloat(a, a.value.replaceFirst(" ?%.*", "")), 187);
+                                    else if(a.value.matches("[0-9.]+ *\\(?NCE\\)?")) // obo:UO_0000187
                                         value = Pair.getPair(getFloat(a, a.value.replaceFirst(" *\\(?NCE\\)?", "")),
-                                                190);
-                                    else if(a.value.matches("NCE [0-9]+%")) // obo:UO_0000190
-                                        value = Pair.getPair(getFloat(a, a.value.replaceFirst("NCE (.*)%", "$1")), 190);
+                                                187);
+                                    else if(a.value.matches("NCE [0-9]+%")) // obo:UO_0000187
+                                        value = Pair.getPair(getFloat(a, a.value.replaceFirst("NCE (.*)%", "$1")), 187);
                                     else
                                     {
                                         ignoreValue(item, a, a.value);

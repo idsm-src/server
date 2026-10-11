@@ -667,15 +667,15 @@ public class Mona
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000045"), // collision energy
-                    config.createAreNotEqualCondition("unit", "'190'::integer"));
+                    config.createAreNotEqualCondition("unit", "'187'::integer"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000138"), // normalized collision energy
-                    config.createAreEqualCondition("unit", "'190'::integer"));
+                    config.createAreEqualCondition("unit", "'187'::integer"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"), // has value
                     config.createLiteralMapping(xsdFloat, "energy"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000221"), // has unit
-                    config.createIriMapping("obo:UO_0000190"), // ratio unit
-                    config.createAreEqualCondition("unit", "'190'::integer"));
+                    config.createIriMapping("obo:UO_0000187"), // percent
+                    config.createAreEqualCondition("unit", "'187'::integer"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000221"), // has unit
                     config.createIriMapping("obo:UO_0000218"), // volt
                     config.createAreEqualCondition("unit", "'218'::integer"));
@@ -699,15 +699,15 @@ public class Mona
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1002013"), // collision energy ramp start
-                    config.createAreNotEqualCondition("unit", "'190'::integer"));
+                    config.createAreNotEqualCondition("unit", "'187'::integer"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1002218"), // percent collision energy ramp start
-                    config.createAreEqualCondition("unit", "'190'::integer"));
+                    config.createAreEqualCondition("unit", "'187'::integer"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"), // has value
                     config.createLiteralMapping(xsdFloat, "ramp_start"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000221"), // has unit
-                    config.createIriMapping("obo:UO_0000190"), // ratio unit
-                    config.createAreEqualCondition("unit", "'190'::integer"));
+                    config.createIriMapping("obo:UO_0000187"), // percent
+                    config.createAreEqualCondition("unit", "'187'::integer"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000221"), // has unit
                     config.createIriMapping("obo:UO_0000218"), // volt
                     config.createAreEqualCondition("unit", "'218'::integer"));
@@ -728,15 +728,15 @@ public class Mona
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1002014"), // collision energy ramp end
-                    config.createAreNotEqualCondition("unit", "'190'::integer"));
+                    config.createAreNotEqualCondition("unit", "'187'::integer"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1002219"), // percent collision energy ramp end
-                    config.createAreEqualCondition("unit", "'190'::integer"));
+                    config.createAreEqualCondition("unit", "'187'::integer"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"), // has value
                     config.createLiteralMapping(xsdFloat, "ramp_end"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000221"), // has unit
-                    config.createIriMapping("obo:UO_0000190"), // ratio unit
-                    config.createAreEqualCondition("unit", "'190'::integer"));
+                    config.createIriMapping("obo:UO_0000187"), // percent
+                    config.createAreEqualCondition("unit", "'187'::integer"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000221"), // has unit
                     config.createIriMapping("obo:UO_0000218"), // volt
                     config.createAreEqualCondition("unit", "'218'::integer"));
