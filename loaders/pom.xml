@@ -100,8 +100,6 @@
               <arguments>
                 <argument>src/main/sql/drugbank/base.sql</argument>
                 <argument>src/main/sql/drugbank/schema.sql</argument>
-                <argument>src/main/sql/drugbank/sachem.sql</argument>
-                <argument>src/main/sql/drugbank/settings.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -112,6 +110,19 @@
             </goals>
             <configuration>
               <mainClass>cz.iocb.load.drugbank.DrugBank</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>drugbank-dbfinish</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/drugbank/sachem.sql</argument>
+                <argument>src/main/sql/drugbank/settings.sql</argument>
+              </arguments>
             </configuration>
           </execution>
 
@@ -135,9 +146,6 @@
               <arguments>
                 <argument>src/main/sql/ontology/base.sql</argument>
                 <argument>src/main/sql/ontology/schema.sql</argument>
-                <argument>src/main/sql/ontology/settings.sql</argument>
-                <argument>src/main/sql/ontology/functions.sql</argument>
-                <argument>src/main/sql/ontology/foreignkey.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -148,6 +156,20 @@
             </goals>
             <configuration>
               <mainClass>cz.iocb.load.ontology.Ontology</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>ontology-dbfinish</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/ontology/settings.sql</argument>
+                <argument>src/main/sql/ontology/functions.sql</argument>
+                <argument>src/main/sql/ontology/foreignkey.sql</argument>
+              </arguments>
             </configuration>
           </execution>
 
@@ -171,9 +193,6 @@
               <arguments>
                 <argument>src/main/sql/chembl/base.sql</argument>
                 <argument>src/main/sql/chembl/schema/</argument>
-                <argument>src/main/sql/chembl/sachem.sql</argument>
-                <argument>src/main/sql/chembl/settings/</argument>
-                <argument>src/main/sql/chembl/foreignkey.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -184,6 +203,20 @@
             </goals>
             <configuration>
               <mainClass>cz.iocb.load.chembl.ChEMBL</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>chembl-dbfinish</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/chembl/sachem.sql</argument>
+                <argument>src/main/sql/chembl/settings/</argument>
+                <argument>src/main/sql/chembl/foreignkey.sql</argument>
+              </arguments>
             </configuration>
           </execution>
 
@@ -207,11 +240,6 @@
               <arguments>
                 <argument>src/main/sql/pubchem/base.sql</argument>
                 <argument>src/main/sql/pubchem/schema/</argument>
-                <argument>src/main/sql/pubchem/sachem.sql</argument>
-                <argument>src/main/sql/pubchem/settings/</argument>
-                <argument>src/main/sql/pubchem/functions/</argument>
-                <argument>src/main/sql/pubchem/procedures/</argument>
-                <argument>src/main/sql/pubchem/foreignkey.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -222,6 +250,22 @@
             </goals>
             <configuration>
               <mainClass>cz.iocb.load.pubchem.PubChemRDF</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pubchem-dbfinish</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/pubchem/sachem.sql</argument>
+                <argument>src/main/sql/pubchem/settings/</argument>
+                <argument>src/main/sql/pubchem/functions/</argument>
+                <argument>src/main/sql/pubchem/procedures/</argument>
+                <argument>src/main/sql/pubchem/foreignkey.sql</argument>
+              </arguments>
             </configuration>
           </execution>
 
@@ -245,9 +289,6 @@
               <arguments>
                 <argument>src/main/sql/chebi/base.sql</argument>
                 <argument>src/main/sql/chebi/schema.sql</argument>
-                <argument>src/main/sql/chebi/sachem.sql</argument>
-                <argument>src/main/sql/chebi/settings.sql</argument>
-                <argument>src/main/sql/chebi/foreignkey.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -258,6 +299,20 @@
             </goals>
             <configuration>
               <mainClass>cz.iocb.load.chebi.ChEBI</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>chebi-dbfinish</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/chebi/sachem.sql</argument>
+                <argument>src/main/sql/chebi/settings.sql</argument>
+                <argument>src/main/sql/chebi/foreignkey.sql</argument>
+              </arguments>
             </configuration>
           </execution>
 
@@ -281,8 +336,6 @@
               <arguments>
                 <argument>src/main/sql/mesh/base.sql</argument>
                 <argument>src/main/sql/mesh/schema.sql</argument>
-                <argument>src/main/sql/mesh/settings.sql</argument>
-                <argument>src/main/sql/mesh/foreignkey.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -293,6 +346,19 @@
             </goals>
             <configuration>
               <mainClass>cz.iocb.load.mesh.Mesh</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>mesh-dbfinish</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/mesh/settings.sql</argument>
+                <argument>src/main/sql/mesh/foreignkey.sql</argument>
+              </arguments>
             </configuration>
           </execution>
 
@@ -316,8 +382,6 @@
               <arguments>
                 <argument>src/main/sql/wikidata/base.sql</argument>
                 <argument>src/main/sql/wikidata/schema.sql</argument>
-                <argument>src/main/sql/wikidata/sachem.sql</argument>
-                <argument>src/main/sql/wikidata/settings.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -328,6 +392,19 @@
             </goals>
             <configuration>
               <mainClass>cz.iocb.load.wikidata.Wikidata</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>wikidata-dbfinish</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/wikidata/sachem.sql</argument>
+                <argument>src/main/sql/wikidata/settings.sql</argument>
+              </arguments>
             </configuration>
           </execution>
 
@@ -351,10 +428,7 @@
               <arguments>
                 <argument>src/main/sql/mona/base.sql</argument>
                 <argument>src/main/sql/mona/schema.sql</argument>
-                <argument>src/main/sql/mona/sachem.sql</argument>
                 <argument>src/main/sql/mona/crosslinks.sql</argument>
-                <argument>src/main/sql/mona/settings.sql</argument>
-                <argument>src/main/sql/mona/foreignkey.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -365,6 +439,20 @@
             </goals>
             <configuration>
               <mainClass>cz.iocb.load.mona.MoNA</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>mona-dbfinish</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/mona/sachem.sql</argument>
+                <argument>src/main/sql/mona/settings.sql</argument>
+                <argument>src/main/sql/mona/foreignkey.sql</argument>
+              </arguments>
             </configuration>
           </execution>
 
@@ -388,10 +476,7 @@
               <arguments>
                 <argument>src/main/sql/isdb/base.sql</argument>
                 <argument>src/main/sql/isdb/schema.sql</argument>
-                <argument>src/main/sql/isdb/sachem.sql</argument>
                 <argument>src/main/sql/isdb/crosslinks.sql</argument>
-                <argument>src/main/sql/isdb/settings.sql</argument>
-                <argument>src/main/sql/isdb/foreignkey.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -402,6 +487,20 @@
             </goals>
             <configuration>
               <mainClass>cz.iocb.load.isdb.ISDB</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>isdb-dbfinish</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/isdb/sachem.sql</argument>
+                <argument>src/main/sql/isdb/settings.sql</argument>
+                <argument>src/main/sql/isdb/foreignkey.sql</argument>
+              </arguments>
             </configuration>
           </execution>
 
@@ -425,7 +524,6 @@
               <arguments>
                 <argument>src/main/sql/pdb/base.sql</argument>
                 <argument>src/main/sql/pdb/schema.sql</argument>
-                <argument>src/main/sql/pdb/settings.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -436,6 +534,19 @@
             </goals>
             <configuration>
               <mainClass>cz.iocb.load.pdb.PDB</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pdb-dbfinish</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/pdb/sachem.sql</argument>
+                <argument>src/main/sql/pdb/settings.sql</argument>
+              </arguments>
             </configuration>
           </execution>
 
@@ -450,9 +561,6 @@
               <arguments>
                 <argument>src/main/sql/molmedb/base.sql</argument>
                 <argument>src/main/sql/molmedb/schema/</argument>
-                <argument>src/main/sql/molmedb/sachem.sql</argument>
-                <argument>src/main/sql/molmedb/settings/</argument>
-                <argument>src/main/sql/molmedb/foreignkey.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -463,6 +571,20 @@
             </goals>
             <configuration>
               <executable>src/main/scripts/load-molmedb.sh</executable>
+            </configuration>
+          </execution>
+          <execution>
+            <id>molmedb-dbfinish</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/molmedb/sachem.sql</argument>
+                <argument>src/main/sql/molmedb/settings/</argument>
+                <argument>src/main/sql/molmedb/foreignkey.sql</argument>
+              </arguments>
             </configuration>
           </execution>
 
@@ -477,8 +599,6 @@
               <arguments>
                 <argument>src/main/sql/stats/base.sql</argument>
                 <argument>src/main/sql/stats/schema.sql</argument>
-                <argument>src/main/sql/stats/settings.sql</argument>
-                <argument>src/main/sql/stats/foreignkey.sql</argument>
               </arguments>
             </configuration>
           </execution>
@@ -489,6 +609,19 @@
             </goals>
             <configuration>
               <mainClass>cz.iocb.load.stats.GenerateVoid</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>stats-dbfinish</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
+                <argument>src/main/sql/stats/settings.sql</argument>
+                <argument>src/main/sql/stats/foreignkey.sql</argument>
+              </arguments>
             </configuration>
           </execution>
 

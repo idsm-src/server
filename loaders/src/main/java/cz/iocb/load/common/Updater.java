@@ -1073,7 +1073,9 @@ public class Updater
      * Updates the Sachem index of the given name according to the audited changes of its table: removes the stale
      * versions of the index and synchronises it. The cleanup has to precede the synchronisation, because after it the
      * cleanup would delete the previous version although the new one is not committed yet. Prints the size of the
-     * index and reports the molecules that the indexer has rejected meanwhile as warnings.
+     * index and reports the molecules that the indexer has rejected meanwhile as warnings. An index that is not
+     * registered yet is left out: the first load fills its table without the audit trigger, and the index is
+     * registered and built from the whole table after the load (sachem.sql of the dbfinish step).
      */
     protected static void syncIndex(String index, boolean optimize) throws SQLException
     {
@@ -1082,6 +1084,22 @@ public class Updater
 
         if(dryRun)
             return;
+
+        try(PreparedStatement statement = connection
+                .prepareStatement("select 1 from sachem.configuration where index_name = ?"))
+        {
+            statement.setString(1, index);
+
+            try(ResultSet result = statement.executeQuery())
+            {
+                if(!result.next())
+                {
+                    System.out.println("sachem index " + index + " not registered yet, it is built after the load");
+                    System.out.println();
+                    return;
+                }
+            }
+        }
 
         System.out.println("sync sachem index " + index + " ...");
 

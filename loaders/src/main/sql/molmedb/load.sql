@@ -927,10 +927,17 @@ select coalesce(max(errors.id), 0) as last
 from sachem.compound_errors as errors, sachem.configuration as configuration
 where errors.index = configuration.id and configuration.index_name = 'molmedb';
 
+-- an index that is not registered yet is left out: the first load fills the table without the audit trigger, and
+-- molmedb-dbfinish registers the index and builds it from the whole table
+select 'sachem index molmedb not registered yet, it is built after the load'
+where not exists (select 1 from sachem.configuration where index_name = 'molmedb');
+
 do $$
 begin
-    perform sachem.cleanup('molmedb');
-    perform sachem.sync_data('molmedb', false, true);
+    if exists (select 1 from sachem.configuration where index_name = 'molmedb') then
+        perform sachem.cleanup('molmedb');
+        perform sachem.sync_data('molmedb', false, true);
+    end if;
 end
 $$;
 
