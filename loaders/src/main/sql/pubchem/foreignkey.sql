@@ -273,7 +273,6 @@ alter table pubchem.protein_glycosmos_matches add foreign key (protein) referenc
 alter table pubchem.protein_alphafold_matches add foreign key (protein) references pubchem.proteins(id) initially deferred;
 alter table pubchem.protein_pharos_matches add foreign key (protein) references pubchem.proteins(id) initially deferred;
 alter table pubchem.protein_proconsortium_matches add foreign key (protein) references pubchem.proteins(id) initially deferred;
-alter table pubchem.protein_wormbase_matches add foreign key (protein) references pubchem.proteins(id) initially deferred;
 alter table pubchem.protein_brenda_matches add foreign key (protein) references pubchem.proteins(id) initially deferred;
 alter table pubchem.protein_intact_matches add foreign key (protein) references pubchem.proteins(id) initially deferred;
 alter table pubchem.protein_interpro_matches add foreign key (protein) references pubchem.proteins(id) initially deferred;

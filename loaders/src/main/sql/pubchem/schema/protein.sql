@@ -148,14 +148,6 @@ create table pubchem.protein_proconsortium_matches
 );
 
 
-create table pubchem.protein_wormbase_matches
-(
-    protein  integer not null,
-    match    varchar not null,
-    primary key(protein, match)
-);
-
-
 create table pubchem.protein_brenda_matches
 (
     protein  integer not null,

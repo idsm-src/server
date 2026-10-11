@@ -108,12 +108,6 @@ grant select on pubchem.protein_proconsortium_matches to sparql;
 
 --------------------------------------------------------------------------------
 
-create index protein_wormbase_matches__protein on pubchem.protein_wormbase_matches(protein);
-create index protein_wormbase_matches__match on pubchem.protein_wormbase_matches(match);
-grant select on pubchem.protein_wormbase_matches to sparql;
-
---------------------------------------------------------------------------------
-
 create index protein_brenda_matches__protein on pubchem.protein_brenda_matches(protein);
 create index protein_brenda_matches__match on pubchem.protein_brenda_matches(match);
 grant select on pubchem.protein_brenda_matches to sparql;

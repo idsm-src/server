@@ -221,14 +221,6 @@ public class Protein
         }
 
         {
-            DatabaseTable table = new DatabaseTable(schema, "protein_wormbase_matches");
-            TermMapping subject = config.createIriMapping("pubchem:protein", "protein");
-
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("wormbase:protein", "match"));
-        }
-
-        {
             DatabaseTable table = new DatabaseTable(schema, "protein_brenda_matches");
             TermMapping subject = config.createIriMapping("pubchem:protein", "protein");
 

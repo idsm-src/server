@@ -410,9 +410,9 @@ class Protein extends Updater
                     "http://identifiers.org/nextprot:NX_", "https://glygen.org/protein/",
                     "https://glycosmos.org/glycoproteins/", "https://alphafold.ebi.ac.uk/entry/",
                     "https://pharos.nih.gov/targets/", "http://identifiers.org/PR:",
-                    "https://wormbase.org/db/seq/protein?name=", "https://www.brenda-enzymes.org/enzyme.php?ecno=",
-                    "https://www.ebi.ac.uk/intact/search?query=", "https://www.ebi.ac.uk/interpro/protein/reviewed/",
-                    "http://identifiers.org/ncbiprotein:", "http://rdf.ebi.ac.uk/resource/chembl/target/",
+                    "https://www.brenda-enzymes.org/enzyme.php?ecno=", "https://www.ebi.ac.uk/intact/search?query=",
+                    "https://www.ebi.ac.uk/interpro/protein/reviewed/", "http://identifiers.org/ncbiprotein:",
+                    "http://rdf.ebi.ac.uk/resource/chembl/target/",
                     "http://rdf.ebi.ac.uk/resource/chembl/target/CHEMBL", "http://purl.uniprot.org/enzyme/",
                     "http://www.wikidata.org/entity/Q", "https://string-db.org/network/",
                     "https://www.enzyme-database.org/query.php?ec="))
@@ -672,36 +672,6 @@ class Protein extends Updater
         dispatcher.after(() -> {
             store("delete from pubchem.protein_proconsortium_matches where protein=? and match=?", oldMatches);
             store("insert into pubchem.protein_proconsortium_matches(protein,match) values(?,?)", newMatches);
-        });
-    }
-
-
-    private static void loadWormbaseCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
-    {
-        IntStringSet keepMatches = new IntStringSet();
-        IntStringSet newMatches = new IntStringSet();
-        IntStringSet oldMatches = new IntStringSet();
-
-        load("select protein,match from pubchem.protein_wormbase_matches", oldMatches);
-
-        dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
-            if(!startsWith(object, "https://wormbase.org/db/seq/protein?name="))
-                return;
-
-            Integer proteinID = getProteinID(subject.getURI());
-            String match = getStringID(object, "https://wormbase.org/db/seq/protein?name=", ";class=Protein");
-
-            Pair<Integer, String> pair = Pair.getPair(proteinID, match);
-
-            if(oldMatches.remove(pair))
-                keepMatches.add(pair);
-            else if(!keepMatches.contains(pair))
-                newMatches.add(pair);
-        });
-
-        dispatcher.after(() -> {
-            store("delete from pubchem.protein_wormbase_matches where protein=? and match=?", oldMatches);
-            store("insert into pubchem.protein_wormbase_matches(protein,match) values(?,?)", newMatches);
         });
     }
 
@@ -1178,7 +1148,6 @@ class Protein extends Updater
         loadAlphafoldCloseMatches(dispatcher);
         loadPharosCloseMatches(dispatcher);
         loadProconsortiumCloseMatches(dispatcher);
-        loadWormbaseCloseMatches(dispatcher);
         loadBrendaCloseMatches(dispatcher);
         loadIntactCloseMatches(dispatcher);
         loadInterproProteinCloseMatches(dispatcher);

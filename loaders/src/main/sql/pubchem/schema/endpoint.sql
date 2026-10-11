@@ -4,9 +4,6 @@ create table pubchem.endpoints
     bioassay        integer not null,
     measuregroup    integer not null,
     value           integer not null,
-    type_id         integer,
-    measurement     real,
-    label           varchar,
     outcome_id      integer,
     primary key(substance, bioassay, measuregroup, value)
 );
