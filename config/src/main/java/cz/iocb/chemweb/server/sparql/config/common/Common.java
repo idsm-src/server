@@ -116,7 +116,7 @@ public class Common
         config.addIriClass(new StringUserIriClass("reference:plantcyc_pathway", "https://pmn.plantcyc.org/pathway?", "orgid=[A-Z0-9_]+&id=[-A-Z0-9]+"));
         config.addIriClass(new StringUserIriClass("reference:plantreactome_pathway", "https://plantreactome.gramene.org/content/detail/", "R-OSA-[0-9]{7}"));
         config.addIriClass(new StringUserIriClass("reference:fairdomhub_model", "https://fairdomhub.org/models/", "[0-9]+"));
-        config.addIriClass(new StringUserIriClass("reference:lipidmaps_pathway", "https://www.lipidmaps.org/data/IntegratedPathwaysData/SetupIntegratedPathways.pl?imgsize=730&Mode=BMDMATPS11&Datatype=", ".*"));
+        config.addIriClass(new StringUserIriClass("reference:lipidmaps_pathway", "https://www.lipidmaps.org/data/IntegratedPathwaysData/SetupIntegratedPathways.pl?imgsize=730&Mode=BMDMATPS11&DataType=", ".*"));
 
         config.addIriClass(new StringUserIriClass("reference:epo_ipc", "http://data.epo.org/linked-data/def/ipc/", "[A-H]([0-9][0-9A-Z-]*)?"));
         config.addIriClass(new StringUserIriClass("reference:wipo_ipc", "http://www.wipo.int/classifications/ipc/ipcpub/?notion=scheme&symbol="));
@@ -130,7 +130,7 @@ public class Common
         config.addIriClass(new StringUserIriClass("glycosmos:glycoproteins", "https://glycosmos.org/glycoproteins/"));
         config.addIriClass(new StringUserIriClass("alphafold:entry", "https://alphafold.ebi.ac.uk/entry/"));
 
-        config.addIriClass(new IntegerUserIriClass("pfam:family", INT4, "https://pfam.xfam.org/family/PF"));
+        config.addIriClass(new IntegerUserIriClass("pfam:family", INT4, "https://pfam.xfam.org/family/PF", 5));
 
         config.addIriClass(new StringUserIriClass("orcid:author", "https://orcid.org/"));
         config.addIriClass(new StringUserIriClass("crossref:funder", "https://data.crossref.org/fundingdata/funder/"));

@@ -36,7 +36,7 @@ public class CompoundDescriptor
         config.addIriClass(new IntegerUserIriClass("pubchem:hydrogen_bond_donor_count", INT4, prefix,
                 "_Hydrogen_Bond_Donor_Count"));
         config.addIriClass(
-                new IntegerUserIriClass("pubchem:non_hydrogen_atom_count", INT4, prefix, "_Non-hydrogen_Atom_Count"));
+                new IntegerUserIriClass("pubchem:non_hydrogen_atom_count", INT4, prefix, "_Non-Hydrogen_Atom_Count"));
         config.addIriClass(
                 new IntegerUserIriClass("pubchem:rotatable_bond_count", INT4, prefix, "_Rotatable_Bond_Count"));
         config.addIriClass(new IntegerUserIriClass("pubchem:undefined_atom_stereo_count", INT4, prefix,
