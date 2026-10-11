@@ -6,9 +6,12 @@ import static cz.iocb.load.common.TripleDispatcher.is;
 import static cz.iocb.load.common.TripleDispatcher.startsWith;
 import static cz.iocb.load.common.TripleDispatcher.text;
 import static cz.iocb.load.common.TripleStreamProcessor.getBoolean;
+import static cz.iocb.load.common.TripleStreamProcessor.getDecimal;
+import static cz.iocb.load.common.TripleStreamProcessor.getIntFromInteger;
 import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
 import static cz.iocb.load.common.TripleStreamProcessor.getLexicalForm;
 import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
+import static cz.iocb.load.common.TripleStreamProcessor.getText;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -722,6 +725,82 @@ public class ChEBI extends Updater
     }
 
 
+    private static void loadMultiDecimalValues(TripleDispatcher dispatcher, String property, String table,
+            String column) throws IOException, SQLException
+    {
+        IntStringSet keepValues = new IntStringSet();
+        IntStringSet newValues = new IntStringSet();
+        IntStringSet oldValues = new IntStringSet();
+
+        load("select class," + column + "::varchar from chebi." + table, oldValues);
+
+        dispatcher.on(property, (subject, object) -> {
+            if(!startsWith(subject, prefix))
+                return;
+
+            Integer chebiID = getEntityID(subject.getURI());
+            String value = getText(getDecimal(object));
+            Pair<Integer, String> pair = Pair.getPair(chebiID, value);
+
+            if(oldValues.remove(pair))
+                keepValues.add(pair);
+            else if(!keepValues.contains(pair))
+                newValues.add(pair);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from chebi." + table + " where class=? and " + column + "=?::numeric", oldValues);
+            store("insert into chebi." + table + "(class," + column + ") values(?,?::numeric)", newValues);
+        });
+    }
+
+
+    private static void loadIntegerValues(TripleDispatcher dispatcher, String property, String table, String column)
+            throws IOException, SQLException
+    {
+        IntIntMap keepValues = new IntIntMap();
+        IntIntMap newValues = new IntIntMap();
+        IntIntMap oldValues = new IntIntMap();
+
+        load("select class," + column + " from chebi." + table, oldValues);
+
+        dispatcher.on(property, (subject, object) -> {
+            if(!startsWith(subject, prefix))
+                return;
+
+            int chebiID = getEntityID(subject.getURI());
+            Integer value = getIntFromInteger(object);
+
+            if(value.equals(oldValues.remove(chebiID)))
+            {
+                keepValues.put(chebiID, value);
+            }
+            else
+            {
+                Integer keep = keepValues.get(chebiID);
+
+                if(value.equals(keep))
+                    return;
+                else if(keep != null)
+                    throw new DataException("multiple values of chebi." + table + "." + column,
+                            chebiID + ": " + keep + ", " + value);
+
+                Integer put = newValues.put(chebiID, value);
+
+                if(put != null && !value.equals(put))
+                    throw new DataException("multiple values of chebi." + table + "." + column,
+                            chebiID + ": " + put + ", " + value);
+            }
+        });
+
+        dispatcher.after(() -> {
+            store("delete from chebi." + table + " where class=? and " + column + "=?", oldValues);
+            store("insert into chebi." + table + "(class," + column + ") values(?,?) "
+                    + "on conflict(class) do update set " + column + "=EXCLUDED." + column, newValues);
+        });
+    }
+
+
     private static void loadBooleanValues(TripleDispatcher dispatcher, String property, String table, String column)
             throws IOException, SQLException
     {
@@ -860,19 +939,20 @@ public class ChEBI extends Updater
             loadMultiStringValues(dispatcher, oboInOwl + "hasRelatedSynonym", "class_related_synonyms", "synonym");
             loadMultiStringValues(dispatcher, oboInOwl + "hasExactSynonym", "class_exact_synonyms", "synonym");
             loadMultiStringValues(dispatcher, chemrof + "generalized_empirical_formula", "class_formulas", "formula");
-            loadMultiStringValues(dispatcher, chemrof + "mass", "class_masses", "mass");
-            loadMultiStringValues(dispatcher, chemrof + "monoisotopic_mass", "class_monoisotopic_masses", "mass");
+            loadMultiDecimalValues(dispatcher, chemrof + "mass", "class_masses", "mass");
+            loadMultiDecimalValues(dispatcher, chemrof + "monoisotopic_mass", "class_monoisotopic_masses", "mass");
             loadMultiStringValues(dispatcher, oboInOwl + "hasAlternativeId", "class_alternative_identifiers",
                     "identifier");
             loadStringValues(dispatcher, rdfs + "label", "class_labels", "label");
             loadStringValues(dispatcher, oboInOwl + "id", "class_identifiers", "identifier");
             loadStringValues(dispatcher, oboInOwl + "hasOBONamespace", "class_namespaces", "namespace");
-            loadStringValues(dispatcher, chemrof + "charge", "class_charges", "charge");
             loadStringValues(dispatcher, chemrof + "smiles_string", "class_smileses", "smiles");
             loadStringValues(dispatcher, chemrof + "inchi_key_string", "class_inchikeys", "inchikey");
             loadStringValues(dispatcher, chemrof + "inchi_string", "class_inchis", "inchi");
             loadStringValues(dispatcher, obo + "IAO_0000115", "class_definitions", "definition");
             loadStringValues(dispatcher, chemrof + "wurcs_representation", "class_wurcs_representations", "wurcs");
+
+            loadIntegerValues(dispatcher, chemrof + "charge", "class_charges", "charge");
 
             loadBooleanValues(dispatcher, owl + "deprecated", "class_deprecated_flags", "flag");
 

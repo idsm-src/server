@@ -1,12 +1,15 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.load.common.EntityTable.float8;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
-import static cz.iocb.load.common.EntityTable.real;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.TripleDispatcher.is;
+import static cz.iocb.load.common.TripleDispatcher.text;
+import static cz.iocb.load.common.TripleStreamProcessor.getDecimal;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import org.apache.jena.graph.Node;
 import cz.iocb.load.common.DataException;
@@ -27,8 +30,8 @@ class CompoundDescriptor extends Updater
             integer("defined_bond_stereo_count"), integer("undefined_bond_stereo_count"), integer("isotope_atom_count"),
             integer("covalent_unit_count"), integer("hydrogen_bond_donor_count"), integer("non_hydrogen_atom_count"),
             integer("rotatable_bond_count"), integer("undefined_atom_stereo_count"), integer("total_formal_charge"),
-            real("structure_complexity"), real("mono_isotopic_weight"), real("xlogp3_aa"), real("xlogp3"),
-            real("exact_mass"), real("molecular_weight"), real("tpsa"));
+            float8("structure_complexity"), float8("mono_isotopic_weight"), float8("xlogp3_aa"), float8("xlogp3"),
+            float8("exact_mass"), float8("molecular_weight"), float8("tpsa"));
 
 
     private static void loadIntegerField(String name, String suffix, String field) throws IOException, SQLException
@@ -95,7 +98,7 @@ class CompoundDescriptor extends Updater
                             return;
 
                         Integer id = getDescriptorID(subject.getURI(), suffix);
-                        Float value = getFloatFromDecimal(object);
+                        Double value = getDecimalValue(object);
 
                         descriptors.set(id, field, value);
                     }
@@ -117,7 +120,7 @@ class CompoundDescriptor extends Updater
                             return;
 
                         Integer id = Compound.getCompoundID(subject.getURI());
-                        Float value = getFloatFromDecimal(object);
+                        Double value = getDecimalValue(object);
 
                         if(!value.equals(descriptors.get(id, field)))
                             throw new DataException("value different from the descriptor",
@@ -143,7 +146,7 @@ class CompoundDescriptor extends Updater
                                 "http://semanticscience.org/resource/SIO_000300"))
                             return;
 
-                        Float value = getFloatFromDecimal(object);
+                        Double value = getDecimalValue(object);
 
                         if(subject.getURI().endsWith("-AA"))
                         {
@@ -175,10 +178,10 @@ class CompoundDescriptor extends Updater
                             return;
 
                         Integer id = Compound.getCompoundID(subject.getURI());
-                        Float value = getFloatFromDecimal(object);
+                        Double value = getDecimalValue(object);
 
-                        Float keepAA = (Float) descriptors.get(id, "xlogp3_aa");
-                        Float keep = (Float) descriptors.get(id, "xlogp3");
+                        Double keepAA = (Double) descriptors.get(id, "xlogp3_aa");
+                        Double keep = (Double) descriptors.get(id, "xlogp3");
 
                         if(keepAA == null && keep == null)
                             throw new DataException("value without a descriptor");
@@ -436,6 +439,21 @@ class CompoundDescriptor extends Updater
     static void finish() throws SQLException
     {
         descriptors.store();
+    }
+
+
+    /*
+     * Returns the value of a decimal descriptor as a double, which holds every decimal of at most 15 significant digits
+     * exactly; the database turns it back into the same decimal, because a double is cast to numeric with 15 digits.
+     */
+    private static Double getDecimalValue(Node node) throws IOException
+    {
+        BigDecimal value = getDecimal(node);
+
+        if(value.stripTrailingZeros().precision() > 15)
+            throw new DataException("decimal value of more than 15 significant digits", text(node));
+
+        return value.doubleValue();
     }
 
 

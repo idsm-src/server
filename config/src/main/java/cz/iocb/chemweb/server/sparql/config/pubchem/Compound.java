@@ -2,8 +2,8 @@ package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
-import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
-import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdShort;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDecimal;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInteger;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.common.StringSubsetLiteralClass;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
@@ -434,58 +434,58 @@ public class Compound
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:hydrogen_bond_acceptor_count"),
-                    config.createLiteralMapping(xsdShort, "hydrogen_bond_acceptor_count"));
+                    config.createLiteralMapping(xsdInteger, "hydrogen_bond_acceptor_count"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:defined_atom_stereo_count"),
-                    config.createLiteralMapping(xsdShort, "defined_atom_stereo_count"));
+                    config.createLiteralMapping(xsdInteger, "defined_atom_stereo_count"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:defined_bond_stereo_count"),
-                    config.createLiteralMapping(xsdShort, "defined_bond_stereo_count"));
+                    config.createLiteralMapping(xsdInteger, "defined_bond_stereo_count"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:undefined_bond_stereo_count"),
-                    config.createLiteralMapping(xsdShort, "undefined_bond_stereo_count"));
+                    config.createLiteralMapping(xsdInteger, "undefined_bond_stereo_count"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:isotope_atom_count"),
-                    config.createLiteralMapping(xsdShort, "isotope_atom_count"));
+                    config.createLiteralMapping(xsdInteger, "isotope_atom_count"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:covalent_unit_count"),
-                    config.createLiteralMapping(xsdShort, "covalent_unit_count"));
+                    config.createLiteralMapping(xsdInteger, "covalent_unit_count"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:hydrogen_bond_donor_count"),
-                    config.createLiteralMapping(xsdShort, "hydrogen_bond_donor_count"));
+                    config.createLiteralMapping(xsdInteger, "hydrogen_bond_donor_count"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:non_hydrogen_atom_count"),
-                    config.createLiteralMapping(xsdShort, "non_hydrogen_atom_count"));
+                    config.createLiteralMapping(xsdInteger, "non_hydrogen_atom_count"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:rotatable_bond_count"),
-                    config.createLiteralMapping(xsdShort, "rotatable_bond_count"));
+                    config.createLiteralMapping(xsdInteger, "rotatable_bond_count"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:undefined_atom_stereo_count"),
-                    config.createLiteralMapping(xsdShort, "undefined_atom_stereo_count"));
+                    config.createLiteralMapping(xsdInteger, "undefined_atom_stereo_count"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:total_formal_charge"),
-                    config.createLiteralMapping(xsdShort, "total_formal_charge"));
+                    config.createLiteralMapping(xsdInteger, "total_formal_charge"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:structure_complexity"),
-                    config.createLiteralMapping(xsdFloat, "structure_complexity"));
+                    config.createLiteralMapping(xsdDecimal, "structure_complexity"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:mono_isotopic_weight"),
-                    config.createLiteralMapping(xsdFloat, "mono_isotopic_weight"));
+                    config.createLiteralMapping(xsdDecimal, "mono_isotopic_weight"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:xlogp3"),
-                    config.createLiteralMapping(xsdFloat, "xlogp3_aa"));
+                    config.createLiteralMapping(xsdDecimal, "xlogp3_aa"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:xlogp3"),
-                    config.createLiteralMapping(xsdFloat, "xlogp3"));
+                    config.createLiteralMapping(xsdDecimal, "xlogp3"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:exact_mass"),
-                    config.createLiteralMapping(xsdFloat, "exact_mass"));
+                    config.createLiteralMapping(xsdDecimal, "exact_mass"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:molecular_weight"),
-                    config.createLiteralMapping(xsdFloat, "molecular_weight"));
+                    config.createLiteralMapping(xsdDecimal, "molecular_weight"));
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:tpsa"),
-                    config.createLiteralMapping(xsdFloat, "tpsa"));
+                    config.createLiteralMapping(xsdDecimal, "tpsa"));
         }
 
         {

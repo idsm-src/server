@@ -3,6 +3,8 @@ package cz.iocb.chemweb.server.sparql.config.chebi;
 import static cz.iocb.chemweb.server.sparql.config.chebi.ChebiConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdBoolean;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDecimal;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInteger;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.common.StringSubsetLiteralClass;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
@@ -141,7 +143,7 @@ public class Chebi
             TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:mass"),
-                    config.createLiteralMapping(xsdString, "mass"));
+                    config.createLiteralMapping(xsdDecimal, "mass"));
         }
 
         {
@@ -149,7 +151,7 @@ public class Chebi
             TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:monoisotopic_mass"),
-                    config.createLiteralMapping(xsdString, "mass"));
+                    config.createLiteralMapping(xsdDecimal, "mass"));
         }
 
         {
@@ -189,7 +191,7 @@ public class Chebi
             TermMapping subject = config.createIriMapping("ontology:chebi", "class");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("chemrof:charge"),
-                    config.createLiteralMapping(xsdString, "charge"));
+                    config.createLiteralMapping(xsdInteger, "charge"));
         }
 
         {

@@ -3,8 +3,8 @@ package cz.iocb.chemweb.server.sparql.config.pubchem;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.rdfLangStringEn;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
-import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
-import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdShort;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDecimal;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInteger;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
@@ -95,10 +95,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000388"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdInteger, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdInteger, field));
         }
 
         {
@@ -110,10 +110,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000370"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdInteger, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdInteger, field));
         }
 
         {
@@ -125,10 +125,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000371"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdInteger, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdInteger, field));
         }
 
         {
@@ -141,10 +141,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000375"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdInteger, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdInteger, field));
         }
 
         {
@@ -156,10 +156,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000372"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdInteger, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdInteger, field));
         }
 
         {
@@ -171,10 +171,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000369"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdInteger, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdInteger, field));
         }
 
         {
@@ -186,10 +186,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000387"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdInteger, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdInteger, field));
         }
 
         {
@@ -201,10 +201,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000373"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdInteger, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdInteger, field));
         }
 
         {
@@ -216,10 +216,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000389"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdInteger, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdInteger, field));
         }
 
         {
@@ -232,10 +232,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000374"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdInteger, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdInteger, field));
         }
 
         {
@@ -247,10 +247,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000336"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdInteger, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdShort, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdInteger, field));
         }
 
         {
@@ -262,10 +262,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000390"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdDecimal, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdDecimal, field));
         }
 
         {
@@ -277,12 +277,12 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000337"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdDecimal, field));
             config.addQuadMapping(table, graph, subject, unit, config.createIriMapping("obo:UO_0000055"),
                     config.createIsNotNullCondition(table, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdDecimal, field));
             config.addQuadMapping(table, graph, subject, oldUnit, config.createIriMapping("obo:UO_0000055"),
                     config.createIsNotNullCondition(table, field));
         }
@@ -296,10 +296,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000395"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdDecimal, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdDecimal, field));
         }
 
         {
@@ -311,10 +311,10 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000395"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdDecimal, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdDecimal, field));
         }
 
         {
@@ -326,12 +326,12 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000338"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdDecimal, field));
             config.addQuadMapping(table, graph, subject, unit, config.createIriMapping("obo:UO_0000055"),
                     config.createIsNotNullCondition(table, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdDecimal, field));
             config.addQuadMapping(table, graph, subject, oldUnit, config.createIriMapping("obo:UO_0000055"),
                     config.createIsNotNullCondition(table, field));
         }
@@ -345,12 +345,12 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000334"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdDecimal, field));
             config.addQuadMapping(table, graph, subject, unit, config.createIriMapping("obo:UO_0000055"),
                     config.createIsNotNullCondition(table, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdDecimal, field));
             config.addQuadMapping(table, graph, subject, oldUnit, config.createIriMapping("obo:UO_0000055"),
                     config.createIsNotNullCondition(table, field));
         }
@@ -364,12 +364,12 @@ public class CompoundDescriptor
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000392"),
                     config.createIsNotNullCondition(table, field));
-            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdDecimal, field));
             config.addQuadMapping(table, graph, subject, unit, config.createIriMapping("obo:UO_0000324"),
                     config.createIsNotNullCondition(table, field));
 
             // deprecated
-            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdFloat, field));
+            config.addQuadMapping(table, graph, subject, oldValue, config.createLiteralMapping(xsdDecimal, field));
             config.addQuadMapping(table, graph, subject, oldUnit, config.createIriMapping("obo:UO_0000324"),
                     config.createIsNotNullCondition(table, field));
         }

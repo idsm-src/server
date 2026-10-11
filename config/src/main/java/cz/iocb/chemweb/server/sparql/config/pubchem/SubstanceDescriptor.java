@@ -2,7 +2,7 @@ package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
-import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInteger;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -34,11 +34,11 @@ public class SubstanceDescriptor
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:IAO_0000129"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
-                    config.createLiteralMapping(xsdInt, "version"));
+                    config.createLiteralMapping(xsdInteger, "version"));
 
             // deprecated
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-value"),
-                    config.createLiteralMapping(xsdInt, "version"));
+                    config.createLiteralMapping(xsdInteger, "version"));
         }
     }
 }

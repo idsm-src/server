@@ -3,7 +3,7 @@ package cz.iocb.chemweb.server.sparql.config.pubchem;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.xsdDateNoZone;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
-import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInteger;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
@@ -141,7 +141,7 @@ public class Substance
             TermMapping subject = config.createIriMapping("pubchem:substance", "substance");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:substance_version"),
-                    config.createLiteralMapping(xsdInt, "version"));
+                    config.createLiteralMapping(xsdInteger, "version"));
         }
     }
 }

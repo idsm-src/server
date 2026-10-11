@@ -3,6 +3,7 @@ package cz.iocb.load.common;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -36,6 +37,8 @@ public abstract class TripleStreamProcessor
     private static final String xsdDecimal = xsd + "decimal";
     private static final String xsdDate = xsd + "date";
     private static final Pattern zonePattern = Pattern.compile("(Z|[+-][0-9]{2}:[0-9]{2})$");
+    private static final Pattern integerPattern = Pattern.compile("[+-]?[0-9]+");
+    private static final Pattern decimalPattern = Pattern.compile("[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)");
     private static final Pattern datePattern = Pattern.compile("([0-9]{4})-([0-9]{2})-([0-9]{2})");
 
 
@@ -422,19 +425,45 @@ public abstract class TripleStreamProcessor
     }
 
 
-    public static float getFloatFromDecimal(Node node) throws IOException
+    /*
+     * Returns the value of an xsd:decimal literal or of an xsd:integer literal, whose values are decimals as well. A
+     * decimal in the exponent notation, which the lexical space of xsd:decimal does not allow, is repaired with a
+     * warning.
+     */
+    public static BigDecimal getDecimal(Node node) throws IOException
     {
         if(!node.isLiteral()
                 || !node.getLiteralDatatypeURI().equals(xsdInteger) && !node.getLiteralDatatypeURI().equals(xsdDecimal))
             throw unexpectedLiteral(node, "xsd:decimal");
 
+        String value = node.getLiteralLexicalForm();
+        boolean integer = node.getLiteralDatatypeURI().equals(xsdInteger);
+
+        if((integer ? integerPattern : decimalPattern).matcher(value).matches())
+            return new BigDecimal(value);
+
+        if(integer)
+            throw malformedValue(node, "xsd:integer");
+
         try
         {
-            return Float.parseFloat(node.getLiteralLexicalForm());
+            BigDecimal repaired = new BigDecimal(value);
+            Problems.warning("repaired malformed xsd:decimal literal", text(node));
+            return repaired;
         }
         catch(NumberFormatException e)
         {
             throw malformedValue(node, "xsd:decimal");
         }
+    }
+
+
+    /*
+     * Returns the text of a decimal in the form that a numeric column returns it, without an exponent and without
+     * trailing zeros of the fraction, so that a stored value and a loaded one compare as equal texts.
+     */
+    public static String getText(BigDecimal value)
+    {
+        return value.stripTrailingZeros().toPlainString();
     }
 }

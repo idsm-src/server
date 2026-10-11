@@ -97,7 +97,7 @@ create table chebi.class_formulas
 create table chebi.class_masses
 (
     class       integer not null,
-    mass        varchar not null,
+    mass        numeric not null,
     primary key(class, mass)
 );
 
@@ -105,7 +105,7 @@ create table chebi.class_masses
 create table chebi.class_monoisotopic_masses
 (
     class       integer not null,
-    mass        varchar not null,
+    mass        numeric not null,
     primary key(class, mass)
 );
 
@@ -145,7 +145,7 @@ create table chebi.class_namespaces
 create table chebi.class_charges
 (
     class       integer not null,
-    charge      varchar not null,
+    charge      numeric not null,
     primary key(class)
 );
 

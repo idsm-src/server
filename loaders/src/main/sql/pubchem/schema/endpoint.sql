@@ -16,7 +16,7 @@ create table pubchem.endpoint_measurements
     measuregroup        integer not null,
     value               integer not null,
     endpoint_type_id    integer,
-    measurement         real,
+    measurement         numeric,
     qualifier           varchar,
     label               varchar,
     primary key(substance, bioassay, measuregroup, value)

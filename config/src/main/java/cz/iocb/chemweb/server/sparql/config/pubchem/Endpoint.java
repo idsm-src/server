@@ -2,7 +2,7 @@ package cz.iocb.chemweb.server.sparql.config.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
-import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDecimal;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import java.util.List;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
@@ -54,7 +54,7 @@ public class Endpoint
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:label"),
                     config.createLiteralMapping(xsdString, "label"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:SIO_000300"),
-                    config.createLiteralMapping(xsdFloat, "measurement"));
+                    config.createLiteralMapping(xsdDecimal, "measurement"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:hasQualifier"),
                     config.createLiteralMapping(xsdString, "qualifier"));
 
@@ -62,7 +62,7 @@ public class Endpoint
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-unit"),
                     config.createIriMapping("obo:UO_0000064"), condition);
             config.addQuadMapping(table, graph, subject, config.createIriMapping("sio:has-value"),
-                    config.createLiteralMapping(xsdFloat, "measurement"));
+                    config.createLiteralMapping(xsdDecimal, "measurement"));
         }
 
         {

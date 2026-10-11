@@ -3,7 +3,7 @@ package cz.iocb.load.pubchem;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBAO;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
 import static cz.iocb.load.common.EntityTable.integer;
-import static cz.iocb.load.common.EntityTable.real;
+import static cz.iocb.load.common.EntityTable.typed;
 import static cz.iocb.load.common.EntityTable.varchar;
 import static cz.iocb.load.common.TripleDispatcher.is;
 import java.io.IOException;
@@ -113,7 +113,7 @@ class Endpoint extends Updater
             integer("outcome_id"));
 
     private static final EntityTable<EndpointID> measurements = new EntityTable<>("pubchem.endpoint_measurements", key,
-            null, integer("endpoint_type_id"), real("measurement"), varchar("qualifier"), varchar("label"));
+            null, integer("endpoint_type_id"), typed("measurement", "numeric"), varchar("qualifier"), varchar("label"));
 
 
     private static void loadOutcomes() throws IOException, SQLException
@@ -205,7 +205,7 @@ class Endpoint extends Updater
 
                     if(predicate.getURI().equals("http://semanticscience.org/resource/SIO_000300"))
                     {
-                        Float measurement = getFloatFromDecimal(object);
+                        String measurement = getText(getDecimal(object));
 
 
                         measurements.set(endpoint, "measurement", measurement);
