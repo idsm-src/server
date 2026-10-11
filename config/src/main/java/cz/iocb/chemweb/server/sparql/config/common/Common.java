@@ -118,7 +118,7 @@ public class Common
         config.addIriClass(new StringUserIriClass("reference:fairdomhub_model", "https://fairdomhub.org/models/", "[0-9]+"));
         config.addIriClass(new StringUserIriClass("reference:lipidmaps_pathway", "https://www.lipidmaps.org/data/IntegratedPathwaysData/SetupIntegratedPathways.pl?imgsize=730&Mode=BMDMATPS11&Datatype=", ".*"));
 
-        config.addIriClass(new StringUserIriClass("reference:epo_ipc", "http://data.epo.org/linked-data/def/ipc/"));
+        config.addIriClass(new StringUserIriClass("reference:epo_ipc", "http://data.epo.org/linked-data/def/ipc/", "[A-H]([0-9][0-9A-Z-]*)?"));
         config.addIriClass(new StringUserIriClass("reference:wipo_ipc", "http://www.wipo.int/classifications/ipc/ipcpub/?notion=scheme&symbol="));
         config.addIriClass(new StringUserIriClass("reference:pubchem_ipc_image", "https://pubchem.ncbi.nlm.nih.gov/images/ipc/"));
 

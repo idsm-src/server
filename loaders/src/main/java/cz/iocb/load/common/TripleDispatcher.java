@@ -21,8 +21,9 @@ import org.apache.jena.riot.Lang;
  * Reads RDF files as streams of triples and passes every triple to the handlers registered for its predicate, so that
  * all the data of the files are loaded in one pass and without holding the files in memory. A handler registered for
  * a type gets the triples whose predicate is rdf:type and whose object is the type. The handlers are called one at a
- * time, also when several files are read in parallel, and they must not depend on the order of the triples. The
- * actions registered by after() run, in their order, once all the files have been read.
+ * time, also when several files are read in parallel, and they must not depend on the order of the triples. A triple
+ * that a filter refuses is passed to no handler. The actions registered by after() run, in their order, once all the
+ * files have been read.
  */
 public class TripleDispatcher extends Updater
 {
@@ -47,11 +48,19 @@ public class TripleDispatcher extends Updater
     }
 
 
+    @FunctionalInterface
+    public static interface Filter
+    {
+        boolean accept(Node subject, Node predicate, Node object);
+    }
+
+
     private static final String typePredicate = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
     private final HashMap<String, List<Handler>> handlers = new HashMap<>();
     private final HashMap<String, List<Handler>> typeHandlers = new HashMap<>();
     private final List<TripleHandler> tripleHandlers = new ArrayList<>();
+    private final List<Filter> filters = new ArrayList<>();
     private final List<Action> actions = new ArrayList<>();
 
 
@@ -79,6 +88,16 @@ public class TripleDispatcher extends Updater
     public void onEvery(TripleHandler handler)
     {
         tripleHandlers.add(handler);
+    }
+
+
+    /*
+     * Registers a filter of the triples that have a handler for their predicate or type: a triple that the filter
+     * refuses is passed to no handler. The filter reports the triples that it refuses itself.
+     */
+    public void filter(Filter filter)
+    {
+        filters.add(filter);
     }
 
 
@@ -305,11 +324,20 @@ public class TripleDispatcher extends Updater
 
 
     /*
-     * Passes the triple to its handlers. A problem of the data that a handler finds is reported, and the other handlers
-     * still get the triple.
+     * Passes the triple to its handlers, unless a filter refuses it. A problem of the data that a handler finds is
+     * reported, and the other handlers still get the triple.
      */
     private synchronized void dispatch(Node subject, Node predicate, Node object) throws IOException, SQLException
     {
+        List<Handler> list = handlers.get(predicate.getURI());
+        List<Handler> types = object.isURI() && predicate.getURI().equals(typePredicate) ?
+                typeHandlers.get(object.getURI()) : null;
+
+        if(list != null || types != null)
+            for(Filter filter : filters)
+                if(!filter.accept(subject, predicate, object))
+                    return;
+
         for(TripleHandler handler : tripleHandlers)
         {
             try
@@ -321,8 +349,6 @@ public class TripleDispatcher extends Updater
                 TripleStreamProcessor.report(e, subject, predicate, object);
             }
         }
-
-        List<Handler> list = handlers.get(predicate.getURI());
 
         if(list != null)
         {
@@ -339,22 +365,17 @@ public class TripleDispatcher extends Updater
             }
         }
 
-        if(object.isURI() && predicate.getURI().equals(typePredicate))
+        if(types != null)
         {
-            List<Handler> types = typeHandlers.get(object.getURI());
-
-            if(types != null)
+            for(Handler handler : types)
             {
-                for(Handler handler : types)
+                try
                 {
-                    try
-                    {
-                        handler.handle(subject, object);
-                    }
-                    catch(DataException | NumberFormatException | UnsupportedOperationException e)
-                    {
-                        TripleStreamProcessor.report(e, subject, predicate, object);
-                    }
+                    handler.handle(subject, object);
+                }
+                catch(DataException | NumberFormatException | UnsupportedOperationException e)
+                {
+                    TripleStreamProcessor.report(e, subject, predicate, object);
                 }
             }
         }

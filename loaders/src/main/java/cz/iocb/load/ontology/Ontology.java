@@ -13,6 +13,7 @@ import static cz.iocb.load.common.EntityTable.real;
 import static cz.iocb.load.common.EntityTable.typed;
 import static cz.iocb.load.common.EntityTable.varchar;
 import static cz.iocb.load.common.TripleDispatcher.is;
+import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static java.util.Locale.ROOT;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -44,6 +45,10 @@ import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.TripleDispatcher;
 import cz.iocb.load.common.TripleStreamProcessor;
 import cz.iocb.load.common.Updater;
+import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
+import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
+import cz.iocb.sparql.engine.mapping.classes.UserIriClass;
+import cz.iocb.sparql.engine.rdf.Iri;
 
 
 
@@ -225,8 +230,8 @@ public class Ontology extends Updater
 
     /*
      * A value of a predicate whose values are resources or strings: the (unit, id) of a resource, or a string with its
-     * language, if any. A table has the columns of the resources and of the languages only if the values of its
-     * predicate can be resources and can have languages.
+     * language, if any. A table has the columns of the resources, of the strings and of the languages only if the
+     * values of its predicate can be resources, strings and strings with languages.
      */
     private static record Value(Integer unit, Integer id, String string, String language)
     {
@@ -265,7 +270,8 @@ public class Ontology extends Updater
         }
 
 
-        void write(PreparedStatement statement, int index, boolean resources, boolean languages) throws SQLException
+        void write(PreparedStatement statement, int index, boolean resources, boolean strings, boolean languages)
+                throws SQLException
         {
             if(resources)
             {
@@ -273,10 +279,11 @@ public class Ontology extends Updater
                 statement.setObject(index++, id, Types.INTEGER);
             }
 
-            statement.setObject(index, string, Types.VARCHAR);
+            if(strings)
+                statement.setObject(index++, string, Types.VARCHAR);
 
             if(languages)
-                statement.setObject(index + 1, language, Types.VARCHAR);
+                statement.setObject(index, language, Types.VARCHAR);
         }
     }
 
@@ -288,12 +295,14 @@ public class Ontology extends Updater
     private static class ResourceValueSet extends SqlSet<Pair<Pair<Integer, Integer>, Value>>
     {
         private final boolean resources;
+        private final boolean strings;
         private final boolean languages;
 
 
-        ResourceValueSet(boolean resources, boolean languages)
+        ResourceValueSet(boolean resources, boolean strings, boolean languages)
         {
             this.resources = resources;
+            this.strings = strings;
             this.languages = languages;
         }
 
@@ -310,7 +319,7 @@ public class Ontology extends Updater
         {
             statement.setInt(1, value.getOne().getOne());
             statement.setInt(2, value.getOne().getTwo());
-            value.getTwo().write(statement, 3, resources, languages);
+            value.getTwo().write(statement, 3, resources, strings, languages);
         }
     }
 
@@ -370,7 +379,93 @@ public class Ontology extends Updater
             statement.setInt(1, value.ontologyID().getOne());
             statement.setInt(2, value.ontologyID().getTwo());
             statement.setString(3, value.property());
-            value.target().write(statement, 4, true, true);
+            value.target().write(statement, 4, true, true, true);
+        }
+    }
+
+
+    /*
+     * An IRI class of another dataset whose IRIs the ontologies use. Such an IRI must not become an ontology resource,
+     * as the mapping takes the IRI classes of different datasets to be disjoint: the SKOS mappings of the resources to
+     * the IRIs of a class that has a table are kept in the table, the other triples with the IRIs are left out as
+     * warnings. The class must be equal to the class of the same name in the configuration of the datasets.
+     */
+    private static class ForeignClass
+    {
+        final UserIriClass iriClass;
+        final String prefix;
+        final String suffix;
+        final boolean integer;
+        final String table;
+        final String column;
+
+
+        ForeignClass(StringUserIriClass iriClass, String table, String column)
+        {
+            this.iriClass = iriClass;
+            this.prefix = iriClass.getPrefix();
+            this.suffix = iriClass.getSuffix();
+            this.integer = false;
+            this.table = table;
+            this.column = column;
+        }
+
+
+        ForeignClass(IntegerUserIriClass iriClass, String table, String column)
+        {
+            this.iriClass = iriClass;
+            this.prefix = iriClass.getPrefix();
+            this.suffix = iriClass.getSuffix();
+            this.integer = true;
+            this.table = table;
+            this.column = column;
+        }
+
+
+        boolean match(String iri)
+        {
+            return iri.startsWith(prefix) && iriClass.match(null, new Iri(iri));
+        }
+
+
+        /*
+         * Returns the value of an IRI of the class in the column of its table.
+         */
+        Object getValue(String iri)
+        {
+            String id = iri.substring(prefix.length(), iri.length() - (suffix == null ? 0 : suffix.length()));
+
+            return integer ? Integer.valueOf(id) : id;
+        }
+    }
+
+
+    /*
+     * A SKOS mapping of a resource to an IRI of a foreign class: the property of the mapping, as the value of
+     * ontology.resource_match_property_type, and the value of the IRI in its class.
+     */
+    private static record ForeignMatch(Pair<Integer, Integer> resource, String property, Object value)
+    {
+    }
+
+
+    @SuppressWarnings("serial")
+    private static class ForeignMatchSet extends SqlSet<ForeignMatch>
+    {
+        @Override
+        public ForeignMatch get(ResultSet result) throws SQLException
+        {
+            return new ForeignMatch(Pair.getPair(result.getInt(1), result.getInt(2)), result.getString(3),
+                    result.getObject(4));
+        }
+
+        @Override
+        public void set(PreparedStatement statement, ForeignMatch value) throws SQLException
+        {
+            statement.setInt(1, value.resource().getOne());
+            statement.setInt(2, value.resource().getTwo());
+            statement.setString(3, value.property());
+            statement.setObject(4, value.value());
         }
     }
 
@@ -380,6 +475,9 @@ public class Ontology extends Updater
     static final String owl = "http://www.w3.org/2002/07/owl#";
     static final String doap = "http://usefulinc.com/ns/doap#";
     static final String xsd = "http://www.w3.org/2001/XMLSchema#";
+    static final String obo = "http://purl.obolibrary.org/obo/";
+    static final String oboInOwl = "http://www.geneontology.org/formats/oboInOwl#";
+    static final String skos = "http://www.w3.org/2004/02/skos/core#";
 
     private static final List<Source> sources = new ArrayList<>();
 
@@ -452,6 +550,7 @@ public class Ontology extends Updater
         literalKinds.put(rdf + "langString", "langString");
         literalKinds.put(rdf + "PlainLiteral", "plainLiteral");
         literalKinds.put(rdf + "HTML", "html");
+        literalKinds.put(rdfs + "Literal", "literal");
         literalKinds.put(xsd + "anyURI", "anyURI");
         literalKinds.put(xsd + "boolean", "boolean");
         literalKinds.put(xsd + "float", "float");
@@ -472,7 +571,35 @@ public class Ontology extends Updater
             Map.entry(xsd + "totalDigits", "TOTAL_DIGITS"), Map.entry(xsd + "fractionDigits", "FRACTION_DIGITS"));
 
     // the kinds of the literals that the annotations keep as strings
-    private static final String[] stringKinds = { "string", "langString", "plainLiteral", "html", "anyURI" };
+    private static final String[] stringKinds = { "string", "langString", "plainLiteral", "html", "literal", "anyURI" };
+
+    // the foreign classes whose IRIs the ontologies use, see ForeignClass
+    private static final List<ForeignClass> foreignClasses = List.of(
+            new ForeignClass(new StringUserIriClass("identifiers:mesh_old", "http://identifiers.org/mesh/",
+                    "[A-Z][0-9]+(\\.[0-9]+|[A-Z][0-9]+)*"), "resource_identifiers_mesh_matches", "mesh"),
+            new ForeignClass(new StringUserIriClass("mesh:resource", "http://id.nlm.nih.gov/mesh/",
+                    "[A-Z][0-9]+(\\.[0-9]+|[A-Z][0-9]+)*"), "resource_mesh_matches", "mesh"),
+            new ForeignClass(new StringUserIriClass("purl:enzyme", "http://purl.uniprot.org/enzyme/"),
+                    "resource_enzyme_matches", "enzyme"),
+            new ForeignClass(new IntegerUserIriClass("wikidata:entity", INT4, "http://www.wikidata.org/entity/Q"),
+                    "resource_wikidata_entity_matches", "entity"),
+            new ForeignClass(new IntegerUserIriClass("wikidata:wiki", INT4, "https://www.wikidata.org/wiki/Q"),
+                    "resource_wikidata_page_matches", "page"),
+            new ForeignClass(new StringUserIriClass("orcid:author", "https://orcid.org/"), null, null));
+
+    // the annotation properties that the loaders of the annotations load, which leave out the blank nodes
+    private static final Set<String> annotationProperties = new HashSet<>();
+
+    // the SKOS mapping properties by their values of ontology.resource_match_property_type
+    private static final Map<String, String> matchProperties = Map.of(skos + "exactMatch", "EXACT_MATCH",
+            skos + "closeMatch", "CLOSE_MATCH", skos + "broadMatch", "BROAD_MATCH", skos + "narrowMatch",
+            "NARROW_MATCH", skos + "relatedMatch", "RELATED_MATCH");
+
+    // the annotation properties whose values for the ChEBI classes the ChEBI loader loads, so that the values given by
+    // the ontologies that import ChEBI classes are left out
+    private static final Set<String> chebiAnnotations = Set.of(rdfs + "label", owl + "deprecated", obo + "IAO_0000115",
+            oboInOwl + "hasExactSynonym", oboInOwl + "hasRelatedSynonym", obo + "IAO_0100001", oboInOwl + "hasDbXref",
+            oboInOwl + "inSubset", oboInOwl + "hasAlternativeId", oboInOwl + "hasOBONamespace");
 
     // the relations of the ontologies by their predicates
     private static final Map<String, String> ontologyRelations = Map.of(owl + "imports", "IMPORTS", owl + "versionIRI",
@@ -789,6 +916,12 @@ public class Ontology extends Updater
         builtinResources.put("http://www.w3.org/2002/07/owl#withRestrictions", 6455);
         builtinResources.put("http://www.w3.org/2000/01/rdf-schema#comment", 6456);
         builtinResources.put("http://www.w3.org/2000/01/rdf-schema#isDefinedBy", 6457);
+        builtinResources.put("http://purl.obolibrary.org/obo/TAXRANK_1000000", 6458);
+        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#consider", 6459);
+        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym", 6460);
+        builtinResources.put("http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym", 6461);
+        builtinResources.put("http://www.w3.org/2004/02/skos/core#broadMatch", 6462);
+        builtinResources.put("http://www.w3.org/2004/02/skos/core#narrowMatch", 6463);
 
 
 
@@ -1727,7 +1860,8 @@ public class Ontology extends Updater
     /*
      * Loads the annotations of the IRIs given by RDFS and OWL: their labels, comments, related resources, defining
      * resources and deprecation flags. The annotations of the blank nodes are left out, as the blank nodes that have
-     * them belong to the structures that are not loaded, such as the annotated axioms or the SWRL rules.
+     * them belong to the structures that are not loaded, such as the annotated axioms or the SWRL rules, and so are
+     * the annotations of the ChEBI classes that the ChEBI loader loads, see chebiAnnotations.
      */
     private static void loadAnnotations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -1743,25 +1877,29 @@ public class Ontology extends Updater
     /*
      * Loads the values of an annotation property of the IRIs into the table: a resource into the columns of the
      * resources, if the table has them, and a literal of a string kind as a string with its language, if the table
-     * has the column of the languages. A value that the table cannot hold is reported as a warning and left out, as
-     * the values of an annotation property are not restricted.
+     * has the columns of the strings and of the languages. A value that the table cannot hold is reported as a warning
+     * and left out, as the values of an annotation property are not restricted.
      */
     private static void loadAnnotations(TripleDispatcher dispatcher, String predicate, String table,
             String resourceColumn, String stringColumn, String languageColumn) throws IOException, SQLException
     {
         boolean resources = resourceColumn != null;
+        boolean strings = stringColumn != null;
         boolean languages = languageColumn != null;
 
-        ResourceValueSet keepValues = new ResourceValueSet(resources, languages);
-        ResourceValueSet newValues = new ResourceValueSet(resources, languages);
-        ResourceValueSet oldValues = new ResourceValueSet(resources, languages);
+        annotationProperties.add(predicate);
+
+        ResourceValueSet keepValues = new ResourceValueSet(resources, strings, languages);
+        ResourceValueSet newValues = new ResourceValueSet(resources, strings, languages);
+        ResourceValueSet oldValues = new ResourceValueSet(resources, strings, languages);
 
         List<String> columns = new ArrayList<>();
 
         if(resources)
             columns.addAll(List.of(resourceColumn + "_unit", resourceColumn + "_id"));
 
-        columns.add(stringColumn);
+        if(strings)
+            columns.add(stringColumn);
 
         if(languages)
             columns.add(languageColumn);
@@ -1769,11 +1907,15 @@ public class Ontology extends Updater
         load("select resource_unit,resource_id," + String.join(",", columns) + " from ontology." + table, oldValues);
 
         dispatcher.on(predicate, (subject, object) -> {
-            if(!subject.isURI())
+            // the SKOS mappings to the IRIs of the foreign classes are loaded by loadForeignMatches()
+            if(!subject.isURI() || isChebiAnnotation(predicate, subject) || getForeignClass(object) != null)
                 return;
 
             try
             {
+                if(object.isLiteral() && !strings)
+                    throw new DataException("unexpected literal", TripleStreamProcessor.text(object));
+
                 Value value = Value.get(object, resources, stringKinds);
 
                 if(value.language() != null && !languages)
@@ -1800,6 +1942,140 @@ public class Ontology extends Updater
 
 
     /*
+     * Tests whether the subject is a ChEBI class and the predicate an annotation property whose values for the ChEBI
+     * classes the ChEBI loader loads.
+     */
+    private static boolean isChebiAnnotation(String predicate, Node subject)
+    {
+        if(!chebiAnnotations.contains(predicate)
+                || !subject.getURI().startsWith("http://purl.obolibrary.org/obo/CHEBI_"))
+            return false;
+
+        Pair<Integer, Integer> id = getId(subject.getURI());
+
+        return id != null && id.getOne() == unitCHEBI;
+    }
+
+
+    /*
+     * Loads the selected annotations of the IRIs given by OBO, IAO, SKOS and TAXRANK: their definitions, synonyms,
+     * replacements, mappings, cross-references, subsets, alternative identifiers, namespaces and taxonomic ranks.
+     * The rank given by ncbitaxon#has_rank is left out, as its values are the obsolete rank classes of NCBITaxon that
+     * the ranks of TAXRANK replace, and so are the annotations of the ChEBI classes that the ChEBI loader loads, see
+     * chebiAnnotations.
+     */
+    private static void loadOboAnnotations(TripleDispatcher dispatcher) throws IOException, SQLException
+    {
+        loadAnnotations(dispatcher, obo + "IAO_0000115", "resource_definitions", null, "definition", "language");
+
+        for(String kind : List.of("Exact", "Related", "Narrow", "Broad"))
+            loadAnnotations(dispatcher, oboInOwl + "has" + kind + "Synonym",
+                    "resource_" + kind.toLowerCase(ROOT) + "_synonyms", null, "synonym", "language");
+
+        loadAnnotations(dispatcher, obo + "IAO_0000118", "resource_alternative_terms", null, "term", "language");
+        loadAnnotations(dispatcher, obo + "IAO_0100001", "resource_replacements", "replacement", "replacement_string",
+                "replacement_language");
+        loadAnnotations(dispatcher, oboInOwl + "consider", "resource_considerations", "consideration",
+                "consideration_string", null);
+
+        for(String kind : List.of("exact", "close", "broad", "narrow", "related"))
+            loadAnnotations(dispatcher, skos + kind + "Match", "resource_" + kind + "_matches", "match", "match_string",
+                    null);
+
+        loadAnnotations(dispatcher, oboInOwl + "hasDbXref", "resource_references", "reference", "reference_string",
+                "reference_language");
+        loadAnnotations(dispatcher, oboInOwl + "inSubset", "resource_subsets", "subset", "subset_string",
+                "subset_language");
+        loadAnnotations(dispatcher, oboInOwl + "hasAlternativeId", "resource_alternative_identifiers", null,
+                "identifier", null);
+        loadAnnotations(dispatcher, oboInOwl + "hasOBONamespace", "resource_namespaces", null, "namespace", null);
+        loadAnnotations(dispatcher, obo + "TAXRANK_1000000", "resource_ranks", "rank", null, null);
+    }
+
+
+    /*
+     * Loads the SKOS mappings of the resources to the IRIs of the foreign classes that have a table, see ForeignClass.
+     */
+    private static void loadForeignMatches(TripleDispatcher dispatcher) throws IOException, SQLException
+    {
+        for(ForeignClass foreign : foreignClasses)
+        {
+            if(foreign.table == null)
+                continue;
+
+            ForeignMatchSet keepMatches = new ForeignMatchSet();
+            ForeignMatchSet newMatches = new ForeignMatchSet();
+            ForeignMatchSet oldMatches = new ForeignMatchSet();
+
+            load("select resource_unit,resource_id,property::varchar," + foreign.column + " from ontology."
+                    + foreign.table, oldMatches);
+
+            for(Entry<String, String> property : matchProperties.entrySet())
+            {
+                dispatcher.on(property.getKey(), (subject, object) -> {
+                    if(subject.isURI() && getForeignClass(object) == foreign)
+                        add(new ForeignMatch(getId(subject), property.getValue(), foreign.getValue(object.getURI())),
+                                keepMatches, newMatches, oldMatches);
+                });
+            }
+
+            dispatcher.after(() -> {
+                store("delete from ontology." + foreign.table + " where resource_unit=? and resource_id=? "
+                        + "and property=?::ontology.resource_match_property_type and " + foreign.column + "=?",
+                        oldMatches);
+                store("insert into ontology." + foreign.table + "(resource_unit,resource_id,property," + foreign.column
+                        + ") values(?,?,?::ontology.resource_match_property_type,?)", newMatches);
+            });
+        }
+    }
+
+
+    /*
+     * Leaves out the triples with an IRI of a foreign class as warnings, see ForeignClass, except the SKOS mappings of
+     * the resources to the IRIs of a foreign class that has a table and the annotations of the blank nodes, which the
+     * loaders of the annotations leave out anyway.
+     */
+    private static void checkForeignResources(TripleDispatcher dispatcher)
+    {
+        dispatcher.filter((subject, predicate, object) -> {
+            if(!subject.isURI() && annotationProperties.contains(predicate.getURI()))
+                return true;
+
+            ForeignClass foreign = getForeignClass(subject);
+
+            if(foreign == null)
+            {
+                foreign = getForeignClass(object);
+
+                if(foreign == null || foreign.table != null && matchProperties.containsKey(predicate.getURI()))
+                    return true;
+            }
+
+            Problems.warning("IRI of " + foreign.iriClass.getResourceName() + " in " + predicate.getURI(),
+                    TripleStreamProcessor.text(subject) + " " + TripleStreamProcessor.text(object));
+
+            return false;
+        });
+    }
+
+
+    /*
+     * Returns the foreign class of the node, or null if the node is not an IRI of a foreign class.
+     */
+    private static ForeignClass getForeignClass(Node node)
+    {
+        if(!node.isURI())
+            return null;
+
+        for(ForeignClass foreign : foreignClasses)
+            if(foreign.match(node.getURI()))
+                return foreign;
+
+        return null;
+    }
+
+
+    /*
      * Loads the deprecation flags of the IRIs; a flag written as a string is read as a boolean. A value that is not a
      * boolean is reported as a warning and left out, as the values of an annotation property are not restricted.
      */
@@ -1811,8 +2087,10 @@ public class Ontology extends Updater
 
         load("select resource_unit,resource_id,flag from ontology.resource_deprecated_flags", oldFlags);
 
+        annotationProperties.add(owl + "deprecated");
+
         dispatcher.on(owl + "deprecated", (subject, object) -> {
-            if(!subject.isURI())
+            if(!subject.isURI() || isChebiAnnotation(owl + "deprecated", subject))
                 return;
 
             try
@@ -2286,9 +2564,9 @@ public class Ontology extends Updater
      */
     private static void loadSameIndividuals(TripleDispatcher dispatcher) throws IOException, SQLException
     {
-        ResourceValueSet keepValues = new ResourceValueSet(true, false);
-        ResourceValueSet newValues = new ResourceValueSet(true, false);
-        ResourceValueSet oldValues = new ResourceValueSet(true, false);
+        ResourceValueSet keepValues = new ResourceValueSet(true, true, false);
+        ResourceValueSet newValues = new ResourceValueSet(true, true, false);
+        ResourceValueSet oldValues = new ResourceValueSet(true, true, false);
 
         load("select individual_unit,individual_id,same_unit,same_id,same_string from ontology.same_individuals",
                 oldValues);
@@ -2381,8 +2659,9 @@ public class Ontology extends Updater
      * form is converted, so that the database keeps only the value; a float is read as a double where only doubles
      * are allowed, a language tag is written in lower case, and the literals of the other string kinds are read as
      * strings: an rdf:PlainLiteral as the text before its last @ with the language after it (a lexical form without
-     * @, which some tools write for a plain literal, as the whole text), an rdf:HTML literal as its lexical form and
-     * an xsd:anyURI literal as its lexical form with the whitespace collapsed.
+     * @, which some tools write for a plain literal, as the whole text), an rdf:HTML literal and a literal typed by
+     * rdfs:Literal, which some tools write for a plain literal too, as its lexical form, and an xsd:anyURI literal as
+     * its lexical form with the whitespace collapsed.
      */
     private static LiteralValue getLiteral(Node node, String... kinds) throws DataException
     {
@@ -2403,7 +2682,7 @@ public class Ontology extends Updater
         {
             return switch(kind)
             {
-                case "string", "html" -> new LiteralValue("string", lexical, null);
+                case "string", "html", "literal" -> new LiteralValue("string", lexical, null);
                 case "langString" -> new LiteralValue("string", lexical, node.getLiteralLanguage().toLowerCase(ROOT));
                 case "plainLiteral" -> getPlainLiteral(lexical);
                 case "anyURI" -> new LiteralValue("string", collapse(lexical), null);
@@ -2498,6 +2777,7 @@ public class Ontology extends Updater
             loadVersions(dispatcher);
             loadTypes(dispatcher);
             checkPredicates(dispatcher);
+            checkForeignResources(dispatcher);
 
             loadBases();
             loadClasses(dispatcher);
@@ -2505,6 +2785,8 @@ public class Ontology extends Updater
             loadIndividuals(dispatcher);
             loadResourceTypes(dispatcher);
             loadAnnotations(dispatcher);
+            loadOboAnnotations(dispatcher);
+            loadForeignMatches(dispatcher);
 
             loadSuperClasses(dispatcher);
 

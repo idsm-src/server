@@ -42,6 +42,158 @@ grant select on ontology.resource_deprecated_flags to sparql;
 
 --------------------------------------------------------------------------------
 
+create index resource_definitions__resource_unit_resource_id on ontology.resource_definitions(resource_unit, resource_id);
+create index resource_definitions__definition on ontology.resource_definitions using hash (definition);
+grant select on ontology.resource_definitions to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_exact_synonyms__resource_unit_resource_id on ontology.resource_exact_synonyms(resource_unit, resource_id);
+create index resource_exact_synonyms__synonym on ontology.resource_exact_synonyms(synonym);
+grant select on ontology.resource_exact_synonyms to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_related_synonyms__resource_unit_resource_id on ontology.resource_related_synonyms(resource_unit, resource_id);
+create index resource_related_synonyms__synonym on ontology.resource_related_synonyms(synonym);
+grant select on ontology.resource_related_synonyms to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_narrow_synonyms__resource_unit_resource_id on ontology.resource_narrow_synonyms(resource_unit, resource_id);
+create index resource_narrow_synonyms__synonym on ontology.resource_narrow_synonyms(synonym);
+grant select on ontology.resource_narrow_synonyms to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_broad_synonyms__resource_unit_resource_id on ontology.resource_broad_synonyms(resource_unit, resource_id);
+create index resource_broad_synonyms__synonym on ontology.resource_broad_synonyms(synonym);
+grant select on ontology.resource_broad_synonyms to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_alternative_terms__resource_unit_resource_id on ontology.resource_alternative_terms(resource_unit, resource_id);
+create index resource_alternative_terms__term on ontology.resource_alternative_terms(term);
+grant select on ontology.resource_alternative_terms to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_replacements__resource_unit_resource_id on ontology.resource_replacements(resource_unit, resource_id);
+create index resource_replacements__replacement_unit_replacement_id on ontology.resource_replacements(replacement_unit, replacement_id);
+create index resource_replacements__replacement_string on ontology.resource_replacements(replacement_string);
+grant select on ontology.resource_replacements to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_considerations__resource_unit_resource_id on ontology.resource_considerations(resource_unit, resource_id);
+create index resource_considerations__consideration_unit_consideration_id on ontology.resource_considerations(consideration_unit, consideration_id);
+create index resource_considerations__consideration_string on ontology.resource_considerations(consideration_string);
+grant select on ontology.resource_considerations to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_exact_matches__resource_unit_resource_id on ontology.resource_exact_matches(resource_unit, resource_id);
+create index resource_exact_matches__match_unit_match_id on ontology.resource_exact_matches(match_unit, match_id);
+create index resource_exact_matches__match_string on ontology.resource_exact_matches(match_string);
+grant select on ontology.resource_exact_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_close_matches__resource_unit_resource_id on ontology.resource_close_matches(resource_unit, resource_id);
+create index resource_close_matches__match_unit_match_id on ontology.resource_close_matches(match_unit, match_id);
+create index resource_close_matches__match_string on ontology.resource_close_matches(match_string);
+grant select on ontology.resource_close_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_broad_matches__resource_unit_resource_id on ontology.resource_broad_matches(resource_unit, resource_id);
+create index resource_broad_matches__match_unit_match_id on ontology.resource_broad_matches(match_unit, match_id);
+create index resource_broad_matches__match_string on ontology.resource_broad_matches(match_string);
+grant select on ontology.resource_broad_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_narrow_matches__resource_unit_resource_id on ontology.resource_narrow_matches(resource_unit, resource_id);
+create index resource_narrow_matches__match_unit_match_id on ontology.resource_narrow_matches(match_unit, match_id);
+create index resource_narrow_matches__match_string on ontology.resource_narrow_matches(match_string);
+grant select on ontology.resource_narrow_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_related_matches__resource_unit_resource_id on ontology.resource_related_matches(resource_unit, resource_id);
+create index resource_related_matches__match_unit_match_id on ontology.resource_related_matches(match_unit, match_id);
+create index resource_related_matches__match_string on ontology.resource_related_matches(match_string);
+grant select on ontology.resource_related_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_identifiers_mesh_matches__resource_unit_resource_id on ontology.resource_identifiers_mesh_matches(resource_unit, resource_id);
+create index resource_identifiers_mesh_matches__property on ontology.resource_identifiers_mesh_matches(property);
+create index resource_identifiers_mesh_matches__mesh on ontology.resource_identifiers_mesh_matches(mesh);
+grant select on ontology.resource_identifiers_mesh_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_mesh_matches__resource_unit_resource_id on ontology.resource_mesh_matches(resource_unit, resource_id);
+create index resource_mesh_matches__property on ontology.resource_mesh_matches(property);
+create index resource_mesh_matches__mesh on ontology.resource_mesh_matches(mesh);
+grant select on ontology.resource_mesh_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_enzyme_matches__resource_unit_resource_id on ontology.resource_enzyme_matches(resource_unit, resource_id);
+create index resource_enzyme_matches__property on ontology.resource_enzyme_matches(property);
+create index resource_enzyme_matches__enzyme on ontology.resource_enzyme_matches(enzyme);
+grant select on ontology.resource_enzyme_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_wikidata_entity_matches__resource_unit_resource_id on ontology.resource_wikidata_entity_matches(resource_unit, resource_id);
+create index resource_wikidata_entity_matches__property on ontology.resource_wikidata_entity_matches(property);
+create index resource_wikidata_entity_matches__entity on ontology.resource_wikidata_entity_matches(entity);
+grant select on ontology.resource_wikidata_entity_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_wikidata_page_matches__resource_unit_resource_id on ontology.resource_wikidata_page_matches(resource_unit, resource_id);
+create index resource_wikidata_page_matches__property on ontology.resource_wikidata_page_matches(property);
+create index resource_wikidata_page_matches__page on ontology.resource_wikidata_page_matches(page);
+grant select on ontology.resource_wikidata_page_matches to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_references__resource_unit_resource_id on ontology.resource_references(resource_unit, resource_id);
+create index resource_references__reference_unit_reference_id on ontology.resource_references(reference_unit, reference_id);
+create index resource_references__reference_string on ontology.resource_references(reference_string);
+grant select on ontology.resource_references to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_subsets__resource_unit_resource_id on ontology.resource_subsets(resource_unit, resource_id);
+create index resource_subsets__subset_unit_subset_id on ontology.resource_subsets(subset_unit, subset_id);
+create index resource_subsets__subset_string on ontology.resource_subsets(subset_string);
+grant select on ontology.resource_subsets to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_alternative_identifiers__resource_unit_resource_id on ontology.resource_alternative_identifiers(resource_unit, resource_id);
+create index resource_alternative_identifiers__identifier on ontology.resource_alternative_identifiers(identifier);
+grant select on ontology.resource_alternative_identifiers to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_namespaces__resource_unit_resource_id on ontology.resource_namespaces(resource_unit, resource_id);
+create index resource_namespaces__namespace on ontology.resource_namespaces(namespace);
+grant select on ontology.resource_namespaces to sparql;
+
+--------------------------------------------------------------------------------
+
+create index resource_ranks__resource_unit_resource_id on ontology.resource_ranks(resource_unit, resource_id);
+create index resource_ranks__rank_unit_rank_id on ontology.resource_ranks(rank_unit, rank_id);
+grant select on ontology.resource_ranks to sparql;
+
+--------------------------------------------------------------------------------
+
 create index superclasses__class_unit_class_id on ontology.superclasses(class_unit, class_id);
 create index superclasses__superclass_unit_superclass_id on ontology.superclasses(superclass_unit, superclass_id);
 grant select on ontology.superclasses to sparql;

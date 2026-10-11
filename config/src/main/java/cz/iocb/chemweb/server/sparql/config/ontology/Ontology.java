@@ -147,6 +147,91 @@ public class Ontology
                     config.createLiteralMapping(xsdBoolean, "flag"));
         }
 
+        for(String[] annotation : new String[][] { { "resource_definitions", "definition", "obo:IAO_0000115" },
+                { "resource_exact_synonyms", "synonym", "oboInOwl:hasExactSynonym" },
+                { "resource_related_synonyms", "synonym", "oboInOwl:hasRelatedSynonym" },
+                { "resource_narrow_synonyms", "synonym", "oboInOwl:hasNarrowSynonym" },
+                { "resource_broad_synonyms", "synonym", "oboInOwl:hasBroadSynonym" },
+                { "resource_alternative_terms", "term", "obo:IAO_0000118" } })
+        {
+            DatabaseTable table = new DatabaseTable(schema, annotation[0]);
+            TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping(annotation[2]),
+                    config.createLiteralMapping(xsdString, annotation[1]),
+                    config.createIsNullCondition(table, "language"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping(annotation[2]),
+                    config.createLiteralMapping(rdfLangString, annotation[1], "language"));
+        }
+
+        for(String[] annotation : new String[][] { { "resource_replacements", "replacement", "obo:IAO_0100001" },
+                { "resource_references", "reference", "oboInOwl:hasDbXref" },
+                { "resource_subsets", "subset", "oboInOwl:inSubset" } })
+        {
+            DatabaseTable table = new DatabaseTable(schema, annotation[0]);
+            TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping(annotation[2]),
+                    config.createIriMapping("ontology:resource", annotation[1] + "_unit", annotation[1] + "_id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping(annotation[2]),
+                    config.createLiteralMapping(xsdString, annotation[1] + "_string"),
+                    config.createIsNullCondition(table, annotation[1] + "_language"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping(annotation[2]),
+                    config.createLiteralMapping(rdfLangString, annotation[1] + "_string", annotation[1] + "_language"));
+        }
+
+        for(String[] annotation : new String[][] { { "resource_considerations", "consideration", "oboInOwl:consider" },
+                { "resource_exact_matches", "match", "skos:exactMatch" },
+                { "resource_close_matches", "match", "skos:closeMatch" },
+                { "resource_broad_matches", "match", "skos:broadMatch" },
+                { "resource_narrow_matches", "match", "skos:narrowMatch" },
+                { "resource_related_matches", "match", "skos:relatedMatch" } })
+        {
+            DatabaseTable table = new DatabaseTable(schema, annotation[0]);
+            TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping(annotation[2]),
+                    config.createIriMapping("ontology:resource", annotation[1] + "_unit", annotation[1] + "_id"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping(annotation[2]),
+                    config.createLiteralMapping(xsdString, annotation[1] + "_string"));
+        }
+
+        for(String[] match : new String[][] { { "resource_identifiers_mesh_matches", "identifiers:mesh_old", "mesh" },
+                { "resource_mesh_matches", "mesh:resource", "mesh" },
+                { "resource_enzyme_matches", "purl:enzyme", "enzyme" },
+                { "resource_wikidata_entity_matches", "wikidata:entity", "entity" },
+                { "resource_wikidata_page_matches", "wikidata:wiki", "page" } })
+        {
+            DatabaseTable table = new DatabaseTable(schema, match[0]);
+            TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
+
+            for(String[] property : new String[][] { { "EXACT_MATCH", "skos:exactMatch" },
+                    { "CLOSE_MATCH", "skos:closeMatch" }, { "BROAD_MATCH", "skos:broadMatch" },
+                    { "NARROW_MATCH", "skos:narrowMatch" }, { "RELATED_MATCH", "skos:relatedMatch" } })
+                config.addQuadMapping(table, graph, subject, config.createIriMapping(property[1]),
+                        config.createIriMapping(match[1], match[2]), config.createAreEqualCondition("property",
+                                "'" + property[0] + "'::" + schema + ".resource_match_property_type"));
+        }
+
+        for(String[] annotation : new String[][] {
+                { "resource_alternative_identifiers", "identifier", "oboInOwl:hasAlternativeId" },
+                { "resource_namespaces", "namespace", "oboInOwl:hasOBONamespace" } })
+        {
+            DatabaseTable table = new DatabaseTable(schema, annotation[0]);
+            TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping(annotation[2]),
+                    config.createLiteralMapping(xsdString, annotation[1]));
+        }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "resource_ranks");
+            TermMapping subject = config.createIriMapping("ontology:resource", "resource_unit", "resource_id");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("obo:TAXRANK_1000000"),
+                    config.createIriMapping("ontology:resource", "rank_unit", "rank_id"));
+        }
+
         {
             DatabaseTable table = new DatabaseTable(schema, "superclasses");
             TermMapping subject = config.createIriMapping("ontology:resource", "class_unit", "class_id");

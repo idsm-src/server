@@ -72,6 +72,257 @@ create table ontology.resource_deprecated_flags
 );
 
 
+create table ontology.resource_definitions
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    definition        varchar not null,
+    language          varchar
+);
+
+
+create table ontology.resource_exact_synonyms
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    synonym           varchar not null,
+    language          varchar,
+    unique nulls not distinct (resource_unit, resource_id, synonym, language)
+);
+
+
+create table ontology.resource_related_synonyms
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    synonym           varchar not null,
+    language          varchar,
+    unique nulls not distinct (resource_unit, resource_id, synonym, language)
+);
+
+
+create table ontology.resource_narrow_synonyms
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    synonym           varchar not null,
+    language          varchar,
+    unique nulls not distinct (resource_unit, resource_id, synonym, language)
+);
+
+
+create table ontology.resource_broad_synonyms
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    synonym           varchar not null,
+    language          varchar,
+    unique nulls not distinct (resource_unit, resource_id, synonym, language)
+);
+
+
+create table ontology.resource_alternative_terms
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    term              varchar not null,
+    language          varchar,
+    unique nulls not distinct (resource_unit, resource_id, term, language)
+);
+
+
+create table ontology.resource_replacements
+(
+    resource_unit        smallint not null,
+    resource_id          integer not null,
+    replacement_unit     smallint,
+    replacement_id       integer,
+    replacement_string   varchar,
+    replacement_language varchar,
+    unique nulls not distinct (resource_unit, resource_id, replacement_unit, replacement_id, replacement_string,
+            replacement_language)
+);
+
+
+create table ontology.resource_considerations
+(
+    resource_unit        smallint not null,
+    resource_id          integer not null,
+    consideration_unit   smallint,
+    consideration_id     integer,
+    consideration_string varchar,
+    unique nulls not distinct (resource_unit, resource_id, consideration_unit, consideration_id, consideration_string)
+);
+
+
+create table ontology.resource_exact_matches
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    match_unit        smallint,
+    match_id          integer,
+    match_string      varchar,
+    unique nulls not distinct (resource_unit, resource_id, match_unit, match_id, match_string)
+);
+
+
+create table ontology.resource_close_matches
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    match_unit        smallint,
+    match_id          integer,
+    match_string      varchar,
+    unique nulls not distinct (resource_unit, resource_id, match_unit, match_id, match_string)
+);
+
+
+create table ontology.resource_broad_matches
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    match_unit        smallint,
+    match_id          integer,
+    match_string      varchar,
+    unique nulls not distinct (resource_unit, resource_id, match_unit, match_id, match_string)
+);
+
+
+create table ontology.resource_narrow_matches
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    match_unit        smallint,
+    match_id          integer,
+    match_string      varchar,
+    unique nulls not distinct (resource_unit, resource_id, match_unit, match_id, match_string)
+);
+
+
+create table ontology.resource_related_matches
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    match_unit        smallint,
+    match_id          integer,
+    match_string      varchar,
+    unique nulls not distinct (resource_unit, resource_id, match_unit, match_id, match_string)
+);
+
+
+create type ontology.resource_match_property_type as enum
+(
+    'EXACT_MATCH',
+    'CLOSE_MATCH',
+    'BROAD_MATCH',
+    'NARROW_MATCH',
+    'RELATED_MATCH'
+);
+
+
+create table ontology.resource_identifiers_mesh_matches
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    property          ontology.resource_match_property_type not null,
+    mesh              varchar not null,
+    primary key(resource_unit, resource_id, property, mesh)
+);
+
+
+create table ontology.resource_mesh_matches
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    property          ontology.resource_match_property_type not null,
+    mesh              varchar not null,
+    primary key(resource_unit, resource_id, property, mesh)
+);
+
+
+create table ontology.resource_enzyme_matches
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    property          ontology.resource_match_property_type not null,
+    enzyme            varchar not null,
+    primary key(resource_unit, resource_id, property, enzyme)
+);
+
+
+create table ontology.resource_wikidata_entity_matches
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    property          ontology.resource_match_property_type not null,
+    entity            integer not null,
+    primary key(resource_unit, resource_id, property, entity)
+);
+
+
+create table ontology.resource_wikidata_page_matches
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    property          ontology.resource_match_property_type not null,
+    page              integer not null,
+    primary key(resource_unit, resource_id, property, page)
+);
+
+
+create table ontology.resource_references
+(
+    resource_unit      smallint not null,
+    resource_id        integer not null,
+    reference_unit     smallint,
+    reference_id       integer,
+    reference_string   varchar,
+    reference_language varchar,
+    unique nulls not distinct (resource_unit, resource_id, reference_unit, reference_id, reference_string,
+            reference_language)
+);
+
+
+create table ontology.resource_subsets
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    subset_unit       smallint,
+    subset_id         integer,
+    subset_string     varchar,
+    subset_language   varchar,
+    unique nulls not distinct (resource_unit, resource_id, subset_unit, subset_id, subset_string, subset_language)
+);
+
+
+create table ontology.resource_alternative_identifiers
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    identifier        varchar not null,
+    primary key(resource_unit, resource_id, identifier)
+);
+
+
+create table ontology.resource_namespaces
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    namespace         varchar not null,
+    primary key(resource_unit, resource_id, namespace)
+);
+
+
+create table ontology.resource_ranks
+(
+    resource_unit     smallint not null,
+    resource_id       integer not null,
+    rank_unit         smallint not null,
+    rank_id           integer not null,
+    primary key(resource_unit, resource_id, rank_unit, rank_id)
+);
+
+
 create table ontology.superclasses
 (
     class_unit         smallint not null,
