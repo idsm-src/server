@@ -31,6 +31,7 @@ vocab:mono_isotopic_weight rdf:type rdf:Property; rdfs:label "mono-isotopic weig
 vocab:non_hydrogen_atom_count rdf:type rdf:Property; rdfs:label "non-hydrogen atom count".
 vocab:preferred_iupac_name rdf:type rdf:Property; rdfs:label "preferred iupac name".
 vocab:rotatable_bond_count rdf:type rdf:Property; rdfs:label "rotatable bond count".
+vocab:smiles rdf:type rdf:Property; rdfs:label "smiles".
 vocab:structure_complexity rdf:type rdf:Property; rdfs:label "structure complexity".
 vocab:substance_version rdf:type rdf:Property; rdfs:label "substance version".
 vocab:total_formal_charge rdf:type rdf:Property; rdfs:label "total formal charge".
@@ -60,6 +61,7 @@ vocab:DefinedAtomStereoCount rdf:type owl:Class; rdfs:label "Defined Atom Stereo
 vocab:DefinedBondStereoCount rdf:type owl:Class; rdfs:label "Defined Bond Stereo Count".
 vocab:Disease rdf:type owl:Class; rdfs:label "Disease".
 vocab:Endpoint rdf:type owl:Class; rdfs:label "Endpoint".
+vocab:Enzyme rdf:type owl:Class; rdfs:label "Enzyme".
 vocab:ExactMass rdf:type owl:Class; rdfs:label "Exact Mass".
 vocab:Gene rdf:type owl:Class; rdfs:label "Gene".
 vocab:GeneSymbol rdf:type owl:Class; rdfs:label "Gene Symbol".
@@ -82,7 +84,6 @@ vocab:PatentInventor rdf:type owl:Class; rdfs:label "Patent Inventor".
 vocab:Pathway rdf:type owl:Class; rdfs:label "Pathway".
 vocab:PreferredIUPACName rdf:type owl:Class; rdfs:label "Preferred IUPAC Name".
 vocab:Protein rdf:type owl:Class; rdfs:label "Protein".
-vocab:PubChemAssayOutcome rdf:type owl:Class; rdfs:label "PubChem Assay Outcome".
 vocab:Reference rdf:type owl:Class; rdfs:label "Reference".
 vocab:RotatableBondCount rdf:type owl:Class; rdfs:label "Rotatable Bond Count".
 vocab:SMILES rdf:type owl:Class; rdfs:label "SMILES".

@@ -65,7 +65,7 @@ public class Gene
             config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:title"),
                     config.createLiteralMapping(xsdString, "title"));
             config.addQuadMapping(table, new DatabaseTable(schema, "genesymbols"), "genesymbol", "id", graph, subject,
-                    config.createIriMapping("sio:gene-symbol"), config.createLiteralMapping(xsdString, "iri"));
+                    config.createIriMapping("sio:gene-symbol"), config.createLiteralMapping(xsdString, "symbol"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("bp:organism"),
                     config.createIriMapping("pubchem:taxonomy", "organism"));
 

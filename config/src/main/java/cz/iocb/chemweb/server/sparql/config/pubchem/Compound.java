@@ -497,6 +497,14 @@ public class Compound
         }
 
         {
+            DatabaseTable table = new DatabaseTable(schema, "compound_smileses");
+            TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:smiles"),
+                    config.createLiteralMapping(xsdString, "smiles"));
+        }
+
+        {
             DatabaseTable table = new DatabaseTable(schema, "compound_connectivity_smileses");
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 

@@ -91,7 +91,8 @@ public class CompoundDescriptor
             TermMapping subject = config.createIriMapping("pubchem:hydrogen_bond_acceptor_count", "compound");
 
             config.addQuadMapping(table, graph, subject, type,
-                    config.createIriMapping("vocab:HydrogenBondAcceptorCount"));
+                    config.createIriMapping("vocab:HydrogenBondAcceptorCount"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000388"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
@@ -105,7 +106,8 @@ public class CompoundDescriptor
             String field = "defined_atom_stereo_count";
             TermMapping subject = config.createIriMapping("pubchem:defined_atom_stereo_count", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:DefinedAtomStereoCount"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:DefinedAtomStereoCount"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000370"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
@@ -119,7 +121,8 @@ public class CompoundDescriptor
             String field = "defined_bond_stereo_count";
             TermMapping subject = config.createIriMapping("pubchem:defined_bond_stereo_count", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:DefinedBondStereoCount"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:DefinedBondStereoCount"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000371"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
@@ -134,7 +137,8 @@ public class CompoundDescriptor
             TermMapping subject = config.createIriMapping("pubchem:undefined_bond_stereo_count", "compound");
 
             config.addQuadMapping(table, graph, subject, type,
-                    config.createIriMapping("vocab:UndefinedBondStereoCount"));
+                    config.createIriMapping("vocab:UndefinedBondStereoCount"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000375"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
@@ -148,7 +152,8 @@ public class CompoundDescriptor
             String field = "isotope_atom_count";
             TermMapping subject = config.createIriMapping("pubchem:isotope_atom_count", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:IsotopeAtomCount"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:IsotopeAtomCount"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000372"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
@@ -162,7 +167,8 @@ public class CompoundDescriptor
             String field = "covalent_unit_count";
             TermMapping subject = config.createIriMapping("pubchem:covalent_unit_count", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:CovalentUnitCount"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:CovalentUnitCount"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000369"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
@@ -176,7 +182,8 @@ public class CompoundDescriptor
             String field = "hydrogen_bond_donor_count";
             TermMapping subject = config.createIriMapping("pubchem:hydrogen_bond_donor_count", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:HydrogenBondDonorCount"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:HydrogenBondDonorCount"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000387"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
@@ -190,7 +197,8 @@ public class CompoundDescriptor
             String field = "non_hydrogen_atom_count";
             TermMapping subject = config.createIriMapping("pubchem:non_hydrogen_atom_count", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:NonHydrogenAtomCount"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:NonHydrogenAtomCount"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000373"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
@@ -204,7 +212,8 @@ public class CompoundDescriptor
             String field = "rotatable_bond_count";
             TermMapping subject = config.createIriMapping("pubchem:rotatable_bond_count", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:RotatableBondCount"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:RotatableBondCount"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000389"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
@@ -219,7 +228,8 @@ public class CompoundDescriptor
             TermMapping subject = config.createIriMapping("pubchem:undefined_atom_stereo_count", "compound");
 
             config.addQuadMapping(table, graph, subject, type,
-                    config.createIriMapping("vocab:UndefinedAtomStereoCount"));
+                    config.createIriMapping("vocab:UndefinedAtomStereoCount"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000374"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
@@ -233,7 +243,8 @@ public class CompoundDescriptor
             String field = "total_formal_charge";
             TermMapping subject = config.createIriMapping("pubchem:total_formal_charge", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:TotalFormalCharge"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:TotalFormalCharge"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000336"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdShort, field));
@@ -247,7 +258,8 @@ public class CompoundDescriptor
             String field = "structure_complexity";
             TermMapping subject = config.createIriMapping("pubchem:structure_complexity", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:StructureComplexity"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:StructureComplexity"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000390"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));
@@ -261,7 +273,8 @@ public class CompoundDescriptor
             String field = "mono_isotopic_weight";
             TermMapping subject = config.createIriMapping("pubchem:mono_isotopic_weight", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:MonoIsotopicWeight"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:MonoIsotopicWeight"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000337"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));
@@ -279,7 +292,8 @@ public class CompoundDescriptor
             String field = "xlogp3_aa";
             TermMapping subject = config.createIriMapping("pubchem:xlogp3_aa", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:XLogP3"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:XLogP3"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000395"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));
@@ -293,7 +307,8 @@ public class CompoundDescriptor
             String field = "xlogp3";
             TermMapping subject = config.createIriMapping("pubchem:xlogp3", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:XLogP3"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:XLogP3"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000395"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));
@@ -307,7 +322,8 @@ public class CompoundDescriptor
             String field = "exact_mass";
             TermMapping subject = config.createIriMapping("pubchem:exact_mass", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:ExactMass"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:ExactMass"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000338"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));
@@ -325,7 +341,8 @@ public class CompoundDescriptor
             String field = "molecular_weight";
             TermMapping subject = config.createIriMapping("pubchem:molecular_weight", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:MolecularWeight"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:MolecularWeight"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000334"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));
@@ -343,7 +360,8 @@ public class CompoundDescriptor
             String field = "tpsa";
             TermMapping subject = config.createIriMapping("pubchem:tpsa", "compound");
 
-            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:TPSA"));
+            config.addQuadMapping(table, graph, subject, type, config.createIriMapping("vocab:TPSA"),
+                    config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, type, config.createIriMapping("sio:CHEMINF_000392"),
                     config.createIsNotNullCondition(table, field));
             config.addQuadMapping(table, graph, subject, value, config.createLiteralMapping(xsdFloat, field));

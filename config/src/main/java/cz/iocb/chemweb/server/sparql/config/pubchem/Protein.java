@@ -35,6 +35,8 @@ public class Protein
             TermMapping subject = config.createIriMapping("pubchem:enzyme", "id");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("vocab:Enzyme"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("sio:SIO_010343"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:subClassOf"),
                     config.createIriMapping("pubchem:enzyme", "parent"));
@@ -42,8 +44,6 @@ public class Protein
                     config.createIriMapping("up:Enzyme"), config.createIsNullCondition(table, "parent"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
                     config.createIriMapping("purl:enzyme", "iri"));
-            config.addQuadMapping(table, graph, subject, config.createIriMapping("dcterms:identifier"),
-                    config.createLiteralMapping(xsdString, "iri"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:prefLabel"),
                     config.createLiteralMapping(xsdString, "title"));
 

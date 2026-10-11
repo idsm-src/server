@@ -73,5 +73,14 @@ public class Endpoint
             config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:citesAsDataSource"),
                     config.createIriMapping("pubchem:reference", "reference"));
         }
+
+        {
+            DatabaseTable table = new DatabaseTable(schema, "endpoint_patents");
+            TermMapping subject = config.createIriMapping("pubchem:endpoint", "substance", "bioassay", "measuregroup",
+                    "value");
+
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("cito:citesAsDataSource"),
+                    config.createIriMapping("pubchem:patent", "patent"));
+        }
     }
 }
