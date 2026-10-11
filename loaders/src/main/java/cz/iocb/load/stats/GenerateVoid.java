@@ -33,7 +33,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.postgresql.ds.PGPoolingDataSource;
+import org.postgresql.ds.PGSimpleDataSource;
 import cz.iocb.chemweb.server.sparql.config.idsm.IdsmConfiguration;
 import cz.iocb.load.common.Updater;
 import cz.iocb.sparql.engine.database.Column;
@@ -438,7 +438,6 @@ public class GenerateVoid extends Updater
     private static int executed = 0;
 
 
-    @SuppressWarnings("deprecation")
     public static void main(String[] args) throws SQLException, IOException
     {
         try
@@ -456,18 +455,17 @@ public class GenerateVoid extends Updater
             }
 
 
-            PGPoolingDataSource connectionPool = new PGPoolingDataSource();
-            connectionPool.setServerName(properties.getProperty("host"));
-            connectionPool.setPortNumber(Integer.parseInt(properties.getProperty("port")));
-            connectionPool.setDatabaseName(properties.getProperty("dbname"));
-            connectionPool.setUser(properties.getProperty("user"));
-            connectionPool.setPassword(properties.getProperty("password"));
-            connectionPool.setMaxConnections(32);
-            connectionPool.setInitialConnections(32);
+            // a connection serves a whole statistics query, so a pool would save only its setup of a few milliseconds
+            PGSimpleDataSource dataSource = new PGSimpleDataSource();
+            dataSource.setServerNames(new String[] { properties.getProperty("host") });
+            dataSource.setPortNumbers(new int[] { Integer.parseInt(properties.getProperty("port")) });
+            dataSource.setDatabaseName(properties.getProperty("dbname"));
+            dataSource.setUser(properties.getProperty("user"));
+            dataSource.setPassword(properties.getProperty("password"));
 
-            DatabaseSchema schema = new DatabaseSchema(connectionPool);
+            DatabaseSchema schema = new DatabaseSchema(dataSource);
 
-            IdsmConfiguration config = new IdsmConfiguration(null, connectionPool, schema);
+            IdsmConfiguration config = new IdsmConfiguration(null, dataSource, schema);
 
             long begin = System.currentTimeMillis();
 
