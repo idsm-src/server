@@ -85,7 +85,14 @@ class ProteinClassification extends Updater
                         case chemblId -> classes.set(id, "chembl_id",
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL_PC_" + id));
                         case rdfsLabel -> classes.set(id, "label", getString(object));
-                        case skos + "prefLabel" -> prefLabels.put(id, getString(object));
+                        case skos + "prefLabel" ->
+                        {
+                            String prefLabel = getString(object);
+                            String previous = prefLabels.put(id, prefLabel);
+
+                            if(previous != null && !previous.equals(prefLabel))
+                                Problems.error("skos:prefLabel different from rdfs:label", "CHEMBL_PC_" + id);
+                        }
                         case cco + "classLevel" -> classes.set(id, "level", getString(object));
                         case cco + "classPath" -> classes.set(id, "path", getString(object));
                         case rdfs + "subClassOf" ->

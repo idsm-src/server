@@ -209,6 +209,8 @@ class Molecule extends Updater
         InverseCheck biocomponentInverses = new InverseCheck("cco:hasBioComponent");
         HashMap<Integer, String> pendingClasses = new HashMap<>();
         HashMap<Integer, String> pendingLabels = new HashMap<>();
+        BitSet labelled = new BitSet();
+        BitSet prefLabelled = new BitSet();
         BitSet typed = new BitSet();
         BitSet depicted = new BitSet();
         BitSet images = new BitSet();
@@ -312,6 +314,7 @@ class Molecule extends Updater
                                 ChEMBL.getChemblId(subject, predicate, object, "CHEMBL" + id));
                         case rdfsLabel ->
                         {
+                            labelled.set(id);
                             molecules.set(id, "label", getString(object));
                             String prefLabel = pendingLabels.remove(id);
 
@@ -320,12 +323,21 @@ class Molecule extends Updater
                         }
                         case skos + "prefLabel" ->
                         {
+                            prefLabelled.set(id);
                             String label = (String) molecules.get(id, "label");
+                            String prefLabel = getString(object);
 
                             if(label == null)
-                                pendingLabels.put(id, getString(object));
-                            else if(!label.equals(getString(object)))
+                            {
+                                String pending = pendingLabels.put(id, prefLabel);
+
+                                if(pending != null && !pending.equals(prefLabel))
+                                    Problems.error("skos:prefLabel different from rdfs:label", iri);
+                            }
+                            else if(!label.equals(prefLabel))
+                            {
                                 Problems.error("skos:prefLabel different from rdfs:label", iri);
+                            }
                         }
                         case cco + "substanceType" ->
                         {
@@ -388,8 +400,8 @@ class Molecule extends Updater
         for(Integer id : pendingClasses.keySet())
             Problems.error("rdf:type without cco:substanceType", "CHEMBL" + id);
 
-        for(Integer id : pendingLabels.keySet())
-            Problems.error("skos:prefLabel different from rdfs:label", "CHEMBL" + id);
+        // the mapping produces skos:prefLabel from rdfs:label
+        compare(labelled, prefLabelled, "rdfs:label", "skos:prefLabel");
 
         // the mapping produces rdf:type, foaf:depiction and the image for the described molecules
         int typeIndex = molecules.columnIndex("type");

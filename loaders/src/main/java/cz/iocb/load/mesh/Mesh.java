@@ -428,14 +428,17 @@ public class Mesh extends Updater
 
 
     /*
-     * Returns the value of a literal of the given language, or of a literal without a language if the language is
-     * empty; any other value is refused.
+     * Returns the value of an rdf:langString literal of the given language, or of an xsd:string literal if the language
+     * is empty; any other value, such as a literal of another datatype or with a base direction, is refused.
      */
     private static String getLiteral(Node node, String lang) throws IOException
     {
-        if(!node.isLiteral() || !node.getLiteralLanguage().equals(lang))
+        String datatype = lang.isEmpty() ? xsd + "string" : rdf + "langString";
+
+        if(!node.isLiteral() || !node.getLiteralDatatypeURI().equals(datatype)
+                || !node.getLiteralLanguage().equals(lang))
         {
-            String literal = lang.isEmpty() ? "a literal without a language" : "a literal in language " + lang;
+            String literal = lang.isEmpty() ? "an xsd:string literal" : "an rdf:langString literal in language " + lang;
             throw new DataException("unexpected value instead of " + literal, text(node));
         }
 

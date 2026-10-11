@@ -9,7 +9,7 @@ import static cz.iocb.load.common.TripleStreamProcessor.getBoolean;
 import static cz.iocb.load.common.TripleStreamProcessor.getDecimal;
 import static cz.iocb.load.common.TripleStreamProcessor.getIntFromInteger;
 import static cz.iocb.load.common.TripleStreamProcessor.getIntID;
-import static cz.iocb.load.common.TripleStreamProcessor.getLexicalForm;
+import static cz.iocb.load.common.TripleStreamProcessor.getString;
 import static cz.iocb.load.common.TripleStreamProcessor.getStringID;
 import static cz.iocb.load.common.TripleStreamProcessor.getText;
 import java.io.BufferedReader;
@@ -643,9 +643,9 @@ public class ChEBI extends Updater
         Pair<Integer, Integer> propertyID = Ontology.getResourceId(property, null);
         Pair<Integer, Integer> typeID = type == null ? null : Ontology.getResourceId(type, unitUncategorized);
 
-        return new Axiom(chebiID, propertyID.getOne(), propertyID.getTwo(), getLexicalForm(target),
-                typeID == null ? null : typeID.getTwo(), reference == null ? null : getLexicalForm(reference),
-                source == null ? null : getLexicalForm(source));
+        return new Axiom(chebiID, propertyID.getOne(), propertyID.getTwo(), getString(target),
+                typeID == null ? null : typeID.getTwo(), reference == null ? null : getString(reference),
+                source == null ? null : getString(source));
     }
 
 
@@ -663,7 +663,7 @@ public class ChEBI extends Updater
                 return;
 
             Integer chebiID = getEntityID(subject.getURI());
-            String value = getLexicalForm(object);
+            String value = getString(object);
             Pair<Integer, String> pair = Pair.getPair(chebiID, value);
 
             if(oldValues.remove(pair))
@@ -693,7 +693,7 @@ public class ChEBI extends Updater
                 return;
 
             int chebiID = getEntityID(subject.getURI());
-            String value = getLexicalForm(object);
+            String value = getString(object);
 
             if(value.equals(oldValues.remove(chebiID)))
             {
