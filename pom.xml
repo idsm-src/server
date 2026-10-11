@@ -10,6 +10,7 @@
     <module>service</module>
     <module>config</module>
     <module>loaders</module>
+    <module>export</module>
   </modules>
 
   <properties>
