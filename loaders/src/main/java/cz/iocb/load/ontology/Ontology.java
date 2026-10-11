@@ -229,6 +229,33 @@ public class Ontology extends Updater
 
 
     /*
+     * The ids of the blank nodes by their keys, see BlankNodeKeys.
+     */
+    @SuppressWarnings("serial")
+    private static class LongIntMap extends SqlMap<Long, Integer>
+    {
+        @Override
+        public Long getKey(ResultSet result) throws SQLException
+        {
+            return result.getLong(1);
+        }
+
+        @Override
+        public Integer getValue(ResultSet result) throws SQLException
+        {
+            return result.getInt(2);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Long key, Integer value) throws SQLException
+        {
+            statement.setLong(1, key);
+            statement.setInt(2, value);
+        }
+    }
+
+
+    /*
      * A value of a predicate whose values are resources or strings: the (unit, id) of a resource, or a string with its
      * language, if any. A table has the columns of the resources, of the strings and of the languages only if the
      * values of its predicate can be resources, strings and strings with languages.
@@ -483,6 +510,16 @@ public class Ontology extends Updater
 
     private static final List<Unit> units = new ArrayList<>();
     private static final HashMap<Node, Integer> blankNodes = new HashMap<>();
+
+    // the keys of the blank nodes, the ids of the keys and the keys of the database
+    private static Map<Node, Long> blankNodeKeys = Map.of();
+    private static final HashMap<Long, Integer> blankNodeIds = new HashMap<>();
+    private static int nextBlankNodeID;
+
+    private static final LongIntMap keepBlankNodes = new LongIntMap();
+    private static final LongIntMap newBlankNodes = new LongIntMap();
+    private static final LongIntMap oldBlankNodes = new LongIntMap();
+
     private static final HashMap<String, Integer> builtinResources = new HashMap<>();
 
     // the subjects of the rdf:type triples by their types, and the rdfs:subClassOf triples
@@ -586,6 +623,11 @@ public class Ontology extends Updater
             new ForeignClass(new IntegerUserIriClass("wikidata:wiki", INT4, "https://www.wikidata.org/wiki/Q"),
                     "resource_wikidata_page_matches", "page"),
             new ForeignClass(new StringUserIriClass("orcid:author", "https://orcid.org/"), null, null));
+
+    // the predicates of RDF, RDFS and OWL that do not belong to the structures of the blank nodes, see isStructural()
+    private static final Set<String> nonstructuralPredicates = Set.of(rdfs + "label", rdfs + "comment",
+            rdfs + "seeAlso", rdfs + "isDefinedBy", owl + "deprecated", owl + "versionInfo", owl + "annotatedSource",
+            owl + "annotatedProperty", owl + "annotatedTarget");
 
     // the annotation properties that the loaders of the annotations load, which leave out the blank nodes
     private static final Set<String> annotationProperties = new HashSet<>();
@@ -1540,8 +1582,8 @@ public class Ontology extends Updater
 
 
     /*
-     * Returns the (unit, id) of a node; a blank node, as well as an IRI that is neither of a unit nor a built-in
-     * resource, gets a new id when it is first seen.
+     * Returns the (unit, id) of a node; a blank node gets the id of its key, see loadBlankNodeKeys(), and an IRI that
+     * is neither of a unit nor a built-in resource gets a new id when it is first seen.
      */
     private static Pair<Integer, Integer> getId(Node node)
     {
@@ -1550,7 +1592,20 @@ public class Ontology extends Updater
             Integer blanknodeID = blankNodes.get(node);
 
             if(blanknodeID == null)
-                blankNodes.put(node, blanknodeID = blankNodes.size());
+            {
+                Long key = blankNodeKeys.get(node);
+
+                if(key == null)
+                    key = BlankNodeKeys.getLabelKey(node);
+
+                blanknodeID = blankNodeIds.computeIfAbsent(key, k -> nextBlankNodeID++);
+                blankNodes.put(node, blanknodeID);
+
+                if(blanknodeID.equals(oldBlankNodes.remove(key)))
+                    keepBlankNodes.put(key, blanknodeID);
+                else if(!keepBlankNodes.containsKey(key))
+                    newBlankNodes.put(key, blanknodeID);
+            }
 
             return Pair.getPair((int) unitBlank, blanknodeID);
         }
@@ -1611,6 +1666,57 @@ public class Ontology extends Updater
             resourceID = newResources.get(iri);
 
         return resourceID == null ? null : Pair.getPair((int) unitUncategorized, resourceID);
+    }
+
+
+    /*
+     * Computes the keys of the blank nodes, see BlankNodeKeys, by reading the files before the load, and assigns the
+     * ids to the keys: a key stored in the database keeps its id, the other keys get new ids in the order of the keys.
+     * So the blank nodes of a structure keep their ids as long as the structure and the resources that refer to it
+     * are unchanged. A blank node whose key is not computed, as none of its triples belongs to the structures, gets the
+     * key of its label.
+     */
+    private static void loadBlankNodeKeys() throws IOException, SQLException
+    {
+        load("select key,id from ontology.blank_nodes", oldBlankNodes);
+
+        blankNodeIds.putAll(oldBlankNodes);
+        nextBlankNodeID = oldBlankNodes.values().stream().max(Integer::compare).orElse(-1) + 1;
+
+        BlankNodeKeys keys = new BlankNodeKeys();
+        TripleDispatcher dispatcher = new TripleDispatcher();
+
+        dispatcher.onEvery((subject, predicate, object) -> {
+            if((subject.isBlank() || object.isBlank()) && isStructural(predicate, object))
+                keys.add(subject, predicate, object);
+        });
+
+        System.out.println("=== read the blank nodes ===");
+        dispatcher.load("ontology", ".*");
+
+        blankNodeKeys = keys.compute();
+
+        for(long key : blankNodeKeys.values().stream().mapToLong(Long::longValue).distinct().sorted().toArray())
+            blankNodeIds.computeIfAbsent(key, k -> nextBlankNodeID++);
+    }
+
+
+    /*
+     * Tests whether the triple belongs to the structures of the blank nodes: its predicate is of RDF, RDFS, OWL or XSD
+     * and is neither an annotation property nor a predicate of the annotated axioms, which the loader leaves out, and
+     * the triple is not a type of an annotated axiom.
+     */
+    private static boolean isStructural(Node predicate, Node object)
+    {
+        String iri = predicate.getURI();
+
+        if(!iri.startsWith(rdf) && !iri.startsWith(rdfs) && !iri.startsWith(owl) && !iri.startsWith(xsd))
+            return false;
+
+        if(iri.equals(rdf + "type") && (is(object, owl + "Axiom") || is(object, owl + "Annotation")))
+            return false;
+
+        return !nonstructuralPredicates.contains(iri);
     }
 
 
@@ -2760,6 +2866,9 @@ public class Ontology extends Updater
     {
         store("delete from ontology.uncategorized_resources where iri=? and id=?", oldResources);
         store("insert into ontology.uncategorized_resources(iri,id) values(?,?)", newResources);
+
+        store("delete from ontology.blank_nodes where key=? and id=?", oldBlankNodes);
+        store("insert into ontology.blank_nodes(key,id) values(?,?)", newBlankNodes);
     }
 
 
@@ -2771,6 +2880,7 @@ public class Ontology extends Updater
             loadCategories();
 
             initSourceList();
+            loadBlankNodeKeys();
 
             TripleDispatcher dispatcher = new TripleDispatcher();
 

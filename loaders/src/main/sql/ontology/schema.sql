@@ -764,6 +764,14 @@ create table ontology.uncategorized_resources
 );
 
 
+create table ontology.blank_nodes
+(
+    id               integer unique not null,
+    key              bigint not null,
+    primary key(key)
+);
+
+
 create table ontology.units
 (
     id               smallint not null,

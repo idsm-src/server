@@ -1,11 +1,13 @@
 package cz.iocb.load.common;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.jena.graph.Node;
@@ -13,6 +15,7 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFParser;
 import org.apache.jena.riot.RDFParserBuilder;
+import org.apache.jena.riot.lang.LabelToNode;
 
 
 
@@ -43,11 +46,14 @@ public abstract class TripleStreamProcessor
 
 
     /*
-     * Reads a stream in the given syntax, resolving relative IRIs against the base.
+     * Reads a stream in the given syntax, resolving relative IRIs against the base. The blank nodes are labelled by a
+     * seed derived from the base, so that a stream read again gives the same blank nodes, whereas the streams of
+     * different bases give different ones.
      */
     public void load(InputStream stream, Lang lang, String base) throws IOException
     {
-        load(RDFParser.source(stream).lang(lang).base(base));
+        load(RDFParser.source(stream).lang(lang).base(base)
+                .labelToNode(LabelToNode.createScopeByDocumentHash(UUID.nameUUIDFromBytes(base.getBytes(UTF_8)))));
     }
 
 
