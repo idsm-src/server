@@ -9,23 +9,27 @@ import java.util.Objects;
 
 
 /*
- * Repairs the errors of Turtle files that the parser would reject: characters not allowed in an IRI (and every # after
- * the first one) are percent-encoded, an escaped space in an IRI becomes %20 and an escaped no-break space loses its
- * backslash, and some characters outside of strings and IRIs are replaced by a space or a hyphen. The underlying
+ * Repairs the errors of Turtle files that the parser would reject: some characters not allowed in an IRI (and every #
+ * after the first one) are percent-encoded, an escaped space in an IRI becomes %20 and an escaped no-break space loses
+ * its backslash, and some characters outside of strings, IRIs and comments are replaced by a space or a hyphen. The
+ * strings (short and long ones, in double or single quotes), the comments, the escapes of local names and the RDF 1.2
+ * << are followed as Turtle defines them, so that their content is never taken for IRIs or strings. The underlying
  * stream is read by blocks, the repaired stream can be read by single bytes as well as by blocks.
  */
 public class InputStreamFixer extends InputStream
 {
+    // ANGLE follows a < that starts an IRI or, followed by another one, a <<; QUOTE and QUOTES follow the one or two
+    // quotes that start a string, an empty string or a long string
     private static enum State
     {
-        OUTSIDE, IRI, STRING1, STRING2
+        OUTSIDE, ANGLE, IRI, COMMENT, QUOTE, QUOTES, STRING, LONG_STRING
     }
 
     private static final byte[] forbidden = { ' ', '"', '<', '>', '{', '}', '|', '^', '`', '[', ']' };
 
     // the bytes that read() may change or that may change its state: in an IRI the end, an escape and the characters
-    // that are percent-encoded, outside of strings and IRIs the starts of strings and IRIs and the leading bytes of the
-    // replaced characters
+    // that are percent-encoded, outside of strings, IRIs and comments the starts of strings, IRIs, comments and
+    // escapes and the leading bytes of the replaced characters
     private static final boolean[] iriSpecial = new boolean[256];
     private static final boolean[] outsideSpecial = new boolean[256];
 
@@ -38,7 +42,7 @@ public class InputStreamFixer extends InputStream
         iriSpecial['\\'] = true;
         iriSpecial['#'] = true;
 
-        for(int c : new int[] { '<', '"', '\'', 0xC2, 0xE2 })
+        for(int c : new int[] { '<', '"', '\'', '#', '\\', 0xC2, 0xE2 })
             outsideSpecial[c] = true;
     }
 
@@ -49,6 +53,8 @@ public class InputStreamFixer extends InputStream
 
     private State state = State.OUTSIDE;
     private boolean backslash = false;
+    private int quote;
+    private int quotes;
     private byte[] iri = new byte[256];
     private int iriLength = 0;
     private boolean hasSharp = false;
@@ -108,16 +114,85 @@ public class InputStreamFixer extends InputStream
             buffer = null;
         }
 
-        int c = next();
+        return process(next());
+    }
 
-        if(state == State.STRING1 || state == State.STRING1)
+
+    /*
+     * Returns the byte of the repaired stream for the next byte of the underlying stream, or -1 at its end.
+     */
+    private int process(int c) throws IOException
+    {
+        if(c == -1)
+            return -1;
+
+        if(state == State.ANGLE)
         {
-            if(state == State.STRING1 && !backslash && c == '"')
+            if(c == '<')
+            {
+                // the << that starts a reified triple or a triple term
                 state = State.OUTSIDE;
-            else if(state == State.STRING2 && !backslash && c == '\'')
+            }
+            else
+            {
+                state = State.IRI;
+                hasSharp = false;
+                iriLength = 0;
+                addIri('<');
+                return process(c);
+            }
+        }
+        else if(state == State.QUOTE)
+        {
+            if(c == quote)
+            {
+                state = State.QUOTES;
+            }
+            else
+            {
+                state = State.STRING;
+                backslash = c == '\\';
+            }
+        }
+        else if(state == State.QUOTES)
+        {
+            if(c == quote)
+            {
+                state = State.LONG_STRING;
+                quotes = 0;
+                backslash = false;
+            }
+            else
+            {
+                // the two quotes have been an empty string
+                state = State.OUTSIDE;
+                return process(c);
+            }
+        }
+        else if(state == State.STRING)
+        {
+            if(!backslash && c == quote)
                 state = State.OUTSIDE;
             else
                 backslash = !backslash && c == '\\';
+        }
+        else if(state == State.LONG_STRING)
+        {
+            if(!backslash && c == quote)
+            {
+                if(++quotes == 3)
+                    state = State.OUTSIDE;
+            }
+            else
+            {
+                quotes = 0;
+                backslash = !backslash && c == '\\';
+            }
+        }
+        else if(state == State.COMMENT)
+        {
+            if(c == '\n' || c == '\r')
+                state = State.OUTSIDE;
         }
         else if(state == State.IRI)
         {
@@ -181,22 +256,31 @@ public class InputStreamFixer extends InputStream
                 }
             }
         }
+        else if(state == State.OUTSIDE && backslash && c < 0x80)
+        {
+            // an escaped character of a local name, which can be only an ASCII one
+            backslash = false;
+        }
         else if(state == State.OUTSIDE)
         {
-            if(c == '<')
+            backslash = false;
+
+            if(c == '\\')
             {
-                state = State.IRI;
-                hasSharp = false;
-                iriLength = 0;
-                addIri('<');
+                backslash = true;
             }
-            else if(c == '"')
+            else if(c == '<')
             {
-                state = State.STRING1;
+                state = State.ANGLE;
             }
-            else if(c == '\'')
+            else if(c == '"' || c == '\'')
             {
-                state = State.STRING2;
+                state = State.QUOTE;
+                quote = c;
+            }
+            else if(c == '#')
+            {
+                state = State.COMMENT;
             }
             else if(c == 0xC2)
             {
@@ -235,8 +319,8 @@ public class InputStreamFixer extends InputStream
                 if(c2 == 0xA9)
                     Problems.warning("replaced character", "U+2029 (paragraph separator)");
                 else if(c2 == 0x91)
-                    Problems.warning("replaced character", "U+2010 (non-breaking hyphen)");
-                if(c2 == 0x93)
+                    Problems.warning("replaced character", "U+2011 (non-breaking hyphen)");
+                else if(c2 == 0x93)
                     Problems.warning("replaced character", "U+2013 (en dash)");
 
                 return c2 == 0xA9 ? ' ' : '-';
@@ -264,8 +348,10 @@ public class InputStreamFixer extends InputStream
             {
                 int c = input[position] & 0xFF;
 
-                if(state == State.STRING2 || state == State.STRING1 && !backslash && c != '"' && c != '\\'
-                        || state == State.IRI && !iriSpecial[c] || state == State.OUTSIDE && !outsideSpecial[c])
+                if(state == State.OUTSIDE && !backslash && !outsideSpecial[c] || state == State.IRI && !iriSpecial[c]
+                        || state == State.STRING && !backslash && c != quote && c != '\\'
+                        || state == State.LONG_STRING && quotes == 0 && !backslash && c != quote && c != '\\'
+                        || state == State.COMMENT && c != '\n' && c != '\r')
                 {
                     position++;
 
