@@ -666,8 +666,11 @@ public class Mona
             TermMapping experiment = config.createIriMapping("mona:experiment", "spectrum");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("obo:MS_1000045"), // collision energy
-                    config.createAreNotEqualCondition("unit", "'187'::integer"));
+                    config.createIriMapping("obo:MS_1000045"), // collision energy (in electronvolts)
+                    config.createAreEqualCondition("unit", "'266'::integer"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("obo:MS_1000510"), // precursor activation attribute (other units)
+                    config.createAreNotEqualCondition("unit", "'187'::integer", "'266'::integer"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1000138"), // normalized collision energy
                     config.createAreEqualCondition("unit", "'187'::integer"));
@@ -698,8 +701,11 @@ public class Mona
             TermMapping experiment = config.createIriMapping("mona:experiment", "spectrum");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("obo:MS_1002013"), // collision energy ramp start
-                    config.createAreNotEqualCondition("unit", "'187'::integer"));
+                    config.createIriMapping("obo:MS_1002013"), // collision energy ramp start (in electronvolts)
+                    config.createAreEqualCondition("unit", "'266'::integer"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("obo:MS_1000510"), // precursor activation attribute (other units)
+                    config.createAreNotEqualCondition("unit", "'187'::integer", "'266'::integer"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1002218"), // percent collision energy ramp start
                     config.createAreEqualCondition("unit", "'187'::integer"));
@@ -727,8 +733,11 @@ public class Mona
             TermMapping experiment = config.createIriMapping("mona:experiment", "spectrum");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("obo:MS_1002014"), // collision energy ramp end
-                    config.createAreNotEqualCondition("unit", "'187'::integer"));
+                    config.createIriMapping("obo:MS_1002014"), // collision energy ramp end (in electronvolts)
+                    config.createAreEqualCondition("unit", "'266'::integer"));
+            config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("obo:MS_1000510"), // precursor activation attribute (other units)
+                    config.createAreNotEqualCondition("unit", "'187'::integer", "'266'::integer"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("obo:MS_1002219"), // percent collision energy ramp end
                     config.createAreEqualCondition("unit", "'187'::integer"));

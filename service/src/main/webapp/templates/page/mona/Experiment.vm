@@ -70,6 +70,7 @@
         (obo:MS_1002218 "percent collision energy ramp start")
         (obo:MS_1002014 "collision energy ramp end")
         (obo:MS_1002219 "percent collision energy ramp end")
+        (obo:MS_1000510 "precursor activation attribute")
         (obo:MS_1000463 "instrument")
         (obo:MS_1000031 "instrument model")
         (obo:MS_1002813 "precursor type")
