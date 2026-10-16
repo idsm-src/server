@@ -238,9 +238,6 @@ public class IsdbUserIriClass extends UserIriClass
 
         IsdbUserIriClass other = (IsdbUserIriClass) object;
 
-        if(!prefix.equals(other.prefix))
-            return false;
-
-        return true;
+        return regexp.equals(other.regexp);
     }
 }

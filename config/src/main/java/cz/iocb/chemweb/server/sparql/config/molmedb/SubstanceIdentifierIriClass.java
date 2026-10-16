@@ -239,4 +239,19 @@ public class SubstanceIdentifierIriClass extends UserIriClass
 
         return List.of(generateInverseFunction1(value, check), generateInverseFunction2(value, check));
     }
+
+
+    @Override
+    public boolean equals(Object object)
+    {
+        if(object == this)
+            return true;
+
+        if(!super.equals(object))
+            return false;
+
+        SubstanceIdentifierIriClass other = (SubstanceIdentifierIriClass) object;
+
+        return delimiter.equals(other.delimiter) && regexp.equals(other.regexp);
+    }
 }
