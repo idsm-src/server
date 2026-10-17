@@ -327,7 +327,11 @@ public class Graph
 
         if(!(resourceClass instanceof OntologyResource))
         {
-            System.err.println("skip " + resourceClass.getResourceName() + " class");
+            if(map.getObject() instanceof ConstantIriMapping object)
+                System.err.println("skip class " + object.getIri().getValue());
+            else
+                System.err.println("skip " + resourceClass.getResourceName() + " class");
+
             return Set.of();
         }
 
