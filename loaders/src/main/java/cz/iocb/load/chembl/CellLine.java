@@ -1,5 +1,6 @@
 package cz.iocb.load.chembl;
 
+import static cz.iocb.chemweb.server.sparql.config.chembl.CellLine.efoUnits;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCLO;
 import static cz.iocb.load.chembl.ChEMBL.cco;
 import static cz.iocb.load.chembl.ChEMBL.chemblId;
@@ -60,7 +61,7 @@ class CellLine extends Updater
                                 Ontology.getResourceId(object, unitCLO).getTwo());
                         case cco + "hasEFO" ->
                         {
-                            Pair<Integer, Integer> efo = Ontology.getResourceId(object, null);
+                            Pair<Integer, Integer> efo = Ontology.getResourceId(object, efoUnits);
                             cellLines.set(id, "efo_unit", efo.getOne());
                             cellLines.set(id, "efo_id", efo.getTwo());
                         }

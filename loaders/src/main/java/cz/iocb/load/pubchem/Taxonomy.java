@@ -1,5 +1,6 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.pubchem.Taxonomy.matchUnits;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.varchar;
 import static cz.iocb.load.common.TripleDispatcher.all;
@@ -168,7 +169,7 @@ public class Taxonomy extends Updater
                 return;
 
             Integer taxonomyID = getTaxonomyID(subject.getURI());
-            Pair<Integer, Integer> match = Ontology.getResourceId(object, null);
+            Pair<Integer, Integer> match = Ontology.getResourceId(object, matchUnits);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(taxonomyID, match);
 

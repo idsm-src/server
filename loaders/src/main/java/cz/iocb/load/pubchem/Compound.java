@@ -1,6 +1,9 @@
 package cz.iocb.load.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
+import static cz.iocb.chemweb.server.sparql.config.pubchem.Compound.ingredientUnits;
+import static cz.iocb.chemweb.server.sparql.config.pubchem.Compound.matchUnits;
+import static cz.iocb.chemweb.server.sparql.config.pubchem.Compound.typeUnits;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -94,7 +97,7 @@ class Compound extends Updater
                         return;
 
                     Integer compoundID = getCompoundID(subject.getURI(), false);
-                    Pair<Integer, Integer> ingredient = Ontology.getResourceId(object, null);
+                    Pair<Integer, Integer> ingredient = Ontology.getResourceId(object, ingredientUnits);
 
                     Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(compoundID, ingredient);
 
@@ -335,7 +338,7 @@ class Compound extends Updater
                             return;
 
                         Integer compoundID = getCompoundID(subject.getURI(), false);
-                        Pair<Integer, Integer> type = Ontology.getResourceId(object, null);
+                        Pair<Integer, Integer> type = Ontology.getResourceId(object, typeUnits);
 
                         Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(compoundID, type);
 
@@ -454,7 +457,7 @@ class Compound extends Updater
                         }
                         else
                         {
-                            Pair<Integer, Integer> match = Ontology.getResourceId(object, null);
+                            Pair<Integer, Integer> match = Ontology.getResourceId(object, matchUnits);
                             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(compoundID, match);
 
                             synchronized(newMatches)

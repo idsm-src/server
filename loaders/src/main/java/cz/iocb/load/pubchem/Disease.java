@@ -1,5 +1,6 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.pubchem.Disease.matchUnits;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.varchar;
 import static cz.iocb.load.common.TripleDispatcher.all;
@@ -161,7 +162,7 @@ public class Disease extends Updater
             }
 
             Integer diseaseID = getDiseaseID(subject.getURI());
-            Pair<Integer, Integer> match = Ontology.getResourceId(iri, null);
+            Pair<Integer, Integer> match = Ontology.getResourceId(iri, matchUnits);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(diseaseID, match);
 
@@ -225,7 +226,7 @@ public class Disease extends Updater
             }
 
             Integer diseaseID = getDiseaseID(subject.getURI());
-            Pair<Integer, Integer> match = Ontology.getResourceId(object, null);
+            Pair<Integer, Integer> match = Ontology.getResourceId(object, matchUnits);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(diseaseID, match);
 

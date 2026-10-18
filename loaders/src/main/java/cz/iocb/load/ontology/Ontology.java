@@ -1586,14 +1586,15 @@ public class Ontology extends Updater
 
 
     /*
-     * Returns the (unit, id) of an IRI of the given unit, or of any unit if the unit is null; any other IRI is refused
-     * as data that cannot be loaded. The uncategorized unit holds only the built-in resources.
+     * Returns the (unit, id) of an IRI of one of the given units, which are the units the mapping of the target
+     * column expects; any other IRI is refused as data that cannot be loaded. The uncategorized unit holds only the
+     * built-in resources.
      */
-    public static Pair<Integer, Integer> getResourceId(String iri, Short unit) throws DataException
+    public static Pair<Integer, Integer> getResourceId(String iri, short... units) throws DataException
     {
         Pair<Integer, Integer> id = getId(iri);
 
-        if(id == null || unit != null && id.getOne().intValue() != unit.intValue())
+        if(id == null || !hasUnit(id, units))
             throw new DataException("unexpected ontology resource", iri);
 
         return id;
@@ -1601,15 +1602,46 @@ public class Ontology extends Updater
 
 
     /*
-     * Returns the (unit, id) of a node that is an IRI of the given unit, or of any unit if the unit is null; any other
-     * node is refused as data that cannot be loaded.
+     * Returns the (unit, id) of a node that is an IRI of one of the given units, see getResourceId(String, short...);
+     * any other node is refused as data that cannot be loaded.
      */
-    public static Pair<Integer, Integer> getResourceId(Node node, Short unit) throws DataException
+    public static Pair<Integer, Integer> getResourceId(Node node, short... units) throws DataException
     {
         if(!node.isURI())
             throw new DataException("unexpected ontology resource", TripleStreamProcessor.text(node));
 
-        return getResourceId(node.getURI(), unit);
+        return getResourceId(node.getURI(), units);
+    }
+
+
+    /*
+     * True if the unit of the (unit, id) is one of the given units, which must be given.
+     */
+    private static boolean hasUnit(Pair<Integer, Integer> id, short... units)
+    {
+        if(units.length == 0)
+            throw new IllegalArgumentException("the expected units are not given");
+
+        for(short unit : units)
+            if(id.getOne().intValue() == unit)
+                return true;
+
+        return false;
+    }
+
+
+    /*
+     * Returns the (unit, id) of a node that is of one of the given units, which are the units the mapping of the
+     * target column expects, see getId(Node); any other node is refused as data that cannot be loaded.
+     */
+    private static Pair<Integer, Integer> getId(Node node, short... units) throws DataException
+    {
+        Pair<Integer, Integer> id = getId(node);
+
+        if(!hasUnit(id, units))
+            throw new DataException("ontology resource of an unexpected unit", TripleStreamProcessor.text(node));
+
+        return id;
     }
 
 
@@ -2383,7 +2415,7 @@ public class Ontology extends Updater
      * (unit, id) of their subject and object.
      */
     private static void loadPairs(TripleDispatcher dispatcher, String predicate, String table, String subject,
-            String object) throws IOException, SQLException
+            String object, short... objectUnits) throws IOException, SQLException
     {
         IntPairIntPairSet keepPairs = new IntPairIntPairSet();
         IntPairIntPairSet newPairs = new IntPairIntPairSet();
@@ -2394,7 +2426,8 @@ public class Ontology extends Updater
         load("select " + columns + " from ontology." + table, oldPairs);
 
         dispatcher.on(predicate, (s, o) -> {
-            add(Pair.getPair(getId(s), getId(o)), keepPairs, newPairs, oldPairs);
+            add(Pair.getPair(getId(s), objectUnits.length == 0 ? getId(o) : getId(o, objectUnits)), keepPairs, newPairs,
+                    oldPairs);
         });
 
         dispatcher.after(() -> {
@@ -2414,23 +2447,23 @@ public class Ontology extends Updater
         loadPairs(dispatcher, owl + "equivalentClass", "class_equivalents", "class", "equivalent");
         loadPairs(dispatcher, owl + "disjointWith", "class_disjoints", "class", "disjoint");
         loadPairs(dispatcher, owl + "complementOf", "class_complements", "class", "complement");
-        loadPairs(dispatcher, owl + "intersectionOf", "class_intersections", "class", "list");
-        loadPairs(dispatcher, owl + "unionOf", "class_unions", "class", "list");
-        loadPairs(dispatcher, owl + "oneOf", "class_enumerations", "class", "list");
-        loadPairs(dispatcher, owl + "disjointUnionOf", "class_disjoint_unions", "class", "list");
-        loadPairs(dispatcher, owl + "hasKey", "class_keys", "class", "list");
+        loadPairs(dispatcher, owl + "intersectionOf", "class_intersections", "class", "list", unitBlank);
+        loadPairs(dispatcher, owl + "unionOf", "class_unions", "class", "list", unitBlank);
+        loadPairs(dispatcher, owl + "oneOf", "class_enumerations", "class", "list", unitBlank);
+        loadPairs(dispatcher, owl + "disjointUnionOf", "class_disjoint_unions", "class", "list", unitBlank);
+        loadPairs(dispatcher, owl + "hasKey", "class_keys", "class", "list", unitBlank);
 
         loadPairs(dispatcher, owl + "inverseOf", "property_inverses", "property", "inverse");
         loadPairs(dispatcher, owl + "equivalentProperty", "property_equivalents", "property", "equivalent");
         loadPairs(dispatcher, owl + "propertyDisjointWith", "property_disjoints", "property", "disjoint");
-        loadPairs(dispatcher, owl + "propertyChainAxiom", "property_chains", "property", "list");
+        loadPairs(dispatcher, owl + "propertyChainAxiom", "property_chains", "property", "list", unitBlank);
 
         loadPairs(dispatcher, owl + "differentFrom", "different_individuals", "individual", "different");
-        loadPairs(dispatcher, owl + "members", "resource_members", "resource", "list");
-        loadPairs(dispatcher, owl + "distinctMembers", "resource_distinct_members", "resource", "list");
+        loadPairs(dispatcher, owl + "members", "resource_members", "resource", "list", unitBlank);
+        loadPairs(dispatcher, owl + "distinctMembers", "resource_distinct_members", "resource", "list", unitBlank);
 
         loadPairs(dispatcher, owl + "onDatatype", "datatype_bases", "datatype", "base");
-        loadPairs(dispatcher, owl + "withRestrictions", "datatype_restrictions", "datatype", "list");
+        loadPairs(dispatcher, owl + "withRestrictions", "datatype_restrictions", "datatype", "list", unitBlank);
     }
 
 
@@ -2476,7 +2509,7 @@ public class Ontology extends Updater
     private static void loadLists(TripleDispatcher dispatcher)
     {
         dispatcher.on(rdf + "first", (subject, object) -> {
-            Pair<Integer, Integer> listID = getId(subject);
+            Pair<Integer, Integer> listID = getId(subject, unitBlank, unitUncategorized);
 
             if(object.isLiteral())
             {
@@ -2493,8 +2526,8 @@ public class Ontology extends Updater
         });
 
         dispatcher.on(rdf + "rest", (subject, object) -> {
-            Pair<Integer, Integer> listID = getId(subject);
-            Pair<Integer, Integer> restID = getId(object);
+            Pair<Integer, Integer> listID = getId(subject, unitBlank, unitUncategorized);
+            Pair<Integer, Integer> restID = getId(object, unitBlank, unitUncategorized);
 
             lists.set(listID, "rest_unit", restID.getOne());
             lists.set(listID, "rest_id", restID.getTwo());
@@ -2684,7 +2717,7 @@ public class Ontology extends Updater
         for(Entry<String, String> facet : facets.entrySet())
         {
             dispatcher.on(facet.getKey(), (subject, object) -> {
-                Pair<Integer, Integer> restrictionID = getId(subject);
+                Pair<Integer, Integer> restrictionID = getId(subject, unitBlank);
 
                 LiteralValue value = getLiteral(object, "string", "integer", "double");
 

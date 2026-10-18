@@ -1,5 +1,6 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.pubchem.Cell.matchUnits;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.varchar;
@@ -198,7 +199,7 @@ public class Cell extends Updater
                 return;
 
             Integer cellID = getCellID(subject.getURI());
-            Pair<Integer, Integer> match = Ontology.getResourceId(object, null);
+            Pair<Integer, Integer> match = Ontology.getResourceId(object, matchUnits);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(cellID, match);
 

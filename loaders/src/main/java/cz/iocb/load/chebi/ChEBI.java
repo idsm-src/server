@@ -1,5 +1,6 @@
 package cz.iocb.load.chebi;
 
+import static cz.iocb.chemweb.server.sparql.config.chebi.Chebi.restrictionPropertyUnits;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
 import static cz.iocb.load.common.TripleDispatcher.except;
 import static cz.iocb.load.common.TripleDispatcher.is;
@@ -521,7 +522,8 @@ public class ChEBI extends Updater
                         {
                             int chebiID = getEntityID(text(superclass.getOne()));
                             int valueRestrictionID = getEntityID(text(values));
-                            Pair<Integer, Integer> propertyID = Ontology.getResourceId(property, null);
+                            Pair<Integer, Integer> propertyID = Ontology.getResourceId(property,
+                                    restrictionPropertyUnits);
 
                             restriction = new Restriction(chebiID, valueRestrictionID, propertyID.getOne(),
                                     propertyID.getTwo());

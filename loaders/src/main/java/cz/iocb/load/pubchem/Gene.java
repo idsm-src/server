@@ -1,6 +1,7 @@
 package cz.iocb.load.pubchem;
 
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGO;
+import static cz.iocb.chemweb.server.sparql.config.pubchem.Gene.matchUnits;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
@@ -258,7 +259,7 @@ class Gene extends Updater
                 return;
 
             Integer geneID = getGeneID(subject.getURI());
-            Pair<Integer, Integer> match = Ontology.getResourceId(object, null);
+            Pair<Integer, Integer> match = Ontology.getResourceId(object, matchUnits);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(geneID, match);
 

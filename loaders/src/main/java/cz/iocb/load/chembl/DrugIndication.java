@@ -1,5 +1,6 @@
 package cz.iocb.load.chembl;
 
+import static cz.iocb.chemweb.server.sparql.config.chembl.DrugIndication.efoUnits;
 import static cz.iocb.load.chembl.ChEMBL.cco;
 import static cz.iocb.load.chembl.ChEMBL.chemblId;
 import static cz.iocb.load.chembl.ChEMBL.rdfType;
@@ -71,7 +72,7 @@ class DrugIndication extends Updater
                         case cco + "hasMeshHeading" -> indications.set(id, "mesh_heading", getString(object));
                         case cco + "hasEFO" ->
                         {
-                            Pair<Integer, Integer> efo = Ontology.getResourceId(object, null);
+                            Pair<Integer, Integer> efo = Ontology.getResourceId(object, efoUnits);
                             indications.set(id, "efo_unit", efo.getOne());
                             indications.set(id, "efo_id", efo.getTwo());
                         }

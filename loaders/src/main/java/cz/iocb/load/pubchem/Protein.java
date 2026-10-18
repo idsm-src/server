@@ -1,5 +1,7 @@
 package cz.iocb.load.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.pubchem.Protein.matchUnits;
+import static cz.iocb.chemweb.server.sparql.config.pubchem.Protein.typeUnits;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
@@ -420,7 +422,7 @@ class Protein extends Updater
                 return;
 
             Integer proteinID = getProteinID(subject.getURI());
-            Pair<Integer, Integer> match = Ontology.getResourceId(object, null);
+            Pair<Integer, Integer> match = Ontology.getResourceId(object, matchUnits);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(proteinID, match);
 
@@ -1053,7 +1055,7 @@ class Protein extends Updater
                 return;
 
             Integer proteinID = getProteinID(subject.getURI());
-            Pair<Integer, Integer> type = Ontology.getResourceId(object, null);
+            Pair<Integer, Integer> type = Ontology.getResourceId(object, typeUnits);
 
             Pair<Integer, Pair<Integer, Integer>> pair = Pair.getPair(proteinID, type);
 
