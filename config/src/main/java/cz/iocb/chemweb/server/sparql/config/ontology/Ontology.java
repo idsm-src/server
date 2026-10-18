@@ -1,26 +1,6 @@
 package cz.iocb.chemweb.server.sparql.config.ontology;
 
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyConfiguration.schema;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBAO;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBlank;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCHEBI;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCHEMINF;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCL;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCLO;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitClassyFire;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitEFO;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGO;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIAO;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitNCBITaxon;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitNCIT;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitPR;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitSIO;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitStar;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitTaxonomy;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitThesaurus;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUO;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUberon;
-import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUncategorized;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.rdfLangString;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdBoolean;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDouble;
@@ -28,12 +8,17 @@ import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInteger;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdNonNegativeInteger;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
+import static cz.iocb.sparql.engine.mapping.classes.DerivedClass.subtract;
+import static cz.iocb.sparql.engine.mapping.classes.DerivedClass.unionize;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Set;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Conditions;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.TermMapping;
+import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
 
 
 
@@ -44,27 +29,44 @@ public class Ontology
         OntologyResource resource = OntologyResource.get(config);
 
         // registered before the whole class, so that an uncategorized resource is detected by a single lookup
-        config.addIriClass(new OntologyUnitResource("ontology:uncategorized", resource, unitUncategorized));
-        config.addIriClass(new OntologyUnitResource("ontology:blank", resource, unitBlank));
-        config.addIriClass(new OntologyUnitResource("ontology:sio", resource, unitSIO));
-        config.addIriClass(new OntologyUnitResource("ontology:cheminf", resource, unitCHEMINF));
-        config.addIriClass(new OntologyUnitResource("ontology:bao", resource, unitBAO));
-        config.addIriClass(new OntologyUnitResource("ontology:go", resource, unitGO));
-        config.addIriClass(new OntologyUnitResource("ontology:pr", resource, unitPR));
-        config.addIriClass(new OntologyUnitResource("ontology:chebi", resource, unitCHEBI));
-        config.addIriClass(new OntologyUnitResource("ontology:thesaurus", resource, unitThesaurus));
-        config.addIriClass(new OntologyUnitResource("ontology:taxonomy", resource, unitTaxonomy));
-        config.addIriClass(new OntologyUnitResource("ontology:classyfire", resource, unitClassyFire));
-        config.addIriClass(new OntologyUnitResource("ontology:ncbitaxon", resource, unitNCBITaxon));
-        config.addIriClass(new OntologyUnitResource("ontology:uberon", resource, unitUberon));
-        config.addIriClass(new OntologyUnitResource("ontology:cl", resource, unitCL));
-        config.addIriClass(new OntologyUnitResource("ontology:uo", resource, unitUO));
-        config.addIriClass(new OntologyUnitResource("ontology:iao", resource, unitIAO));
-        config.addIriClass(new OntologyUnitResource("ontology:clo", resource, unitCLO));
-        config.addIriClass(new OntologyUnitResource("ontology:efo", resource, unitEFO));
-        config.addIriClass(new OntologyUnitResource("ontology:star", resource, unitStar));
-        config.addIriClass(new OntologyUnitResource("ontology:ncit", resource, unitNCIT));
+        for(short unit : OntologyResource.getClassUnits())
+            config.addIriClass(new OntologyUnitResource(OntologyResource.getClassName(unit), resource, unit));
+
         config.addIriClass(resource);
+    }
+
+
+    /*
+     * Returns the mapping of a pair of unit and id columns holding resources of the given units only, as the union of
+     * their resource classes; a single unit is mapped by its class over the id column alone, so two or more are needed.
+     */
+    public static TermMapping createResourceMapping(SparqlDatabaseConfiguration config, String unitColumn,
+            String idColumn, short... units)
+    {
+        if(units.length < 2)
+            throw new IllegalArgumentException("a union of ontology units needs at least two units");
+
+        Set<ResourceClass> classes = new HashSet<>();
+
+        for(short unit : units)
+            classes.add(config.getIriClass(OntologyResource.getClassName(unit)));
+
+        return config.createTermMapping(unionize(classes), unitColumn, idColumn);
+    }
+
+
+    /*
+     * Returns the mapping of a pair of unit and id columns holding resources of all units except the given ones.
+     */
+    public static TermMapping createResourceMappingWithout(SparqlDatabaseConfiguration config, String unitColumn,
+            String idColumn, short... units)
+    {
+        ResourceClass resClass = config.getIriClass("ontology:resource");
+
+        for(short unit : units)
+            resClass = subtract(config, resClass, config.getIriClass(OntologyResource.getClassName(unit)));
+
+        return config.createTermMapping(resClass, unitColumn, idColumn);
     }
 
 
