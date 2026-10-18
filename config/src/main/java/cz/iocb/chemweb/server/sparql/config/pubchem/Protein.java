@@ -1,9 +1,28 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCHEBI;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitDrugBankBioEntity;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGlyConnectProtein;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersChEMBL;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersHPA;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersIUPHARReceptor;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersNCIT;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitOpenTargets;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitPR;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitPR0;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitPR1;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitPR2;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitSIO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitThesaurus;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWormBaseProteinBM;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWormBaseProteinCBP;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWormBaseProteinCE;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
+import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.TableColumn;
@@ -15,6 +34,14 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 public class Protein
 {
+    public static final short[] matchUnits = { unitPR2, unitPR1, unitPR0, unitPR, unitIdentifiersChEMBL,
+            unitIdentifiersHPA, unitIdentifiersIUPHARReceptor, unitIdentifiersNCIT, unitThesaurus,
+            unitWormBaseProteinBM, unitWormBaseProteinCBP, unitWormBaseProteinCE, unitGlyConnectProtein,
+            unitOpenTargets, unitDrugBankBioEntity };
+
+    public static final short[] typeUnits = { unitPR2, unitPR1, unitPR0, unitCHEBI, unitGO, unitPR, unitSIO };
+
+
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pubchem:enzyme", INT4, new DatabaseTable(schema, "enzymes"),
@@ -147,7 +174,7 @@ public class Protein
             TermMapping subject = config.createIriMapping("pubchem:protein", "protein");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("ontology:resource", "match_unit", "match_id"));
+                    Ontology.createResourceMapping(config, "match_unit", "match_id", matchUnits));
         }
 
         {
@@ -321,7 +348,7 @@ public class Protein
             TermMapping subject = config.createIriMapping("pubchem:protein", "protein");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("ontology:resource", "type_unit", "type_id"));
+                    Ontology.createResourceMapping(config, "type_unit", "type_id", typeUnits));
         }
 
         {

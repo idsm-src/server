@@ -1,9 +1,27 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGenCC;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGlycosmosGlycoGene;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersCTDGene;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersFB;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersHGNC;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersMGI;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersMIM;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersNCBIGene;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersNCIT;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersPharmGKBGene;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersRGD;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersSGD;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersXenbaseGene;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersXenbaseGenePage;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitOpenTargets;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitThesaurus;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWormBaseGene;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
+import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.TableColumn;
@@ -16,6 +34,13 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 public class Gene
 {
+    public static final short[] matchUnits = { unitIdentifiersCTDGene, unitIdentifiersFB, unitIdentifiersHGNC,
+            unitIdentifiersMGI, unitIdentifiersMIM, unitIdentifiersNCBIGene, unitIdentifiersNCIT,
+            unitIdentifiersPharmGKBGene, unitIdentifiersRGD, unitIdentifiersSGD, unitIdentifiersXenbaseGene,
+            unitIdentifiersXenbaseGenePage, unitThesaurus, unitWormBaseGene, unitGlycosmosGlycoGene, unitOpenTargets,
+            unitGenCC };
+
+
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pubchem:genesymbol", INT4, new DatabaseTable(schema, "genesymbols"),
@@ -111,7 +136,7 @@ public class Gene
             TermMapping subject = config.createIriMapping("pubchem:gene", "gene");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("ontology:resource", "match_unit", "match_id"));
+                    Ontology.createResourceMapping(config, "match_unit", "match_id", matchUnits));
         }
 
         {

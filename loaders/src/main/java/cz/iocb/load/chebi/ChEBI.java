@@ -91,18 +91,15 @@ public class ChEBI extends Updater
     private static final class Axiom
     {
         final int chebiID;
-        final int propertyUnit;
         final int propertyID;
         final String target;
         final Integer typeID;
         final String reference;
         final String source;
 
-        public Axiom(int chebiID, int propertyUnit, int propertyID, String target, Integer typeID, String reference,
-                String source)
+        public Axiom(int chebiID, int propertyID, String target, Integer typeID, String reference, String source)
         {
             this.chebiID = chebiID;
-            this.propertyUnit = propertyUnit;
             this.propertyID = propertyID;
             this.target = target;
             this.typeID = typeID;
@@ -119,9 +116,6 @@ public class ChEBI extends Updater
             Axiom axiom = (Axiom) obj;
 
             if(chebiID != axiom.chebiID)
-                return false;
-
-            if(propertyUnit != axiom.propertyUnit)
                 return false;
 
             if(propertyID != axiom.propertyID)
@@ -183,27 +177,26 @@ public class ChEBI extends Updater
         @Override
         public Axiom getKey(ResultSet result) throws SQLException
         {
-            return new Axiom(result.getInt(1), result.getShort(2), result.getInt(3), result.getString(4),
-                    (Integer) result.getObject(5), result.getString(6), result.getString(7));
+            return new Axiom(result.getInt(1), result.getInt(2), result.getString(3), (Integer) result.getObject(4),
+                    result.getString(5), result.getString(6));
         }
 
         @Override
         public Integer getValue(ResultSet result) throws SQLException
         {
-            return result.getInt(8);
+            return result.getInt(7);
         }
 
         @Override
         public void set(PreparedStatement statement, Axiom key, Integer value) throws SQLException
         {
             statement.setInt(1, key.chebiID);
-            statement.setInt(2, key.propertyUnit);
-            statement.setInt(3, key.propertyID);
-            statement.setString(4, key.target);
-            statement.setObject(5, key.typeID);
-            statement.setString(6, key.reference);
-            statement.setString(7, key.source);
-            statement.setInt(8, value);
+            statement.setInt(2, key.propertyID);
+            statement.setString(3, key.target);
+            statement.setObject(4, key.typeID);
+            statement.setString(5, key.reference);
+            statement.setString(6, key.source);
+            statement.setInt(7, value);
         }
     }
 
@@ -567,7 +560,7 @@ public class ChEBI extends Updater
         AxiomIntMap newAxioms = new AxiomIntMap();
         AxiomIntMap oldAxioms = new AxiomIntMap();
 
-        load("select class,property_unit,property_id,target,type_id,reference,source,id from chebi.axioms", oldAxioms);
+        load("select class,property_id,target,type_id,reference,source,id from chebi.axioms", oldAxioms);
 
         HashSet<Node> axioms = new HashSet<>();
         BlankNodes parts = new BlankNodes(dispatcher, owl + "annotatedProperty", owl + "annotatedSource",
@@ -607,11 +600,11 @@ public class ChEBI extends Updater
             }
 
             store("""
-                    delete from chebi.axioms where class=? and property_unit=? and property_id=? and target=? and \
+                    delete from chebi.axioms where class=? and property_id=? and target=? and \
                     coalesce(type_id,-1)=coalesce(?,-1) and coalesce(reference,'')=coalesce(?,'') and \
                     coalesce(source,'')=coalesce(?,'') and id=?""", oldAxioms);
-            store("insert into chebi.axioms(class,property_unit,property_id,target,type_id,reference,source,id) "
-                    + "values(?,?,?,?,?,?,?,?)", newAxioms);
+            store("insert into chebi.axioms(class,property_id,target,type_id,reference,source,id) "
+                    + "values(?,?,?,?,?,?,?)", newAxioms);
         });
     }
 
@@ -640,12 +633,11 @@ public class ChEBI extends Updater
             throws IOException
     {
         int chebiID = getEntityID(text(chebi));
-        Pair<Integer, Integer> propertyID = Ontology.getResourceId(property, null);
+        Pair<Integer, Integer> propertyID = Ontology.getResourceId(property, unitUncategorized);
         Pair<Integer, Integer> typeID = type == null ? null : Ontology.getResourceId(type, unitUncategorized);
 
-        return new Axiom(chebiID, propertyID.getOne(), propertyID.getTwo(), getString(target),
-                typeID == null ? null : typeID.getTwo(), reference == null ? null : getString(reference),
-                source == null ? null : getString(source));
+        return new Axiom(chebiID, propertyID.getTwo(), getString(target), typeID == null ? null : typeID.getTwo(),
+                reference == null ? null : getString(reference), source == null ? null : getString(source));
     }
 
 

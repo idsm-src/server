@@ -1,8 +1,11 @@
 package cz.iocb.chemweb.server.sparql.config.chembl;
 
 import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.schema;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitEFO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitEFOShort;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
+import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -13,6 +16,9 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 public class CellLine
 {
+    public static final short[] efoUnits = { unitEFOShort, unitEFO };
+
+
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("chembl:cell_line", INT4,
@@ -32,7 +38,7 @@ public class CellLine
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasCLO"),
                 config.createIriMapping("ontology:clo", "clo_id"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasEFO"),
-                config.createIriMapping("ontology:resource", "efo_unit", "efo_id"));
+                Ontology.createResourceMapping(config, "efo_unit", "efo_id", efoUnits));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),
                 config.createIriMapping("ontology:taxonomy", "taxonomy"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:taxonomy"),

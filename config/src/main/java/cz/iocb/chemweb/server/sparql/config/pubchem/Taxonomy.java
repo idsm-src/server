@@ -1,8 +1,36 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitEOL;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGlyConnectTaxonomy;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGlycoInfo;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGlycosmosOrganism;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIPNI1;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIPNI2;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIPNI3;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIPNI4;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitITIS;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersNCIT;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitPOWO1;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitPOWO2;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitPOWO3;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitPOWO4;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitPOWO5;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitThesaurus;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitUniProtTaxonomy;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWFO0;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWFO1;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWFO2;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWFO3;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWFO4;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWFO5;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWFO6;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWFO7;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWFO8;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitWFO9;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
+import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -13,6 +41,12 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 public class Taxonomy
 {
+    public static final short[] matchUnits = { unitIdentifiersNCIT, unitThesaurus, unitWFO0, unitWFO1, unitWFO2,
+            unitWFO3, unitWFO4, unitWFO5, unitWFO6, unitWFO7, unitWFO8, unitWFO9, unitPOWO1, unitPOWO2, unitPOWO3,
+            unitPOWO4, unitPOWO5, unitGlycosmosOrganism, unitIPNI1, unitIPNI2, unitIPNI3, unitIPNI4,
+            unitGlyConnectTaxonomy, unitUniProtTaxonomy, unitGlycoInfo, unitEOL, unitITIS };
+
+
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("pubchem:taxonomy", INT4,
@@ -75,7 +109,7 @@ public class Taxonomy
             TermMapping subject = config.createIriMapping("pubchem:taxonomy", "taxonomy");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("ontology:resource", "match_unit", "match_id"));
+                    Ontology.createResourceMapping(config, "match_unit", "match_id", matchUnits));
         }
 
         {

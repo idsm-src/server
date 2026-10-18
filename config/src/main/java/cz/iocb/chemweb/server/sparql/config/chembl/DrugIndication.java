@@ -1,9 +1,20 @@
 package cz.iocb.chemweb.server.sparql.config.chembl;
 
 import static cz.iocb.chemweb.server.sparql.config.chembl.ChemblConfiguration.schema;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitEFO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitEFOCHEBI;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitEFODOID;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitEFOGO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitEFOMONDO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitEFONCBITaxon;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitEFOUberon;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitHP;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitOLSMP;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitOrphanet;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
+import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -14,6 +25,10 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 public class DrugIndication
 {
+    public static final short[] efoUnits = { unitHP, unitEFOCHEBI, unitEFODOID, unitEFO, unitEFOGO, unitEFOMONDO,
+            unitEFONCBITaxon, unitEFOUberon, unitOLSMP, unitOrphanet };
+
+
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("chembl:drug_indication", INT4,
@@ -33,7 +48,7 @@ public class DrugIndication
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasMesh"),
                 config.createIriMapping("identifiers:mesh_old", "mesh"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasEFO"),
-                config.createIriMapping("ontology:resource", "efo_unit", "efo_id"));
+                Ontology.createResourceMapping(config, "efo_unit", "efo_id", efoUnits));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:hasMolecule"),
                 config.createIriMapping("chembl:molecule", "molecule"));
         config.addQuadMapping(table, graph, subject, config.createIriMapping("cco:highestDevelopmentPhase"),

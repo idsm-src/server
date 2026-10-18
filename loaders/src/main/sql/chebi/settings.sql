@@ -31,7 +31,7 @@ grant select on chebi.restrictions to sparql;
 --------------------------------------------------------------------------------
 
 create index axioms__class on chebi.axioms(class);
-create index axioms__property_unit_property_id on chebi.axioms(property_unit, property_id);
+create index axioms__property_id on chebi.axioms(property_id);
 create index axioms__target on chebi.axioms(target);
 create index axioms__type_id on chebi.axioms(type_id);
 create index axioms__reference on chebi.axioms(reference);

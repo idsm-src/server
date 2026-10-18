@@ -1,12 +1,15 @@
 package cz.iocb.chemweb.server.sparql.config.chebi;
 
 import static cz.iocb.chemweb.server.sparql.config.chebi.ChebiConfiguration.schema;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBFO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitRO;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdBoolean;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDecimal;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInteger;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.common.StringSubsetLiteralClass;
+import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -18,6 +21,9 @@ import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 
 public class Chebi
 {
+    public static final short[] restrictionPropertyUnits = { unitBFO, unitRO };
+
+
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("chebi:restriction", INT4, "http://blank/ID_R"));
@@ -48,7 +54,7 @@ public class Chebi
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Restriction"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:onProperty"),
-                    config.createIriMapping("ontology:resource", "property_unit", "property_id"));
+                    Ontology.createResourceMapping(config, "property_unit", "property_id", restrictionPropertyUnits));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:someValuesFrom"),
                     config.createIriMapping("ontology:chebi", "value_restriction"));
         }
@@ -60,7 +66,7 @@ public class Chebi
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
                     config.createIriMapping("owl:Axiom"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:annotatedProperty"),
-                    config.createIriMapping("ontology:resource", "property_unit", "property_id"));
+                    config.createIriMapping("ontology:uncategorized", "property_id"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:annotatedSource"),
                     config.createIriMapping("ontology:chebi", "class"));
             config.addQuadMapping(table, graph, subject, config.createIriMapping("owl:annotatedTarget"),

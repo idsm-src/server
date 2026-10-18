@@ -1,11 +1,17 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCHEBI;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersNCIT;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitNDFRT;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitSNOMEDCT;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitThesaurus;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDecimal;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInteger;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import cz.iocb.chemweb.server.sparql.config.common.StringSubsetLiteralClass;
+import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -17,6 +23,13 @@ import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 
 public class Compound
 {
+    public static final short[] typeUnits = { unitCHEBI, unitThesaurus, unitNDFRT, unitSNOMEDCT };
+
+    public static final short[] ingredientUnits = { unitNDFRT, unitSNOMEDCT };
+
+    public static final short[] matchUnits = { unitIdentifiersNCIT, unitThesaurus };
+
+
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID";
@@ -145,7 +158,7 @@ public class Compound
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdf:type"),
-                    config.createIriMapping("ontology:resource", "type_unit", "type_id"));
+                    Ontology.createResourceMapping(config, "type_unit", "type_id", typeUnits));
         }
 
         {
@@ -153,7 +166,7 @@ public class Compound
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("vocab:is_active_ingredient_of"),
-                    config.createIriMapping("ontology:resource", "ingredient_unit", "ingredient_id"));
+                    Ontology.createResourceMapping(config, "ingredient_unit", "ingredient_id", ingredientUnits));
         }
 
         {
@@ -418,7 +431,7 @@ public class Compound
             TermMapping subject = config.createIriMapping("pubchem:compound", "compound");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("ontology:resource", "match_unit", "match_id"));
+                    Ontology.createResourceMapping(config, "match_unit", "match_id", matchUnits));
         }
 
         {

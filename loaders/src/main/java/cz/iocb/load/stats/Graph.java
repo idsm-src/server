@@ -34,6 +34,7 @@ import cz.iocb.sparql.engine.mapping.JoinTableQuadMapping;
 import cz.iocb.sparql.engine.mapping.ParametrisedBlankNodeMapping;
 import cz.iocb.sparql.engine.mapping.ParametrisedIriMapping;
 import cz.iocb.sparql.engine.mapping.ParametrisedLiteralMapping;
+import cz.iocb.sparql.engine.mapping.ParametrisedTermMapping;
 import cz.iocb.sparql.engine.mapping.QuadMapping;
 import cz.iocb.sparql.engine.mapping.SingleTableQuadMapping;
 import cz.iocb.sparql.engine.mapping.TermMapping;
@@ -199,6 +200,11 @@ public class Graph
         if(map instanceof ParametrisedIriMapping m && m.getResourceClass() instanceof OntologyUnitResource c)
             return new ParametrisedIriMapping(c.getResource(),
                     c.toGeneralClass(c.getResource(), m.getColumns(), false));
+
+        // a union of unit classes (or their complement) is stored in the columns of the whole class
+        if(map instanceof ParametrisedTermMapping m
+                && m.getResourceClass(null).getEffectiveClass() instanceof OntologyResource c)
+            return new ParametrisedIriMapping(c, m.getColumns(null));
 
         return map;
     }

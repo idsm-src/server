@@ -1,8 +1,26 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBTO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCL;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCLO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCancerRxGene;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCellModelPassports;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitDepMap;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitEFO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGlyConnectCellLine;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersBTO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersCL;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersCLO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersEFO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersLINCSCell;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersNCIT;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitLINCSHMS;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitSangerCellLine;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitThesaurus;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
+import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -13,6 +31,12 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 public class Cell
 {
+    public static final short[] matchUnits = { unitBTO, unitCL, unitCLO, unitIdentifiersBTO, unitIdentifiersCL,
+            unitIdentifiersCLO, unitIdentifiersEFO, unitIdentifiersLINCSCell, unitIdentifiersNCIT, unitEFO,
+            unitThesaurus, unitGlyConnectCellLine, unitSangerCellLine, unitCellModelPassports, unitDepMap, unitLINCSHMS,
+            unitCancerRxGene };
+
+
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
@@ -67,7 +91,7 @@ public class Cell
             TermMapping subject = config.createIriMapping("pubchem:cell", "cell");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("rdfs:seeAlso"),
-                    config.createIriMapping("ontology:resource", "match_unit", "match_id"));
+                    Ontology.createResourceMapping(config, "match_unit", "match_id", matchUnits));
         }
 
         {

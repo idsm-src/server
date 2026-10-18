@@ -52,7 +52,6 @@ create table chebi.axioms
 (
     id              integer not null,
     class           integer not null,
-    property_unit   smallint not null,
     property_id     integer not null,
     target          varchar not null,
     type_id         integer,

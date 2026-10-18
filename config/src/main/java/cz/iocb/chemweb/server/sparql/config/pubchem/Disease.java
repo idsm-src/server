@@ -1,8 +1,30 @@
 package cz.iocb.chemweb.server.sparql.config.pubchem;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitDOIDColon;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitDOIDColon0;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGARD;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGlycosmosDOID;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGlycosmosDOID0;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitGuideToPharmacologyDisease;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitHP;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersDOID;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersDOID0;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersHP;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersKEGGDisease;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersMIM;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersMedGen;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersMedGenCN;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersNANDO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersNCIT;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersOrphanet;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersPharmGKBDisease;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitIdentifiersUMLS;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitMONDO;
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitThesaurus;
 import static cz.iocb.chemweb.server.sparql.config.pubchem.PubChemConfiguration.schema;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
+import cz.iocb.chemweb.server.sparql.config.ontology.Ontology;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -13,6 +35,13 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 public class Disease
 {
+    public static final short[] matchUnits = { unitDOIDColon, unitDOIDColon0, unitHP, unitMONDO, unitIdentifiersDOID,
+            unitIdentifiersDOID0, unitIdentifiersHP, unitIdentifiersKEGGDisease, unitIdentifiersMedGen,
+            unitIdentifiersMedGenCN, unitIdentifiersMIM, unitIdentifiersNANDO, unitIdentifiersNCIT,
+            unitIdentifiersOrphanet, unitIdentifiersPharmGKBDisease, unitIdentifiersUMLS, unitThesaurus, unitGARD,
+            unitGlycosmosDOID, unitGlycosmosDOID0, unitGuideToPharmacologyDisease };
+
+
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
@@ -49,7 +78,7 @@ public class Disease
             TermMapping subject = config.createIriMapping("pubchem:disease", "disease");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:closeMatch"),
-                    config.createIriMapping("ontology:resource", "match_unit", "match_id"));
+                    Ontology.createResourceMapping(config, "match_unit", "match_id", matchUnits));
         }
 
         {
@@ -68,7 +97,7 @@ public class Disease
             TermMapping subject = config.createIriMapping("pubchem:disease", "disease");
 
             config.addQuadMapping(table, graph, subject, config.createIriMapping("skos:relatedMatch"),
-                    config.createIriMapping("ontology:resource", "match_unit", "match_id"));
+                    Ontology.createResourceMapping(config, "match_unit", "match_id", matchUnits));
         }
     }
 }
