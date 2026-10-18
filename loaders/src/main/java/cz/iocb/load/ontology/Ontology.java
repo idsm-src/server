@@ -571,10 +571,9 @@ public class Ontology extends Updater
             "ontology.restriction_dataranges", intKey("restriction"), null, integer("datarange_unit"),
             integer("datarange_id"));
 
-    private static final EntityTable<Pair<Integer, Integer>> facetRestrictions = new EntityTable<>(
-            "ontology.facet_restrictions", intPairKey("restriction_unit", "restriction_id"), null,
-            typed("facet", "ontology.facet_restriction_facet_type"), varchar("value_string"),
-            typed("value_integer", "numeric"), float8("value_double"));
+    private static final EntityTable<Integer> facetRestrictions = new EntityTable<>("ontology.facet_restrictions",
+            intKey("restriction_id"), null, typed("facet", "ontology.facet_restriction_facet_type"),
+            varchar("value_string"), typed("value_integer", "numeric"), float8("value_double"));
 
     // the kinds of the literal values by the datatypes of the data; the integer datatypes are unified, as OWL 2
     // compares the numbers by their values regardless of their datatypes, a float is unified to a double where only
@@ -2415,7 +2414,7 @@ public class Ontology extends Updater
      * (unit, id) of their subject and object.
      */
     private static void loadPairs(TripleDispatcher dispatcher, String predicate, String table, String subject,
-            String object, short... objectUnits) throws IOException, SQLException
+            String object) throws IOException, SQLException
     {
         IntPairIntPairSet keepPairs = new IntPairIntPairSet();
         IntPairIntPairSet newPairs = new IntPairIntPairSet();
@@ -2426,14 +2425,41 @@ public class Ontology extends Updater
         load("select " + columns + " from ontology." + table, oldPairs);
 
         dispatcher.on(predicate, (s, o) -> {
-            add(Pair.getPair(getId(s), objectUnits.length == 0 ? getId(o) : getId(o, objectUnits)), keepPairs, newPairs,
-                    oldPairs);
+            add(Pair.getPair(getId(s), getId(o)), keepPairs, newPairs, oldPairs);
         });
 
         dispatcher.after(() -> {
             store("delete from ontology." + table + " where " + subject + "_unit=? and " + subject + "_id=? and "
                     + object + "_unit=? and " + object + "_id=?", oldPairs);
             store("insert into ontology." + table + "(" + columns + ") values(?,?,?,?)", newPairs);
+        });
+    }
+
+
+    /*
+     * Loads the pairs of the subjects and the objects of a predicate whose objects are lists, into the table with
+     * the columns of the subject and the column of the id of the list; a list is a blank node, so its unit is not
+     * stored.
+     */
+    private static void loadListPairs(TripleDispatcher dispatcher, String predicate, String table, String subject)
+            throws IOException, SQLException
+    {
+        IntPairIntSet keepPairs = new IntPairIntSet();
+        IntPairIntSet newPairs = new IntPairIntSet();
+        IntPairIntSet oldPairs = new IntPairIntSet();
+
+        String columns = subject + "_unit," + subject + "_id,list_id";
+
+        load("select " + columns + " from ontology." + table, oldPairs);
+
+        dispatcher.on(predicate, (s, o) -> {
+            add(Pair.getPair(getId(s), getId(o, unitBlank).getTwo()), keepPairs, newPairs, oldPairs);
+        });
+
+        dispatcher.after(() -> {
+            store("delete from ontology." + table + " where " + subject + "_unit=? and " + subject
+                    + "_id=? and list_id=?", oldPairs);
+            store("insert into ontology." + table + "(" + columns + ") values(?,?,?)", newPairs);
         });
     }
 
@@ -2447,23 +2473,23 @@ public class Ontology extends Updater
         loadPairs(dispatcher, owl + "equivalentClass", "class_equivalents", "class", "equivalent");
         loadPairs(dispatcher, owl + "disjointWith", "class_disjoints", "class", "disjoint");
         loadPairs(dispatcher, owl + "complementOf", "class_complements", "class", "complement");
-        loadPairs(dispatcher, owl + "intersectionOf", "class_intersections", "class", "list", unitBlank);
-        loadPairs(dispatcher, owl + "unionOf", "class_unions", "class", "list", unitBlank);
-        loadPairs(dispatcher, owl + "oneOf", "class_enumerations", "class", "list", unitBlank);
-        loadPairs(dispatcher, owl + "disjointUnionOf", "class_disjoint_unions", "class", "list", unitBlank);
-        loadPairs(dispatcher, owl + "hasKey", "class_keys", "class", "list", unitBlank);
+        loadListPairs(dispatcher, owl + "intersectionOf", "class_intersections", "class");
+        loadListPairs(dispatcher, owl + "unionOf", "class_unions", "class");
+        loadListPairs(dispatcher, owl + "oneOf", "class_enumerations", "class");
+        loadListPairs(dispatcher, owl + "disjointUnionOf", "class_disjoint_unions", "class");
+        loadListPairs(dispatcher, owl + "hasKey", "class_keys", "class");
 
         loadPairs(dispatcher, owl + "inverseOf", "property_inverses", "property", "inverse");
         loadPairs(dispatcher, owl + "equivalentProperty", "property_equivalents", "property", "equivalent");
         loadPairs(dispatcher, owl + "propertyDisjointWith", "property_disjoints", "property", "disjoint");
-        loadPairs(dispatcher, owl + "propertyChainAxiom", "property_chains", "property", "list", unitBlank);
+        loadListPairs(dispatcher, owl + "propertyChainAxiom", "property_chains", "property");
 
         loadPairs(dispatcher, owl + "differentFrom", "different_individuals", "individual", "different");
-        loadPairs(dispatcher, owl + "members", "resource_members", "resource", "list", unitBlank);
-        loadPairs(dispatcher, owl + "distinctMembers", "resource_distinct_members", "resource", "list", unitBlank);
+        loadListPairs(dispatcher, owl + "members", "resource_members", "resource");
+        loadListPairs(dispatcher, owl + "distinctMembers", "resource_distinct_members", "resource");
 
         loadPairs(dispatcher, owl + "onDatatype", "datatype_bases", "datatype", "base");
-        loadPairs(dispatcher, owl + "withRestrictions", "datatype_restrictions", "datatype", "list", unitBlank);
+        loadListPairs(dispatcher, owl + "withRestrictions", "datatype_restrictions", "datatype");
     }
 
 
@@ -2717,7 +2743,7 @@ public class Ontology extends Updater
         for(Entry<String, String> facet : facets.entrySet())
         {
             dispatcher.on(facet.getKey(), (subject, object) -> {
-                Pair<Integer, Integer> restrictionID = getId(subject, unitBlank);
+                int restrictionID = getId(subject, unitBlank).getTwo();
 
                 LiteralValue value = getLiteral(object, "string", "integer", "double");
 

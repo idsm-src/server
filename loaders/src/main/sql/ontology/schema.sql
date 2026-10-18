@@ -459,9 +459,8 @@ create table ontology.class_intersections
 (
     class_unit        smallint not null,
     class_id          integer not null,
-    list_unit         smallint not null,
     list_id           integer not null,
-    primary key(class_unit, class_id, list_unit, list_id)
+    primary key(class_unit, class_id, list_id)
 );
 
 
@@ -469,9 +468,8 @@ create table ontology.class_unions
 (
     class_unit        smallint not null,
     class_id          integer not null,
-    list_unit         smallint not null,
     list_id           integer not null,
-    primary key(class_unit, class_id, list_unit, list_id)
+    primary key(class_unit, class_id, list_id)
 );
 
 
@@ -479,9 +477,8 @@ create table ontology.class_enumerations
 (
     class_unit        smallint not null,
     class_id          integer not null,
-    list_unit         smallint not null,
     list_id           integer not null,
-    primary key(class_unit, class_id, list_unit, list_id)
+    primary key(class_unit, class_id, list_id)
 );
 
 
@@ -489,9 +486,8 @@ create table ontology.class_disjoint_unions
 (
     class_unit        smallint not null,
     class_id          integer not null,
-    list_unit         smallint not null,
     list_id           integer not null,
-    primary key(class_unit, class_id, list_unit, list_id)
+    primary key(class_unit, class_id, list_id)
 );
 
 
@@ -499,9 +495,8 @@ create table ontology.class_keys
 (
     class_unit        smallint not null,
     class_id          integer not null,
-    list_unit         smallint not null,
     list_id           integer not null,
-    primary key(class_unit, class_id, list_unit, list_id)
+    primary key(class_unit, class_id, list_id)
 );
 
 
@@ -539,9 +534,8 @@ create table ontology.property_chains
 (
     property_unit     smallint not null,
     property_id       integer not null,
-    list_unit         smallint not null,
     list_id           integer not null,
-    primary key(property_unit, property_id, list_unit, list_id)
+    primary key(property_unit, property_id, list_id)
 );
 
 
@@ -559,9 +553,8 @@ create table ontology.resource_members
 (
     resource_unit     smallint not null,
     resource_id       integer not null,
-    list_unit         smallint not null,
     list_id           integer not null,
-    primary key(resource_unit, resource_id, list_unit, list_id)
+    primary key(resource_unit, resource_id, list_id)
 );
 
 
@@ -569,9 +562,8 @@ create table ontology.resource_distinct_members
 (
     resource_unit     smallint not null,
     resource_id       integer not null,
-    list_unit         smallint not null,
     list_id           integer not null,
-    primary key(resource_unit, resource_id, list_unit, list_id)
+    primary key(resource_unit, resource_id, list_id)
 );
 
 
@@ -589,9 +581,8 @@ create table ontology.datatype_restrictions
 (
     datatype_unit     smallint not null,
     datatype_id       integer not null,
-    list_unit         smallint not null,
     list_id           integer not null,
-    primary key(datatype_unit, datatype_id, list_unit, list_id)
+    primary key(datatype_unit, datatype_id, list_id)
 );
 
 
@@ -721,13 +712,12 @@ create type ontology.facet_restriction_facet_type as enum
 
 create table ontology.facet_restrictions
 (
-    restriction_unit  smallint not null,
     restriction_id    integer not null,
     facet             ontology.facet_restriction_facet_type not null,
     value_string      varchar,
     value_integer     numeric,
     value_double      double precision,
-    primary key(restriction_unit, restriction_id)
+    primary key(restriction_id)
 );
 
 

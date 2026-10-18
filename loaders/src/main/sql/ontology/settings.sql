@@ -273,31 +273,31 @@ grant select on ontology.class_complements to sparql;
 --------------------------------------------------------------------------------
 
 create index class_intersections__class_unit_class_id on ontology.class_intersections(class_unit, class_id);
-create index class_intersections__list_unit_list_id on ontology.class_intersections(list_unit, list_id);
+create index class_intersections__list_id on ontology.class_intersections(list_id);
 grant select on ontology.class_intersections to sparql;
 
 --------------------------------------------------------------------------------
 
 create index class_unions__class_unit_class_id on ontology.class_unions(class_unit, class_id);
-create index class_unions__list_unit_list_id on ontology.class_unions(list_unit, list_id);
+create index class_unions__list_id on ontology.class_unions(list_id);
 grant select on ontology.class_unions to sparql;
 
 --------------------------------------------------------------------------------
 
 create index class_enumerations__class_unit_class_id on ontology.class_enumerations(class_unit, class_id);
-create index class_enumerations__list_unit_list_id on ontology.class_enumerations(list_unit, list_id);
+create index class_enumerations__list_id on ontology.class_enumerations(list_id);
 grant select on ontology.class_enumerations to sparql;
 
 --------------------------------------------------------------------------------
 
 create index class_disjoint_unions__class_unit_class_id on ontology.class_disjoint_unions(class_unit, class_id);
-create index class_disjoint_unions__list_unit_list_id on ontology.class_disjoint_unions(list_unit, list_id);
+create index class_disjoint_unions__list_id on ontology.class_disjoint_unions(list_id);
 grant select on ontology.class_disjoint_unions to sparql;
 
 --------------------------------------------------------------------------------
 
 create index class_keys__class_unit_class_id on ontology.class_keys(class_unit, class_id);
-create index class_keys__list_unit_list_id on ontology.class_keys(list_unit, list_id);
+create index class_keys__list_id on ontology.class_keys(list_id);
 grant select on ontology.class_keys to sparql;
 
 --------------------------------------------------------------------------------
@@ -321,7 +321,7 @@ grant select on ontology.property_disjoints to sparql;
 --------------------------------------------------------------------------------
 
 create index property_chains__property_unit_property_id on ontology.property_chains(property_unit, property_id);
-create index property_chains__list_unit_list_id on ontology.property_chains(list_unit, list_id);
+create index property_chains__list_id on ontology.property_chains(list_id);
 grant select on ontology.property_chains to sparql;
 
 --------------------------------------------------------------------------------
@@ -333,13 +333,13 @@ grant select on ontology.different_individuals to sparql;
 --------------------------------------------------------------------------------
 
 create index resource_members__resource_unit_resource_id on ontology.resource_members(resource_unit, resource_id);
-create index resource_members__list_unit_list_id on ontology.resource_members(list_unit, list_id);
+create index resource_members__list_id on ontology.resource_members(list_id);
 grant select on ontology.resource_members to sparql;
 
 --------------------------------------------------------------------------------
 
 create index resource_distinct_members__resource_unit_resource_id on ontology.resource_distinct_members(resource_unit, resource_id);
-create index resource_distinct_members__list_unit_list_id on ontology.resource_distinct_members(list_unit, list_id);
+create index resource_distinct_members__list_id on ontology.resource_distinct_members(list_id);
 grant select on ontology.resource_distinct_members to sparql;
 
 --------------------------------------------------------------------------------
@@ -351,7 +351,7 @@ grant select on ontology.datatype_bases to sparql;
 --------------------------------------------------------------------------------
 
 create index datatype_restrictions__datatype_unit_datatype_id on ontology.datatype_restrictions(datatype_unit, datatype_id);
-create index datatype_restrictions__list_unit_list_id on ontology.datatype_restrictions(list_unit, list_id);
+create index datatype_restrictions__list_id on ontology.datatype_restrictions(list_id);
 grant select on ontology.datatype_restrictions to sparql;
 
 --------------------------------------------------------------------------------
@@ -421,7 +421,7 @@ grant select on ontology.restriction_dataranges to sparql;
 
 --------------------------------------------------------------------------------
 
-create index facet_restrictions__restriction_unit_restriction_id on ontology.facet_restrictions(restriction_unit, restriction_id);
+create index facet_restrictions__restriction_id on ontology.facet_restrictions(restriction_id);
 create index facet_restrictions__facet on ontology.facet_restrictions(facet);
 create index facet_restrictions__value_string on ontology.facet_restrictions(value_string);
 create index facet_restrictions__value_integer on ontology.facet_restrictions(value_integer);
