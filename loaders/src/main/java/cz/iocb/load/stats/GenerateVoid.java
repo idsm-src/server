@@ -1,5 +1,6 @@
 package cz.iocb.load.stats;
 
+import static cz.iocb.chemweb.server.sparql.config.stats.Void.excludedUnits;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.rdfLangString;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDate;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDateTime;
@@ -478,25 +479,12 @@ public class GenerateVoid extends Updater
              * process config
              */
 
-            List<Short> excludedClassCategories = new ArrayList<>();
+            // the units of the classes the statistics leave out; the mapping of the statistics excludes them from all
+            // its resources, so the classes of these units are skipped and a property or a datatype of them is refused
+            List<Short> excluded = new ArrayList<>();
 
-            try(Statement statement = connection.createStatement())
-            {
-                try(ResultSet rs = statement.executeQuery("""
-                        select id from ontology.units where prefix like any (array[
-                            'http://purl.obolibrary.org/obo/PR_%',
-                            'http://purl.obolibrary.org/obo/CHEBI_%',
-                            'http://purl.obolibrary.org/obo/CHEMONTID_%',
-                            'http://purl.obolibrary.org/obo/UBERON_%',
-                            'http://purl.bioontology.org/ontology/SNOMEDCT/%',
-                            'http://purl.bioontology.org/ontology/NDFRT/%',
-                            'http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#%'])
-                        """))
-                {
-                    while(rs.next())
-                        excludedClassCategories.add(rs.getShort(1));
-                }
-            }
+            for(short unit : excludedUnits)
+                excluded.add(unit);
 
 
             Map<Iri, Resource> datatypeMap = new HashMap<>();
@@ -505,12 +493,16 @@ public class GenerateVoid extends Updater
             for(Datatype datatype : config.getDatatypes())
             {
                 Iri iri = datatype.getTypeIri();
-                List<Column> cols = rc.toColumns(request, iri);
-                datatypeMap.put(iri, new Resource(cols));
+                Resource resource = new Resource(rc.toColumns(request, iri));
+
+                Graph.checkUnit(resource, iri, excluded);
+                datatypeMap.put(iri, resource);
             }
 
-            List<Column> cols = rc.toColumns(request, rdfLangStringIri);
-            datatypeMap.put(rdfLangStringIri, new Resource(cols));
+            Resource langString = new Resource(rc.toColumns(request, rdfLangStringIri));
+
+            Graph.checkUnit(langString, rdfLangStringIri, excluded);
+            datatypeMap.put(rdfLangStringIri, langString);
 
             Resource rdfType = new Resource(rc.toColumns(request, new Iri(Rdf.TYPE)));
 
@@ -530,7 +522,7 @@ public class GenerateVoid extends Updater
                     graphDefinitions.put(iri, set);
                 }
 
-                set.add(request, map, datatypeMap, excludedClassCategories);
+                set.add(request, map, datatypeMap, excluded);
             }
 
 

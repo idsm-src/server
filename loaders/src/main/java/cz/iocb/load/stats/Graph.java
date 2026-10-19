@@ -107,6 +107,8 @@ public class Graph
 
         Resource predicate = new Resource(predicateMapping.getColumns());
 
+        checkUnit(predicate, predicateMapping.getIri(), excluded);
+
         if(map.getObject() instanceof ConstantLiteralMapping || map.getObject() instanceof ParametrisedLiteralMapping)
         {
             LiteralClass rc = ((LiteralClass) map.getObject().getResourceClass(null));
@@ -160,6 +162,23 @@ public class Graph
                 classes.put(key, dataset);
             }
         }
+    }
+
+
+    /**
+     * Refuses a resource of an excluded unit: the mapping of the statistics excludes the units from all its resources,
+     * so the properties and the datatypes of the statistics must belong to none of them (the classes are skipped).
+     *
+     * @param resource the resource
+     * @param iri the IRI of the resource
+     * @param excluded the excluded units
+     * @throws IllegalStateException if the resource belongs to an excluded unit
+     */
+    static void checkUnit(Resource resource, Iri iri, List<Short> excluded)
+    {
+        if(excluded.contains(resource.unit()))
+            throw new IllegalStateException(
+                    iri.getValue() + " belongs to an ontology unit excluded from the statistics");
     }
 
 
