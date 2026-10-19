@@ -1,6 +1,9 @@
+-- The integers are cast to text explicitly, so that the functions without a sub-select are inlined: '||' with an integer
+-- resolves to the stable function textanycat, and an immutable function whose body is stable is not inlined by the planner.
+
 create function pubchem.compound_compound_cooccurrence(subject in integer, object in integer) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/CID' || subject || '_CID' || object;
+  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/CID' || subject::text || '_CID' || object::text;
 $$
 immutable parallel safe strict;
 
@@ -22,7 +25,7 @@ immutable parallel safe strict;
 
 create function pubchem.compound_disease_cooccurrence(subject in integer, object in integer) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/CID' || subject || '_DZID' || object;
+  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/CID' || subject::text || '_DZID' || object::text;
 $$
 immutable parallel safe strict;
 
@@ -44,7 +47,7 @@ immutable parallel safe strict;
 
 create function pubchem.compound_genesymbol_cooccurrence(subject in integer, object in integer) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/CID' || subject || '_' || (select iri from pubchem.genesymbols where id = object);
+  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/CID' || subject::text || '_' || (select iri from pubchem.genesymbols where id = object);
 $$
 immutable parallel safe strict;
 
@@ -66,7 +69,7 @@ immutable parallel safe strict;
 
 create function pubchem.compound_enzyme_cooccurrence(subject in integer, object in integer) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/CID' || subject || '_EC_' || (select iri from pubchem.enzymes where id = object);
+  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/CID' || subject::text || '_EC_' || (select iri from pubchem.enzymes where id = object);
 $$
 immutable parallel safe strict;
 
@@ -88,7 +91,7 @@ immutable parallel safe strict;
 
 create function pubchem.disease_compound_cooccurrence(subject in integer, object in integer) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/DZID' || subject || '_CID' || object;
+  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/DZID' || subject::text || '_CID' || object::text;
 $$
 immutable parallel safe strict;
 
@@ -110,7 +113,7 @@ immutable parallel safe strict;
 
 create function pubchem.disease_disease_cooccurrence(subject in integer, object in integer) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/DZID' || subject || '_DZID' || object;
+  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/DZID' || subject::text || '_DZID' || object::text;
 $$
 immutable parallel safe strict;
 
@@ -132,7 +135,7 @@ immutable parallel safe strict;
 
 create function pubchem.disease_genesymbol_cooccurrence(subject in integer, object in integer) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/DZID' || subject || '_' || (select iri from pubchem.genesymbols where id = object);
+  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/DZID' || subject::text || '_' || (select iri from pubchem.genesymbols where id = object);
 $$
 immutable parallel safe strict;
 
@@ -154,7 +157,7 @@ immutable parallel safe strict;
 
 create function pubchem.disease_enzyme_cooccurrence(subject in integer, object in integer) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/DZID' || subject || '_EC_' || (select iri from pubchem.enzymes where id = object);
+  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/DZID' || subject::text || '_EC_' || (select iri from pubchem.enzymes where id = object);
 $$
 immutable parallel safe strict;
 
@@ -176,7 +179,7 @@ immutable parallel safe strict;
 
 create function pubchem.genesymbol_compound_cooccurrence(subject in integer, object in integer) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/' || (select iri from pubchem.genesymbols where id = subject) || '_CID' || object;
+  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/' || (select iri from pubchem.genesymbols where id = subject) || '_CID' || object::text;
 $$
 immutable parallel safe strict;
 
@@ -198,7 +201,7 @@ immutable parallel safe strict;
 
 create function pubchem.enzyme_compound_cooccurrence(subject in integer, object in integer) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/EC_' || (select iri from pubchem.enzymes where id = subject) || '_CID' || object;
+  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/EC_' || (select iri from pubchem.enzymes where id = subject) || '_CID' || object::text;
 $$
 immutable parallel safe strict;
 
@@ -220,7 +223,7 @@ immutable parallel safe strict;
 
 create function pubchem.genesymbol_disease_cooccurrence(subject in integer, object in integer) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/' || (select iri from pubchem.genesymbols where id = subject) || '_DZID' || object;
+  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/' || (select iri from pubchem.genesymbols where id = subject) || '_DZID' || object::text;
 $$
 immutable parallel safe strict;
 
@@ -242,7 +245,7 @@ immutable parallel safe strict;
 
 create function pubchem.enzyme_disease_cooccurrence(subject in integer, object in integer) returns varchar language sql as
 $$
-  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/EC_' || (select iri from pubchem.enzymes where id = subject) || '_DZID' || object;
+  select 'http://rdf.ncbi.nlm.nih.gov/pubchem/cooccurrence/EC_' || (select iri from pubchem.enzymes where id = subject) || '_DZID' || object::text;
 $$
 immutable parallel safe strict;
 

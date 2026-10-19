@@ -1,13 +1,18 @@
+-- The integers are cast to text explicitly, so that the functions without a sub-select are inlined: '||' with an integer
+-- resolves to the stable function textanycat, and an immutable function whose body is stable is not inlined by the planner.
+-- Not strict: a strict function whose body is a CASE expression is not inlined either, and skipping the call for a
+-- null argument saves nothing once the body is inlined.
+
 create function pubchem.endpoint(substance in integer, bioassay in integer, measuregroup in integer, value in integer) returns varchar language sql as
 $$
   select case
-    when measuregroup = 2147483647  then 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID' || substance || '_AID' || bioassay || '_VALUE' || value
-    when measuregroup = -2147483647 then 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID' || substance || '_AID' || bioassay || '_PMID' || '_VALUE' || value
-    when measuregroup < 0           then 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID' || substance || '_AID' || bioassay || '_PMID' || (-1 * measuregroup) || '_VALUE' || value
-    when measuregroup >= 0          then 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID' || substance || '_AID' || bioassay || '_' || measuregroup || '_VALUE' || value
+    when measuregroup = 2147483647  then 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID' || substance::text || '_AID' || bioassay::text || '_VALUE' || value::text
+    when measuregroup = -2147483647 then 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID' || substance::text || '_AID' || bioassay::text || '_PMID' || '_VALUE' || value::text
+    when measuregroup < 0           then 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID' || substance::text || '_AID' || bioassay::text || '_PMID' || (-1 * measuregroup)::text || '_VALUE' || value::text
+    when measuregroup >= 0          then 'http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID' || substance::text || '_AID' || bioassay::text || '_' || measuregroup::text || '_VALUE' || value::text
   end;
 $$
-immutable parallel safe strict;
+immutable parallel safe;
 
 
 create function pubchem.endpoint_inv1(iri in varchar) returns integer language sql as

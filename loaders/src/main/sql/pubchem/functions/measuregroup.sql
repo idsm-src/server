@@ -1,15 +1,20 @@
+-- The integers are cast to text explicitly, so that the functions without a sub-select are inlined: '||' with an integer
+-- resolves to the stable function textanycat, and an immutable function whose body is stable is not inlined by the planner.
+-- Not strict: a strict function whose body is a CASE expression is not inlined either, and skipping the call for a
+-- null argument saves nothing once the body is inlined.
+
 create function pubchem.measuregroup(bioassay in integer, measuregroup in integer) returns varchar language sql as
 $$
   select case
-    when measuregroup = 2147483647  then 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID' || bioassay
-    when measuregroup = 2147483646  then 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID' || bioassay || '_'
-    when measuregroup = -2147483647 then 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID' || bioassay || '_PMID'
-    when measuregroup < 0           then 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID' || bioassay || '_PMID' || (-1 * measuregroup)
-    when measuregroup >= 0          then 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID' || bioassay || '_' || measuregroup
+    when measuregroup = 2147483647  then 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID' || bioassay::text
+    when measuregroup = 2147483646  then 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID' || bioassay::text || '_'
+    when measuregroup = -2147483647 then 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID' || bioassay::text || '_PMID'
+    when measuregroup < 0           then 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID' || bioassay::text || '_PMID' || (-1 * measuregroup)::text
+    when measuregroup >= 0          then 'http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID' || bioassay::text || '_' || measuregroup::text
     else null
   end;
 $$
-immutable parallel safe strict;
+immutable parallel safe;
 
 
 create function pubchem.measuregroup_inv1(iri in varchar) returns integer language sql as
