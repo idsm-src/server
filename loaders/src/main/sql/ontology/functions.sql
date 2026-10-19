@@ -78,14 +78,14 @@ $$
     end if;
   end;
 $$
-immutable parallel safe;
+immutable parallel safe strict;
 
 
 create function ontology.resource_inv1(iri in varchar) returns smallint language sql as
 $$
   select coalesce((select id from ontology.units where starts_with(iri, prefix) and iri ~ pattern limit 1), 0::smallint);
 $$
-immutable parallel safe;
+immutable parallel safe strict;
 
 
 create function ontology.resource_inv2(iri in varchar) returns integer language plpgsql as
@@ -144,4 +144,4 @@ $$
     end if;
   end;
 $$
-immutable parallel safe;
+immutable parallel safe strict;

@@ -2,4 +2,4 @@ create function idsm.fulltext_match(text in varchar, query in varchar) returns b
 $$
   select to_tsvector('english', text) @@ to_tsquery('english', query);
 $$
-immutable parallel safe;
+immutable parallel safe strict;

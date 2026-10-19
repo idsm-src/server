@@ -9,14 +9,14 @@ $$
     else null
   end;
 $$
-immutable parallel safe;
+immutable parallel safe strict;
 
 
 create function pubchem.measuregroup_inv1(iri in varchar) returns integer language sql as
 $$
   select substring(split_part(iri, '_', 1), 53)::integer;
 $$
-immutable parallel safe;
+immutable parallel safe strict;
 
 
 create function pubchem.measuregroup_inv2(iri in varchar) returns integer language sql as
@@ -30,4 +30,4 @@ $$
   end
   from (select split_part(iri, '_', 2) as part) as tab;
 $$
-immutable parallel safe;
+immutable parallel safe strict;
