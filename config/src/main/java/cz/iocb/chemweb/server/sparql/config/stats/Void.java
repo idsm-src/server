@@ -1,5 +1,6 @@
 package cz.iocb.chemweb.server.sparql.config.stats;
 
+import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitBlank;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitCHEBI;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitClassyFire;
 import static cz.iocb.chemweb.server.sparql.config.ontology.OntologyResource.unitNDFRT;
@@ -35,14 +36,14 @@ import cz.iocb.sparql.engine.rdf.Iri;
 public class Void
 {
     /**
-     * Units of the classes the statistics leave out: the proteins, ChEBI, ClassyFire, Uberon, the taxonomy, the NCI
-     * Thesaurus, NDF-RT and SNOMED CT, whose classes are too numerous for partitions of their own. The generator of the
-     * statistics skips the classes of these units and refuses a property or a datatype of them, so that no resource of
-     * the mapping belongs to them and the tables of these units (such as the ChEBI and taxonomy labels) never take part
-     * in a query over the statistics.
+     * Units of the classes the statistics leave out: the blank nodes, whose classes are anonymous, and the proteins,
+     * ChEBI, ClassyFire, Uberon, the taxonomy, the NCI Thesaurus, NDF-RT and SNOMED CT, whose classes are too numerous
+     * for partitions of their own. The generator of the statistics skips the classes of these units and refuses a
+     * property or a datatype of them, so that no resource of the mapping belongs to them and the tables of these units
+     * (such as the ChEBI and taxonomy labels) never take part in a query over the statistics.
      */
-    public static final short[] excludedUnits = { unitPR2, unitPR1, unitPR0, unitCHEBI, unitClassyFire, unitPR,
-            unitUberon, unitTaxonomy, unitThesaurus, unitNDFRT, unitSNOMEDCT };
+    public static final short[] excludedUnits = { unitBlank, unitPR2, unitPR1, unitPR0, unitCHEBI, unitClassyFire,
+            unitPR, unitUberon, unitTaxonomy, unitThesaurus, unitNDFRT, unitSNOMEDCT };
 
 
     public static void addPrefixes(VoidConfiguration config)
