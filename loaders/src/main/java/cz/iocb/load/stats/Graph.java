@@ -210,20 +210,37 @@ public class Graph
     }
 
 
+    /**
+     * An object mapping replaced by the hash of its value, together with the condition the object table needs for it.
+     *
+     * @param mapping the hashed object mapping
+     * @param condition the condition of the object table, empty when none is needed
+     */
+    private record HashedObject(TermMapping mapping, Condition condition)
+    {
+    }
+
+
     private QuadMapping hashObject(Request request, QuadMapping map, HashString hashClass) throws SQLException
     {
         if(map instanceof SingleTableQuadMapping m)
         {
+            HashedObject hashed = hashObject(request, m.getTable(), m.getObject(), hashClass);
+
             return new SingleTableQuadMapping(m.getTable(), m.getGraph(), m.getSubject(), m.getPredicate(),
-                    hashObject(request, m.getTable(), m.getObject(), hashClass), m.getConditions(), m.isDistinct());
+                    hashed.mapping(), Conditions.and(m.getConditions(), hashed.condition()), m.isDistinct());
         }
         else if(map instanceof JoinTableQuadMapping m)
         {
+            int idx = m.getObjectTableIdx();
+            HashedObject hashed = hashObject(request, m.getTables().get(idx), m.getObject(), hashClass);
+
+            List<Conditions> conditions = new ArrayList<>(m.getConditions());
+            conditions.set(idx, Conditions.and(conditions.get(idx), hashed.condition()));
+
             return new JoinTableQuadMapping(m.getTables(), m.getJoinColumnsPairs(), m.getGraphTableIdx(), m.getGraph(),
-                    m.getSubjectTableIdx(), m.getSubject(), m.getPredicateTableIdx(), m.getPredicate(),
-                    m.getObjectTableIdx(),
-                    hashObject(request, m.getTables().get(m.getObjectTableIdx()), m.getObject(), hashClass),
-                    m.getConditions(), m.getDistinct());
+                    m.getSubjectTableIdx(), m.getSubject(), m.getPredicateTableIdx(), m.getPredicate(), idx,
+                    hashed.mapping(), conditions, m.getDistinct());
         }
         else
         {
@@ -232,10 +249,11 @@ public class Graph
     }
 
 
-    private TermMapping hashObject(Request request, SourceTable table, TermMapping map, HashString hashClass)
+    private HashedObject hashObject(Request request, SourceTable table, TermMapping map, HashString hashClass)
             throws SQLException
     {
         Column col = map.getColumns(request).get(0);
+        Condition condition = new Condition();
 
         if(map instanceof ConstantLiteralMapping)
         {
@@ -246,16 +264,20 @@ public class Graph
 
                 Literal literal = new TypedLiteral(Long.toString(value), hashClass.getTypeIri());
 
-                return new ConstantLiteralMapping(hashClass, literal);
+                return new HashedObject(new ConstantLiteralMapping(hashClass, literal), condition);
             }
         }
         else if(map instanceof ParametrisedLiteralMapping)
         {
-            boolean canBeNull = request.getConfiguration().getDatabaseSchema().isNullableColumn(table, col);
+            // a nullable column is tested for null as the column itself and not as its hash: the hash function is
+            // strict, so the rows admitted by the condition have a non-null hash, and the string is hashed once per row
+            // instead of once more for the test
+            if(request.getConfiguration().getDatabaseSchema().isNullableColumn(table, col))
+                condition.addIsNotNull(col);
 
             List<Column> cols = List
-                    .of((Column) new ExpressionColumn("(hashtextextended(" + col + ",0)::int8)", INT8, canBeNull));
-            return new ParametrisedLiteralMapping(hashClass, cols);
+                    .of((Column) new ExpressionColumn("(hashtextextended(" + col + ",0)::int8)", INT8, false));
+            return new HashedObject(new ParametrisedLiteralMapping(hashClass, cols), condition);
         }
         else
         {
