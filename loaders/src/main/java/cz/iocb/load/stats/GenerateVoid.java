@@ -1206,7 +1206,7 @@ public class GenerateVoid extends Updater
             String sql = getSqlQuery(branch, groupBy, null, vars);
 
             if(sql != null)
-                futures.add(getCountMap(sql, cache, fres, priority));
+                futures.add(getCountMap(sql, false, cache, fres, priority));
         }
 
         return new FutureWrapper<>()
@@ -1267,7 +1267,7 @@ public class GenerateVoid extends Updater
             String sql = getSqlQuery(branch, groupBy, what, vars);
 
             if(sql != null)
-                futures.add(getCountMap(sql, cache, fres, priority));
+                futures.add(getCountMap(sql, isCountDistinct(branch, what), cache, fres, priority));
         }
 
         return new FutureWrapper<>()
@@ -1330,8 +1330,8 @@ public class GenerateVoid extends Updater
     }
 
 
-    private static <T> Future<Map<T, Long>> getCountMap(String sql, Map<String, Future<Map<T, Long>>> cache,
-            ExtractFromResultSet<T> fres, int priority) throws SQLException
+    private static <T> Future<Map<T, Long>> getCountMap(String sql, boolean countDistinct,
+            Map<String, Future<Map<T, Long>>> cache, ExtractFromResultSet<T> fres, int priority) throws SQLException
     {
         synchronized(cache)
         {
@@ -1353,6 +1353,12 @@ public class GenerateVoid extends Updater
                         try(Statement statement = connection.createStatement())
                         {
                             statement.setFetchSize(0);
+
+                            // a count of distinct values groups by a key with about as many groups as input rows, for
+                            // which a hash aggregate only spills to disk, whereas a sort-based grouping runs in the
+                            // parallel workers; the connection serves this statement only, so the setting does not leak
+                            if(countDistinct)
+                                statement.execute("SET enable_hashagg = off");
 
                             try(ResultSet rs = statement.executeQuery(sql))
                             {
@@ -1400,7 +1406,7 @@ public class GenerateVoid extends Updater
 
         LinkedHashMap<Variable, SqlExpressionIntercode> aggregations = new LinkedHashMap<>();
 
-        if(what == null || imcode instanceof SqlTableAccess a && uniques.contains(a.getTable()))
+        if(!isCountDistinct(imcode, what))
         {
             aggregations.put(varCount, SqlBuiltinCall.create(request, "card", false, List.of()));
         }
@@ -1424,6 +1430,20 @@ public class GenerateVoid extends Updater
 
         return "SELECT " + select.stream().flatMap(n -> getMapping(vars.get(n)).stream()).map(e -> e.toString())
                 .collect(Collectors.joining(", ")) + " FROM (" + result.translate(request) + ") as tab";
+    }
+
+
+    /**
+     * Whether the statistics query of the code counts distinct values of the variable, rather than rows: the rows of a
+     * table known to hold each value once are counted directly.
+     *
+     * @param imcode the code of the counted triples
+     * @param what the counted variable, or null to count the rows
+     * @return true if the query counts distinct values of the variable, false if it counts rows
+     */
+    private static boolean isCountDistinct(SqlIntercode imcode, Variable what)
+    {
+        return what != null && !(imcode instanceof SqlTableAccess a && uniques.contains(a.getTable()));
     }
 
 
