@@ -20,6 +20,8 @@ import cz.iocb.load.common.Updater;
 public class Wikidata extends Updater
 {
     private static final Pattern entityPattern = Pattern.compile("^<http://www\\.wikidata\\.org/entity/Q([0-9]+)>$");
+    private static final Pattern unknownValuePattern = Pattern
+            .compile("^<http://www\\.wikidata\\.org/\\.well-known/genid/[0-9a-f]+>$");
 
 
     /*
@@ -86,7 +88,8 @@ public class Wikidata extends Updater
 
     /*
      * Loads the values of a property from the TSV result of its query into the given table; an unexpected line is
-     * reported as an error and skipped.
+     * reported as an error and skipped. A statement of an unknown value, which the query service gives as a skolem
+     * IRI, has no value to load and is skipped silently.
      */
     private static void loadValues(String file, String table, String column) throws IOException, SQLException
     {
@@ -123,6 +126,9 @@ public class Wikidata extends Updater
 
                     if(items.length != 2 || !matcher.matches())
                         throw new DataException("unexpected line", line);
+
+                    if(unknownValuePattern.matcher(items[1]).matches())
+                        continue;
 
                     Pair<Integer, String> pair = Pair.getPair(Integer.valueOf(matcher.group(1)), decode(items[1]));
 
