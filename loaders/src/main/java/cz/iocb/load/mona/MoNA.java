@@ -5,6 +5,7 @@ import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.integer;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.EntityTable.varchar;
+import static java.util.Locale.ROOT;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -134,7 +135,7 @@ public class MoNA extends Updater
     /**
      * The format of the stored dates of the spectra.
      */
-    private static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+    private static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd", ROOT);
 
     /**
      * The regular expression of a decimal number of a peak.

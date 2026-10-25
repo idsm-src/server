@@ -10,6 +10,7 @@ import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.expression;
 import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.string;
 import static cz.iocb.sparql.engine.mapping.classes.DerivedClass.subtract;
 import static cz.iocb.sparql.engine.mapping.classes.DerivedClass.unionize;
+import static java.util.Locale.ROOT;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -89,7 +90,7 @@ public class SubstanceIdentifierIriClass extends UserIriClass
         super(name, List.of(INT4, VARCHAR), Set.of(iri, box));
 
         String delim = delimiter.replaceAll("'", "''");
-        String code = String.format("right(split_part(?::varchar,'%s',1), -%d)", delim, prefix.length());
+        String code = String.format(ROOT, "right(split_part(?::varchar,'%s',1), -%d)", delim, prefix.length());
 
         this.sqlQuery = String.format("(SELECT %s::varchar FROM %s WHERE %s = %s)", from, table, to, code);
         this.delimiter = delimiter;
@@ -141,7 +142,7 @@ public class SubstanceIdentifierIriClass extends UserIriClass
         builder.append(String.format("(SELECT \"@from\"::%s FROM %s WHERE \"@to\" = ", sqlTypes.get(0), access));
 
         String delim = delimiter.replaceAll("'", "''");
-        builder.append(String.format("right(split_part(%s, '%s', 1), -%d)", parameter, delim, prefix.length()));
+        builder.append(String.format(ROOT, "right(split_part(%s, '%s', 1), -%d)", parameter, delim, prefix.length()));
 
         builder.append(")");
 
@@ -176,7 +177,8 @@ public class SubstanceIdentifierIriClass extends UserIriClass
             builder.append(String.format("SELECT \"@from\"::%s FROM %s WHERE \"@to\" = ", sqlTypes.get(0), access));
 
             String delim = delimiter.replaceAll("'", "''");
-            builder.append(String.format("right(split_part(%s, '%s', 1), -%d)", parameter, delim, prefix.length()));
+            builder.append(
+                    String.format(ROOT, "right(split_part(%s, '%s', 1), -%d)", parameter, delim, prefix.length()));
 
             builder.append(") IS NOT NULL THEN ");
         }

@@ -2,6 +2,7 @@ package cz.iocb.chemweb.server.sparql.config.molmedb;
 
 import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
 import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.string;
+import static java.util.Locale.ROOT;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -63,7 +64,8 @@ public class SubstanceChebiIdentifierIriClass extends SubstanceIdentifierIriClas
             builder.append(String.format("SELECT \"@from\"::%s FROM %s WHERE \"@to\" = ", sqlTypes.get(0), access));
 
             String delim = delimiter.replaceAll("'", "''");
-            builder.append(String.format("right(split_part(%s, '%s', 1), -%d)", parameter, delim, prefix.length()));
+            builder.append(
+                    String.format(ROOT, "right(split_part(%s, '%s', 1), -%d)", parameter, delim, prefix.length()));
 
             builder.append(") IS NOT NULL THEN ");
         }

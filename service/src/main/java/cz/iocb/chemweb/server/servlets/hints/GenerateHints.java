@@ -1,5 +1,6 @@
 package cz.iocb.chemweb.server.servlets.hints;
 
+import static java.util.Locale.ROOT;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -254,12 +255,12 @@ public class GenerateHints extends HttpServlet
                     if(iri == null)
                         continue;
 
-                    ArrayList<Item> list = hints.get(iri.prefix.toLowerCase());
+                    ArrayList<Item> list = hints.get(iri.prefix.toLowerCase(ROOT));
 
                     if(list == null)
                     {
                         list = new ArrayList<>();
-                        hints.put(iri.prefix.toLowerCase(), list);
+                        hints.put(iri.prefix.toLowerCase(ROOT), list);
                     }
 
 
@@ -309,7 +310,7 @@ public class GenerateHints extends HttpServlet
 
         for(ArrayList<Item> list : hints.values())
             Collections.sort(list,
-                    (Item item1, Item item2) -> item1.name.toLowerCase().compareTo(item2.name.toLowerCase()));
+                    (Item item1, Item item2) -> item1.name.toLowerCase(ROOT).compareTo(item2.name.toLowerCase(ROOT)));
 
 
         out.println("var hints = {");

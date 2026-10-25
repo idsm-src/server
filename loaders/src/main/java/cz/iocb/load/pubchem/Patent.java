@@ -3,6 +3,7 @@ package cz.iocb.load.pubchem;
 import static cz.iocb.load.common.EntityTable.date;
 import static cz.iocb.load.common.EntityTable.intKey;
 import static cz.iocb.load.common.EntityTable.uniqueVarchar;
+import static java.util.Locale.ROOT;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -923,8 +924,8 @@ class Patent extends Updater
      */
     private static boolean isNameBetter(String a, String b)
     {
-        String ua = a.toUpperCase();
-        String ub = b.toUpperCase();
+        String ua = a.toUpperCase(ROOT);
+        String ub = b.toUpperCase(ROOT);
 
         boolean result = false;
 

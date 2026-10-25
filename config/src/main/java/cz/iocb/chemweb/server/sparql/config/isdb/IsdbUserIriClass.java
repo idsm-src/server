@@ -10,6 +10,7 @@ import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.expression;
 import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.string;
 import static cz.iocb.sparql.engine.mapping.classes.DerivedClass.subtract;
 import static cz.iocb.sparql.engine.mapping.classes.DerivedClass.unionize;
+import static java.util.Locale.ROOT;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -197,10 +198,10 @@ public class IsdbUserIriClass extends UserIriClass
     protected List<Column> generateInverseFunctions(Column parameter, boolean check)
     {
         String access = "(SELECT id as \"@from\", accession as \"@to\" FROM isdb.compounds) as \"@rctab\"";
-        String col1 = String.format(
+        String col1 = String.format(ROOT,
                 "(SELECT \"@from\"::integer FROM %s WHERE \"@to\" = substring(%s, %d, 14)::varchar)", access, parameter,
                 prefixLen + 1);
-        String col2 = String.format("right(%s, %d)::char", parameter.toString(), suffixLen + 1);
+        String col2 = String.format(ROOT, "right(%s, %d)::char", parameter.toString(), suffixLen + 1);
 
         if(check)
         {
