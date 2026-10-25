@@ -13,7 +13,8 @@ import jakarta.servlet.http.HttpServletResponse;
 /**
  * Servlet sending data posted by the user interface back as a file to download, for the browsers that cannot save data
  * by themselves. The request gives the action ({@code call=saveFile}), the data, its {@code encoding} (base64 or
- * plain), the file name and the MIME type.
+ * plain), the file name and the MIME type. Only POST requests are served, so that a link cannot have the server send
+ * content of its own as a download.
  */
 public class DownloadServlet extends HttpServlet
 {
@@ -30,20 +31,6 @@ public class DownloadServlet extends HttpServlet
     {
     }
 
-
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, java.io.IOException
-    {
-        try
-        {
-            processRequest(req, res);
-        }
-        catch(Exception e)
-        {
-            throw new ServletException(e);
-        }
-    }
 
 
     @Override
