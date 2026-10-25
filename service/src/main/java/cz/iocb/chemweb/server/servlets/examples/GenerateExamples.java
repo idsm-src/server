@@ -121,23 +121,21 @@ public class GenerateExamples extends HttpServlet
 
 
     /**
-     * Returns the text of the first descendant element of a name, trimmed and escaped for a JavaScript string literal.
+     * Returns the text content of the first descendant element of a name, trimmed, with its line breaks and quotation
+     * marks escaped for a JavaScript string literal; backslashes are kept, so that the text can contain JavaScript
+     * escape sequences.
      *
      * @param ele the element of the example
      * @param tagName the name of the descendant element
-     * @return the escaped text, empty if the element has no content
+     * @return the escaped text, empty if there is no such element
      */
     private String getTextValue(Element ele, String tagName)
     {
-        String textVal = null;
+        String textVal = "";
         NodeList nl = ele.getElementsByTagName(tagName);
 
-        if(nl != null && nl.getLength() > 0)
-        {
-            Element el = (Element) nl.item(0);
-
-            textVal = el.getFirstChild() == null ? "" : el.getFirstChild().getNodeValue();
-        }
+        if(nl.getLength() > 0)
+            textVal = nl.item(0).getTextContent();
 
         return textVal.trim().replace("\n", "\\n").replace("\"", "\\\"");
     }
