@@ -71,7 +71,7 @@ public class EscapeIriDirective extends Directive
     {
         if(node.jjtGetNumChildren() != 1)
         {
-            log.error("url directive: wrong number of arguments");
+            log.error("escapeIRI directive: wrong number of arguments");
             return false;
         }
 

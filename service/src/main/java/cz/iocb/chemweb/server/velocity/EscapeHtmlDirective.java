@@ -56,7 +56,7 @@ public class EscapeHtmlDirective extends Directive
     {
         if(node.jjtGetNumChildren() != 1)
         {
-            log.error("url directive: wrong number of arguments");
+            log.error("escapeHTML directive: wrong number of arguments");
             return false;
         }
 
