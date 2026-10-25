@@ -76,9 +76,12 @@ public class NormalizeIRI
 
     /**
      * Regular expression of the production {@code PN_LOCAL} of the SPARQL grammar: the local part of a prefixed name.
+     * The part after the first character, which must not end with a dot, is matched as possessively repeated runs of
+     * dots each followed by another character, so that java.util.regex does not recurse for every character of a long
+     * name.
      */
-    private static String PN_LOCAL = "((" + PN_CHARS_U + "|[0-9:]|" + PLX + ")((" + PN_CHARS + "|[.:]|" + PLX + ")*("
-            + PN_CHARS + "|:|" + PLX + "))?)?";
+    private static String PN_LOCAL = "((" + PN_CHARS_U + "|[0-9:]|" + PLX + ")(\\.*+(" + PN_CHARS + "|:|" + PLX
+            + "))*+)?";
 
 
     /**
