@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.ParsePosition;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,7 +42,8 @@ public class Spectrum
      * Parses a spectrum given as a list of {@code [mz,intensity]} pairs in brackets, of {@code {mz,intensity}} pairs in
      * braces, or of {@code mz:intensity} pairs separated by whitespace, a comma or a semicolon. Whitespace may surround
      * the numbers and the punctuation and precede a list, but only a list of the last kind may end with it. The peaks
-     * get sorted by the m/z values, as {@code pgms.spectrum} keeps them.
+     * get sorted by the m/z values with the algorithm of {@code pgms.spectrum}, so that the peaks of equal m/z values
+     * end up in the same order as in the database.
      *
      * @param literal the lexical form
      * @return the spectrum, or null if the lexical form is invalid
@@ -111,17 +111,190 @@ public class Spectrum
         if(position.getIndex() < literal.length())
             return null;
 
-        peaks.sort(Comparator.comparingDouble(peak -> peak[0]));
+        float[][] sorted = peaks.toArray(new float[0][]);
+        sort(sorted, 0, sorted.length);
 
-        float[] value = new float[2 * peaks.size()];
+        float[] value = new float[2 * sorted.length];
 
-        for(int i = 0; i < peaks.size(); i++)
+        for(int i = 0; i < sorted.length; i++)
         {
-            value[2 * i] = peaks.get(i)[0];
-            value[2 * i + 1] = peaks.get(i)[1];
+            value[2 * i] = sorted[i][0];
+            value[2 * i + 1] = sorted[i][1];
         }
 
         return new Spectrum(value);
+    }
+
+    /**
+     * Sorts peaks by their m/z values with the algorithm that {@code pgms.spectrum} uses, the {@code pg_qsort} of
+     * PostgreSQL ({@code src/include/lib/sort_template.h}) transcribed with the same comparison of the m/z values. The
+     * algorithm is not stable, so the order of the peaks of equal m/z values, and thus the canonical form of the
+     * spectrum, depends on it: the first seven peaks and presorted peaks keep their order, the others are partitioned
+     * around a pivot, the median of three or nine peaks.
+     *
+     * @param peaks the peaks, each an m/z value followed by an intensity
+     * @param from the index of the first peak to sort
+     * @param n the number of the peaks to sort
+     */
+    private static void sort(float[][] peaks, int from, int n)
+    {
+        while(true)
+        {
+            if(n < 7)
+            {
+                for(int pm = from + 1; pm < from + n; pm++)
+                    for(int pl = pm; pl > from && compare(peaks[pl - 1], peaks[pl]) > 0; pl--)
+                        swap(peaks, pl, pl - 1);
+
+                return;
+            }
+
+            boolean presorted = true;
+
+            for(int pm = from + 1; presorted && pm < from + n; pm++)
+                presorted = compare(peaks[pm - 1], peaks[pm]) <= 0;
+
+            if(presorted)
+                return;
+
+            int pm = from + n / 2;
+
+            if(n > 7)
+            {
+                int pl = from;
+                int pn = from + n - 1;
+
+                if(n > 40)
+                {
+                    int step = n / 8;
+                    pl = median(peaks, pl, pl + step, pl + 2 * step);
+                    pm = median(peaks, pm - step, pm, pm + step);
+                    pn = median(peaks, pn - 2 * step, pn - step, pn);
+                }
+
+                pm = median(peaks, pl, pm, pn);
+            }
+
+            swap(peaks, from, pm);
+
+            int pa = from + 1;
+            int pb = from + 1;
+            int pc = from + n - 1;
+            int pd = from + n - 1;
+
+            while(true)
+            {
+                int r;
+
+                while(pb <= pc && (r = compare(peaks[pb], peaks[from])) <= 0)
+                {
+                    if(r == 0)
+                        swap(peaks, pa++, pb);
+
+                    pb++;
+                }
+
+                while(pb <= pc && (r = compare(peaks[pc], peaks[from])) >= 0)
+                {
+                    if(r == 0)
+                        swap(peaks, pc, pd--);
+
+                    pc--;
+                }
+
+                if(pb > pc)
+                    break;
+
+                swap(peaks, pb++, pc--);
+            }
+
+            int pn = from + n;
+            int d1 = Math.min(pa - from, pb - pa);
+            swap(peaks, from, pb - d1, d1);
+            d1 = Math.min(pd - pc, pn - pd - 1);
+            swap(peaks, pb, pn - d1, d1);
+            d1 = pb - pa;
+            int d2 = pd - pc;
+
+            if(d1 <= d2)
+            {
+                if(d1 > 1)
+                    sort(peaks, from, d1);
+
+                if(d2 <= 1)
+                    return;
+
+                from = pn - d2;
+                n = d2;
+            }
+            else
+            {
+                if(d2 > 1)
+                    sort(peaks, pn - d2, d2);
+
+                if(d1 <= 1)
+                    return;
+
+                n = d1;
+            }
+        }
+    }
+
+    /**
+     * Compares two peaks by their m/z values as {@code pgms.spectrum} does.
+     *
+     * @param left the first peak
+     * @param right the second peak
+     * @return -1, 0 or 1 if the first m/z value is less than, equal to or greater than the second one
+     */
+    private static int compare(float[] left, float[] right)
+    {
+        return left[0] == right[0] ? 0 : (left[0] < right[0] ? -1 : 1);
+    }
+
+    /**
+     * Returns the index of the peak with the median m/z value of three peaks, as {@code pg_qsort} picks its pivot.
+     *
+     * @param peaks the peaks
+     * @param a the index of the first peak
+     * @param b the index of the second peak
+     * @param c the index of the third peak
+     * @return the index of the peak with the median m/z value
+     */
+    private static int median(float[][] peaks, int a, int b, int c)
+    {
+        if(compare(peaks[a], peaks[b]) < 0)
+            return compare(peaks[b], peaks[c]) < 0 ? b : (compare(peaks[a], peaks[c]) < 0 ? c : a);
+        else
+            return compare(peaks[b], peaks[c]) > 0 ? b : (compare(peaks[a], peaks[c]) < 0 ? a : c);
+    }
+
+    /**
+     * Exchanges two peaks.
+     *
+     * @param peaks the peaks
+     * @param i the index of the first peak
+     * @param j the index of the second peak
+     */
+    private static void swap(float[][] peaks, int i, int j)
+    {
+        float[] peak = peaks[i];
+        peaks[i] = peaks[j];
+        peaks[j] = peak;
+    }
+
+    /**
+     * Exchanges two runs of peaks.
+     *
+     * @param peaks the peaks
+     * @param i the index of the first peak of the first run
+     * @param j the index of the first peak of the second run
+     * @param n the number of the peaks of each run
+     */
+    private static void swap(float[][] peaks, int i, int j, int n)
+    {
+        for(int k = 0; k < n; k++)
+            swap(peaks, i + k, j + k);
     }
 
     /**
