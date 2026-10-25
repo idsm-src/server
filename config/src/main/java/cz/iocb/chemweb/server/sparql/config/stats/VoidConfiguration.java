@@ -10,8 +10,8 @@ import cz.iocb.sparql.engine.database.DatabaseSchema;
 
 
 /**
- * Configuration of the VoID statistics of the IDSM endpoint, which the endpoint merges into its service and uses as
- * its service description.
+ * Configuration of the VoID statistics of the IDSM endpoint, which the endpoint merges into its service and uses as its
+ * service description.
  */
 public class VoidConfiguration extends SparqlDatabaseOptimisedConfiguration
 {

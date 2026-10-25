@@ -38,10 +38,10 @@ import org.xml.sax.SAXException;
 
 
 /**
- * Base of the loaders, whose static members run a load: the connection to the database, in which the whole load is
- * one transaction, the files of the data directory, the transfer of sets and maps of values between the database and
- * the memory, the versions, statistics and Sachem indexes of the loaded sources, and the commit or the rollback of
- * the load.
+ * Base of the loaders, whose static members run a load: the connection to the database, in which the whole load is one
+ * transaction, the files of the data directory, the transfer of sets and maps of values between the database and the
+ * memory, the versions, statistics and Sachem indexes of the loaded sources, and the commit or the rollback of the
+ * load.
  */
 public class Updater
 {
@@ -118,8 +118,8 @@ public class Updater
 
 
     /**
-     * Map whose keys and values are read from the columns of a query result and set to the parameters of a command,
-     * the key first, in the order of their components.
+     * Map whose keys and values are read from the columns of a query result and set to the parameters of a command, the
+     * key first, in the order of their components.
      *
      * @param <K> the type of the keys
      * @param <V> the type of the values
@@ -1199,8 +1199,8 @@ public class Updater
 
     /**
      * Opens a file of the data directory and records that the loader reads it, see
-     * {@link #checkFiles(String, String...)}. A missing file is reported as an error and null is returned, so that
-     * the load goes on without its data.
+     * {@link #checkFiles(String, String...)}. A missing file is reported as an error and null is returned, so that the
+     * load goes on without its data.
      *
      * @param file the path of the file in the data directory
      * @return the stream of the file, or null if the file is missing
@@ -1223,9 +1223,9 @@ public class Updater
 
 
     /**
-     * Reports the files of the given directory of the data directory, including its subdirectories, that the loader
-     * has not read as errors, as their data would be left out, e.g. a new part of a release. The files whose paths
-     * relative to the directory match one of the given patterns are known not to be data of the loader.
+     * Reports the files of the given directory of the data directory, including its subdirectories, that the loader has
+     * not read as errors, as their data would be left out, e.g. a new part of a release. The files whose paths relative
+     * to the directory match one of the given patterns are known not to be data of the loader.
      *
      * @param directory the path of the directory in the data directory
      * @param ignored the regular expressions of the relative paths of the files that are not data of the loader
@@ -1343,8 +1343,8 @@ public class Updater
 
 
     /**
-     * Processes the files of the directory whose names match the pattern, several of them in parallel. No such file
-     * is an error, as the data of the files would be missing.
+     * Processes the files of the directory whose names match the pattern, several of them in parallel. No such file is
+     * an error, as the data of the files would be missing.
      *
      * @param path the path of the directory in the data directory
      * @param name the regular expression of the names of the files
@@ -1389,8 +1389,8 @@ public class Updater
 
 
     /**
-     * Processes the XML files of the directory whose names match the pattern, several of them in parallel. No such
-     * file is an error, as the data of the files would be missing.
+     * Processes the XML files of the directory whose names match the pattern, several of them in parallel. No such file
+     * is an error, as the data of the files would be missing.
      *
      * @param path the path of the directory in the data directory
      * @param name the regular expression of the names of the files
@@ -1475,8 +1475,8 @@ public class Updater
 
 
     /**
-     * Sets the version of the given source; an unknown version is an error. A database without the table of the
-     * sources is left as it is, a missing source in it is an error.
+     * Sets the version of the given source; an unknown version is an error. A database without the table of the sources
+     * is left as it is, a missing source in it is an error.
      *
      * @param name the name of the source
      * @param version the version, or null or empty if it is unknown
@@ -1540,8 +1540,8 @@ public class Updater
 
 
     /**
-     * Moves the date of the version of the database to the current time, unless it is later, within the transaction
-     * of the load.
+     * Moves the date of the version of the database to the current time, unless it is later, within the transaction of
+     * the load.
      *
      * @throws SQLException if a database error occurs
      */
@@ -1554,10 +1554,10 @@ public class Updater
     /**
      * Updates the Sachem index of the given name according to the audited changes of its table: removes the stale
      * versions of the index and synchronises it. The cleanup has to precede the synchronisation, because after it the
-     * cleanup would delete the previous version although the new one is not committed yet. Prints the size of the
-     * index and reports the molecules that the indexer has rejected meanwhile as warnings. An index that is not
-     * registered yet is left out: the first load fills its table without the audit trigger, and the index is
-     * registered and built from the whole table after the load (sachem.sql of the dbfinish step).
+     * cleanup would delete the previous version although the new one is not committed yet. Prints the size of the index
+     * and reports the molecules that the indexer has rejected meanwhile as warnings. An index that is not registered
+     * yet is left out: the first load fills its table without the audit trigger, and the index is registered and built
+     * from the whole table after the load (sachem.sql of the dbfinish step).
      *
      * @param index the name of the index
      * @param optimize whether the synchronisation optimizes the index
@@ -1691,8 +1691,8 @@ public class Updater
 
 
     /**
-     * Ends the reading of the data: prints the summary of the problems and, if the data are incomplete, fails the
-     * load at once, so that they are neither indexed nor committed.
+     * Ends the reading of the data: prints the summary of the problems and, if the data are incomplete, fails the load
+     * at once, so that they are neither indexed nor committed.
      */
     protected static void checkProblems()
     {
@@ -1705,8 +1705,8 @@ public class Updater
 
 
     /**
-     * Fails the load: prints the exception, if any, with the summary of the problems reported before it, rolls the
-     * data back and exits with a non-zero status, so that the scripts running the loaders can tell the failure.
+     * Fails the load: prints the exception, if any, with the summary of the problems reported before it, rolls the data
+     * back and exits with a non-zero status, so that the scripts running the loaders can tell the failure.
      *
      * @param exception the exception that has failed the load, or null
      */

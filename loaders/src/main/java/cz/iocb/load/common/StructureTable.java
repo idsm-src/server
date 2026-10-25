@@ -16,13 +16,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * A table of the structures (molfiles or SMILES) of entities with integer identifiers, on which a Sachem index is
- * built. The table is loaded from a complete dump of the structures: the structure of every entity of the dump is
- * put, the rows whose structure has not changed are left untouched (so that the audit trigger of the index records
- * only real changes), and the rows of the entities missing from the dump are deleted at the end. The structures are
- * compared by the hash of their text without the first two lines, because the name line of a molfile holds the
- * identifier and the header line a time stamp that some sources renew with every dump. Only the identifiers and the
- * hashes of the stored rows are kept in memory, the structures are streamed, and they can be put from several
- * threads at once.
+ * built. The table is loaded from a complete dump of the structures: the structure of every entity of the dump is put,
+ * the rows whose structure has not changed are left untouched (so that the audit trigger of the index records only real
+ * changes), and the rows of the entities missing from the dump are deleted at the end. The structures are compared by
+ * the hash of their text without the first two lines, because the name line of a molfile holds the identifier and the
+ * header line a time stamp that some sources renew with every dump. Only the identifiers and the hashes of the stored
+ * rows are kept in memory, the structures are streamed, and they can be put from several threads at once.
  */
 public class StructureTable extends Updater
 {
@@ -194,8 +193,8 @@ public class StructureTable extends Updater
 
 
     /**
-     * Puts the structure of an entity: a new or changed structure is sent to the table, an unchanged one is only
-     * noted. The structure of an entity can be put only once.
+     * Puts the structure of an entity: a new or changed structure is sent to the table, an unchanged one is only noted.
+     * The structure of an entity can be put only once.
      *
      * @param id the identifier of the entity
      * @param structure the structure of the entity

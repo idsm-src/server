@@ -12,13 +12,13 @@ import java.util.regex.Pattern;
 
 /**
  * Reads the records of a Mascot generic format (MGF) file. A record is enclosed in the lines BEGIN IONS and END IONS,
- * it starts with its parameters (KEY=value lines) and continues with its peaks (an m/z value and an intensity
- * separated by white space); the parameters before the first record apply to every record. Blank lines and comments
- * (lines starting with #, ;, ! or /) are skipped. The peaks of a record are returned in the text form of a pgms
- * spectrum, i.e. as m/z:intensity pairs separated by spaces, with the numbers converted to single precision as the
- * extension stores them; a number the extension would refuse (out of the range of single precision) is refused here.
- * A malformed record, i.e. one with a malformed peak or a repeated parameter or one without its END IONS, and a line
- * outside the records that is not a global parameter are reported as errors and skipped, so that the reading goes on.
+ * it starts with its parameters (KEY=value lines) and continues with its peaks (an m/z value and an intensity separated
+ * by white space); the parameters before the first record apply to every record. Blank lines and comments (lines
+ * starting with #, ;, ! or /) are skipped. The peaks of a record are returned in the text form of a pgms spectrum, i.e.
+ * as m/z:intensity pairs separated by spaces, with the numbers converted to single precision as the extension stores
+ * them; a number the extension would refuse (out of the range of single precision) is refused here. A malformed record,
+ * i.e. one with a malformed peak or a repeated parameter or one without its END IONS, and a line outside the records
+ * that is not a global parameter are reported as errors and skipped, so that the reading goes on.
  */
 public class MgfReader implements Closeable
 {
@@ -117,8 +117,8 @@ public class MgfReader implements Closeable
 
 
     /**
-     * Converts the text of a number to single precision; the values that overflow or underflow it are refused as
-     * the extension refuses them, null stands for a refused number.
+     * Converts the text of a number to single precision; the values that overflow or underflow it are refused as the
+     * extension refuses them, null stands for a refused number.
      *
      * @param text the text of the number
      * @return the number, or null if it is refused

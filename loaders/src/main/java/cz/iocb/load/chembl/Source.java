@@ -19,8 +19,8 @@ import cz.iocb.load.common.Updater;
 
 
 /**
- * Loader of the ChEMBL sources, the data sources of the assays and activities, from the source file of the release
- * into the table {@code chembl.sources}.
+ * Loader of the ChEMBL sources, the data sources of the assays and activities, from the source file of the release into
+ * the table {@code chembl.sources}.
  */
 class Source extends Updater
 {

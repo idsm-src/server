@@ -26,11 +26,11 @@ import java.util.stream.Stream;
  * one is deleted. The rows can be assembled by several threads at once.
  *
  * <p>
- * Once the described entities are assembled, the rows can be flushed to free their memory: they are stored at once
- * and only their keys are kept. An entity referenced after the flush gets a new row, and the final store adds these
- * rows and deletes the stored rows of the entities that are neither described nor referenced. A stored row without an
- * assembled one is remembered by its key and by whether it is a stub, which has no value except those determined by
- * the key, so that the final store can keep it unchanged if the entity is referenced again.
+ * Once the described entities are assembled, the rows can be flushed to free their memory: they are stored at once and
+ * only their keys are kept. An entity referenced after the flush gets a new row, and the final store adds these rows
+ * and deletes the stored rows of the entities that are neither described nor referenced. A stored row without an
+ * assembled one is remembered by its key and by whether it is a stub, which has no value except those determined by the
+ * key, so that the final store can keep it unchanged if the entity is referenced again.
  *
  * @param <K> the type of the keys of the entities
  */
@@ -120,8 +120,7 @@ public class EntityTable<K> extends Updater
 
 
         /**
-         * Checks that a value is held by the Java class of the type; fails with a {@link ClassCastException}
-         * otherwise.
+         * Checks that a value is held by the Java class of the type; fails with a {@link ClassCastException} otherwise.
          *
          * @param value the value
          * @return the value
@@ -144,11 +143,11 @@ public class EntityTable<K> extends Updater
 
     /**
      * A value column of a table. The strings of a pooled column are shared by the rows; a column of (nearly) all
-     * distinct values is not pooled. A column with a cast holds the text form of a value of another SQL type, such as
-     * a date or an enumeration. The values of a column with an equality test are compared by it instead of their
-     * equals method, so that a value that differs from the stored one only in its form does not count as changed. A
-     * column determined by the key holds the same value in every row of the key, such as the IRI of an entity
-     * identified by a surrogate id; a stub row of a referenced entity carries it too.
+     * distinct values is not pooled. A column with a cast holds the text form of a value of another SQL type, such as a
+     * date or an enumeration. The values of a column with an equality test are compared by it instead of their equals
+     * method, so that a value that differs from the stored one only in its form does not count as changed. A column
+     * determined by the key holds the same value in every row of the key, such as the IRI of an entity identified by a
+     * surrogate id; a stub row of a referenced entity carries it too.
      *
      * @param name the name of the column
      * @param type the type of the values
@@ -737,8 +736,8 @@ public class EntityTable<K> extends Updater
 
 
     /**
-     * Ensures that a referenced entity has a row, which stays empty unless the entity is described; returns whether
-     * the row has been created now.
+     * Ensures that a referenced entity has a row, which stays empty unless the entity is described; returns whether the
+     * row has been created now.
      *
      * @param id the key of the entity
      * @return true if the row has been created now
@@ -847,8 +846,8 @@ public class EntityTable<K> extends Updater
 
 
     /**
-     * Returns the number of the entities described by the data; without the column {@code described}, the number of
-     * all entities.
+     * Returns the number of the entities described by the data; without the column {@code described}, the number of all
+     * entities.
      *
      * @return the number of the entities
      */
@@ -915,8 +914,8 @@ public class EntityTable<K> extends Updater
 
 
     /**
-     * Compares a stored row with the assembled one, which is dropped if it is unchanged; returns whether the stored
-     * row has no assembled one.
+     * Compares a stored row with the assembled one, which is dropped if it is unchanged; returns whether the stored row
+     * has no assembled one.
      *
      * @param id the key of the row
      * @param values the values of the stored row
@@ -1047,8 +1046,8 @@ public class EntityTable<K> extends Updater
 
 
     /**
-     * Stores the rows and deletes the stored rows of the entities that are neither described nor referenced; the
-     * table cannot be used afterwards.
+     * Stores the rows and deletes the stored rows of the entities that are neither described nor referenced; the table
+     * cannot be used afterwards.
      *
      * @param entity the name under which the summary counts the entities that are only referenced, or null for a table
      *            without the column {@code described}

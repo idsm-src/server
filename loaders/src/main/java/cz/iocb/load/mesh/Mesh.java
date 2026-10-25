@@ -600,8 +600,8 @@ public class Mesh extends Updater
 
 
     /**
-     * Returns the date of an xsd:date literal without its timezone and the timezone in seconds, or the minimal
-     * integer for a date without a timezone.
+     * Returns the date of an xsd:date literal without its timezone and the timezone in seconds, or the minimal integer
+     * for a date without a timezone.
      *
      * @param node the node
      * @return the date and the timezone in seconds
@@ -649,9 +649,9 @@ public class Mesh extends Updater
 
     /**
      * Returns the id of a MeSH resource. The dump of a production year identifies the resources by the versioned IRIs
-     * of the year (http://id.nlm.nih.gov/mesh/2026/D000001), whose data mirror the current resources with
-     * non-versioned IRIs (http://id.nlm.nih.gov/mesh/D000001), which the mapping publishes; all the IRIs of a dump must
-     * be of the same year, or all non-versioned.
+     * of the year (http://id.nlm.nih.gov/mesh/2026/D000001), whose data mirror the current resources with non-versioned
+     * IRIs (http://id.nlm.nih.gov/mesh/D000001), which the mapping publishes; all the IRIs of a dump must be of the
+     * same year, or all non-versioned.
      *
      * @param node the IRI of the resource
      * @return the id of the resource

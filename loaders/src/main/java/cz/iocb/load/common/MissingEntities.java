@@ -39,9 +39,8 @@ public class MissingEntities<K>
 
 
     /**
-     * Creates the counter of a kind of entities. The name of the kind of the entities is shown in the summary.
-     * Deferred counting is meant for the class that reads the descriptions of the entities, until it calls
-     * {@link #settle()}.
+     * Creates the counter of a kind of entities. The name of the kind of the entities is shown in the summary. Deferred
+     * counting is meant for the class that reads the descriptions of the entities, until it calls {@link #settle()}.
      *
      * @param name the name of the kind of the entities
      * @param deferred whether the referenced entities are counted only by {@link #settle()}

@@ -29,8 +29,8 @@ import cz.iocb.load.common.Updater;
 
 
 /**
- * Loader of the ChEMBL targets from the target file of the release into the table {@code chembl.targets}, together
- * with their components, the target component matches of the linksets and the relations between the targets.
+ * Loader of the ChEMBL targets from the target file of the release into the table {@code chembl.targets}, together with
+ * their components, the target component matches of the linksets and the relations between the targets.
  */
 class Target extends Updater
 {
@@ -289,8 +289,8 @@ class Target extends Updater
 
 
     /**
-     * Loads the targets, their components, the linksets of the target components and the relations between the
-     * targets from the files of the release.
+     * Loads the targets, their components, the linksets of the target components and the relations between the targets
+     * from the files of the release.
      *
      * @throws IOException if a file cannot be read
      * @throws SQLException if a database error occurs
@@ -310,8 +310,8 @@ class Target extends Updater
 
 
     /**
-     * Stores the collected targets, reporting the referenced ones that the files do not describe, their components,
-     * the linksets and the relations.
+     * Stores the collected targets, reporting the referenced ones that the files do not describe, their components, the
+     * linksets and the relations.
      *
      * @throws SQLException if a database error occurs
      */

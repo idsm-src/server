@@ -295,9 +295,9 @@ class Molecule extends Updater
 
     /**
      * Loads the molecules with their descriptors, labels, alternative names, ATC classifications, documents and
-     * biocomponents from the molecule file of the release, and checks the inverse triples of their links and the
-     * values the mapping produces from the stored ones: {@code skos:prefLabel}, {@code rdf:type}, the images and the
-     * links to the descriptor nodes.
+     * biocomponents from the molecule file of the release, and checks the inverse triples of their links and the values
+     * the mapping produces from the stored ones: {@code skos:prefLabel}, {@code rdf:type}, the images and the links to
+     * the descriptor nodes.
      *
      * @throws IOException if the file cannot be read
      * @throws SQLException if a database error occurs

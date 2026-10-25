@@ -18,9 +18,9 @@ import cz.iocb.load.ontology.Ontology;
 
 
 /**
- * Loader of ChEMBL from the RDF files of its release into the tables of the schema {@code chembl}. It reads the
- * version of the release from its VoID description, loads the entities in the order of their references, stores them
- * and records the version and the counts of the substances and assays.
+ * Loader of ChEMBL from the RDF files of its release into the tables of the schema {@code chembl}. It reads the version
+ * of the release from its VoID description, loads the entities in the order of their references, stores them and
+ * records the version and the counts of the substances and assays.
  */
 public class ChEMBL extends Updater
 {

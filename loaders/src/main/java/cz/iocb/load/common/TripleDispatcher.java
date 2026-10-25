@@ -19,8 +19,8 @@ import org.apache.jena.riot.Lang;
 
 /**
  * Reads RDF files as streams of triples and passes every triple to the handlers registered for its predicate, so that
- * all the data of the files are loaded in one pass and without holding the files in memory. A handler registered for
- * a type gets the triples whose predicate is rdf:type and whose object is the type. The handlers are called one at a
+ * all the data of the files are loaded in one pass and without holding the files in memory. A handler registered for a
+ * type gets the triples whose predicate is rdf:type and whose object is the type. The handlers are called one at a
  * time, also when several files are read in parallel, and they must not depend on the order of the triples. A triple
  * that a filter refuses is passed to no handler. The actions registered by after() run, in their order, once all the
  * files have been read.
@@ -75,8 +75,8 @@ public class TripleDispatcher extends Updater
         /**
          * Runs the action.
          *
-         * @throws IOException if the data are inconsistent (a {@link DataException}, which is reported) or an I/O
-         *             error occurs
+         * @throws IOException if the data are inconsistent (a {@link DataException}, which is reported) or an I/O error
+         *             occurs
          * @throws SQLException if a database error occurs
          */
         void run() throws IOException, SQLException;
@@ -442,8 +442,8 @@ public class TripleDispatcher extends Updater
 
 
     /**
-     * Reports the values of the predicate that start with the prefix and lack a value with the pair prefix and the
-     * same rest at the same subject as errors; a pairing in both directions is checked by two calls.
+     * Reports the values of the predicate that start with the prefix and lack a value with the pair prefix and the same
+     * rest at the same subject as errors; a pairing in both directions is checked by two calls.
      *
      * @param predicate the IRI of the predicate
      * @param prefix the prefix of the checked values
@@ -541,8 +541,8 @@ public class TripleDispatcher extends Updater
     /**
      * Reads an RDF file: Turtle if its name ends with .ttl, N-Triples if it ends with .nt and RDF/XML otherwise,
      * gzipped if the name ends with .gz. Relative IRIs are resolved against file:/// followed by the path of the file
-     * in the data directory, so that they do not depend on the directory the loader runs in. A missing file is
-     * reported as an error.
+     * in the data directory, so that they do not depend on the directory the loader runs in. A missing file is reported
+     * as an error.
      *
      * @param file the path of the file in the data directory
      * @throws IOException if an I/O error occurs

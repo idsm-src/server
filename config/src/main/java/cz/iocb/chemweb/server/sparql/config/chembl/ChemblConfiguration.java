@@ -96,8 +96,8 @@ public class ChemblConfiguration extends SparqlDatabaseOptimisedConfiguration
 
 
     /**
-     * Adds to the configuration the resource classes of ChEMBL and of the ontology, MeSH and PubChem resources it
-     * links to.
+     * Adds to the configuration the resource classes of ChEMBL and of the ontology, MeSH and PubChem resources it links
+     * to.
      *
      * @throws SQLException if a database error occurs
      */

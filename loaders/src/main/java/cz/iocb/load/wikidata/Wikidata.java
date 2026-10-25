@@ -112,8 +112,8 @@ public class Wikidata extends Updater
 
     /**
      * Loads the values of a property from the TSV result of its query into the given table; an unexpected line is
-     * reported as an error and skipped. A statement of an unknown value, which the query service gives as a skolem
-     * IRI, has no value to load and is skipped silently.
+     * reported as an error and skipped. A statement of an unknown value, which the query service gives as a skolem IRI,
+     * has no value to load and is skipped silently.
      *
      * @param file the name of the TSV file in the directory {@code wikidata}
      * @param table the name of the table in the schema {@code wikidata}

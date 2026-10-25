@@ -2003,9 +2003,9 @@ public class Ontology extends Updater
 
 
     /**
-     * Returns the (unit, id) of an IRI of one of the given units, which are the units the mapping of the target
-     * column expects; any other IRI is refused as data that cannot be loaded. The uncategorized unit holds only the
-     * built-in resources.
+     * Returns the (unit, id) of an IRI of one of the given units, which are the units the mapping of the target column
+     * expects; any other IRI is refused as data that cannot be loaded. The uncategorized unit holds only the built-in
+     * resources.
      *
      * @param iri the IRI
      * @param units the expected units
@@ -2063,8 +2063,8 @@ public class Ontology extends Updater
 
 
     /**
-     * Returns the (unit, id) of a node that is of one of the given units, which are the units the mapping of the
-     * target column expects, see getId(Node); any other node is refused as data that cannot be loaded.
+     * Returns the (unit, id) of a node that is of one of the given units, which are the units the mapping of the target
+     * column expects, see getId(Node); any other node is refused as data that cannot be loaded.
      *
      * @param node the node
      * @param units the expected units
@@ -2179,9 +2179,9 @@ public class Ontology extends Updater
     /**
      * Computes the keys of the blank nodes, see BlankNodeKeys, by reading the files before the load, and assigns the
      * ids to the keys: a key stored in the database keeps its id, the other keys get new ids in the order of the keys.
-     * So the blank nodes of a structure keep their ids as long as the structure and the resources that refer to it
-     * are unchanged. A blank node whose key is not computed, as none of its triples belongs to the structures, gets the
-     * key of its label.
+     * So the blank nodes of a structure keep their ids as long as the structure and the resources that refer to it are
+     * unchanged. A blank node whose key is not computed, as none of its triples belongs to the structures, gets the key
+     * of its label.
      *
      * @throws IOException if a file cannot be read
      * @throws SQLException if a database error occurs
@@ -2325,8 +2325,8 @@ public class Ontology extends Updater
 
 
     /**
-     * Returns the types whose instances are properties, which are rdf:Property and its direct and indirect
-     * subclasses; the OWL classes of properties are among them even without the OWL vocabulary in the data.
+     * Returns the types whose instances are properties, which are rdf:Property and its direct and indirect subclasses;
+     * the OWL classes of properties are among them even without the OWL vocabulary in the data.
      *
      * @return the types whose instances are properties
      */
@@ -2403,9 +2403,9 @@ public class Ontology extends Updater
 
     /**
      * Loads the classes: the instances of the classes of classes, the classes in the class hierarchy, the domains and
-     * the ranges of the properties, the classes of the values of the restrictions, the classes in the class axioms
-     * and class expressions, and the datatypes restricted by facets, which the RDF-based semantics of OWL entails to
-     * be classes.
+     * the ranges of the properties, the classes of the values of the restrictions, the classes in the class axioms and
+     * class expressions, and the datatypes restricted by facets, which the RDF-based semantics of OWL entails to be
+     * classes.
      *
      * @param dispatcher the dispatcher of the triples
      * @throws IOException if an I/O error occurs
@@ -2450,9 +2450,9 @@ public class Ontology extends Updater
 
 
     /**
-     * Loads the properties: the instances of the classes of properties, the properties in the property hierarchy and
-     * in the other property axioms, the properties with a domain or a range and the properties of the restrictions,
-     * which the RDF-based semantics of OWL entails to be properties.
+     * Loads the properties: the instances of the classes of properties, the properties in the property hierarchy and in
+     * the other property axioms, the properties with a domain or a range and the properties of the restrictions, which
+     * the RDF-based semantics of OWL entails to be properties.
      *
      * @param dispatcher the dispatcher of the triples
      * @throws IOException if an I/O error occurs
@@ -2522,8 +2522,8 @@ public class Ontology extends Updater
     /**
      * Loads the annotations of the IRIs given by RDFS and OWL: their labels, comments, related resources, defining
      * resources and deprecation flags. The annotations of the blank nodes are left out, as the blank nodes that have
-     * them belong to the structures that are not loaded, such as the annotated axioms or the SWRL rules, and so are
-     * the annotations of the ChEBI classes that the ChEBI loader loads, see chebiAnnotations.
+     * them belong to the structures that are not loaded, such as the annotated axioms or the SWRL rules, and so are the
+     * annotations of the ChEBI classes that the ChEBI loader loads, see chebiAnnotations.
      *
      * @param dispatcher the dispatcher of the triples
      * @throws IOException if an I/O error occurs
@@ -2542,9 +2542,9 @@ public class Ontology extends Updater
 
     /**
      * Loads the values of an annotation property of the IRIs into the table: a resource into the columns of the
-     * resources, if the table has them, and a literal of a string kind as a string with its language, if the table
-     * has the columns of the strings and of the languages. A value that the table cannot hold is reported as a warning
-     * and left out, as the values of an annotation property are not restricted.
+     * resources, if the table has them, and a literal of a string kind as a string with its language, if the table has
+     * the columns of the strings and of the languages. A value that the table cannot hold is reported as a warning and
+     * left out, as the values of an annotation property are not restricted.
      *
      * @param dispatcher the dispatcher of the triples
      * @param predicate the IRI of the annotation property
@@ -2638,9 +2638,9 @@ public class Ontology extends Updater
 
     /**
      * Loads the selected annotations of the IRIs given by OBO, IAO, SKOS and TAXRANK: their definitions, synonyms,
-     * replacements, mappings, cross-references, subsets, alternative identifiers, namespaces and taxonomic ranks.
-     * The rank given by ncbitaxon#has_rank is left out, as its values are the obsolete rank classes of NCBITaxon that
-     * the ranks of TAXRANK replace, and so are the annotations of the ChEBI classes that the ChEBI loader loads, see
+     * replacements, mappings, cross-references, subsets, alternative identifiers, namespaces and taxonomic ranks. The
+     * rank given by ncbitaxon#has_rank is left out, as its values are the obsolete rank classes of NCBITaxon that the
+     * ranks of TAXRANK replace, and so are the annotations of the ChEBI classes that the ChEBI loader loads, see
      * chebiAnnotations.
      *
      * @param dispatcher the dispatcher of the triples
@@ -2997,9 +2997,8 @@ public class Ontology extends Updater
 
 
     /**
-     * Loads the pairs of the subjects and the objects of a predicate whose objects are lists, into the table with
-     * the columns of the subject and the column of the id of the list; a list is a blank node, so its unit is not
-     * stored.
+     * Loads the pairs of the subjects and the objects of a predicate whose objects are lists, into the table with the
+     * columns of the subject and the column of the id of the list; a list is a blank node, so its unit is not stored.
      *
      * @param dispatcher the dispatcher of the triples
      * @param predicate the IRI of the predicate
@@ -3184,8 +3183,8 @@ public class Ontology extends Updater
     /**
      * Loads a restriction into the table of its kind, which is given by the predicate of its filler: of the class of
      * the values, of the value, of the local reflexivity or of the cardinality. The class or the data range of a
-     * qualified cardinality restriction has a table of its own; a restriction without a filler, which the data
-     * contain, is kept in a table of its own too, so that all of its triples are loaded.
+     * qualified cardinality restriction has a table of its own; a restriction without a filler, which the data contain,
+     * is kept in a table of its own too, so that all of its triples are loaded.
      *
      * @param restrictions the collected triples of the restrictions
      * @param node the blank node of the restriction
@@ -3465,12 +3464,12 @@ public class Ontology extends Updater
 
     /**
      * Returns the canonical value of a literal of one of the allowed kinds, see literalKinds. A non-canonical lexical
-     * form is converted, so that the database keeps only the value; a float is read as a double where only doubles
-     * are allowed, a language tag is written in lower case, and the literals of the other string kinds are read as
-     * strings: an rdf:PlainLiteral as the text before its last {@code @} with the language after it (a lexical form
-     * without {@code @}, which some tools write for a plain literal, as the whole text), an rdf:HTML literal and a
-     * literal typed by rdfs:Literal, which some tools write for a plain literal too, as its lexical form, and an
-     * xsd:anyURI literal as its lexical form with the whitespace collapsed.
+     * form is converted, so that the database keeps only the value; a float is read as a double where only doubles are
+     * allowed, a language tag is written in lower case, and the literals of the other string kinds are read as strings:
+     * an rdf:PlainLiteral as the text before its last {@code @} with the language after it (a lexical form without
+     * {@code @}, which some tools write for a plain literal, as the whole text), an rdf:HTML literal and a literal
+     * typed by rdfs:Literal, which some tools write for a plain literal too, as its lexical form, and an xsd:anyURI
+     * literal as its lexical form with the whitespace collapsed.
      *
      * @param node the node
      * @param kinds the allowed kinds
@@ -3567,8 +3566,8 @@ public class Ontology extends Updater
 
 
     /**
-     * Returns the lexical form of a floating-point number in the form that Java parses: the special values of XSD
-     * are written differently.
+     * Returns the lexical form of a floating-point number in the form that Java parses: the special values of XSD are
+     * written differently.
      *
      * @param lexical the lexical form of XSD
      * @return the lexical form for Java

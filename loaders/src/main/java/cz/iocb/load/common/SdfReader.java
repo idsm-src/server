@@ -38,11 +38,11 @@ public class SdfReader
 
 
     /**
-     * Reads the records of the given file. The identifier of a record is the value of the given data item; the
-     * molfile is passed with the identifier in place of its name line, so that the stored structures are named by
-     * their identifiers. A record has to carry the data item exactly once and has to be terminated; a record that
-     * does not, as well as a record the handler refuses by a DataException or a malformed number, is reported as an
-     * error and skipped. A blank line left at the end of the file is tolerated.
+     * Reads the records of the given file. The identifier of a record is the value of the given data item; the molfile
+     * is passed with the identifier in place of its name line, so that the stored structures are named by their
+     * identifiers. A record has to carry the data item exactly once and has to be terminated; a record that does not,
+     * as well as a record the handler refuses by a DataException or a malformed number, is reported as an error and
+     * skipped. A blank line left at the end of the file is tolerated.
      *
      * @param name the name of the file, used in the reported problems
      * @param reader the reader of the file

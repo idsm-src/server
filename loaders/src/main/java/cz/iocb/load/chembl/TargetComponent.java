@@ -35,9 +35,8 @@ import cz.iocb.load.common.Updater;
 
 /**
  * Loader of the ChEMBL target components from the target component file of the release into the table
- * {@code chembl.components}, together with their alternative names, their references to other databases with the
- * labels of the references, and their UniProt accessions from the UniProt linkset; the file also gives labels of
- * taxonomies.
+ * {@code chembl.components}, together with their alternative names, their references to other databases with the labels
+ * of the references, and their UniProt accessions from the UniProt linkset; the file also gives labels of taxonomies.
  */
 class TargetComponent extends Updater
 {
@@ -247,8 +246,8 @@ class TargetComponent extends Updater
 
 
     /**
-     * Returns the reference type and the stored value of a reference IRI with the given rdf:type values; a reference
-     * of an unknown type or with an unexpected IRI is reported and null is returned.
+     * Returns the reference type and the stored value of a reference IRI with the given rdf:type values; a reference of
+     * an unknown type or with an unexpected IRI is reported and null is returned.
      *
      * @param iri the reference IRI
      * @param types the local names of the {@code rdf:type} values of the reference IRIs
@@ -306,8 +305,8 @@ class TargetComponent extends Updater
 
 
     /**
-     * Loads the target components with their alternative names, references and UniProt accessions from the files of
-     * the release.
+     * Loads the target components with their alternative names, references and UniProt accessions from the files of the
+     * release.
      *
      * @throws IOException if a file cannot be read
      * @throws SQLException if a database error occurs

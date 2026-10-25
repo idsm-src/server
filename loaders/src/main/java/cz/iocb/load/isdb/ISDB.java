@@ -30,8 +30,8 @@ import cz.iocb.load.common.Updater;
 
 /**
  * Loads the In Silico Spectral Database (ISDB) from the MGF files of its summed spectra into the tables
- * {@code isdb.compounds} and {@code isdb.spectra}: a compound is identified by its name (usually the first block of
- * its InChIKey) and has one spectrum per polarity.
+ * {@code isdb.compounds} and {@code isdb.spectra}: a compound is identified by its name (usually the first block of its
+ * InChIKey) and has one spectrum per polarity.
  */
 public final class ISDB extends Updater
 {

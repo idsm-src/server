@@ -8,9 +8,9 @@ import cz.iocb.load.common.EntityTable.Column;
 
 
 /**
- * The text form of a pgms spectrum: m/z:intensity pairs separated by spaces. Two literals denote the same spectrum
- * when they hold the same peaks regardless of their order and of the format of the numbers, which is how a spectrum
- * column of an entity table compares its values with the stored ones.
+ * The text form of a pgms spectrum: m/z:intensity pairs separated by spaces. Two literals denote the same spectrum when
+ * they hold the same peaks regardless of their order and of the format of the numbers, which is how a spectrum column
+ * of an entity table compares its values with the stored ones.
  */
 public final class SpectrumLiteral
 {

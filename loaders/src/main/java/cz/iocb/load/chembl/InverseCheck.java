@@ -6,8 +6,8 @@ import cz.iocb.load.common.Problems;
 
 
 /**
- * Checks that the triples of an inverse property are exactly the inverses of the triples of the property stored in
- * the database, because the mapping derives the inverse triples from the stored ones. Pairs are collected in the
+ * Checks that the triples of an inverse property are exactly the inverses of the triples of the property stored in the
+ * database, because the mapping derives the inverse triples from the stored ones. Pairs are collected in the
  * orientation of the stored property.
  */
 class InverseCheck

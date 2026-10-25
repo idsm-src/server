@@ -474,8 +474,8 @@ public abstract class TripleStreamProcessor
 
 
     /**
-     * Returns the date of an xsd:date literal without its timezone. The date has to have one of the given timezones,
-     * or no timezone when none is given, because the mapping gives all dates of a property the same timezone or none.
+     * Returns the date of an xsd:date literal without its timezone. The date has to have one of the given timezones, or
+     * no timezone when none is given, because the mapping gives all dates of a property the same timezone or none.
      *
      * @param node the node
      * @param zones the allowed timezones, such as {@code Z} or {@code +02:00}
@@ -511,8 +511,8 @@ public abstract class TripleStreamProcessor
 
 
     /**
-     * Tests whether the text is a date that the database can store: a day of the years 1 to 9999 written as the
-     * lexical form of an xsd:date literal without its timezone.
+     * Tests whether the text is a date that the database can store: a day of the years 1 to 9999 written as the lexical
+     * form of an xsd:date literal without its timezone.
      *
      * @param text the text
      * @return true if the text is a storable date

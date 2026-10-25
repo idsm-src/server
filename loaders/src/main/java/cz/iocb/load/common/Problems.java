@@ -8,10 +8,10 @@ import java.util.Map.Entry;
 
 /**
  * Collects the problems of the loaded data. An error is a part of the data that the loader cannot load, such as an
- * unknown predicate, class or file: the load goes on, so that all the errors are reported at once, but the data
- * would be incomplete, so they are rolled back at the end. A warning is a problem that the loader has dealt with,
- * such as a repaired IRI, and does not prevent the commit. The first occurrences of each kind are printed at once,
- * the further ones are only counted, and the summary gives the numbers of all the kinds.
+ * unknown predicate, class or file: the load goes on, so that all the errors are reported at once, but the data would
+ * be incomplete, so they are rolled back at the end. A warning is a problem that the loader has dealt with, such as a
+ * repaired IRI, and does not prevent the commit. The first occurrences of each kind are printed at once, the further
+ * ones are only counted, and the summary gives the numbers of all the kinds.
  */
 public final class Problems
 {

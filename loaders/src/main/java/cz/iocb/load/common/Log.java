@@ -14,9 +14,9 @@ import java.time.format.DateTimeFormatter;
 
 
 /**
- * Copies the standard and the error output of a loader into a log file while they still go to the console. The file
- * is named by the start time of the loader, e.g. 2026-10-10_15-30-00.log, and it gets the output as it is written,
- * so that it can be followed during the load and it is complete even if the loader exits abruptly.
+ * Copies the standard and the error output of a loader into a log file while they still go to the console. The file is
+ * named by the start time of the loader, e.g. 2026-10-10_15-30-00.log, and it gets the output as it is written, so that
+ * it can be followed during the load and it is complete even if the loader exits abruptly.
  */
 public class Log
 {
@@ -27,8 +27,8 @@ public class Log
 
 
     /**
-     * Writes the output to the console and to the log, which the standard and the error output share; the log is
-     * locked for each write, so that it gets the output in the order in which it is written.
+     * Writes the output to the console and to the log, which the standard and the error output share; the log is locked
+     * for each write, so that it gets the output in the order in which it is written.
      */
     private static class Tee extends OutputStream
     {

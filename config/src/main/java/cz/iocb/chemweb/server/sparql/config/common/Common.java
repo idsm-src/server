@@ -28,8 +28,8 @@ public class Common
 
 
     /**
-     * Adds the common prefixes to the configuration: those of RDF, RDFS, OWL, XSD, the service description
-     * vocabularies and the full-text extension ({@code fulltext}).
+     * Adds the common prefixes to the configuration: those of RDF, RDFS, OWL, XSD, the service description vocabularies
+     * and the full-text extension ({@code fulltext}).
      *
      * @param config the configuration
      */

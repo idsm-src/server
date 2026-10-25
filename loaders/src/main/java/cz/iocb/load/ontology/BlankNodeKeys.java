@@ -12,14 +12,14 @@ import org.apache.jena.graph.Node;
 
 /**
  * Computes the keys of the blank nodes, which identify a blank node in the loads of the ontologies, although its label
- * changes. The key of a blank node is a hash of its content and its context. The content consists of the predicates
- * and the objects of the triples whose subject the blank node is, with the contents of the blank node objects in place
- * of the objects. The context consists of the subjects and the predicates of the triples whose object the blank node
- * is, with the keys of the blank node subjects in place of the subjects. So the key of a blank node stays the same as
- * long as its structure and the resources that refer to the structure do, and two blank nodes get the same key only
- * if they are equal structures in equal contexts, such as an axiom stated by two ontologies; such blank nodes can be
- * merged, as the merged graph is equivalent. A blank node in a cycle, which the structures of OWL do not have, and a
- * blank node referred to from a cycle are keyed by their labels.
+ * changes. The key of a blank node is a hash of its content and its context. The content consists of the predicates and
+ * the objects of the triples whose subject the blank node is, with the contents of the blank node objects in place of
+ * the objects. The context consists of the subjects and the predicates of the triples whose object the blank node is,
+ * with the keys of the blank node subjects in place of the subjects. So the key of a blank node stays the same as long
+ * as its structure and the resources that refer to the structure do, and two blank nodes get the same key only if they
+ * are equal structures in equal contexts, such as an axiom stated by two ontologies; such blank nodes can be merged, as
+ * the merged graph is equivalent. A blank node in a cycle, which the structures of OWL do not have, and a blank node
+ * referred to from a cycle are keyed by their labels.
  */
 final class BlankNodeKeys
 {

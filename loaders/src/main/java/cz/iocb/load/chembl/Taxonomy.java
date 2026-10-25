@@ -14,8 +14,8 @@ import cz.iocb.load.common.TripleStreamProcessor;
 
 /**
  * The taxonomies are not entities of their own: both IRIs of a taxonomy are produced by the mapping from the taxonomy
- * columns of the entities, which this class checks, and their labels, which the target component and biocomponent
- * files give, are stored as they are in the table {@code chembl.taxonomy_labels}.
+ * columns of the entities, which this class checks, and their labels, which the target component and biocomponent files
+ * give, are stored as they are in the table {@code chembl.taxonomy_labels}.
  */
 class Taxonomy
 {
