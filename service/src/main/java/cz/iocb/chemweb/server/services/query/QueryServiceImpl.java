@@ -377,14 +377,14 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
 
 
     @Override
-    public long query(String query) throws DatabaseException
+    public long query(String query)
     {
         return query(query, 0, -1);
     }
 
 
     @Override
-    public long query(String query, int offset, int limit) throws DatabaseException
+    public long query(String query, int offset, int limit)
     {
         final HttpSession httpSession = this.getThreadLocalRequest().getSession(true);
         final QueryState queryState = new QueryState();
