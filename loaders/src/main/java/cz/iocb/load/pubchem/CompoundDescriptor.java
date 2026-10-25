@@ -250,10 +250,8 @@ class CompoundDescriptor extends Updater
 
 
     /**
-     * Loads a string descriptor of the compounds into the table {@code pubchem.compound_
-     * 
-    <table>
-     * } and checks the values of the property of the same name in {@code pubchem/RDF/compound/general} against it.
+     * Loads a string descriptor of the compounds into the table {@code "pubchem.compound_" + table} and checks the
+     * values of the property of the same name in {@code pubchem/RDF/compound/general} against it.
      *
      * @param name the name of the descriptor in the names of its files
      * @param suffix the suffix of the IRIs of the descriptor
