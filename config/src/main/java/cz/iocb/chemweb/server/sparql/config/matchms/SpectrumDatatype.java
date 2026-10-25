@@ -7,8 +7,8 @@ import cz.iocb.sparql.engine.rdf.Iri;
 
 
 /**
- * Datatype {@code ms:spectrum} of mass spectra, stored as {@code pgms.spectrum}; the canonical form lists the peaks as
- * {@code mz:intensity} pairs separated by spaces.
+ * Datatype {@code ms:spectrum} of mass spectra, stored as {@code pgms.spectrum}; the canonical form is the one the type
+ * prints, the peaks sorted by m/z as {@code mz:intensity} pairs separated by spaces.
  */
 public class SpectrumDatatype extends UserDatatype
 {
