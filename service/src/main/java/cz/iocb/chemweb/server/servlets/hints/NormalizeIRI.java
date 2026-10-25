@@ -41,12 +41,13 @@ public class NormalizeIRI
 
 
     /**
-     * Regular expression of the production {@code PN_CHARS_BASE} of the SPARQL grammar.
+     * Regular expression of the production {@code PN_CHARS_BASE} of the SPARQL grammar; Java matches the characters
+     * above U+FFFF as code points.
      */
     private static String PN_CHARS_BASE = """
             ([A-Za-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\
-            \\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD]|\
-            [\\uD840-\\uDBBF][\\uDC00–\\uDFFF])""";
+            \\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD\
+            \\x{10000}-\\x{EFFFF}])""";
 
     /**
      * Regular expression of the production {@code PN_CHARS_U} of the SPARQL grammar.
