@@ -130,9 +130,8 @@ public class DetailsPageServiceImpl extends GWTRemoteServiceServlet implements D
         }
 
         Properties properties = new Properties();
-        properties.put("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.NullLogChute");
-        properties.put("file.resource.loader.path", config.getServletContext().getRealPath("/templates"));
-        properties.put("userdirective", """
+        properties.put("resource.loader.file.path", config.getServletContext().getRealPath("/templates"));
+        properties.put("runtime.custom_directives", """
                 cz.iocb.chemweb.server.velocity.SparqlDirective,\
                 cz.iocb.chemweb.server.velocity.EscapeHtmlDirective,\
                 cz.iocb.chemweb.server.velocity.EscapeIriDirective,\

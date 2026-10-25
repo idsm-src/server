@@ -322,8 +322,8 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
 
 
             Properties properties = new Properties();
-            properties.put("file.resource.loader.path", config.getServletContext().getRealPath("/templates"));
-            properties.put("userdirective", """
+            properties.put("resource.loader.file.path", config.getServletContext().getRealPath("/templates"));
+            properties.put("runtime.custom_directives", """
                     cz.iocb.chemweb.server.velocity.SparqlDirective,\
                     cz.iocb.chemweb.server.velocity.EscapeHtmlDirective,\
                     cz.iocb.chemweb.server.velocity.EscapeIriDirective,\
