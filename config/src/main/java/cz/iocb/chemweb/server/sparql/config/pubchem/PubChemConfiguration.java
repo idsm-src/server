@@ -26,14 +26,36 @@ import cz.iocb.sparql.engine.mapping.extension.ResultDefinition;
 
 
 
+/**
+ * Configuration of the PubChem dataset, which the IDSM endpoint merges into its service; besides the mappings of
+ * PubChem, it provides the full-text search procedures over the bioassays and compounds.
+ */
 public class PubChemConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    /**
+     * Database schema of the PubChem tables.
+     */
     static final String schema = "pubchem";
 
+    /**
+     * Literal class of the strings with the language tag {@code en}.
+     */
     public static final LangStringWithTagClass rdfLangStringEn = LangStringWithTagClass.get("en");
+
+    /**
+     * Literal class of the dates without a time zone.
+     */
     public static final DateInZoneClass xsdDateNoZone = DateInZoneClass.get(Integer.MIN_VALUE);
 
 
+    /**
+     * Creates the configuration of the PubChem dataset.
+     *
+     * @param service IRI of the service, or null
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public PubChemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
         super(service, connectionPool, schema);
@@ -46,6 +68,9 @@ public class PubChemConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the common prefixes and those of the PubChem RDF and of the vocabularies it uses to the configuration.
+     */
     private void addPrefixes()
     {
         Common.addPrefixes(this);
@@ -135,6 +160,12 @@ public class PubChemConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds to the configuration the resource classes of PubChem and of the ChEBI, MeSH, ontology, ChEMBL and Sachem
+     * resources it links to.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private void addResourceClasses() throws SQLException
     {
         Common.addResourceClasses(this);
@@ -182,6 +213,9 @@ public class PubChemConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the quad mappings of PubChem to the configuration.
+     */
     private void addQuadMappings()
     {
         Anatomy.addQuadMappings(this);
@@ -216,12 +250,20 @@ public class PubChemConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the common functions to the configuration.
+     */
     private void addFunctions()
     {
         Common.addFunctions(this);
     }
 
 
+    /**
+     * Adds the full-text search procedures to the configuration: {@code fulltext:bioassaySearch}, which returns the
+     * bioassays matching a query, and {@code fulltext:compoundSearch}, which returns the matching compounds with their
+     * scores and names.
+     */
     private void addProcedures()
     {
         String fulltext = getPrefixes().get("fulltext");

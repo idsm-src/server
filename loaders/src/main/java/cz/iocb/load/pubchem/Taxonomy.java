@@ -28,16 +28,47 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the PubChem taxonomies ({@code pubchem/RDF/taxonomy}) into the table {@code pubchem.taxonomies} and the
+ * tables of their alternative labels, references, patents and matches.
+ */
 public class Taxonomy extends Updater
 {
+    /**
+     * IRI prefix of the taxonomies.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/taxonomy/TAXID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Table of the taxonomies.
+     */
     private static final EntityTable<Integer> taxonomies = new EntityTable<>("pubchem.taxonomies", intKey("id"), null,
             varchar("label"));
+
+    /**
+     * Taxonomies referenced but not described by the data.
+     */
     private static final MissingEntities<Integer> missingTaxonomies = new MissingEntities<>("taxonomy", true);
 
 
+    /**
+     * Not instantiable.
+     */
+    private Taxonomy()
+    {
+    }
+
+
+    /**
+     * Registers the checks of the predicates, types and values of the taxonomy file.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), rdf + "type", dcterms + "identifier", skos + "prefLabel", skos + "altLabel",
@@ -58,6 +89,13 @@ public class Taxonomy extends Updater
     }
 
 
+    /**
+     * Registers the handler that adds the taxonomies described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.onType(sio + "SIO_010000", (subject, object) -> {
@@ -69,6 +107,13 @@ public class Taxonomy extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the labels of the taxonomies.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadLabels(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(skos + "prefLabel", (subject, object) -> {
@@ -77,6 +122,14 @@ public class Taxonomy extends Updater
     }
 
 
+    /**
+     * Registers the handler of the alternative labels of the taxonomies and the action that stores their changes in
+     * {@code pubchem.taxonomy_alternatives}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAlternatives(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepAlternatives = new IntStringSet();
@@ -104,6 +157,14 @@ public class Taxonomy extends Updater
     }
 
 
+    /**
+     * Registers the handler of the references and patents discussing the taxonomies and the action that stores their
+     * changes in {@code pubchem.taxonomy_references} and {@code pubchem.taxonomy_patents}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadReferences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepReferences = new IntPairSet();
@@ -154,6 +215,14 @@ public class Taxonomy extends Updater
     }
 
 
+    /**
+     * Registers the handler of the ontology resources matching the taxonomies and the action that stores their changes
+     * in {@code pubchem.taxonomy_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntIntPairSet keepMatches = new IntIntPairSet();
@@ -186,6 +255,14 @@ public class Taxonomy extends Updater
     }
 
 
+    /**
+     * Registers the handler of the MeSH descriptors matching the taxonomies and the action that stores their changes in
+     * {@code pubchem.taxonomy_mesh_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMeshCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -216,6 +293,14 @@ public class Taxonomy extends Updater
     }
 
 
+    /**
+     * Registers the handler of the Catalogue of Life taxa matching the taxonomies and the action that stores their
+     * changes in {@code pubchem.taxonomy_catalogueoflife_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCatalogueoflifeCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -246,6 +331,14 @@ public class Taxonomy extends Updater
     }
 
 
+    /**
+     * Registers the handler of the Wikidata items matching the taxonomies and the action that stores their changes in
+     * {@code pubchem.taxonomy_wikidata_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadWikidataCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepMatches = new IntPairSet();
@@ -276,6 +369,12 @@ public class Taxonomy extends Updater
     }
 
 
+    /**
+     * Loads the taxonomies from the PubChemRDF file and flushes their table.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load taxonomies ...");
@@ -302,6 +401,13 @@ public class Taxonomy extends Updater
     }
 
 
+    /**
+     * Stores the taxonomies, including those referenced by the parts loaded later, and deletes the stored taxonomies
+     * that are neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish taxonomies ...");
@@ -312,6 +418,14 @@ public class Taxonomy extends Updater
     }
 
 
+    /**
+     * Returns the id of the taxonomy with the given IRI; a taxonomy not described by the data gets a row and is counted
+     * as missing.
+     *
+     * @param value the IRI of the taxonomy
+     * @return the id (the NCBI taxonomy id) of the taxonomy
+     * @throws IOException if the IRI is not an IRI of a taxonomy
+     */
     static Integer getTaxonomyID(String value) throws IOException
     {
         if(!value.startsWith(prefix))

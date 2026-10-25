@@ -41,15 +41,46 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the ChEBI ontology from the OWL file {@code chebi/chebi.owl} and of the structures of its entities from the
+ * SDF file {@code chebi/chebi.sdf.gz} into the tables of the schema {@code chebi}; the tables are updated
+ * incrementally, only the rows that changed are deleted or inserted.
+ */
 public class ChEBI extends Updater
 {
+    /**
+     * Existential restriction that is a superclass of an entity.
+     */
     private static final class Restriction
     {
+        /**
+         * Id of the restricted entity.
+         */
         final int chebiID;
+
+        /**
+         * Id of the entity the values of the property must come from.
+         */
         final int valueRestrictionID;
+
+        /**
+         * Ontology unit of the property.
+         */
         final int propertyUnit;
+
+        /**
+         * Id of the property within its unit.
+         */
         final int propertyID;
 
+        /**
+         * Creates the restriction.
+         *
+         * @param chebiID the id of the restricted entity
+         * @param valueRestrictionID the id of the entity the values of the property must come from
+         * @param propertyUnit the ontology unit of the property
+         * @param propertyID the id of the property within its unit
+         */
         public Restriction(int chebiID, int valueRestrictionID, int propertyUnit, int propertyID)
         {
             this.chebiID = chebiID;
@@ -89,15 +120,51 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Annotation of an axiom about an entity, such as the type, the reference and the source of its synonym.
+     */
     private static final class Axiom
     {
+        /**
+         * Id of the annotated entity.
+         */
         final int chebiID;
+
+        /**
+         * Id of the annotated property among the uncategorized ontology resources.
+         */
         final int propertyID;
+
+        /**
+         * Value of the annotated property.
+         */
         final String target;
+
+        /**
+         * Id of the synonym type among the uncategorized ontology resources, or null.
+         */
         final Integer typeID;
+
+        /**
+         * Database cross-reference, or null.
+         */
         final String reference;
+
+        /**
+         * Source, or null.
+         */
         final String source;
 
+        /**
+         * Creates the annotation.
+         *
+         * @param chebiID the id of the annotated entity
+         * @param propertyID the id of the annotated property among the uncategorized ontology resources
+         * @param target the value of the annotated property
+         * @param typeID the id of the synonym type among the uncategorized ontology resources, or null
+         * @param reference the database cross-reference, or null
+         * @param source the source, or null
+         */
         public Axiom(int chebiID, int propertyID, String target, Integer typeID, String reference, String source)
         {
             this.chebiID = chebiID;
@@ -145,9 +212,19 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Restrictions with their ids, as stored in the table {@code chebi.restrictions}.
+     */
     @SuppressWarnings("serial")
     public static class RestrictionIntMap extends SqlMap<Restriction, Integer>
     {
+        /**
+         * Creates an empty map.
+         */
+        public RestrictionIntMap()
+        {
+        }
+
         @Override
         public Restriction getKey(ResultSet result) throws SQLException
         {
@@ -172,9 +249,19 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Axiom annotations with their ids, as stored in the table {@code chebi.axioms}.
+     */
     @SuppressWarnings("serial")
     public static class AxiomIntMap extends SqlMap<Axiom, Integer>
     {
+        /**
+         * Creates an empty map.
+         */
+        public AxiomIntMap()
+        {
+        }
+
         @Override
         public Axiom getKey(ResultSet result) throws SQLException
         {
@@ -202,28 +289,91 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Namespace of RDF.
+     */
     static final String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+
+    /**
+     * Namespace of RDF Schema.
+     */
     static final String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
+
+    /**
+     * Namespace of OWL.
+     */
     static final String owl = "http://www.w3.org/2002/07/owl#";
+
+    /**
+     * Namespace of the OBO ontologies.
+     */
     static final String obo = "http://purl.obolibrary.org/obo/";
+
+    /**
+     * Namespace of the OBO in OWL vocabulary.
+     */
     static final String oboInOwl = "http://www.geneontology.org/formats/oboInOwl#";
+
+    /**
+     * Namespace of the Chemical Entity Materials and Reactions Ontological Framework.
+     */
     static final String chemrof = "https://w3id.org/chemrof/";
+
+    /**
+     * Namespace of the DCMI Metadata Terms.
+     */
     static final String dcterms = "http://purl.org/dc/terms/";
+
+    /**
+     * Namespace of FOAF.
+     */
     static final String foaf = "http://xmlns.com/foaf/0.1/";
 
+    /**
+     * IRI prefix of the ChEBI entities.
+     */
     static final String prefix = "http://purl.obolibrary.org/obo/CHEBI_";
 
+    /**
+     * OWL file of the ontology.
+     */
     private static final String file = "chebi/chebi.owl";
 
+    /**
+     * Stored entities that the release still contains.
+     */
     private static final IntSet keepEntities = new IntSet();
+
+    /**
+     * Entities of the release to insert into {@code chebi.classes}.
+     */
     private static final IntSet newEntities = new IntSet();
+
+    /**
+     * Stored entities not met in the release (yet), deleted at the end.
+     */
     private static final IntSet oldEntities = new IntSet();
+
+    /**
+     * Entities referenced but not described by the ontology.
+     */
     private static final MissingEntities<Integer> missingEntities = new MissingEntities<>("entity", true);
 
 
-    /*
+    /**
+     * Not instantiable.
+     */
+    private ChEBI()
+    {
+    }
+
+
+    /**
      * Returns the version of the ontology from its version IRI, which the header of the file states, so that the file
      * is read only up to it; null stands for an unknown version.
+     *
+     * @return the version of the ontology, or null if it is unknown
+     * @throws IOException if the file cannot be read
      */
     private static String getVersion() throws IOException
     {
@@ -266,6 +416,11 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Registers the checks of the predicates and types of the ontology file.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         // the subjects other than the ontology and the declarations of its properties, subsets and synonym types
@@ -297,6 +452,13 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Loads the stored entities and registers the handler that collects the entities declared by the ontology.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         load("select id from chebi.classes", oldEntities);
@@ -313,6 +475,13 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the superclasses of the entities into {@code chebi.class_parents}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadParents(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepParents = new IntPairSet();
@@ -343,6 +512,13 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the star ratings of the entities into {@code chebi.class_stars}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadStars(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntIntMap keepStars = new IntIntMap();
@@ -390,6 +566,13 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the replacements of the obsolete entities into {@code chebi.class_replacements}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadReplacements(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntIntMap keepReplacements = new IntIntMap();
@@ -432,6 +615,14 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the reasons of the obsolescence of the entities into
+     * {@code chebi.class_obsolescence_reasons}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadObsolescenceReasons(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntIntMap keepReasons = new IntIntMap();
@@ -474,9 +665,13 @@ public class ChEBI extends Updater
     }
 
 
-    /*
+    /**
      * Loads the existential restrictions that are superclasses of the entities. A restriction is a blank node, so its
      * triples are collected and the restrictions are assembled once the file has been read.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadRestrictions(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -551,10 +746,14 @@ public class ChEBI extends Updater
     }
 
 
-    /*
+    /**
      * Loads the annotations of the axioms about the entities. An annotated axiom is a blank node, so its triples are
      * collected and the annotations are assembled once the file has been read; the annotation of an axiom with several
      * values of a property is stored once for each combination of them.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadAxioms(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -611,9 +810,14 @@ public class ChEBI extends Updater
     }
 
 
-    /*
+    /**
      * Returns the annotations of an annotated axiom, one for each combination of the values of its properties; the
      * type, reference and source are optional.
+     *
+     * @param parts the collected triples of the blank nodes
+     * @param node the blank node of the axiom
+     * @return the annotations of the axiom
+     * @throws IOException if a part of the axiom is missing or invalid
      */
     private static List<Axiom> getAxioms(BlankNodes parts, Node node) throws IOException
     {
@@ -631,6 +835,18 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Creates the annotation of an axiom from the values of its properties.
+     *
+     * @param chebi the annotated entity
+     * @param property the annotated property
+     * @param target the value of the annotated property
+     * @param type the synonym type, or null
+     * @param reference the database cross-reference, or null
+     * @param source the source, or null
+     * @return the annotation
+     * @throws IOException if a value is invalid
+     */
     private static Axiom getAxiom(Node chebi, Node property, Node target, Node type, Node reference, Node source)
             throws IOException
     {
@@ -643,6 +859,16 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the string values of a multivalued property of the entities into a table.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param property the IRI of the property
+     * @param table the name of the table in the schema {@code chebi}
+     * @param column the name of the value column
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMultiStringValues(TripleDispatcher dispatcher, String property, String table, String column)
             throws IOException, SQLException
     {
@@ -673,6 +899,16 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the string values of a single-valued property of the entities into a table.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param property the IRI of the property
+     * @param table the name of the table in the schema {@code chebi}
+     * @param column the name of the value column
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadStringValues(TripleDispatcher dispatcher, String property, String table, String column)
             throws IOException, SQLException
     {
@@ -719,6 +955,16 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the decimal values of a multivalued property of the entities into a table.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param property the IRI of the property
+     * @param table the name of the table in the schema {@code chebi}
+     * @param column the name of the value column
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMultiDecimalValues(TripleDispatcher dispatcher, String property, String table,
             String column) throws IOException, SQLException
     {
@@ -749,6 +995,16 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the integer values of a single-valued property of the entities into a table.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param property the IRI of the property
+     * @param table the name of the table in the schema {@code chebi}
+     * @param column the name of the value column
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadIntegerValues(TripleDispatcher dispatcher, String property, String table, String column)
             throws IOException, SQLException
     {
@@ -795,6 +1051,16 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the boolean values of a single-valued property of the entities into a table.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param property the IRI of the property
+     * @param table the name of the table in the schema {@code chebi}
+     * @param column the name of the value column
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBooleanValues(TripleDispatcher dispatcher, String property, String table, String column)
             throws IOException, SQLException
     {
@@ -841,6 +1107,12 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Stores the collected entities: deletes the entities no longer present and inserts the new ones.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void finish() throws IOException, SQLException
     {
         store("delete from chebi.classes where id=?", oldEntities);
@@ -848,8 +1120,11 @@ public class ChEBI extends Updater
     }
 
 
-    /*
+    /**
      * Ensures that the entity has a row; returns whether it has not had one yet.
+     *
+     * @param entityID the id of the entity
+     * @return true if the entity has not had a row yet, false otherwise
      */
     private static boolean addEntity(Integer entityID)
     {
@@ -865,12 +1140,25 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Returns the id of a referenced entity given by its IRI and ensures that the entity has a row.
+     *
+     * @param value the IRI of the entity
+     * @return the id of the entity
+     * @throws IOException if the IRI is not an IRI of a ChEBI entity
+     */
     private static Integer getEntityID(String value) throws IOException
     {
         return getEntityID(getIntID(value, prefix));
     }
 
 
+    /**
+     * Returns the id of a referenced entity and ensures that the entity has a row.
+     *
+     * @param entityID the id of the entity
+     * @return the id of the entity
+     */
     private static Integer getEntityID(Integer entityID)
     {
         if(addEntity(entityID))
@@ -880,8 +1168,11 @@ public class ChEBI extends Updater
     }
 
 
-    /*
+    /**
      * Loads the structures of the entities from the SDF file of the release.
+     *
+     * @throws IOException if the file cannot be read or is invalid
+     * @throws SQLException if a database error occurs
      */
     private static void loadMolfiles() throws IOException, SQLException
     {
@@ -905,6 +1196,13 @@ public class ChEBI extends Updater
     }
 
 
+    /**
+     * Runs the loader of ChEBI.
+     *
+     * @param args the command-line arguments (ignored)
+     * @throws SQLException if a database error occurs
+     * @throws IOException if an I/O error occurs
+     */
     public static void main(String[] args) throws SQLException, IOException
     {
         try

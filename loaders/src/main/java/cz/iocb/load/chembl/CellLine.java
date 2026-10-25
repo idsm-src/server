@@ -23,15 +23,38 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the ChEMBL cell lines from the cell line file of the release into the table {@code chembl.cell_lines}.
+ */
 class CellLine extends Updater
 {
+    /**
+     * IRI prefix of the cell lines.
+     */
     static final String prefix = ChEMBL.chembl + "cell_line/CHEMBL";
 
+    /**
+     * Table of the cell lines.
+     */
     private static final EntityTable<Integer> cellLines = new EntityTable<>("chembl.cell_lines", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), varchar("label"), varchar("description"), varchar("organism"),
             integer("taxonomy"), varchar("cellosaurus"), integer("clo_id"), integer("efo_unit"), integer("efo_id"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private CellLine()
+    {
+    }
+
+
+    /**
+     * Loads the cell lines from the cell line file of the release.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load cell lines ...");
@@ -77,6 +100,11 @@ class CellLine extends Updater
     }
 
 
+    /**
+     * Stores the collected cell lines and reports the referenced ones that the file does not describe.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish cell lines ...");
@@ -87,6 +115,13 @@ class CellLine extends Updater
     }
 
 
+    /**
+     * Returns the id of a cell line and marks the cell line as referenced.
+     *
+     * @param node the IRI of the cell line
+     * @return the id of the cell line
+     * @throws IOException if the node is not an IRI of a cell line
+     */
     static int getCellLineID(Node node) throws IOException
     {
         int id = TripleStreamProcessor.getIntID(node, prefix);

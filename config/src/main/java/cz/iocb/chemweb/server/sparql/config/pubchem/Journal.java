@@ -11,8 +11,24 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem journals (graph {@code pubchem:journal}).
+ */
 public class Journal
 {
+    /**
+     * Not instantiable.
+     */
+    private Journal()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem journals to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
@@ -20,6 +36,11 @@ public class Journal
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem journals to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:journal");

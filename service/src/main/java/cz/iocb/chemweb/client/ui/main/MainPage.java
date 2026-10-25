@@ -34,39 +34,99 @@ import cz.iocb.chemweb.shared.utils.Encode;
 
 
 
+/**
+ * Main page of the client: the query editor, the result table and the details and properties of the visited resource,
+ * side by side in a split layout. It fires a selection event with the IRI of each visited resource and highlights the
+ * occurrences of the selected resource.
+ */
 public class MainPage extends ResizeComposite implements HasSelectionHandlers<String>
 {
+    /**
+     * Binder of the page template {@code MainPage.ui.xml}.
+     */
     interface MainPageUiBinder extends UiBinder<Widget, MainPage>
     {
     }
 
 
+    /**
+     * Binder of the page template.
+     */
     private static MainPageUiBinder uiBinder = GWT.create(MainPageUiBinder.class);
 
+    /**
+     * Tab panel with the query editor.
+     */
     @UiField
     TabLayoutPanel queryTabPanel;
+
+    /**
+     * Split layout of the query, result and information panels.
+     */
     @UiField(provided = true)
     SplitLayoutPanel mainSplitLayoutPanel;
+
+    /**
+     * Tab panel with the result table.
+     */
     @UiField
     TabLayoutPanel resultTabPanel;
+
+    /**
+     * Tab panel with the details and the properties of the visited resource.
+     */
     @UiField
     TabLayoutPanel infoTabPanel;
+
+    /**
+     * Query editor.
+     */
     @UiField(provided = true)
     QueryPart queryPart;
+
+    /**
+     * Result table.
+     */
     @UiField
     ResultTablePart resultTablePart;
+
+    /**
+     * Details of the visited resource.
+     */
     @UiField(provided = true)
     DetailsPart detailsPart;
+
+    /**
+     * Properties of the visited resource.
+     */
     @UiField(provided = true)
     PropertiesPart propertiesPart;
 
+    /**
+     * Minimal width of the result panel in pixels.
+     */
     private final int minCentralWidth = 300;
+
+    /**
+     * Style element highlighting the occurrences of the selected resource.
+     */
     private final Element styleOfSelected;
 
+    /**
+     * Manager of the selection handlers.
+     */
     private final HandlerManager handlerManager = new HandlerManager(this);
+
+    /**
+     * History of the visited resources shared by the details and the properties.
+     */
     private final VisitingHistory history;
 
 
+    /**
+     * Creates the page; the query editor starts with the query of the {@code query} parameter of the page, or with the
+     * first example query.
+     */
     public MainPage()
     {
         String query = Location.getParameter("query");
@@ -211,6 +271,12 @@ public class MainPage extends ResizeComposite implements HasSelectionHandlers<St
     }
 
 
+    /**
+     * Visits a resource: records it in the history, announces it to the selection handlers and shows it in the open
+     * information tab.
+     *
+     * @param iri the IRI of the resource
+     */
     private void visitIri(String iri)
     {
         if(iri.equals(history.getCurrent()))
@@ -229,6 +295,10 @@ public class MainPage extends ResizeComposite implements HasSelectionHandlers<St
     }
 
 
+    /**
+     * Shrinks the query and the information panels, the wider one more, when the result panel would be narrower than
+     * its minimal width.
+     */
     private void resetSplitLayoutSize()
     {
         int border = 2;
@@ -275,12 +345,22 @@ public class MainPage extends ResizeComposite implements HasSelectionHandlers<St
     }
 
 
+    /**
+     * Returns the resource shown when the page is loaded, defined by {@code chemweb/js/config.js}.
+     *
+     * @return the IRI of the start resource
+     */
     public final native static String getStartIri()
     /*-{
         return $wnd.startIri;
     }-*/;
 
 
+    /**
+     * Returns the query shown when the page is loaded without a query.
+     *
+     * @return the first example query with its description
+     */
     public final static String getDefultQuery()
     {
         return SelectExampleDialog.getData().get(0).getCommentedCode();

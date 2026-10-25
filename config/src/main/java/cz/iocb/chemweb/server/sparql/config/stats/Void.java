@@ -33,6 +33,11 @@ import cz.iocb.sparql.engine.rdf.Iri;
 
 
 
+/**
+ * Mapping of the VoID statistics of the IDSM endpoint (schema {@code void}, graph
+ * {@code https://idsm.elixir-czech.cz/.well-known/void}): the service with its default dataset and named graphs, and
+ * the class, property, class-property and datatype partitions and the linksets of the graphs.
+ */
 public class Void
 {
     /**
@@ -46,6 +51,19 @@ public class Void
             unitPR, unitUberon, unitTaxonomy, unitThesaurus, unitNDFRT, unitSNOMEDCT };
 
 
+    /**
+     * Not instantiable.
+     */
+    private Void()
+    {
+    }
+
+
+    /**
+     * Adds the prefixes of the VoID vocabularies and of the Dublin Core terms to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addPrefixes(VoidConfiguration config)
     {
         config.addPrefix("void", "http://rdfs.org/ns/void#");
@@ -54,6 +72,12 @@ public class Void
     }
 
 
+    /**
+     * Adds the resource classes of the graphs and of the partitions and linksets of the statistics to the
+     * configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(VoidConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("sd:graph", INT4, new DatabaseTable(schema, "graphs"),
@@ -95,6 +119,11 @@ public class Void
     }
 
 
+    /**
+     * Adds the quad mappings of the statistics to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(VoidConfiguration config)
     {
         String endpoint = "https://idsm.elixir-czech.cz/sparql/endpoint/idsm";

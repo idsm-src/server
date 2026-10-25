@@ -17,15 +17,39 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the Wikidata compounds from the TSV results of the queries of their isomeric SMILES, canonical SMILES and
+ * InChI into the tables of the schema {@code wikidata}, which also gets the structures of the compounds derived from
+ * the SMILES.
+ */
 public class Wikidata extends Updater
 {
+    /**
+     * The pattern of the IRI of a Wikidata entity in a query result, capturing its number.
+     */
     private static final Pattern entityPattern = Pattern.compile("^<http://www\\.wikidata\\.org/entity/Q([0-9]+)>$");
+
+    /**
+     * The pattern of the skolem IRI of an unknown value in a query result.
+     */
     private static final Pattern unknownValuePattern = Pattern
             .compile("^<http://www\\.wikidata\\.org/\\.well-known/genid/[0-9a-f]+>$");
 
 
-    /*
+    /**
+     * Not instantiable.
+     */
+    private Wikidata()
+    {
+    }
+
+
+    /**
      * Returns the value of a string literal of a TSV query result, i.e. with the escape sequences decoded.
+     *
+     * @param literal the literal in the TSV form, quoted
+     * @return the value of the literal
+     * @throws DataException if the literal is malformed
      */
     private static String decode(String literal) throws DataException
     {
@@ -86,10 +110,17 @@ public class Wikidata extends Updater
     }
 
 
-    /*
+    /**
      * Loads the values of a property from the TSV result of its query into the given table; an unexpected line is
      * reported as an error and skipped. A statement of an unknown value, which the query service gives as a skolem
      * IRI, has no value to load and is skipped silently.
+     *
+     * @param file the name of the TSV file in the directory {@code wikidata}
+     * @param table the name of the table in the schema {@code wikidata}
+     * @param column the name of the value column of the table, which is also the name of the value variable of the
+     *            query
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
      */
     private static void loadValues(String file, String table, String column) throws IOException, SQLException
     {
@@ -159,8 +190,10 @@ public class Wikidata extends Updater
     }
 
 
-    /*
+    /**
      * Sets the structures of the compounds to their SMILES, the isomeric one if available.
+     *
+     * @throws SQLException if a database error occurs
      */
     private static void loadStructures() throws SQLException
     {
@@ -188,6 +221,13 @@ public class Wikidata extends Updater
     }
 
 
+    /**
+     * Runs the loader.
+     *
+     * @param args the command-line arguments (ignored)
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     public static void main(String[] args) throws IOException, SQLException
     {
         try

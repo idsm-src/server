@@ -14,8 +14,25 @@ import cz.iocb.sparql.engine.mapping.classes.GenericUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem endpoints, the outcomes of testing the substances in the bioassays (graph
+ * {@code pubchem:endpoint}).
+ */
 public class Endpoint
 {
+    /**
+     * Not instantiable.
+     */
+    private Endpoint()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem endpoints to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new GenericUserIriClass("pubchem:endpoint", schema, "endpoint",
@@ -24,6 +41,11 @@ public class Endpoint
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem endpoints to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:endpoint");

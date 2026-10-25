@@ -14,13 +14,23 @@ import org.apache.commons.io.IOUtils;
 
 
 /**
+ * Request wrapper caching the body, so that the body can be read more than once: by the Matomo filter and then by the
+ * servlet. Taken from
  * http://stackoverflow.com/questions/10210645/http-servlet-request-lose-params-from-post-body-after-read-it-once
  */
 
 public class MultiReadHttpServletRequest extends HttpServletRequestWrapper
 {
+    /**
+     * Cached body of the request, null until the body is read first.
+     */
     private ByteArrayOutputStream cachedBytes;
 
+    /**
+     * Creates the wrapper.
+     *
+     * @param request the wrapped request
+     */
     public MultiReadHttpServletRequest(HttpServletRequest request)
     {
         super(request);
@@ -41,6 +51,11 @@ public class MultiReadHttpServletRequest extends HttpServletRequestWrapper
         return new BufferedReader(new InputStreamReader(getInputStream()));
     }
 
+    /**
+     * Reads the body of the wrapped request into the cache.
+     *
+     * @throws IOException if an I/O error occurs
+     */
     private void cacheInputStream() throws IOException
     {
         /* Cache the inputstream in order to read it multiple times. For
@@ -50,11 +65,19 @@ public class MultiReadHttpServletRequest extends HttpServletRequestWrapper
         IOUtils.copy(super.getInputStream(), cachedBytes);
     }
 
-    /* An inputstream which reads the cached request body */
+    /**
+     * Input stream reading the cached body of the request.
+     */
     public class CachedServletInputStream extends ServletInputStream
     {
+        /**
+         * Stream of the cached body.
+         */
         private final ByteArrayInputStream input;
 
+        /**
+         * Creates a stream reading the cached body from its beginning.
+         */
         public CachedServletInputStream()
         {
             /* create a new input stream from the cached request body */

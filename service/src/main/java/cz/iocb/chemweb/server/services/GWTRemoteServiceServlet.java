@@ -6,9 +6,24 @@ import com.google.gwt.user.server.rpc.jakarta.RemoteServiceServlet;
 
 
 
+/**
+ * Base of the GWT RPC servlets that finds the serialization policy under the module base URL given by the
+ * {@code X-GWT-Module-Base} header, if present, so that the services work behind a proxy that changes the URL.
+ */
 public class GWTRemoteServiceServlet extends RemoteServiceServlet
 {
+    /**
+     * Serialization version.
+     */
     private static final long serialVersionUID = 1L;
+
+
+    /**
+     * Creates the servlet.
+     */
+    public GWTRemoteServiceServlet()
+    {
+    }
 
 
     @Override

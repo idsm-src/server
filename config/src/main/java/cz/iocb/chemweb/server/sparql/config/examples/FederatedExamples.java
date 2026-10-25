@@ -11,8 +11,26 @@ import cz.iocb.sparql.engine.rdf.Iri;
 
 
 
+/**
+ * Mapping of the federated SPARQL examples of IDSM (tables {@code idsm.federated_queries} and
+ * {@code idsm.federated_query_targets}), described by SHACL as executable SELECT queries in the graph
+ * {@code https://idsm.elixir-czech.cz/.well-known/federated-sparql-examples}.
+ */
 public class FederatedExamples
 {
+    /**
+     * Not instantiable.
+     */
+    private FederatedExamples()
+    {
+    }
+
+
+    /**
+     * Adds the prefixes of SHACL, schema.org and the SPARQL examples ontology to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addPrefixes(ExamplesConfiguration config)
     {
         config.addPrefix("sh", "http://www.w3.org/ns/shacl#");
@@ -21,6 +39,11 @@ public class FederatedExamples
     }
 
 
+    /**
+     * Adds the resource class of the federated examples to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(ExamplesConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("idsm:federated_example", INT4,
@@ -28,6 +51,11 @@ public class FederatedExamples
     }
 
 
+    /**
+     * Adds the quad mappings of the federated examples to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(ExamplesConfiguration config)
     {
         ConstantIriMapping graph = config

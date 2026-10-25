@@ -5,8 +5,14 @@ import com.google.gwt.resources.client.ImageResource;
 
 
 
+/**
+ * Factory of the resources of the CodeMirror editor for high-density (retina) displays, chosen by deferred binding.
+ */
 public class RetinaCodeMirrorBundle extends CodeMirrorBundle
 {
+    /**
+     * Resources of the CodeMirror editor with the images in double resolution.
+     */
     public interface RetinaCodeMirrorClientBundle extends CodeMirrorClientBundle
     {
         @Override
@@ -28,6 +34,14 @@ public class RetinaCodeMirrorBundle extends CodeMirrorBundle
         @Override
         @Source("multiple@2x.png")
         ImageResource multipleSymbol();
+    }
+
+
+    /**
+     * Creates the factory.
+     */
+    public RetinaCodeMirrorBundle()
+    {
     }
 
 

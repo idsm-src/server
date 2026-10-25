@@ -13,8 +13,24 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem substances (graph {@code pubchem:substance}).
+ */
 public class Substance
 {
+    /**
+     * Not instantiable.
+     */
+    private Substance()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem substances to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("pubchem:substance", INT4,
@@ -22,6 +38,11 @@ public class Substance
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem substances to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:substance");

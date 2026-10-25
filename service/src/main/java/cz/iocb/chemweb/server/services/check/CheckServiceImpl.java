@@ -18,11 +18,29 @@ import cz.iocb.sparql.engine.request.Request;
 
 
 
+/**
+ * Implementation of the {@link CheckService}: checks queries by the engine of the configuration named by the
+ * {@code resource} init parameter (a JNDI resource).
+ */
 public class CheckServiceImpl extends GWTRemoteServiceServlet implements CheckService
 {
+    /**
+     * Serialization version.
+     */
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Engine checking the queries.
+     */
     private Engine engine;
+
+
+    /**
+     * Creates the servlet.
+     */
+    public CheckServiceImpl()
+    {
+    }
 
 
     @Override

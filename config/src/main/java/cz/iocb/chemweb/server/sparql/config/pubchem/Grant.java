@@ -13,8 +13,24 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem grants (graph {@code pubchem:grant}).
+ */
 public class Grant
 {
+    /**
+     * Not instantiable.
+     */
+    private Grant()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem grants to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pubchem:grant", INT4, new DatabaseTable(schema, "grants"),
@@ -23,6 +39,11 @@ public class Grant
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem grants to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:grant");

@@ -20,16 +20,37 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem references ({@code pubchem/RDF/reference}) into the table {@code pubchem.references} and the
+ * tables of their subjects, identifiers, authors, grants, funding agencies, journals, books and text-mined entities.
+ */
 class Reference extends Updater
 {
+    /**
+     * IRI prefix of the references.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/reference/";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Table of the references.
+     */
     private static final EntityTable<Integer> references = new EntityTable<>("pubchem.references", intKey("id"), null,
             date("dcdate"), varchar("date"), uniqueVarchar("title"), uniqueVarchar("citation"), varchar("publication"),
             varchar("issue"), varchar("starting_page"), varchar("ending_page"), varchar("page_range"), varchar("lang"));
+
+    /**
+     * References referenced but missing in the title files of the references.
+     */
     private static final MissingEntities<Integer> missingReferences = new MissingEntities<>("reference", false);
 
+    /**
+     * Values of the source type of the references by the IRIs of their sources.
+     */
     private static HashMap<String, String> sources = new HashMap<>();
 
 
@@ -52,6 +73,20 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Not instantiable.
+     */
+    private Reference()
+    {
+    }
+
+
+    /**
+     * Loads the references, which the title files describe, with their titles.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/reference", "pc_reference_title_[0-9]+\\.ttl\\.gz", file -> {
@@ -79,6 +114,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the names of the publications of the references.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadPublications() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/reference", "pc_reference_publication_[0-9]+\\.ttl\\.gz", file -> {
@@ -107,6 +148,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the citations of the references.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCitations() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/reference", "pc_reference_citation_[0-9]+\\.ttl\\.gz", file -> {
@@ -135,6 +182,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the issues of the references.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadIssues() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/reference", "pc_reference_issue_[0-9]+\\.ttl\\.gz", file -> {
@@ -163,6 +216,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the starting pages of the references.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadStartingPages() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/reference", "pc_reference_startingpage_[0-9]+\\.ttl\\.gz", file -> {
@@ -191,6 +250,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the ending pages of the references.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadEndingPages() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/reference", "pc_reference_endingpage_[0-9]+\\.ttl\\.gz", file -> {
@@ -219,6 +284,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the page ranges of the references.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadPageRanges() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/reference", "pc_reference_pagerange_[0-9]+\\.ttl\\.gz", file -> {
@@ -247,6 +318,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the languages of the references.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadLangs() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/reference", "pc_reference_lang_[0-9]+\\.ttl\\.gz", file -> {
@@ -274,6 +351,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the dates of the references, which are stored as dates or, if they are given as strings, as texts.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadDates() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/reference", "pc_reference_date\\.ttl\\.gz", file -> {
@@ -315,6 +398,13 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the MeSH headings of the chemicals and diseases discussed by the references and stores their changes in
+     * {@code pubchem.reference_discussed_headings}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadChemicalDiseases() throws IOException, SQLException
     {
         IntStringSet keepDiscusses = new IntStringSet();
@@ -359,6 +449,13 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the MeSH and ANZSRC subject terms of the references and stores their changes in
+     * {@code pubchem.reference_subjects} and {@code pubchem.reference_anzsrc_subjects}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMeshheadings() throws IOException, SQLException
     {
         IntStringSet keepSubjects = new IntStringSet();
@@ -430,6 +527,13 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the primary MeSH subject terms of the references and stores their changes in
+     * {@code pubchem.reference_primary_subjects}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadPrimaryMeshheadings() throws IOException, SQLException
     {
         IntStringSet keepSubjects = new IntStringSet();
@@ -475,6 +579,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the content types of the references and stores their changes in {@code pubchem.reference_content_types}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadContentTypes() throws IOException, SQLException
     {
         IntStringSet keepContentTypes = new IntStringSet();
@@ -520,6 +630,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the ISSNs of the references and stores their changes in {@code pubchem.reference_issn_numbers}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadIssnNumbers() throws IOException, SQLException
     {
         IntStringSet keepIssnNumbers = new IntStringSet();
@@ -565,6 +681,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the ISBNs of the references and stores their changes in {@code pubchem.reference_isbn_numbers}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadIsbnNumbers() throws IOException, SQLException
     {
         IntStringSet keepIsbnNumbers = new IntStringSet();
@@ -610,6 +732,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the authors of the references and stores their changes in {@code pubchem.reference_authors}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAuthor() throws IOException, SQLException
     {
         IntPairSet keepAuthors = new IntPairSet();
@@ -654,6 +782,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the grants supporting the references and stores their changes in {@code pubchem.reference_grants}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadGrant() throws IOException, SQLException
     {
         IntPairSet keepGrants = new IntPairSet();
@@ -698,6 +832,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the funding agencies of the references and stores their changes in {@code pubchem.reference_organizations}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadFundingAgency() throws IOException, SQLException
     {
         IntPairSet keepOrganizations = new IntPairSet();
@@ -742,6 +882,14 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the journals and books the references are part of, given by PubChem IRIs or by ISSNs and ISBNs, and stores
+     * their changes in {@code pubchem.reference_journals}, {@code pubchem.reference_books},
+     * {@code pubchem.reference_issn_journals} and {@code pubchem.reference_isbn_books}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadJournalsAndBooks() throws IOException, SQLException
     {
         IntPairSet keepJournals = new IntPairSet();
@@ -860,6 +1008,13 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the compounds, diseases, gene symbols and enzymes found in the references by text mining and stores their
+     * changes in the {@code pubchem.reference_mined_*} tables.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTextMinigs() throws IOException, SQLException
     {
         IntPairSet keepCompounds = new IntPairSet();
@@ -979,6 +1134,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the identifiers of the references and stores their changes in {@code pubchem.reference_identifiers}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadIdentifiers() throws IOException, SQLException
     {
         IntStringSet keepIdentifiers = new IntStringSet();
@@ -1023,6 +1184,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the sources of the references and stores their changes in {@code pubchem.reference_source_types}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSources() throws IOException, SQLException
     {
         IntStringSet keepSources = new IntStringSet();
@@ -1075,6 +1242,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Checks the types of the references.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void checkTypes() throws IOException, SQLException
     {
         try(InputStream stream = getTtlStream("pubchem/RDF/reference/pc_reference_type.ttl.gz"))
@@ -1099,6 +1272,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the references with their titles, before the parts that refer to them are loaded.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void preload() throws IOException, SQLException
     {
         System.out.println("load references (bases) ...");
@@ -1109,6 +1288,12 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Loads the other properties of the references from the PubChemRDF files and flushes their table.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load references ...");
@@ -1144,6 +1329,13 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Stores the references, including those referenced by the parts loaded later, and deletes the stored references
+     * that are neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish references ...");
@@ -1154,8 +1346,13 @@ class Reference extends Updater
     }
 
 
-    /*
+    /**
      * Tests whether the triple belongs to the reference without an identifier, which is ignored with a warning.
+     *
+     * @param subject the subject of the triple
+     * @param predicate the predicate of the triple
+     * @param object the object of the triple
+     * @return true if the triple is ignored
      */
     private static boolean isIgnored(Node subject, Node predicate, Node object)
     {
@@ -1168,6 +1365,13 @@ class Reference extends Updater
     }
 
 
+    /**
+     * Returns the id of the reference with the given IRI; a reference without a row gets one and is counted as missing.
+     *
+     * @param value the IRI of the reference
+     * @return the id of the reference
+     * @throws IOException if the IRI is not an IRI of a reference
+     */
     static Integer getReferenceID(String value) throws IOException
     {
         if(!value.startsWith(prefix))

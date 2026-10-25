@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 
 
-/*
+/**
  * Reads the records of a Mascot generic format (MGF) file. A record is enclosed in the lines BEGIN IONS and END IONS,
  * it starts with its parameters (KEY=value lines) and continues with its peaks (an m/z value and an intensity
  * separated by white space); the parameters before the first record apply to every record. Blank lines and comments
@@ -22,26 +22,63 @@ import java.util.regex.Pattern;
  */
 public class MgfReader implements Closeable
 {
-    /*
+    /**
      * A record of the file: the line of its BEGIN IONS, its parameters, its peaks as a spectrum literal and their
      * number.
+     *
+     * @param line the number of the line of its BEGIN IONS
+     * @param parameters the parameters of the record, including the global ones it does not override
+     * @param spectrum the peaks in the text form of a pgms spectrum
+     * @param peaks the number of the peaks
      */
     public static record Record(int line, Map<String, String> parameters, String spectrum, int peaks)
     {
     }
 
 
+    /**
+     * Syntax of a number of a peak.
+     */
     private static final Pattern numberPattern = Pattern
             .compile("[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([eE][+-]?[0-9]+)?");
 
+    /**
+     * Name of the file, used in the reported problems.
+     */
     private final String name;
+
+    /**
+     * Reader of the file.
+     */
     private final BufferedReader reader;
+
+    /**
+     * Global parameters, given before the first record.
+     */
     private final HashMap<String, String> global = new HashMap<>();
+
+    /**
+     * Number of the last read line.
+     */
     private int lineNumber;
+
+    /**
+     * Whether the first record has been found, after which no global parameter may follow.
+     */
     private boolean started;
+
+    /**
+     * Whether the BEGIN IONS of the next record has already been read by the previous, unterminated record.
+     */
     private boolean pending;
 
 
+    /**
+     * Creates the reader of a file.
+     *
+     * @param name the name of the file, used in the reported problems
+     * @param reader the reader of the file
+     */
     public MgfReader(String name, BufferedReader reader)
     {
         this.name = name;
@@ -49,6 +86,12 @@ public class MgfReader implements Closeable
     }
 
 
+    /**
+     * Reads the next line and counts it.
+     *
+     * @return the line, or null at the end of the file
+     * @throws IOException if an I/O error occurs
+     */
     private String readLine() throws IOException
     {
         String line = reader.readLine();
@@ -60,6 +103,12 @@ public class MgfReader implements Closeable
     }
 
 
+    /**
+     * Tests whether a non-empty line is a comment.
+     *
+     * @param line the line
+     * @return true if the line starts with one of the comment characters
+     */
     private static boolean isComment(String line)
     {
         char c = line.charAt(0);
@@ -67,9 +116,12 @@ public class MgfReader implements Closeable
     }
 
 
-    /*
+    /**
      * Converts the text of a number to single precision; the values that overflow or underflow it are refused as
      * the extension refuses them, null stands for a refused number.
+     *
+     * @param text the text of the number
+     * @return the number, or null if it is refused
      */
     private static Float number(String text)
     {
@@ -86,8 +138,11 @@ public class MgfReader implements Closeable
     }
 
 
-    /*
+    /**
      * Returns the next record, or null at the end of the file.
+     *
+     * @return the next well-formed record, or null at the end of the file
+     * @throws IOException if an I/O error occurs
      */
     public Record next() throws IOException
     {
@@ -107,8 +162,11 @@ public class MgfReader implements Closeable
     }
 
 
-    /*
+    /**
      * Reads the lines up to the next BEGIN IONS; returns false at the end of the file.
+     *
+     * @return true if a record has been found, false at the end of the file
+     * @throws IOException if an I/O error occurs
      */
     private boolean findRecord() throws IOException
     {
@@ -134,8 +192,11 @@ public class MgfReader implements Closeable
     }
 
 
-    /*
+    /**
      * Reads the record following its BEGIN IONS; returns null for a malformed record, which is reported.
+     *
+     * @return the record, or null if it is malformed
+     * @throws IOException if an I/O error occurs
      */
     private Record readRecord() throws IOException
     {

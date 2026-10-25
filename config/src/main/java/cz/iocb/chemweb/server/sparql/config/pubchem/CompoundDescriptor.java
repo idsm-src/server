@@ -14,8 +14,25 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the descriptors of the PubChem compounds (graph {@code descriptor:compound}), each of them a resource with
+ * its type and value.
+ */
 public class CompoundDescriptor
 {
+    /**
+     * Not instantiable.
+     */
+    private CompoundDescriptor()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem compound descriptors to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID";
@@ -62,6 +79,11 @@ public class CompoundDescriptor
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem compound descriptors to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("descriptor:compound");

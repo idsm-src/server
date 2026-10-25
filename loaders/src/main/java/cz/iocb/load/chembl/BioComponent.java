@@ -19,15 +19,39 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the ChEMBL biocomponents, the components of the biotherapeutic molecules, from the biocomponent file of the
+ * release into the table {@code chembl.biocomponents}; the file also gives labels of taxonomies.
+ */
 class BioComponent extends Updater
 {
+    /**
+     * IRI prefix of the biocomponents.
+     */
     static final String prefix = ChEMBL.chembl + "biocomponent/CHEMBL_BC_";
 
+    /**
+     * Table of the biocomponents.
+     */
     private static final EntityTable<Integer> biocomponents = new EntityTable<>("chembl.biocomponents", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), varchar("type"), varchar("description"), varchar("organism"),
             integer("taxonomy"), varchar("sequence"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private BioComponent()
+    {
+    }
+
+
+    /**
+     * Loads the biocomponents from the biocomponent file of the release together with the labels of their taxonomies.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load biocomponents ...");
@@ -72,6 +96,11 @@ class BioComponent extends Updater
     }
 
 
+    /**
+     * Stores the collected biocomponents and reports the referenced ones that the file does not describe.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish biocomponents ...");
@@ -82,6 +111,13 @@ class BioComponent extends Updater
     }
 
 
+    /**
+     * Returns the id of a biocomponent and marks the biocomponent as referenced.
+     *
+     * @param node the IRI of the biocomponent
+     * @return the id of the biocomponent
+     * @throws IOException if the node is not an IRI of a biocomponent
+     */
     static int getBioComponentID(Node node) throws IOException
     {
         int id = TripleStreamProcessor.getIntID(node, prefix);

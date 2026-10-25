@@ -11,11 +11,30 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the ChEMBL target components (graph {@code ebi:chembl}).
+ */
 public class TargetComponent
 {
+    /**
+     * SQL enum type of the databases the target components are referenced in.
+     */
     private static String componentReferenceType = schema + ".component_reference_type";
 
 
+    /**
+     * Not instantiable.
+     */
+    private TargetComponent()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the ChEMBL target components to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("chembl:component", INT4,
@@ -23,6 +42,11 @@ public class TargetComponent
     }
 
 
+    /**
+     * Adds the quad mappings of the ChEMBL target components to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");

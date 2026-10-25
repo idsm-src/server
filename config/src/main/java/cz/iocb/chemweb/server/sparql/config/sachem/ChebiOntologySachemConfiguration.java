@@ -13,8 +13,20 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Configuration of the SACHEM endpoint of the ChEBI compounds, identified by their ontology resource class
+ * {@code ontology:chebi}.
+ */
 public class ChebiOntologySachemConfiguration extends SparqlDatabaseConfiguration
 {
+    /**
+     * Creates the configuration.
+     *
+     * @param service the service IRI
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public ChebiOntologySachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema)
             throws SQLException
     {
@@ -27,6 +39,9 @@ public class ChebiOntologySachemConfiguration extends SparqlDatabaseConfiguratio
     }
 
 
+    /**
+     * Adds the prefixes of the configuration.
+     */
     private void addPrefixes()
     {
         Common.addPrefixes(this);
@@ -37,6 +52,11 @@ public class ChebiOntologySachemConfiguration extends SparqlDatabaseConfiguratio
     }
 
 
+    /**
+     * Adds the resource classes of the configuration.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private void addResourceClasses() throws SQLException
     {
         Sachem.addResourceClasses(this);
@@ -47,6 +67,9 @@ public class ChebiOntologySachemConfiguration extends SparqlDatabaseConfiguratio
     }
 
 
+    /**
+     * Adds the quad mappings of the configuration.
+     */
     private void addQuadMappings()
     {
         MolFiles.addQuadMappings(this, "ontology:chebi", "chebi:molfile", new DatabaseTable("chebi", "class_molfiles"),
@@ -55,6 +78,9 @@ public class ChebiOntologySachemConfiguration extends SparqlDatabaseConfiguratio
     }
 
 
+    /**
+     * Adds the procedures of the configuration.
+     */
     private void addProcedures()
     {
         Sachem.addProcedures(this, "chebi", "ontology:chebi", getColumns(getIriClass("ontology:chebi"), "compound"));

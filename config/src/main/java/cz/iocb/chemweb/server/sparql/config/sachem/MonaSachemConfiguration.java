@@ -16,8 +16,19 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
+/**
+ * Configuration of the SACHEM endpoint of the MoNA compounds.
+ */
 public class MonaSachemConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    /**
+     * Creates the configuration.
+     *
+     * @param service the service IRI
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public MonaSachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
         super(service, connectionPool, schema);
@@ -29,6 +40,9 @@ public class MonaSachemConfiguration extends SparqlDatabaseOptimisedConfiguratio
     }
 
 
+    /**
+     * Adds the prefixes of the configuration.
+     */
     private void addPrefixes()
     {
         Common.addPrefixes(this);
@@ -40,6 +54,9 @@ public class MonaSachemConfiguration extends SparqlDatabaseOptimisedConfiguratio
     }
 
 
+    /**
+     * Adds the resource classes of the configuration.
+     */
     private void addResourceClasses()
     {
         Sachem.addResourceClasses(this);
@@ -51,6 +68,9 @@ public class MonaSachemConfiguration extends SparqlDatabaseOptimisedConfiguratio
     }
 
 
+    /**
+     * Adds the quad mappings of the configuration.
+     */
     private void addQuadMappings()
     {
         MolFiles.addQuadMappings(this, "mona:compound", "mona:molfile",
@@ -59,6 +79,9 @@ public class MonaSachemConfiguration extends SparqlDatabaseOptimisedConfiguratio
     }
 
 
+    /**
+     * Adds the procedures of the configuration.
+     */
     private void addProcedures()
     {
         Sachem.addProcedures(this, "mona", "mona:compound", getColumns(getIriClass("mona:compound"), "compound"));

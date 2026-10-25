@@ -12,9 +12,21 @@ import jakarta.servlet.http.HttpServletResponse;
 
 
 
+/**
+ * Servlet returning the peaks of a mass spectrum as JSON, {@code {"peaks":[{"mz":m,"intensity":i},...]}}; the access
+ * query gives the peaks as space-separated {@code m:i} pairs.
+ */
 @SuppressWarnings("serial")
 public class SpectrumServlet extends SourceServlet
 {
+    /**
+     * Creates the servlet.
+     */
+    public SpectrumServlet()
+    {
+    }
+
+
     @Override
     public String getServletInfo()
     {
@@ -41,6 +53,13 @@ public class SpectrumServlet extends SourceServlet
     }
 
 
+    /**
+     * Reads the peaks of a spectrum by the access query and converts them to JSON.
+     *
+     * @param id the id of the spectrum
+     * @return the JSON of the peaks, null if no spectrum has the id
+     * @throws SQLException if a database error occurs
+     */
     protected String getSpectrum(String id) throws SQLException
     {
         try(Connection connection = connectionPool.getConnection())

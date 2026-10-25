@@ -14,10 +14,29 @@ import jakarta.servlet.http.HttpServletResponse;
 
 
 
+/**
+ * Filter forbidding the caching of the responses, except for the servlet paths listed (separated by spaces) in the
+ * {@code excludedUrls} init parameter.
+ */
 public class CacheFilter implements Filter
 {
+    /**
+     * Configuration of the filter.
+     */
     private FilterConfig filterConfig;
+
+    /**
+     * Servlet paths whose responses may be cached.
+     */
     private HashSet<String> excludedUrls = new HashSet<>();
+
+
+    /**
+     * Creates the filter.
+     */
+    public CacheFilter()
+    {
+    }
 
 
     @Override

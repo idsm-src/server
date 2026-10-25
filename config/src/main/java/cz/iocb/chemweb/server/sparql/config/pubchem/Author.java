@@ -13,8 +13,24 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem authors (graph {@code pubchem:author}).
+ */
 public class Author
 {
+    /**
+     * Not instantiable.
+     */
+    private Author()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem authors to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pubchem:author", INT4, new DatabaseTable(schema, "authors"),
@@ -23,6 +39,11 @@ public class Author
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem authors to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:author");

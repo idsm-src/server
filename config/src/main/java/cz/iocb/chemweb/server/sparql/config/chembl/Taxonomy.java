@@ -8,11 +8,30 @@ import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 
 
 
+/**
+ * Mapping of the labels ChEMBL gives to the taxonomy resources (graph {@code ebi:chembl}).
+ */
 public class Taxonomy
 {
+    /**
+     * SQL enum type of the taxonomy databases the labels belong to.
+     */
     private static String taxonomyReferenceType = schema + ".taxonomy_reference_type";
 
 
+    /**
+     * Not instantiable.
+     */
+    private Taxonomy()
+    {
+    }
+
+
+    /**
+     * Adds the quad mappings of the taxonomy labels to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");

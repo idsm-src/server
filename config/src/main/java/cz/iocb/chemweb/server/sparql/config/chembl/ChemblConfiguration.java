@@ -14,11 +14,25 @@ import cz.iocb.sparql.engine.database.DatabaseSchema;
 
 
 
+/**
+ * Configuration of the ChEMBL dataset, which the IDSM endpoint merges into its service.
+ */
 public class ChemblConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    /**
+     * Database schema of the ChEMBL tables.
+     */
     static final String schema = "chembl";
 
 
+    /**
+     * Creates the configuration of the ChEMBL dataset.
+     *
+     * @param service IRI of the service, or null
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public ChemblConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
         super(service, connectionPool, schema);
@@ -29,6 +43,9 @@ public class ChemblConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the common prefixes and those of the ChEMBL vocabularies to the configuration.
+     */
     private void addPrefixes()
     {
         Common.addPrefixes(this);
@@ -78,6 +95,12 @@ public class ChemblConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds to the configuration the resource classes of ChEMBL and of the ontology, MeSH and PubChem resources it
+     * links to.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private void addResourceClasses() throws SQLException
     {
         Common.addResourceClasses(this);
@@ -105,6 +128,9 @@ public class ChemblConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the quad mappings of ChEMBL to the configuration.
+     */
     private void addQuadMappings()
     {
         Activity.addQuadMappings(this);

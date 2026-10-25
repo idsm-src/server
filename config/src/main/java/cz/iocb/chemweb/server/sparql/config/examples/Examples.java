@@ -12,8 +12,25 @@ import cz.iocb.sparql.engine.rdf.Iri;
 
 
 
+/**
+ * Mapping of the SPARQL examples of IDSM (table {@code idsm.queries}), described by SHACL as executable SELECT queries
+ * in the graph {@code https://idsm.elixir-czech.cz/.well-known/sparql-examples}.
+ */
 public class Examples
 {
+    /**
+     * Not instantiable.
+     */
+    private Examples()
+    {
+    }
+
+
+    /**
+     * Adds the prefixes of SHACL and schema.org to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addPrefixes(ExamplesConfiguration config)
     {
         config.addPrefix("sh", "http://www.w3.org/ns/shacl#");
@@ -21,6 +38,11 @@ public class Examples
     }
 
 
+    /**
+     * Adds the resource classes of the examples and of the prefix declarations to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(ExamplesConfiguration config)
     {
         config.addIriClass(new StringUserIriClass("idsm:prefix", "https://idsm.elixir-czech.cz/sparql-prefixes/"));
@@ -29,6 +51,11 @@ public class Examples
     }
 
 
+    /**
+     * Adds the quad mappings of the examples to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(ExamplesConfiguration config)
     {
         ConstantIriMapping graph = config

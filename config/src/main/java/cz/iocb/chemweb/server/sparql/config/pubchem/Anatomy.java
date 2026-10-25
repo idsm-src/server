@@ -21,12 +21,31 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem anatomies (graph {@code pubchem:anatomy}).
+ */
 public class Anatomy
 {
+    /**
+     * Ontology units of the matches of the anatomies ({@code rdfs:seeAlso}).
+     */
     public static final short[] matchUnits = { unitBTO, unitUberon, unitIdentifiersBTO, unitIdentifiersEFO,
             unitIdentifiersNCIT, unitIdentifiersUberon, unitEFO, unitChEMBLTissue, unitThesaurus };
 
 
+    /**
+     * Not instantiable.
+     */
+    private Anatomy()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem anatomies to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("pubchem:anatomy", INT4,
@@ -34,6 +53,11 @@ public class Anatomy
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem anatomies to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:anatomy");

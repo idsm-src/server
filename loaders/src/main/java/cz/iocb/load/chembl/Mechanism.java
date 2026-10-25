@@ -18,15 +18,40 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the ChEMBL mechanisms of action of the drugs from the mechanism file of the release into the table
+ * {@code chembl.mechanisms}.
+ */
 class Mechanism extends Updater
 {
+    /**
+     * IRI prefix of the mechanisms.
+     */
     static final String prefix = ChEMBL.chembl + "drug_mechanism/CHEMBL_MEC_";
 
+    /**
+     * Table of the mechanisms.
+     */
     private static final EntityTable<Integer> mechanisms = new EntityTable<>("chembl.mechanisms", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), integer("molecule"), integer("target"), integer("binding_site"),
             varchar("description"), varchar("action_type"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private Mechanism()
+    {
+    }
+
+
+    /**
+     * Loads the mechanisms from the mechanism file of the release and checks the triples of the molecules, targets and
+     * binding sites linking them to the mechanisms against the links of the mechanisms.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load mechanisms ...");
@@ -101,6 +126,11 @@ class Mechanism extends Updater
     }
 
 
+    /**
+     * Stores the collected mechanisms and reports the referenced ones that the file does not describe.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish mechanisms ...");
@@ -111,6 +141,13 @@ class Mechanism extends Updater
     }
 
 
+    /**
+     * Returns the id of a mechanism and marks the mechanism as referenced.
+     *
+     * @param node the IRI of the mechanism
+     * @return the id of the mechanism
+     * @throws IOException if the node is not an IRI of a mechanism
+     */
     static int getMechanismID(Node node) throws IOException
     {
         int id = TripleStreamProcessor.getIntID(node, prefix);

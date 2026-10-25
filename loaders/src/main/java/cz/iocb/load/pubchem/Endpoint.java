@@ -24,16 +24,48 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the PubChem endpoints, the results of the substances tested in the measuregroups of the bioassays, from the
+ * files of {@code pubchem/RDF/endpoint} into the tables {@code pubchem.endpoints} and
+ * {@code pubchem.endpoint_measurements} and the tables of their references and patents.
+ */
 class Endpoint extends Updater
 {
+    /**
+     * Key of an endpoint: the substance, the bioassay, the measuregroup and the value, as the IRI of the endpoint gives
+     * them.
+     */
     private static final class EndpointID
     {
+        /**
+         * Id of the substance.
+         */
         private final int substance;
+
+        /**
+         * Id of the bioassay.
+         */
         private final int bioassay;
+
+        /**
+         * Number of the measuregroup, as {@link Measuregroup#parseMeasuregroup(Node)} gives it.
+         */
         private final int measuregroup;
+
+        /**
+         * Number of the value.
+         */
         private final int value;
 
 
+        /**
+         * Creates the key.
+         *
+         * @param substance the id of the substance
+         * @param bioassay the id of the bioassay
+         * @param measuregroup the number of the measuregroup
+         * @param value the number of the value
+         */
         public EndpointID(int substance, int bioassay, int measuregroup, int value)
         {
             this.substance = substance;
@@ -68,9 +100,19 @@ class Endpoint extends Updater
     }
 
 
+    /**
+     * Set of the pairs of an endpoint and an id, read from and written to five columns.
+     */
     @SuppressWarnings("serial")
     private static class IntQuaterpletIntSet extends SqlSet<Pair<EndpointID, Integer>>
     {
+        /**
+         * Creates an empty set.
+         */
+        private IntQuaterpletIntSet()
+        {
+        }
+
         @Override
         public Pair<EndpointID, Integer> get(ResultSet result) throws SQLException
         {
@@ -90,9 +132,20 @@ class Endpoint extends Updater
     }
 
 
+    /**
+     * IRI prefix of the endpoints.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/endpoint/SID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Key of the tables of the endpoints, the columns {@code substance}, {@code bioassay}, {@code measuregroup} and
+     * {@code value}.
+     */
     private static final Key<EndpointID> key = new Key<>("substance", "bioassay", "measuregroup", "value")
     {
         @Override
@@ -111,13 +164,33 @@ class Endpoint extends Updater
         }
     };
 
+    /**
+     * Table of the endpoints and their outcomes.
+     */
     private static final EntityTable<EndpointID> endpoints = new EntityTable<>("pubchem.endpoints", key, null,
             integer("outcome_id"));
 
+    /**
+     * Table of the measurements of the endpoints: their types, values, qualifiers and labels.
+     */
     private static final EntityTable<EndpointID> measurements = new EntityTable<>("pubchem.endpoint_measurements", key,
             null, integer("endpoint_type_id"), typed("measurement", "numeric"), varchar("qualifier"), varchar("label"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private Endpoint()
+    {
+    }
+
+
+    /**
+     * Loads the outcomes of the endpoints from the files {@code pc_endpoint_outcome_*.ttl.gz}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadOutcomes() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/endpoint", "pc_endpoint_outcome_[0-9]+\\.ttl\\.gz", file -> {
@@ -143,8 +216,12 @@ class Endpoint extends Updater
     }
 
 
-    /*
+    /**
      * Loads the types of the endpoints; returns the number of the vocab:Endpoint types.
+     *
+     * @return the number of the {@code vocab:Endpoint} types
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static long loadTypes() throws IOException, SQLException
     {
@@ -182,6 +259,12 @@ class Endpoint extends Updater
     }
 
 
+    /**
+     * Loads the labels of the measurements from {@code pc_endpoint_label.ttl.gz}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadLabels() throws IOException, SQLException
     {
         try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint_label.ttl.gz"))
@@ -205,6 +288,12 @@ class Endpoint extends Updater
     }
 
 
+    /**
+     * Loads the measured values of the endpoints and their qualifiers from {@code pc_endpoint_value.ttl.gz}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMeasuredValues() throws IOException, SQLException
     {
         try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint_value.ttl.gz"))
@@ -241,6 +330,14 @@ class Endpoint extends Updater
     }
 
 
+    /**
+     * Loads the references and patents that the endpoints cite as their data sources from
+     * {@code pc_endpoint2cites_as_data_source.ttl.gz} into the tables {@code pubchem.endpoint_references} and
+     * {@code pubchem.endpoint_patents}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadReferences() throws IOException, SQLException
     {
         IntQuaterpletIntSet keepReferences = new IntQuaterpletIntSet();
@@ -308,6 +405,12 @@ class Endpoint extends Updater
     }
 
 
+    /**
+     * Checks that the unit of every endpoint in {@code pc_endpoint_unit.ttl.gz} is micromolar.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void checkUnits() throws IOException, SQLException
     {
         try(InputStream stream = getTtlStream("pubchem/RDF/endpoint/pc_endpoint_unit.ttl.gz"))
@@ -328,9 +431,13 @@ class Endpoint extends Updater
     }
 
 
-    /*
+    /**
      * Checks that the substance of an endpoint is the one in its IRI, which is published; returns the number of the
      * triples.
+     *
+     * @return the number of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static long checkSubstances() throws IOException, SQLException
     {
@@ -362,9 +469,13 @@ class Endpoint extends Updater
     }
 
 
-    /*
+    /**
      * Checks that the measuregroup of an endpoint is the one in its IRI, which is published; returns the number of the
      * triples.
+     *
+     * @return the number of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static long checkMeasuregroups() throws IOException, SQLException
     {
@@ -397,9 +508,12 @@ class Endpoint extends Updater
     }
 
 
-    /*
+    /**
      * Reports the endpoints without one of the given triples. The source states the triple for every endpoint and
      * states each just once, so the numbers differ whenever an endpoint lacks the triple.
+     *
+     * @param triples the description of the triples shown in the error
+     * @param count the number of the triples
      */
     private static void checkCount(String triples, long count)
     {
@@ -409,6 +523,13 @@ class Endpoint extends Updater
     }
 
 
+    /**
+     * Loads the endpoints from the files of {@code pubchem/RDF/endpoint} into the tables and stores them at once,
+     * because nothing loaded later refers to the endpoints.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load endpoints ...");
@@ -434,12 +555,25 @@ class Endpoint extends Updater
     }
 
 
+    /**
+     * Ensures that an endpoint has a row.
+     *
+     * @param endpoint the key of the endpoint
+     */
     static void addEndpointID(EndpointID endpoint)
     {
         endpoints.reference(endpoint);
     }
 
 
+    /**
+     * Parses the IRI of an endpoint into its key and references the endpoint, its substance, its measuregroup and its
+     * bioassay; the measuregroup is numbered as by {@link Measuregroup#parseMeasuregroup(Node)}.
+     *
+     * @param node the IRI of the endpoint
+     * @return the key of the endpoint
+     * @throws IOException if the node is not an IRI of an endpoint
+     */
     private static EndpointID parseEndpoint(Node node) throws IOException
     {
         String iri = node.getURI();

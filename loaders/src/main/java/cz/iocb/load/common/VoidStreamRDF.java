@@ -6,8 +6,19 @@ import org.apache.jena.sparql.core.Quad;
 
 
 
+/**
+ * Stream of parsed RDF that ignores everything; a subclass overrides the methods of the events it handles.
+ */
 public class VoidStreamRDF implements StreamRDF
 {
+    /**
+     * Creates the stream.
+     */
+    public VoidStreamRDF()
+    {
+    }
+
+
     @Override
     public void start()
     {

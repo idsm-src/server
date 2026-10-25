@@ -11,8 +11,24 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the ChEMBL biocomponents (graph {@code ebi:chembl}).
+ */
 public class BioComponent
 {
+    /**
+     * Not instantiable.
+     */
+    private BioComponent()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the ChEMBL biocomponents to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("chembl:biocomponent", INT4,
@@ -20,6 +36,11 @@ public class BioComponent
     }
 
 
+    /**
+     * Adds the quad mappings of the ChEMBL biocomponents to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");

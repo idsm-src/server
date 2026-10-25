@@ -14,8 +14,24 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem InChIKeys (graph {@code pubchem:inchikey}).
+ */
 public class InchiKey
 {
+    /**
+     * Not instantiable.
+     */
+    private InchiKey()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem InChIKeys to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pubchem:inchikey", INT4, new DatabaseTable(schema, "inchikeys"),
@@ -24,6 +40,11 @@ public class InchiKey
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem InChIKeys to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:inchikey");

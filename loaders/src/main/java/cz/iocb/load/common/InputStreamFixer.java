@@ -8,29 +8,77 @@ import java.util.Objects;
 
 
 
-/*
+/**
  * Repairs the errors of Turtle files that the parser would reject: some characters not allowed in an IRI (and every #
  * after the first one) are percent-encoded, an escaped space in an IRI becomes %20 and an escaped no-break space loses
  * its backslash, and some characters outside of strings, IRIs and comments are replaced by a space or a hyphen. The
  * strings (short and long ones, in double or single quotes), the comments, the escapes of local names and the RDF 1.2
- * << are followed as Turtle defines them, so that their content is never taken for IRIs or strings. The underlying
- * stream is read by blocks, the repaired stream can be read by single bytes as well as by blocks.
+ * {@code <<} are followed as Turtle defines them, so that their content is never taken for IRIs or strings. The
+ * underlying stream is read by blocks, the repaired stream can be read by single bytes as well as by blocks.
  */
 public class InputStreamFixer extends InputStream
 {
-    // ANGLE follows a < that starts an IRI or, followed by another one, a <<; QUOTE and QUOTES follow the one or two
-    // quotes that start a string, an empty string or a long string
+    /**
+     * Lexical state of the stream at the current position.
+     */
     private static enum State
     {
-        OUTSIDE, ANGLE, IRI, COMMENT, QUOTE, QUOTES, STRING, LONG_STRING
+        /**
+         * Outside of strings, IRIs and comments.
+         */
+        OUTSIDE,
+
+        /**
+         * After a {@code <} that starts an IRI or, followed by another one, a {@code <<}.
+         */
+        ANGLE,
+
+        /**
+         * In an IRI.
+         */
+        IRI,
+
+        /**
+         * In a comment.
+         */
+        COMMENT,
+
+        /**
+         * After the quote that starts a string, an empty string or a long string.
+         */
+        QUOTE,
+
+        /**
+         * After the two quotes that start an empty string or a long string.
+         */
+        QUOTES,
+
+        /**
+         * In a short string.
+         */
+        STRING,
+
+        /**
+         * In a long string.
+         */
+        LONG_STRING
     }
 
+    /**
+     * Characters not allowed in an IRI, which are percent-encoded there.
+     */
     private static final byte[] forbidden = { ' ', '"', '<', '>', '{', '}', '|', '^', '`', '[', ']' };
 
-    // the bytes that read() may change or that may change its state: in an IRI the end, an escape and the characters
-    // that are percent-encoded, outside of strings, IRIs and comments the starts of strings, IRIs, comments and
-    // escapes and the leading bytes of the replaced characters
+    /**
+     * Bytes that {@link #read()} may change in an IRI or that may change its state there: the end, an escape and the
+     * characters that are percent-encoded.
+     */
     private static final boolean[] iriSpecial = new boolean[256];
+
+    /**
+     * Bytes that {@link #read()} may change outside of strings, IRIs and comments or that may change its state there:
+     * the starts of strings, IRIs, comments and escapes and the leading bytes of the replaced characters.
+     */
     private static final boolean[] outsideSpecial = new boolean[256];
 
     static
@@ -46,32 +94,93 @@ public class InputStreamFixer extends InputStream
             outsideSpecial[c] = true;
     }
 
+    /**
+     * Underlying stream.
+     */
     private final InputStream in;
+
+    /**
+     * Block of the underlying stream being processed.
+     */
     private final byte[] input = new byte[65536];
+
+    /**
+     * Position of the next unprocessed byte in {@link #input}.
+     */
     private int position = 0;
+
+    /**
+     * Number of the valid bytes in {@link #input}.
+     */
     private int limit = 0;
 
+    /**
+     * Lexical state at the current position.
+     */
     private State state = State.OUTSIDE;
+
+    /**
+     * Whether the previous byte is a backslash that escapes the next one.
+     */
     private boolean backslash = false;
+
+    /**
+     * Quote character of the current string.
+     */
     private int quote;
+
+    /**
+     * Number of the consecutive unescaped quotes read at the end of a long string.
+     */
     private int quotes;
+
+    /**
+     * Bytes of the IRI being read, kept for the report of its repair.
+     */
     private byte[] iri = new byte[256];
+
+    /**
+     * Number of the bytes in {@link #iri}.
+     */
     private int iriLength = 0;
+
+    /**
+     * Whether the IRI being read already contains a {@code #}.
+     */
     private boolean hasSharp = false;
+
+    /**
+     * Whether the IRI being read has been repaired.
+     */
     private boolean bug = false;
 
+    /**
+     * Bytes of the repaired stream that are returned before the next byte of the underlying stream, or null.
+     */
     private byte[] buffer;
+
+    /**
+     * Position of the next byte in {@link #buffer}.
+     */
     private int idx;
 
 
+    /**
+     * Creates the repairing stream.
+     *
+     * @param in the underlying Turtle stream
+     */
     public InputStreamFixer(InputStream in)
     {
         this.in = in;
     }
 
 
-    /*
+    /**
      * Returns the next byte of the underlying stream, or -1 at its end.
+     *
+     * @return the next byte, or -1 at the end of the stream
+     * @throws IOException if an I/O error occurs
      */
     private int next() throws IOException
     {
@@ -90,8 +199,10 @@ public class InputStreamFixer extends InputStream
     }
 
 
-    /*
+    /**
      * Appends a byte to the IRI being read, which is kept for the report of its repair.
+     *
+     * @param c the byte
      */
     private void addIri(int c)
     {
@@ -118,8 +229,12 @@ public class InputStreamFixer extends InputStream
     }
 
 
-    /*
+    /**
      * Returns the byte of the repaired stream for the next byte of the underlying stream, or -1 at its end.
+     *
+     * @param c the next byte of the underlying stream, or -1 at its end
+     * @return the next byte of the repaired stream, or -1 at its end
+     * @throws IOException if an I/O error occurs or the stream ends within an escape or a character
      */
     private int process(int c) throws IOException
     {
@@ -382,6 +497,12 @@ public class InputStreamFixer extends InputStream
     }
 
 
+    /**
+     * Returns the hexadecimal digit of a value.
+     *
+     * @param i the value, from 0 to 15
+     * @return the upper-case hexadecimal digit
+     */
     private byte toHex(int i)
     {
         if(i < 10)

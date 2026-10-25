@@ -23,17 +23,48 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem books from the files {@code pubchem/RDF/book/pc_book_*.ttl.gz} into the table
+ * {@code pubchem.books} and the table of their authors.
+ */
 public class Book extends Updater
 {
+    /**
+     * IRI prefix of the books.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/book/NBK";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Table of the books.
+     */
     private static final EntityTable<Integer> books = new EntityTable<>("pubchem.books", intKey("id"), null,
             uniqueVarchar("title"), varchar("publisher"), varchar("location"), uniqueVarchar("subtitle"),
             varchar("date"), uniqueVarchar("isbn"));
+
+    /**
+     * Books referenced but not described by the data.
+     */
     private static final MissingEntities<Integer> missingBooks = new MissingEntities<>("book", true);
 
 
+    /**
+     * Not instantiable.
+     */
+    private Book()
+    {
+    }
+
+
+    /**
+     * Registers the checks of the predicates, types and values of the book files.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), rdf + "type", dcterms + "creator", dcterms + "title", dcterms + "publisher",
@@ -44,6 +75,13 @@ public class Book extends Updater
     }
 
 
+    /**
+     * Registers the handler that adds the books described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.onType(fabio + "Book", (subject, object) -> {
@@ -55,6 +93,13 @@ public class Book extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the titles of the books.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(dcterms + "title", (subject, object) -> {
@@ -66,6 +111,13 @@ public class Book extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the publishers of the books.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadPublishers(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(dcterms + "publisher", (subject, object) -> {
@@ -77,6 +129,13 @@ public class Book extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the publication places of the books.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadLocations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(prism + "location", (subject, object) -> {
@@ -88,6 +147,13 @@ public class Book extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the subtitles of the books.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSubtitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(prism + "subtitle", (subject, object) -> {
@@ -99,6 +165,13 @@ public class Book extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the dates of the books.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadDates(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(dcterms + "date", (subject, object) -> {
@@ -110,6 +183,13 @@ public class Book extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the ISBNs of the books.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadIsbns(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(prism + "isbn", (subject, object) -> {
@@ -121,6 +201,14 @@ public class Book extends Updater
     }
 
 
+    /**
+     * Registers the handler of the authors of the books and the action that stores their changes in
+     * {@code pubchem.book_authors}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAuthors(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepAuthors = new IntPairSet();
@@ -148,6 +236,13 @@ public class Book extends Updater
     }
 
 
+    /**
+     * Loads the books from the files {@code pubchem/RDF/book/pc_book_*.ttl.gz} into the tables and flushes the table of
+     * the books.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load books ...");
@@ -174,6 +269,13 @@ public class Book extends Updater
     }
 
 
+    /**
+     * Stores the books, including those referenced by the parts loaded later, and deletes the stored books that are
+     * neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish books ...");
@@ -184,6 +286,14 @@ public class Book extends Updater
     }
 
 
+    /**
+     * Returns the id of the book with the given IRI; a book not described by the data gets a row and is counted as
+     * missing.
+     *
+     * @param value the IRI of the book
+     * @return the id of the book
+     * @throws IOException if the IRI is not an IRI of a book
+     */
     static Integer getBookID(String value) throws IOException
     {
         if(!value.startsWith(prefix))

@@ -29,14 +29,33 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem cell lines (graph {@code pubchem:cell}).
+ */
 public class Cell
 {
+    /**
+     * Ontology units of the matches of the cell lines ({@code rdfs:seeAlso}).
+     */
     public static final short[] matchUnits = { unitBTO, unitCL, unitCLO, unitIdentifiersBTO, unitIdentifiersCL,
             unitIdentifiersCLO, unitIdentifiersEFO, unitIdentifiersLINCSCell, unitIdentifiersNCIT, unitEFO,
             unitThesaurus, unitGlyConnectCellLine, unitSangerCellLine, unitCellModelPassports, unitDepMap, unitLINCSHMS,
             unitCancerRxGene };
 
 
+    /**
+     * Not instantiable.
+     */
+    private Cell()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem cell lines to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
@@ -44,6 +63,11 @@ public class Cell
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem cell lines to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:cell");

@@ -12,8 +12,24 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the ChEMBL assays (graph {@code ebi:chembl}).
+ */
 public class Assay
 {
+    /**
+     * Not instantiable.
+     */
+    private Assay()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the ChEMBL assays to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
@@ -21,6 +37,11 @@ public class Assay
     }
 
 
+    /**
+     * Adds the quad mappings of the ChEMBL assays to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");

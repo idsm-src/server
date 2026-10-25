@@ -11,16 +11,52 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem InChIKeys ({@code pubchem/RDF/inchikey}) into the table {@code pubchem.inchikeys} and the
+ * tables of their compounds and MeSH subjects.
+ */
 class InchiKey extends Updater
 {
+    /**
+     * IRI prefix of the InChIKeys.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/inchikey/";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Stored InChIKeys met in the data, by their values.
+     */
     private static final StringIntMap keepKeys = new StringIntMap();
+
+    /**
+     * InChIKeys met in the data that are not stored yet, by their values.
+     */
     private static final StringIntMap newKeys = new StringIntMap();
+
+    /**
+     * Id of the next new InChIKey.
+     */
     private static int nextKeyID;
 
 
+    /**
+     * Not instantiable.
+     */
+    private InchiKey()
+    {
+    }
+
+
+    /**
+     * Loads the InChIKeys from their value files, which must agree with their IRIs, and stores their changes.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases() throws IOException, SQLException
     {
         StringIntMap oldKeys = new StringIntMap();
@@ -68,6 +104,13 @@ class InchiKey extends Updater
     }
 
 
+    /**
+     * Loads the compounds of the InChIKeys, checks them against the InChIKeys stated by the compound files and stores
+     * their changes in {@code pubchem.inchikey_compounds}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCompounds() throws IOException, SQLException
     {
         IntIntMap keepCompounds = new IntIntMap();
@@ -146,8 +189,13 @@ class InchiKey extends Updater
     }
 
 
-    /*
+    /**
      * Checks the InChIKeys that the files of the compounds state against the compounds of the InChIKeys.
+     *
+     * @param keepCompounds the stored InChIKeys of the compounds met in the data, by the compounds
+     * @param newCompounds the new InChIKeys of the compounds, by the compounds
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void checkCompoundKeys(IntIntMap keepCompounds, IntIntMap newCompounds)
             throws IOException, SQLException
@@ -183,6 +231,12 @@ class InchiKey extends Updater
     }
 
 
+    /**
+     * Loads the MeSH subjects of the InChIKeys and stores their changes in {@code pubchem.inchikey_subjects}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSubjects() throws IOException, SQLException
     {
         IntStringMap keepSubjects = new IntStringMap();
@@ -243,6 +297,12 @@ class InchiKey extends Updater
     }
 
 
+    /**
+     * Checks the types of the InChIKeys.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void checkTypes() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/inchikey", "pc_inchikey_type_[0-9]+\\.ttl\\.gz", file -> {
@@ -268,6 +328,12 @@ class InchiKey extends Updater
     }
 
 
+    /**
+     * Loads the InChIKeys from the PubChemRDF files.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load inchikeys ...");
@@ -281,6 +347,13 @@ class InchiKey extends Updater
     }
 
 
+    /**
+     * Returns the id of the InChIKey with the given IRI.
+     *
+     * @param value the IRI of the InChIKey
+     * @return the id of the InChIKey, or null for an InChIKey without a value in the data
+     * @throws IOException if the IRI is not an IRI of an InChIKey
+     */
     static Integer getKeyID(String value) throws IOException
     {
         // workaround

@@ -17,11 +17,26 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the structures of the DrugBank compounds from the open structures archive into the table
+ * {@code drugbank.compounds}.
+ */
 public class DrugBank extends Updater
 {
-    /*
+    /**
+     * Not instantiable.
+     */
+    private DrugBank()
+    {
+    }
+
+
+    /**
      * Loads the structures of the compounds from the SDF files of the open structures archive; another entry of the
      * archive is reported as an unknown file.
+     *
+     * @throws IOException if the archive cannot be read
+     * @throws SQLException if a database error occurs
      */
     private static void loadCompounds() throws IOException, SQLException
     {
@@ -58,6 +73,13 @@ public class DrugBank extends Updater
     }
 
 
+    /**
+     * Runs the loader.
+     *
+     * @param args the command-line arguments (ignored)
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     public static void main(String[] args) throws IOException, SQLException
     {
         try

@@ -28,25 +28,39 @@ import cz.iocb.load.common.Updater;
 
 
 
-/*
- * Loads the In Silico Spectral Database (ISDB) from the MGF files of its summed spectra: a compound is identified by
- * its name (usually the first block of its InChIKey) and has one spectrum per polarity.
+/**
+ * Loads the In Silico Spectral Database (ISDB) from the MGF files of its summed spectra into the tables
+ * {@code isdb.compounds} and {@code isdb.spectra}: a compound is identified by its name (usually the first block of
+ * its InChIKey) and has one spectrum per polarity.
  */
 public final class ISDB extends Updater
 {
+    /**
+     * The pattern of the names of the compounds.
+     */
     private static final Pattern accessionPattern = Pattern.compile("[A-Z]{14}");
+
+    /**
+     * The pattern of the InChIKeys of the compounds.
+     */
     private static final Pattern inchikeyPattern = Pattern.compile("[A-Z]{14}-[A-Z]{10}-[A-Z]");
 
+    /**
+     * The parameters of the records that the loader knows.
+     */
     private static final Set<String> knownParameters = Set.of("CHARGE", "IONMODE", "COLLISION_ENERGY", "ADDUCT",
             "FRAGMENTATION_MODE", "MOLECULAR_FORMULA", "SMILES", "INCHI", "INCHIKEY", "SCANS", "NUM_PEAKS",
             "CONFIDENCE", "PARENT_MASS", "COMPOUND_NAME", "PRECURSOR_MZ");
 
-    /*
-     * The parent mass of a compound is derived from the precursor m/z of each polarity, so the two values differ in
-     * their last digits; the first of them is kept.
+    /**
+     * The tolerance of the comparison of the exact masses of a compound. The parent mass of a compound is derived from
+     * the precursor m/z of each polarity, so the two values differ in their last digits; the first of them is kept.
      */
     private static final float massTolerance = 0.001f;
 
+    /**
+     * The key of the spectra, the id of the compound and the polarity.
+     */
     private static final Key<Pair<Integer, String>> spectrumKey = new Key<>("compound", "ionmode")
     {
         @Override
@@ -63,19 +77,48 @@ public final class ISDB extends Updater
         }
     };
 
+    /**
+     * Table of the compounds.
+     */
     private static final EntityTable<Integer> compounds = new EntityTable<>("isdb.compounds", intKey("id"), null,
             uniqueVarchar("accession"), uniqueVarchar("inchikey"),
             real("exact_mass")
                     .comparedBy((a, b) -> a != null && b != null && Math.abs((Float) a - (Float) b) <= massTolerance),
             varchar("formula"), uniqueVarchar("smiles"), uniqueVarchar("inchi"));
+
+    /**
+     * Table of the spectra.
+     */
     private static final EntityTable<Pair<Integer, String>> spectra = new EntityTable<>("isdb.spectra", spectrumKey,
             null, real("pepmass"), SpectrumLiteral.column("spectrum"));
+
+    /**
+     * Database ids of the compounds by their names.
+     */
     private static final StringIntMap compoundIDs = new StringIntMap();
+
+    /**
+     * Next free id for a new compound.
+     */
     private static int nextCompoundID;
 
 
-    /*
+    /**
+     * Not instantiable.
+     */
+    private ISDB()
+    {
+    }
+
+
+    /**
      * Returns the exception that refuses a record because of the given parameter, missing or with the given value.
+     *
+     * @param file the name of the file of the record
+     * @param record the record
+     * @param kind the kind of the problem
+     * @param value the value of the parameter, or null if it is missing
+     * @return the exception
      */
     private static DataException error(String file, Record record, String kind, String value)
     {
@@ -83,8 +126,14 @@ public final class ISDB extends Updater
     }
 
 
-    /*
+    /**
      * Returns the value of a required parameter, which must not contain white space.
+     *
+     * @param file the name of the file of the record
+     * @param record the record
+     * @param name the name of the parameter
+     * @return the value of the parameter
+     * @throws DataException if the parameter is missing, empty or contains white space
      */
     private static String parameter(String file, Record record, String name) throws DataException
     {
@@ -100,6 +149,15 @@ public final class ISDB extends Updater
     }
 
 
+    /**
+     * Checks that a parameter of a record has the expected value.
+     *
+     * @param file the name of the file of the record
+     * @param record the record
+     * @param name the name of the parameter
+     * @param expected the expected value
+     * @throws DataException if the parameter is missing or has another value
+     */
     private static void check(String file, Record record, String name, String expected) throws DataException
     {
         String value = record.parameters().get(name);
@@ -112,6 +170,15 @@ public final class ISDB extends Updater
     }
 
 
+    /**
+     * Returns the value of a required numeric parameter.
+     *
+     * @param file the name of the file of the record
+     * @param record the record
+     * @param name the name of the parameter
+     * @return the value of the parameter
+     * @throws DataException if the parameter is missing or is not a number
+     */
     private static float number(String file, Record record, String name) throws DataException
     {
         String value = parameter(file, record, name);
@@ -127,6 +194,12 @@ public final class ISDB extends Updater
     }
 
 
+    /**
+     * Returns the id of a compound, assigning a new one to a compound not stored yet.
+     *
+     * @param accession the name of the compound
+     * @return the id of the compound
+     */
     private static synchronized int getCompoundID(String accession)
     {
         Integer id = compoundIDs.get(accession);
@@ -138,8 +211,11 @@ public final class ISDB extends Updater
     }
 
 
-    /*
+    /**
      * Reports the parameters of a record that the loader does not know as errors, as their values would be left out.
+     *
+     * @param file the name of the file of the record
+     * @param record the record
      */
     private static void checkParameters(String file, Record record)
     {
@@ -149,6 +225,14 @@ public final class ISDB extends Updater
     }
 
 
+    /**
+     * Loads the records of an MGF file; a refused record is reported as an error, and a missing file has been reported
+     * by {@link cz.iocb.load.common.Updater#openFile(String)}.
+     *
+     * @param file the name of the file
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     private static void loadFile(String file) throws IOException, SQLException
     {
         System.out.println("  load " + file);
@@ -178,9 +262,13 @@ public final class ISDB extends Updater
     }
 
 
-    /*
+    /**
      * Loads a record of an MGF file, i.e. a compound and its spectrum of the polarity of the record; a record with an
      * unexpected value is refused.
+     *
+     * @param file the name of the file of the record
+     * @param record the record
+     * @throws IOException if the record is refused or conflicts with the loaded values
      */
     private static void loadRecord(String file, Record record) throws IOException
     {
@@ -241,9 +329,12 @@ public final class ISDB extends Updater
     }
 
 
-    /*
-     * Loads the negative file before the positive one, so that the parent masses of the negative polarity are the ones
-     * stored.
+    /**
+     * Loads the compounds and the spectra from the MGF files and stores them. The negative file is loaded before the
+     * positive one, so that the parent masses of the negative polarity are the ones stored.
+     *
+     * @throws IOException if a file cannot be read
+     * @throws SQLException if a database error occurs
      */
     private static void loadFiles() throws IOException, SQLException
     {
@@ -265,6 +356,12 @@ public final class ISDB extends Updater
     }
 
 
+    /**
+     * Runs the loader.
+     *
+     * @param args the command-line arguments (ignored)
+     * @throws Exception if the load fails
+     */
     public static void main(String[] args) throws Exception
     {
         try

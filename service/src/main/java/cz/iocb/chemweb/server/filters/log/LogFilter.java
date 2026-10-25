@@ -14,12 +14,30 @@ import org.slf4j.MDC;
 
 
 
+/**
+ * Filter logging the URI of every request; the remote address, the remote host and the session id are put into the
+ * mapped diagnostic context while the request is served.
+ */
 public class LogFilter implements Filter
 {
+    /**
+     * Logger of the requests.
+     */
     private static final Logger logger = LoggerFactory.getLogger(LogFilter.class);
 
+    /**
+     * Configuration of the filter.
+     */
     @SuppressWarnings("unused")
     private FilterConfig filterConfig;
+
+
+    /**
+     * Creates the filter.
+     */
+    public LogFilter()
+    {
+    }
 
 
 

@@ -11,9 +11,21 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 
 
 
+/**
+ * Servlet depicting the structure of a compound as an SVG image; the optional parameter {@code filename} makes the
+ * image an attachment of that name.
+ */
 @SuppressWarnings("serial")
 public class CompoundSvgImageServlet extends CompoundImageServlet
 {
+    /**
+     * Creates the servlet.
+     */
+    public CompoundSvgImageServlet()
+    {
+    }
+
+
     @Override
     public String getServletInfo()
     {

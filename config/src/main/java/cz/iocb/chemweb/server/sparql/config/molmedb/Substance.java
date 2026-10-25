@@ -24,8 +24,25 @@ import cz.iocb.sparql.engine.request.Request;
 
 
 
+/**
+ * Mapping of the MolMeDB substances: their identifiers, properties, structures and links to the same compounds in other
+ * databases.
+ */
 public class Substance
 {
+    /**
+     * Not instantiable.
+     */
+    private Substance()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the substances to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("molmedb:substance", INT4, new DatabaseTable(schema, "substances"),
@@ -137,6 +154,11 @@ public class Substance
     }
 
 
+    /**
+     * Adds the quad mappings of the substances to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("<https://rdf.molmedb.upol.cz>");

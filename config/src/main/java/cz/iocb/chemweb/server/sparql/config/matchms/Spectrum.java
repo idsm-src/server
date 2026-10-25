@@ -2,15 +2,33 @@ package cz.iocb.chemweb.server.sparql.config.matchms;
 
 
 
+/**
+ * Mass spectrum parsed from the lexical form of an {@code ms:spectrum} literal.
+ */
 public class Spectrum
 {
+    /**
+     * The m/z values and intensities of the peaks, interleaved.
+     */
     final private float[] value;
 
+    /**
+     * Creates the spectrum.
+     *
+     * @param value the m/z values and intensities of the peaks, interleaved
+     */
     Spectrum(float[] value)
     {
         this.value = value;
     }
 
+    /**
+     * Parses a spectrum given as a list of {@code [mz,intensity]} pairs in brackets, of {@code {mz,intensity}} pairs in
+     * braces, or of {@code mz:intensity} pairs separated by spaces, commas or semicolons.
+     *
+     * @param literal the lexical form
+     * @return the spectrum, or null if the lexical form is invalid
+     */
     public static Spectrum valueOf(String literal)
     {
         String spaces = "(( |\\f|\\n|\\r|\\t|\\v)*)";

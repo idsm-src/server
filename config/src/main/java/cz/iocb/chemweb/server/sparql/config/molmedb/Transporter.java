@@ -14,8 +14,25 @@ import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
 
 
 
+/**
+ * Mapping of the MolMeDB interactions of the substances with transporters: the transporter proteins, the substrate and
+ * inhibitor measurements and their measure groups.
+ */
 public class Transporter
 {
+    /**
+     * Not instantiable.
+     */
+    private Transporter()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the transporters to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
@@ -52,6 +69,11 @@ public class Transporter
     }
 
 
+    /**
+     * Adds the quad mappings of the transporters to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("<https://rdf.molmedb.upol.cz>");

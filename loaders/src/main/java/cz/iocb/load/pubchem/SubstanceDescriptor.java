@@ -10,12 +10,38 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem substance descriptors ({@code pubchem/RDF/descriptor/substance}): the versions of the
+ * substances, stored in the table {@code pubchem.substance_versions}.
+ */
 class SubstanceDescriptor extends Updater
 {
+    /**
+     * IRI prefix of the substance descriptors.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/SID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
 
+    /**
+     * Not instantiable.
+     */
+    private SubstanceDescriptor()
+    {
+    }
+
+
+    /**
+     * Loads the versions of the substances from the version descriptors and from the substance files, which must agree,
+     * and stores their changes.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSubstanceVersions() throws IOException, SQLException
     {
         IntIntMap keepValues = new IntIntMap();
@@ -118,6 +144,12 @@ class SubstanceDescriptor extends Updater
     }
 
 
+    /**
+     * Checks the types of the version descriptors of the substances.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void checkSubstanceVersionTypes() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/descriptor/substance", "pc_descr_SubstanceVersion_type_[0-9]+\\.ttl\\.gz", file -> {
@@ -143,6 +175,12 @@ class SubstanceDescriptor extends Updater
     }
 
 
+    /**
+     * Loads the substance descriptors from the PubChemRDF files.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load substance descriptors ...");
@@ -154,6 +192,15 @@ class SubstanceDescriptor extends Updater
     }
 
 
+    /**
+     * Returns the id of the substance that the descriptor with the given IRI describes; a substance not described by
+     * the data gets a row and is counted as missing.
+     *
+     * @param value the IRI of the descriptor
+     * @param suffix the suffix of the IRI naming the kind of the descriptor
+     * @return the id of the substance
+     * @throws IOException if the IRI is not an IRI of a descriptor of the kind
+     */
     private static Integer getDescriptorID(String value, String suffix) throws IOException
     {
         if(!value.startsWith(prefix))

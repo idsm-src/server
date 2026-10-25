@@ -28,10 +28,20 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the ChEMBL activities, the measured results of the assays, from the activity file of the release into the
+ * table {@code chembl.activities}.
+ */
 class Activity extends Updater
 {
+    /**
+     * IRI prefix of the activities.
+     */
     static final String prefix = ChEMBL.chembl + "activity/CHEMBL_ACT_";
 
+    /**
+     * Table of the activities.
+     */
     private static final EntityTable<Integer> activities = new EntityTable<>("chembl.activities", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), integer("assay"), integer("molecule"), integer("document"),
             integer("endpoint_id"), integer("unit_id"), integer("qudt_id"), varchar("type"), varchar("relation"),
@@ -40,6 +50,22 @@ class Activity extends Updater
             varchar("validity_comment"), bool("potential_duplicate"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private Activity()
+    {
+    }
+
+
+    /**
+     * Loads the activities from the activity file of the release, checks the {@code cco:hasActivity} triples of the
+     * documents and molecules against the links of the activities, and checks that the activities with a
+     * {@code cco:dataValidityComment} are exactly those with {@code cco:dataValidityIssue}.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load activities ...");
@@ -136,6 +162,11 @@ class Activity extends Updater
     }
 
 
+    /**
+     * Stores the collected activities and reports the referenced ones that the file does not describe.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish activities ...");
@@ -146,6 +177,13 @@ class Activity extends Updater
     }
 
 
+    /**
+     * Returns the id of an activity and marks the activity as referenced.
+     *
+     * @param node the IRI of the activity
+     * @return the id of the activity
+     * @throws IOException if the node is not an IRI of an activity
+     */
     static int getActivityID(Node node) throws IOException
     {
         int id = TripleStreamProcessor.getIntID(node, prefix);
@@ -154,6 +192,13 @@ class Activity extends Updater
     }
 
 
+    /**
+     * Sets the assay of an activity, which the assay file gives.
+     *
+     * @param activityID the id of the activity
+     * @param assayID the id of the assay
+     * @throws IOException if the activity already has another assay
+     */
     static void setAssay(int activityID, int assayID) throws IOException
     {
         activities.set(activityID, "assay", assayID);

@@ -13,8 +13,26 @@ import cz.iocb.sparql.engine.mapping.extension.FunctionDefinition;
 
 
 
+/**
+ * Mapping parts shared by the configurations of the datasets: the common prefixes, the IRI classes of the external
+ * resources the datasets link to, and the full-text match function.
+ */
 public class Common
 {
+    /**
+     * Not instantiable.
+     */
+    private Common()
+    {
+    }
+
+
+    /**
+     * Adds the common prefixes to the configuration: those of RDF, RDFS, OWL, XSD, the service description
+     * vocabularies and the full-text extension ({@code fulltext}).
+     *
+     * @param config the configuration
+     */
     public static void addPrefixes(SparqlDatabaseConfiguration config)
     {
         config.addPrefix("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
@@ -30,6 +48,12 @@ public class Common
     }
 
 
+    /**
+     * Adds the resource classes of the external resources the datasets link to (NCBI, UniProt, identifiers.org, the
+     * cross-reference databases, Wikidata and others) to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         // @formatter:off
@@ -160,6 +184,12 @@ public class Common
     }
 
 
+    /**
+     * Adds the extension function {@code fulltext:match} to the configuration, which tells whether a string matches an
+     * English full-text query (SQL function {@code idsm.fulltext_match}); the {@code fulltext} prefix must be defined.
+     *
+     * @param config the configuration
+     */
     public static void addFunctions(SparqlDatabaseConfiguration config)
     {
         String fulltext = config.getPrefixes().get("fulltext");

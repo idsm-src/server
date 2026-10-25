@@ -32,16 +32,47 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the PubChem cells from {@code pubchem/RDF/cell/pc_cell.ttl.gz} into the table {@code pubchem.cells} and the
+ * tables of their alternative labels, occurrences, references, matches and anatomies.
+ */
 public class Cell extends Updater
 {
+    /**
+     * IRI prefix of the cells.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/cell/CELLID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Table of the cells.
+     */
     private static final EntityTable<Integer> cells = new EntityTable<>("pubchem.cells", intKey("id"), null,
             integer("organism"), varchar("label"));
+
+    /**
+     * Cells referenced but not described by the data.
+     */
     private static final MissingEntities<Integer> missingCells = new MissingEntities<>("cell", true);
 
 
+    /**
+     * Not instantiable.
+     */
+    private Cell()
+    {
+    }
+
+
+    /**
+     * Registers the checks of the predicates, types and values of the cell file.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), rdf + "type", skos + "prefLabel", skos + "altLabel", rdfs + "seeAlso",
@@ -63,6 +94,13 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Registers the handler that adds the cells described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.onType(sio + "SIO_010054", (subject, object) -> {
@@ -74,6 +112,13 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the labels of the cells.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadLabels(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(skos + "prefLabel", (subject, object) -> {
@@ -85,6 +130,14 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the organisms of the cells; an organism given by the taxonomy prefix without an
+     * id is skipped with a warning.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadOrganisms(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(up + "organism", (subject, object) -> {
@@ -103,6 +156,14 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Registers the handler of the alternative labels of the cells and the action that stores their changes in
+     * {@code pubchem.cell_alternatives}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAlternatives(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepAlternatives = new IntStringSet();
@@ -130,6 +191,14 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Registers the handler of the occurrences of the cells (the literal values of {@code obo:BFO_0000050}) and the
+     * action that stores their changes in {@code pubchem.cell_occurrences}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadOccurrences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepOccurrences = new IntStringSet();
@@ -157,6 +226,14 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Registers the handler of the references discussing the cells and the action that stores their changes in
+     * {@code pubchem.cell_references}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadReferences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepReferences = new IntPairSet();
@@ -184,6 +261,14 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Registers the handler of the ontology resources linked to the cells by {@code rdfs:seeAlso} (except the MeSH,
+     * Wikidata, ChEMBL and Cellosaurus links) and the action that stores their changes in {@code pubchem.cell_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntIntPairSet keepMatches = new IntIntPairSet();
@@ -216,6 +301,14 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Registers the handler of the MeSH descriptors linked to the cells by {@code rdfs:seeAlso} and the action that
+     * stores their changes in {@code pubchem.cell_mesh_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMeshCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -246,6 +339,14 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Registers the handler of the Wikidata entities linked to the cells by {@code rdfs:seeAlso} and the action that
+     * stores their changes in {@code pubchem.cell_wikidata_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadWikidataCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepMatches = new IntPairSet();
@@ -276,6 +377,14 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Registers the handler of the Cellosaurus cell lines linked to the cells by {@code rdfs:seeAlso} and the action
+     * that stores their changes in {@code pubchem.cell_cellosaurus_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCellosaurusMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -306,6 +415,14 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Registers the handler of the ChEMBL cell lines linked to the cells by {@code rdfs:seeAlso} and the action that
+     * stores their changes in {@code pubchem.cell_chembl_card_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadChemblCardCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepMatches = new IntPairSet();
@@ -336,6 +453,14 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Registers the handler of the anatomies the cells derive from and the action that stores their changes in
+     * {@code pubchem.cell_anatomies}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAnatomies(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepAnatomies = new IntPairSet();
@@ -363,6 +488,12 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Loads the cells from {@code pubchem/RDF/cell/pc_cell.ttl.gz} into the tables and flushes the table of the cells.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load cells ...");
@@ -393,6 +524,13 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Stores the cells, including those referenced by the parts loaded later, and deletes the stored cells that are
+     * neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish cells ...");
@@ -403,6 +541,14 @@ public class Cell extends Updater
     }
 
 
+    /**
+     * Returns the id of the cell with the given IRI; a cell not described by the data gets a row and is counted as
+     * missing.
+     *
+     * @param value the IRI of the cell
+     * @return the id of the cell
+     * @throws IOException if the IRI is not an IRI of a cell
+     */
     static Integer getCellID(String value) throws IOException
     {
         if(!value.startsWith(prefix))

@@ -4,6 +4,9 @@ import com.google.gwt.resources.client.RetinaImageResource;
 
 
 
+/**
+ * Images of the buttons of the pagers in double resolution for high-density (retina) displays.
+ */
 public interface RetinaPagerResources extends PagerResources
 {
     @Override

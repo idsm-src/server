@@ -31,12 +31,30 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the ChEMBL assays from the assay file of the release into the table {@code chembl.assays}, together with
+ * the labels of their PubChem assay references and the PubChem bioassays the references stand for.
+ */
 class Assay extends Updater
 {
+    /**
+     * IRI prefix of the assays.
+     */
     static final String prefix = ChEMBL.chembl + "assay/CHEMBL";
+
+    /**
+     * IRI prefix of the PubChem assay references of the assays.
+     */
     static final String pubchemPrefix = "http://pubchem.ncbi.nlm.nih.gov/assay/assay.cgi?aid=";
+
+    /**
+     * The text that introduces the name of the member in the description of an assay of a PubChem panel member.
+     */
     static final String panelMember = "Panel member name:";
 
+    /**
+     * Table of the assays.
+     */
     private static final EntityTable<Integer> assays = new EntityTable<>("chembl.assays", intKey("id"), "chembl_id",
             uniqueVarchar("chembl_id"), varchar("type"), varchar("description"), integer("document"), integer("target"),
             integer("source"), integer("cell_line"), integer("format_id"), varchar("organism"), integer("taxonomy"),
@@ -45,11 +63,29 @@ class Assay extends Updater
             varchar("relationship_desc"), integer("confidence_score"), varchar("confidence_desc"),
             integer("pubchem_assay"), integer("pubchem_bioassay"));
 
-    // the labels of the PubChem assay IRIs, which carry one label per assay referencing them
+    /**
+     * Table of the labels of the PubChem assay IRIs, which carry one label per assay referencing them.
+     */
     private static final ValueTable referenceLabels = new ValueTable("chembl.assay_reference_labels",
             column("reference"), column("label"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private Assay()
+    {
+    }
+
+
+    /**
+     * Loads the assays from the assay file of the release, checks the triples of the activities, documents, targets,
+     * sources and cell lines linking them to the assays against the links of the assays, and resolves the PubChem
+     * bioassays of the references.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load assays ...");
@@ -172,8 +208,11 @@ class Assay extends Updater
     }
 
 
-    /*
-     * The mapping produces rdf:type of the PubChem assay references from the stored values.
+    /**
+     * Checks that the PubChem assay references with an {@code rdf:type} are exactly the referenced ones, because the
+     * mapping produces {@code rdf:type} of the PubChem assay references from the stored values.
+     *
+     * @param types the AIDs of the references with an {@code rdf:type}
      */
     private static void checkXrefs(Set<Integer> types)
     {
@@ -194,11 +233,14 @@ class Assay extends Updater
     }
 
 
-    /*
-     * The assays of PubChem panel assays reference the AID of the panel concatenated with the number of the panel
-     * member (AID 493040 member 169 gives aid=493040169). The extension link to the PubChem assay uses the AID of the
-     * panel: the panel members are recognized by their descriptions, which are equal up to the name of the member, and
-     * the AID of the panel is the common prefix of the references of its members.
+    /**
+     * Sets the PubChem bioassays of the assays with a PubChem assay reference. The assays of PubChem panel assays
+     * reference the AID of the panel concatenated with the number of the panel member (AID 493040 member 169 gives
+     * aid=493040169). The extension link to the PubChem assay uses the AID of the panel: the panel members are
+     * recognized by their descriptions, which are equal up to the name of the member, and the AID of the panel is the
+     * common prefix of the references of its members.
+     *
+     * @throws IOException if an assay already has another PubChem bioassay
      */
     private static void setPubchemBioassays() throws IOException
     {
@@ -261,6 +303,12 @@ class Assay extends Updater
     }
 
 
+    /**
+     * Stores the collected assays, reporting the referenced ones that the file does not describe, and the labels of
+     * their PubChem assay references.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish assays ...");
@@ -272,6 +320,13 @@ class Assay extends Updater
     }
 
 
+    /**
+     * Returns the id of an assay and marks the assay as referenced.
+     *
+     * @param node the IRI of the assay
+     * @return the id of the assay
+     * @throws IOException if the node is not an IRI of an assay
+     */
     static int getAssayID(Node node) throws IOException
     {
         int id = TripleStreamProcessor.getIntID(node, prefix);
@@ -280,6 +335,11 @@ class Assay extends Updater
     }
 
 
+    /**
+     * Returns the number of the assays described by the assay file.
+     *
+     * @return the number of the described assays
+     */
     static int size()
     {
         return assays.size();

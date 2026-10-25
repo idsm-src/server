@@ -21,19 +21,58 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem sources ({@code pubchem/RDF/source}) into the table {@code pubchem.sources} and the tables of
+ * their subjects and alternative titles.
+ */
 class Source extends Updater
 {
+    /**
+     * IRI prefix of the sources.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/source/";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Table of the sources.
+     */
     private static final EntityTable<Integer> sources = new EntityTable<>("pubchem.sources", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), varchar("title"), varchar("homepage"), varchar("license"),
             varchar("rights"));
+
+    /**
+     * Ids of the sources by their IRIs without the prefix.
+     */
     private static final StringIntMap sourceIDs = new StringIntMap();
+
+    /**
+     * Sources referenced but not described by the data.
+     */
     private static final MissingEntities<String> missingSources = new MissingEntities<>("source", true);
+
+    /**
+     * Id of the next new source.
+     */
     private static int nextSourceID;
 
 
+    /**
+     * Not instantiable.
+     */
+    private Source()
+    {
+    }
+
+
+    /**
+     * Registers the checks of the predicates and types of the source file.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), dcterms + "title", dcterms + "alternative", dcterms + "subject",
@@ -42,6 +81,12 @@ class Source extends Updater
     }
 
 
+    /**
+     * Loads the ids of the stored sources and registers the handler that adds the sources described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases(TripleDispatcher dispatcher) throws SQLException
     {
         load("select iri,id from pubchem.sources", sourceIDs);
@@ -57,6 +102,11 @@ class Source extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the titles of the sources.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void loadTitles(TripleDispatcher dispatcher)
     {
         dispatcher.on(dcterms + "title", (subject, object) -> {
@@ -68,6 +118,11 @@ class Source extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the homepages of the sources.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void loadHomepages(TripleDispatcher dispatcher)
     {
         dispatcher.on(foaf + "homepage", (subject, object) -> {
@@ -79,6 +134,11 @@ class Source extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the licenses of the sources.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void loadLicenses(TripleDispatcher dispatcher)
     {
         dispatcher.on(dcterms + "license", (subject, object) -> {
@@ -90,6 +150,11 @@ class Source extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the rights statements of the sources.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void loadRights(TripleDispatcher dispatcher)
     {
         dispatcher.on(dcterms + "rights", (subject, object) -> {
@@ -101,6 +166,13 @@ class Source extends Updater
     }
 
 
+    /**
+     * Registers the handler of the subject concepts of the sources and the action that stores their changes in
+     * {@code pubchem.source_subjects}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSubjects(TripleDispatcher dispatcher) throws SQLException
     {
         IntPairSet keepSubjects = new IntPairSet();
@@ -128,6 +200,13 @@ class Source extends Updater
     }
 
 
+    /**
+     * Registers the handler of the alternative titles of the sources and the action that stores their changes in
+     * {@code pubchem.source_alternatives}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAlternatives(TripleDispatcher dispatcher) throws SQLException
     {
         IntStringSet keepAlternatives = new IntStringSet();
@@ -155,6 +234,12 @@ class Source extends Updater
     }
 
 
+    /**
+     * Loads the sources from the PubChemRDF file and flushes their table.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load sources ...");
@@ -180,6 +265,13 @@ class Source extends Updater
     }
 
 
+    /**
+     * Stores the sources, including those referenced by the parts loaded later, and deletes the stored sources that are
+     * neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish sources ...");
@@ -190,6 +282,15 @@ class Source extends Updater
     }
 
 
+    /**
+     * Returns the id of the source that a bioassay XML file names; a source not described by the data gets a row with
+     * the given title and is counted as missing.
+     *
+     * @param source the IRI of the source without the prefix
+     * @param title the title of the source
+     * @return the id of the source
+     * @throws IOException if the row of the source conflicts with the data
+     */
     static Integer registerSourceID(String source, String title) throws IOException
     {
         synchronized(sourceIDs)
@@ -209,6 +310,14 @@ class Source extends Updater
     }
 
 
+    /**
+     * Returns the id of the source with the given IRI; a source not described by the data gets a row and is counted as
+     * missing.
+     *
+     * @param value the IRI of the source
+     * @return the id of the source
+     * @throws IOException if the IRI is not an IRI of a source
+     */
     static Integer getSourceID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
@@ -230,8 +339,12 @@ class Source extends Updater
     }
 
 
-    /*
+    /**
      * Adds the row of a source, which keeps its id if it has one.
+     *
+     * @param source the IRI of the source without the prefix
+     * @return the id of the source
+     * @throws IOException if the row of the source conflicts with the data
      */
     private static Integer addSource(String source) throws IOException
     {

@@ -12,11 +12,27 @@ import cz.iocb.sparql.engine.database.DatabaseSchema;
 
 
 
+/**
+ * Configuration of the MolMeDB dataset of the interactions of molecules with membranes and transporters, with the
+ * SACHEM search over its substances. It serves the MolMeDB endpoint and is merged into the IDSM endpoint by
+ * {@link cz.iocb.chemweb.server.sparql.config.idsm.IdsmConfiguration}.
+ */
 public class MolmedbConfiguration extends SparqlDatabaseConfiguration
 {
+    /**
+     * Database schema of the MolMeDB tables.
+     */
     static final String schema = "molmedb";
 
 
+    /**
+     * Creates the configuration.
+     *
+     * @param service the service IRI
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public MolmedbConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
         super(service, connectionPool, schema);
@@ -28,6 +44,9 @@ public class MolmedbConfiguration extends SparqlDatabaseConfiguration
     }
 
 
+    /**
+     * Adds the prefixes of the configuration.
+     */
     private void addPrefixes()
     {
         Common.addPrefixes(this);
@@ -55,6 +74,11 @@ public class MolmedbConfiguration extends SparqlDatabaseConfiguration
     }
 
 
+    /**
+     * Adds the resource classes of the configuration.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private void addResourceClasses() throws SQLException
     {
         Ontology.addResourceClasses(this);
@@ -69,6 +93,9 @@ public class MolmedbConfiguration extends SparqlDatabaseConfiguration
     }
 
 
+    /**
+     * Adds the quad mappings of the configuration.
+     */
     private void addQuadMappings()
     {
         Substance.addQuadMappings(this);
@@ -78,6 +105,9 @@ public class MolmedbConfiguration extends SparqlDatabaseConfiguration
     }
 
 
+    /**
+     * Adds the procedures of the configuration.
+     */
     private void addProcedures()
     {
         Sachem.addProcedures(this, "molmedb", "molmedb:substance",

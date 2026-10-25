@@ -29,13 +29,36 @@ import cz.iocb.sparql.engine.rdf.Iri;
 
 
 
+/**
+ * Implementation of the {@link DetailsPageService}: renders the details page of a resource by the Velocity template
+ * ({@code templates/page/*.vm}) registered for the pattern its IRI matches, over the configuration named by the
+ * {@code resource} init parameter (a JNDI resource).
+ */
 public class DetailsPageServiceImpl extends GWTRemoteServiceServlet implements DetailsPageService
 {
+    /**
+     * Serialization version.
+     */
     private static final long serialVersionUID = 1L;
+
+    /**
+     * Logger of the rendering times.
+     */
     private static final Logger logger = LoggerFactory.getLogger(DetailsPageServiceImpl.class);
+
+    /**
+     * Template files by the patterns of the IRIs they render.
+     */
     private static final Map<Pattern, String> templates = new HashMap<>();
 
+    /**
+     * Configuration the templates query.
+     */
     private SparqlDatabaseConfiguration dbConfig;
+
+    /**
+     * Velocity engine rendering the templates.
+     */
     private VelocityEngine ve;
 
 
@@ -77,6 +100,14 @@ public class DetailsPageServiceImpl extends GWTRemoteServiceServlet implements D
         addTemplate(wikidata + "entity/Q([0-9]+)", "wikidata/Compound.vm");
 
         addTemplate(obolibrary + "obo/CHEBI_([0-9]+)", "chebi/Class.vm");
+    }
+
+
+    /**
+     * Creates the servlet.
+     */
+    public DetailsPageServiceImpl()
+    {
     }
 
 
@@ -153,12 +184,24 @@ public class DetailsPageServiceImpl extends GWTRemoteServiceServlet implements D
     }
 
 
+    /**
+     * Registers the template of the details pages of the IRIs matching a pattern.
+     *
+     * @param regexp the regular expression the IRIs match
+     * @param file the template file relative to the directory {@code templates/page}
+     */
     private static void addTemplate(String regexp, String file)
     {
         templates.put(Pattern.compile(regexp), "page/" + file);
     }
 
 
+    /**
+     * Returns the template of the details page of an IRI.
+     *
+     * @param value the IRI
+     * @return the template file of the first matching pattern, {@code page/unknown.vm} if no pattern matches
+     */
     private static String getTempleteFileName(String value)
     {
         for(Entry<Pattern, String> e : templates.entrySet())

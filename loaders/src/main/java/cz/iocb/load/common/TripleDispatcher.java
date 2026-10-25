@@ -17,7 +17,7 @@ import org.apache.jena.riot.Lang;
 
 
 
-/*
+/**
  * Reads RDF files as streams of triples and passes every triple to the handlers registered for its predicate, so that
  * all the data of the files are loaded in one pass and without holding the files in memory. A handler registered for
  * a type gets the triples whose predicate is rdf:type and whose object is the type. The handlers are called one at a
@@ -27,45 +27,124 @@ import org.apache.jena.riot.Lang;
  */
 public class TripleDispatcher extends Updater
 {
+    /**
+     * Handler of the triples of a predicate or a type.
+     */
     @FunctionalInterface
     public static interface Handler
     {
+        /**
+         * Processes a triple.
+         *
+         * @param subject the subject of the triple
+         * @param object the object of the triple
+         * @throws IOException if the triple cannot be loaded (a {@link DataException}, which is reported) or an I/O
+         *             error occurs
+         * @throws SQLException if a database error occurs
+         */
         void handle(Node subject, Node object) throws IOException, SQLException;
     }
 
 
+    /**
+     * Handler of all the triples.
+     */
     @FunctionalInterface
     public static interface TripleHandler
     {
+        /**
+         * Processes a triple.
+         *
+         * @param subject the subject of the triple
+         * @param predicate the predicate of the triple
+         * @param object the object of the triple
+         * @throws IOException if the triple cannot be loaded (a {@link DataException}, which is reported) or an I/O
+         *             error occurs
+         * @throws SQLException if a database error occurs
+         */
         void handle(Node subject, Node predicate, Node object) throws IOException, SQLException;
     }
 
 
+    /**
+     * Action run once all the files have been read.
+     */
     @FunctionalInterface
     public static interface Action
     {
+        /**
+         * Runs the action.
+         *
+         * @throws IOException if the data are inconsistent (a {@link DataException}, which is reported) or an I/O
+         *             error occurs
+         * @throws SQLException if a database error occurs
+         */
         void run() throws IOException, SQLException;
     }
 
 
+    /**
+     * Filter of the triples passed to the handlers.
+     */
     @FunctionalInterface
     public static interface Filter
     {
+        /**
+         * Tests whether a triple is passed to the handlers.
+         *
+         * @param subject the subject of the triple
+         * @param predicate the predicate of the triple
+         * @param object the object of the triple
+         * @return true if the triple is accepted
+         */
         boolean accept(Node subject, Node predicate, Node object);
     }
 
 
+    /**
+     * IRI of {@code rdf:type}.
+     */
     private static final String typePredicate = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
+    /**
+     * Handlers of the triples by the IRIs of their predicates.
+     */
     private final HashMap<String, List<Handler>> handlers = new HashMap<>();
+
+    /**
+     * Handlers of the {@code rdf:type} triples by the IRIs of their types.
+     */
     private final HashMap<String, List<Handler>> typeHandlers = new HashMap<>();
+
+    /**
+     * Handlers of all the triples.
+     */
     private final List<TripleHandler> tripleHandlers = new ArrayList<>();
+
+    /**
+     * Filters of the triples that have a handler for their predicate or type.
+     */
     private final List<Filter> filters = new ArrayList<>();
+
+    /**
+     * Actions run once all the files have been read.
+     */
     private final List<Action> actions = new ArrayList<>();
 
 
-    /*
+    /**
+     * Creates a dispatcher without handlers.
+     */
+    public TripleDispatcher()
+    {
+    }
+
+
+    /**
      * Registers a handler of the triples with the given predicate.
+     *
+     * @param predicate the IRI of the predicate
+     * @param handler the handler
      */
     public void on(String predicate, Handler handler)
     {
@@ -73,8 +152,11 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Registers a handler of the rdf:type triples with the given type.
+     *
+     * @param type the IRI of the type
+     * @param handler the handler
      */
     public void onType(String type, Handler handler)
     {
@@ -82,8 +164,10 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Registers a handler of all the triples.
+     *
+     * @param handler the handler
      */
     public void onEvery(TripleHandler handler)
     {
@@ -91,9 +175,11 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Registers a filter of the triples that have a handler for their predicate or type: a triple that the filter
      * refuses is passed to no handler. The filter reports the triples that it refuses itself.
+     *
+     * @param filter the filter
      */
     public void filter(Filter filter)
     {
@@ -101,8 +187,10 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Registers an action to run once all the files have been read.
+     *
+     * @param action the action
      */
     public void after(Action action)
     {
@@ -110,9 +198,12 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Returns the IRI of an IRI or the lexical form of a literal, as the SPARQL function str() does, and null for a
      * blank node.
+     *
+     * @param node the node
+     * @return the IRI or the lexical form, or null for a blank node
      */
     public static String str(Node node)
     {
@@ -126,8 +217,11 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Returns the IRI of an IRI node and the string form of any other node, as the messages show them.
+     *
+     * @param node the node
+     * @return the text of the node
      */
     public static String text(Node node)
     {
@@ -135,8 +229,12 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Tests whether the IRI or literal value starts with any of the prefixes, as strstarts(str(...), ...) does.
+     *
+     * @param node the node
+     * @param prefixes the prefixes
+     * @return true if the IRI or the lexical form of the node starts with any of the prefixes
      */
     public static boolean startsWith(Node node, String... prefixes)
     {
@@ -151,8 +249,12 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Tests whether the node is the given IRI.
+     *
+     * @param node the node
+     * @param iri the IRI
+     * @return true if the node is the IRI
      */
     public static boolean is(Node node, String iri)
     {
@@ -160,20 +262,34 @@ public class TripleDispatcher extends Updater
     }
 
 
+    /**
+     * Selects all the nodes.
+     *
+     * @return the predicate accepting every node
+     */
     public static Predicate<Node> all()
     {
         return node -> true;
     }
 
 
+    /**
+     * Selects the IRIs starting with the prefix.
+     *
+     * @param prefix the prefix of the IRIs
+     * @return the predicate accepting the IRIs starting with the prefix
+     */
     public static Predicate<Node> startingWith(String prefix)
     {
         return node -> node.isURI() && node.getURI().startsWith(prefix);
     }
 
 
-    /*
+    /**
      * Selects the nodes that are not IRIs starting with the prefix, including the blank nodes.
+     *
+     * @param prefix the prefix of the IRIs
+     * @return the predicate accepting the nodes other than the IRIs starting with the prefix
      */
     public static Predicate<Node> notStartingWith(String prefix)
     {
@@ -181,8 +297,11 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Selects all the nodes except the given IRIs.
+     *
+     * @param iris the excluded IRIs
+     * @return the predicate accepting the nodes other than the IRIs
      */
     public static Predicate<Node> except(String... iris)
     {
@@ -192,8 +311,11 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Reports the triples of the selected subjects whose predicates are other than the allowed ones as errors.
+     *
+     * @param subjects the selected subjects
+     * @param allowed the IRIs of the allowed predicates
      */
     public void checkPredicates(Predicate<Node> subjects, String... allowed)
     {
@@ -206,8 +328,11 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Reports the types of the selected subjects other than the allowed ones as errors.
+     *
+     * @param subjects the selected subjects
+     * @param allowed the IRIs of the allowed types
      */
     public void checkTypes(Predicate<Node> subjects, String... allowed)
     {
@@ -220,8 +345,11 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Reports the values of the predicate other than the allowed IRIs as errors.
+     *
+     * @param predicate the IRI of the predicate
+     * @param allowed the allowed IRIs
      */
     public void checkValues(String predicate, String... allowed)
     {
@@ -234,8 +362,12 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Reports the values of the predicate at the selected subjects that start with none of the prefixes as errors.
+     *
+     * @param subjects the selected subjects
+     * @param predicate the IRI of the predicate
+     * @param prefixes the allowed prefixes of the values
      */
     public void checkPrefixes(Predicate<Node> subjects, String predicate, String... prefixes)
     {
@@ -243,9 +375,14 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Reports the selected values of the predicate at the selected subjects that start with none of the prefixes as
      * errors.
+     *
+     * @param subjects the selected subjects
+     * @param predicate the IRI of the predicate
+     * @param values the selected values
+     * @param prefixes the allowed prefixes of the values
      */
     public void checkPrefixes(Predicate<Node> subjects, String predicate, Predicate<Node> values, String... prefixes)
     {
@@ -264,8 +401,11 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Reports the subjects whose IRI without the pattern differs from their value of the predicate as errors.
+     *
+     * @param predicate the IRI of the predicate
+     * @param pattern the regular expression removed from the IRIs of the subjects
      */
     public void checkIdentifier(String predicate, String pattern)
     {
@@ -276,9 +416,15 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Reports the selected values of the predicate at the selected subjects whose rest without the value pattern
      * differs from the rest of the subject IRI without the subject pattern as errors.
+     *
+     * @param subjects the selected subjects
+     * @param predicate the IRI of the predicate
+     * @param values the selected values
+     * @param subjectPattern the regular expression removed from the IRIs of the subjects
+     * @param valuePattern the regular expression removed from the values
      */
     public void checkLink(Predicate<Node> subjects, String predicate, Predicate<Node> values, String subjectPattern,
             String valuePattern)
@@ -295,9 +441,13 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Reports the values of the predicate that start with the prefix and lack a value with the pair prefix and the
      * same rest at the same subject as errors; a pairing in both directions is checked by two calls.
+     *
+     * @param predicate the IRI of the predicate
+     * @param prefix the prefix of the checked values
+     * @param pairPrefix the prefix of their pairs
      */
     public void checkPaired(String predicate, String prefix, String pairPrefix)
     {
@@ -323,9 +473,15 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Passes the triple to its handlers, unless a filter refuses it. A problem of the data that a handler finds is
      * reported, and the other handlers still get the triple.
+     *
+     * @param subject the subject of the triple
+     * @param predicate the predicate of the triple
+     * @param object the object of the triple
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private synchronized void dispatch(Node subject, Node predicate, Node object) throws IOException, SQLException
     {
@@ -382,11 +538,15 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Reads an RDF file: Turtle if its name ends with .ttl, N-Triples if it ends with .nt and RDF/XML otherwise,
      * gzipped if the name ends with .gz. Relative IRIs are resolved against file:/// followed by the path of the file
      * in the data directory, so that they do not depend on the directory the loader runs in. A missing file is
      * reported as an error.
+     *
+     * @param file the path of the file in the data directory
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     public void load(String file) throws IOException, SQLException
     {
@@ -429,8 +589,13 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
+    /**
      * Reads the files of the directory whose names match the pattern, several of them in parallel.
+     *
+     * @param path the path of the directory in the data directory
+     * @param pattern the regular expression of the names of the files
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     public void load(String path, String pattern) throws IOException, SQLException
     {
@@ -438,9 +603,12 @@ public class TripleDispatcher extends Updater
     }
 
 
-    /*
-     * Runs the actions registered by after(). A problem of the data that an action finds is reported, and the other
-     * actions still run.
+    /**
+     * Runs the actions registered by {@link #after(Action)}. A problem of the data that an action finds is reported,
+     * and the other actions still run.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     public void finish() throws IOException, SQLException
     {

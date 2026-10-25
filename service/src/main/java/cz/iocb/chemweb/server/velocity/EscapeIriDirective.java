@@ -16,11 +16,29 @@ import cz.iocb.sparql.engine.rdf.Iri;
 
 
 
+/**
+ * Velocity line directive {@code #escapeIRI(value)} writing an IRI as a prefixed name of the prefixes given by the
+ * application attribute {@link #IRI_PREFIXES_CONFIG}, or unchanged if it has no prefixed name.
+ */
 public class EscapeIriDirective extends Directive
 {
+    /**
+     * Name of the application attribute holding the prefixes.
+     */
     public static final String IRI_PREFIXES_CONFIG = "IRI_PREFIXES_CONFIG";
 
+    /**
+     * IRIs of the prefixes by their names.
+     */
     HashMap<String, String> prefixes;
+
+
+    /**
+     * Creates the directive.
+     */
+    public EscapeIriDirective()
+    {
+    }
 
 
     @Override
@@ -69,6 +87,12 @@ public class EscapeIriDirective extends Directive
     }
 
 
+    /**
+     * Converts an IRI to a prefixed name, if it has one.
+     *
+     * @param value the IRI
+     * @return the prefixed name, or the IRI if it has no prefixed name
+     */
     private String escape(String value)
     {
         String iri = IriNode.toPrefixedIri(value, prefixes);

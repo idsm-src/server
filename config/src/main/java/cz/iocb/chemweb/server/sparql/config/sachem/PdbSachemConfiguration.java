@@ -14,8 +14,19 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
+/**
+ * Configuration of the SACHEM endpoint of the compounds of the PDB Chemical Component Dictionary.
+ */
 public class PdbSachemConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    /**
+     * Creates the configuration.
+     *
+     * @param service the service IRI
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public PdbSachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
         super(service, connectionPool, schema);
@@ -27,6 +38,9 @@ public class PdbSachemConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the prefixes of the configuration.
+     */
     private void addPrefixes()
     {
         Common.addPrefixes(this);
@@ -35,6 +49,9 @@ public class PdbSachemConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the resource classes of the configuration.
+     */
     private void addResourceClasses()
     {
         Sachem.addResourceClasses(this);
@@ -49,6 +66,9 @@ public class PdbSachemConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the quad mappings of the configuration.
+     */
     private void addQuadMappings()
     {
         MolFiles.addQuadMappings(this, "pdb:compound", "pdb:molfile", new DatabaseTable("pdb", "compounds"),
@@ -56,6 +76,9 @@ public class PdbSachemConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the procedures of the configuration.
+     */
     private void addProcedures()
     {
         Sachem.addProcedures(this, "pdb", "pdb:compound", getColumns(getIriClass("pdb:compound"), "compound"));

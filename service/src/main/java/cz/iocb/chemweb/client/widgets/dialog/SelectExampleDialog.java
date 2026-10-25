@@ -32,24 +32,49 @@ import cz.iocb.chemweb.client.widgets.codemirror.CodeMirror;
 
 
 
+/**
+ * Dialog offering the example queries of the endpoint (loaded by the page from {@code chemweb/js/examples-data.js})
+ * with a preview of the selected one.
+ */
 public class SelectExampleDialog extends DialogBox
 {
+    /**
+     * Example query as a JavaScript object of the example data.
+     */
     public static class Example extends JavaScriptObject
     {
+        /**
+         * Not instantiable from Java; instances come from the example data.
+         */
         protected Example()
         {
         }
 
+        /**
+         * Returns the description of the example.
+         *
+         * @return the description in HTML
+         */
         public final native String getDescription()
         /*-{
             return this.description;
         }-*/;
 
+        /**
+         * Returns the code of the example.
+         *
+         * @return the SPARQL query
+         */
         public final native String getCode()
         /*-{
             return this.code;
         }-*/;
 
+        /**
+         * Returns the code of the example preceded by a comment line with its description in plain text.
+         *
+         * @return the commented SPARQL query
+         */
         public final String getCommentedCode()
         {
             return "# " + getDescription().replaceAll("<[^>]+>", "").replaceAll("[\n ]+", " ").trim() + "\n" + "\n"
@@ -57,31 +82,78 @@ public class SelectExampleDialog extends DialogBox
         }
     }
 
+    /**
+     * Binder of the dialog template {@code SelectExampleDialog.ui.xml}.
+     */
     interface ExamplesPageUiBinder extends UiBinder<Widget, SelectExampleDialog>
     {
     }
 
+    /**
+     * Receiver of the selected example.
+     */
     public static abstract class Callback
     {
+        /**
+         * Creates the receiver.
+         */
+        protected Callback()
+        {
+        }
+
+
+        /**
+         * Called with the selected example.
+         *
+         * @param code the commented code of the example
+         */
         abstract public void onSelection(String code);
     }
 
 
 
+    /**
+     * Binder of the dialog template.
+     */
     private static ExamplesPageUiBinder uiBinder = GWT.create(ExamplesPageUiBinder.class);
 
+    /**
+     * Grid of the descriptions of the examples.
+     */
     @UiField(provided = true)
     DataGrid<Example> examplesDataGrid;
+
+    /**
+     * Text area replaced by the read-only editor previewing the selected example.
+     */
     @UiField
     TextArea previewTextArea;
+
+    /**
+     * Button selecting the example.
+     */
     @UiField
     Button selectButton;
 
+    /**
+     * Editor previewing the selected example.
+     */
     private CodeMirror codemirror;
+
+    /**
+     * Receiver of the example selected in the open dialog.
+     */
     private Callback callback;
+
+    /**
+     * Selection model of the grid of the examples.
+     */
     private final SingleSelectionModel<Example> selectionModel;
 
 
+    /**
+     * Creates the dialog and fills it with the examples once the page is loaded.
+     */
     public SelectExampleDialog()
     {
         examplesDataGrid = new DataGrid<>(1, DataGridBundle.INSTANCE);
@@ -198,6 +270,12 @@ public class SelectExampleDialog extends DialogBox
     }
 
 
+    /**
+     * Closes the dialog and passes the selected example to the callback; called also for the Enter key and a double
+     * click.
+     *
+     * @param e the click event, or null
+     */
     @UiHandler("selectButton")
     void selectButtonClick(ClickEvent e)
     {
@@ -208,12 +286,22 @@ public class SelectExampleDialog extends DialogBox
     }
 
 
+    /**
+     * Closes the dialog without a selection; called also for the Escape key.
+     *
+     * @param e the click event, or null
+     */
     @UiHandler("cancelButton")
     void cancelButtonClick(ClickEvent e)
     {
         hide();
     }
 
+    /**
+     * Opens the dialog in the centre of the page.
+     *
+     * @param callback the receiver of the selected example
+     */
     public void open(Callback callback)
     {
         this.callback = callback;
@@ -240,6 +328,11 @@ public class SelectExampleDialog extends DialogBox
         });
     }
 
+    /**
+     * Provides the dialog itself as the root of the template.
+     *
+     * @return the dialog
+     */
     @UiFactory
     DialogBox instance()
     {
@@ -247,6 +340,11 @@ public class SelectExampleDialog extends DialogBox
     }
 
 
+    /**
+     * Returns the example queries defined by the example data.
+     *
+     * @return the examples
+     */
     public static final native JsArray<Example> getData()
     /*-{
         return $wnd.examples;

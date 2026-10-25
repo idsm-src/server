@@ -24,15 +24,46 @@ import cz.iocb.sparql.engine.request.Request;
 
 
 
+/**
+ * IRI class of the graphs, partitions and linksets of the VoID statistics, whose IRIs consist of a prefix followed by
+ * the hexadecimal forms of the id columns, four digits for a {@code smallint} and eight for an {@code integer}.
+ */
 public class VoidResource extends UserIriClass
 {
+    /**
+     * Compiled pattern of the IRIs of the class.
+     */
     private final Pattern pattern;
+
+    /**
+     * Regular expression of the IRIs of the class.
+     */
     private final String regexp;
+
+    /**
+     * Prefix of the IRIs.
+     */
     private final String prefix;
+
+    /**
+     * Positions of the hexadecimal forms of the columns in an IRI, counted from 1 as by the SQL {@code substring}.
+     */
     private final List<Integer> offsets;
+
+    /**
+     * Lengths of the hexadecimal forms of the columns.
+     */
     private final List<Integer> lengths;
 
 
+    /**
+     * Creates the IRI class.
+     *
+     * @param name the name of the class
+     * @param prefix the prefix of the IRIs
+     * @param types the types of the id columns, each {@code INT2} or {@code INT4}
+     * @throws IllegalArgumentException if a type is neither {@code INT2} nor {@code INT4}
+     */
     public VoidResource(String name, String prefix, List<SqlType> types)
     {
         super(name, types, Set.of(iri, box));
@@ -107,6 +138,12 @@ public class VoidResource extends UserIriClass
     }
 
 
+    /**
+     * Returns the SQL expression of the IRI of a resource given by its columns.
+     *
+     * @param columns the columns of the resource
+     * @return the expression of the IRI
+     */
     protected Column generateFunction(List<Column> columns)
     {
         StringBuilder builder = new StringBuilder();
@@ -127,6 +164,13 @@ public class VoidResource extends UserIriClass
     }
 
 
+    /**
+     * Returns the SQL expressions of the columns of the resource denoted by an IRI.
+     *
+     * @param parameter the expression of the IRI
+     * @param check whether to check that the IRI belongs to the class; the columns of an IRI that does not are null
+     * @return the expressions of the columns
+     */
     protected List<Column> generateInverseFunctions(Column parameter, boolean check)
     {
         List<Column> result = new ArrayList<>(getColumnCount());

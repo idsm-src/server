@@ -10,13 +10,31 @@ import cz.iocb.sparql.engine.mapping.classes.LangStringWithTagClass;
 
 
 
+/**
+ * Configuration of the Medical Subject Headings (MeSH) dataset. It is merged into the IDSM endpoint by
+ * {@link cz.iocb.chemweb.server.sparql.config.idsm.IdsmConfiguration}.
+ */
 public class MeshConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    /**
+     * Database schema of the MeSH tables.
+     */
     static final String schema = "mesh";
 
+    /**
+     * Literal class of the strings in English.
+     */
     static final LangStringWithTagClass rdfLangStringEn = LangStringWithTagClass.get("en");
 
 
+    /**
+     * Creates the configuration.
+     *
+     * @param service the service IRI
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public MeshConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
         super(service, connectionPool, schema);
@@ -27,6 +45,9 @@ public class MeshConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the prefixes of the configuration.
+     */
     private void addPrefixes()
     {
         Common.addPrefixes(this);
@@ -36,6 +57,11 @@ public class MeshConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the resource classes of the configuration.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private void addResourceClasses() throws SQLException
     {
         Ontology.addResourceClasses(this);
@@ -44,6 +70,9 @@ public class MeshConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the quad mappings of the configuration.
+     */
     private void addQuadMappings()
     {
         Mesh.addQuadMappings(this);

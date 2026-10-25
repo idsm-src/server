@@ -11,27 +11,50 @@ import cz.iocb.load.common.Updater;
 
 
 
-/*
+/**
  * A table of a multi-valued property, one row per value. The rows assembled from the RDF data are compared with the
  * stored ones: missing rows are inserted and stored rows without an assembled one are deleted.
  */
 class ValueTable extends Updater
 {
+    /**
+     * A column of the table.
+     *
+     * @param name the name of the column
+     * @param enumType the enumeration type of the column, or null for an integer or varchar column
+     */
     static record Column(String name, String enumType)
     {
     }
 
 
+    /**
+     * A row of the table, compared by the values of its columns.
+     */
     static final class Value
     {
+        /**
+         * The values of the columns, in the order of the columns of the table.
+         */
         private final Object[] values;
 
+        /**
+         * Creates the row.
+         *
+         * @param values the values of the columns
+         */
         Value(Object[] values)
         {
             this.values = values;
         }
 
 
+        /**
+         * Returns the value of a column.
+         *
+         * @param index the index of the column
+         * @return the value of the column
+         */
         Object get(int index)
         {
             return values[index];
@@ -53,9 +76,20 @@ class ValueTable extends Updater
     }
 
 
+    /**
+     * A set of rows of the table, read from and written to the columns of the table.
+     */
     @SuppressWarnings("serial")
     private class ValueSet extends SqlSet<Value>
     {
+        /**
+         * Creates an empty set.
+         */
+        private ValueSet()
+        {
+        }
+
+
         @Override
         public Value get(ResultSet result) throws SQLException
         {
@@ -77,11 +111,28 @@ class ValueTable extends Updater
     }
 
 
+    /**
+     * The name of the table.
+     */
     private final String table;
+
+    /**
+     * The columns of the table.
+     */
     private final Column[] columns;
+
+    /**
+     * The rows assembled from the RDF data.
+     */
     private final ValueSet values = new ValueSet();
 
 
+    /**
+     * Creates the table.
+     *
+     * @param table the name of the table
+     * @param columns the columns of the table
+     */
     ValueTable(String table, Column... columns)
     {
         this.table = table;
@@ -89,20 +140,35 @@ class ValueTable extends Updater
     }
 
 
+    /**
+     * Creates an integer or varchar column.
+     *
+     * @param name the name of the column
+     * @return the column
+     */
     static Column column(String name)
     {
         return new Column(name, null);
     }
 
 
+    /**
+     * Creates a column of an enumeration type.
+     *
+     * @param name the name of the column
+     * @param enumType the enumeration type of the column
+     * @return the column
+     */
     static Column enumeration(String name, String enumType)
     {
         return new Column(name, enumType);
     }
 
 
-    /*
-     * Adds a value (integers and strings only); adding the same value again is allowed.
+    /**
+     * Adds a row (integers and strings only); adding the same row again is allowed.
+     *
+     * @param value the values of the columns
      */
     void add(Object... value)
     {
@@ -110,24 +176,45 @@ class ValueTable extends Updater
     }
 
 
+    /**
+     * Returns whether a row has been added.
+     *
+     * @param value the values of the columns
+     * @return true if the row has been added
+     */
     boolean contains(Object... value)
     {
         return values.contains(new Value(value));
     }
 
 
+    /**
+     * Returns the added rows.
+     *
+     * @return the added rows
+     */
     Iterable<Value> values()
     {
         return values;
     }
 
 
+    /**
+     * Returns the number of the added rows.
+     *
+     * @return the number of the added rows
+     */
     int size()
     {
         return values.size();
     }
 
 
+    /**
+     * Brings the table in line with the added rows and forgets them.
+     *
+     * @throws SQLException if a database error occurs
+     */
     void store() throws SQLException
     {
         String names = Stream.of(columns).map(c -> c.enumType == null ? c.name : c.name + "::varchar")
@@ -162,6 +249,12 @@ class ValueTable extends Updater
     }
 
 
+    /**
+     * Returns the statement parameter of a column, cast to the enumeration type of the column if it has one.
+     *
+     * @param column the column
+     * @return the statement parameter of the column
+     */
     private static String parameter(Column column)
     {
         return column.enumType == null ? "?" : "?::" + column.enumType;

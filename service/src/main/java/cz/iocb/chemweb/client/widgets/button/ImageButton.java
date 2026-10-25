@@ -14,14 +14,30 @@ import com.google.gwt.user.client.ui.Label;
 
 
 
+/**
+ * Button showing an image as its background and an optional text; a disabled button blocks all events aimed at it.
+ */
 public class ImageButton extends FocusPanel implements HasEnabled, HasText
 {
+    /**
+     * Resources of the image buttons.
+     */
     protected static ImageButtonResources resources = GWT.create(ImageButtonResources.class);
 
+    /**
+     * Whether the button is enabled.
+     */
     private boolean enabled = true;
+
+    /**
+     * Label holding the text of the button.
+     */
     protected Label label = new Label();
 
 
+    /**
+     * Creates the button without its image and label, installing the style and the blocking of events.
+     */
     protected ImageButton()
     {
         resources.css().ensureInjected();
@@ -46,6 +62,12 @@ public class ImageButton extends FocusPanel implements HasEnabled, HasText
     }
 
 
+    /**
+     * Creates the button with an image.
+     *
+     * @param src the URI of the image
+     * @param position the CSS background position of the image
+     */
     @UiConstructor
     public ImageButton(SafeUri src, String position)
     {

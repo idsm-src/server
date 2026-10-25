@@ -23,21 +23,63 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the International Patent Classification of PubChem ({@code pubchem/RDF/patent/ipc}) into the table
+ * {@code pubchem.patentipcs} and the table of their titles.
+ */
 class PatentIpc extends Updater
 {
+    /**
+     * IRI prefix of the IPC entries.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/patentipc/";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * IRI prefix of the IPC entries of the European Patent Office.
+     */
     private static final String epoPrefix = "http://data.epo.org/linked-data/def/ipc/";
+
+    /**
+     * IRI prefix of the IPC entries of the WIPO publication.
+     */
     private static final String wipoPrefix = "http://www.wipo.int/classifications/ipc/ipcpub/?notion=scheme&symbol=";
+
+    /**
+     * IRI prefix of the images of the IPC entries.
+     */
     private static final String imagePrefix = "https://pubchem.ncbi.nlm.nih.gov/images/ipc/";
 
+    /**
+     * Table of the IPC entries.
+     */
     private static final EntityTable<String> ipcs = new EntityTable<>("pubchem.patentipcs", stringKey("id"), null,
             uniqueVarchar("label"), varchar("broader"), uniqueVarchar("epo_id"), uniqueVarchar("wipo_id"),
             varchar("image"));
+
+    /**
+     * IPC entries referenced but not described by the data.
+     */
     private static final MissingEntities<String> missingIpcs = new MissingEntities<>("patent IPC", true);
 
 
+    /**
+     * Not instantiable.
+     */
+    private PatentIpc()
+    {
+    }
+
+
+    /**
+     * Registers the checks of the predicates, types and values of the IPC file.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), rdf + "type", rdfs + "label", dcterms + "title", skos + "broader",
@@ -47,6 +89,13 @@ class PatentIpc extends Updater
     }
 
 
+    /**
+     * Registers the handler that adds the IPC entries described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.onType(vocab + "PatentIPC", (subject, object) -> {
@@ -58,6 +107,13 @@ class PatentIpc extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the labels of the IPC entries.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadLabels(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(rdfs + "label", (subject, object) -> {
@@ -69,6 +125,14 @@ class PatentIpc extends Updater
     }
 
 
+    /**
+     * Registers the handler of the titles of the IPC entries and the action that stores their changes in
+     * {@code pubchem.patentipc_titles}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         StringPairSet keepTitles = new StringPairSet();
@@ -96,6 +160,13 @@ class PatentIpc extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the broader entries of the IPC entries.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBroaders(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(skos + "broader", (subject, object) -> {
@@ -107,6 +178,13 @@ class PatentIpc extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the EPO and WIPO ids and the images of the IPC entries.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSameAsReferences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(owl + "sameAs", (subject, object) -> {
@@ -124,6 +202,12 @@ class PatentIpc extends Updater
     }
 
 
+    /**
+     * Loads the IPC entries from the PubChemRDF file and flushes their table.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load patent IPCs ...");
@@ -147,6 +231,13 @@ class PatentIpc extends Updater
     }
 
 
+    /**
+     * Stores the IPC entries, including those referenced by the parts loaded later, and deletes the stored entries that
+     * are neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish patent IPCs ...");
@@ -157,6 +248,14 @@ class PatentIpc extends Updater
     }
 
 
+    /**
+     * Returns the id of the IPC entry with the given IRI; an entry not described by the data gets a row and is counted
+     * as missing.
+     *
+     * @param value the IRI of the IPC entry
+     * @return the id (the IPC code) of the entry
+     * @throws IOException if the IRI is not an IRI of an IPC entry
+     */
     static String getIpcID(String value) throws IOException
     {
         if(!value.startsWith(prefix))

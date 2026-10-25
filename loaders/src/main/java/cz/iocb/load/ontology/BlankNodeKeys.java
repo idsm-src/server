@@ -10,7 +10,7 @@ import org.apache.jena.graph.Node;
 
 
 
-/*
+/**
  * Computes the keys of the blank nodes, which identify a blank node in the loads of the ontologies, although its label
  * changes. The key of a blank node is a hash of its content and its context. The content consists of the predicates
  * and the objects of the triples whose subject the blank node is, with the contents of the blank node objects in place
@@ -23,23 +23,73 @@ import org.apache.jena.graph.Node;
  */
 final class BlankNodeKeys
 {
+    /**
+     * Indexes of the blank nodes.
+     */
     private final HashMap<Node, Integer> indexes = new HashMap<>();
+
+    /**
+     * Hashes of the predicates by their IRIs.
+     */
     private final HashMap<String, Long> predicateHashes = new HashMap<>();
+
+    /**
+     * Digest computing the hashes.
+     */
     private final MessageDigest digest = getDigest();
+
+    /**
+     * Blank nodes by their indexes.
+     */
     private Node[] nodes = new Node[1024];
 
-    // the triples: the index of a blank node subject or -1 and the hash of another subject, the hash of the
-    // predicate, and the index of a blank node object or -1 and the hash of another object
+    /**
+     * Number of the added triples, which the following arrays hold: the index of a blank node subject or -1 and the
+     * hash of another subject, the hash of the predicate, and the index of a blank node object or -1 and the hash of
+     * another object.
+     */
     private int size = 0;
+
+    /**
+     * Indexes of the blank node subjects of the triples, -1 for the other subjects.
+     */
     private int[] subjects = new int[1024];
+
+    /**
+     * Hashes of the subjects of the triples that are not blank nodes.
+     */
     private long[] subjectHashes = new long[1024];
+
+    /**
+     * Hashes of the predicates of the triples.
+     */
     private long[] predicates = new long[1024];
+
+    /**
+     * Indexes of the blank node objects of the triples, -1 for the other objects.
+     */
     private int[] objects = new int[1024];
+
+    /**
+     * Hashes of the objects of the triples that are not blank nodes.
+     */
     private long[] objectHashes = new long[1024];
 
 
-    /*
+    /**
+     * Creates the computation without any triple.
+     */
+    BlankNodeKeys()
+    {
+    }
+
+
+    /**
      * Adds a triple whose subject or object is a blank node.
+     *
+     * @param subject the subject of the triple
+     * @param predicate the predicate of the triple
+     * @param object the object of the triple
      */
     void add(Node subject, Node predicate, Node object)
     {
@@ -61,8 +111,10 @@ final class BlankNodeKeys
     }
 
 
-    /*
+    /**
      * Returns the keys of the blank nodes of the added triples.
+     *
+     * @return the keys of the blank nodes
      */
     Map<Node, Long> compute()
     {
@@ -180,8 +232,11 @@ final class BlankNodeKeys
     }
 
 
-    /*
+    /**
      * Returns the key of a blank node that has no key computed, which is given by its label.
+     *
+     * @param node the blank node
+     * @return the key of the blank node
      */
     static long getLabelKey(Node node)
     {
@@ -191,6 +246,12 @@ final class BlankNodeKeys
     }
 
 
+    /**
+     * Returns the index of a blank node, assigning the next one to a new node.
+     *
+     * @param node the blank node
+     * @return the index of the blank node
+     */
     private int getIndex(Node node)
     {
         Integer index = indexes.get(node);
@@ -210,8 +271,12 @@ final class BlankNodeKeys
     }
 
 
-    /*
+    /**
      * Returns the offsets of the triples of each blank node in the given position, as getTriples() lists them.
+     *
+     * @param position the indexes of the blank nodes of the triples in the position, -1 for other nodes
+     * @param count the number of the blank nodes
+     * @return the offset of the first triple of each blank node, followed by the number of the triples
      */
     private int[] getOffsets(int[] position, int count)
     {
@@ -228,8 +293,13 @@ final class BlankNodeKeys
     }
 
 
-    /*
+    /**
      * Returns the triples ordered by the blank nodes in the given position.
+     *
+     * @param position the indexes of the blank nodes of the triples in the position, -1 for other nodes
+     * @param offsets the offsets of the triples of each blank node, as getOffsets() returns them
+     * @param count the number of the blank nodes
+     * @return the indexes of the triples whose node in the position is a blank node, ordered by the blank nodes
      */
     private int[] getTriples(int[] position, int[] offsets, int count)
     {
@@ -244,12 +314,24 @@ final class BlankNodeKeys
     }
 
 
+    /**
+     * Returns the hash of the label of a blank node.
+     *
+     * @param node the index of the blank node
+     * @return the hash of the label
+     */
     private long getLabelHash(int node)
     {
         return getHash("B" + nodes[node].getBlankNodeLabel());
     }
 
 
+    /**
+     * Returns the hash of an IRI or a literal.
+     *
+     * @param node the IRI or the literal
+     * @return the hash of the node
+     */
     private long getHash(Node node)
     {
         if(node.isURI())
@@ -260,18 +342,38 @@ final class BlankNodeKeys
     }
 
 
+    /**
+     * Returns the hash of a text.
+     *
+     * @param text the text
+     * @return the hash of the text
+     */
     private long getHash(String text)
     {
         return toLong(digest.digest(text.getBytes(UTF_8)));
     }
 
 
+    /**
+     * Returns the hash of a pair of values.
+     *
+     * @param first the first value
+     * @param second the second value
+     * @return the hash of the pair
+     */
     private long getHash(long first, long second)
     {
         return getHash(first, new long[] { second });
     }
 
 
+    /**
+     * Returns the hash of a value followed by a sequence of values.
+     *
+     * @param first the first value
+     * @param values the following values
+     * @return the hash of the values
+     */
     private long getHash(long first, long[] values)
     {
         byte[] bytes = new byte[8 * (values.length + 1)];
@@ -285,6 +387,13 @@ final class BlankNodeKeys
     }
 
 
+    /**
+     * Writes a value into an array of bytes in the big-endian order.
+     *
+     * @param bytes the array of bytes
+     * @param offset the offset of the value in the array
+     * @param value the value
+     */
     private static void put(byte[] bytes, int offset, long value)
     {
         for(int i = 0; i < 8; i++)
@@ -292,6 +401,12 @@ final class BlankNodeKeys
     }
 
 
+    /**
+     * Returns the value of the first eight bytes of an array in the big-endian order.
+     *
+     * @param bytes the array of bytes
+     * @return the value
+     */
     private static long toLong(byte[] bytes)
     {
         long value = 0;
@@ -303,6 +418,12 @@ final class BlankNodeKeys
     }
 
 
+    /**
+     * Returns a new SHA-256 digest.
+     *
+     * @return the digest
+     * @throws IllegalStateException if the platform does not provide SHA-256
+     */
     private static MessageDigest getDigest()
     {
         try

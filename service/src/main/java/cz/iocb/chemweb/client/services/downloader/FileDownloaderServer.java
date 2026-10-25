@@ -8,16 +8,46 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 
 
 
+/**
+ * Downloader that posts the data to the download servlet of the server, which sends it back as an attachment; used by
+ * the browsers that cannot download a {@code data:} URL.
+ */
 public class FileDownloaderServer extends FileDownloader
 {
+    /**
+     * Hidden field naming the action of the servlet.
+     */
     private final Hidden callField;
+
+    /**
+     * Hidden field with the encoding of the data.
+     */
     private final Hidden encodingField;
+
+    /**
+     * Hidden field with the name of the file.
+     */
     private final Hidden filenameField;
+
+    /**
+     * Hidden field with the MIME type of the file.
+     */
     private final Hidden mimetypeField;
+
+    /**
+     * Hidden field with the content of the file.
+     */
     private final Hidden dataField;
+
+    /**
+     * Form posting the fields to the download servlet.
+     */
     private final FormPanel form;
 
 
+    /**
+     * Creates the downloader with its form.
+     */
     private FileDownloaderServer()
     {
         form = new FormPanel("_blank");

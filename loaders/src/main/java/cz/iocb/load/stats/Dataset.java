@@ -31,40 +31,81 @@ import cz.iocb.sparql.engine.translator.VariableBindings;
 
 
 
+/**
+ * Set of quad mappings whose triples are counted together by the statistics, translated into the code of a pattern
+ * binding the subjects and the objects of the triples.
+ */
 public class Dataset
 {
+    /**
+     * Quad mappings of the dataset.
+     */
     private Collection<QuadMapping> mappings = new ArrayList<>();
 
 
+    /**
+     * Creates an empty dataset.
+     */
     public Dataset()
     {
     }
 
 
+    /**
+     * Creates the dataset of one quad mapping.
+     *
+     * @param map the quad mapping
+     */
     public Dataset(QuadMapping map)
     {
         mappings.add(map);
     }
 
 
+    /**
+     * Returns the quad mappings of the dataset.
+     *
+     * @return the quad mappings
+     */
     public Collection<QuadMapping> getMappings()
     {
         return mappings;
     }
 
 
+    /**
+     * Adds a quad mapping to the dataset.
+     *
+     * @param mapping the quad mapping
+     */
     public void add(QuadMapping mapping)
     {
         mappings.add(mapping);
     }
 
 
+    /**
+     * Adds the quad mappings of another dataset to the dataset.
+     *
+     * @param dataset the other dataset
+     */
     public void add(Dataset dataset)
     {
         mappings.addAll(dataset.mappings);
     }
 
 
+    /**
+     * Binds a variable to the columns of a term mapping and requires the nullable columns that the resource class does
+     * not leave optional to be not null.
+     *
+     * @param request the current request
+     * @param table the table of the term mapping
+     * @param nodemap the term mapping
+     * @param name the bound variable, or null when only the condition is needed
+     * @param bindings the bindings to extend
+     * @param condition the condition of the table to extend
+     */
     private static void processNodeMapping(Request request, SourceTable table, TermMapping nodemap, Variable name,
             VariableBindings bindings, Condition condition)
     {
@@ -84,6 +125,15 @@ public class Dataset
     }
 
 
+    /**
+     * Returns the columns that a table access of a distinct mapping keeps distinct: all the table columns touched by
+     * the mapped terms.
+     *
+     * @param distinct whether the mapping of the table is distinct
+     * @param bindings the bindings of the table access
+     * @param condition the condition of the table access
+     * @return the distinct columns, empty when the mapping is not distinct
+     */
     private static Set<Column> distinctColumns(boolean distinct, VariableBindings bindings, Condition condition)
     {
         if(!distinct)
@@ -97,6 +147,16 @@ public class Dataset
     }
 
 
+    /**
+     * Translates the dataset into the union of the table accesses of its quad mappings, optimized for the given
+     * variables.
+     *
+     * @param request the current request
+     * @param subject the variable bound to the subjects, or null when they are not needed
+     * @param object the variable bound to the objects, or null when they are not needed
+     * @return the code of the pattern
+     * @throws UnsupportedOperationException if a mapping is of an unknown kind
+     */
     public SqlIntercode translate(Request request, Variable subject, Variable object)
     {
         List<SqlIntercode> branches = new ArrayList<>();

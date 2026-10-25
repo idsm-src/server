@@ -13,8 +13,25 @@ import cz.iocb.sparql.engine.mapping.classes.GenericUserIriClass.SqlCheck;
 
 
 
+/**
+ * Mapping of the co-occurrences of compounds, diseases, genes and enzymes in the literature (graph
+ * {@code pubchem:cooccurrence}).
+ */
 public class Cooccurrence
 {
+    /**
+     * Not instantiable.
+     */
+    private Cooccurrence()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem co-occurrences to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         final String prefix = "http://rdf\\.ncbi\\.nlm\\.nih\\.gov/pubchem/cooccurrence/";
@@ -68,6 +85,11 @@ public class Cooccurrence
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem co-occurrences to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:cooccurrence");

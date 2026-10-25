@@ -8,8 +8,19 @@ import cz.iocb.sparql.engine.database.DatabaseTable;
 
 
 
+/**
+ * Configuration of the SACHEM endpoint of the PubChem compounds.
+ */
 public class PubChemSachemConfiguration extends SachemConfiguration
 {
+    /**
+     * Creates the configuration.
+     *
+     * @param service the service IRI
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public PubChemSachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema)
             throws SQLException
     {
@@ -22,6 +33,9 @@ public class PubChemSachemConfiguration extends SachemConfiguration
     }
 
 
+    /**
+     * Adds the prefixes of the dataset.
+     */
     private void addPrefixes()
     {
         addPrefix("compound", "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/");

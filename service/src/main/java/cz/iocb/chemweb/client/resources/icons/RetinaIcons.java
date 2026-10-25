@@ -4,6 +4,9 @@ import com.google.gwt.resources.client.RetinaImageResource;
 
 
 
+/**
+ * Icons of the application in double resolution for high-density (retina) displays.
+ */
 public interface RetinaIcons extends Icons
 {
     @Override

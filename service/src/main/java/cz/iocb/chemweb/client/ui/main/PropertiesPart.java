@@ -43,21 +43,60 @@ import cz.iocb.chemweb.shared.services.query.QueryResult;
 
 
 
+/**
+ * Tab with the properties of the visited resource, i.e. the triples having it as their subject, listed page by page in
+ * a data grid. It has its own navigation in the shared history of the visited resources and fires a selection event
+ * with the IRI of each resource it visits.
+ */
 public class PropertiesPart extends ResizeComposite implements HasSelectionHandlers<String>
 {
+    /**
+     * Binder of the tab template {@code PropertiesPart.ui.xml}.
+     */
     interface PropertiesPartUiBinder extends UiBinder<Widget, PropertiesPart>
     {
     }
 
 
+    /**
+     * Provider of the rows of the data grid, which queries the properties of the resource on the visible range.
+     */
     private class AsyncPropertiesProvider extends AsyncDataProvider<DataGridNode[]>
     {
+        /**
+         * Number of the queries for the rows, which identifies the latest one.
+         */
         private int asyncPropertiesCounter = 0;
+
+        /**
+         * IRI of the resource whose properties are provided.
+         */
         private String propertiesIri = null;
+
+        /**
+         * The last query for the rows, cancelled by the next one.
+         */
         private QueryServiceStub.Query runningQuery = null;
+
+        /**
+         * Rows of an empty range.
+         */
         List<DataGridNode[]> emptyData = new LinkedList<>();
 
 
+        /**
+         * Creates the provider.
+         */
+        private AsyncPropertiesProvider()
+        {
+        }
+
+
+        /**
+         * Sets the resource whose properties are provided.
+         *
+         * @param iri the IRI of the resource
+         */
         void setPropertiesIri(String iri)
         {
             propertiesIri = iri;
@@ -132,37 +171,110 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
     }
 
 
+    /**
+     * Minimal width of a column of the data grid in pixels.
+     */
     private static final int minimalColumnWidth = 250;
 
+    /**
+     * Binder of the tab template.
+     */
     private static PropertiesPartUiBinder uiBinder = GWT.create(PropertiesPartUiBinder.class);
+
+    /**
+     * Factory of the resources of the pager.
+     */
     private static PagerResourcesFactory pagerResourcesFactory = GWT.create(PagerResourcesFactory.class);
+
+    /**
+     * Factory of the icons.
+     */
     private static IconsClientBundleFactory iconsClientBundleFactory = GWT.create(IconsClientBundleFactory.class);
+
+    /**
+     * Resources of the pager.
+     */
     private static Resources pagerIcons = pagerResourcesFactory.create();
 
+    /**
+     * Icons of the toolbar.
+     */
     @UiField(provided = true)
     Icons res = iconsClientBundleFactory.create();
+
+    /**
+     * Button going back to the previous resource.
+     */
     @UiField
     ImageButton prevButton;
+
+    /**
+     * Button going forward to the next resource.
+     */
     @UiField
     ImageButton nextButton;
+
+    /**
+     * Button reloading the properties of the current resource.
+     */
     @UiField
     ImageButton reloadButton;
+
+    /**
+     * Indicator shown instead of the reload button while the properties are loaded.
+     */
     @UiField
     ImageButton stopButton;
+
+    /**
+     * Text box with the IRI or the prefixed name of the current resource, where another one can be entered.
+     */
     @UiField
     TextBox iriTextBox;
+
+    /**
+     * Data grid of the properties and their values.
+     */
     @UiField(provided = true)
     DataGrid<DataGridNode[]> propertiesDataGrid;
+
+    /**
+     * Pager of the data grid.
+     */
     @UiField(provided = true)
     SimplePager pager;
 
+    /**
+     * Provider of the rows of the data grid.
+     */
     private final AsyncPropertiesProvider propertiesAsyncProvider = new AsyncPropertiesProvider();
+
+    /**
+     * Manager of the selection handlers.
+     */
     private final HandlerManager handlerManager = new HandlerManager(this);
+
+    /**
+     * History of the visited resources shared with the other tabs.
+     */
     private final VisitingHistory history;
+
+    /**
+     * IRI of the resource whose properties are shown, null when none are.
+     */
     private String showedProperties;
+
+    /**
+     * Number of the requests for the properties, which identifies the latest one.
+     */
     private int requestedPropertiesCounter = 0;
 
 
+    /**
+     * Creates the tab.
+     *
+     * @param visitingHistory the history of the visited resources shared with the other tabs
+     */
     public PropertiesPart(VisitingHistory visitingHistory)
     {
         propertiesDataGrid = new DataGrid<>(1, DataGridBundle.INSTANCE)
@@ -225,6 +337,11 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
     }
 
 
+    /**
+     * Shows the previous resource of the history.
+     *
+     * @param e the click event
+     */
     @UiHandler("prevButton")
     void prevButtonClick(ClickEvent e)
     {
@@ -232,6 +349,11 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
     }
 
 
+    /**
+     * Shows the next resource of the history.
+     *
+     * @param e the click event
+     */
     @UiHandler("nextButton")
     void nextButtonClick(ClickEvent e)
     {
@@ -239,6 +361,11 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
     }
 
 
+    /**
+     * Loads the properties of the current resource again.
+     *
+     * @param e the click event
+     */
     @UiHandler("reloadButton")
     void reloadButtonClick(ClickEvent e)
     {
@@ -247,6 +374,11 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
     }
 
 
+    /**
+     * Clears the mark of an invalid IRI as the IRI is edited.
+     *
+     * @param event the key up event
+     */
     @UiHandler("iriTextBox")
     void iriTextBoxKeyUp(KeyUpEvent event)
     {
@@ -255,6 +387,12 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
     }
 
 
+    /**
+     * Visits the resource entered in the text box when Enter is pressed, or marks the value as invalid when it is not a
+     * valid IRI.
+     *
+     * @param event the key press event
+     */
     @UiHandler("iriTextBox")
     void iriTextBoxKeyPress(KeyPressEvent event)
     {
@@ -276,6 +414,11 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
     }
 
 
+    /**
+     * Visits a resource unless it is the current one.
+     *
+     * @param iri the IRI of the resource
+     */
     public void visit(String iri)
     {
         if(iri.equals(history.getCurrent()))
@@ -286,6 +429,9 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
     }
 
 
+    /**
+     * Shows the current resource of the history, which may have been visited by another tab.
+     */
     public void show()
     {
         if(history.getCurrent() == null)
@@ -295,6 +441,12 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
     }
 
 
+    /**
+     * Shows a resource: updates the toolbar and loads the properties.
+     *
+     * @param iri the IRI of the resource
+     * @param emitEvent whether to fire a selection event with the IRI
+     */
     private void show(String iri, boolean emitEvent)
     {
         prevButton.setEnabled(history.hasPrev());
@@ -313,6 +465,12 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
     }
 
 
+    /**
+     * Counts the properties of a resource and lets the data grid load its first page, unless the properties are already
+     * shown; the response to an outdated request is ignored.
+     *
+     * @param iri the IRI of the resource
+     */
     private void showProperties(final String iri)
     {
         propertiesDataGrid.redraw(); // DataGrig in TabLayoutPanel workaround
@@ -370,6 +528,9 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
     }
 
 
+    /**
+     * Removes the shown properties.
+     */
     public void clear()
     {
         showedProperties = null;
@@ -379,6 +540,13 @@ public class PropertiesPart extends ResizeComposite implements HasSelectionHandl
     }
 
 
+    /**
+     * Adds a column whose cells visit the resource they show when they are clicked or Enter is pressed on them.
+     *
+     * @param grid the data grid
+     * @param i the index of the column in a row
+     * @param name the header of the column
+     */
     private void addColumn(DataGrid<DataGridNode[]> grid, final int i, final String name)
     {
         LinkCell cell = new LinkCell()

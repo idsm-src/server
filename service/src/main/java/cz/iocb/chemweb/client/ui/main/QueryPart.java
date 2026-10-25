@@ -35,19 +35,41 @@ import cz.iocb.chemweb.shared.utils.Encode;
 
 
 
+/**
+ * Tab with the SPARQL editor and its toolbar: opening a local file, an example query or the wizard of search queries,
+ * saving the query, and running or cancelling it. The editor checks the query on the server as it is edited; running
+ * and cancelling are announced by events.
+ */
 public class QueryPart extends ResizeComposite implements HasHandlers
 {
+    /**
+     * Binder of the tab template {@code QueryPart.ui.xml}.
+     */
     interface QueryPartUiBinder extends UiBinder<Widget, QueryPart>
     {
     }
 
 
+    /**
+     * Event announcing that a query is to be run.
+     */
     public static class QuerySubmitEvent extends GwtEvent<QuerySubmitEventHandler>
     {
+        /**
+         * Type of the event.
+         */
         public static Type<QuerySubmitEventHandler> TYPE = new Type<>();
 
+        /**
+         * The query to run.
+         */
         private final String query;
 
+        /**
+         * Creates the event.
+         *
+         * @param query the query to run
+         */
         public QuerySubmitEvent(String query)
         {
             this.query = query;
@@ -65,6 +87,11 @@ public class QueryPart extends ResizeComposite implements HasHandlers
             handler.onQuerySubmit(this);
         }
 
+        /**
+         * Returns the query to run.
+         *
+         * @return the query
+         */
         public String getQuery()
         {
             return query;
@@ -72,15 +99,36 @@ public class QueryPart extends ResizeComposite implements HasHandlers
     }
 
 
+    /**
+     * Handler of the events announcing that a query is to be run.
+     */
     public interface QuerySubmitEventHandler extends EventHandler
     {
+        /**
+         * Called when a query is to be run.
+         *
+         * @param event the event
+         */
         void onQuerySubmit(QuerySubmitEvent event);
     }
 
 
+    /**
+     * Event announcing that the running query is to be cancelled.
+     */
     public static class QueryCancelEvent extends GwtEvent<QueryCancelEventHandler>
     {
+        /**
+         * Type of the event.
+         */
         public static Type<QueryCancelEventHandler> TYPE = new Type<>();
+
+        /**
+         * Creates the event.
+         */
+        public QueryCancelEvent()
+        {
+        }
 
         @Override
         public Type<QueryCancelEventHandler> getAssociatedType()
@@ -96,41 +144,119 @@ public class QueryPart extends ResizeComposite implements HasHandlers
     }
 
 
+    /**
+     * Handler of the events announcing that the running query is to be cancelled.
+     */
     public interface QueryCancelEventHandler extends EventHandler
     {
+        /**
+         * Called when the running query is to be cancelled.
+         *
+         * @param event the event
+         */
         void onQueryCancel(QueryCancelEvent event);
     }
 
 
+    /**
+     * Binder of the tab template.
+     */
     private static QueryPartUiBinder uiBinder = GWT.create(QueryPartUiBinder.class);
+
+    /**
+     * Factory of the icons.
+     */
     private static IconsClientBundleFactory iconsClientBundleFactory = GWT.create(IconsClientBundleFactory.class);
+
+    /**
+     * Asynchronous proxy of the check service.
+     */
     private static CheckServiceAsync checkService = (CheckServiceAsync) GWT.create(CheckService.class);
+
+    /**
+     * Downloader saving the query to a file.
+     */
     private static FileDownloader fileDownloader = GWT.create(FileDownloader.class);
 
+    /**
+     * Icons of the toolbar.
+     */
     @UiField(provided = true)
     Icons res = iconsClientBundleFactory.create();
+
+    /**
+     * Button opening a local file.
+     */
     @UiField
     FileUploadImageButton openButton;
+
+    /**
+     * Button opening an example query.
+     */
     @UiField
     ImageButton examplesButton;
+
+    /**
+     * Button opening the wizard of search queries.
+     */
     @UiField
     ImageButton wizardButton;
+
+    /**
+     * Button saving the query to a file.
+     */
     @UiField
     ImageButton saveButton;
+
+    /**
+     * Button running the query, disabled while the query has an error.
+     */
     @UiField
     ImageButton runButton;
+
+    /**
+     * Button cancelling the running query, shown instead of the run button.
+     */
     @UiField
     ImageButton cancelButton;
+
+    /**
+     * Text area replaced by the editor.
+     */
     @UiField
     TextArea queryTextArea;
 
+    /**
+     * The editor, created once the tab is loaded.
+     */
     private CodeMirror codemirror;
+
+    /**
+     * Manager of the handlers of the query events.
+     */
     private final HandlerManager handlerManager = new HandlerManager(this);
+
+    /**
+     * Dialog selecting an example query.
+     */
     private final SelectExampleDialog exampleDialog;
+
+    /**
+     * Wizard of search queries.
+     */
     private final SearchQueryWizardDialog wizardDialog;
+
+    /**
+     * Query the editor starts with.
+     */
     private final String defaultQuery;
 
 
+    /**
+     * Creates the tab.
+     *
+     * @param query the query the editor starts with
+     */
     public QueryPart(String query)
     {
         initWidget(uiBinder.createAndBindUi(this));
@@ -151,18 +277,35 @@ public class QueryPart extends ResizeComposite implements HasHandlers
     }
 
 
+    /**
+     * Adds a handler of the events announcing that a query is to be run.
+     *
+     * @param handler the handler
+     * @return the registration of the handler
+     */
     public HandlerRegistration addQuerySubmitEventHandler(QuerySubmitEventHandler handler)
     {
         return handlerManager.addHandler(QuerySubmitEvent.TYPE, handler);
     }
 
 
+    /**
+     * Adds a handler of the events announcing that the running query is to be cancelled.
+     *
+     * @param handler the handler
+     * @return the registration of the handler
+     */
     public HandlerRegistration addQueryCancelEventHandler(QueryCancelEventHandler handler)
     {
         return handlerManager.addHandler(QueryCancelEvent.TYPE, handler);
     }
 
 
+    /**
+     * Opens the dialog of the example queries, whose selected query replaces the code of the editor.
+     *
+     * @param e the click event
+     */
     @UiHandler("examplesButton")
     void examplesButtonClick(ClickEvent e)
     {
@@ -177,6 +320,11 @@ public class QueryPart extends ResizeComposite implements HasHandlers
     }
 
 
+    /**
+     * Opens the wizard of search queries, whose generated query replaces the code of the editor.
+     *
+     * @param e the click event
+     */
     @UiHandler("wizardButton")
     void wizardButtonClick(ClickEvent e)
     {
@@ -191,6 +339,11 @@ public class QueryPart extends ResizeComposite implements HasHandlers
     }
 
 
+    /**
+     * Offers the query for download as {@code query.sparql}.
+     *
+     * @param e the click event
+     */
     @UiHandler("saveButton")
     void saveButtonClick(ClickEvent e)
     {
@@ -199,6 +352,11 @@ public class QueryPart extends ResizeComposite implements HasHandlers
     }
 
 
+    /**
+     * Announces that the query of the editor is to be run.
+     *
+     * @param e the click event, or null
+     */
     @UiHandler("runButton")
     void runButtonClick(ClickEvent e)
     {
@@ -206,6 +364,11 @@ public class QueryPart extends ResizeComposite implements HasHandlers
     }
 
 
+    /**
+     * Announces that the running query is to be cancelled.
+     *
+     * @param e the click event
+     */
     @UiHandler("cancelButton")
     void cancelButtonClick(ClickEvent e)
     {
@@ -213,6 +376,12 @@ public class QueryPart extends ResizeComposite implements HasHandlers
     }
 
 
+    /**
+     * Replaces the code of the editor by the content of an opened file and resets the file input, so that the same file
+     * can be opened again.
+     *
+     * @param code the content of the file
+     */
     public void openClick(String code)
     {
         codemirror.setValue(code);
@@ -220,6 +389,9 @@ public class QueryPart extends ResizeComposite implements HasHandlers
     }
 
 
+    /**
+     * Redraws the editor, needed after the size of the tab changed.
+     */
     public void refresh()
     {
         if(codemirror != null)
@@ -227,6 +399,11 @@ public class QueryPart extends ResizeComposite implements HasHandlers
     }
 
 
+    /**
+     * Shows the cancel button while a query runs and the run button otherwise.
+     *
+     * @param isRunning whether a query runs
+     */
     public void setRunning(boolean isRunning)
     {
         runButton.setVisible(!isRunning);
@@ -234,6 +411,10 @@ public class QueryPart extends ResizeComposite implements HasHandlers
     }
 
 
+    /**
+     * Creates the editor with the default query and its validator, which checks the query on the server and enables the
+     * run button unless an error is found.
+     */
     private void init()
     {
         codemirror = new CodeMirror(queryTextArea);
@@ -317,6 +498,11 @@ public class QueryPart extends ResizeComposite implements HasHandlers
     }
 
 
+    /**
+     * Reads the file selected in the file input and passes its content to {@link #openClick(String)}.
+     *
+     * @param evt the file input element
+     */
     private native void handleFileSelect(@SuppressWarnings("deprecation") com.google.gwt.user.client.Element evt)
     /*-{
         var file = evt.files[0];

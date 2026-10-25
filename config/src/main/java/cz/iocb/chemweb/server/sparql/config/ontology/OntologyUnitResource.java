@@ -19,13 +19,37 @@ import cz.iocb.sparql.engine.request.Request;
 
 
 
+/**
+ * IRI class of the resources of one ontology unit, stored as the id column of {@link OntologyResource} alone, whose
+ * unit column is a constant of the class. The class of the uncategorized unit holds the uncategorized resources known
+ * to {@code ontology.uncategorized_resources}.
+ */
 public class OntologyUnitResource extends UserIriClass
 {
+    /**
+     * The class of all ontology resources.
+     */
     private final OntologyResource resource;
+
+    /**
+     * Id of the unit.
+     */
     private final short unit;
+
+    /**
+     * Definition of the unit; null for the uncategorized unit.
+     */
     private final Unit definition;
 
 
+    /**
+     * Creates the class of a unit.
+     *
+     * @param name the name of the class
+     * @param resource the class of all ontology resources
+     * @param unit the id of the unit
+     * @throws IllegalArgumentException if the unit is unknown
+     */
     public OntologyUnitResource(String name, OntologyResource resource, short unit)
     {
         super(name, List.of(INT4), Set.of(resource, iri, box));
@@ -128,12 +152,22 @@ public class OntologyUnitResource extends UserIriClass
     }
 
 
+    /**
+     * Returns the class of all ontology resources.
+     *
+     * @return the class of all ontology resources
+     */
     public OntologyResource getResource()
     {
         return resource;
     }
 
 
+    /**
+     * Returns the id of the unit.
+     *
+     * @return the id of the unit
+     */
     public short getUnit()
     {
         return unit;

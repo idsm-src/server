@@ -17,25 +17,70 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem measuregroups ({@code pubchem/RDF/measuregroup}) into the table {@code pubchem.measuregroups}
+ * and the tables of their participants and substances.
+ */
 class Measuregroup extends Updater
 {
+    /**
+     * IRI prefix of the measuregroups.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/measuregroup/AID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Table of the measuregroups, keyed by their bioassays and measuregroup numbers.
+     */
     private static final EntityTable<Pair<Integer, Integer>> measuregroups = new EntityTable<>("pubchem.measuregroups",
             intPairKey("bioassay", "measuregroup"), null, integer("source"), uniqueVarchar("title"));
 
+    /**
+     * Stored substances of the measuregroups met in the data.
+     */
     private static final IntPairIntSet keepSubstances = new IntPairIntSet();
+
+    /**
+     * Substances of the measuregroups met in the data that are not stored yet.
+     */
     private static final IntPairIntSet newSubstances = new IntPairIntSet();
+
+    /**
+     * Stored substances of the measuregroups not met in the data so far; those left are deleted.
+     */
     private static final IntPairIntSet oldSubstances = new IntPairIntSet();
 
 
+    /**
+     * Not instantiable.
+     */
+    private Measuregroup()
+    {
+    }
+
+
+    /**
+     * Loads the stored substances of the measuregroups.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases() throws IOException, SQLException
     {
         load("select bioassay,measuregroup,substance from pubchem.measuregroup_substances", oldSubstances);
     }
 
 
+    /**
+     * Checks the types of the measuregroups and adds the measuregroups they describe.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTypes() throws IOException, SQLException
     {
         try(InputStream stream = getTtlStream("pubchem/RDF/measuregroup/pc_measuregroup_type.ttl.gz"))
@@ -58,6 +103,12 @@ class Measuregroup extends Updater
     }
 
 
+    /**
+     * Loads the sources of the measuregroups.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSources() throws IOException, SQLException
     {
         try(InputStream stream = getTtlStream("pubchem/RDF/measuregroup/pc_measuregroup_source.ttl.gz"))
@@ -80,6 +131,12 @@ class Measuregroup extends Updater
     }
 
 
+    /**
+     * Loads the titles of the measuregroups.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTitles() throws IOException, SQLException
     {
         try(InputStream stream = getTtlStream("pubchem/RDF/measuregroup/pc_measuregroup_title.ttl.gz"))
@@ -102,6 +159,13 @@ class Measuregroup extends Updater
     }
 
 
+    /**
+     * Loads the participants of the measuregroups (proteins, genes, taxonomies, cells and anatomies) and stores their
+     * changes in the tables of the participants.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadProteinsAndGenes() throws IOException, SQLException
     {
         IntPairIntSet keepProteins = new IntPairIntSet();
@@ -231,6 +295,12 @@ class Measuregroup extends Updater
     }
 
 
+    /**
+     * Loads the measuregroups from the PubChemRDF files and flushes their table.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load measuregroups ...");
@@ -247,11 +317,14 @@ class Measuregroup extends Updater
     }
 
 
-    /*
+    /**
      * Loads the measuregroups of the substances, to which the endpoints have already added the measuregroups of their
-     * substances. The source states the measuregroup of every substance with an endpoint and states each just once,
-     * so the number of its triples differs from the number of the pairs whenever an endpoint has added a pair that the
+     * substances. The source states the measuregroup of every substance with an endpoint and states each just once, so
+     * the number of its triples differs from the number of the pairs whenever an endpoint has added a pair that the
      * source does not state.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     static void loadSubstances() throws IOException, SQLException
     {
@@ -292,6 +365,12 @@ class Measuregroup extends Updater
     }
 
 
+    /**
+     * Stores the measuregroups, including those referenced by the parts loaded later, and the changes of the substances
+     * of the measuregroups.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish measuregroups ...");
@@ -307,12 +386,25 @@ class Measuregroup extends Updater
     }
 
 
+    /**
+     * Records a reference to the measuregroup; a measuregroup without a row gets one.
+     *
+     * @param bioassay the id of the bioassay
+     * @param measuregroup the number of the measuregroup
+     */
     static void addMeasuregroupID(Integer bioassay, Integer measuregroup)
     {
         measuregroups.reference(Pair.getPair(bioassay, measuregroup));
     }
 
 
+    /**
+     * Records that the substance belongs to the measuregroup.
+     *
+     * @param bioassay the id of the bioassay
+     * @param measuregroup the number of the measuregroup
+     * @param substance the id of the substance
+     */
     static void addMeasuregroupSubstance(Integer bioassay, Integer measuregroup, Integer substance)
     {
         Pair<Pair<Integer, Integer>, Integer> triplet = Pair.getPair(Pair.getPair(bioassay, measuregroup), substance);
@@ -330,6 +422,15 @@ class Measuregroup extends Updater
     }
 
 
+    /**
+     * Parses the IRI of a measuregroup into its bioassay and measuregroup number and references both. The IRIs without
+     * a number get reserved ones: 2147483647 for {@code AID<n>}, 2147483646 for {@code AID<n>_}, -2147483647 for
+     * {@code AID<n>_PMID}, and {@code AID<n>_PMID<m>} gets -m.
+     *
+     * @param node the IRI of the measuregroup
+     * @return the id of the bioassay and the number of the measuregroup
+     * @throws IOException if the node is not an IRI of a measuregroup
+     */
     static Pair<Integer, Integer> parseMeasuregroup(Node node) throws IOException
     {
         String iri = node.getURI();

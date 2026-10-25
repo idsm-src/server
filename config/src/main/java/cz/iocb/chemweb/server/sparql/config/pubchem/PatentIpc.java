@@ -10,8 +10,24 @@ import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
 
 
 
+/**
+ * Mapping of the IPC patent classifications (graph {@code pubchem:patentipc}).
+ */
 public class PatentIpc
 {
+    /**
+     * Not instantiable.
+     */
+    private PatentIpc()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem IPC classifications to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
@@ -19,6 +35,11 @@ public class PatentIpc
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem IPC classifications to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:patentipc");

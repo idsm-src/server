@@ -13,8 +13,24 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem concepts (graph {@code pubchem:concept}).
+ */
 public class Concept
 {
+    /**
+     * Not instantiable.
+     */
+    private Concept()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem concepts to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pubchem:concept", INT2, new DatabaseTable(schema, "concepts"),
@@ -23,6 +39,11 @@ public class Concept
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem concepts to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:concept");

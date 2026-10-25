@@ -13,8 +13,24 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the ChEMBL documents (graph {@code ebi:chembl}).
+ */
 public class Document
 {
+    /**
+     * Not instantiable.
+     */
+    private Document()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the ChEMBL documents to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("chembl:document", INT4,
@@ -22,6 +38,11 @@ public class Document
     }
 
 
+    /**
+     * Adds the quad mappings of the ChEMBL documents to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");

@@ -35,26 +35,79 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the PubChem genes and gene symbols from {@code pubchem/RDF/gene/pc_gene.ttl.gz} into the tables
+ * {@code pubchem.genes} and {@code pubchem.genesymbols} and the tables of the alternative labels, references, matches,
+ * Gene Ontology annotations and orthologs of the genes.
+ */
 class Gene extends Updater
 {
+    /**
+     * IRI prefix of the genes.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * IRI prefix of the gene symbols.
+     */
     static final String symbolPrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/gene/";
+
+    /**
+     * Length of {@link #symbolPrefix}.
+     */
     static final int symbolPrefixLength = symbolPrefix.length();
 
+    /**
+     * Table of the genes.
+     */
     private static final EntityTable<Integer> genes = new EntityTable<>("pubchem.genes", intKey("id"), null,
             uniqueVarchar("title"), integer("genesymbol"), integer("organism"));
 
+    /**
+     * Table of the gene symbols.
+     */
     private static final EntityTable<Integer> geneSymbols = new EntityTable<>("pubchem.genesymbols", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), varchar("symbol"));
+
+    /**
+     * Ids of the gene symbols by their IRIs without the prefix.
+     */
     private static final StringIntMap geneSymbolIDs = new StringIntMap();
+
+    /**
+     * Id of the next new gene symbol.
+     */
     private static int nextGeneSymbolID;
 
+    /**
+     * Genes referenced but not described by the data.
+     */
     private static final MissingEntities<Integer> missingGenes = new MissingEntities<>("gene", true);
+
+    /**
+     * Gene symbols referenced but not described by the data.
+     */
     private static final MissingEntities<String> missingGeneSymbols = new MissingEntities<>("gene symbol", true);
 
 
+    /**
+     * Not instantiable.
+     */
+    private Gene()
+    {
+    }
+
+
+    /**
+     * Registers the checks of the predicates, types and values of the gene file.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(startingWith("http://rdf.ncbi.nlm.nih.gov/pubchem/gene/GID"), skos + "altLabel",
@@ -92,6 +145,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Loads the ids of the stored gene symbols and registers the handler that adds the gene symbols described by the
+     * data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadGeneSymbolBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         load("select iri,id from pubchem.genesymbols", geneSymbolIDs);
@@ -107,6 +168,13 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the symbols of the gene symbols.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadGeneSymbolLiterals(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(sio + "SIO_000300", (subject, object) -> {
@@ -118,6 +186,13 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler that adds the genes described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadGeneBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.onType(sio + "SIO_010035", (subject, object) -> {
@@ -130,6 +205,13 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the gene symbols of the genes.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSymbols(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(bao + "BAO_0002870", (subject, object) -> {
@@ -141,6 +223,13 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the titles of the genes.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(skos + "prefLabel", (subject, object) -> {
@@ -152,6 +241,13 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the organisms of the genes.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadOrganisms(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(up + "organism", (subject, object) -> {
@@ -163,6 +259,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the alternative labels of the genes and the action that stores their changes in
+     * {@code pubchem.gene_alternatives}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAlternatives(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepAlternatives = new IntStringSet();
@@ -190,6 +294,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the references and patents discussing the genes and the action that stores their changes
+     * in {@code pubchem.gene_references} and {@code pubchem.gene_patents}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadReferences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepReferences = new IntPairSet();
@@ -240,6 +352,15 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the ontology resources linked to the genes by {@code rdfs:seeAlso} (except the links to
+     * the databases that have tables of their own) and the action that stores their changes in
+     * {@code pubchem.gene_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntIntPairSet keepMatches = new IntIntPairSet();
@@ -276,6 +397,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the Ensembl genes linked to the genes by {@code rdfs:seeAlso} and the action that stores
+     * their changes in {@code pubchem.gene_ensembl_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadEnsemblCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -306,6 +435,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the MeSH descriptors linked to the genes by {@code rdfs:seeAlso} and the action that
+     * stores their changes in {@code pubchem.gene_mesh_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMeshCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -336,6 +473,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the ENZYME entries of Expasy linked to the genes by {@code rdfs:seeAlso} and the action
+     * that stores their changes in {@code pubchem.gene_expasy_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadExpasyCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -366,6 +511,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the MedlinePlus genes linked to the genes by {@code rdfs:seeAlso} and the action that
+     * stores their changes in {@code pubchem.gene_medlineplus_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMedlineplusCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -396,6 +549,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the Alliance of Genome Resources genes linked to the genes by {@code rdfs:seeAlso} and
+     * the action that stores their changes in {@code pubchem.gene_alliancegenome_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAlliancegenomeCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -426,6 +587,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the KEGG genes linked to the genes by {@code rdfs:seeAlso} and the action that stores
+     * their changes in {@code pubchem.gene_kegg_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadKeggCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -456,6 +625,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the Pharos targets linked to the genes by {@code rdfs:seeAlso} and the action that
+     * stores their changes in {@code pubchem.gene_pharos_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadPharosCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -486,6 +663,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the Bgee genes linked to the genes by {@code rdfs:seeAlso} and the action that stores
+     * their changes in {@code pubchem.gene_bgee_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBgeeCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -516,6 +701,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the PomBase genes linked to the genes by {@code rdfs:seeAlso} and the action that stores
+     * their changes in {@code pubchem.gene_pombase_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadPombaseCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -546,6 +739,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the VEuPathDB genes linked to the genes by {@code rdfs:seeAlso} and the action that
+     * stores their changes in {@code pubchem.gene_veupathdb_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadVeupathdbCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -576,6 +777,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the ZFIN genes linked to the genes by {@code rdfs:seeAlso} and the action that stores
+     * their changes in {@code pubchem.gene_zfin_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadZfinCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -606,6 +815,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the UniProt enzymes linked to the genes by {@code rdfs:seeAlso} and the action that
+     * stores their changes in {@code pubchem.gene_enzyme_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadEnzymeCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -636,6 +853,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the Wikidata entities linked to the genes by {@code rdfs:seeAlso} and the action that
+     * stores their changes in {@code pubchem.gene_wikidata_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadWikidataCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepMatches = new IntPairSet();
@@ -666,6 +891,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the biological processes (Gene Ontology) the genes participate in and the action that
+     * stores their changes in {@code pubchem.gene_processes}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadProcesses(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepProcesses = new IntPairSet();
@@ -693,6 +926,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the molecular functions (Gene Ontology) of the genes and the action that stores their
+     * changes in {@code pubchem.gene_functions}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadFunctions(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepFunctions = new IntPairSet();
@@ -720,6 +961,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the cellular components (Gene Ontology) the genes are located in and the action that
+     * stores their changes in {@code pubchem.gene_locations}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadLocations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepLocations = new IntPairSet();
@@ -747,6 +996,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Registers the handler of the orthologs of the genes and the action that stores their changes in
+     * {@code pubchem.gene_orthologs}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadOrthologs(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepOrthologs = new IntPairSet();
@@ -774,6 +1031,13 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Loads the genes and the gene symbols from {@code pubchem/RDF/gene/pc_gene.ttl.gz} into the tables and flushes the
+     * tables of the genes and the gene symbols.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load genes ...");
@@ -820,6 +1084,13 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Stores the genes and the gene symbols, including those referenced by the parts loaded later, and deletes the
+     * stored ones that are neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish genes ...");
@@ -832,6 +1103,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Returns the id of the gene symbol with the given IRI; a gene symbol not described by the data gets a row and is
+     * counted as missing.
+     *
+     * @param value the IRI of the gene symbol
+     * @return the id of the gene symbol
+     * @throws IOException if the IRI is not an IRI of a gene symbol
+     */
     static Integer getGeneSymbolID(String value) throws IOException
     {
         if(!value.startsWith(symbolPrefix))
@@ -853,8 +1132,12 @@ class Gene extends Updater
     }
 
 
-    /*
+    /**
      * Adds the row of a gene symbol, which keeps its id if it has one.
+     *
+     * @param symbol the IRI of the gene symbol without the prefix
+     * @return the id of the gene symbol
+     * @throws IOException if the row of the gene symbol holds another IRI
      */
     private static Integer addGeneSymbol(String symbol) throws IOException
     {
@@ -872,6 +1155,14 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Returns the id of the gene with the given IRI; a gene not described by the data gets a row and is counted as
+     * missing.
+     *
+     * @param value the IRI of the gene
+     * @return the id of the gene
+     * @throws IOException if the IRI is not an IRI of a gene or the gene is refused by {@link #checkGeneID(int)}
+     */
     static Integer getGeneID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
@@ -888,6 +1179,12 @@ class Gene extends Updater
     }
 
 
+    /**
+     * Refuses the gene ids 4, 7 and 8, whose gene IRIs are the IRIs of the gene symbols GID4, GID7 and GID8.
+     *
+     * @param geneID the id of the gene
+     * @throws IOException if the gene id is refused
+     */
     private static void checkGeneID(int geneID) throws IOException
     {
         if(geneID == 4 || geneID == 7 || geneID == 8)

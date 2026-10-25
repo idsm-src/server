@@ -23,31 +23,88 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of MeSH (Medical Subject Headings) from its N-Triples dump {@code mesh/mesh.nt.gz} into the tables of the
+ * schema {@code mesh}; the tables are updated incrementally, only the rows that changed are deleted or inserted.
+ */
 public class Mesh extends Updater
 {
+    /**
+     * Namespace of RDF.
+     */
     static final String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+
+    /**
+     * Namespace of RDF Schema.
+     */
     static final String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
+
+    /**
+     * Namespace of the XML Schema datatypes.
+     */
     static final String xsd = "http://www.w3.org/2001/XMLSchema#";
+
+    /**
+     * Namespace of the MeSH vocabulary.
+     */
     static final String meshv = "http://id.nlm.nih.gov/mesh/vocab#";
 
+    /**
+     * IRI prefix of the MeSH resources.
+     */
     static final String prefix = "http://id.nlm.nih.gov/mesh/";
 
+    /**
+     * Stored MeSH resources that the dump still contains.
+     */
     private static final StringSet keepMeshes = new StringSet();
+
+    /**
+     * MeSH resources of the dump to insert into {@code mesh.resources}.
+     */
     private static final StringSet newMeshes = new StringSet();
+
+    /**
+     * Stored MeSH resources not met in the dump (yet), deleted at the end.
+     */
     private static final StringSet oldMeshes = new StringSet();
+
+    /**
+     * MeSH resources referenced but not described by the dump.
+     */
     private static final MissingEntities<String> missingMeshes = new MissingEntities<>("mesh", true);
 
-    // the year of the versioned IRIs of the dump, an empty string for non-versioned IRIs, null before the first IRI
+    /**
+     * Year of the versioned IRIs of the dump, an empty string for non-versioned IRIs, null before the first IRI.
+     */
     private static String year;
 
 
+    /**
+     * Pattern of the timezone at the end of a date.
+     */
     private static final Pattern zonePattern = Pattern.compile("(Z|[+-][0-9]{2}:[0-9]{2})$");
+
+    /**
+     * Pattern of the id of a versioned IRI: the year and the id of the resource.
+     */
     private static final Pattern versionedPattern = Pattern.compile("(20[0-9]{2})/(.*)");
 
 
-    /*
+    /**
+     * Not instantiable.
+     */
+    private Mesh()
+    {
+    }
+
+
+    /**
      * Returns the version of MeSH, the date of the last update of its dump, as the download script has recorded it;
      * null stands for an unknown version.
+     *
+     * @return the version of MeSH, or null if it is unknown
+     * @throws IOException if the version file cannot be read
      */
     private static String getVersion() throws IOException
     {
@@ -58,6 +115,12 @@ public class Mesh extends Updater
     }
 
 
+    /**
+     * Registers the checks of the predicates of the MeSH dump; the undefined predicate {@code meshv:Concept} is
+     * reported and ignored.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), rdf + "type", meshv + "altLabel", meshv + "previousIndexing",
@@ -82,6 +145,13 @@ public class Mesh extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the MeSH resources and their types into {@code mesh.resources}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTypes(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         StringIntMap keepTypes = new StringIntMap();
@@ -131,6 +201,18 @@ public class Mesh extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the string values of a multivalued property into a table; values in other
+     * languages are ignored.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param property the IRI of the property
+     * @param table the name of the table in the schema {@code mesh}
+     * @param column the name of the value column
+     * @param lang the language of the values, empty for {@code xsd:string} values
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMultiStringValues(TripleDispatcher dispatcher, String property, String table, String column,
             String lang) throws IOException, SQLException
     {
@@ -166,6 +248,18 @@ public class Mesh extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the string values of a single-valued property into a table; values in other
+     * languages are ignored.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param property the IRI of the property
+     * @param table the name of the table in the schema {@code mesh}
+     * @param column the name of the value column
+     * @param lang the language of the values, empty for {@code xsd:string} values
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadStringValues(TripleDispatcher dispatcher, String property, String table, String column,
             String lang) throws IOException, SQLException
     {
@@ -216,6 +310,16 @@ public class Mesh extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the boolean values of a single-valued property into a table.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param property the IRI of the property
+     * @param table the name of the table in the schema {@code mesh}
+     * @param column the name of the value column
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBooleanValues(TripleDispatcher dispatcher, String property, String table, String column)
             throws IOException, SQLException
     {
@@ -259,6 +363,16 @@ public class Mesh extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the integer values of a single-valued property into a table.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param property the IRI of the property
+     * @param table the name of the table in the schema {@code mesh}
+     * @param column the name of the value column
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadIntegerValues(TripleDispatcher dispatcher, String property, String table, String column)
             throws IOException, SQLException
     {
@@ -302,6 +416,16 @@ public class Mesh extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the {@code xsd:date} values of a single-valued property into the columns
+     * {@code date} and {@code timezone} of a table.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param property the IRI of the property
+     * @param table the name of the table in the schema {@code mesh}
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadDateValues(TripleDispatcher dispatcher, String property, String table)
             throws IOException, SQLException
     {
@@ -345,6 +469,16 @@ public class Mesh extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the MeSH resources linked by a multivalued property into a table.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param property the IRI of the property
+     * @param table the name of the table in the schema {@code mesh}
+     * @param column the name of the value column
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMultiMeshValues(TripleDispatcher dispatcher, String property, String table, String column)
             throws IOException, SQLException
     {
@@ -373,6 +507,16 @@ public class Mesh extends Updater
     }
 
 
+    /**
+     * Registers the handler that loads the MeSH resources linked by a single-valued property into a table.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param property the IRI of the property
+     * @param table the name of the table in the schema {@code mesh}
+     * @param column the name of the value column
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMeshValues(TripleDispatcher dispatcher, String property, String table, String column)
             throws IOException, SQLException
     {
@@ -416,9 +560,13 @@ public class Mesh extends Updater
     }
 
 
-    /*
+    /**
      * Tests whether the node is a literal in another language than the given one, i.e. a translation, which is not
      * loaded.
+     *
+     * @param node the node
+     * @param lang the language of the loaded values, empty for {@code xsd:string} values
+     * @return true if the node is a translation, false otherwise
      */
     private static boolean isTranslation(Node node, String lang)
     {
@@ -427,9 +575,14 @@ public class Mesh extends Updater
     }
 
 
-    /*
+    /**
      * Returns the value of an rdf:langString literal of the given language, or of an xsd:string literal if the language
      * is empty; any other value, such as a literal of another datatype or with a base direction, is refused.
+     *
+     * @param node the node
+     * @param lang the language of the literal, empty for an {@code xsd:string} literal
+     * @return the lexical form of the literal
+     * @throws IOException if the node is not a literal of the expected kind
      */
     private static String getLiteral(Node node, String lang) throws IOException
     {
@@ -446,9 +599,13 @@ public class Mesh extends Updater
     }
 
 
-    /*
+    /**
      * Returns the date of an xsd:date literal without its timezone and the timezone in seconds, or the minimal
      * integer for a date without a timezone.
+     *
+     * @param node the node
+     * @return the date and the timezone in seconds
+     * @throws IOException if the node is not a valid {@code xsd:date} literal
      */
     private static Pair<String, Integer> getDate(Node node) throws IOException
     {
@@ -477,6 +634,12 @@ public class Mesh extends Updater
     }
 
 
+    /**
+     * Stores the collected MeSH resources: deletes the resources no longer present and inserts the new ones.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         store("delete from mesh.resources where id=?", oldMeshes);
@@ -484,11 +647,15 @@ public class Mesh extends Updater
     }
 
 
-    /*
+    /**
      * Returns the id of a MeSH resource. The dump of a production year identifies the resources by the versioned IRIs
      * of the year (http://id.nlm.nih.gov/mesh/2026/D000001), whose data mirror the current resources with
      * non-versioned IRIs (http://id.nlm.nih.gov/mesh/D000001), which the mapping publishes; all the IRIs of a dump must
      * be of the same year, or all non-versioned.
+     *
+     * @param node the IRI of the resource
+     * @return the id of the resource
+     * @throws IOException if the node is not a MeSH IRI or is of another year than the other IRIs
      */
     private static synchronized String getResourceID(Node node) throws IOException
     {
@@ -506,6 +673,13 @@ public class Mesh extends Updater
     }
 
 
+    /**
+     * Returns the id of a referenced MeSH resource and records the resource as one to keep or to insert.
+     *
+     * @param node the IRI of the resource
+     * @return the id of the resource
+     * @throws IOException if the node is not a MeSH IRI or is of another year than the other IRIs
+     */
     static String getMeshID(Node node) throws IOException
     {
         String meshID = getResourceID(node);
@@ -528,6 +702,13 @@ public class Mesh extends Updater
 
 
 
+    /**
+     * Runs the loader of MeSH.
+     *
+     * @param args the command-line arguments (ignored)
+     * @throws SQLException if a database error occurs
+     * @throws IOException if an I/O error occurs
+     */
     public static void main(String[] args) throws SQLException, IOException
     {
         String file = "mesh/mesh.nt.gz";

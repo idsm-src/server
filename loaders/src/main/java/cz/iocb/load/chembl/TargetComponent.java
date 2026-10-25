@@ -33,10 +33,30 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the ChEMBL target components from the target component file of the release into the table
+ * {@code chembl.components}, together with their alternative names, their references to other databases with the
+ * labels of the references, and their UniProt accessions from the UniProt linkset; the file also gives labels of
+ * taxonomies.
+ */
 class TargetComponent extends Updater
 {
+    /**
+     * A type of the references of the target components.
+     *
+     * @param type the stored type of the reference
+     * @param prefix the IRI prefix of the references of the type
+     * @param pattern the pattern of the stored value, the rest of the IRI after the prefix
+     */
     private static record Reference(String type, String prefix, Pattern pattern)
     {
+        /**
+         * Creates the type of the references.
+         *
+         * @param type the stored type of the reference
+         * @param prefix the IRI prefix of the references of the type
+         * @param pattern the regular expression of the stored value, the rest of the IRI after the prefix
+         */
         Reference(String type, String prefix, String pattern)
         {
             this(type, prefix, Pattern.compile(pattern));
@@ -44,11 +64,20 @@ class TargetComponent extends Updater
     }
 
 
+    /**
+     * IRI prefix of the target components.
+     */
     static final String prefix = ChEMBL.chembl + "targetcomponent/CHEMBL_TC_";
+
+    /**
+     * IRI prefix of the UniProt proteins.
+     */
     static final String uniprotPrefix = "http://purl.uniprot.org/uniprot/";
 
-    // reference types by the rdf:type of the reference: the stored type, and the IRI prefix and pattern of the stored
-    // value
+    /**
+     * Reference types by the local name of the {@code rdf:type} of the reference: the stored type, and the IRI prefix
+     * and pattern of the stored value.
+     */
     private static final Map<String, Reference> referenceTypes = new HashMap<>();
 
     static
@@ -75,21 +104,48 @@ class TargetComponent extends Updater
         referenceTypes.put("CGDRef", new Reference("CGD", "http://research.nhgri.nih.gov/CGD/view/?g=", "[A-Z0-9-]+"));
     }
 
+    /**
+     * Table of the target components.
+     */
     private static final EntityTable<Integer> components = new EntityTable<>("chembl.components", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), varchar("type"), varchar("description"), varchar("organism"),
             integer("taxonomy"), varchar("sequence"), varchar("accession"));
 
+    /**
+     * Table of the alternative names of the target components.
+     */
     private static final ValueTable alternatives = new ValueTable("chembl.component_alternatives", column("component"),
             column("alternative"));
 
+    /**
+     * Table of the references of the target components.
+     */
     private static final ValueTable references = new ValueTable("chembl.component_references", column("component"),
             enumeration("type", "chembl.component_reference_type"), column("reference"));
 
-    // the labels of the reference IRIs, which carry one label per component referencing them
+    /**
+     * Table of the labels of the reference IRIs, which carry one label per component referencing them.
+     */
     private static final ValueTable referenceLabels = new ValueTable("chembl.component_reference_labels",
             enumeration("type", "chembl.component_reference_type"), column("reference"), column("label"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private TargetComponent()
+    {
+    }
+
+
+    /**
+     * Loads the target components, their alternative names and references, and the labels of the references from the
+     * target component file of the release, and checks that the references with an {@code rdf:type} are exactly the
+     * referenced ones, because the mapping produces their {@code rdf:type} from the stored type and value.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     private static void loadComponents() throws IOException, SQLException
     {
         Taxonomy.Forms taxonomies = new Taxonomy.Forms("target component");
@@ -190,9 +246,13 @@ class TargetComponent extends Updater
     }
 
 
-    /*
+    /**
      * Returns the reference type and the stored value of a reference IRI with the given rdf:type values; a reference
      * of an unknown type or with an unexpected IRI is reported and null is returned.
+     *
+     * @param iri the reference IRI
+     * @param types the local names of the {@code rdf:type} values of the reference IRIs
+     * @return the reference type and the stored value, or null
      */
     private static Pair<Reference, String> getReference(String iri, Map<String, String> types)
     {
@@ -217,6 +277,12 @@ class TargetComponent extends Updater
     }
 
 
+    /**
+     * Loads the UniProt accessions of the target components from the UniProt linkset file of the release.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAccessions() throws IOException, SQLException
     {
         try(InputStream stream = getTtlStream(ChEMBL.file("targetcmpt_uniprot_ls")))
@@ -239,6 +305,13 @@ class TargetComponent extends Updater
     }
 
 
+    /**
+     * Loads the target components with their alternative names, references and UniProt accessions from the files of
+     * the release.
+     *
+     * @throws IOException if a file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load target components ...");
@@ -250,6 +323,12 @@ class TargetComponent extends Updater
     }
 
 
+    /**
+     * Stores the collected target components, reporting the referenced ones that the files do not describe, their
+     * alternative names, their references and the labels of the references.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish target components ...");
@@ -263,6 +342,13 @@ class TargetComponent extends Updater
     }
 
 
+    /**
+     * Returns the id of a target component and marks the target component as referenced.
+     *
+     * @param node the IRI of the target component
+     * @return the id of the target component
+     * @throws IOException if the node is not an IRI of a target component
+     */
     static int getComponentID(Node node) throws IOException
     {
         int id = TripleStreamProcessor.getIntID(node, prefix);

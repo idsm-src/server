@@ -17,36 +17,120 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem patents ({@code pubchem/RDF/patent}) into the table {@code pubchem.patents}, the tables of
+ * their inventors and applicants and the tables of their citations and classifications.
+ */
 class Patent extends Updater
 {
+    /**
+     * IRI prefix of the patents.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/patent/";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * IRI prefix of the patent inventors.
+     */
     static final String inventorPrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/patentinventor/MD5_";
+
+    /**
+     * Length of {@link #inventorPrefix}.
+     */
     static final int inventorPrefixLength = inventorPrefix.length();
 
+    /**
+     * IRI prefix of the patent assignees, which are stored as the applicants.
+     */
     static final String assigneePrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/patentassignee/MD5_";
+
+    /**
+     * Length of {@link #assigneePrefix}.
+     */
     static final int assigneePrefixLength = assigneePrefix.length();
 
+    /**
+     * Table of the patents.
+     */
     private static final EntityTable<Integer> patents = new EntityTable<>("pubchem.patents", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), uniqueVarchar("title"), uniqueVarchar("abstract"),
             uniqueVarchar("publication_number"), date("filing_date"), date("grant_date"), date("publication_date"),
             date("priority_date"));
+
+    /**
+     * Ids of the patents by their IRIs without the prefix.
+     */
     private static final StringIntMap patentIDs = new StringIntMap();
+
+    /**
+     * Id of the next new patent.
+     */
     private static int nextPatentID;
 
+    /**
+     * Stored inventors met in the data.
+     */
     private static final StringSet keepInventors = new StringSet();
+
+    /**
+     * Inventors met in the data that are not stored yet.
+     */
     private static final StringSet newInventors = new StringSet();
+
+    /**
+     * Stored inventors not met in the data so far; those left are deleted.
+     */
     private static final StringSet oldInventors = new StringSet();
 
+    /**
+     * Stored assignees met in the data.
+     */
     private static final StringSet keepAssignees = new StringSet();
+
+    /**
+     * Assignees met in the data that are not stored yet.
+     */
     private static final StringSet newAssignees = new StringSet();
+
+    /**
+     * Stored assignees not met in the data so far; those left are deleted.
+     */
     private static final StringSet oldAssignees = new StringSet();
+
+    /**
+     * Patents referenced but not described by the data.
+     */
     private static final MissingEntities<String> missingPatents = new MissingEntities<>("patent", false);
+
+    /**
+     * Inventors referenced but not described by the data.
+     */
     private static final MissingEntities<String> missingInventors = new MissingEntities<>("patent inventor", false);
+
+    /**
+     * Assignees referenced but not described by the data.
+     */
     private static final MissingEntities<String> missingAssignees = new MissingEntities<>("patent assignee", false);
 
 
+    /**
+     * Not instantiable.
+     */
+    private Patent()
+    {
+    }
+
+
+    /**
+     * Loads the ids of the stored patents, inventors and assignees and adds those that the type files describe.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases() throws IOException, SQLException
     {
         load("select iri,id from pubchem.patents", patentIDs);
@@ -121,6 +205,12 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the titles of the patents.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTitles() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/patent", "pc_patent2title_[0-9]+\\.ttl\\.gz", file -> {
@@ -146,6 +236,12 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the abstracts of the patents.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAbstracts() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/patent", "pc_patent2abstract_[0-9]+\\.ttl\\.gz", file -> {
@@ -170,6 +266,12 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the publication numbers of the patents.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadNumbers() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/patent", "pc_patent2publicationnumber_[0-9]+\\.ttl\\.gz", file -> {
@@ -195,6 +297,12 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the filing dates of the patents.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadFilingDates() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/patent", "pc_patent2filingdate_[0-9]+\\.ttl\\.gz", file -> {
@@ -220,6 +328,12 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the grant dates of the patents.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadGrantDates() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/patent", "pc_patent2grantdate_[0-9]+\\.ttl\\.gz", file -> {
@@ -245,6 +359,12 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the publication dates of the patents.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadPublicationDates() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/patent", "pc_patent2publicationdate_[0-9]+\\.ttl\\.gz", file -> {
@@ -270,6 +390,12 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the priority dates of the patents.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadPriorityDates() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/patent", "pc_patent2prioritydate_[0-9]+\\.ttl\\.gz", file -> {
@@ -295,6 +421,12 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the patents citing the patents and stores their changes in {@code pubchem.patent_citations}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCitations() throws IOException, SQLException
     {
         IntPairSet keepCitations = new IntPairSet();
@@ -336,6 +468,13 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the additional CPC classifications of the patents and stores their changes in
+     * {@code pubchem.patent_cpc_additional_classifications}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCpcAdditionalClassifications() throws IOException, SQLException
     {
         IntStringSet keepClassifications = new IntStringSet();
@@ -380,6 +519,13 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the inventive CPC classifications of the patents and stores their changes in
+     * {@code pubchem.patent_cpc_inventive_classifications}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCpcInventiveClassifications() throws IOException, SQLException
     {
         IntStringSet keepClassifications = new IntStringSet();
@@ -424,6 +570,13 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the additional IPC classifications of the patents and stores their changes in
+     * {@code pubchem.patent_ipc_additional_classifications}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadIpcAdditionalClassifications() throws IOException, SQLException
     {
         IntStringSet keepClassifications = new IntStringSet();
@@ -468,6 +621,13 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the inventive IPC classifications of the patents and stores their changes in
+     * {@code pubchem.patent_ipc_inventive_classifications}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadIpcInventiveClassifications() throws IOException, SQLException
     {
         IntStringSet keepClassifications = new IntStringSet();
@@ -512,6 +672,12 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the inventors of the patents and stores their changes in {@code pubchem.patent_inventors}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadInventors() throws IOException, SQLException
     {
         IntStringSet keepInventors = new IntStringSet();
@@ -554,6 +720,12 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the assignees of the patents and stores their changes in {@code pubchem.patent_applicants}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadApplicants() throws IOException, SQLException
     {
         IntStringSet keepApplicants = new IntStringSet();
@@ -596,6 +768,14 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the names of the inventors and assignees and stores their changes in {@code pubchem.inventors} and
+     * {@code pubchem.applicants}; of the conflicting names of one of them the better one is kept, see
+     * {@link #isNameBetter(String, String)}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadFormattedNames() throws IOException, SQLException
     {
         StringStringMap keepInventorNames = new StringStringMap();
@@ -732,6 +912,15 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Decides which of two conflicting names of an inventor or an assignee is kept and reports the conflict as a
+     * warning: a name glued to {@code SAMSUNG SDI CO LTD} loses, otherwise the longer, then the not upper-case, and
+     * then the lexicographically smaller name wins.
+     *
+     * @param a the first name
+     * @param b the second name
+     * @return true if the first name is better
+     */
     private static boolean isNameBetter(String a, String b)
     {
         String ua = a.toUpperCase();
@@ -763,6 +952,12 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Loads the patents from the PubChemRDF files and flushes their table.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load patents ...");
@@ -790,6 +985,13 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Stores the patents, including those referenced by the parts loaded later, and the changes of the inventors and
+     * assignees, and deletes the stored ones that are neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish patents ...");
@@ -806,6 +1008,13 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Returns the id of the patent with the given IRI; a patent without a row gets one and is counted as missing.
+     *
+     * @param value the IRI of the patent
+     * @return the id of the patent
+     * @throws IOException if the IRI is not an IRI of a patent
+     */
     static Integer getPatentID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
@@ -827,8 +1036,12 @@ class Patent extends Updater
     }
 
 
-    /*
+    /**
      * Adds the row of a patent, which keeps its id if it has one.
+     *
+     * @param patent the IRI of the patent without the prefix
+     * @return the id of the patent
+     * @throws IOException if the row of the patent conflicts with the data
      */
     private static Integer addPatent(String patent) throws IOException
     {
@@ -846,6 +1059,15 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Returns the id of the inventor with the given IRI; an inventor not described by the data is counted as missing.
+     *
+     * @param value the IRI of the inventor
+     * @param forceKeep whether the row of the inventor is written together with its name, so that it must not be
+     *            inserted as a new one
+     * @return the id (the MD5 hash) of the inventor
+     * @throws IOException if the IRI is not an IRI of an inventor
+     */
     private static String getInventorID(String value, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(inventorPrefix))
@@ -878,6 +1100,15 @@ class Patent extends Updater
     }
 
 
+    /**
+     * Returns the id of the assignee with the given IRI; an assignee not described by the data is counted as missing.
+     *
+     * @param value the IRI of the assignee
+     * @param forceKeep whether the row of the assignee is written together with its name, so that it must not be
+     *            inserted as a new one
+     * @return the id (the MD5 hash) of the assignee
+     * @throws IOException if the IRI is not an IRI of an assignee
+     */
     private static String getAssigneeID(String value, boolean forceKeep) throws IOException
     {
         if(!value.startsWith(assigneePrefix))

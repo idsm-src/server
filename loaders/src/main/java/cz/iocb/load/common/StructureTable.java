@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 
-/*
+/**
  * A table of the structures (molfiles or SMILES) of entities with integer identifiers, on which a Sachem index is
  * built. The table is loaded from a complete dump of the structures: the structure of every entity of the dump is
  * put, the rows whose structure has not changed are left untouched (so that the audit trigger of the index records
@@ -26,16 +26,34 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class StructureTable extends Updater
 {
-    /*
+    /**
      * The rows one thread has put and not yet sent.
      */
     private static final class Batch
     {
+        /**
+         * Identifiers of the entities of the rows.
+         */
         final List<Integer> ids = new ArrayList<>(structureBatchSize);
+
+        /**
+         * Structures of the rows, in the order of their identifiers.
+         */
         final List<String> structures = new ArrayList<>(structureBatchSize);
+
+
+        /**
+         * Creates an empty batch.
+         */
+        private Batch()
+        {
+        }
     }
 
 
+    /**
+     * MD5 digests of the threads.
+     */
     private static final ThreadLocal<MessageDigest> digests = ThreadLocal.withInitial(() -> {
         try
         {
@@ -48,22 +66,79 @@ public class StructureTable extends Updater
     });
 
 
+    /**
+     * Number of the rows a thread collects before it sends them.
+     */
     private static final int structureBatchSize = 1000;
 
+    /**
+     * Qualified name of the table.
+     */
     private final String table;
+
+    /**
+     * Name of the identifier column.
+     */
     private final String idColumn;
+
+    /**
+     * Name of the structure column.
+     */
     private final String structureColumn;
+
+    /**
+     * Batch of the current thread.
+     */
     private final ThreadLocal<Batch> batches = ThreadLocal.withInitial(this::createBatch);
+
+    /**
+     * Batches of all the threads, flushed by {@link #store()}.
+     */
     private final ConcurrentLinkedQueue<Batch> allBatches = new ConcurrentLinkedQueue<>();
+
+    /**
+     * Identifiers of the stored rows.
+     */
     private final BitSet stored = new BitSet();
+
+    /**
+     * Identifiers of the entities whose structures have been put.
+     */
     private final BitSet seen = new BitSet();
+
+    /**
+     * Hashes of the structures of the stored rows by their identifiers.
+     */
     private long[] hashes = new long[0];
+
+    /**
+     * Statement inserting or updating a row, null until {@link #load()}.
+     */
     private PreparedStatement upsert;
+
+    /**
+     * Number of the structures that have been put.
+     */
     private int count;
+
+    /**
+     * Number of the rows sent to the table.
+     */
     private int sent;
+
+    /**
+     * Whether the table has been stored and can no longer be used.
+     */
     private boolean finished;
 
 
+    /**
+     * Creates the table.
+     *
+     * @param table the qualified name of the table
+     * @param idColumn the name of the identifier column
+     * @param structureColumn the name of the structure column
+     */
     public StructureTable(String table, String idColumn, String structureColumn)
     {
         this.table = table;
@@ -72,8 +147,10 @@ public class StructureTable extends Updater
     }
 
 
-    /*
+    /**
      * Reads the identifiers and the hashes of the stored rows and prepares the upsert.
+     *
+     * @throws SQLException if a database error occurs
      */
     public void load() throws SQLException
     {
@@ -116,9 +193,15 @@ public class StructureTable extends Updater
     }
 
 
-    /*
+    /**
      * Puts the structure of an entity: a new or changed structure is sent to the table, an unchanged one is only
      * noted. The structure of an entity can be put only once.
+     *
+     * @param id the identifier of the entity
+     * @param structure the structure of the entity
+     * @throws IOException if the identifier is negative or the structure of the entity has already been put (a
+     *             {@link DataException})
+     * @throws SQLException if a database error occurs
      */
     public void put(int id, String structure) throws IOException, SQLException
     {
@@ -151,10 +234,13 @@ public class StructureTable extends Updater
     }
 
 
-    /*
+    /**
      * Sends the remaining rows and deletes the rows of the entities whose structures have not been put; the table
      * cannot be used afterwards. A dump without any structure is reported as an error and the table is left as it is,
      * so that a missing dump does not empty it.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     public synchronized void store() throws IOException, SQLException
     {
@@ -209,8 +295,10 @@ public class StructureTable extends Updater
     }
 
 
-    /*
+    /**
      * Returns the number of the structures that have been put.
+     *
+     * @return the number of the structures that have been put
      */
     public synchronized int size()
     {
@@ -218,6 +306,11 @@ public class StructureTable extends Updater
     }
 
 
+    /**
+     * Creates the batch of a thread and registers it for {@link #store()}.
+     *
+     * @return the new batch
+     */
     private Batch createBatch()
     {
         Batch batch = new Batch();
@@ -226,6 +319,12 @@ public class StructureTable extends Updater
     }
 
 
+    /**
+     * Sends the rows of a batch to the table and empties it.
+     *
+     * @param batch the batch
+     * @throws SQLException if a database error occurs
+     */
     private synchronized void flush(Batch batch) throws SQLException
     {
         for(int i = 0; i < batch.ids.size(); i++)
@@ -244,8 +343,11 @@ public class StructureTable extends Updater
     }
 
 
-    /*
+    /**
      * Returns the hash of a structure without its first two lines, computed the way the database does it.
+     *
+     * @param structure the structure
+     * @return the first 64 bits of the MD5 digest of the structure without its first two lines
      */
     private static long hash(String structure)
     {

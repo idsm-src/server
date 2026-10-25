@@ -38,28 +38,89 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the PubChem proteins and enzymes ({@code pubchem/RDF/protein}) into the tables {@code pubchem.proteins} and
+ * {@code pubchem.enzymes} and the tables of their alternative labels, links, matches, families, types and references.
+ */
 class Protein extends Updater
 {
+    /**
+     * IRI prefix of the proteins.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/ACC";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * IRI prefix of the enzymes.
+     */
     static final String enzymePrefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_";
+
+    /**
+     * Length of {@link #enzymePrefix}.
+     */
     static final int enzymePrefixLength = enzymePrefix.length();
 
+    /**
+     * Table of the proteins.
+     */
     private static final EntityTable<Integer> proteins = new EntityTable<>("pubchem.proteins", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), integer("organism"), uniqueVarchar("title"),
             uniqueVarchar("sequence"));
+
+    /**
+     * Proteins referenced but not described by the data.
+     */
     private static final MissingEntities<String> missingProteins = new MissingEntities<>("protein", true);
+
+    /**
+     * Enzymes referenced but not described by the data.
+     */
     private static final MissingEntities<String> missingEnzymes = new MissingEntities<>("enzyme", true);
+
+    /**
+     * Ids of the proteins by their IRIs without the prefix.
+     */
     private static final StringIntMap proteinIDs = new StringIntMap();
+
+    /**
+     * Id of the next new protein.
+     */
     private static int nextProteinID;
 
+    /**
+     * Table of the enzymes.
+     */
     private static final EntityTable<Integer> enzymes = new EntityTable<>("pubchem.enzymes", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), integer("parent"), uniqueVarchar("title"));
+
+    /**
+     * Ids of the enzymes by their IRIs without the prefix.
+     */
     private static final StringIntMap enzymeIDs = new StringIntMap();
+
+    /**
+     * Id of the next new enzyme.
+     */
     private static int nextEnzymeID;
 
 
+    /**
+     * Not instantiable.
+     */
+    private Protein()
+    {
+    }
+
+
+    /**
+     * Registers the checks of the predicates, types and values of the protein files.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(notStartingWith("http://rdf.ncbi.nlm.nih.gov/pubchem/protein/EC_"),
@@ -104,6 +165,13 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Loads the ids of the stored enzymes and registers the handler that adds the enzymes described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadEnzymeBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         load("select iri,id from pubchem.enzymes", enzymeIDs);
@@ -119,6 +187,13 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the parents of the enzymes.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadEnzymeParents(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(rdfs + "subClassOf", (subject, object) -> {
@@ -133,6 +208,13 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the titles of the enzymes.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadEnzymeTitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(skos + "prefLabel", (subject, object) -> {
@@ -147,6 +229,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the alternative labels of the enzymes and the action that stores their changes in
+     * {@code pubchem.enzyme_alternatives}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadEnzymeAlternatives(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepAlternatives = new IntStringSet();
@@ -177,6 +267,13 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Loads the ids of the stored proteins and registers the handler that adds the proteins described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadProteinBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         load("select iri,id from pubchem.proteins", proteinIDs);
@@ -192,6 +289,13 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the organisms of the proteins.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadOrganisms(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(up + "organism", (subject, object) -> {
@@ -203,6 +307,13 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the titles of the proteins.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadProteinTitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(skos + "prefLabel", (subject, object) -> {
@@ -224,6 +335,13 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the sequences of the proteins.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSequences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(bao + "BAO_0002817", (subject, object) -> {
@@ -235,6 +353,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the alternative labels of the proteins and the action that stores their changes in
+     * {@code pubchem.protein_alternatives}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadProteinAlternatives(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepAlternatives = new IntStringSet();
@@ -265,6 +391,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the PDB entries linked to the proteins and the action that stores their changes in
+     * {@code pubchem.protein_pdblinks}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadPdbLinks(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepPdbLinks = new IntStringSet();
@@ -292,6 +426,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the similar proteins of the proteins and the action that stores their changes in
+     * {@code pubchem.protein_similar_proteins}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSimilarProteins(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepSimilarProteins = new IntPairSet();
@@ -321,6 +463,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the genes encoding the proteins and the action that stores their changes in
+     * {@code pubchem.protein_genes}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadGenes(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepGenes = new IntPairSet();
@@ -348,6 +498,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the enzymes of the proteins, UniProt or PubChem ones, and the action that stores their
+     * changes in {@code pubchem.protein_uniprot_enzymes} and {@code pubchem.protein_enzymes}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadEnzymes(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepEnzymes = new IntStringSet();
@@ -399,6 +557,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the ontology resources matching the proteins and the action that stores their changes in
+     * {@code pubchem.protein_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntIntPairSet keepMatches = new IntIntPairSet();
@@ -439,6 +605,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the NCBI RefSeq proteins matching the proteins and the action that stores their changes
+     * in {@code pubchem.protein_ncbi_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadNcbiCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -469,6 +643,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the UniProt proteins matching the proteins and the action that stores their changes in
+     * {@code pubchem.protein_uniprot_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadUniprotCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -499,6 +681,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the MeSH descriptors matching the proteins and the action that stores their changes in
+     * {@code pubchem.protein_mesh_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMeshCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -529,6 +719,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the GlyGen proteins matching the proteins and the action that stores their changes in
+     * {@code pubchem.protein_glygen_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadGlygenCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -559,6 +757,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the GlyCosmos glycoproteins matching the proteins and the action that stores their
+     * changes in {@code pubchem.protein_glycosmos_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadGlycosmosCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -589,6 +795,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the AlphaFold entries matching the proteins and the action that stores their changes in
+     * {@code pubchem.protein_alphafold_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAlphafoldCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -619,6 +833,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the Pharos targets matching the proteins and the action that stores their changes in
+     * {@code pubchem.protein_pharos_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadPharosCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -649,6 +871,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the Protein Ontology entries matching the proteins and the action that stores their
+     * changes in {@code pubchem.protein_proconsortium_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadProconsortiumCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -679,6 +909,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the BRENDA enzymes matching the proteins and the action that stores their changes in
+     * {@code pubchem.protein_brenda_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBrendaCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -709,6 +947,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the IntAct entries matching the proteins and the action that stores their changes in
+     * {@code pubchem.protein_intact_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadIntactCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -739,6 +985,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the InterPro proteins matching the proteins and the action that stores their changes in
+     * {@code pubchem.protein_interpro_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadInterproProteinCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -769,6 +1023,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the neXtProt entries matching the proteins and the action that stores their changes in
+     * {@code pubchem.protein_nextprot_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadNextprotCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -799,6 +1061,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the STRING proteins matching the proteins and the action that stores their changes in
+     * {@code pubchem.protein_stringdb_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadStringDbCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -829,6 +1099,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the entries of the IUBMB Enzyme Database matching the proteins and the action that
+     * stores their changes in {@code pubchem.protein_enzymedatabase_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadEnzymeDatabaseCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -859,6 +1137,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the ChEMBL targets matching the proteins and the action that stores their changes in
+     * {@code pubchem.protein_chembl_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadChemblCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepMatches = new IntPairSet();
@@ -889,6 +1175,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the Wikidata items matching the proteins and the action that stores their changes in
+     * {@code pubchem.protein_wikidata_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadWikidataCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepMatches = new IntPairSet();
@@ -919,6 +1213,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the conserved domains of the proteins and the action that stores their changes in
+     * {@code pubchem.protein_conserveddomains}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadConservedDomains(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepDomains = new IntPairSet();
@@ -949,6 +1251,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the proteins that are parts of the proteins and the action that stores their changes in
+     * {@code pubchem.protein_continuant_parts}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadContinuantParts(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepContinuantParts = new IntPairSet();
@@ -979,6 +1289,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the Pfam families of the proteins and the action that stores their changes in
+     * {@code pubchem.protein_families}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadFamilies(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepFamilies = new IntPairSet();
@@ -1009,6 +1327,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the InterPro families of the proteins and the action that stores their changes in
+     * {@code pubchem.protein_interpro_families}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadInterProFamilies(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepFamilies = new IntPairSet();
@@ -1039,6 +1365,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the ontology types of the proteins and the action that stores their changes in
+     * {@code pubchem.protein_types}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTypes(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntIntPairSet keepTypes = new IntIntPairSet();
@@ -1072,6 +1406,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Registers the handler of the references and patents discussing the proteins and the action that stores their
+     * changes in {@code pubchem.protein_references} and {@code pubchem.protein_patents}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadReferences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepReferences = new IntPairSet();
@@ -1122,6 +1464,12 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Loads the proteins and the enzymes from the PubChemRDF files and flushes their tables.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load proteins ...");
@@ -1178,6 +1526,13 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Stores the proteins and the enzymes, including those referenced by the parts loaded later, and deletes the stored
+     * ones that are neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish proteins ...");
@@ -1190,6 +1545,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Returns the id of the enzyme with the given IRI; an enzyme not described by the data gets a row and is counted as
+     * missing.
+     *
+     * @param value the IRI of the enzyme
+     * @return the id of the enzyme
+     * @throws IOException if the IRI is not an IRI of an enzyme
+     */
     static Integer getEnzymeID(String value) throws IOException
     {
         if(!value.startsWith(enzymePrefix))
@@ -1211,8 +1574,12 @@ class Protein extends Updater
     }
 
 
-    /*
+    /**
      * Adds the row of an enzyme, which keeps its id if it has one.
+     *
+     * @param enzyme the IRI of the enzyme without the prefix
+     * @return the id of the enzyme
+     * @throws IOException if the row of the enzyme conflicts with the data
      */
     private static Integer addEnzyme(String enzyme) throws IOException
     {
@@ -1230,6 +1597,14 @@ class Protein extends Updater
     }
 
 
+    /**
+     * Returns the id of the protein with the given IRI; a protein not described by the data gets a row and is counted
+     * as missing.
+     *
+     * @param value the IRI of the protein
+     * @return the id of the protein
+     * @throws IOException if the IRI is not an IRI of a protein
+     */
     static Integer getProteinID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
@@ -1251,8 +1626,12 @@ class Protein extends Updater
     }
 
 
-    /*
+    /**
      * Adds the row of a protein, which keeps its id if it has one.
+     *
+     * @param protein the IRI of the protein without the prefix
+     * @return the id of the protein
+     * @throws IOException if the row of the protein conflicts with the data
      */
     private static Integer addProtein(String protein) throws IOException
     {

@@ -14,8 +14,25 @@ import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
 
 
 
+/**
+ * Mapping of the Medical Subject Headings (MeSH): its descriptors, qualifiers, concepts, terms and supplementary
+ * records with their labels, notes, dates and relations.
+ */
 public class Mesh
 {
+    /**
+     * Not instantiable.
+     */
+    private Mesh()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the MeSH resources to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new StringUserIriClass("mesh:resource", "http://id.nlm.nih.gov/mesh/",
@@ -23,6 +40,11 @@ public class Mesh
     }
 
 
+    /**
+     * Adds the quad mappings of the MeSH resources to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("mesh:heading");

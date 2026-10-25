@@ -52,35 +52,85 @@ import cz.iocb.sparql.engine.rdf.Iri;
 
 
 
+/**
+ * Loader of the ontologies, read from the files of the directory {@code ontology}, into the tables of the schema
+ * {@code ontology}: the resources of the ontology units and the uncategorized resources, the classes, properties and
+ * individuals with their annotations, hierarchies, axioms, lists and restrictions, and the relations and versions of
+ * the ontologies; the tables are updated incrementally. The other loaders resolve the ontology resources they reference
+ * through {@link #getResourceId(Node, short...)} after {@link #loadCategories()}.
+ */
 public class Ontology extends Updater
 {
+    /**
+     * Source of ontology resources whose version is recorded.
+     */
     static private abstract class Source
     {
+        /**
+         * Name of the source.
+         */
         private final String name;
 
+        /**
+         * Creates the source.
+         *
+         * @param name the name of the source
+         */
         public Source(String name)
         {
             this.name = name;
         }
 
+        /**
+         * Returns the name of the source.
+         *
+         * @return the name of the source
+         */
         public String getName()
         {
             return name;
         }
 
+        /**
+         * Returns the version of the source.
+         *
+         * @return the version of the source, or null if it is unknown
+         */
         public abstract String getVersion();
     }
 
 
+    /**
+     * Source given by an ontology of the loaded files, whose version is read from the data of the ontology.
+     */
     static private class OwlSource extends Source
     {
+        /**
+         * IRI of the ontology.
+         */
         public final String iri;
 
-        // the values of owl:versionInfo, doap:Version and owl:versionIRI of the ontology
+        /**
+         * Values of {@code owl:versionInfo} of the ontology.
+         */
         private final LinkedHashSet<Node> infos = new LinkedHashSet<>();
+
+        /**
+         * Values of {@code doap:Version} of the ontology.
+         */
         private final LinkedHashSet<Node> releases = new LinkedHashSet<>();
+
+        /**
+         * Values of {@code owl:versionIRI} of the ontology.
+         */
         private final LinkedHashSet<Node> versionIRIs = new LinkedHashSet<>();
 
+        /**
+         * Creates the source of an ontology.
+         *
+         * @param name the name of the source
+         * @param iri the IRI of the ontology
+         */
         public OwlSource(String name, String iri)
         {
             super(name);
@@ -88,6 +138,12 @@ public class Ontology extends Updater
         }
 
 
+        /**
+         * Returns the version given by the version infos and the releases of the ontology: the only value containing a
+         * digit, or the latest of several dates.
+         *
+         * @return the version, or null if there is none or the values are not comparable dates
+         */
         public String getVersionFromInfo()
         {
             String version = null;
@@ -119,6 +175,12 @@ public class Ontology extends Updater
         }
 
 
+        /**
+         * Returns the version given by the version IRI of the ontology: the date at its end, or its last numeric path
+         * segment.
+         *
+         * @return the version, or null if the ontology does not have exactly one version IRI
+         */
         public String getVersionFromVersionIRI()
         {
             if(versionIRIs.size() != 1)
@@ -149,10 +211,22 @@ public class Ontology extends Updater
     }
 
 
+    /**
+     * Source whose version is stated by the loader, as its files do not give it.
+     */
     static private class StaticSource extends Source
     {
+        /**
+         * Version of the source.
+         */
         public final String version;
 
+        /**
+         * Creates the source.
+         *
+         * @param name the name of the source
+         * @param version the version of the source
+         */
         public StaticSource(String name, String version)
         {
             super(name);
@@ -167,16 +241,41 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * The rdfs:subClassOf triples as pairs of the (unit, id) of their subject and object, encoded as longs.
      */
     private static class SubclassPairs
     {
+        /**
+         * Encoded subjects of the triples.
+         */
         private long[] subclasses = new long[1024];
+
+        /**
+         * Encoded objects of the triples.
+         */
         private long[] superclasses = new long[1024];
+
+        /**
+         * Number of the triples.
+         */
         private int size = 0;
 
 
+        /**
+         * Creates the empty set of triples.
+         */
+        private SubclassPairs()
+        {
+        }
+
+
+        /**
+         * Adds a triple.
+         *
+         * @param subclass the (unit, id) of the subject
+         * @param superclass the (unit, id) of the object
+         */
         void add(Pair<Integer, Integer> subclass, Pair<Integer, Integer> superclass)
         {
             if(size == subclasses.length)
@@ -191,8 +290,11 @@ public class Ontology extends Updater
         }
 
 
-        /*
+        /**
          * Returns the class with its direct and indirect subclasses.
+         *
+         * @param root the (unit, id) of the class
+         * @return the encoded class and its subclasses
          */
         HashSet<Long> getSubclasses(Pair<Integer, Integer> root)
         {
@@ -212,6 +314,12 @@ public class Ontology extends Updater
         }
 
 
+        /**
+         * Encodes a (unit, id) as a long.
+         *
+         * @param id the (unit, id)
+         * @return the encoded (unit, id)
+         */
         static long encode(Pair<Integer, Integer> id)
         {
             return (long) id.getOne() << 32 | id.getTwo() & 0xffffffffL;
@@ -219,21 +327,55 @@ public class Ontology extends Updater
     }
 
 
+    /**
+     * Unit of the ontology resources, as {@code ontology.units} defines it: the IRIs of the unit match its pattern and
+     * consist of a prefix, the id of the resource and a suffix.
+     */
     private static class Unit
     {
+        /**
+         * Id of the unit.
+         */
         int id;
+
+        /**
+         * Offset of the id of the resource in the IRIs of the unit.
+         */
         int valueOffset;
+
+        /**
+         * Suffix of the IRIs of the unit.
+         */
         String suffix;
+
+        /**
+         * Pattern of the IRIs of the unit.
+         */
         Pattern pattern;
+
+
+        /**
+         * Creates the unit, whose fields are set by the caller.
+         */
+        private Unit()
+        {
+        }
     }
 
 
-    /*
+    /**
      * The ids of the blank nodes by their keys, see BlankNodeKeys.
      */
     @SuppressWarnings("serial")
     private static class LongIntMap extends SqlMap<Long, Integer>
     {
+        /**
+         * Creates an empty map.
+         */
+        private LongIntMap()
+        {
+        }
+
         @Override
         public Long getKey(ResultSet result) throws SQLException
         {
@@ -255,16 +397,27 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * A value of a predicate whose values are resources or strings: the (unit, id) of a resource, or a string with its
      * language, if any. A table has the columns of the resources, of the strings and of the languages only if the
      * values of its predicate can be resources, strings and strings with languages.
+     *
+     * @param unit the unit of the resource, or null for a string
+     * @param id the id of the resource, or null for a string
+     * @param string the string, or null for a resource
+     * @param language the language of the string, or null
      */
     private static record Value(Integer unit, Integer id, String string, String language)
     {
-        /*
+        /**
          * Returns the value of a node, which is a resource, if resources are allowed, or a literal of one of the
          * allowed kinds.
+         *
+         * @param node the node
+         * @param resources whether resources are allowed
+         * @param kinds the allowed kinds of the literals, see literalKinds
+         * @return the value of the node
+         * @throws DataException if the node is not an allowed value
          */
         static Value get(Node node, boolean resources, String... kinds) throws DataException
         {
@@ -281,6 +434,16 @@ public class Ontology extends Updater
         }
 
 
+        /**
+         * Reads a value from the columns of the current row of a result, starting at the given column.
+         *
+         * @param result the result
+         * @param index the index of the first column
+         * @param resources whether the columns of the resources are present
+         * @param languages whether the column of the languages is present
+         * @return the value
+         * @throws SQLException if a database error occurs
+         */
         static Value read(ResultSet result, int index, boolean resources, boolean languages) throws SQLException
         {
             if(resources)
@@ -297,6 +460,16 @@ public class Ontology extends Updater
         }
 
 
+        /**
+         * Sets the value to the parameters of a statement, starting at the given parameter.
+         *
+         * @param statement the statement
+         * @param index the index of the first parameter
+         * @param resources whether the parameters of the resources are present
+         * @param strings whether the parameter of the strings is present
+         * @param languages whether the parameter of the languages is present
+         * @throws SQLException if a database error occurs
+         */
         void write(PreparedStatement statement, int index, boolean resources, boolean strings, boolean languages)
                 throws SQLException
         {
@@ -315,17 +488,35 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * The pairs of a resource and a value of its predicate, see Value.
      */
     @SuppressWarnings("serial")
     private static class ResourceValueSet extends SqlSet<Pair<Pair<Integer, Integer>, Value>>
     {
+        /**
+         * Whether the table has the columns of the resources.
+         */
         private final boolean resources;
+
+        /**
+         * Whether the table has the column of the strings.
+         */
         private final boolean strings;
+
+        /**
+         * Whether the table has the column of the languages.
+         */
         private final boolean languages;
 
 
+        /**
+         * Creates an empty set for a table.
+         *
+         * @param resources whether the table has the columns of the resources
+         * @param strings whether the table has the column of the strings
+         * @param languages whether the table has the column of the languages
+         */
         ResourceValueSet(boolean resources, boolean strings, boolean languages)
         {
             this.resources = resources;
@@ -351,12 +542,19 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * The pairs of a resource and a boolean value of its predicate.
      */
     @SuppressWarnings("serial")
     private static class ResourceFlagSet extends SqlSet<Pair<Pair<Integer, Integer>, Boolean>>
     {
+        /**
+         * Creates an empty set.
+         */
+        private ResourceFlagSet()
+        {
+        }
+
         @Override
         public Pair<Pair<Integer, Integer>, Boolean> get(ResultSet result) throws SQLException
         {
@@ -373,26 +571,45 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * The canonical value of a literal: a string with its language, if any, a boolean, the text of the canonical form
      * of an integer, or a floating-point number; the kind names the column of the value.
+     *
+     * @param kind the kind of the value, which names its column
+     * @param value the value
+     * @param language the language of a string, or null
      */
     private static record LiteralValue(String kind, Object value, String language)
     {
     }
 
 
-    /*
+    /**
      * A relation of an ontology given by an ontology property, such as owl:imports, or by owl:versionInfo.
+     *
+     * @param ontologyID the (unit, id) of the ontology
+     * @param property the kind of the relation, as the value of the column {@code property} of
+     *            {@code ontology.ontology_relations}
+     * @param target the target of the relation
      */
     private static record Relation(Pair<Integer, Integer> ontologyID, String property, Value target)
     {
     }
 
 
+    /**
+     * Relations of the ontologies, as stored in {@code ontology.ontology_relations}.
+     */
     @SuppressWarnings("serial")
     private static class RelationSet extends SqlSet<Relation>
     {
+        /**
+         * Creates an empty set.
+         */
+        private RelationSet()
+        {
+        }
+
         @Override
         public Relation get(ResultSet result) throws SQLException
         {
@@ -411,7 +628,7 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * An IRI class of another dataset whose IRIs the ontologies use. Such an IRI must not become an ontology resource,
      * as the mapping takes the IRI classes of different datasets to be disjoint: the SKOS mappings of the resources to
      * the IRIs of a class that has a table are kept in the table, the other triples with the IRIs are left out as
@@ -419,14 +636,44 @@ public class Ontology extends Updater
      */
     private static class ForeignClass
     {
+        /**
+         * IRI class of the dataset.
+         */
         final UserIriClass iriClass;
+
+        /**
+         * Prefix of the IRIs of the class.
+         */
         final String prefix;
+
+        /**
+         * Suffix of the IRIs of the class, or null.
+         */
         final String suffix;
+
+        /**
+         * Whether the IRIs of the class end with integer ids.
+         */
         final boolean integer;
+
+        /**
+         * Table of the SKOS mappings to the IRIs of the class, or null if they are not kept.
+         */
         final String table;
+
+        /**
+         * Column of the values of the IRIs in the table, or null.
+         */
         final String column;
 
 
+        /**
+         * Creates the foreign class of a string IRI class.
+         *
+         * @param iriClass the IRI class
+         * @param table the table of the SKOS mappings, or null if they are not kept
+         * @param column the column of the values of the IRIs in the table, or null
+         */
         ForeignClass(StringUserIriClass iriClass, String table, String column)
         {
             this.iriClass = iriClass;
@@ -438,6 +685,13 @@ public class Ontology extends Updater
         }
 
 
+        /**
+         * Creates the foreign class of an integer IRI class.
+         *
+         * @param iriClass the IRI class
+         * @param table the table of the SKOS mappings, or null if they are not kept
+         * @param column the column of the values of the IRIs in the table, or null
+         */
         ForeignClass(IntegerUserIriClass iriClass, String table, String column)
         {
             this.iriClass = iriClass;
@@ -449,14 +703,23 @@ public class Ontology extends Updater
         }
 
 
+        /**
+         * Tests whether an IRI belongs to the class.
+         *
+         * @param iri the IRI
+         * @return true if the IRI belongs to the class, false otherwise
+         */
         boolean match(String iri)
         {
             return iri.startsWith(prefix) && iriClass.match(null, new Iri(iri));
         }
 
 
-        /*
+        /**
          * Returns the value of an IRI of the class in the column of its table.
+         *
+         * @param iri the IRI
+         * @return the value of the IRI
          */
         Object getValue(String iri)
         {
@@ -467,18 +730,32 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * A SKOS mapping of a resource to an IRI of a foreign class: the property of the mapping, as the value of
      * ontology.resource_match_property_type, and the value of the IRI in its class.
+     *
+     * @param resource the (unit, id) of the resource
+     * @param property the property of the mapping
+     * @param value the value of the IRI in its class
      */
     private static record ForeignMatch(Pair<Integer, Integer> resource, String property, Object value)
     {
     }
 
 
+    /**
+     * SKOS mappings of the resources to the IRIs of a foreign class, as stored in the table of the class.
+     */
     @SuppressWarnings("serial")
     private static class ForeignMatchSet extends SqlSet<ForeignMatch>
     {
+        /**
+         * Creates an empty set.
+         */
+        private ForeignMatchSet()
+        {
+        }
+
         @Override
         public ForeignMatch get(ResultSet result) throws SQLException
         {
@@ -497,46 +774,136 @@ public class Ontology extends Updater
     }
 
 
+    /**
+     * Namespace of RDF.
+     */
     static final String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+
+    /**
+     * Namespace of RDF Schema.
+     */
     static final String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
+
+    /**
+     * Namespace of OWL.
+     */
     static final String owl = "http://www.w3.org/2002/07/owl#";
+
+    /**
+     * Namespace of the DOAP vocabulary.
+     */
     static final String doap = "http://usefulinc.com/ns/doap#";
+
+    /**
+     * Namespace of the XML Schema datatypes.
+     */
     static final String xsd = "http://www.w3.org/2001/XMLSchema#";
+
+    /**
+     * Namespace of the OBO ontologies.
+     */
     static final String obo = "http://purl.obolibrary.org/obo/";
+
+    /**
+     * Namespace of the OBO in OWL vocabulary.
+     */
     static final String oboInOwl = "http://www.geneontology.org/formats/oboInOwl#";
+
+    /**
+     * Namespace of SKOS.
+     */
     static final String skos = "http://www.w3.org/2004/02/skos/core#";
 
+    /**
+     * Sources of the ontology resources whose versions are recorded.
+     */
     private static final List<Source> sources = new ArrayList<>();
 
+    /**
+     * Units of the ontology resources.
+     */
     private static final List<Unit> units = new ArrayList<>();
+
+    /**
+     * Ids of the blank nodes met in the files.
+     */
     private static final HashMap<Node, Integer> blankNodes = new HashMap<>();
 
-    // the keys of the blank nodes, the ids of the keys and the keys of the database
+    /**
+     * Keys of the blank nodes, see {@link BlankNodeKeys}.
+     */
     private static Map<Node, Long> blankNodeKeys = Map.of();
+
+    /**
+     * Ids of the keys of the blank nodes.
+     */
     private static final HashMap<Long, Integer> blankNodeIds = new HashMap<>();
+
+    /**
+     * Next free id of a blank node.
+     */
     private static int nextBlankNodeID;
 
+    /**
+     * Stored keys of the blank nodes that the files still contain.
+     */
     private static final LongIntMap keepBlankNodes = new LongIntMap();
+
+    /**
+     * Keys of the blank nodes to insert into {@code ontology.blank_nodes}.
+     */
     private static final LongIntMap newBlankNodes = new LongIntMap();
+
+    /**
+     * Stored keys of the blank nodes not met in the files (yet), deleted at the end.
+     */
     private static final LongIntMap oldBlankNodes = new LongIntMap();
 
+    /**
+     * Ids of the built-in resources, which belong to the uncategorized unit, by their IRIs.
+     */
     private static final HashMap<String, Integer> builtinResources = new HashMap<>();
 
-    // the subjects of the rdf:type triples by their types, and the rdfs:subClassOf triples
+    /**
+     * Subjects of the {@code rdf:type} triples by their types.
+     */
     private static final HashMap<Node, List<Node>> instances = new HashMap<>();
+
+    /**
+     * The {@code rdfs:subClassOf} triples.
+     */
     private static final SubclassPairs subclassPairs = new SubclassPairs();
 
+    /**
+     * Next free id of an uncategorized resource.
+     */
     private static int nextResourceID;
 
+    /**
+     * Stored uncategorized resources that the files still contain, by their IRIs.
+     */
     private static final StringIntMap keepResources = new StringIntMap();
+
+    /**
+     * Uncategorized resources to insert into {@code ontology.uncategorized_resources}, by their IRIs.
+     */
     private static final StringIntMap newResources = new StringIntMap();
+
+    /**
+     * Stored uncategorized resources not met in the files (yet), deleted at the end, by their IRIs.
+     */
     private static final StringIntMap oldResources = new StringIntMap();
 
+    /**
+     * Table of the cells of the RDF lists.
+     */
     private static final EntityTable<Pair<Integer, Integer>> lists = new EntityTable<>("ontology.lists",
             intPairKey("unit", "id"), null, integer("first_unit"), integer("first_id"), varchar("first_string"),
             typed("first_integer", "numeric"), real("first_float"), integer("rest_unit"), integer("rest_id"));
 
-    // the tables of the restrictions by the predicates of their fillers
+    /**
+     * Tables of the restrictions by the predicates of their fillers.
+     */
     private static final LinkedHashMap<String, EntityTable<Integer>> restrictionTables = new LinkedHashMap<>();
 
     static
@@ -562,22 +929,37 @@ public class Ontology extends Updater
                             integer("property_unit"), integer("property_id"), typed("cardinality", "numeric")));
     }
 
-    // the restrictions without a filler, and the classes and data ranges of the qualified cardinality restrictions
+    /**
+     * Table of the restrictions without a filler.
+     */
     private static final EntityTable<Integer> incompleteRestrictions = new EntityTable<>(
             "ontology.incomplete_restrictions", intKey("id"), null, integer("property_unit"), integer("property_id"));
+
+    /**
+     * Table of the classes of the qualified cardinality restrictions.
+     */
     private static final EntityTable<Integer> restrictionClasses = new EntityTable<>("ontology.restriction_classes",
             intKey("restriction"), null, integer("class_unit"), integer("class_id"));
+
+    /**
+     * Table of the data ranges of the qualified cardinality restrictions.
+     */
     private static final EntityTable<Integer> restrictionDataRanges = new EntityTable<>(
             "ontology.restriction_dataranges", intKey("restriction"), null, integer("datarange_unit"),
             integer("datarange_id"));
 
+    /**
+     * Table of the facet restrictions of the datatype restrictions.
+     */
     private static final EntityTable<Integer> facetRestrictions = new EntityTable<>("ontology.facet_restrictions",
             intKey("restriction_id"), null, typed("facet", "ontology.facet_restriction_facet_type"),
             varchar("value_string"), typed("value_integer", "numeric"), float8("value_double"));
 
-    // the kinds of the literal values by the datatypes of the data; the integer datatypes are unified, as OWL 2
-    // compares the numbers by their values regardless of their datatypes, a float is unified to a double where only
-    // doubles are kept, and the string kinds other than langString are unified to xsd:string where they are allowed
+    /**
+     * Kinds of the literal values by the datatypes of the data; the integer datatypes are unified, as OWL 2 compares
+     * the numbers by their values regardless of their datatypes, a float is unified to a double where only doubles are
+     * kept, and the string kinds other than langString are unified to xsd:string where they are allowed.
+     */
     private static final Map<String, String> literalKinds = new HashMap<>();
 
     static
@@ -598,7 +980,9 @@ public class Ontology extends Updater
             literalKinds.put(xsd + datatype, "integer");
     }
 
-    // the facets of the datatype restrictions by their predicates
+    /**
+     * Facets of the datatype restrictions by their predicates.
+     */
     private static final Map<String, String> facets = Map.ofEntries(Map.entry(xsd + "length", "LENGTH"),
             Map.entry(xsd + "minLength", "MIN_LENGTH"), Map.entry(xsd + "maxLength", "MAX_LENGTH"),
             Map.entry(xsd + "pattern", "PATTERN"), Map.entry(rdf + "langRange", "LANG_RANGE"),
@@ -606,10 +990,14 @@ public class Ontology extends Updater
             Map.entry(xsd + "minExclusive", "MIN_EXCLUSIVE"), Map.entry(xsd + "maxExclusive", "MAX_EXCLUSIVE"),
             Map.entry(xsd + "totalDigits", "TOTAL_DIGITS"), Map.entry(xsd + "fractionDigits", "FRACTION_DIGITS"));
 
-    // the kinds of the literals that the annotations keep as strings
+    /**
+     * Kinds of the literals that the annotations keep as strings.
+     */
     private static final String[] stringKinds = { "string", "langString", "plainLiteral", "html", "literal", "anyURI" };
 
-    // the foreign classes whose IRIs the ontologies use, see ForeignClass
+    /**
+     * Foreign classes whose IRIs the ontologies use, see ForeignClass.
+     */
     private static final List<ForeignClass> foreignClasses = List.of(
             new ForeignClass(new StringUserIriClass("identifiers:mesh_old", "http://identifiers.org/mesh/",
                     "[A-Z][0-9]+(\\.[0-9]+|[A-Z][0-9]+)*"), "resource_identifiers_mesh_matches", "mesh"),
@@ -623,31 +1011,52 @@ public class Ontology extends Updater
                     "resource_wikidata_page_matches", "page"),
             new ForeignClass(new StringUserIriClass("orcid:author", "https://orcid.org/"), null, null));
 
-    // the predicates of RDF, RDFS and OWL that do not belong to the structures of the blank nodes, see isStructural()
+    /**
+     * Predicates of RDF, RDFS and OWL that do not belong to the structures of the blank nodes, see isStructural().
+     */
     private static final Set<String> nonstructuralPredicates = Set.of(rdfs + "label", rdfs + "comment",
             rdfs + "seeAlso", rdfs + "isDefinedBy", owl + "deprecated", owl + "versionInfo", owl + "annotatedSource",
             owl + "annotatedProperty", owl + "annotatedTarget");
 
-    // the annotation properties that the loaders of the annotations load, which leave out the blank nodes
+    /**
+     * Annotation properties that the loaders of the annotations load, which leave out the blank nodes.
+     */
     private static final Set<String> annotationProperties = new HashSet<>();
 
-    // the SKOS mapping properties by their values of ontology.resource_match_property_type
+    /**
+     * SKOS mapping properties by their values of {@code ontology.resource_match_property_type}.
+     */
     private static final Map<String, String> matchProperties = Map.of(skos + "exactMatch", "EXACT_MATCH",
             skos + "closeMatch", "CLOSE_MATCH", skos + "broadMatch", "BROAD_MATCH", skos + "narrowMatch",
             "NARROW_MATCH", skos + "relatedMatch", "RELATED_MATCH");
 
-    // the annotation properties whose values for the ChEBI classes the ChEBI loader loads, so that the values given by
-    // the ontologies that import ChEBI classes are left out
+    /**
+     * Annotation properties whose values for the ChEBI classes the ChEBI loader loads, so that the values given by the
+     * ontologies that import ChEBI classes are left out.
+     */
     private static final Set<String> chebiAnnotations = Set.of(rdfs + "label", owl + "deprecated", obo + "IAO_0000115",
             oboInOwl + "hasExactSynonym", oboInOwl + "hasRelatedSynonym", obo + "IAO_0100001", oboInOwl + "hasDbXref",
             oboInOwl + "inSubset", oboInOwl + "hasAlternativeId", oboInOwl + "hasOBONamespace");
 
-    // the relations of the ontologies by their predicates
+    /**
+     * Relations of the ontologies by their predicates.
+     */
     private static final Map<String, String> ontologyRelations = Map.of(owl + "imports", "IMPORTS", owl + "versionIRI",
             "VERSION_IRI", owl + "versionInfo", "VERSION_INFO", owl + "priorVersion", "PRIOR_VERSION",
             owl + "backwardCompatibleWith", "BACKWARD_COMPATIBLE_WITH", owl + "incompatibleWith", "INCOMPATIBLE_WITH");
 
 
+    /**
+     * Not instantiable.
+     */
+    private Ontology()
+    {
+    }
+
+
+    /**
+     * Lists the sources of the ontology resources whose versions are recorded.
+     */
     private static void initSourceList()
     {
         sources.add(new OwlSource("BioAssay Ontology (BAO)", "http://www.bioassayontology.org/bao/bao_complete.owl"));
@@ -737,6 +1146,12 @@ public class Ontology extends Updater
     }
 
 
+    /**
+     * Loads the units of the ontology resources from {@code ontology.units} and registers the built-in resources; a
+     * loader calls it before it resolves the ontology resources.
+     *
+     * @throws SQLException if a database error occurs
+     */
     public static void loadCategories() throws SQLException
     {
         try(Statement statement = connection.createStatement())
@@ -1561,9 +1976,12 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the (unit, id) of an IRI of a unit or of a built-in resource, which belongs to the uncategorized unit,
      * and null for any other IRI.
+     *
+     * @param iri the IRI, or null
+     * @return the (unit, id) of the IRI, or null
      */
     public static Pair<Integer, Integer> getId(String iri)
     {
@@ -1584,10 +2002,15 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the (unit, id) of an IRI of one of the given units, which are the units the mapping of the target
      * column expects; any other IRI is refused as data that cannot be loaded. The uncategorized unit holds only the
      * built-in resources.
+     *
+     * @param iri the IRI
+     * @param units the expected units
+     * @return the (unit, id) of the IRI
+     * @throws DataException if the IRI is not of one of the units
      */
     public static Pair<Integer, Integer> getResourceId(String iri, short... units) throws DataException
     {
@@ -1600,9 +2023,14 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the (unit, id) of a node that is an IRI of one of the given units, see getResourceId(String, short...);
      * any other node is refused as data that cannot be loaded.
+     *
+     * @param node the node
+     * @param units the expected units
+     * @return the (unit, id) of the node
+     * @throws DataException if the node is not an IRI of one of the units
      */
     public static Pair<Integer, Integer> getResourceId(Node node, short... units) throws DataException
     {
@@ -1613,8 +2041,13 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * True if the unit of the (unit, id) is one of the given units, which must be given.
+     *
+     * @param id the (unit, id)
+     * @param units the units
+     * @return true if the unit is one of the units, false otherwise
+     * @throws IllegalArgumentException if no unit is given
      */
     private static boolean hasUnit(Pair<Integer, Integer> id, short... units)
     {
@@ -1629,9 +2062,14 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the (unit, id) of a node that is of one of the given units, which are the units the mapping of the
      * target column expects, see getId(Node); any other node is refused as data that cannot be loaded.
+     *
+     * @param node the node
+     * @param units the expected units
+     * @return the (unit, id) of the node
+     * @throws DataException if the node is not of one of the units
      */
     private static Pair<Integer, Integer> getId(Node node, short... units) throws DataException
     {
@@ -1644,9 +2082,12 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the (unit, id) of a node; a blank node gets the id of its key, see loadBlankNodeKeys(), and an IRI that
      * is neither of a unit nor a built-in resource gets a new id when it is first seen.
+     *
+     * @param node the IRI or the blank node
+     * @return the (unit, id) of the node
      */
     private static Pair<Integer, Integer> getId(Node node)
     {
@@ -1702,8 +2143,11 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the (unit, id) of a node if it has one already, without giving it a new id, or null otherwise.
+     *
+     * @param node the node
+     * @return the (unit, id) of the node, or null
      */
     private static Pair<Integer, Integer> findId(Node node)
     {
@@ -1732,12 +2176,15 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Computes the keys of the blank nodes, see BlankNodeKeys, by reading the files before the load, and assigns the
      * ids to the keys: a key stored in the database keeps its id, the other keys get new ids in the order of the keys.
      * So the blank nodes of a structure keep their ids as long as the structure and the resources that refer to it
      * are unchanged. A blank node whose key is not computed, as none of its triples belongs to the structures, gets the
      * key of its label.
+     *
+     * @throws IOException if a file cannot be read
+     * @throws SQLException if a database error occurs
      */
     private static void loadBlankNodeKeys() throws IOException, SQLException
     {
@@ -1764,10 +2211,14 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Tests whether the triple belongs to the structures of the blank nodes: its predicate is of RDF, RDFS, OWL or XSD
      * and is neither an annotation property nor a predicate of the annotated axioms, which the loader leaves out, and
      * the triple is not a type of an annotated axiom.
+     *
+     * @param predicate the predicate of the triple
+     * @param object the object of the triple
+     * @return true if the triple belongs to the structures, false otherwise
      */
     private static boolean isStructural(Node predicate, Node object)
     {
@@ -1783,8 +2234,14 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Records a value of the data: a value stored in the database is kept, any other one is new.
+     *
+     * @param <T> the type of the values
+     * @param value the value
+     * @param keepValues the stored values to keep
+     * @param newValues the values to insert
+     * @param oldValues the stored values not met yet
      */
     private static <T> void add(T value, SqlSet<T> keepValues, SqlSet<T> newValues, SqlSet<T> oldValues)
     {
@@ -1795,8 +2252,10 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Collects the values of owl:versionInfo, doap:Version and owl:versionIRI of the ontologies of the sources.
+     *
+     * @param dispatcher the dispatcher of the triples
      */
     private static void loadVersions(TripleDispatcher dispatcher)
     {
@@ -1823,9 +2282,11 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Collects the subjects of the rdf:type triples by their types and the rdfs:subClassOf triples, as some resources
      * can be classified only once all the files have been read.
+     *
+     * @param dispatcher the dispatcher of the triples
      */
     private static void loadTypes(TripleDispatcher dispatcher)
     {
@@ -1839,8 +2300,11 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the instances of the type.
+     *
+     * @param type the IRI of the type
+     * @return the instances of the type
      */
     private static List<Node> getInstances(String type)
     {
@@ -1848,9 +2312,11 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the types whose instances are classes, which are rdfs:Class and its direct and indirect subclasses; the
      * OWL classes of classes are among them even without the OWL vocabulary in the data.
+     *
+     * @return the types whose instances are classes
      */
     private static List<Node> getClassTypes()
     {
@@ -1858,9 +2324,11 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the types whose instances are properties, which are rdf:Property and its direct and indirect
      * subclasses; the OWL classes of properties are among them even without the OWL vocabulary in the data.
+     *
+     * @return the types whose instances are properties
      */
     private static List<Node> getPropertyTypes()
     {
@@ -1869,9 +2337,13 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the types of the instances that are the root type, one of the given types or their direct or indirect
      * subclass.
+     *
+     * @param root the IRI of the root type
+     * @param types the IRIs of the other types
+     * @return the types of the instances that are subtypes of the given types
      */
     private static List<Node> getSubtypes(String root, String... types)
     {
@@ -1905,6 +2377,12 @@ public class Ontology extends Updater
     }
 
 
+    /**
+     * Loads the stored uncategorized resources and stores the built-in resources whose ids are missing or changed.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases() throws IOException, SQLException
     {
         load("select iri,id from ontology.uncategorized_resources", oldResources);
@@ -1923,11 +2401,15 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the classes: the instances of the classes of classes, the classes in the class hierarchy, the domains and
      * the ranges of the properties, the classes of the values of the restrictions, the classes in the class axioms
      * and class expressions, and the datatypes restricted by facets, which the RDF-based semantics of OWL entails to
      * be classes.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadClasses(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -1967,10 +2449,14 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the properties: the instances of the classes of properties, the properties in the property hierarchy and
      * in the other property axioms, the properties with a domain or a range and the properties of the restrictions,
      * which the RDF-based semantics of OWL entails to be properties.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadProperties(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -2007,6 +2493,13 @@ public class Ontology extends Updater
     }
 
 
+    /**
+     * Loads the named individuals into {@code ontology.individuals}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadIndividuals(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepIndividuals = new IntPairSet();
@@ -2026,11 +2519,15 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the annotations of the IRIs given by RDFS and OWL: their labels, comments, related resources, defining
      * resources and deprecation flags. The annotations of the blank nodes are left out, as the blank nodes that have
      * them belong to the structures that are not loaded, such as the annotated axioms or the SWRL rules, and so are
      * the annotations of the ChEBI classes that the ChEBI loader loads, see chebiAnnotations.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadAnnotations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -2043,11 +2540,20 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the values of an annotation property of the IRIs into the table: a resource into the columns of the
      * resources, if the table has them, and a literal of a string kind as a string with its language, if the table
      * has the columns of the strings and of the languages. A value that the table cannot hold is reported as a warning
      * and left out, as the values of an annotation property are not restricted.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param predicate the IRI of the annotation property
+     * @param table the name of the table
+     * @param resourceColumn the prefix of the names of the columns of the resources, or null
+     * @param stringColumn the name of the column of the strings, or null
+     * @param languageColumn the name of the column of the languages, or null
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadAnnotations(TripleDispatcher dispatcher, String predicate, String table,
             String resourceColumn, String stringColumn, String languageColumn) throws IOException, SQLException
@@ -2110,9 +2616,13 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Tests whether the subject is a ChEBI class and the predicate an annotation property whose values for the ChEBI
      * classes the ChEBI loader loads.
+     *
+     * @param predicate the IRI of the predicate
+     * @param subject the subject
+     * @return true if the ChEBI loader loads the value, false otherwise
      */
     private static boolean isChebiAnnotation(String predicate, Node subject)
     {
@@ -2126,12 +2636,16 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the selected annotations of the IRIs given by OBO, IAO, SKOS and TAXRANK: their definitions, synonyms,
      * replacements, mappings, cross-references, subsets, alternative identifiers, namespaces and taxonomic ranks.
      * The rank given by ncbitaxon#has_rank is left out, as its values are the obsolete rank classes of NCBITaxon that
      * the ranks of TAXRANK replace, and so are the annotations of the ChEBI classes that the ChEBI loader loads, see
      * chebiAnnotations.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadOboAnnotations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -2162,8 +2676,12 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the SKOS mappings of the resources to the IRIs of the foreign classes that have a table, see ForeignClass.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadForeignMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -2199,10 +2717,12 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Leaves out the triples with an IRI of a foreign class as warnings, see ForeignClass, except the SKOS mappings of
      * the resources to the IRIs of a foreign class that has a table and the annotations of the blank nodes, which the
      * loaders of the annotations leave out anyway.
+     *
+     * @param dispatcher the dispatcher of the triples
      */
     private static void checkForeignResources(TripleDispatcher dispatcher)
     {
@@ -2228,8 +2748,11 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the foreign class of the node, or null if the node is not an IRI of a foreign class.
+     *
+     * @param node the node
+     * @return the foreign class of the node, or null
      */
     private static ForeignClass getForeignClass(Node node)
     {
@@ -2244,9 +2767,13 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the deprecation flags of the IRIs; a flag written as a string is read as a boolean. A value that is not a
      * boolean is reported as a warning and left out, as the values of an annotation property are not restricted.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadDeprecatedFlags(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -2287,10 +2814,14 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the superclasses: the superclasses of the class hierarchy, except those between two ChEBI classes, and
      * owl:Thing as the superclass of the classes without a superclass (except blank nodes, owl:Thing and
      * rdfs:Resource).
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadSuperClasses(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -2343,6 +2874,13 @@ public class Ontology extends Updater
     }
 
 
+    /**
+     * Loads the superproperties of the property hierarchy into {@code ontology.superproperties}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSuperProperties(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairIntPairSet keepSuperProperties = new IntPairIntPairSet();
@@ -2367,6 +2905,13 @@ public class Ontology extends Updater
     }
 
 
+    /**
+     * Loads the domains of the properties into {@code ontology.property_domains}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadDomains(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairIntPairSet keepDomains = new IntPairIntPairSet();
@@ -2388,6 +2933,13 @@ public class Ontology extends Updater
     }
 
 
+    /**
+     * Loads the ranges of the properties into {@code ontology.property_ranges}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadRanges(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairIntPairSet keepRanges = new IntPairIntPairSet();
@@ -2409,9 +2961,17 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the triples of the predicate, whose subjects and objects are resources, into the table as pairs of the
      * (unit, id) of their subject and object.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param predicate the IRI of the predicate
+     * @param table the name of the table
+     * @param subject the prefix of the names of the columns of the subject
+     * @param object the prefix of the names of the columns of the object
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadPairs(TripleDispatcher dispatcher, String predicate, String table, String subject,
             String object) throws IOException, SQLException
@@ -2436,10 +2996,17 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the pairs of the subjects and the objects of a predicate whose objects are lists, into the table with
      * the columns of the subject and the column of the id of the list; a list is a blank node, so its unit is not
      * stored.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param predicate the IRI of the predicate
+     * @param table the name of the table
+     * @param subject the prefix of the names of the columns of the subject
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadListPairs(TripleDispatcher dispatcher, String predicate, String table, String subject)
             throws IOException, SQLException
@@ -2464,9 +3031,13 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the class axioms and the class expressions other than the restrictions, the property axioms other than the
      * hierarchy, domains and ranges, and the axioms of the individuals; their members are given by lists.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadAxioms(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -2493,10 +3064,14 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the types of the resources other than those given by the tables of the classes, the properties, the
      * individuals and the restrictions. A blank node gets only the types of the RDF, RDFS and OWL vocabularies, as the
      * blank nodes of the other structures, such as the annotated axioms or the SWRL rules, are not loaded.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadResourceTypes(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -2528,9 +3103,11 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the cells of the RDF lists, which hold the members of the class expressions and of the other constructs
      * built on lists.
+     *
+     * @param dispatcher the dispatcher of the triples
      */
     private static void loadLists(TripleDispatcher dispatcher)
     {
@@ -2563,9 +3140,11 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the restrictions. A restriction is a blank node, so its triples are collected and the restrictions are
      * assembled once all the files have been read.
+     *
+     * @param dispatcher the dispatcher of the triples
      */
     private static void loadRestrictions(TripleDispatcher dispatcher)
     {
@@ -2602,11 +3181,15 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads a restriction into the table of its kind, which is given by the predicate of its filler: of the class of
      * the values, of the value, of the local reflexivity or of the cardinality. The class or the data range of a
      * qualified cardinality restriction has a table of its own; a restriction without a filler, which the data
      * contain, is kept in a table of its own too, so that all of its triples are loaded.
+     *
+     * @param restrictions the collected triples of the restrictions
+     * @param node the blank node of the restriction
+     * @throws IOException if the restriction is invalid
      */
     private static void loadRestriction(BlankNodes restrictions, Node node) throws IOException
     {
@@ -2697,8 +3280,12 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the (unit, id) of a node that is a resource; a literal is refused.
+     *
+     * @param node the node
+     * @return the (unit, id) of the node
+     * @throws DataException if the node is a literal
      */
     private static Pair<Integer, Integer> getNonLiteralId(Node node) throws DataException
     {
@@ -2709,8 +3296,14 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the only value of the predicate at the blank node.
+     *
+     * @param nodes the collected triples of the blank nodes
+     * @param node the blank node
+     * @param predicate the IRI of the predicate
+     * @return the value
+     * @throws DataException if the value is missing or there are several
      */
     private static Node getSingleValue(BlankNodes nodes, Node node, String predicate) throws DataException
     {
@@ -2724,8 +3317,15 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Sets the columns of the resource with the given prefix of their names to the (unit, id) of the resource.
+     *
+     * @param <K> the type of the keys of the table
+     * @param table the table
+     * @param key the key of the row
+     * @param column the prefix of the names of the columns
+     * @param resourceID the (unit, id) of the resource
+     * @throws IOException if the columns already hold another resource
      */
     private static <K> void setResource(EntityTable<K> table, K key, String column, Pair<Integer, Integer> resourceID)
             throws IOException
@@ -2735,8 +3335,10 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the facets of the datatype restrictions; a facet restriction is a blank node with one facet.
+     *
+     * @param dispatcher the dispatcher of the triples
      */
     private static void loadFacets(TripleDispatcher dispatcher)
     {
@@ -2756,8 +3358,12 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the identities of the individuals; the value of owl:sameAs can be a string in the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadSameIndividuals(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -2783,8 +3389,12 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Loads the relations of the ontologies: their imports, versions and compatibility.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadOntologyRelations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
@@ -2818,10 +3428,12 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Reports the predicates of the RDF, RDFS, OWL and XSD vocabularies that the loader does not load as errors, so
      * that a construct used by a new version of an ontology is not left out unnoticed. The annotations of axioms are
      * not loaded on purpose, owl:ontologyIRI of MADS/RDF is not a term of OWL.
+     *
+     * @param dispatcher the dispatcher of the triples
      */
     private static void checkPredicates(TripleDispatcher dispatcher)
     {
@@ -2851,14 +3463,19 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the canonical value of a literal of one of the allowed kinds, see literalKinds. A non-canonical lexical
      * form is converted, so that the database keeps only the value; a float is read as a double where only doubles
      * are allowed, a language tag is written in lower case, and the literals of the other string kinds are read as
-     * strings: an rdf:PlainLiteral as the text before its last @ with the language after it (a lexical form without
-     * @, which some tools write for a plain literal, as the whole text), an rdf:HTML literal and a literal typed by
-     * rdfs:Literal, which some tools write for a plain literal too, as its lexical form, and an xsd:anyURI literal as
-     * its lexical form with the whitespace collapsed.
+     * strings: an rdf:PlainLiteral as the text before its last {@code @} with the language after it (a lexical form
+     * without {@code @}, which some tools write for a plain literal, as the whole text), an rdf:HTML literal and a
+     * literal typed by rdfs:Literal, which some tools write for a plain literal too, as its lexical form, and an
+     * xsd:anyURI literal as its lexical form with the whitespace collapsed.
+     *
+     * @param node the node
+     * @param kinds the allowed kinds
+     * @return the canonical value of the literal
+     * @throws DataException if the node is not a valid literal of an allowed kind
      */
     private static LiteralValue getLiteral(Node node, String... kinds) throws DataException
     {
@@ -2896,8 +3513,12 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the value of an rdf:PlainLiteral as a string with its language, if the language is not empty.
+     *
+     * @param lexical the lexical form
+     * @return the string with its language
+     * @throws NumberFormatException if the language is malformed
      */
     private static LiteralValue getPlainLiteral(String lexical)
     {
@@ -2915,8 +3536,11 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the text with its whitespace collapsed as XML Schema does it.
+     *
+     * @param text the text
+     * @return the collapsed text
      */
     private static String collapse(String text)
     {
@@ -2924,8 +3548,12 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the value of a lexical form of xsd:boolean.
+     *
+     * @param lexical the lexical form
+     * @return the value
+     * @throws NumberFormatException if the lexical form is not of xsd:boolean
      */
     private static boolean getBoolean(String lexical)
     {
@@ -2938,9 +3566,12 @@ public class Ontology extends Updater
     }
 
 
-    /*
+    /**
      * Returns the lexical form of a floating-point number in the form that Java parses: the special values of XSD
      * are written differently.
+     *
+     * @param lexical the lexical form of XSD
+     * @return the lexical form for Java
      */
     private static String getJavaNumber(String lexical)
     {
@@ -2953,6 +3584,13 @@ public class Ontology extends Updater
     }
 
 
+    /**
+     * Stores the collected uncategorized resources and the keys of the blank nodes: deletes those no longer present and
+     * inserts the new ones.
+     *
+     * @throws SQLException if a database error occurs
+     * @throws IOException if an I/O error occurs
+     */
     static void finish() throws SQLException, IOException
     {
         store("delete from ontology.uncategorized_resources where iri=? and id=?", oldResources);
@@ -2963,6 +3601,13 @@ public class Ontology extends Updater
     }
 
 
+    /**
+     * Runs the loader of the ontologies.
+     *
+     * @param args the command-line arguments (ignored)
+     * @throws SQLException if a database error occurs
+     * @throws IOException if an I/O error occurs
+     */
     public static void main(String[] args) throws SQLException, IOException
     {
         try

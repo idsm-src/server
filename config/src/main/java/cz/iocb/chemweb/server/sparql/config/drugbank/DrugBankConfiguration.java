@@ -8,8 +8,19 @@ import cz.iocb.sparql.engine.database.DatabaseSchema;
 
 
 
+/**
+ * Configuration of the DrugBank compounds, which the IDSM endpoint merges into its service.
+ */
 public class DrugBankConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    /**
+     * Creates the configuration of the DrugBank compounds.
+     *
+     * @param service IRI of the service, or null
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public DrugBankConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
         super(service, connectionPool, schema);
@@ -20,6 +31,9 @@ public class DrugBankConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the common prefixes and those of DrugBank to the configuration.
+     */
     private void addPrefixes()
     {
         Common.addPrefixes(this);
@@ -31,12 +45,20 @@ public class DrugBankConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the resource classes of DrugBank to the configuration.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private void addResourceClasses() throws SQLException
     {
         DrugBank.addResourceClasses(this);
     }
 
 
+    /**
+     * Adds the quad mappings of DrugBank to the configuration.
+     */
     private void addQuadMappings()
     {
         DrugBank.addQuadMappings(this);

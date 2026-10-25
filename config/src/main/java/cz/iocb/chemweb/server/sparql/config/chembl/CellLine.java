@@ -14,11 +14,30 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the ChEMBL cell lines (graph {@code ebi:chembl}).
+ */
 public class CellLine
 {
+    /**
+     * Ontology units of the EFO terms of the cell lines ({@code cco:hasEFO}).
+     */
     public static final short[] efoUnits = { unitEFOShort, unitEFO };
 
 
+    /**
+     * Not instantiable.
+     */
+    private CellLine()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the ChEMBL cell lines to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("chembl:cell_line", INT4,
@@ -26,6 +45,11 @@ public class CellLine
     }
 
 
+    /**
+     * Adds the quad mappings of the ChEMBL cell lines to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");

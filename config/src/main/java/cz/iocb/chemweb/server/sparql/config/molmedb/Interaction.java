@@ -13,8 +13,25 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the MolMeDB interactions of the substances with membranes: the measured partition and permeability values,
+ * their methods, membranes and measure groups.
+ */
 public class Interaction
 {
+    /**
+     * Not instantiable.
+     */
+    private Interaction()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the interactions to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
@@ -87,6 +104,11 @@ public class Interaction
     }
 
 
+    /**
+     * Adds the quad mappings of the interactions to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("<https://rdf.molmedb.upol.cz>");

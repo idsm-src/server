@@ -9,11 +9,27 @@ import cz.iocb.sparql.engine.database.DatabaseSchema;
 
 
 
+/**
+ * Configuration of the ontology dataset: the classes, properties, individuals and annotations of the ontologies loaded
+ * into the {@code ontology} schema. It is merged into the IDSM endpoint by
+ * {@link cz.iocb.chemweb.server.sparql.config.idsm.IdsmConfiguration}.
+ */
 public class OntologyConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    /**
+     * Database schema of the ontology tables.
+     */
     static final String schema = "ontology";
 
 
+    /**
+     * Creates the configuration.
+     *
+     * @param service the service IRI
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public OntologyConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
         super(service, connectionPool, schema);
@@ -24,6 +40,9 @@ public class OntologyConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the prefixes of the configuration.
+     */
     private void addPrefixes()
     {
         Common.addPrefixes(this);
@@ -35,6 +54,11 @@ public class OntologyConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the resource classes of the configuration.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private void addResourceClasses() throws SQLException
     {
         // the classes of the SKOS mappings to the IRIs of other datasets
@@ -45,6 +69,9 @@ public class OntologyConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the quad mappings of the configuration.
+     */
     private void addQuadMappings()
     {
         Ontology.addQuadMappings(this);

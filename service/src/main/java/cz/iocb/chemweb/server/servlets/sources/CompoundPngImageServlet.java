@@ -14,9 +14,22 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 
 
 
+/**
+ * Servlet depicting the structure of a compound as a square PNG image; the parameter {@code w} gives its size (40 to
+ * 1600 pixels), the optional parameter {@code background} its background color (hexadecimal RGB, transparent by
+ * default) and the optional parameter {@code filename} makes the image an attachment of that name.
+ */
 @SuppressWarnings("serial")
 public class CompoundPngImageServlet extends CompoundImageServlet
 {
+    /**
+     * Creates the servlet.
+     */
+    public CompoundPngImageServlet()
+    {
+    }
+
+
     @Override
     public String getServletInfo()
     {

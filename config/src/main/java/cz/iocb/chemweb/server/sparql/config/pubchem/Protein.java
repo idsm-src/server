@@ -32,16 +32,38 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem proteins and enzymes (graph {@code pubchem:protein}).
+ */
 public class Protein
 {
+    /**
+     * Ontology units of the matches of the proteins ({@code rdfs:seeAlso}).
+     */
     public static final short[] matchUnits = { unitPR2, unitPR1, unitPR0, unitPR, unitIdentifiersChEMBL,
             unitIdentifiersHPA, unitIdentifiersIUPHARReceptor, unitIdentifiersNCIT, unitThesaurus,
             unitWormBaseProteinBM, unitWormBaseProteinCBP, unitWormBaseProteinCE, unitGlyConnectProtein,
             unitOpenTargets, unitDrugBankBioEntity };
 
+    /**
+     * Ontology units of the types of the proteins ({@code rdf:type}).
+     */
     public static final short[] typeUnits = { unitPR2, unitPR1, unitPR0, unitCHEBI, unitGO, unitPR, unitSIO };
 
 
+    /**
+     * Not instantiable.
+     */
+    private Protein()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem proteins and enzymes to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pubchem:enzyme", INT4, new DatabaseTable(schema, "enzymes"),
@@ -53,6 +75,11 @@ public class Protein
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem proteins and enzymes to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:protein");

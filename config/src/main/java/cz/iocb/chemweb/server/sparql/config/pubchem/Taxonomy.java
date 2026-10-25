@@ -39,14 +39,33 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem taxa (graph {@code pubchem:taxonomy}).
+ */
 public class Taxonomy
 {
+    /**
+     * Ontology units of the matches of the taxa ({@code rdfs:seeAlso}).
+     */
     public static final short[] matchUnits = { unitIdentifiersNCIT, unitThesaurus, unitWFO0, unitWFO1, unitWFO2,
             unitWFO3, unitWFO4, unitWFO5, unitWFO6, unitWFO7, unitWFO8, unitWFO9, unitPOWO1, unitPOWO2, unitPOWO3,
             unitPOWO4, unitPOWO5, unitGlycosmosOrganism, unitIPNI1, unitIPNI2, unitIPNI3, unitIPNI4,
             unitGlyConnectTaxonomy, unitUniProtTaxonomy, unitGlycoInfo, unitEOL, unitITIS };
 
 
+    /**
+     * Not instantiable.
+     */
+    private Taxonomy()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem taxa to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("pubchem:taxonomy", INT4,
@@ -54,6 +73,11 @@ public class Taxonomy
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem taxa to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:taxonomy");

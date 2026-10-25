@@ -37,26 +37,86 @@ import cz.iocb.sparql.engine.translator.ServiceException;
 
 
 
+/**
+ * Servlet generating the script {@code chemweb/js/sparql-hint-data.js} with the hints of the query editor: the classes,
+ * individuals and properties that occur as constant IRIs in the quad mappings of the configuration named by the
+ * {@code resource} init parameter (a JNDI resource), as prefixed names grouped by their prefixes and with their labels.
+ * The script is generated once per configuration.
+ */
 public class GenerateHints extends HttpServlet
 {
+    /**
+     * Variable of the hinted resources in the query of the hints.
+     */
     private static final Variable varH = new Variable("H");
+
+    /**
+     * Variable of the types of the resources in the query of the hints.
+     */
     private static final Variable varT = new Variable("T");
+
+    /**
+     * Variable of the labels of the resources in the query of the hints.
+     */
     private static final Variable varL = new Variable("L");
 
 
+    /**
+     * Hint of one resource of one type.
+     */
     private static class Item
     {
+        /**
+         * Code of the type: {@code C} for a class, {@code I} for an individual and {@code P} for a property.
+         */
         String type;
+
+        /**
+         * Local part of the prefixed name of the resource.
+         */
         String name;
+
+        /**
+         * Label of the resource escaped for a JavaScript string literal, null if the resource has no label.
+         */
         String info;
+
+        /**
+         * Preferred label of the resource, null if the resource has no label.
+         */
         Literal label;
+
+        /**
+         * Creates an empty hint.
+         */
+        private Item()
+        {
+        }
     }
 
 
+    /**
+     * Serialization version.
+     */
     private static final long serialVersionUID = 1L;
+
+    /**
+     * Generated scripts by the names of the configurations, shared by the servlets of a configuration.
+     */
     private static HashMap<String, String> hintsMap = new HashMap<>();
 
+    /**
+     * Script served by the servlet.
+     */
     private String hintsJS;
+
+
+    /**
+     * Creates the servlet.
+     */
+    public GenerateHints()
+    {
+    }
 
 
     @Override
@@ -105,6 +165,13 @@ public class GenerateHints extends HttpServlet
     }
 
 
+    /**
+     * Writes the script as the response.
+     *
+     * @param req the request
+     * @param res the response
+     * @throws IOException if an I/O error occurs
+     */
     protected void processRequest(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
         PrintWriter out = res.getWriter();
@@ -113,6 +180,17 @@ public class GenerateHints extends HttpServlet
     }
 
 
+    /**
+     * Generates the script of the hints of a configuration by querying the types and the labels of the constant IRIs of
+     * its quad mappings.
+     *
+     * @param sparqlConfig the configuration
+     * @return the script
+     * @throws TranslateExceptions if the query of the hints cannot be translated
+     * @throws LimitExceedException if the query of the hints exceeds a limit
+     * @throws SQLException if a database error occurs
+     * @throws ServiceException if a SERVICE call of the query fails
+     */
     private static String generateHints(SparqlDatabaseConfiguration sparqlConfig)
             throws TranslateExceptions, LimitExceedException, SQLException, ServiceException
     {
@@ -275,9 +353,13 @@ public class GenerateHints extends HttpServlet
     }
 
 
-    /*
-     * Tests whether a label is preferred to another one: an English label to a label without a language and that one
-     * to a label in another language, otherwise the label with the greater lexical form.
+    /**
+     * Tests whether a label is preferred to another one: an English label to a label without a language and that one to
+     * a label in another language, otherwise the label with the greater lexical form.
+     *
+     * @param label the label
+     * @param other the other label
+     * @return true if the label is preferred to the other one, false otherwise
      */
     private static boolean isPreferred(Literal label, Literal other)
     {
@@ -291,6 +373,12 @@ public class GenerateHints extends HttpServlet
     }
 
 
+    /**
+     * Returns the rank of the language of a label: 2 for English, 1 for no language and 0 for another language.
+     *
+     * @param label the label
+     * @return the rank of the language of the label
+     */
     private static int getRank(Literal label)
     {
         String language = label instanceof LangStringLiteral literal ? literal.getTag() : "";

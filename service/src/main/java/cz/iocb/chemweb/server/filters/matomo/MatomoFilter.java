@@ -24,11 +24,31 @@ import org.matomo.java.tracking.parameters.VisitorId;
 
 
 
+/**
+ * Filter reporting the requests to the Matomo web analytics configured by the context parameters {@code matomoAddress},
+ * {@code matomoAuthToken} and {@code matomoSiteId}. The action is named by the {@code actionName} init parameter or,
+ * for GWT RPC calls (init parameter {@code rpc}), after the called method.
+ */
 public class MatomoFilter implements Filter
 {
+    /**
+     * Tracker sending the reports to Matomo.
+     */
     private MatomoTracker tracker = null;
+
+    /**
+     * Name prefix of the Matomo cookie holding the visitor id.
+     */
     private String cookieName = null;
+
+    /**
+     * Action name of all filtered requests, null if the actions are named by the requests.
+     */
     private String actionName = null;
+
+    /**
+     * Whether the filtered requests are GWT RPC calls, whose actions are named after the methods called.
+     */
     private boolean rpc = false;
 
 
@@ -44,6 +64,14 @@ public class MatomoFilter implements Filter
         Thread.currentThread().setContextClassLoader(root);
         DatatypeConverter.printHexBinary(new byte[0]);
         Thread.currentThread().setContextClassLoader(active);
+    }
+
+
+    /**
+     * Creates the filter.
+     */
+    public MatomoFilter()
+    {
     }
 
 

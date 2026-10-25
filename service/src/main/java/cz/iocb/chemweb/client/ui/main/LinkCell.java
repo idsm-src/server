@@ -8,8 +8,16 @@ import cz.iocb.chemweb.shared.utils.Encode;
 
 
 
+/**
+ * Cell of a data grid rendering a node as its HTML; a node of a resource is marked so that the resource can be
+ * highlighted wherever it occurs. The cell receives the click and key press events, which its users handle to visit the
+ * clicked resources.
+ */
 public class LinkCell extends AbstractCell<DataGridNode>
 {
+    /**
+     * Creates the cell.
+     */
     public LinkCell()
     {
         super("click", "keypress");

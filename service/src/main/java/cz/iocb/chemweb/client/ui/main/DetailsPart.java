@@ -30,41 +30,110 @@ import cz.iocb.chemweb.shared.utils.Encode;
 
 
 
+/**
+ * Tab with the details of the visited resource, an HTML page rendered by the details service. It has its own navigation
+ * in the shared history of the visited resources and fires a selection event with the IRI of each resource it visits.
+ */
 public class DetailsPart extends ResizeComposite implements HasSelectionHandlers<String>
 {
+    /**
+     * Binder of the tab template {@code DetailsPart.ui.xml}.
+     */
     interface DetailsPanelUiBinder extends UiBinder<Widget, DetailsPart>
     {
     }
 
 
+    /**
+     * Binder of the tab template.
+     */
     private static DetailsPanelUiBinder uiBinder = GWT.create(DetailsPanelUiBinder.class);
+
+    /**
+     * Factory of the icons.
+     */
     private static IconsClientBundleFactory iconsClientBundleFactory = GWT.create(IconsClientBundleFactory.class);
+
+    /**
+     * Asynchronous proxy of the details service.
+     */
     private static DetailsPageServiceAsync detailsService = (DetailsPageServiceAsync) GWT
             .create(DetailsPageService.class);
 
+    /**
+     * Icons of the toolbar.
+     */
     @UiField(provided = true)
     Icons res = iconsClientBundleFactory.create();
+
+    /**
+     * Button going back to the previous resource.
+     */
     @UiField
     ImageButton prevButton;
+
+    /**
+     * Button going forward to the next resource.
+     */
     @UiField
     ImageButton nextButton;
+
+    /**
+     * Button reloading the details of the current resource.
+     */
     @UiField
     ImageButton reloadButton;
+
+    /**
+     * Indicator shown instead of the reload button while the details are loaded.
+     */
     @UiField
     ImageButton stopButton;
+
+    /**
+     * Text box with the IRI or the prefixed name of the current resource, where another one can be entered.
+     */
     @UiField
     TextBox iriTextBox;
+
+    /**
+     * Scroll panel of the details.
+     */
     @UiField
     ScrollPanel pageScrollPanel;
+
+    /**
+     * Panel with the HTML page of the details.
+     */
     @UiField
     HTML pageHTML;
 
+    /**
+     * Manager of the selection handlers.
+     */
     private final HandlerManager handlerManager = new HandlerManager(this);
+
+    /**
+     * History of the visited resources shared with the other tabs.
+     */
     private final VisitingHistory history;
+
+    /**
+     * IRI of the resource whose details are shown, null when none are.
+     */
     private String showedDetails;
+
+    /**
+     * Number of the requests for the details, which identifies the latest one.
+     */
     private int requestedDetailsCounter = 0;
 
 
+    /**
+     * Creates the tab.
+     *
+     * @param visitingHistory the history of the visited resources shared with the other tabs
+     */
     public DetailsPart(VisitingHistory visitingHistory)
     {
         initWidget(uiBinder.createAndBindUi(this));
@@ -83,6 +152,11 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
     }
 
 
+    /**
+     * Shows the previous resource of the history.
+     *
+     * @param e the click event
+     */
     @UiHandler("prevButton")
     void prevButtonClick(ClickEvent e)
     {
@@ -90,6 +164,11 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
     }
 
 
+    /**
+     * Shows the next resource of the history.
+     *
+     * @param e the click event
+     */
     @UiHandler("nextButton")
     void nextButtonClick(ClickEvent e)
     {
@@ -97,6 +176,11 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
     }
 
 
+    /**
+     * Loads the details of the current resource again.
+     *
+     * @param e the click event
+     */
     @UiHandler("reloadButton")
     void reloadButtonClick(ClickEvent e)
     {
@@ -105,6 +189,11 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
     }
 
 
+    /**
+     * Clears the mark of an invalid IRI as the IRI is edited.
+     *
+     * @param event the key up event
+     */
     @UiHandler("iriTextBox")
     void iriTextBoxKeyUp(KeyUpEvent event)
     {
@@ -113,6 +202,12 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
     }
 
 
+    /**
+     * Visits the resource entered in the text box when Enter is pressed, or marks the value as invalid when it is not a
+     * valid IRI.
+     *
+     * @param event the key press event
+     */
     @UiHandler("iriTextBox")
     void iriTextBoxKeyPress(KeyPressEvent event)
     {
@@ -134,6 +229,11 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
     }
 
 
+    /**
+     * Visits a resource unless it is the current one.
+     *
+     * @param iri the IRI of the resource
+     */
     public void visit(String iri)
     {
         if(iri.equals(history.getCurrent()))
@@ -144,6 +244,9 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
     }
 
 
+    /**
+     * Shows the current resource of the history, which may have been visited by another tab.
+     */
     public void show()
     {
         if(history.getCurrent() == null)
@@ -153,6 +256,12 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
     }
 
 
+    /**
+     * Shows a resource: updates the toolbar and loads the details.
+     *
+     * @param iri the IRI of the resource
+     * @param emitEvent whether to fire a selection event with the IRI
+     */
     private void show(String iri, boolean emitEvent)
     {
         prevButton.setEnabled(history.hasPrev());
@@ -171,6 +280,11 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
     }
 
 
+    /**
+     * Loads the details of a resource unless they are already shown; the response to an outdated request is ignored.
+     *
+     * @param iri the IRI of the resource
+     */
     private void showDetails(final String iri)
     {
         requestedDetailsCounter++;
@@ -227,6 +341,9 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
     }
 
 
+    /**
+     * Removes the shown details.
+     */
     public void clear()
     {
         showedDetails = null;
@@ -242,6 +359,9 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
     }
 
 
+    /**
+     * Lets the links of the details visit a resource by posting its IRI as a window message.
+     */
     private native void initJS()
     /*-{
         var that = this;

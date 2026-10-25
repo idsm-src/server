@@ -43,18 +43,46 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the ChEMBL molecules into the table {@code chembl.molecules} and the related tables: their descriptors,
+ * structures, labels, alternative names, ATC classifications, documents and biocomponents from the molecule file, their
+ * parents from the molecule hierarchy file, their references to other databases from the UniChem file, and their
+ * molfiles from the SDF files of the release.
+ */
 class Molecule extends Updater
 {
-    // a descriptor node <molecule#name>: the column of its value, its rdf:type, and whether the value is numeric
+    /**
+     * A descriptor node {@code <molecule#name>}.
+     *
+     * @param table the table of the value of the descriptor
+     * @param column the column of the value of the descriptor
+     * @param type the local name of the {@code sio} class of the node
+     * @param numeric whether the value is numeric
+     */
     private static record Descriptor(EntityTable<Integer> table, String column, String type, boolean numeric)
     {
     }
 
 
-    // a reference of the unichem file: its rdf:type, the stored type, the IRI prefix, pattern of the stored value and
-    // the IRI suffix
+    /**
+     * A type of the references of the UniChem file.
+     *
+     * @param rdfType the local name of the {@code cco} class of the reference
+     * @param type the stored type of the reference
+     * @param prefix the IRI prefix of the references of the type
+     * @param pattern the pattern of the stored value, the part of the IRI between the prefix and the suffix
+     * @param suffix the IRI suffix of the references of the type
+     */
     private static record Reference(String rdfType, String type, String prefix, Pattern pattern, String suffix)
     {
+        /**
+         * Creates a type of the references whose IRIs have no suffix.
+         *
+         * @param rdfType the local name of the {@code cco} class of the reference
+         * @param type the stored type of the reference
+         * @param prefix the IRI prefix of the references of the type
+         * @param pattern the regular expression of the stored value, the rest of the IRI after the prefix
+         */
         Reference(String rdfType, String type, String prefix, String pattern)
         {
             this(rdfType, type, prefix, Pattern.compile(pattern), "");
@@ -62,25 +90,47 @@ class Molecule extends Updater
     }
 
 
+    /**
+     * IRI prefix of the molecules.
+     */
     static final String prefix = ChEMBL.chembl + "molecule/CHEMBL";
+
+    /**
+     * IRI prefix of the images of the molecules.
+     */
     static final String imagePrefix = "https://www.ebi.ac.uk/chembl/api/data/image/CHEMBL";
+
+    /**
+     * IRI suffix of the images of the molecules.
+     */
     static final String imageSuffix = ".svg";
 
+    /**
+     * Table of the molecules.
+     */
     private static final EntityTable<Integer> molecules = new EntityTable<>("chembl.molecules", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), varchar("type"), varchar("label"), real("phase"),
             bool("biotherapeutic"), varchar("helm_notation"), varchar("description"), varchar("hrac_classification"),
             varchar("irac_classification"), varchar("frac_classification"), integer("parent"));
 
+    /**
+     * Table of the values of the descriptors of the molecules.
+     */
     private static final EntityTable<Integer> descriptors = new EntityTable<>("chembl.molecule_descriptors",
             intKey("molecule"), null, float8("alogp"), float8("aromatic_rings"), float8("hba"), float8("hbd"),
             float8("heavy_atoms"), float8("num_ro5_violations"), float8("psa"), float8("qed_weighted"), float8("rtb"),
             float8("mw_freebase"), float8("full_mwt"), varchar("ro3_pass"), varchar("full_molformula"));
 
+    /**
+     * Table of the structure descriptors of the molecules: the InChI, the InChIKey and the SMILES.
+     */
     private static final EntityTable<Integer> structures = new EntityTable<>("chembl.molecule_structures",
             intKey("molecule"), null, uniqueVarchar("standard_inchi"), uniqueVarchar("standard_inchi_key"),
             uniqueVarchar("canonical_smiles"));
 
-    // the labels of the descriptor nodes, named after the nodes, and of the image
+    /**
+     * Table of the labels of the descriptor nodes, named after the nodes, and of the image of the molecules.
+     */
     private static final EntityTable<Integer> labels = new EntityTable<>("chembl.molecule_labels", intKey("molecule"),
             null, uniqueVarchar("alogp"), uniqueVarchar("aromatic_rings"), uniqueVarchar("hba"), uniqueVarchar("hbd"),
             uniqueVarchar("heavy_atoms"), uniqueVarchar("num_ro5_violations"), uniqueVarchar("psa"),
@@ -89,36 +139,68 @@ class Molecule extends Updater
             uniqueVarchar("standard_inchi"), uniqueVarchar("standard_inchi_key"), uniqueVarchar("canonical_smiles"),
             uniqueVarchar("image"));
 
+    /**
+     * Table of the alternative names of the molecules.
+     */
     private static final ValueTable alternatives = new ValueTable("chembl.molecule_alternatives", column("molecule"),
             column("alternative"));
 
+    /**
+     * Table of the ATC classifications of the molecules.
+     */
     private static final ValueTable atcClassifications = new ValueTable("chembl.molecule_atc_classifications",
             column("molecule"), column("classification"));
 
+    /**
+     * Table of the documents of the molecules.
+     */
     private static final ValueTable documents = new ValueTable("chembl.molecule_documents", column("molecule"),
             column("document"));
 
+    /**
+     * Table of the biocomponents of the molecules.
+     */
     private static final ValueTable biocomponents = new ValueTable("chembl.molecule_biocomponents", column("molecule"),
             column("biocomponent"));
 
+    /**
+     * Table of the references of the molecules to other databases.
+     */
     private static final ValueTable references = new ValueTable("chembl.molecule_references", column("molecule"),
             enumeration("type", "chembl.molecule_reference_type"), column("reference"));
 
-    // the labels of the reference IRIs, which carry one label per molecule referencing them
+    /**
+     * Table of the labels of the reference IRIs, which carry one label per molecule referencing them.
+     */
     private static final ValueTable referenceLabels = new ValueTable("chembl.molecule_reference_labels",
             enumeration("type", "chembl.molecule_reference_type"), column("reference"), column("label"));
 
+    /**
+     * Table of the PubChem compounds referenced by the molecules.
+     */
     private static final ValueTable pubchemReferences = new ValueTable("chembl.molecule_pubchem_references",
             column("molecule"), column("compound"));
 
+    /**
+     * Table of the ChEBI entities referenced by the molecules.
+     */
     private static final ValueTable chebiReferences = new ValueTable("chembl.molecule_chebi_references",
             column("molecule"), column("chebi"));
 
-    // rdf:type of a molecule is determined by its cco:substanceType
+    /**
+     * Local names of the {@code cco} classes of the molecules by their {@code cco:substanceType}, which determines the
+     * {@code rdf:type} of a molecule.
+     */
     private static final Map<String, String> types = new HashMap<>();
 
+    /**
+     * The descriptor nodes by their names.
+     */
     private static final Map<String, Descriptor> descriptorTypes = new LinkedHashMap<>();
 
+    /**
+     * The types of the references of the UniChem file.
+     */
     private static final List<Reference> referenceTypes = new ArrayList<>();
 
     static
@@ -203,6 +285,23 @@ class Molecule extends Updater
     }
 
 
+    /**
+     * Not instantiable.
+     */
+    private Molecule()
+    {
+    }
+
+
+    /**
+     * Loads the molecules with their descriptors, labels, alternative names, ATC classifications, documents and
+     * biocomponents from the molecule file of the release, and checks the inverse triples of their links and the
+     * values the mapping produces from the stored ones: {@code skos:prefLabel}, {@code rdf:type}, the images and the
+     * links to the descriptor nodes.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMolecules() throws IOException, SQLException
     {
         InverseCheck documentInverses = new InverseCheck("cco:hasDocument");
@@ -427,6 +526,14 @@ class Molecule extends Updater
     }
 
 
+    /**
+     * Reports an error for every molecule that is in exactly one of two sets.
+     *
+     * @param set the ids of the molecules of the first set
+     * @param expected the ids of the molecules of the second set
+     * @param setName the name of the first set, used in the reported errors
+     * @param expectedName the name of the second set, used in the reported errors
+     */
     private static void compare(BitSet set, BitSet expected, String setName, String expectedName)
     {
         BitSet difference = (BitSet) set.clone();
@@ -440,6 +547,12 @@ class Molecule extends Updater
     }
 
 
+    /**
+     * Loads the parents of the molecules from the molecule hierarchy file of the release.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     private static void loadHierarchy() throws IOException, SQLException
     {
         InverseCheck parents = new InverseCheck("cco:hasParentMolecule");
@@ -472,6 +585,14 @@ class Molecule extends Updater
     }
 
 
+    /**
+     * Loads the references of the molecules and their labels from the UniChem file of the release, and checks that
+     * every labelled reference is referenced, because the mapping produces {@code rdf:type} of the references from the
+     * references of the molecules.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     private static void loadReferences() throws IOException, SQLException
     {
         try(InputStream stream = getTtlStream(ChEMBL.file("unichem")))
@@ -530,6 +651,13 @@ class Molecule extends Updater
     }
 
 
+    /**
+     * Returns the type of a reference IRI.
+     *
+     * @param iri the reference IRI
+     * @return the type of the reference
+     * @throws IOException if the IRI is of no known type
+     */
     private static Reference getReference(String iri) throws IOException
     {
         for(Reference reference : referenceTypes)
@@ -540,6 +668,14 @@ class Molecule extends Updater
     }
 
 
+    /**
+     * Returns the stored value of a reference IRI.
+     *
+     * @param reference the type of the reference
+     * @param iri the reference IRI
+     * @return the stored value of the reference
+     * @throws IOException if the value does not match the pattern of the type
+     */
     private static String getValue(Reference reference, String iri) throws IOException
     {
         String value = iri.substring(reference.prefix.length(), iri.length() - reference.suffix.length());
@@ -551,9 +687,12 @@ class Molecule extends Updater
     }
 
 
-    /*
+    /**
      * Loads the structures of the molecules from the SDF files of the release; a molecule known only from the files
      * gets its row as well.
+     *
+     * @throws IOException if a file cannot be read
+     * @throws SQLException if a database error occurs
      */
     private static void loadMolfiles() throws IOException, SQLException
     {
@@ -579,6 +718,13 @@ class Molecule extends Updater
     }
 
 
+    /**
+     * Loads the molecules with their related data from the molecule, molecule hierarchy, UniChem and SDF files of the
+     * release.
+     *
+     * @throws IOException if a file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load molecules ...");
@@ -592,6 +738,12 @@ class Molecule extends Updater
     }
 
 
+    /**
+     * Stores the collected molecules, reporting the referenced ones that the files do not describe, and their related
+     * data.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish molecules ...");
@@ -613,6 +765,13 @@ class Molecule extends Updater
     }
 
 
+    /**
+     * Returns the id of a molecule and marks the molecule as referenced.
+     *
+     * @param node the IRI of the molecule
+     * @return the id of the molecule
+     * @throws IOException if the node is not an IRI of a molecule
+     */
     static int getMoleculeID(Node node) throws IOException
     {
         int id = TripleStreamProcessor.getIntID(node, prefix);
@@ -621,6 +780,11 @@ class Molecule extends Updater
     }
 
 
+    /**
+     * Returns the number of the molecules described by the molecule file.
+     *
+     * @return the number of the described molecules
+     */
     static int size()
     {
         return molecules.size();

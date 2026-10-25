@@ -36,11 +36,20 @@ import org.openscience.cdk.tools.manipulator.AtomTypeManipulator;
 
 
 
+/**
+ * Base of the servlets depicting the structure of a compound, stored as a SMILES or as a molfile.
+ */
 @SuppressWarnings("serial")
 public abstract class CompoundImageServlet extends SourceServlet
 {
+    /**
+     * Line marking a molfile in the V3000 format.
+     */
     protected static final String V30_HEADER = "M  V30 BEGIN CTAB";
 
+    /**
+     * Aromaticity model applied to the depicted molecules, one instance per thread.
+     */
     protected static final ThreadLocal<Aromaticity> aromaticity = new ThreadLocal<>()
     {
         @Override
@@ -51,6 +60,24 @@ public abstract class CompoundImageServlet extends SourceServlet
     };
 
 
+    /**
+     * Creates the servlet.
+     */
+    protected CompoundImageServlet()
+    {
+    }
+
+
+    /**
+     * Reads the structure of a compound by the access query and prepares it for the depiction.
+     *
+     * @param id the id of the compound
+     * @return the molecule
+     * @throws SQLException if a database error occurs
+     * @throws CDKException if the structure cannot be parsed or prepared
+     * @throws IOException if the molfile cannot be read
+     * @throws NoSuchElementException if no structure has the id
+     */
     protected IAtomContainer getMolecule(String id) throws SQLException, CDKException, IOException
     {
         try(Connection connection = connectionPool.getConnection())
@@ -71,6 +98,16 @@ public abstract class CompoundImageServlet extends SourceServlet
     }
 
 
+    /**
+     * Prepares a structure for the depiction: parses it as a SMILES (a single line, laid out in 2D) or as a molfile
+     * (V2000 or V3000), configures the atom types, adds the missing implicit hydrogens, applies the aromaticity and
+     * removes the hydrogens that do not matter for the depiction.
+     *
+     * @param mol the SMILES or the molfile
+     * @return the molecule
+     * @throws CDKException if the structure cannot be parsed or prepared
+     * @throws IOException if the molfile cannot be read
+     */
     protected static IAtomContainer crateAtomContainer(String mol) throws CDKException, IOException
     {
         IAtomContainer molecule = null;
@@ -133,6 +170,13 @@ public abstract class CompoundImageServlet extends SourceServlet
     }
 
 
+    /**
+     * Turns the explicit hydrogens of a molecule into implicit ones, except the charged hydrogens, the isotopes, the
+     * hydrogens bound to no atom, to several atoms or to a hydrogen, and the hydrogens taking part in a stereo element
+     * or carrying a single electron.
+     *
+     * @param molecule the molecule, modified in place
+     */
     protected static void removeNonChiralHydrogens(IAtomContainer molecule)
     {
         List<IAtom> remove = new ArrayList<>();

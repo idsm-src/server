@@ -18,18 +18,61 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem authors from the files {@code pubchem/RDF/author/pc_author_*.ttl.gz} into the table
+ * {@code pubchem.authors} and the tables of their names, organizations and ORCID identifiers.
+ */
 public class Author extends Updater
 {
+    /**
+     * IRI prefix of the authors.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/author/";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Stored authors met in the data, by their IRIs without the prefix.
+     */
     private static final StringIntMap keepAuthors = new StringIntMap();
+
+    /**
+     * Authors met in the data that are not stored yet, by their IRIs without the prefix.
+     */
     private static final StringIntMap newAuthors = new StringIntMap();
+
+    /**
+     * Stored authors not met in the data so far, by their IRIs without the prefix; those left are deleted.
+     */
     private static final StringIntMap oldAuthors = new StringIntMap();
+
+    /**
+     * Id of the next new author.
+     */
     private static int nextAuthorID;
+
+    /**
+     * Authors referenced but not described by the data.
+     */
     private static final MissingEntities<String> missingAuthors = new MissingEntities<>("author", false);
 
 
+    /**
+     * Not instantiable.
+     */
+    private Author()
+    {
+    }
+
+
+    /**
+     * Loads the ids of the stored authors.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases() throws SQLException
     {
         load("select iri,id from pubchem.authors", oldAuthors);
@@ -38,6 +81,11 @@ public class Author extends Updater
     }
 
 
+    /**
+     * Registers the checks of the predicates, types and values of the author files.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), vcard + "given-name", vcard + "family-name", vcard + "fn",
@@ -47,6 +95,14 @@ public class Author extends Updater
     }
 
 
+    /**
+     * Registers the handler of the given names of the authors and the action that stores their changes in
+     * {@code pubchem.author_given_names}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadGivenNames(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepNames = new IntStringSet();
@@ -74,6 +130,14 @@ public class Author extends Updater
     }
 
 
+    /**
+     * Registers the handler of the family names of the authors and the action that stores their changes in
+     * {@code pubchem.author_family_names}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadFamilyNames(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepNames = new IntStringSet();
@@ -101,6 +165,14 @@ public class Author extends Updater
     }
 
 
+    /**
+     * Registers the handler of the formatted names of the authors and the action that stores their changes in
+     * {@code pubchem.author_formatted_names}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadFormattedNames(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepNames = new IntStringSet();
@@ -128,6 +200,14 @@ public class Author extends Updater
     }
 
 
+    /**
+     * Registers the handler of the organization names of the authors, each with an id of its own, and the action that
+     * stores their changes in {@code pubchem.author_organizations}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadOrganizations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringPairIntMap keepOrganizations = new IntStringPairIntMap();
@@ -160,6 +240,14 @@ public class Author extends Updater
     }
 
 
+    /**
+     * Registers the handler of the ORCID identifiers of the authors and the action that stores their changes in
+     * {@code pubchem.author_orcids}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadOrcids(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepOrcids = new IntStringSet();
@@ -187,6 +275,12 @@ public class Author extends Updater
     }
 
 
+    /**
+     * Loads the authors from the files {@code pubchem/RDF/author/pc_author_*.ttl.gz} into the tables.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load authors ...");
@@ -208,6 +302,13 @@ public class Author extends Updater
     }
 
 
+    /**
+     * Stores the authors, including those referenced by the parts loaded later, and deletes the stored authors that are
+     * neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish authors ...");
@@ -219,12 +320,28 @@ public class Author extends Updater
     }
 
 
+    /**
+     * Returns the id of the author of an IRI referenced by another loader; an author not described by the author files
+     * is counted as missing.
+     *
+     * @param author the IRI of the author
+     * @return the id of the author
+     * @throws IOException if the IRI is not an IRI of an author
+     */
     static Integer getAuthorID(String author) throws IOException
     {
         return getAuthorID(author, true);
     }
 
 
+    /**
+     * Returns the id of the author of an IRI; an author unknown so far gets a new id unless it is stored already.
+     *
+     * @param value the IRI of the author
+     * @param verbose whether an author unknown so far is counted as missing
+     * @return the id of the author
+     * @throws IOException if the IRI is not an IRI of an author
+     */
     private static Integer getAuthorID(String value, boolean verbose) throws IOException
     {
         if(!value.startsWith(prefix))

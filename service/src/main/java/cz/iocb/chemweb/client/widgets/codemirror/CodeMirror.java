@@ -14,31 +14,95 @@ import cz.iocb.chemweb.shared.services.check.CheckServiceAsync;
 
 
 
+/**
+ * SPARQL editor wrapping a CodeMirror instance created over a text area, with the completion of prefixed names from the
+ * hints of the endpoint and an asynchronous lint whose validator is supplied by the owner.
+ */
 public class CodeMirror
 {
+    /**
+     * Templates of the entries of the completion list.
+     */
     public interface HintTemplate extends SafeHtmlTemplates
     {
+        /**
+         * Entry with a symbol, a name and an additional information.
+         *
+         * @param img the class of the symbol
+         * @param text the completed name
+         * @param info the additional information
+         * @return the entry
+         */
         @Template("<div class='{0}'></div><div>{1}</div><div>{2}</div>")
         SafeHtml hint(String img, String text, String info);
 
+        /**
+         * Entry with a symbol and a name.
+         *
+         * @param img the class of the symbol
+         * @param text the completed name
+         * @return the entry
+         */
         @Template("<div class='{0}'></div><div>{1}</div>")
         SafeHtml hint(String img, String text);
     }
 
 
+    /**
+     * Validator of the code of the editor, called by the lint of CodeMirror.
+     */
     static public abstract class Validator
     {
+        /**
+         * Creates the validator.
+         */
+        protected Validator()
+        {
+        }
+
+
+        /**
+         * Validates the code and passes the found problems to the callback of the lint, see
+         * {@link CodeMirror#callback(JavaScriptObject, JavaScriptObject, JavaScriptObject)}.
+         *
+         * @param code the code of the editor
+         * @param callbackFunction the callback of the lint
+         * @param options the options of the lint
+         * @param cm the CodeMirror instance
+         */
         public abstract void validate(String code, JavaScriptObject callbackFunction, JavaScriptObject options,
                 JavaScriptObject cm);
     }
 
 
+    /**
+     * Templates of the entries of the completion list.
+     */
     private static final HintTemplate template = GWT.create(HintTemplate.class);
+
+    /**
+     * Factory of the resources of the editor.
+     */
     private static final CodeMirrorBundle factory = GWT.create(CodeMirrorBundle.class);
+
+    /**
+     * Resources of the editor.
+     */
     private static final CodeMirrorClientBundle resources = factory.create();
+
+    /**
+     * Style of the editor.
+     */
     private static final Style style = resources.style();
+
+    /**
+     * Asynchronous proxy of the check service.
+     */
     private static CheckServiceAsync checkService = (CheckServiceAsync) GWT.create(CheckService.class);
 
+    /**
+     * The CodeMirror instance.
+     */
     private JavaScriptObject codemirror = null;
 
 
@@ -48,18 +112,34 @@ public class CodeMirror
     }
 
 
+    /**
+     * Creates the editor over a text area.
+     *
+     * @param textArea the text area replaced by the editor
+     * @param readOnly whether the editor is read-only (without the lint)
+     */
     public CodeMirror(TextArea textArea, boolean readOnly)
     {
         codemirror = init(textArea.getElement(), readOnly);
     }
 
 
+    /**
+     * Creates an editable editor over a text area.
+     *
+     * @param textArea the text area replaced by the editor
+     */
     public CodeMirror(TextArea textArea)
     {
         this(textArea, false);
     }
 
 
+    /**
+     * Sets the validator called by the lint of the editor.
+     *
+     * @param validator the validator
+     */
     public native void setValidator(Validator validator)
     /*-{
         var editor = this.@cz.iocb.chemweb.client.widgets.codemirror.CodeMirror::codemirror;
@@ -70,6 +150,11 @@ public class CodeMirror
     }-*/;
 
 
+    /**
+     * Returns the validator of the editor.
+     *
+     * @return the validator
+     */
     public native Validator getValidator()
     /*-{
         var editor = this.@cz.iocb.chemweb.client.widgets.codemirror.CodeMirror::codemirror;
@@ -77,6 +162,12 @@ public class CodeMirror
     }-*/;
 
 
+    /**
+     * Returns the validator set to the lint of a CodeMirror instance.
+     *
+     * @param cm the CodeMirror instance
+     * @return the validator, or null when the instance has no lint
+     */
     public static native Validator getValidator(JavaScriptObject cm)
     /*-{
         var lint = cm.getOption("lint");
@@ -84,6 +175,17 @@ public class CodeMirror
     }-*/;
 
 
+    /**
+     * Creates a problem reported to the lint.
+     *
+     * @param beginLine the line where the problem begins
+     * @param beginColumn the column where the problem begins
+     * @param endLine the line where the problem ends
+     * @param endColumn the column where the problem ends
+     * @param type the severity of the problem ({@code error} or {@code warning})
+     * @param warn the message
+     * @return the problem
+     */
     public native static JavaScriptObject createWarning(int beginLine, int beginColumn, int endLine, int endColumn,
             String type, String warn)
     /*-{
@@ -98,12 +200,27 @@ public class CodeMirror
     }-*/;
 
 
+    /**
+     * Passes the problems found by a validator to the lint.
+     *
+     * @param callbackFunction the callback of the lint
+     * @param result the array of the problems
+     * @param cm the CodeMirror instance
+     */
     public native static void callback(JavaScriptObject callbackFunction, JavaScriptObject result, JavaScriptObject cm)
     /*-{
         callbackFunction(cm, result);
     }-*/;
 
 
+    /**
+     * Annotation function of the lint, which delegates the validation to the validator of the instance.
+     *
+     * @param code the code of the editor
+     * @param callbackFunction the callback of the lint
+     * @param options the options of the lint
+     * @param cm the CodeMirror instance
+     */
     protected static void validateCode(final String code, final JavaScriptObject callbackFunction,
             final JavaScriptObject options, final JavaScriptObject cm)
     {
@@ -114,6 +231,15 @@ public class CodeMirror
     }
 
 
+    /**
+     * Hint function of the editor: completes the prefixed name at the cursor from the hints of its prefix (the names or
+     * the information containing the typed local part).
+     *
+     * @param cm the CodeMirror instance
+     * @param cb the callback of the hint (unused)
+     * @param options the options of the hint
+     * @return the completions and the replaced range, or an empty object when there is nothing to complete
+     */
     private native static JavaScriptObject getHints(JavaScriptObject cm, JavaScriptObject cb, JavaScriptObject options)
     /*-{
         var cur = cm.getCursor();
@@ -163,6 +289,13 @@ public class CodeMirror
     }-*/;
 
 
+    /**
+     * Creates a CodeMirror instance in the SPARQL mode from a text area.
+     *
+     * @param e the text area element
+     * @param readOnly whether the instance is read-only (without the lint)
+     * @return the CodeMirror instance
+     */
     public native static JavaScriptObject init(Element e, boolean readOnly)
     /*-{
         var editor = $wnd.CodeMirror.fromTextArea(e, {
@@ -201,6 +334,14 @@ public class CodeMirror
     }-*/;
 
 
+    /**
+     * Renders an entry of the completion list.
+     *
+     * @param type the type of the hint ({@code C} for a class, a property otherwise)
+     * @param text the completed name
+     * @param info the additional information, or null
+     * @return the element of the entry
+     */
     static private Element createHint(String type, String text, String info)
     {
         String imgClass = "C".equals(type) ? style.classHint() : style.propertyHint();
@@ -216,6 +357,11 @@ public class CodeMirror
     }
 
 
+    /**
+     * Returns the code of the editor.
+     *
+     * @return the code
+     */
     public native String getValue()
     /*-{
         var editor = this.@cz.iocb.chemweb.client.widgets.codemirror.CodeMirror::codemirror;
@@ -223,6 +369,12 @@ public class CodeMirror
     }-*/;
 
 
+    /**
+     * Replaces the code of the editor.
+     *
+     * @param val the new code
+     * @return the value returned by CodeMirror, which is undefined
+     */
     public native String setValue(String val)
     /*-{
         var editor = this.@cz.iocb.chemweb.client.widgets.codemirror.CodeMirror::codemirror;
@@ -230,6 +382,11 @@ public class CodeMirror
     }-*/;
 
 
+    /**
+     * Redraws the editor, needed after its size or visibility changed.
+     *
+     * @return the value returned by CodeMirror, which is undefined
+     */
     public native String refresh()
     /*-{
         var editor = this.@cz.iocb.chemweb.client.widgets.codemirror.CodeMirror::codemirror;

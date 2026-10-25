@@ -12,11 +12,30 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the ChEMBL targets (graph {@code ebi:chembl}).
+ */
 public class Target
 {
+    /**
+     * SQL enum type of the relationships between the targets.
+     */
     private static String targetRelationshipType = schema + ".target_relationship_type";
 
 
+    /**
+     * Not instantiable.
+     */
+    private Target()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the ChEMBL targets to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
@@ -24,6 +43,11 @@ public class Target
     }
 
 
+    /**
+     * Adds the quad mappings of the ChEMBL targets to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");

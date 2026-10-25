@@ -29,19 +29,61 @@ import cz.iocb.sparql.engine.request.Request;
 
 
 
+/**
+ * IRI class of the MolMeDB IRIs of the identifiers of a substance in another database,
+ * {@code https://rdf.molmedb.upol.cz/substance/<substance><delimiter><identifier>}. An IRI is stored as the id of the
+ * substance and the identifier; the substance is found by its MolMeDB identifier in {@code molmedb.substances}.
+ */
 public class SubstanceIdentifierIriClass extends UserIriClass
 {
+    /**
+     * Table of the substances.
+     */
     protected final DatabaseTable table = new DatabaseTable(schema, "substances");
+
+    /**
+     * Column of the ids of the substances.
+     */
     protected final TableColumn from = new TableColumn("id", INT4);
+
+    /**
+     * Column of the MolMeDB identifiers of the substances.
+     */
     protected final TableColumn to = new TableColumn("identifier", VARCHAR);
 
+    /**
+     * Prefix of the IRIs.
+     */
     protected final String prefix = "https://rdf.molmedb.upol.cz/substance/";
+
+    /**
+     * Delimiter between the substance and the identifier in the IRIs.
+     */
     protected final String delimiter;
+
+    /**
+     * Query of the id of the substance of an IRI, with {@code ?} standing for the IRI.
+     */
     protected final String sqlQuery;
+
+    /**
+     * Regular expression of the IRIs of the class.
+     */
     protected final String regexp;
+
+    /**
+     * Compiled {@link #regexp}.
+     */
     protected final Pattern pattern;
 
 
+    /**
+     * Creates the class.
+     *
+     * @param name the name of the class
+     * @param delimiter the delimiter between the substance and the identifier
+     * @param pattern the regular expression of the identifiers
+     */
     protected SubstanceIdentifierIriClass(String name, String delimiter, String pattern)
     {
         super(name, List.of(INT4, VARCHAR), Set.of(iri, box));
@@ -56,6 +98,12 @@ public class SubstanceIdentifierIriClass extends UserIriClass
     }
 
 
+    /**
+     * Returns the SQL code of the IRI of the columns.
+     *
+     * @param cols the substance id and identifier columns
+     * @return the column of the IRI
+     */
     public Column generateFunction(List<Column> cols)
     {
         String pref = prefix.replaceAll("'", "''");
@@ -69,6 +117,13 @@ public class SubstanceIdentifierIriClass extends UserIriClass
     }
 
 
+    /**
+     * Returns the SQL code of the substance id column of an IRI.
+     *
+     * @param parameter the column of the IRI
+     * @param check whether an IRI that does not belong to the class gives null
+     * @return the substance id column
+     */
     public Column generateInverseFunction1(Column parameter, boolean check)
     {
         StringBuilder builder = new StringBuilder();
@@ -97,6 +152,13 @@ public class SubstanceIdentifierIriClass extends UserIriClass
     }
 
 
+    /**
+     * Returns the SQL code of the identifier column of an IRI.
+     *
+     * @param parameter the column of the IRI
+     * @param check whether an IRI that does not belong to the class gives null
+     * @return the identifier column
+     */
     public Column generateInverseFunction2(Column parameter, boolean check)
     {
         StringBuilder builder = new StringBuilder();

@@ -13,11 +13,40 @@ import org.apache.velocity.runtime.parser.node.Node;
 
 
 
+/**
+ * Velocity block directive {@code #url(iri) content #end} wrapping its content in a link to the resource; the kind of
+ * the link depends on where the template is rendered, given by the {@link Context} in the template variable
+ * {@code urlContext} (no link without it).
+ */
 public class UrlDirective extends Directive
 {
+    /**
+     * Places where a template is rendered.
+     */
     public static enum Context
     {
-        DETAILS, NODE, PAGE
+        /**
+         * Details page of the user interface: a link posts the IRI as a message to the window.
+         */
+        DETAILS,
+
+        /**
+         * Cell of the result table: a link opens the page of the resource in a new window.
+         */
+        NODE,
+
+        /**
+         * Standalone page: a link opens the page of the resource.
+         */
+        PAGE
+    }
+
+
+    /**
+     * Creates the directive.
+     */
+    public UrlDirective()
+    {
     }
 
 

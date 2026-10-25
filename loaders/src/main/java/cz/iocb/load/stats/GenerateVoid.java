@@ -66,10 +66,27 @@ import cz.iocb.sparql.engine.translator.VariableBindings;
 
 
 
+/**
+ * Generator of the VoID statistics of the IDSM endpoint: translates the quad mappings of its configuration into count
+ * queries, evaluates them in parallel and updates the changed statistics of the graphs, class and property partitions
+ * and linksets in the tables of the schema {@code void}.
+ */
 public class GenerateVoid extends Updater
 {
+    /**
+     * Graph of the statistics.
+     *
+     * @param id the id of the graph in the statistics tables
+     * @param iri the IRI of the graph, empty for the default graph
+     */
     private static record GraphIRI(Integer id, String iri)
     {
+        /**
+         * Creates the graph from its IRI.
+         *
+         * @param id the id of the graph in the statistics tables
+         * @param iri the IRI of the graph, null for the default graph
+         */
         public GraphIRI(Integer id, Iri iri)
         {
             this(id, iri == null ? "" : iri.getValue());
@@ -77,24 +94,62 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Class partition: the instances of a class in a graph.
+     *
+     * @param graph the id of the graph
+     * @param resource the class
+     */
     private static record ClassInGraph(Integer graph, Resource resource)
     {
     }
 
 
+    /**
+     * Property partition: the triples of a property in a graph.
+     *
+     * @param graph the id of the graph
+     * @param resource the property
+     */
     private static record PropertyInGraph(Integer graph, Resource resource)
     {
     }
 
 
+    /**
+     * Property partition of a class partition: the triples of a property whose subjects are instances of a class in a
+     * graph.
+     *
+     * @param graph the id of the graph
+     * @param rclass the class of the subjects
+     * @param property the property
+     */
     private static record ClassAndPropertyInGraph(Integer graph, Resource rclass, Resource property)
     {
     }
 
 
+    /**
+     * Class linkset: the triples of a property linking the instances of a class to the instances of another class, each
+     * class taken in its own graph.
+     *
+     * @param predicateGraph the id of the graph of the triples
+     * @param predicate the property
+     * @param subjectGraph the id of the graph of the subject class
+     * @param subjectClass the class of the subjects
+     * @param objectGraph the id of the graph of the object class
+     * @param objectClass the class of the objects
+     */
     private static record PropertyFromClassToClass(Integer predicateGraph, Resource predicate, Integer subjectGraph,
             Resource subjectClass, Integer objectGraph, Resource objectClass)
     {
+        /**
+         * Creates the linkset from its property partition and the class partitions of its subjects and objects.
+         *
+         * @param p the property partition
+         * @param s the class partition of the subjects
+         * @param o the class partition of the objects
+         */
         public PropertyFromClassToClass(PropertyInGraph p, ClassInGraph s, ClassInGraph o)
         {
             this(p.graph(), p.resource(), s.graph(), s.resource(), o.graph(), o.resource());
@@ -102,9 +157,25 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Literal linkset: the triples of a property linking the instances of a class to literals of a datatype.
+     *
+     * @param predicateGraph the id of the graph of the triples
+     * @param predicate the property
+     * @param subjectGraph the id of the graph of the subject class
+     * @param subjectClass the class of the subjects
+     * @param datatype the datatype of the objects
+     */
     private static record PropertyFromClassToDatatype(Integer predicateGraph, Resource predicate, Integer subjectGraph,
             Resource subjectClass, Resource datatype)
     {
+        /**
+         * Creates the linkset from its property partition, the class partition of its subjects and the datatype.
+         *
+         * @param p the property partition
+         * @param s the class partition of the subjects
+         * @param o the datatype of the objects
+         */
         public PropertyFromClassToDatatype(PropertyInGraph p, ClassInGraph s, Resource o)
         {
             this(p.graph(), p.resource(), s.graph(), s.resource(), o);
@@ -112,15 +183,51 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Statistics of a graph, a partition or a linkset.
+     */
     private static final class Stats
     {
+        /**
+         * Number of the distinct classes.
+         */
         long classes;
+
+        /**
+         * Number of the distinct properties.
+         */
         long predicates;
+
+        /**
+         * Number of the triples.
+         */
         long triples;
+
+        /**
+         * Number of the distinct subjects.
+         */
         long subjects;
+
+        /**
+         * Number of the distinct IRI objects.
+         */
         long iriObjects;
+
+        /**
+         * Number of the distinct literal objects.
+         */
         long litObjects;
 
+        /**
+         * Creates the statistics.
+         *
+         * @param classes the number of the distinct classes
+         * @param predicates the number of the distinct properties
+         * @param triples the number of the triples
+         * @param subjects the number of the distinct subjects
+         * @param iriObjects the number of the distinct IRI objects
+         * @param litObjects the number of the distinct literal objects
+         */
         public Stats(long classes, long predicates, long triples, long subjects, long iriObjects, long litObjects)
         {
             this.classes = classes;
@@ -154,46 +261,87 @@ public class GenerateVoid extends Updater
                     && iriObjects == other.iriObjects && subjects == other.subjects && triples == other.triples;
         }
 
+        /**
+         * Returns the number of the distinct classes.
+         *
+         * @return the number of the distinct classes
+         */
         public final long classes()
         {
             return classes;
         }
 
+        /**
+         * Returns the number of the distinct properties.
+         *
+         * @return the number of the distinct properties
+         */
         public final long predicates()
         {
             return predicates;
         }
 
+        /**
+         * Returns the number of the triples.
+         *
+         * @return the number of the triples
+         */
         public final long triples()
         {
             return triples;
         }
 
+        /**
+         * Returns the number of the distinct subjects.
+         *
+         * @return the number of the distinct subjects
+         */
         public final long subjects()
         {
             return subjects;
         }
 
+        /**
+         * Returns the number of the distinct IRI objects.
+         *
+         * @return the number of the distinct IRI objects
+         */
         public final long iriObjects()
         {
             return iriObjects;
         }
 
+        /**
+         * Returns the number of the distinct literal objects.
+         *
+         * @return the number of the distinct literal objects
+         */
         public final long litObjects()
         {
             return litObjects;
         }
 
+        /**
+         * Counts one more class.
+         */
         void incClasses()
         {
             classes++;
         }
 
+        /**
+         * Counts one more property.
+         */
         void incPredicate()
         {
             predicates++;
         }
 
+        /**
+         * Sets the number of the distinct classes.
+         *
+         * @param classes the number of the distinct classes
+         */
         public void setClasses(long classes)
         {
             this.classes = classes;
@@ -201,9 +349,19 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Statistics of the graphs as stored in the table {@code void.graphs}.
+     */
     @SuppressWarnings("serial")
     private static final class GraphStats extends SqlMap<GraphIRI, Stats>
     {
+        /**
+         * Creates an empty map.
+         */
+        private GraphStats()
+        {
+        }
+
         @Override
         public GraphIRI getKey(ResultSet result) throws SQLException
         {
@@ -233,9 +391,19 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Statistics of the class partitions as stored in the table {@code void.class_partitions}.
+     */
     @SuppressWarnings("serial")
     private static final class ClassPartitionStats extends SqlMap<ClassInGraph, Stats>
     {
+        /**
+         * Creates an empty map.
+         */
+        private ClassPartitionStats()
+        {
+        }
+
         @Override
         public ClassInGraph getKey(ResultSet result) throws SQLException
         {
@@ -266,9 +434,20 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Statistics of the property partitions of the class partitions as stored in the table
+     * {@code void.class_property_partitions}.
+     */
     @SuppressWarnings("serial")
     private static final class ClassPropertyPartitionStats extends SqlMap<ClassAndPropertyInGraph, Stats>
     {
+        /**
+         * Creates an empty map.
+         */
+        private ClassPropertyPartitionStats()
+        {
+        }
+
         @Override
         public ClassAndPropertyInGraph getKey(ResultSet result) throws SQLException
         {
@@ -299,9 +478,19 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Statistics of the property partitions as stored in the table {@code void.property_partitions}.
+     */
     @SuppressWarnings("serial")
     private static final class PropertyPartitionStats extends SqlMap<PropertyInGraph, Stats>
     {
+        /**
+         * Creates an empty map.
+         */
+        private PropertyPartitionStats()
+        {
+        }
+
         @Override
         public PropertyInGraph getKey(ResultSet result) throws SQLException
         {
@@ -329,9 +518,19 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Statistics of the class linksets as stored in the table {@code void.linksets}.
+     */
     @SuppressWarnings("serial")
     private static final class ClassLinksetStats extends SqlMap<PropertyFromClassToClass, Stats>
     {
+        /**
+         * Creates an empty map.
+         */
+        private ClassLinksetStats()
+        {
+        }
+
         @Override
         public PropertyFromClassToClass getKey(ResultSet result) throws SQLException
         {
@@ -365,9 +564,19 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Statistics of the literal linksets as stored in the table {@code void.literal_linksets}.
+     */
     @SuppressWarnings("serial")
     private static final class DatatypeLinksetStats extends SqlMap<PropertyFromClassToDatatype, Stats>
     {
+        /**
+         * Creates an empty map.
+         */
+        private DatatypeLinksetStats()
+        {
+        }
+
         @Override
         public PropertyFromClassToDatatype getKey(ResultSet result) throws SQLException
         {
@@ -400,20 +609,60 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Result computed in the background.
+     *
+     * @param <T> the type of the result
+     */
     private static interface FutureWrapper<T>
     {
+        /**
+         * Waits for the result and returns it.
+         *
+         * @return the result
+         * @throws CancellationException if the computation was cancelled
+         * @throws ExecutionException if the computation failed
+         * @throws InterruptedException if the thread is interrupted
+         * @throws SQLException if a database error occurs
+         */
         T get() throws CancellationException, ExecutionException, InterruptedException, SQLException;
     }
 
 
+    /**
+     * Reader of the group key of a row of the result of a count query.
+     *
+     * @param <T> the type of the key
+     */
     private static interface ExtractFromResultSet<T>
     {
+        /**
+         * Reads the group key of the current row.
+         *
+         * @param rs the result set positioned at the row
+         * @return the group key
+         * @throws SQLException if a database error occurs
+         */
         T apply(ResultSet rs) throws SQLException;
     }
 
 
+    /**
+     * Pair of resources: the classes of the subjects and of the objects of a class linkset.
+     *
+     * @param r1 the first resource
+     * @param r2 the second resource
+     */
     private static record ResourcePair(Resource r1, Resource r2)
     {
+        /**
+         * Creates the pair from the units and ids of the resources.
+         *
+         * @param short1 the unit of the first resource
+         * @param int1 the id of the first resource
+         * @param short2 the unit of the second resource
+         * @param int2 the id of the second resource
+         */
         public ResourcePair(short short1, int int1, short short2, int int2)
         {
             this(new Resource(short1, int1), new Resource(short2, int2));
@@ -421,24 +670,86 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Molfile tables, which hold each of their literal values once, so that their rows are counted instead of their
+     * distinct values.
+     */
     private static final HashSet<SourceTable> uniques = new HashSet<>(
             Set.of(new DatabaseTable("chebi", "class_molfiles"), new DatabaseTable("chembl", "molecule_molfiles"),
                     new DatabaseTable("drugbank", "compounds"), new DatabaseTable("pubchem", "compound_molfiles")));
 
+    /**
+     * Variable of the subjects.
+     */
     private static final Variable varS = new Variable("S");
+
+    /**
+     * Variable of the objects.
+     */
     private static final Variable varO = new Variable("O");
+
+    /**
+     * Variable of the classes of the subjects.
+     */
     private static final Variable varSC = new Variable("SC");
+
+    /**
+     * Variable of the classes of the objects.
+     */
     private static final Variable varOC = new Variable("OC");
+
+    /**
+     * Variable of the counts.
+     */
     private static final Variable varCount = new Variable("COUNT");
 
+    /**
+     * Service of the tasks computing the statistics.
+     */
     private static CompletionService<Boolean> taskService;
+
+    /**
+     * Pool running the count queries by their priorities.
+     */
     private static PriorityThreadPoolExecutor sqlService;
+
+    /**
+     * Request translating the count queries.
+     */
     private static Request request;
+
+    /**
+     * Number of the submitted tasks computing the statistics.
+     */
     private static int taskCount = 0;
+
+    /**
+     * Number of the requested count queries, including those served by the cache.
+     */
     private static int planned = 0;
+
+    /**
+     * Number of the executed count queries.
+     */
     private static int executed = 0;
 
 
+    /**
+     * Not instantiable.
+     */
+    private GenerateVoid()
+    {
+    }
+
+
+    /**
+     * Generates the statistics and updates their tables; the connection to the database is read from the file
+     * {@code datasource.properties}.
+     *
+     * @param args the command-line arguments (ignored)
+     * @throws SQLException if a database error occurs
+     * @throws IOException if an I/O error occurs
+     */
     public static void main(String[] args) throws SQLException, IOException
     {
         try
@@ -1084,6 +1395,15 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Compares the stored and the new statistics: the stored statistics are left with the entries to delete, whose keys
+     * have no new statistics, and the new ones with the entries to store, which differ from the stored ones.
+     *
+     * @param <K> the type of the keys
+     * @param <V> the type of the statistics
+     * @param oldMap the stored statistics
+     * @param newMap the new statistics
+     */
     private static <K, V> void processMap(Map<K, V> oldMap, Map<K, V> newMap)
     {
         Iterator<Entry<K, V>> it = newMap.entrySet().iterator();
@@ -1100,6 +1420,21 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Submits the task computing the statistics of the triples grouped by the values of some variables.
+     *
+     * @param <T> the type of the group keys
+     * @param <K> the type of the keys of the statistics
+     * @param output the statistics to fill
+     * @param cache the futures of the submitted count queries by their SQL code
+     * @param iriImcode the code of the triples with IRI objects
+     * @param litImcode the code of the triples with literal objects
+     * @param v the variables grouping the triples
+     * @param fres the reader of the group keys
+     * @param keyget the function giving the key of the statistics of a group
+     * @param asumeNotEmpty whether the triples are known to exist, so that the distinct counts need not wait for the
+     *            count of the triples
+     */
     private static <T, K> void sumbitTask(Map<K, Stats> output, Map<String, Future<Map<T, Long>>> cache,
             SqlIntercode iriImcode, SqlIntercode litImcode, List<Variable> v, ExtractFromResultSet<T> fres,
             Function<T, K> keyget, boolean asumeNotEmpty)
@@ -1109,6 +1444,19 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Submits the task computing the statistics of all the triples under one key.
+     *
+     * @param <T> the type of the group keys of the cached queries
+     * @param <K> the type of the keys of the statistics
+     * @param output the statistics to fill
+     * @param cache the futures of the submitted count queries by their SQL code
+     * @param iriImcode the code of the triples with IRI objects
+     * @param litImcode the code of the triples with literal objects
+     * @param key the key of the statistics
+     * @param asumeNotEmpty whether the triples are known to exist, so that the distinct counts need not wait for the
+     *            count of the triples
+     */
     private static <T, K> void sumbitTask(Map<K, Stats> output, Map<String, Future<Map<T, Long>>> cache,
             SqlIntercode iriImcode, SqlIntercode litImcode, K key, boolean asumeNotEmpty)
     {
@@ -1117,6 +1465,23 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Computes the statistics of all the triples under one key.
+     *
+     * @param <T> the type of the group keys of the cached queries
+     * @param <K> the type of the keys of the statistics
+     * @param output the statistics to fill
+     * @param cache the futures of the submitted count queries by their SQL code
+     * @param iriImcode the code of the triples with IRI objects
+     * @param litImcode the code of the triples with literal objects
+     * @param key the key of the statistics
+     * @param asumeNotEmpty whether the triples are known to exist, so that the distinct counts need not wait for the
+     *            count of the triples
+     * @return true
+     * @throws SQLException if a database error occurs
+     * @throws InterruptedException if the thread is interrupted
+     * @throws ExecutionException if a count query fails
+     */
     private static <T, K> boolean computeStats(Map<K, Stats> output, Map<String, Future<Map<T, Long>>> cache,
             SqlIntercode iriImcode, SqlIntercode litImcode, K key, boolean asumeNotEmpty)
             throws SQLException, InterruptedException, ExecutionException
@@ -1125,6 +1490,26 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Computes the statistics of the triples grouped by the values of some variables: the number of the triples and,
+     * unless there are none, the numbers of the distinct subjects and of the distinct IRI and literal objects.
+     *
+     * @param <T> the type of the group keys
+     * @param <K> the type of the keys of the statistics
+     * @param output the statistics to fill
+     * @param cache the futures of the submitted count queries by their SQL code
+     * @param iriPart the code of the triples with IRI objects
+     * @param litPart the code of the triples with literal objects
+     * @param v the variables grouping the triples
+     * @param fres the reader of the group keys
+     * @param keyget the function giving the key of the statistics of a group
+     * @param asumeNotEmpty whether the triples are known to exist, so that the distinct counts need not wait for the
+     *            count of the triples
+     * @return true
+     * @throws SQLException if a database error occurs
+     * @throws InterruptedException if the thread is interrupted
+     * @throws ExecutionException if a count query fails
+     */
     private static <T, K> boolean computeStats(Map<K, Stats> output, Map<String, Future<Map<T, Long>>> cache,
             SqlIntercode iriPart, SqlIntercode litPart, List<Variable> v, ExtractFromResultSet<T> fres,
             Function<T, K> keyget, boolean asumeNotEmpty) throws SQLException, InterruptedException, ExecutionException
@@ -1175,6 +1560,23 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Submits the queries counting the triples grouped by the values of some variables, one query per branch of the
+     * code.
+     *
+     * @param <T> the type of the group keys
+     * @param <K> the type of the keys of the statistics
+     * @param cache the futures of the submitted count queries by their SQL code
+     * @param imcode the code of the triples
+     * @param v the variables grouping the triples
+     * @param fres the reader of the group keys
+     * @param fkey the function giving the key of the statistics of a group
+     * @param priority the priority of the queries
+     * @return the future sums of the counts by the keys of the statistics
+     * @throws SQLException if a database error occurs
+     * @throws InterruptedException if the thread is interrupted
+     * @throws ExecutionException if a count query fails
+     */
     private static <T, K> FutureWrapper<HashMap<K, Long>> computeCount(Map<String, Future<Map<T, Long>>> cache,
             SqlIntercode imcode, List<Variable> v, ExtractFromResultSet<T> fres, Function<T, K> fkey, int priority)
             throws SQLException, InterruptedException, ExecutionException
@@ -1233,6 +1635,24 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Submits the queries counting the distinct values of a variable grouped by the values of other variables, one
+     * query per group of branches of the code whose values cannot coincide (see {@link #splitImCode}).
+     *
+     * @param <T> the type of the group keys
+     * @param <K> the type of the keys of the statistics
+     * @param cache the futures of the submitted count queries by their SQL code
+     * @param imcode the code of the triples
+     * @param v the variables grouping the triples
+     * @param fres the reader of the group keys
+     * @param fkey the function giving the key of the statistics of a group
+     * @param what the variable whose distinct values are counted
+     * @param priority the priority of the queries
+     * @return the future sums of the counts by the keys of the statistics
+     * @throws SQLException if a database error occurs
+     * @throws InterruptedException if the thread is interrupted
+     * @throws ExecutionException if a count query fails
+     */
     private static <T, K> FutureWrapper<HashMap<K, Long>> computeDistinctCount(Map<String, Future<Map<T, Long>>> cache,
             SqlIntercode imcode, List<Variable> v, ExtractFromResultSet<T> fres, Function<T, K> fkey, Variable what,
             int priority) throws SQLException, InterruptedException, ExecutionException
@@ -1294,6 +1714,15 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Splits the branches of a union into groups by the resource class of a variable, so that the distinct values of
+     * different groups never coincide and their counts add up; the literal branches of the molfile tables form groups
+     * of their own, counted by their rows.
+     *
+     * @param imcode the code of the triples
+     * @param what the variable whose distinct values are counted
+     * @return the code of each group
+     */
     private static List<SqlIntercode> splitImCode(SqlIntercode imcode, Variable what)
     {
         Map<ResourceClass, List<SqlIntercode>> groups = new HashMap<>();
@@ -1322,6 +1751,19 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Returns the future counts of a count query by their group keys, submitting the query unless the cache already
+     * holds it.
+     *
+     * @param <T> the type of the group keys
+     * @param sql the SQL code of the query
+     * @param countDistinct whether the query counts distinct values, which is evaluated without hash aggregation
+     * @param cache the futures of the submitted count queries by their SQL code
+     * @param fres the reader of the group keys
+     * @param priority the priority of the query
+     * @return the future counts by the group keys
+     * @throws SQLException if a database error occurs
+     */
     private static <T> Future<Map<T, Long>> getCountMap(String sql, boolean countDistinct,
             Map<String, Future<Map<T, Long>>> cache, ExtractFromResultSet<T> fres, int priority) throws SQLException
     {
@@ -1389,6 +1831,16 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Builds the SQL query counting the solutions of the code, or the distinct values of a variable, grouped by the
+     * values of other variables.
+     *
+     * @param imcode the code of the triples
+     * @param gvars the variables grouping the solutions
+     * @param what the variable whose distinct values are counted, or null to count the solutions
+     * @param select the variables whose columns the query returns, the count first
+     * @return the SQL code of the query, or null when the code has no solution
+     */
     private static String getSqlQuery(SqlIntercode imcode, Set<Variable> gvars, Variable what, List<Variable> select)
     {
         if(imcode == SqlNoSolution.get())
@@ -1439,12 +1891,26 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Returns the columns of a variable binding of a single resource class.
+     *
+     * @param binding the variable binding
+     * @return the columns of the binding
+     */
     private static List<Column> getMapping(VariableBinding binding)
     {
         return binding.getMapping(Graph.getResourceClass(binding));
     }
 
 
+    /**
+     * Builds the SQL query reading the stored statistics of a table of the schema {@code void}.
+     *
+     * @param table the name of the table
+     * @param key the key columns
+     * @param value the value columns
+     * @return the SQL code of the query
+     */
     private static String getLoadSql(String table, List<String> key, List<String> value)
     {
         List<String> cols = new ArrayList<>();
@@ -1455,6 +1921,14 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Builds the SQL command deleting a row of statistics from a table of the schema {@code void}.
+     *
+     * @param table the name of the table
+     * @param key the key columns
+     * @param value the value columns
+     * @return the SQL code of the command
+     */
     private static String getDeleteSql(String table, List<String> key, List<String> value)
     {
         List<String> cols = new ArrayList<>();
@@ -1465,6 +1939,14 @@ public class GenerateVoid extends Updater
     }
 
 
+    /**
+     * Builds the SQL command inserting or updating a row of statistics in a table of the schema {@code void}.
+     *
+     * @param table the name of the table
+     * @param key the key columns
+     * @param value the value columns
+     * @return the SQL code of the command
+     */
     private static String getUpdateSql(String table, List<String> key, List<String> value)
     {
         List<String> cols = new ArrayList<>();

@@ -26,16 +26,47 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the PubChem anatomies from {@code pubchem/RDF/anatomy/pc_anatomy.ttl.gz} into the table
+ * {@code pubchem.anatomies} and the tables of their alternative labels, matches and patents.
+ */
 public class Anatomy extends Updater
 {
+    /**
+     * IRI prefix of the anatomies.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/anatomy/ANATOMYID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Table of the anatomies.
+     */
     private static final EntityTable<Integer> anatomies = new EntityTable<>("pubchem.anatomies", intKey("id"), null,
             varchar("label"));
+
+    /**
+     * Anatomies referenced but not described by the data.
+     */
     private static final MissingEntities<Integer> missingAnatomies = new MissingEntities<>("anatomy", true);
 
 
+    /**
+     * Not instantiable.
+     */
+    private Anatomy()
+    {
+    }
+
+
+    /**
+     * Registers the checks of the predicates, types and values of the anatomy file.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), rdf + "type", skos + "prefLabel", skos + "altLabel", rdfs + "seeAlso",
@@ -52,6 +83,13 @@ public class Anatomy extends Updater
     }
 
 
+    /**
+     * Registers the handler that adds the anatomies described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.onType(sio + "SIO_001262", (subject, object) -> {
@@ -63,6 +101,13 @@ public class Anatomy extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the labels of the anatomies.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadLabels(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(skos + "prefLabel", (subject, object) -> {
@@ -71,6 +116,14 @@ public class Anatomy extends Updater
     }
 
 
+    /**
+     * Registers the handler of the alternative labels of the anatomies and the action that stores their changes in
+     * {@code pubchem.anatomy_alternatives}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAlternatives(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepAlternatives = new IntStringSet();
@@ -98,6 +151,14 @@ public class Anatomy extends Updater
     }
 
 
+    /**
+     * Registers the handler of the ontology resources linked to the anatomies by {@code rdfs:seeAlso} (except the MeSH
+     * descriptors) and the action that stores their changes in {@code pubchem.anatomy_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntIntPairSet keepMatches = new IntIntPairSet();
@@ -128,6 +189,14 @@ public class Anatomy extends Updater
     }
 
 
+    /**
+     * Registers the handler of the MeSH descriptors linked to the anatomies by {@code rdfs:seeAlso} and the action that
+     * stores their changes in {@code pubchem.anatomy_mesh_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMeshCloseMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -158,6 +227,14 @@ public class Anatomy extends Updater
     }
 
 
+    /**
+     * Registers the handler of the patents discussing the anatomies and the action that stores their changes in
+     * {@code pubchem.anatomy_patents}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadReferences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepPatents = new IntPairSet();
@@ -185,6 +262,13 @@ public class Anatomy extends Updater
     }
 
 
+    /**
+     * Loads the anatomies from {@code pubchem/RDF/anatomy/pc_anatomy.ttl.gz} into the tables and flushes the table of
+     * the anatomies.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load anatomies ...");
@@ -209,6 +293,13 @@ public class Anatomy extends Updater
     }
 
 
+    /**
+     * Stores the anatomies, including those referenced by the parts loaded later, and deletes the stored anatomies that
+     * are neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish anatomies ...");
@@ -219,6 +310,14 @@ public class Anatomy extends Updater
     }
 
 
+    /**
+     * Returns the id of the anatomy with the given IRI; an anatomy not described by the data gets a row and is counted
+     * as missing.
+     *
+     * @param value the IRI of the anatomy
+     * @return the id of the anatomy
+     * @throws IOException if the IRI is not an IRI of an anatomy
+     */
     static Integer getAnatomyID(String value) throws IOException
     {
         if(!value.startsWith(prefix))

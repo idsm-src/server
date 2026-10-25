@@ -11,8 +11,24 @@ import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 
 
 
+/**
+ * Mapping of the DrugBank compounds (graph {@code drugbank:}), of which only the molfiles are held.
+ */
 public class DrugBank
 {
+    /**
+     * Not instantiable.
+     */
+    private DrugBank()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the DrugBank compounds and their molfiles to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("drugbank:compound", INT4,
@@ -23,6 +39,11 @@ public class DrugBank
     }
 
 
+    /**
+     * Adds the quad mappings of the DrugBank molfiles to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("drugbank:");

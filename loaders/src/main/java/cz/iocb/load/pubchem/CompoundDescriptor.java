@@ -20,11 +20,26 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem compound descriptors from the files of {@code pubchem/RDF/descriptor/compound} into the table
+ * {@code pubchem.compound_descriptors} and the tables of the string descriptors; the descriptor values that the files
+ * of {@code pubchem/RDF/compound/general} repeat are checked against them.
+ */
 class CompoundDescriptor extends Updater
 {
+    /**
+     * IRI prefix of the compound descriptors.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/CID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Table of the numeric descriptors of the compounds.
+     */
     private static final EntityTable<Integer> descriptors = new EntityTable<>("pubchem.compound_descriptors",
             intKey("compound"), null, integer("hydrogen_bond_acceptor_count"), integer("defined_atom_stereo_count"),
             integer("defined_bond_stereo_count"), integer("undefined_bond_stereo_count"), integer("isotope_atom_count"),
@@ -34,6 +49,24 @@ class CompoundDescriptor extends Updater
             float8("exact_mass"), float8("molecular_weight"), float8("tpsa"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private CompoundDescriptor()
+    {
+    }
+
+
+    /**
+     * Loads an integer descriptor of the compounds into a column of {@link #descriptors} and checks the values of the
+     * property of the same name in {@code pubchem/RDF/compound/general} against it.
+     *
+     * @param name the name of the descriptor in the names of its files
+     * @param suffix the suffix of the IRIs of the descriptor
+     * @param field the column of the descriptor, also the local name of the property
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadIntegerField(String name, String suffix, String field) throws IOException, SQLException
     {
         processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
@@ -83,6 +116,16 @@ class CompoundDescriptor extends Updater
     }
 
 
+    /**
+     * Loads a decimal descriptor of the compounds into a column of {@link #descriptors} and checks the values of the
+     * property of the same name in {@code pubchem/RDF/compound/general} against it.
+     *
+     * @param name the name of the descriptor in the names of its files
+     * @param suffix the suffix of the IRIs of the descriptor
+     * @param field the column of the descriptor, also the local name of the property
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadFloatField(String name, String suffix, String field) throws IOException, SQLException
     {
         processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
@@ -132,6 +175,14 @@ class CompoundDescriptor extends Updater
     }
 
 
+    /**
+     * Loads the XLogP3 and XLogP3-AA descriptors of the compounds into {@link #descriptors}, which share their files,
+     * and checks the values of {@code vocab:xlogp3} against them.
+     *
+     * @param name the name of the descriptors in the names of their files
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadXLogP3Field(String name) throws IOException, SQLException
     {
         processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
@@ -198,6 +249,17 @@ class CompoundDescriptor extends Updater
     }
 
 
+    /**
+     * Loads a string descriptor of the compounds into the table {@code pubchem.compound_<table>} and checks the values
+     * of the property of the same name in {@code pubchem/RDF/compound/general} against it.
+     *
+     * @param name the name of the descriptor in the names of its files
+     * @param suffix the suffix of the IRIs of the descriptor
+     * @param table the name of the table without the {@code compound_} prefix
+     * @param field the column of the descriptor, also the local name of the property
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadStringField(String name, String suffix, String table, String field)
             throws IOException, SQLException
     {
@@ -253,6 +315,15 @@ class CompoundDescriptor extends Updater
     }
 
 
+    /**
+     * Checks that the unit files of a descriptor give the expected unit.
+     *
+     * @param name the name of the descriptor in the names of its files
+     * @param suffix the suffix of the IRIs of the descriptor
+     * @param unitName the local name of the expected unit in the OBO namespace
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void checkUnit(String name, String suffix, String unitName) throws IOException, SQLException
     {
         final String unit = "http://purl.obolibrary.org/obo/" + unitName;
@@ -280,6 +351,14 @@ class CompoundDescriptor extends Updater
     }
 
 
+    /**
+     * Checks that the values of the compound identifier descriptors match the ids in their IRIs.
+     *
+     * @param name the name of the descriptor in the names of its files
+     * @param suffix the suffix of the IRIs of the descriptor
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void checkIdentifier(String name, String suffix) throws IOException, SQLException
     {
         processFiles("pubchem/RDF/descriptor/compound", "pc_descr_" + name + "_value_[0-9]+\\.ttl\\.gz", file -> {
@@ -307,6 +386,16 @@ class CompoundDescriptor extends Updater
     }
 
 
+    /**
+     * Checks that the type files of a descriptor give the expected types.
+     *
+     * @param name the name of the descriptor in the names of its files
+     * @param suffix the suffix of the IRIs of the descriptor
+     * @param typeName the local name of the expected type in the SIO namespace
+     * @param vocabName the local name of the expected type in the PubChem vocabulary
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void checkType(String name, String suffix, String typeName, String vocabName)
             throws IOException, SQLException
     {
@@ -335,6 +424,15 @@ class CompoundDescriptor extends Updater
     }
 
 
+    /**
+     * Checks that the type files of the XLogP3 and XLogP3-AA descriptors give the expected types.
+     *
+     * @param name the name of the descriptors in the names of their files
+     * @param typeName the local name of the expected type in the SIO namespace
+     * @param vocabName the local name of the expected type in the PubChem vocabulary
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void checkXLogP3Type(String name, String typeName, String vocabName) throws IOException, SQLException
     {
         final String type = "http://semanticscience.org/resource/" + typeName;
@@ -365,6 +463,12 @@ class CompoundDescriptor extends Updater
     }
 
 
+    /**
+     * Loads the compound descriptors into the tables and flushes the table of the numeric descriptors.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load compound descriptors ...");
@@ -436,15 +540,24 @@ class CompoundDescriptor extends Updater
     }
 
 
+    /**
+     * Stores the table of the numeric descriptors.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         descriptors.store();
     }
 
 
-    /*
+    /**
      * Returns the value of a decimal descriptor as a double, which holds every decimal of at most 15 significant digits
      * exactly; the database turns it back into the same decimal, because a double is cast to numeric with 15 digits.
+     *
+     * @param node the literal of the descriptor
+     * @return the value as a double
+     * @throws IOException if the literal is not a decimal or has more than 15 significant digits
      */
     private static Double getDecimalValue(Node node) throws IOException
     {
@@ -457,6 +570,14 @@ class CompoundDescriptor extends Updater
     }
 
 
+    /**
+     * Returns the id of the compound of a descriptor IRI and adds the compound.
+     *
+     * @param value the IRI of the descriptor
+     * @param suffix the suffix of the IRIs of the descriptor
+     * @return the id of the compound
+     * @throws IOException if the IRI is not a descriptor IRI with the suffix
+     */
     private static Integer getDescriptorID(String value, String suffix) throws IOException
     {
         if(!value.startsWith(prefix))

@@ -46,25 +46,58 @@ import cz.iocb.chemweb.shared.services.query.QueryResult;
 
 
 
+/**
+ * Tab with the results of the query in a data grid: the results are queried page by page and the rows of the page can
+ * be filtered by a text. The start and the end of the evaluation and the visits of the resources clicked in the grid
+ * are announced by events.
+ */
 public class ResultTablePart extends ResizeComposite
 {
+    /**
+     * Binder of the tab template {@code ResultTablePart.ui.xml}.
+     */
     interface ResultTablePartUiBinder extends UiBinder<Widget, ResultTablePart>
     {
     }
 
 
+    /**
+     * Status of the evaluation of the query.
+     */
     public static enum Status
     {
-        RUNNING, FINISHED
+        /**
+         * The query runs.
+         */
+        RUNNING,
+
+        /**
+         * The query has completed, failed or been cancelled.
+         */
+        FINISHED
     }
 
 
+    /**
+     * Event announcing a change of the status of the evaluation.
+     */
     public static class StatusChangeEvent extends GwtEvent<StatusChangeEventHandler>
     {
+        /**
+         * Type of the event.
+         */
         public static Type<StatusChangeEventHandler> TYPE = new Type<>();
 
+        /**
+         * The new status.
+         */
         private final Status status;
 
+        /**
+         * Creates the event.
+         *
+         * @param status the new status
+         */
         public StatusChangeEvent(Status status)
         {
             this.status = status;
@@ -82,6 +115,11 @@ public class ResultTablePart extends ResizeComposite
             handler.onStatusChange(this);
         }
 
+        /**
+         * Returns the new status.
+         *
+         * @return the status
+         */
         public Status getStatus()
         {
             return status;
@@ -89,18 +127,40 @@ public class ResultTablePart extends ResizeComposite
     }
 
 
+    /**
+     * Handler of the events announcing a change of the status of the evaluation.
+     */
     public interface StatusChangeEventHandler extends EventHandler
     {
+        /**
+         * Called when the status of the evaluation changes.
+         *
+         * @param event the event
+         */
         void onStatusChange(StatusChangeEvent event);
     }
 
 
+    /**
+     * Event announcing that a resource clicked in the grid is to be visited.
+     */
     public static class VisitItemEvent extends GwtEvent<VisitItemEventHandler>
     {
+        /**
+         * Type of the event.
+         */
         public static Type<VisitItemEventHandler> TYPE = new Type<>();
 
+        /**
+         * IRI of the resource.
+         */
         private final String iri;
 
+        /**
+         * Creates the event.
+         *
+         * @param iri the IRI of the resource
+         */
         public VisitItemEvent(String iri)
         {
             this.iri = iri;
@@ -118,6 +178,11 @@ public class ResultTablePart extends ResizeComposite
             handler.onVisitItem(this);
         }
 
+        /**
+         * Returns the resource to visit.
+         *
+         * @return the IRI of the resource
+         */
         public String getIri()
         {
             return iri;
@@ -125,36 +190,92 @@ public class ResultTablePart extends ResizeComposite
     }
 
 
+    /**
+     * Handler of the events announcing that a resource is to be visited.
+     */
     public interface VisitItemEventHandler extends EventHandler
     {
+        /**
+         * Called when a resource is to be visited.
+         *
+         * @param event the event
+         */
         void onVisitItem(VisitItemEvent event);
     }
 
 
+    /**
+     * Display standing between the provider of the results and the data grid: it receives the rows of the current page
+     * and passes those that pass the filter to the grid. Only the members the provider and the pager use are
+     * implemented.
+     */
     private static class HasDataFilter implements HasData<DataGridNode[]>
     {
+        /**
+         * Filter of the rows.
+         */
         private static interface IFilter
         {
+            /**
+             * Decides whether a row passes the filter.
+             *
+             * @param value the row
+             * @return true if the row is shown
+             */
             boolean isValid(DataGridNode[] value);
         }
 
 
+        /**
+         * Data grid showing the rows that pass the filter.
+         */
         DataGrid<DataGridNode[]> dataGrid;
+
+        /**
+         * Filter of the rows, null when all rows are shown.
+         */
         IFilter filter = null;
+
+        /**
+         * Rows of the current page.
+         */
         List<? extends DataGridNode[]> values = new ArrayList<>();
 
+        /**
+         * Manager of the range, row count and cell preview handlers.
+         */
         private final HandlerManager handlerManager = new HandlerManager(this);
+
+        /**
+         * Whether the row count is exact.
+         */
         private boolean exact = false;
+
+        /**
+         * Visible range of the rows.
+         */
         private Range range = new Range(0, 0);
+
+        /**
+         * Number of the rows of the result known so far.
+         */
         private int count = -1;
 
 
+        /**
+         * Creates the display.
+         *
+         * @param dataGrid the data grid showing the rows that pass the filter
+         */
         public HasDataFilter(DataGrid<DataGridNode[]> dataGrid)
         {
             this.dataGrid = dataGrid;
         }
 
 
+        /**
+         * Shows the rows of the current page that pass the filter in the data grid.
+         */
         @SuppressWarnings("unchecked")
         private void show()
         {
@@ -179,6 +300,11 @@ public class ResultTablePart extends ResizeComposite
         }
 
 
+        /**
+         * Sets the filter of the rows and shows the rows that pass it.
+         *
+         * @param filter the filter, or null to show all rows
+         */
         public void setFilter(IFilter filter)
         {
             this.filter = filter;
@@ -309,17 +435,60 @@ public class ResultTablePart extends ResizeComposite
     }
 
 
+    /**
+     * Provider of the rows, which queries the results of the query on the visible range.
+     */
     private class AsyncResultsProvider extends AsyncDataProvider<DataGridNode[]>
     {
+        /**
+         * Number of the queries for the rows, which identifies the latest one.
+         */
         private int asyncResultsCounter = 0;
+
+        /**
+         * The query whose results are provided.
+         */
         private String queryString = null;
+
+        /**
+         * Whether the columns are to be rebuilt from the heads of the next result.
+         */
         private boolean resetColumns = false;
+
+        /**
+         * Number of the rows known so far, i.e. the end of the furthest page received.
+         */
         private int maxRows = 0;
+
+        /**
+         * Whether more rows may follow the rows received so far; the row count is exact once a page is not truncated.
+         */
         private boolean truncated = true;
+
+        /**
+         * The last query for the rows, cancelled by the next one.
+         */
         private QueryServiceStub.Query runningQuery = null;
+
+        /**
+         * Rows of an empty range.
+         */
         List<DataGridNode[]> emptyData = new LinkedList<>();
 
 
+        /**
+         * Creates the provider.
+         */
+        private AsyncResultsProvider()
+        {
+        }
+
+
+        /**
+         * Sets the query whose results are provided; the columns are rebuilt from its first result.
+         *
+         * @param query the SPARQL query
+         */
         void setQuery(String query)
         {
             queryString = query;
@@ -327,6 +496,9 @@ public class ResultTablePart extends ResizeComposite
         }
 
 
+        /**
+         * Cancels the last query for the rows and ignores its response.
+         */
         void cancelQuery()
         {
             asyncResultsCounter++;
@@ -422,26 +594,69 @@ public class ResultTablePart extends ResizeComposite
     }
 
 
+    /**
+     * Minimal width of a column of the data grid in pixels.
+     */
     private static final int minimalColumnWidth = 250;
 
+    /**
+     * Binder of the tab template.
+     */
     private static ResultTablePartUiBinder uiBinder = GWT.create(ResultTablePartUiBinder.class);
+
+    /**
+     * Factory of the resources of the pager.
+     */
     private static PagerResourcesFactory pagerResourcesFactory = GWT.create(PagerResourcesFactory.class);
+
+    /**
+     * Resources of the pager.
+     */
     private static Resources pagerIcons = pagerResourcesFactory.create();
 
+    /**
+     * Text box with the text the shown rows must contain.
+     */
     @UiField
     TextBox searchTextBox;
+
+    /**
+     * List of the columns the text is searched in.
+     */
     @UiField
     ListBox searchListBox;
+
+    /**
+     * Data grid of the results.
+     */
     @UiField(provided = true)
     DataGrid<DataGridNode[]> resultsDataGrid;
+
+    /**
+     * Pager of the results.
+     */
     @UiField(provided = true)
     SimplePager resultsPager;
 
+    /**
+     * Manager of the handlers of the status change and visit events.
+     */
     private final HandlerManager handlerManager = new HandlerManager(this);
+
+    /**
+     * Display filtering the rows of the current page.
+     */
     private final HasDataFilter hasDataFilter;
+
+    /**
+     * Provider of the rows.
+     */
     private final AsyncResultsProvider resultsAsyncProvider = new AsyncResultsProvider();
 
 
+    /**
+     * Creates the tab.
+     */
     public ResultTablePart()
     {
         resultsDataGrid = new DataGrid<>(1, DataGridBundle.INSTANCE)
@@ -497,18 +712,35 @@ public class ResultTablePart extends ResizeComposite
     }
 
 
+    /**
+     * Adds a handler of the events announcing a change of the status of the evaluation.
+     *
+     * @param handler the handler
+     * @return the registration of the handler
+     */
     public HandlerRegistration addStatusChangeEventHandler(StatusChangeEventHandler handler)
     {
         return handlerManager.addHandler(StatusChangeEvent.TYPE, handler);
     }
 
 
+    /**
+     * Adds a handler of the events announcing that a resource is to be visited.
+     *
+     * @param handler the handler
+     * @return the registration of the handler
+     */
     public HandlerRegistration addVisitItemEventHandler(VisitItemEventHandler handler)
     {
         return handlerManager.addHandler(VisitItemEvent.TYPE, handler);
     }
 
 
+    /**
+     * Filters the rows as the search text is typed.
+     *
+     * @param e the key up event
+     */
     @UiHandler("searchTextBox")
     void complexesTextBoxKeyUp(KeyUpEvent e)
     {
@@ -516,6 +748,11 @@ public class ResultTablePart extends ResizeComposite
     }
 
 
+    /**
+     * Filters the rows when the searched column changes.
+     *
+     * @param e the change event
+     */
     @UiHandler("searchListBox")
     void searchListBoxChangeEvent(ChangeEvent e)
     {
@@ -523,6 +760,10 @@ public class ResultTablePart extends ResizeComposite
     }
 
 
+    /**
+     * Filters the rows of the current page by the search text, which the text of a cell (of the chosen column or of any
+     * column) without its HTML tags must contain, ignoring the case.
+     */
     private void resetFilter()
     {
         final String value = searchTextBox.getValue().toLowerCase();
@@ -547,6 +788,11 @@ public class ResultTablePart extends ResizeComposite
     }
 
 
+    /**
+     * Runs a query and shows the first page of its results.
+     *
+     * @param query the SPARQL query
+     */
     public void run(String query)
     {
         clear();
@@ -560,6 +806,9 @@ public class ResultTablePart extends ResizeComposite
     }
 
 
+    /**
+     * Cancels the running query and announces that the evaluation has finished.
+     */
     public void cancel()
     {
         resultsAsyncProvider.cancelQuery();
@@ -567,6 +816,9 @@ public class ResultTablePart extends ResizeComposite
     }
 
 
+    /**
+     * Removes the columns of the results and resets the search.
+     */
     public void clear()
     {
         searchListBox.clear();
@@ -582,6 +834,14 @@ public class ResultTablePart extends ResizeComposite
     }
 
 
+    /**
+     * Adds a column whose cells announce a visit of the resource they show when they are clicked or Enter is pressed on
+     * them.
+     *
+     * @param grid the data grid
+     * @param i the index of the column in a row
+     * @param name the header of the column
+     */
     private void addColumn(DataGrid<DataGridNode[]> grid, final int i, final String name)
     {
         LinkCell cell = new LinkCell()
@@ -616,6 +876,11 @@ public class ResultTablePart extends ResizeComposite
 
 
 
+    /**
+     * Removes the {@code col} elements left behind by the removed columns of a data grid.
+     *
+     * @param dataGrid the data grid
+     */
     private static void removeUnusedDataGridColumns(DataGrid<?> dataGrid)
     {
         int columnCount = dataGrid.getColumnCount();

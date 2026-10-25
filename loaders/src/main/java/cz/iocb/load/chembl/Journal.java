@@ -19,16 +19,43 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the ChEMBL journals from the journal file of the release into the table {@code chembl.journals}.
+ */
 class Journal extends Updater
 {
+    /**
+     * IRI prefix of the journals.
+     */
     static final String prefix = ChEMBL.chembl + "journal/CHEMBL_JRN_";
+
+    /**
+     * IRI of the journal {@code CHEMBL_JRN_null}, which stands for no journal.
+     */
     static final String nullJournal = prefix + "null";
 
+    /**
+     * Table of the journals.
+     */
     private static final EntityTable<Integer> journals = new EntityTable<>("chembl.journals", intKey("id"), "chembl_id",
             uniqueVarchar("chembl_id"), varchar("label"), varchar("title"), varchar("short_title"), varchar("issn"),
             varchar("eissn"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private Journal()
+    {
+    }
+
+
+    /**
+     * Loads the journals from the journal file of the release.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load journals ...");
@@ -62,6 +89,11 @@ class Journal extends Updater
     }
 
 
+    /**
+     * Stores the collected journals and reports the referenced ones that the file does not describe.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish journals ...");
@@ -72,8 +104,13 @@ class Journal extends Updater
     }
 
 
-    /*
-     * Returns null for CHEMBL_JRN_null, which the mapping produces for the documents without a journal.
+    /**
+     * Returns the id of a journal and marks the journal as referenced; returns null for {@code CHEMBL_JRN_null}, which
+     * the mapping produces for the documents without a journal.
+     *
+     * @param node the IRI of the journal
+     * @return the id of the journal, or null for {@code CHEMBL_JRN_null}
+     * @throws IOException if the node is not an IRI of a journal
      */
     static Integer getJournalID(Node node) throws IOException
     {

@@ -27,15 +27,46 @@ import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
 
 
 
+/**
+ * Mapping of the MassBank of North America (MoNA): its spectra with their metadata and annotations, their compounds
+ * with the identifiers and properties, the submitters and the libraries.
+ */
 public class Mona
 {
+    /**
+     * Prefix of the MoNA web pages of the spectra.
+     */
     public static final String web = "https://mona.fiehnlab.ucdavis.edu/spectra/display/";
+
+    /**
+     * Prefix of the IRIs of the MoNA resources.
+     */
     public static final String mona = "https://idsm.elixir-czech.cz/rdf/mona/";
+
+    /**
+     * Prefix of the IRIs standing for the blank nodes of the MoNA data.
+     */
     public static final String bnmona = "https://idsm.elixir-czech.cz/rdf/mona/bn";
 
+    /**
+     * Literal class of the dates in UTC.
+     */
     public static final DateInZoneClass xsdDateZ = DateInZoneClass.get(0);
 
 
+    /**
+     * Not instantiable.
+     */
+    private Mona()
+    {
+    }
+
+
+    /**
+     * Adds the prefixes of MoNA to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addPrefixes(SparqlDatabaseConfiguration config)
     {
         Common.addPrefixes(config);
@@ -53,6 +84,12 @@ public class Mona
     }
 
 
+    /**
+     * Adds the resource classes of the MoNA spectra and compounds to the configuration.
+     *
+     * @param config the configuration
+     * @throws SQLException if a database error occurs
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config) throws SQLException
     {
         Ontology.addResourceClasses(config);
@@ -116,6 +153,11 @@ public class Mona
     }
 
 
+    /**
+     * Adds the quad mappings of the MoNA spectra and compounds to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("mona:");
@@ -857,6 +899,11 @@ public class Mona
     }
 
 
+    /**
+     * Adds the functions of the spectrum similarities to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addFunctions(SparqlDatabaseConfiguration config)
     {
         Matchms.addFunctions(config);

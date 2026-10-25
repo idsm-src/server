@@ -13,8 +13,24 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the ChEMBL activities (graph {@code ebi:chembl}).
+ */
 public class Activity
 {
+    /**
+     * Not instantiable.
+     */
+    private Activity()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the ChEMBL activities to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("chembl:activity", INT4,
@@ -22,6 +38,11 @@ public class Activity
     }
 
 
+    /**
+     * Adds the quad mappings of the ChEMBL activities to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");

@@ -14,8 +14,17 @@ import cz.iocb.sparql.engine.request.Request;
 
 
 
+/**
+ * IRI class of the MolMeDB IRIs of the ChEBI identifiers of a substance, whose IRIs hold the number of the identifier
+ * without the {@code CHEBI:} prefix that the identifier column keeps.
+ */
 public class SubstanceChebiIdentifierIriClass extends SubstanceIdentifierIriClass
 {
+    /**
+     * Creates the class.
+     *
+     * @param name the name of the class
+     */
     protected SubstanceChebiIdentifierIriClass(String name)
     {
         super(name, "_CHEBI", "[0-9]+");

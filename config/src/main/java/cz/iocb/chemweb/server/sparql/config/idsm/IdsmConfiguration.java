@@ -45,10 +45,25 @@ import cz.iocb.sparql.engine.request.Request;
 
 
 
+/**
+ * Configuration of the IDSM endpoint, which merges the configurations of all datasets into one service and adds the
+ * Sachem structure search over their compounds, the Sachem endpoints of the single datasets as further services, and
+ * the SHACL declarations of its prefixes. The endpoint obtains it through JNDI; the export and the generator of the
+ * VoID statistics create it directly.
+ */
 public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    /**
+     * Copy of the database schema that declares the {@code molfile} column of the molfile tables of DrugBank, ChEBI,
+     * ChEMBL and PubChem as a unique key of its table.
+     */
     public static class ExtendedDatabaseSchema extends DatabaseSchema
     {
+        /**
+         * Creates the copy of the schema with the additional unique keys.
+         *
+         * @param schema the schema to copy
+         */
         public ExtendedDatabaseSchema(DatabaseSchema schema)
         {
             super(schema);
@@ -61,6 +76,15 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Creates the configuration. Without a service IRI, it is the configuration of the IDSM endpoint itself, described
+     * in the graph of its VoID statistics; otherwise it serves under the given IRI with the default description graph.
+     *
+     * @param service IRI of the service, or null for the IDSM endpoint
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public IdsmConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
         super(service != null ? service : "https://idsm.elixir-czech.cz/sparql/endpoint/idsm",
@@ -76,6 +100,13 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Replaces the constant IRIs of all quad mappings by mappings with their resource classes and columns detected in
+     * advance, so that no request needs to detect them; the detections are kept in the IRI cache, and the IRIs of no
+     * supported class or of uncategorized ontology resources that are not built in are reported.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private void detectIriResourceClasses() throws SQLException
     {
         try(Request request = new Request(this))
@@ -117,6 +148,15 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Returns the mapping of a constant IRI with its resource class and columns detected; other mappings, and the
+     * constant mappings that already know them, are returned unchanged.
+     *
+     * @param <T> the type of the mapping
+     * @param request the request used for the detection
+     * @param mapping the mapping
+     * @return the mapping with the detected resource class and columns
+     */
     @SuppressWarnings("unchecked")
     private <T extends TermMapping> T remap(Request request, T mapping)
     {
@@ -146,6 +186,14 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Tells whether the detection of a constant IRI is reported: the IRI belongs to no supported class, or it is an
+     * uncategorized ontology resource whose id is not below {@code builtinResourceLimit}, i.e. not a built-in one.
+     *
+     * @param iriClass the detected resource class
+     * @param columns the detected columns
+     * @return true if the detection is reported, false otherwise
+     */
     private boolean shouldBeReported(ResourceClass iriClass, List<Column> columns)
     {
         if(iriClass.getResourceName().equals("unsupported"))
@@ -161,6 +209,10 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the prefixes of the federated services (Rhea, neXtProt, Wikidata), of the Dublin Core terms and of the IDSM
+     * endpoints to the configuration.
+     */
     private void addPrefixes()
     {
         // rhea
@@ -197,6 +249,13 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Merges the configurations of all datasets into this service, adds the Sachem procedures and functions over the
+     * compounds of the datasets, and imports the configurations of the single datasets with structure search as
+     * services under the IRIs of their {@code sparql} and {@code sachem} endpoints.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private void addServices() throws SQLException
     {
         addService(new ChebiConfiguration(null, connectionPool, getDatabaseSchema()), true);
@@ -271,6 +330,10 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the SHACL declarations of all prefixes of the configuration ({@code sh:prefix} and {@code sh:namespace} of
+     * {@code https://idsm.elixir-czech.cz/sparql-prefixes/<prefix>}) to the graph of the SPARQL examples.
+     */
     private void addPrefixDefinitionMappings()
     {
         String graphIri = "https://idsm.elixir-czech.cz/.well-known/sparql-examples";

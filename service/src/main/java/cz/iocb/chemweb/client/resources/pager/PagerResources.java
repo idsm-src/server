@@ -5,6 +5,9 @@ import com.google.gwt.user.cellview.client.SimplePager;
 
 
 
+/**
+ * Images of the buttons of the pagers of the data grids.
+ */
 public interface PagerResources extends SimplePager.Resources
 {
     @Override

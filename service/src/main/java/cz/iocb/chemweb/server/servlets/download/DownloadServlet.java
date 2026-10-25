@@ -11,9 +11,25 @@ import jakarta.servlet.http.HttpServletResponse;
 
 
 
+/**
+ * Servlet sending data posted by the user interface back as a file to download, for the browsers that cannot save data
+ * by themselves. The request gives the action ({@code call=saveFile}), the data, its {@code encoding} (base64 or
+ * plain), the file name and the MIME type.
+ */
 public class DownloadServlet extends HttpServlet
 {
+    /**
+     * Serialization version.
+     */
     private static final long serialVersionUID = 1L;
+
+
+    /**
+     * Creates the servlet.
+     */
+    public DownloadServlet()
+    {
+    }
 
 
 
@@ -45,6 +61,16 @@ public class DownloadServlet extends HttpServlet
     }
 
 
+    /**
+     * Writes the posted data as an attachment.
+     *
+     * @param req the request
+     * @param res the response
+     * @throws ServletException not thrown by this implementation
+     * @throws java.io.IOException if an I/O error occurs
+     * @throws NumberFormatException not thrown by this implementation
+     * @throws RemoteException not thrown by this implementation
+     */
     protected void processRequest(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, java.io.IOException, NumberFormatException, RemoteException
     {

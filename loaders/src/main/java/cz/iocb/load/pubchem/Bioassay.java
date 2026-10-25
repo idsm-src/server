@@ -45,10 +45,23 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the PubChem bioassays from their XML descriptions in {@code pubchem/Bioassay/XML} and from
+ * {@code pubchem/RDF/bioassay/pc_bioassay.ttl.gz} into the table {@code pubchem.bioassays} and the tables of their
+ * texts, ChEMBL links, stages and related assays.
+ */
 class Bioassay extends Updater
 {
+    /**
+     * A ZIP stream that stays open when the reader of an entry closes it.
+     */
     private static class MyZipInputStream extends ZipInputStream
     {
+        /**
+         * Creates the stream.
+         *
+         * @param in the stream of the ZIP file
+         */
         public MyZipInputStream(InputStream in)
         {
             super(in);
@@ -60,6 +73,11 @@ class Bioassay extends Updater
             //super.close();
         }
 
+        /**
+         * Closes the stream.
+         *
+         * @throws IOException if an I/O error occurs
+         */
         public void myClose() throws IOException
         {
             super.close();
@@ -67,14 +85,44 @@ class Bioassay extends Updater
     }
 
 
+    /**
+     * IRI prefix of the bioassays.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/bioassay/AID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Table of the bioassays.
+     */
     private static final EntityTable<Integer> bioassays = new EntityTable<>("pubchem.bioassays", intKey("id"), null,
             integer("source"), uniqueVarchar("title"));
+
+    /**
+     * Bioassays referenced but not described by the data.
+     */
     private static final MissingEntities<Integer> missingBioassays = new MissingEntities<>("bioassay", false);
 
 
+    /**
+     * Not instantiable.
+     */
+    private Bioassay()
+    {
+    }
+
+
+    /**
+     * Returns the text contents of the elements given by the path, one per line.
+     *
+     * @param path the path of the elements
+     * @param node the node the path starts from
+     * @return the text contents of the elements, empty if there is none
+     * @throws XPathExpressionException if the path cannot be evaluated
+     */
     private static String getMultiNodeValue(XPathExpression path, Node node) throws XPathExpressionException
     {
         NodeList nodes = (NodeList) path.evaluate(node, XPathConstants.NODESET);
@@ -94,9 +142,16 @@ class Bioassay extends Updater
     }
 
 
-    /*
+    /**
      * Returns the value of the single element given by the path; no element or several elements of the given name are
      * refused.
+     *
+     * @param path the path of the element
+     * @param node the node the path starts from
+     * @param name the name of the element shown in the error
+     * @return the text content of the element
+     * @throws XPathExpressionException if the path cannot be evaluated
+     * @throws DataException if there is no such element or there are several
      */
     private static String getSingleNodeValue(XPathExpression path, Node node, String name)
             throws XPathExpressionException, DataException
@@ -110,6 +165,14 @@ class Bioassay extends Updater
     }
 
 
+    /**
+     * Returns the identifier of the source IRI for the name of a source in the XML description: {@code ID} followed by
+     * a numeric name, otherwise the name cut at its first parenthesis with the characters {@code -,/.&} and spaces
+     * replaced by underscores.
+     *
+     * @param sourceName the name of the source
+     * @return the identifier of the source IRI
+     */
     private static String createSourceID(String sourceName)
     {
         if(sourceName.matches("[0-9]+"))
@@ -119,9 +182,17 @@ class Bioassay extends Updater
     }
 
 
-    /*
+    /**
      * Loads the bioassays described by the XML; the ChEMBL assays and mechanisms of all of them are also put into the
-     * given maps, against which pc_bioassay is checked.
+     * given maps, against which pc_bioassay is checked. The texts and the ChEMBL links are stored at once.
+     *
+     * @param chemblAssays the map receiving the ChEMBL assay of each bioassay
+     * @param chemblMechanisms the map receiving the ChEMBL mechanism of each bioassay
+     * @throws SQLException if a database error occurs
+     * @throws IOException if an I/O error occurs
+     * @throws XPathException if an XPath expression cannot be compiled or evaluated
+     * @throws ParserConfigurationException if no XML parser can be created
+     * @throws SAXException if an XML document cannot be parsed
      */
     private static void loadBioassays(IntIntMap chemblAssays, IntIntMap chemblMechanisms)
             throws SQLException, IOException, XPathException, ParserConfigurationException, SAXException
@@ -321,6 +392,11 @@ class Bioassay extends Updater
     }
 
 
+    /**
+     * Registers the checks of the predicates, types and values of the bioassay file.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), dcterms + "title", dcterms + "source", bao + "BAO_0000209",
@@ -333,12 +409,16 @@ class Bioassay extends Updater
     }
 
 
-    /*
+    /**
      * Checks that the title, the source and the ChEMBL assay or mechanism of a bioassay in pc_bioassay are those of its
      * XML description, which are published. PubChem escapes some titles in pc_bioassay once more: every backslash and
      * quotation mark of the XML title is preceded by a backslash. The XML is newer than pc_bioassay, so it describes
-     * also the bioassays added since and its values are not checked against pc_bioassay; a title edited since is only
-     * a warning.
+     * also the bioassays added since and its values are not checked against pc_bioassay; a title edited since is only a
+     * warning.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param chemblAssays the ChEMBL assays of the bioassays by the XML descriptions
+     * @param chemblMechanisms the ChEMBL mechanisms of the bioassays by the XML descriptions
      */
     private static void checkDescriptions(TripleDispatcher dispatcher, IntIntMap chemblAssays,
             IntIntMap chemblMechanisms)
@@ -396,9 +476,11 @@ class Bioassay extends Updater
     }
 
 
-    /*
+    /**
      * Registers the measuregroups of the bioassays. A measuregroup is published as one of the bioassay in its IRI, so
      * this has to be the bioassay that the measuregroup is stated for.
+     *
+     * @param dispatcher the dispatcher of the triples
      */
     private static void loadMeasuregroups(TripleDispatcher dispatcher)
     {
@@ -413,6 +495,14 @@ class Bioassay extends Updater
     }
 
 
+    /**
+     * Registers the handler of the stages of the bioassays, at most one per bioassay, and the action that stores their
+     * changes in {@code pubchem.bioassay_stages}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadStages(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntIntMap keepStages = new IntIntMap();
@@ -455,6 +545,14 @@ class Bioassay extends Updater
     }
 
 
+    /**
+     * Registers the handler of the confirmatory assays of the bioassays and the action that stores their changes in
+     * {@code pubchem.bioassay_confirmatory_assays}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadConfirmatoryAssays(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepRelations = new IntPairSet();
@@ -484,6 +582,14 @@ class Bioassay extends Updater
     }
 
 
+    /**
+     * Registers the handler of the primary assays of the bioassays and the action that stores their changes in
+     * {@code pubchem.bioassay_primary_assays}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadPrimaryAssays(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepRelations = new IntPairSet();
@@ -511,6 +617,14 @@ class Bioassay extends Updater
     }
 
 
+    /**
+     * Registers the handler of the summary assays of the bioassays and the action that stores their changes in
+     * {@code pubchem.bioassay_summary_assays}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSummaryAssays(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepRelations = new IntPairSet();
@@ -538,6 +652,16 @@ class Bioassay extends Updater
     }
 
 
+    /**
+     * Loads the bioassays from their XML descriptions and from {@code pubchem/RDF/bioassay/pc_bioassay.ttl.gz} into the
+     * tables and flushes the table of the bioassays.
+     *
+     * @throws XPathException if an XPath expression cannot be compiled or evaluated
+     * @throws SQLException if a database error occurs
+     * @throws IOException if an I/O error occurs
+     * @throws ParserConfigurationException if no XML parser can be created
+     * @throws SAXException if an XML document cannot be parsed
+     */
     static void load() throws XPathException, SQLException, IOException, ParserConfigurationException, SAXException
     {
         System.out.println("load bioassays ...");
@@ -566,6 +690,13 @@ class Bioassay extends Updater
     }
 
 
+    /**
+     * Stores the bioassays, including those referenced by the parts loaded later, and deletes the stored bioassays that
+     * are neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish bioassays ...");
@@ -576,6 +707,11 @@ class Bioassay extends Updater
     }
 
 
+    /**
+     * Ensures that the bioassay of an id has a row; a bioassay without an XML description is counted as missing.
+     *
+     * @param bioassayID the id of the bioassay
+     */
     static void addBioassayID(Integer bioassayID)
     {
         if(bioassays.reference(bioassayID))
@@ -583,6 +719,14 @@ class Bioassay extends Updater
     }
 
 
+    /**
+     * Returns the id of the bioassay of an IRI and ensures that the bioassay has a row; a bioassay without an XML
+     * description is counted as missing.
+     *
+     * @param value the IRI of the bioassay
+     * @return the id of the bioassay
+     * @throws IOException if the IRI is not an IRI of a bioassay
+     */
     static Integer getBioassayID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
@@ -596,20 +740,53 @@ class Bioassay extends Updater
     }
 
 
+    /**
+     * Returns the number of the bioassays.
+     *
+     * @return the number of the bioassays
+     */
     public static int size()
     {
         return bioassays.size();
     }
 
 
+    /**
+     * An input stream that skips the invalid UTF-8 sequences of a bioassay description with a warning.
+     */
     static class FilteredInputStream extends InputStream
     {
+        /**
+         * The filtered stream.
+         */
         private final InputStream inputStream;
+
+        /**
+         * The name of the file shown in the warnings.
+         */
         private final String name;
+
+        /**
+         * The continuation bytes of the last sequence read ahead, in reverse order.
+         */
         private final int[] buffer = new int[3];
+
+        /**
+         * The number of the bytes in {@link #buffer} not returned yet.
+         */
         private int bufferPosition = 0;
+
+        /**
+         * The byte that has ended an invalid sequence and is read again, or -1.
+         */
         private int pushBackChar = -1;
 
+        /**
+         * Creates the stream.
+         *
+         * @param inputStream the filtered stream
+         * @param name the name of the file shown in the warnings
+         */
         public FilteredInputStream(InputStream inputStream, String name)
         {
             this.inputStream = new BufferedInputStream(inputStream);
@@ -655,6 +832,13 @@ class Bioassay extends Updater
             }
         }
 
+        /**
+         * Tests whether a byte read ahead continues the current sequence and counts it in {@link #buffer}; otherwise
+         * the sequence is skipped with a warning and the byte is pushed back.
+         *
+         * @param i the byte read ahead
+         * @return whether the byte is a continuation byte
+         */
         private boolean valid(int i)
         {
             if(i > 0b01111111 && i <= 0b10111111)

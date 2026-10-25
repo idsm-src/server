@@ -8,8 +8,19 @@ import cz.iocb.sparql.engine.database.DatabaseSchema;
 
 
 
+/**
+ * Configuration of the Wikidata compounds, which the IDSM endpoint merges into its service.
+ */
 public class WikidataConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    /**
+     * Creates the configuration of the Wikidata compounds.
+     *
+     * @param service IRI of the service, or null
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public WikidataConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
         super(service, connectionPool, schema);
@@ -20,6 +31,9 @@ public class WikidataConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the common prefixes and the Wikidata prefix to the configuration.
+     */
     private void addPrefixes()
     {
         Common.addPrefixes(this);
@@ -31,12 +45,20 @@ public class WikidataConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the resource classes of the Wikidata compounds to the configuration.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private void addResourceClasses() throws SQLException
     {
         Wikidata.addResourceClasses(this);
     }
 
 
+    /**
+     * Adds the quad mappings of the Wikidata compounds to the configuration.
+     */
     private void addQuadMappings()
     {
         Wikidata.addQuadMappings(this);

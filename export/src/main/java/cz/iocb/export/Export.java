@@ -79,17 +79,55 @@ import cz.iocb.sparql.engine.translator.VariableBindings;
  */
 public class Export
 {
-    // a subset of PN_LOCAL of Turtle (ASCII only, without dots and escapes)
+    /**
+     * Pattern of the local names written in prefixed names: a subset of PN_LOCAL of Turtle (ASCII only, without dots
+     * and escapes).
+     */
     private static final Pattern localNamePattern = Pattern.compile("[A-Za-z0-9_:][-A-Za-z_0-9:]*");
+
+    /**
+     * Pattern of the language tags that can be written.
+     */
     private static final Pattern languageTagPattern = Pattern.compile("[a-zA-Z]+(-[a-zA-Z0-9]+)*");
+
+    /**
+     * Format of the hexadecimal digits of the escapes in IRIs.
+     */
     private static final HexFormat hexFormat = HexFormat.of().withUpperCase();
 
+    /**
+     * Number of the files exported at the same time.
+     */
     private static final int threads = 64;
 
+    /**
+     * Variable of the subjects of the exported triples.
+     */
     private static final Variable subject = new Variable("S");
+
+    /**
+     * Variable of the objects of the exported triples.
+     */
     private static final Variable object = new Variable("O");
 
 
+    /**
+     * Not instantiable.
+     */
+    private Export()
+    {
+    }
+
+
+    /**
+     * Exports the endpoint whose database is given by the file {@code datasource.properties} of the working directory
+     * ({@code host}, {@code port}, {@code dbname}, {@code user} and {@code password}) into the directory {@code idsm-}
+     * followed by the current date under the directory given by {@code base}.
+     *
+     * @param args the command-line arguments (ignored)
+     * @throws IOException if the properties cannot be read or the directories cannot be created
+     * @throws SQLException if a database error occurs
+     */
     public static void main(String[] args) throws IOException, SQLException
     {
         Properties properties = new Properties();
@@ -126,6 +164,15 @@ public class Export
     }
 
 
+    /**
+     * Exports the named graphs of a configuration, a directory per graph and a file per predicate, the files being
+     * written in parallel. The names of all directories and files are checked before anything is written.
+     *
+     * @param config the configuration
+     * @param base the directory to export into
+     * @return true if all files were exported, false if some failed
+     * @throws IOException if a directory cannot be created
+     */
     private static boolean export(SparqlDatabaseConfiguration config, Path base) throws IOException
     {
         Map<Iri, Map<Iri, Set<QuadMapping>>> mappings = new HashMap<>();
@@ -199,6 +246,14 @@ public class Export
     }
 
 
+    /**
+     * Registers the path an IRI is exported to and refuses a path already taken by another IRI.
+     *
+     * @param names the paths taken so far with their IRIs
+     * @param name the path
+     * @param iri the IRI
+     * @throws IllegalStateException if another IRI is exported to the same path
+     */
     private static void checkName(Map<Path, Iri> names, Path name, Iri iri)
     {
         Iri other = names.putIfAbsent(name, iri);
@@ -208,6 +263,20 @@ public class Export
     }
 
 
+    /**
+     * Writes the triples of one predicate in one graph into a gzipped TriG file. The prefixes are made of the IRI
+     * prefixes of the mapped classes and the predicate is the empty prefix. The file is written under the suffix
+     * {@code .part} and renamed when it is complete; a failed file is removed.
+     *
+     * @param file the file
+     * @param config the configuration
+     * @param graph the graph
+     * @param predicate the predicate
+     * @param mappings the quad mappings of the predicate in the graph
+     * @return the number of the written triples
+     * @throws SQLException if a database error occurs
+     * @throws IOException if an I/O error occurs
+     */
     private static long writeTrig(Path file, SparqlDatabaseConfiguration config, Iri graph, Iri predicate,
             Set<QuadMapping> mappings) throws SQLException, IOException
     {
@@ -295,6 +364,14 @@ public class Export
     }
 
 
+    /**
+     * Returns the candidate prefixes of the terms of a mapping: its IRI if it is constant, otherwise the IRI prefixes
+     * of its IRI classes and the datatype IRIs of its literal classes.
+     *
+     * @param mapping the term mapping
+     * @param var the binding of the term in the translated select, null if the mapping has no solution
+     * @return the prefixes
+     */
     private static List<String> getPrefixes(TermMapping mapping, VariableBinding var)
     {
         if(mapping instanceof ConstantIriMapping iriMapping)
@@ -324,6 +401,17 @@ public class Export
     }
 
 
+    /**
+     * Binds a term mapping of a table to a variable and requires its nullable columns that are not optional for its
+     * class to be not null.
+     *
+     * @param request the request
+     * @param table the table of the mapping
+     * @param nodemap the term mapping
+     * @param name the variable, null to add the conditions only
+     * @param bindings the bindings to extend
+     * @param condition the condition to extend
+     */
     private static void processNodeMapping(Request request, SourceTable table, TermMapping nodemap, Variable name,
             VariableBindings bindings, Condition condition)
     {
@@ -343,6 +431,15 @@ public class Export
     }
 
 
+    /**
+     * Returns the columns a table access of a distinct mapping is distinct on: the columns of its bindings and of its
+     * condition.
+     *
+     * @param distinct whether the mapping is distinct
+     * @param bindings the bindings of the access
+     * @param condition the condition of the access
+     * @return the columns, empty if the mapping is not distinct
+     */
     private static Set<Column> distinctColumns(boolean distinct, VariableBindings bindings, Condition condition)
     {
         if(!distinct)
@@ -356,6 +453,13 @@ public class Export
     }
 
 
+    /**
+     * Translates a quad mapping into the select of the subjects and the objects of its triples.
+     *
+     * @param request the request
+     * @param mapping the quad mapping
+     * @return the optimized select
+     */
     private static SqlSelect translate(Request request, QuadMapping mapping)
     {
         SqlIntercode imcode = switch(mapping)
@@ -433,12 +537,26 @@ public class Export
     }
 
 
+    /**
+     * Converts an IRI to a file name by replacing the runs of colons and slashes with underscores.
+     *
+     * @param iri the IRI
+     * @return the file name
+     */
     private static String convertIriToName(Iri iri)
     {
         return iri.getValue().replaceAll("[:/]+", "_");
     }
 
 
+    /**
+     * Writes an RDF term in the syntax of TriG.
+     *
+     * @param out the output
+     * @param term the term
+     * @param prefixes the names of the prefixes by their IRIs, the longest IRIs first
+     * @throws IOException if an I/O error occurs
+     */
     private static void writeTerm(Writer out, RdfTerm term, Map<String, String> prefixes) throws IOException
     {
         switch(term)
@@ -488,6 +606,14 @@ public class Export
     }
 
 
+    /**
+     * Writes an IRI as a prefixed name of the longest prefix whose local name can be written, otherwise as an IRIREF.
+     *
+     * @param out the output
+     * @param iri the IRI
+     * @param prefixes the names of the prefixes by their IRIs, the longest IRIs first
+     * @throws IOException if an I/O error occurs
+     */
     private static void writeIri(Writer out, Iri iri, Map<String, String> prefixes) throws IOException
     {
         String value = iri.getValue();
@@ -512,6 +638,13 @@ public class Export
     }
 
 
+    /**
+     * Writes an IRI as an IRIREF, the characters an IRIREF does not admit being written as UCHAR escapes.
+     *
+     * @param out the output
+     * @param iri the IRI
+     * @throws IOException if an I/O error occurs
+     */
     private static void writeIriRef(Writer out, String iri) throws IOException
     {
         out.write('<');
@@ -538,6 +671,13 @@ public class Export
     }
 
 
+    /**
+     * Writes a string as a quoted literal, escaping the quotes, the backslashes and the line breaks.
+     *
+     * @param out the output
+     * @param value the string
+     * @throws IOException if an I/O error occurs
+     */
     private static void writeString(Writer out, String value) throws IOException
     {
         out.write('"');
@@ -568,6 +708,14 @@ public class Export
     }
 
 
+    /**
+     * Writes a language tag; a tag that cannot be written (a tag cannot be escaped) is refused by an
+     * {@link IllegalArgumentException}.
+     *
+     * @param out the output
+     * @param tag the language tag
+     * @throws IOException if an I/O error occurs
+     */
     private static void writeLanguageTag(Writer out, String tag) throws IOException
     {
         // a language tag cannot be escaped

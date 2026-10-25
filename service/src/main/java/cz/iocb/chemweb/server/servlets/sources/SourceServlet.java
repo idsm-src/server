@@ -16,11 +16,31 @@ import org.openscience.cdk.exception.CDKException;
 
 
 
+/**
+ * Base of the servlets serving a record of the database selected by the {@code id} parameter: the record is read by the
+ * SQL query given by the {@code access} init parameter from the data source named by the {@code resource} init
+ * parameter (a JNDI resource). The responses allow any origin.
+ */
 @SuppressWarnings("serial")
 public abstract class SourceServlet extends HttpServlet
 {
+    /**
+     * Data source of the database.
+     */
     protected DataSource connectionPool;
+
+    /**
+     * SQL query reading the record of an id, which is its only parameter.
+     */
     protected String access;
+
+
+    /**
+     * Creates the servlet.
+     */
+    protected SourceServlet()
+    {
+    }
 
 
     @Override
@@ -73,11 +93,25 @@ public abstract class SourceServlet extends HttpServlet
     }
 
 
+    /**
+     * Adds the headers common to all responses, which allow any origin to read them.
+     *
+     * @param req the request
+     * @param res the response
+     */
     protected static void setBasicHttpHeaders(HttpServletRequest req, HttpServletResponse res)
     {
         res.setHeader("Access-Control-Allow-Origin", "*");
     }
 
+    /**
+     * Generates the response and turns the failures into error responses: an unknown id into 404, an invalid parameter
+     * into 400, a database error into 503 and any other failure into 500.
+     *
+     * @param req the request
+     * @param res the response
+     * @throws IOException if an I/O error occurs
+     */
     protected void processRequest(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
         try
@@ -103,6 +137,16 @@ public abstract class SourceServlet extends HttpServlet
     }
 
 
+    /**
+     * Generates the response for the requested record; an unknown id is reported by a {@link NoSuchElementException},
+     * an invalid parameter by an {@link IllegalArgumentException}.
+     *
+     * @param req the request
+     * @param res the response
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     * @throws CDKException if the structure of a compound cannot be processed
+     */
     protected abstract void generateResponse(HttpServletRequest req, HttpServletResponse res)
             throws IOException, SQLException, CDKException;
 }

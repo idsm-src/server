@@ -23,17 +23,47 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the ChEMBL documents, the publications and other sources of the data, from the document file of the release
+ * into the table {@code chembl.documents}. It also checks the {@code cco:hasDocument} triples of the journals against
+ * the stored {@code cco:hasJournal} links of the documents.
+ */
 class Document extends Updater
 {
+    /**
+     * IRI prefix of the documents.
+     */
     static final String prefix = ChEMBL.chembl + "document/CHEMBL";
+
+    /**
+     * IRI prefix of the PubMed identifiers of the documents.
+     */
     static final String pubmedPrefix = "http://identifiers.org/pubmed/";
 
+    /**
+     * Table of the documents.
+     */
     private static final EntityTable<Integer> documents = new EntityTable<>("chembl.documents", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), integer("journal"), varchar("type"), varchar("title"),
             integer("year"), varchar("volume"), varchar("issue"), varchar("first_page"), varchar("last_page"),
             varchar("doi"), integer("pubmed"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private Document()
+    {
+    }
+
+
+    /**
+     * Loads the documents from the document file of the release and checks that every described document has exactly
+     * one journal, {@code CHEMBL_JRN_null} standing for none.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load documents ...");
@@ -116,6 +146,11 @@ class Document extends Updater
     }
 
 
+    /**
+     * Stores the collected documents and reports the referenced ones that the file does not describe.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish documents ...");
@@ -126,6 +161,13 @@ class Document extends Updater
     }
 
 
+    /**
+     * Returns the id of a document and marks the document as referenced.
+     *
+     * @param node the IRI of the document
+     * @return the id of the document
+     * @throws IOException if the node is not an IRI of a document
+     */
     static int getDocumentID(Node node) throws IOException
     {
         int id = TripleStreamProcessor.getIntID(node, prefix);

@@ -13,8 +13,24 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem organizations (graph {@code pubchem:organization}).
+ */
 public class Organization
 {
+    /**
+     * Not instantiable.
+     */
+    private Organization()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem organizations to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pubchem:organization", INT4, new DatabaseTable(schema, "organizations"),
@@ -23,6 +39,11 @@ public class Organization
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem organizations to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:organization");

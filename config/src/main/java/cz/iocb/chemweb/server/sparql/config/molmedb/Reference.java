@@ -14,8 +14,25 @@ import cz.iocb.sparql.engine.mapping.classes.ListUserIriClass;
 
 
 
+/**
+ * Mapping of the MolMeDB references: the publications of the measured values and their substances, membranes, methods
+ * and proteins.
+ */
 public class Reference
 {
+    /**
+     * Not instantiable.
+     */
+    private Reference()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the references to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
@@ -26,6 +43,11 @@ public class Reference
     }
 
 
+    /**
+     * Adds the quad mappings of the references to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("<https://rdf.molmedb.upol.cz>");

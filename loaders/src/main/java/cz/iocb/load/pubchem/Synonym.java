@@ -14,24 +14,57 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem synonyms ({@code pubchem/RDF/synonym}), identified by the MD5 hashes of their names, into the
+ * tables {@code pubchem.synonyms} and {@code pubchem.synonym_values} and the tables of their types, compounds and
+ * subjects.
+ */
 class Synonym extends Updater
 {
+    /**
+     * MD5 hash of the name of a synonym, held as two longs.
+     */
     private static final class MD5
     {
+        /**
+         * Upper 64 bits of the hash.
+         */
         private final long hi;
+
+        /**
+         * Lower 64 bits of the hash.
+         */
         private final long lo;
 
+        /**
+         * Creates the hash from its hexadecimal form.
+         *
+         * @param value the 32 lower-case hexadecimal digits of the hash
+         */
         public MD5(String value)
         {
             this(value, 0);
         }
 
+        /**
+         * Creates the hash from its hexadecimal form in a string.
+         *
+         * @param value the string holding the 32 lower-case hexadecimal digits of the hash
+         * @param offset the index of the first digit in the string
+         */
         public MD5(String value, int offset)
         {
             hi = parse(offset + 0, value);
             lo = parse(offset + 16, value);
         }
 
+        /**
+         * Parses 16 lower-case hexadecimal digits of a string.
+         *
+         * @param offset the index of the first digit
+         * @param value the string
+         * @return the parsed value
+         */
         private static long parse(int offset, String value)
         {
             long ret = 0;
@@ -97,9 +130,19 @@ class Synonym extends Updater
     }
 
 
+    /**
+     * Map of the synonym hashes to integers, read from and written to the database as hexadecimal strings.
+     */
     @SuppressWarnings("serial")
     private static class MD5IntMap extends SqlMap<MD5, Integer>
     {
+        /**
+         * Creates an empty map.
+         */
+        private MD5IntMap()
+        {
+        }
+
         @Override
         public MD5 getKey(ResultSet result) throws SQLException
         {
@@ -121,16 +164,51 @@ class Synonym extends Updater
     }
 
 
+    /**
+     * IRI prefix of the synonyms.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/synonym/MD5_";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Ids of the stored synonyms met in the data, by their hashes.
+     */
     private static final MD5IntMap keepHashes = new MD5IntMap();
+
+    /**
+     * Ids of the synonyms met in the data that are not stored yet, by their hashes.
+     */
     private static final MD5IntMap newHashes = new MD5IntMap();
 
+    /**
+     * Id of the next new synonym.
+     */
     private static int nextMd5ID;
+
+    /**
+     * Id of the next new synonym value.
+     */
     private static int nextValueID;
 
 
+    /**
+     * Not instantiable.
+     */
+    private Synonym()
+    {
+    }
+
+
+    /**
+     * Loads the synonyms and their values from the value files and stores their changes.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases() throws IOException, SQLException
     {
         MD5IntMap oldHashes = new MD5IntMap();
@@ -199,6 +277,12 @@ class Synonym extends Updater
     }
 
 
+    /**
+     * Loads the CHEMINF types of the synonyms and stores their changes in {@code pubchem.synonym_types}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTypes() throws IOException, SQLException
     {
         IntPairSet keepTypes = new IntPairSet();
@@ -252,6 +336,12 @@ class Synonym extends Updater
     }
 
 
+    /**
+     * Loads the compounds of the synonyms and stores their changes in {@code pubchem.synonym_compounds}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCompounds() throws IOException, SQLException
     {
         IntPairSet keepCompounds = new IntPairSet();
@@ -303,6 +393,13 @@ class Synonym extends Updater
     }
 
 
+    /**
+     * Loads the subjects of the synonyms, which are PubChem concepts or MeSH descriptors, and stores their changes in
+     * {@code pubchem.synonym_concept_subjects} and {@code pubchem.synonym_mesh_subjects}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTopics() throws IOException, SQLException
     {
         IntPairSet keepConceptSubjects = new IntPairSet();
@@ -368,6 +465,12 @@ class Synonym extends Updater
     }
 
 
+    /**
+     * Loads the synonyms from the PubChemRDF files.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load synonyms ...");
@@ -381,6 +484,13 @@ class Synonym extends Updater
     }
 
 
+    /**
+     * Returns the hash of the synonym with the given IRI.
+     *
+     * @param value the IRI of the synonym
+     * @return the hash of the synonym
+     * @throws IOException if the IRI is not an IRI of a synonym
+     */
     private static MD5 getSynonymMD5(String value) throws IOException
     {
         if(!value.startsWith(prefix) || !value.substring(prefixLength).matches("[0-9a-f]{32}"))
@@ -390,6 +500,13 @@ class Synonym extends Updater
     }
 
 
+    /**
+     * Returns the id of the synonym with the given IRI.
+     *
+     * @param value the IRI of the synonym
+     * @return the id of the synonym, or null for a synonym without a value in the data
+     * @throws IOException if the IRI is not an IRI of a synonym
+     */
     static Integer getSynonymID(String value) throws IOException
     {
         MD5 md5 = getSynonymMD5(value);

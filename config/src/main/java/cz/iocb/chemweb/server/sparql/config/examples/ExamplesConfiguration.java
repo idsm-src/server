@@ -12,11 +12,25 @@ import cz.iocb.sparql.engine.mapping.classes.ListUserIriClass;
 
 
 
+/**
+ * Configuration of the SPARQL examples of IDSM, which the IDSM endpoint merges into its service.
+ */
 public class ExamplesConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    /**
+     * Database schema of the tables of the examples.
+     */
     static final String schema = "idsm";
 
 
+    /**
+     * Creates the configuration of the examples.
+     *
+     * @param service IRI of the service, or null
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public ExamplesConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
         super(service, connectionPool, schema);
@@ -27,6 +41,9 @@ public class ExamplesConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the common prefixes and those of the examples to the configuration.
+     */
     private void addPrefixes()
     {
         Common.addPrefixes(this);
@@ -36,6 +53,11 @@ public class ExamplesConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the resource classes of the examples and of the endpoints they target to the configuration.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private void addResourceClasses() throws SQLException
     {
         addIriClass(new ListUserIriClass("idsm:endpoint", new DatabaseTable(schema, "sparql_endpoints"),
@@ -46,6 +68,9 @@ public class ExamplesConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the quad mappings of the examples to the configuration.
+     */
     private void addQuadMappings()
     {
         Examples.addQuadMappings(this);

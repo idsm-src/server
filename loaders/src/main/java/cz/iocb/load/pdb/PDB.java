@@ -18,11 +18,33 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the structures of the PDB chemical components from the archive of the Chemical Component Dictionary into
+ * the table {@code pdb.compounds}.
+ */
 public final class PDB extends Updater
 {
+    /**
+     * The matcher of the paths of the model structure files of the components in the archive.
+     */
     private static final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:ccd/*/*/*_model.sdf");
 
 
+    /**
+     * Not instantiable.
+     */
+    private PDB()
+    {
+    }
+
+
+    /**
+     * Loads the model structures of the components from the archive; a missing archive has been reported by
+     * {@link cz.iocb.load.common.Updater#openFile(String)} and leaves the table unchanged.
+     *
+     * @throws IOException if the archive cannot be read
+     * @throws SQLException if a database error occurs
+     */
     public static void loadCompounds() throws IOException, SQLException
     {
         StringStringMap keepCompounds = new StringStringMap();
@@ -91,6 +113,12 @@ public final class PDB extends Updater
     }
 
 
+    /**
+     * Runs the loader.
+     *
+     * @param args the command-line arguments (ignored)
+     * @throws Exception if the load fails
+     */
     public static void main(String[] args) throws Exception
     {
         try

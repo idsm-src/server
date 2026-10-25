@@ -32,8 +32,14 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem genes and gene symbols (graph {@code pubchem:gene}).
+ */
 public class Gene
 {
+    /**
+     * Ontology units of the matches of the genes ({@code rdfs:seeAlso}).
+     */
     public static final short[] matchUnits = { unitIdentifiersCTDGene, unitIdentifiersFB, unitIdentifiersHGNC,
             unitIdentifiersMGI, unitIdentifiersMIM, unitIdentifiersNCBIGene, unitIdentifiersNCIT,
             unitIdentifiersPharmGKBGene, unitIdentifiersRGD, unitIdentifiersSGD, unitIdentifiersXenbaseGene,
@@ -41,6 +47,19 @@ public class Gene
             unitGenCC };
 
 
+    /**
+     * Not instantiable.
+     */
+    private Gene()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem genes and gene symbols to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pubchem:genesymbol", INT4, new DatabaseTable(schema, "genesymbols"),
@@ -51,6 +70,11 @@ public class Gene
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem genes and gene symbols to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:gene");

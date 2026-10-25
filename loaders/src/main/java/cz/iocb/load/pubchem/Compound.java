@@ -23,23 +23,71 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the PubChem compounds from the files of {@code pubchem/RDF/compound/general} and from the molfiles of
+ * {@code pubchem/Compound/CURRENT-Full/SDF} into the table {@code pubchem.compounds} and the tables of their relations,
+ * roles, types, labels, matches and structures.
+ */
 class Compound extends Updater
 {
+    /**
+     * IRI prefix of the compounds.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Stored compounds met in the data.
+     */
     private static final IntSet keepCompounds = new IntSet();
+
+    /**
+     * Compounds met in the data that are not stored yet.
+     */
     private static final IntSet newCompounds = new IntSet();
+
+    /**
+     * Stored compounds not met in the data so far; those left are deleted.
+     */
     private static final IntSet oldCompounds = new IntSet();
+
+    /**
+     * Compounds referenced but not described by the data.
+     */
     private static final MissingEntities<Integer> missingCompounds = new MissingEntities<>("compound", false);
 
 
+    /**
+     * Not instantiable.
+     */
+    private Compound()
+    {
+    }
+
+
+    /**
+     * Loads the ids of the stored compounds.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases() throws IOException, SQLException
     {
         load("select id from pubchem.compounds", oldCompounds);
     }
 
 
+    /**
+     * Loads the components of the compounds from {@code pc_compound2component.ttl.gz} into the table
+     * {@code pubchem.compound_components}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadComponents() throws IOException, SQLException
     {
         IntPairSet keepComponents = new IntPairSet();
@@ -77,6 +125,13 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Loads the drug products the compounds are active ingredients of from {@code pc_compound2drugproduct.ttl.gz} into
+     * the table {@code pubchem.compound_active_ingredients}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadDrugproducts() throws IOException, SQLException
     {
         IntIntPairSet keepIngredients = new IntIntPairSet();
@@ -116,6 +171,13 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Loads the isotopologues of the compounds from {@code pc_compound2isotopologue.ttl.gz} into the table
+     * {@code pubchem.compound_isotopologues}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadIsotopologues() throws IOException, SQLException
     {
         IntPairSet keepIsotopologues = new IntPairSet();
@@ -153,6 +215,13 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Loads the parent compounds of the compounds from {@code pc_compound2parent.ttl.gz} into the table
+     * {@code pubchem.compound_parents}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadParents() throws IOException, SQLException
     {
         IntPairSet keepParents = new IntPairSet();
@@ -190,6 +259,13 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Loads the compounds of the same connectivity from {@code pc_compound2sameconnectivity.ttl.gz} into the table
+     * {@code pubchem.compound_same_connectivities}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSameConnectivities() throws IOException, SQLException
     {
         IntPairSet keepIsomers = new IntPairSet();
@@ -227,6 +303,13 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Loads the stereoisomers of the compounds from the files {@code pc_compound2stereoisomer_*.ttl.gz} into the table
+     * {@code pubchem.compound_stereoisomers}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadStereoisomers() throws IOException, SQLException
     {
         IntPairSet keepIsomers = new IntPairSet();
@@ -269,6 +352,13 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Loads the roles of the compounds from {@code pc_compound_role.ttl.gz} into the table
+     * {@code pubchem.compound_roles}; a triple of the invalid subject {@code CIDNULL} is skipped with a warning.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadRoles() throws IOException, SQLException
     {
         IntPairSet keepRoles = new IntPairSet();
@@ -314,6 +404,13 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Loads the types of the compounds (except {@code vocab:Compound}) from the files {@code pc_compound_type_*.ttl.gz}
+     * into the table {@code pubchem.compound_types}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTypes() throws IOException, SQLException
     {
         IntIntPairSet keepTypes = new IntIntPairSet();
@@ -359,6 +456,13 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Loads the labels of the compounds, at most one per compound, from the files {@code pc_compound_label_*.ttl.gz}
+     * into the table {@code pubchem.compound_labels}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadLabels() throws IOException, SQLException
     {
         IntStringMap keepLabels = new IntStringMap();
@@ -415,6 +519,14 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Loads the resources linked to the compounds by {@code rdfs:seeAlso} from the files
+     * {@code pc_compound_seealso_*.ttl.gz} into the tables {@code pubchem.compound_wikidata_matches} (Wikidata
+     * entities) and {@code pubchem.compound_matches} (ontology resources).
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCloseMatches() throws IOException, SQLException
     {
         IntIntPairSet keepMatches = new IntIntPairSet();
@@ -481,9 +593,12 @@ class Compound extends Updater
     }
 
 
-    /*
+    /**
      * Checks that the molfile files cover the identifiers contiguously from the first one, so that an incomplete dump
      * does not delete the structures it lacks. No molfile file at all is reported by processFiles().
+     *
+     * @param path the directory of the molfile files
+     * @param pattern the pattern of the names of the molfile files
      */
     private static void checkMolfileFiles(String path, String pattern)
     {
@@ -509,9 +624,12 @@ class Compound extends Updater
     }
 
 
-    /*
-     * Loads the structures of the compounds from the dump of all molfiles; a compound known only from the dump gets
-     * its row as well.
+    /**
+     * Loads the structures of the compounds from the dump of all molfiles; a compound known only from the dump gets its
+     * row as well.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     private static void loadMolfiles() throws IOException, SQLException
     {
@@ -539,6 +657,13 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Checks that the subjects of the files {@code pc_compound2descriptor_*.ttl.gz} are compounds and that their values
+     * of {@code sio:SIO_000008} are compound descriptors.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void checkDescriptors() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/compound/general", "pc_compound2descriptor_[0-9]+\\.ttl\\.gz", file -> {
@@ -563,6 +688,13 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Checks that the values of {@code dcterms:identifier} in the files {@code pc_compound_identifier_*.ttl.gz} match
+     * the IRIs of the compounds.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void checkIdentifiers() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/compound/general", "pc_compound_identifier_[0-9]+\\.ttl\\.gz", file -> {
@@ -588,6 +720,12 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Loads the compounds and their relations, roles, types, labels, matches and structures into the tables.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load compounds ...");
@@ -611,6 +749,12 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Stores the compounds, including those referenced by the parts loaded later, and deletes the stored compounds that
+     * are neither described nor referenced.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish compounds ...");
@@ -622,12 +766,25 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Adds a compound referenced by another loader; a compound unknown so far is counted as missing.
+     *
+     * @param compoundID the id of the compound
+     * @throws IOException if an I/O error occurs
+     */
     static void addCompoundID(Integer compoundID) throws IOException
     {
         addCompoundID(compoundID, true);
     }
 
 
+    /**
+     * Adds a compound unless it is known already.
+     *
+     * @param compoundID the id of the compound
+     * @param verbose whether a compound unknown so far is counted as missing
+     * @throws IOException if an I/O error occurs
+     */
     static void addCompoundID(Integer compoundID, boolean verbose) throws IOException
     {
         synchronized(newCompounds)
@@ -646,12 +803,28 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Returns the id of the compound of an IRI referenced by another loader; a compound unknown so far is counted as
+     * missing.
+     *
+     * @param value the IRI of the compound
+     * @return the id of the compound
+     * @throws IOException if the IRI is not an IRI of a compound
+     */
     static Integer getCompoundID(String value) throws IOException
     {
         return getCompoundID(value, true);
     }
 
 
+    /**
+     * Returns the id of the compound of an IRI and adds the compound unless it is known already.
+     *
+     * @param value the IRI of the compound
+     * @param verbose whether a compound unknown so far is counted as missing
+     * @return the id of the compound
+     * @throws IOException if the IRI is not an IRI of a compound
+     */
     private static Integer getCompoundID(String value, boolean verbose) throws IOException
     {
         if(!value.startsWith(prefix))
@@ -677,6 +850,11 @@ class Compound extends Updater
     }
 
 
+    /**
+     * Returns the number of the compounds.
+     *
+     * @return the number of the compounds
+     */
     public static int size()
     {
         return newCompounds.size() + keepCompounds.size();

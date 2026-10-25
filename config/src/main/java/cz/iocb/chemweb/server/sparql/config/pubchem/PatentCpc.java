@@ -12,8 +12,24 @@ import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
 
 
 
+/**
+ * Mapping of the CPC patent classifications (graph {@code pubchem:patentcpc}).
+ */
 public class PatentCpc
 {
+    /**
+     * Not instantiable.
+     */
+    private PatentCpc()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem CPC classifications to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
@@ -21,6 +37,11 @@ public class PatentCpc
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem CPC classifications to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:patentcpc");

@@ -11,8 +11,24 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the version descriptors of the PubChem substances (graph {@code descriptor:substance}).
+ */
 public class SubstanceDescriptor
 {
+    /**
+     * Not instantiable.
+     */
+    private SubstanceDescriptor()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem substance versions to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/descriptor/SID";
@@ -21,6 +37,11 @@ public class SubstanceDescriptor
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem substance versions to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("descriptor:substance");

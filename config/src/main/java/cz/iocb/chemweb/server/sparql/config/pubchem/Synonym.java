@@ -13,8 +13,24 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem synonyms (graph {@code pubchem:synonym}).
+ */
 public class Synonym
 {
+    /**
+     * Not instantiable.
+     */
+    private Synonym()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem synonyms to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pubchem:synonym", INT4, new DatabaseTable(schema, "synonyms"),
@@ -23,6 +39,11 @@ public class Synonym
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem synonyms to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:synonym");

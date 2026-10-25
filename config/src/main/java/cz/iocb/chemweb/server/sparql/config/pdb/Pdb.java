@@ -13,8 +13,25 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
+/**
+ * Mapping of the compounds of the PDB Chemical Component Dictionary (graph {@code pdb-ccd:}), of which only the
+ * molfiles are held.
+ */
 public class Pdb
 {
+    /**
+     * Not instantiable.
+     */
+    private Pdb()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PDB compounds and their molfiles to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pdb:compound", INT4, new DatabaseTable("pdb", "compounds"),
@@ -27,6 +44,11 @@ public class Pdb
     }
 
 
+    /**
+     * Adds the quad mappings of the PDB molfiles to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pdb-ccd:");

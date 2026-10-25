@@ -18,14 +18,39 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the ChEMBL binding sites of the targets from the binding site file of the release into the table
+ * {@code chembl.binding_sites}.
+ */
 class BindingSite extends Updater
 {
+    /**
+     * IRI prefix of the binding sites.
+     */
     static final String prefix = ChEMBL.chembl + "binding_site/CHEMBL_BS_";
 
+    /**
+     * Table of the binding sites.
+     */
     private static final EntityTable<Integer> sites = new EntityTable<>("chembl.binding_sites", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), varchar("name"), integer("target"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private BindingSite()
+    {
+    }
+
+
+    /**
+     * Loads the binding sites from the binding site file of the release and checks the {@code cco:hasBindingSite}
+     * triples of the targets against their {@code cco:hasTarget} links.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load binding sites ...");
@@ -76,6 +101,11 @@ class BindingSite extends Updater
     }
 
 
+    /**
+     * Stores the collected binding sites and reports the referenced ones that the file does not describe.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish binding sites ...");
@@ -86,6 +116,13 @@ class BindingSite extends Updater
     }
 
 
+    /**
+     * Returns the id of a binding site and marks the binding site as referenced.
+     *
+     * @param node the IRI of the binding site
+     * @return the id of the binding site
+     * @throws IOException if the node is not an IRI of a binding site
+     */
     static int getSiteID(Node node) throws IOException
     {
         int id = TripleStreamProcessor.getIntID(node, prefix);

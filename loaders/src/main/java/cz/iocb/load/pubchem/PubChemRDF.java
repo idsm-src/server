@@ -12,33 +12,127 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of PubChem: reads the PubChemRDF dump, together with the XML files of the bioassays and the SDF files of the
+ * compounds, into the {@code pubchem} schema. The parts are read in the order of their dependencies and stored when all
+ * of them have been read; the whole load is committed at once or rolled back.
+ */
 public class PubChemRDF extends Updater
 {
+    /**
+     * Namespace of RDF.
+     */
     static final String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+
+    /**
+     * Namespace of RDF Schema.
+     */
     static final String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
+
+    /**
+     * Namespace of OWL.
+     */
     static final String owl = "http://www.w3.org/2002/07/owl#";
+
+    /**
+     * Namespace of the XML Schema datatypes.
+     */
     static final String xsd = "http://www.w3.org/2001/XMLSchema#";
+
+    /**
+     * Namespace of SKOS.
+     */
     static final String skos = "http://www.w3.org/2004/02/skos/core#";
+
+    /**
+     * Namespace of vCard.
+     */
     static final String vcard = "http://www.w3.org/2006/vcard/ns#";
+
+    /**
+     * Namespace of the Dublin Core terms.
+     */
     static final String dcterms = "http://purl.org/dc/terms/";
+
+    /**
+     * Namespace of FOAF.
+     */
     static final String foaf = "http://xmlns.com/foaf/0.1/";
+
+    /**
+     * Namespace of PRISM.
+     */
     static final String prism = "http://prismstandard.org/namespaces/basic/3.0/";
+
+    /**
+     * Namespace of CiTO.
+     */
     static final String cito = "http://purl.org/spar/cito/";
+
+    /**
+     * Namespace of FaBiO.
+     */
     static final String fabio = "http://purl.org/spar/fabio/";
+
+    /**
+     * Namespace of FRAPO.
+     */
     static final String frapo = "http://purl.org/cerif/frapo/";
+
+    /**
+     * Namespace of the Semanticscience Integrated Ontology.
+     */
     static final String sio = "http://semanticscience.org/resource/";
+
+    /**
+     * Namespace of the OBO ontologies.
+     */
     static final String obo = "http://purl.obolibrary.org/obo/";
+
+    /**
+     * Namespace of the BioAssay Ontology.
+     */
     static final String bao = "http://www.bioassayontology.org/bao#";
+
+    /**
+     * Namespace of BioPAX level 3.
+     */
     static final String bp = "http://www.biopax.org/release/biopax-level3.owl#";
+
+    /**
+     * Namespace of the UniProt core ontology.
+     */
     static final String up = "http://purl.uniprot.org/core/";
+
+    /**
+     * Namespace of the PDBx ontology.
+     */
     static final String pdbo = "http://rdf.wwpdb.org/schema/pdbx-v50.owl#";
+
+    /**
+     * Namespace of the EDAM ontology.
+     */
     static final String edam = "http://edamontology.org/";
+
+    /**
+     * Namespace of the PubChem vocabulary.
+     */
     static final String vocab = "http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#";
 
 
-    /*
-     * Returns the date of the last modification of the PubChemRDF dataset, as its VoID description states it; null
-     * stands for an unknown version.
+    /**
+     * Not instantiable.
+     */
+    private PubChemRDF()
+    {
+    }
+
+
+    /**
+     * Returns the date of the last modification of the PubChemRDF dataset, as its VoID description states it.
+     *
+     * @return the date of the last modification, or null for an unknown version
+     * @throws IOException if an I/O error occurs
      */
     private static String getVersion() throws IOException
     {
@@ -66,9 +160,13 @@ public class PubChemRDF extends Updater
     }
 
 
-    /*
+    /**
      * Returns the date of the download of the given part of the PubChem dump, which stands for its version, as the
-     * download script has recorded it; null stands for an unknown date.
+     * download script has recorded it.
+     *
+     * @param part the directory of the part, such as {@code Bioassay} or {@code Compound}
+     * @return the date of the download, or null for an unknown date
+     * @throws IOException if an I/O error occurs
      */
     private static String getDownloadDate(String part) throws IOException
     {
@@ -79,6 +177,15 @@ public class PubChemRDF extends Updater
     }
 
 
+    /**
+     * Runs the load of PubChem. It records the counts of the substances, compounds and bioassays and the versions of
+     * the parts, checks that no file of the dump has been left out, synchronizes the Sachem index of the compounds and
+     * commits; any problem fails the load with exit status 1.
+     *
+     * @param args the command-line arguments (ignored)
+     * @throws SQLException if a database error occurs
+     * @throws IOException if an I/O error occurs
+     */
     public static void main(String[] args) throws SQLException, IOException
     {
         try

@@ -7,19 +7,30 @@ import org.apache.jena.graph.Node;
 
 
 
-/*
+/**
  * Collects the values of chosen predicates at blank nodes while the triples are read, so that a structure of blank
  * nodes, such as an OWL restriction or an annotated axiom, can be processed once all of its triples are known. The
  * values of a predicate at a node form a set, as in an RDF graph.
  */
 public class BlankNodes
 {
+    /**
+     * Index of each collected predicate in the value arrays of the nodes.
+     */
     private final HashMap<String, Integer> indexes = new HashMap<>();
+
+    /**
+     * Values of the collected predicates at each blank node, by the index of the predicate; an entry is null, a single
+     * node, or a list of the distinct nodes.
+     */
     private final HashMap<Node, Object[]> nodes = new HashMap<>();
 
 
-    /*
+    /**
      * Registers the handlers that collect the values of the predicates.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @param predicates the IRIs of the predicates whose values are collected
      */
     public BlankNodes(TripleDispatcher dispatcher, String... predicates)
     {
@@ -36,8 +47,12 @@ public class BlankNodes
     }
 
 
-    /*
+    /**
      * Adds a value to the values of a node, which are kept as a node while there is only one of them.
+     *
+     * @param node the blank node
+     * @param index the index of the predicate
+     * @param value the value of the predicate
      */
     @SuppressWarnings("unchecked")
     private void add(Node node, int index, Node value)
@@ -63,8 +78,12 @@ public class BlankNodes
     }
 
 
-    /*
+    /**
      * Returns the values of the predicate at the node.
+     *
+     * @param node the blank node
+     * @param predicate the IRI of a collected predicate
+     * @return the distinct values, empty if there is none
      */
     @SuppressWarnings("unchecked")
     public List<Node> values(Node node, String predicate)
@@ -81,9 +100,13 @@ public class BlankNodes
     }
 
 
-    /*
+    /**
      * Returns the values of the predicate at the node, or a list holding just null if there is none, so that a loop
      * over the values runs once also for a node without them.
+     *
+     * @param node the blank node
+     * @param predicate the IRI of a collected predicate
+     * @return the distinct values, or a list holding just null if there is none
      */
     public List<Node> optionalValues(Node node, String predicate)
     {

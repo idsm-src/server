@@ -13,8 +13,19 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Configuration of the SACHEM endpoint of the Wikidata compounds, with their SMILES.
+ */
 public class WikidataSachemConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    /**
+     * Creates the configuration.
+     *
+     * @param service the service IRI
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public WikidataSachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema)
             throws SQLException
     {
@@ -27,6 +38,9 @@ public class WikidataSachemConfiguration extends SparqlDatabaseOptimisedConfigur
     }
 
 
+    /**
+     * Adds the prefixes of the configuration.
+     */
     private void addPrefixes()
     {
         Common.addPrefixes(this);
@@ -37,6 +51,11 @@ public class WikidataSachemConfiguration extends SparqlDatabaseOptimisedConfigur
     }
 
 
+    /**
+     * Adds the resource classes of the configuration.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private void addResourceClasses() throws SQLException
     {
         Sachem.addResourceClasses(this);
@@ -45,6 +64,9 @@ public class WikidataSachemConfiguration extends SparqlDatabaseOptimisedConfigur
     }
 
 
+    /**
+     * Adds the quad mappings of the configuration.
+     */
     private void addQuadMappings()
     {
         {
@@ -65,6 +87,9 @@ public class WikidataSachemConfiguration extends SparqlDatabaseOptimisedConfigur
     }
 
 
+    /**
+     * Adds the procedures of the configuration.
+     */
     private void addProcedures()
     {
         Sachem.addProcedures(this, "wikidata", "wikidata:entity",

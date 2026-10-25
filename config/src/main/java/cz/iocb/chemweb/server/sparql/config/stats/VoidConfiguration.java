@@ -9,11 +9,26 @@ import cz.iocb.sparql.engine.database.DatabaseSchema;
 
 
 
+/**
+ * Configuration of the VoID statistics of the IDSM endpoint, which the endpoint merges into its service and uses as
+ * its service description.
+ */
 public class VoidConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    /**
+     * Database schema of the statistics.
+     */
     static final String schema = "void";
 
 
+    /**
+     * Creates the configuration of the statistics.
+     *
+     * @param service IRI of the service, or null
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public VoidConfiguration(String service, DataSource connectionPool, DatabaseSchema schema) throws SQLException
     {
         super(service, connectionPool, schema);
@@ -24,6 +39,9 @@ public class VoidConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the common prefixes and those of the statistics to the configuration.
+     */
     private void addPrefixes()
     {
         Common.addPrefixes(this);
@@ -32,6 +50,11 @@ public class VoidConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the resource classes of the ontology resources and of the statistics to the configuration.
+     *
+     * @throws SQLException if a database error occurs
+     */
     private void addResourceClasses() throws SQLException
     {
         Ontology.addResourceClasses(this);
@@ -40,6 +63,9 @@ public class VoidConfiguration extends SparqlDatabaseOptimisedConfiguration
     }
 
 
+    /**
+     * Adds the quad mappings of the statistics to the configuration.
+     */
     private void addQuadMappings()
     {
         Void.addQuadMappings(this);

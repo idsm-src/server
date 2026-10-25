@@ -8,14 +8,52 @@ import cz.iocb.chemweb.shared.services.SessionException;
 
 
 
+/**
+ * Shows the failures of the calls of the server in a message dialog.
+ */
 public class ErrorMessage
 {
+    /**
+     * Action that failed.
+     */
     public static enum Context
     {
-        QUERY, CANCEL, DETAILS, PROPERTIES
+        /**
+         * Evaluation of a query.
+         */
+        QUERY,
+
+        /**
+         * Cancellation of a query.
+         */
+        CANCEL,
+
+        /**
+         * Loading of the details of a resource.
+         */
+        DETAILS,
+
+        /**
+         * Loading of the properties of a resource.
+         */
+        PROPERTIES
     }
 
 
+    /**
+     * Not instantiable.
+     */
+    private ErrorMessage()
+    {
+    }
+
+
+    /**
+     * Shows a message describing the failure of a call of the server.
+     *
+     * @param context the action that failed (not distinguished in the message yet)
+     * @param error the failure
+     */
     public static void show(Context context, Throwable error)
     {
         String message = null;

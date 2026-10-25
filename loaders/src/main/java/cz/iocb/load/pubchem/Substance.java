@@ -24,16 +24,49 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem substances ({@code pubchem/RDF/substance}) into the table {@code pubchem.substances} and the
+ * tables of their types, matches, PDB links, references, patents and synonyms.
+ */
 class Substance extends Updater
 {
+    /**
+     * IRI prefix of the substances.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/substance/SID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Table of the substances.
+     */
     private static final EntityTable<Integer> substances = new EntityTable<>("pubchem.substances", intKey("id"), null,
             integer("source"), date("available"), date("modified"), integer("compound"));
+
+    /**
+     * Substances referenced by the other parts but missing in the substance files.
+     */
     private static final MissingEntities<Integer> missingSubstances = new MissingEntities<>("substance", false);
 
 
+    /**
+     * Not instantiable.
+     */
+    private Substance()
+    {
+    }
+
+
+    /**
+     * Loads the compounds of the substances and their ChEBI types, which are extended to all substances of the same
+     * compound, and stores the changes of the types in {@code pubchem.substance_types}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCompoundsAndTypes() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/substance", "pc_substance2compound_[0-9]+\\.ttl\\.gz", file -> {
@@ -148,6 +181,12 @@ class Substance extends Updater
     }
 
 
+    /**
+     * Loads the dates since when the substances are available.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAvailabilities() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/substance", "pc_substance_available_[0-9]+\\.ttl\\.gz", file -> {
@@ -172,6 +211,12 @@ class Substance extends Updater
     }
 
 
+    /**
+     * Loads the dates of the last modifications of the substances.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadModifiedDates() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/substance", "pc_substance_modified_[0-9]+\\.ttl\\.gz", file -> {
@@ -196,6 +241,12 @@ class Substance extends Updater
     }
 
 
+    /**
+     * Loads the sources of the substances.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSources() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/substance", "pc_substance_source_[0-9]+\\.ttl\\.gz", file -> {
@@ -220,6 +271,13 @@ class Substance extends Updater
     }
 
 
+    /**
+     * Loads the ChEMBL and GlyTouCan matches of the substances, each of which must occur in both its forms, and stores
+     * their changes in {@code pubchem.substance_chembl_matches} and {@code pubchem.substance_glytoucan_matches}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMatches() throws IOException, SQLException
     {
         IntPairSet keepChemblMatches = new IntPairSet();
@@ -325,8 +383,14 @@ class Substance extends Updater
     }
 
 
-    /*
-     * Reports the rdfs:seeAlso links that occur in one form only (1: the identifiers.org form, 2: the other one).
+    /**
+     * Reports the rdfs:seeAlso links that occur in one form only.
+     *
+     * @param <T> the type of the ids of the matches
+     * @param forms the forms in which the matches of the substances occur (1: the identifiers.org form, 2: the other
+     *            one, 3: both)
+     * @param prefix the IRI prefix of the identifiers.org form
+     * @param pairPrefix the IRI prefix of the other form
      */
     private static <T> void checkForms(Map<Pair<Integer, T>, Integer> forms, String prefix, String pairPrefix)
     {
@@ -344,6 +408,12 @@ class Substance extends Updater
     }
 
 
+    /**
+     * Loads the PDB entries linked to the substances and stores their changes in {@code pubchem.substance_pdblinks}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadPdbLinks() throws IOException, SQLException
     {
         IntStringSet keepLinks = new IntStringSet();
@@ -389,6 +459,13 @@ class Substance extends Updater
     }
 
 
+    /**
+     * Loads the references and patents discussing the substances and stores their changes in
+     * {@code pubchem.substance_references} and {@code pubchem.substance_patents}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadReferences() throws IOException, SQLException
     {
         IntPairSet keepReferences = new IntPairSet();
@@ -456,6 +533,12 @@ class Substance extends Updater
     }
 
 
+    /**
+     * Loads the synonyms of the substances and stores their changes in {@code pubchem.substance_synonyms}.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSynonyms() throws IOException, SQLException
     {
         IntPairSet keepSynonyms = new IntPairSet();
@@ -509,6 +592,12 @@ class Substance extends Updater
     }
 
 
+    /**
+     * Checks that the identifiers of the substances agree with their IRIs.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void checkIdentifiers() throws IOException, SQLException
     {
         processFiles("pubchem/RDF/substance", "pc_substance_identifier_[0-9]+\\.ttl\\.gz", file -> {
@@ -534,6 +623,12 @@ class Substance extends Updater
     }
 
 
+    /**
+     * Loads the substances from the PubChemRDF files and flushes their table.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load substances ...");
@@ -554,6 +649,12 @@ class Substance extends Updater
     }
 
 
+    /**
+     * Stores the substances, including those referenced by the parts loaded later, and deletes the stored substances
+     * that are neither described nor referenced.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish substances ...");
@@ -564,6 +665,12 @@ class Substance extends Updater
     }
 
 
+    /**
+     * Records a reference to the substance; a substance without a row gets one and is counted as missing.
+     *
+     * @param substanceID the id of the substance
+     * @throws IOException if an I/O error occurs
+     */
     static void addSubstanceID(Integer substanceID) throws IOException
     {
         if(substances.reference(substanceID))
@@ -571,12 +678,27 @@ class Substance extends Updater
     }
 
 
+    /**
+     * Returns the id of the substance with the given IRI; a substance without a row gets one and is counted as missing.
+     *
+     * @param value the IRI of the substance
+     * @return the id of the substance
+     * @throws IOException if the IRI is not an IRI of a substance
+     */
     static Integer getSubstanceID(String value) throws IOException
     {
         return getSubstanceID(value, true);
     }
 
 
+    /**
+     * Returns the id of the substance with the given IRI; a substance without a row gets one.
+     *
+     * @param value the IRI of the substance
+     * @param verbose whether a substance without a row is counted as missing
+     * @return the id of the substance
+     * @throws IOException if the IRI is not an IRI of a substance
+     */
     private static Integer getSubstanceID(String value, boolean verbose) throws IOException
     {
         if(!value.startsWith(prefix))
@@ -591,6 +713,11 @@ class Substance extends Updater
     }
 
 
+    /**
+     * Returns the number of the substances.
+     *
+     * @return the number of the substances
+     */
     public static int size()
     {
         return substances.size();

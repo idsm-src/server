@@ -14,8 +14,24 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem data sources with their licenses and home pages (graph {@code pubchem:source}).
+ */
 public class Source
 {
+    /**
+     * Not instantiable.
+     */
+    private Source()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem data sources to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pubchem:source", INT2, new DatabaseTable(schema, "sources"),
@@ -28,6 +44,11 @@ public class Source
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem data sources to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:source");

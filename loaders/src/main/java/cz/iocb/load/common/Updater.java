@@ -37,44 +37,146 @@ import org.xml.sax.SAXException;
 
 
 
+/**
+ * Base of the loaders, whose static members run a load: the connection to the database, in which the whole load is
+ * one transaction, the files of the data directory, the transfer of sets and maps of values between the database and
+ * the memory, the versions, statistics and Sachem indexes of the loaded sources, and the commit or the rollback of
+ * the load.
+ */
 public class Updater
 {
+    /**
+     * Processing of a file of the data directory.
+     */
     protected static interface FileNameSqlFunction
     {
+        /**
+         * Processes a file.
+         *
+         * @param file the path of the file in the data directory
+         * @throws IOException if an I/O error occurs
+         * @throws SQLException if a database error occurs
+         */
         void apply(String file) throws IOException, SQLException;
     }
 
 
+    /**
+     * Processing of an XML file of the data directory.
+     */
     protected static interface FileNameXmlFunction
     {
+        /**
+         * Processes a file.
+         *
+         * @param file the path of the file in the data directory
+         * @throws IOException if an I/O error occurs
+         * @throws XPathException if an XPath expression fails
+         * @throws ParserConfigurationException if the XML parser cannot be created
+         * @throws SAXException if the XML cannot be parsed
+         * @throws SQLException if a database error occurs
+         */
         void apply(String file)
                 throws IOException, XPathException, ParserConfigurationException, SAXException, SQLException;
     }
 
 
+    /**
+     * Set of values that are read from the columns of a query result and set to the parameters of a command, in the
+     * order of their components.
+     *
+     * @param <T> the type of the values
+     */
     @SuppressWarnings("serial")
     public static abstract class SqlSet<T> extends HashSet<T>
     {
+        /**
+         * Creates an empty set.
+         */
+        protected SqlSet()
+        {
+        }
+
+        /**
+         * Reads a value from the first columns of a result.
+         *
+         * @param result the result
+         * @return the value
+         * @throws SQLException if a database error occurs
+         */
         public abstract T get(ResultSet result) throws SQLException;
 
+        /**
+         * Sets a value to the first parameters of a statement.
+         *
+         * @param statement the statement
+         * @param value the value
+         * @throws SQLException if a database error occurs
+         */
         public abstract void set(PreparedStatement statement, T value) throws SQLException;
     }
 
 
+    /**
+     * Map whose keys and values are read from the columns of a query result and set to the parameters of a command,
+     * the key first, in the order of their components.
+     *
+     * @param <K> the type of the keys
+     * @param <V> the type of the values
+     */
     @SuppressWarnings("serial")
     public static abstract class SqlMap<K, V> extends HashMap<K, V>
     {
+        /**
+         * Creates an empty map.
+         */
+        protected SqlMap()
+        {
+        }
+
+        /**
+         * Reads a key from the first columns of a result.
+         *
+         * @param result the result
+         * @return the key
+         * @throws SQLException if a database error occurs
+         */
         public abstract K getKey(ResultSet result) throws SQLException;
 
+        /**
+         * Reads a value from the columns of a result that follow the key.
+         *
+         * @param result the result
+         * @return the value
+         * @throws SQLException if a database error occurs
+         */
         public abstract V getValue(ResultSet result) throws SQLException;
 
+        /**
+         * Sets a key and its value to the first parameters of a statement.
+         *
+         * @param statement the statement
+         * @param key the key
+         * @param value the value
+         * @throws SQLException if a database error occurs
+         */
         public abstract void set(PreparedStatement statement, K key, V value) throws SQLException;
     }
 
 
+    /**
+     * Set of integers.
+     */
     @SuppressWarnings("serial")
     public static class IntSet extends SqlSet<Integer>
     {
+        /**
+         * Creates an empty set.
+         */
+        public IntSet()
+        {
+        }
+
         @Override
         public Integer get(ResultSet result) throws SQLException
         {
@@ -89,9 +191,19 @@ public class Updater
     }
 
 
+    /**
+     * Set of strings.
+     */
     @SuppressWarnings("serial")
     public static class StringSet extends SqlSet<String>
     {
+        /**
+         * Creates an empty set.
+         */
+        public StringSet()
+        {
+        }
+
         @Override
         public String get(ResultSet result) throws SQLException
         {
@@ -106,9 +218,19 @@ public class Updater
     }
 
 
+    /**
+     * Set of pairs of integers.
+     */
     @SuppressWarnings("serial")
     public static class IntPairSet extends SqlSet<Pair<Integer, Integer>>
     {
+        /**
+         * Creates an empty set.
+         */
+        public IntPairSet()
+        {
+        }
+
         @Override
         public Pair<Integer, Integer> get(ResultSet result) throws SQLException
         {
@@ -124,9 +246,19 @@ public class Updater
     }
 
 
+    /**
+     * Set of pairs of an integer and a string.
+     */
     @SuppressWarnings("serial")
     public static class IntStringSet extends SqlSet<Pair<Integer, String>>
     {
+        /**
+         * Creates an empty set.
+         */
+        public IntStringSet()
+        {
+        }
+
         @Override
         public Pair<Integer, String> get(ResultSet result) throws SQLException
         {
@@ -142,9 +274,19 @@ public class Updater
     }
 
 
+    /**
+     * Set of pairs of an integer and a float.
+     */
     @SuppressWarnings("serial")
     public static class IntFloatSet extends SqlSet<Pair<Integer, Float>>
     {
+        /**
+         * Creates an empty set.
+         */
+        public IntFloatSet()
+        {
+        }
+
         @Override
         public Pair<Integer, Float> get(ResultSet result) throws SQLException
         {
@@ -160,9 +302,19 @@ public class Updater
     }
 
 
+    /**
+     * Set of pairs of strings.
+     */
     @SuppressWarnings("serial")
     public static class StringPairSet extends SqlSet<Pair<String, String>>
     {
+        /**
+         * Creates an empty set.
+         */
+        public StringPairSet()
+        {
+        }
+
         @Override
         public Pair<String, String> get(ResultSet result) throws SQLException
         {
@@ -178,9 +330,19 @@ public class Updater
     }
 
 
+    /**
+     * Set of pairs of an integer and a pair of integers.
+     */
     @SuppressWarnings("serial")
     public static class IntIntPairSet extends SqlSet<Pair<Integer, Pair<Integer, Integer>>>
     {
+        /**
+         * Creates an empty set.
+         */
+        public IntIntPairSet()
+        {
+        }
+
         @Override
         public Pair<Integer, Pair<Integer, Integer>> get(ResultSet result) throws SQLException
         {
@@ -197,9 +359,19 @@ public class Updater
     }
 
 
+    /**
+     * Set of pairs of an integer and a pair of a float and an integer.
+     */
     @SuppressWarnings("serial")
     public static class IntFloatIntPairSet extends SqlSet<Pair<Integer, Pair<Float, Integer>>>
     {
+        /**
+         * Creates an empty set.
+         */
+        public IntFloatIntPairSet()
+        {
+        }
+
         @Override
         public Pair<Integer, Pair<Float, Integer>> get(ResultSet result) throws SQLException
         {
@@ -216,9 +388,19 @@ public class Updater
     }
 
 
+    /**
+     * Set of pairs of an integer and a pair of a pair of floats and an integer.
+     */
     @SuppressWarnings("serial")
     public static class IntFloatPairIntPairSet extends SqlSet<Pair<Integer, Pair<Pair<Float, Float>, Integer>>>
     {
+        /**
+         * Creates an empty set.
+         */
+        public IntFloatPairIntPairSet()
+        {
+        }
+
         @Override
         public Pair<Integer, Pair<Pair<Float, Float>, Integer>> get(ResultSet result) throws SQLException
         {
@@ -238,9 +420,19 @@ public class Updater
     }
 
 
+    /**
+     * Set of pairs of a pair of integers and an integer.
+     */
     @SuppressWarnings("serial")
     public static class IntPairIntSet extends SqlSet<Pair<Pair<Integer, Integer>, Integer>>
     {
+        /**
+         * Creates an empty set.
+         */
+        public IntPairIntSet()
+        {
+        }
+
         @Override
         public Pair<Pair<Integer, Integer>, Integer> get(ResultSet result) throws SQLException
         {
@@ -257,9 +449,19 @@ public class Updater
     }
 
 
+    /**
+     * Set of pairs of two pairs of integers.
+     */
     @SuppressWarnings("serial")
     public static class IntPairIntPairSet extends SqlSet<Pair<Pair<Integer, Integer>, Pair<Integer, Integer>>>
     {
+        /**
+         * Creates an empty set.
+         */
+        public IntPairIntPairSet()
+        {
+        }
+
         @Override
         public Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> get(ResultSet result) throws SQLException
         {
@@ -279,9 +481,19 @@ public class Updater
     }
 
 
+    /**
+     * Map of integers to integers.
+     */
     @SuppressWarnings("serial")
     public static class IntIntMap extends SqlMap<Integer, Integer>
     {
+        /**
+         * Creates an empty map.
+         */
+        public IntIntMap()
+        {
+        }
+
         @Override
         public Integer getKey(ResultSet result) throws SQLException
         {
@@ -303,9 +515,19 @@ public class Updater
     }
 
 
+    /**
+     * Map of integers to floats.
+     */
     @SuppressWarnings("serial")
     public static class IntFloatMap extends SqlMap<Integer, Float>
     {
+        /**
+         * Creates an empty map.
+         */
+        public IntFloatMap()
+        {
+        }
+
         @Override
         public Integer getKey(ResultSet result) throws SQLException
         {
@@ -327,9 +549,19 @@ public class Updater
     }
 
 
+    /**
+     * Map of integers to strings.
+     */
     @SuppressWarnings("serial")
     public static class IntStringMap extends SqlMap<Integer, String>
     {
+        /**
+         * Creates an empty map.
+         */
+        public IntStringMap()
+        {
+        }
+
         @Override
         public Integer getKey(ResultSet result) throws SQLException
         {
@@ -351,9 +583,19 @@ public class Updater
     }
 
 
+    /**
+     * Map of strings to integers.
+     */
     @SuppressWarnings("serial")
     public static class StringIntMap extends SqlMap<String, Integer>
     {
+        /**
+         * Creates an empty map.
+         */
+        public StringIntMap()
+        {
+        }
+
         @Override
         public String getKey(ResultSet result) throws SQLException
         {
@@ -375,9 +617,19 @@ public class Updater
     }
 
 
+    /**
+     * Map of strings to strings.
+     */
     @SuppressWarnings("serial")
     public static class StringStringMap extends SqlMap<String, String>
     {
+        /**
+         * Creates an empty map.
+         */
+        public StringStringMap()
+        {
+        }
+
         @Override
         public String getKey(ResultSet result) throws SQLException
         {
@@ -399,9 +651,19 @@ public class Updater
     }
 
 
+    /**
+     * Map of pairs of integers to integers.
+     */
     @SuppressWarnings("serial")
     public static class IntPairIntMap extends SqlMap<Pair<Integer, Integer>, Integer>
     {
+        /**
+         * Creates an empty map.
+         */
+        public IntPairIntMap()
+        {
+        }
+
         @Override
         public Pair<Integer, Integer> getKey(ResultSet result) throws SQLException
         {
@@ -424,9 +686,19 @@ public class Updater
     }
 
 
+    /**
+     * Map of pairs of strings to integers.
+     */
     @SuppressWarnings("serial")
     public static class StringPairIntMap extends SqlMap<Pair<String, String>, Integer>
     {
+        /**
+         * Creates an empty map.
+         */
+        public StringPairIntMap()
+        {
+        }
+
         @Override
         public Pair<String, String> getKey(ResultSet result) throws SQLException
         {
@@ -449,9 +721,19 @@ public class Updater
     }
 
 
+    /**
+     * Map of pairs of integers to strings.
+     */
     @SuppressWarnings("serial")
     public static class IntPairStringMap extends SqlMap<Pair<Integer, Integer>, String>
     {
+        /**
+         * Creates an empty map.
+         */
+        public IntPairStringMap()
+        {
+        }
+
         @Override
         public Pair<Integer, Integer> getKey(ResultSet result) throws SQLException
         {
@@ -474,9 +756,19 @@ public class Updater
     }
 
 
+    /**
+     * Map of integers to pairs of a string and an integer.
+     */
     @SuppressWarnings("serial")
     public static class IntStringIntPairMap extends SqlMap<Integer, Pair<String, Integer>>
     {
+        /**
+         * Creates an empty map.
+         */
+        public IntStringIntPairMap()
+        {
+        }
+
         @Override
         public Integer getKey(ResultSet result) throws SQLException
         {
@@ -499,9 +791,19 @@ public class Updater
     }
 
 
+    /**
+     * Map of integers to pairs of strings.
+     */
     @SuppressWarnings("serial")
     public static class IntStringPairMap extends SqlMap<Integer, Pair<String, String>>
     {
+        /**
+         * Creates an empty map.
+         */
+        public IntStringPairMap()
+        {
+        }
+
         @Override
         public Integer getKey(ResultSet result) throws SQLException
         {
@@ -524,9 +826,19 @@ public class Updater
     }
 
 
+    /**
+     * Map of strings to pairs of a string and an integer.
+     */
     @SuppressWarnings("serial")
     public static class StringStringIntPairMap extends SqlMap<String, Pair<String, Integer>>
     {
+        /**
+         * Creates an empty map.
+         */
+        public StringStringIntPairMap()
+        {
+        }
+
         @Override
         public String getKey(ResultSet result) throws SQLException
         {
@@ -549,9 +861,19 @@ public class Updater
     }
 
 
+    /**
+     * Map of pairs of an integer and a string to integers.
+     */
     @SuppressWarnings("serial")
     public static class IntStringPairIntMap extends SqlMap<Pair<Integer, String>, Integer>
     {
+        /**
+         * Creates an empty map.
+         */
+        public IntStringPairIntMap()
+        {
+        }
+
         @Override
         public Pair<Integer, String> getKey(ResultSet result) throws SQLException
         {
@@ -574,10 +896,20 @@ public class Updater
     }
 
 
+    /**
+     * Map of integers to pairs of two pairs of integers.
+     */
     @SuppressWarnings("serial")
     public static class IntIntPairIntPairPairMap
             extends SqlMap<Integer, Pair<Pair<Integer, Integer>, Pair<Integer, Integer>>>
     {
+        /**
+         * Creates an empty map.
+         */
+        public IntIntPairIntPairPairMap()
+        {
+        }
+
         @Override
         public Integer getKey(ResultSet result) throws SQLException
         {
@@ -604,15 +936,58 @@ public class Updater
     }
 
 
+    /**
+     * Number of the commands sent to the database in one batch.
+     */
     protected static final int batchSize = 100000;
+
+    /**
+     * Data directory, ending with a slash; the paths of the files are relative to it.
+     */
     protected static String baseDirectory = null;
+
+    /**
+     * Connection to the database, in which the whole load runs as one transaction.
+     */
     protected static Connection connection;
+
+    /**
+     * Normalized paths of the files that the loader has opened, see {@link #checkFiles(String, String...)}.
+     */
     private static final Set<String> readFiles = ConcurrentHashMap.newKeySet();
+
+    /**
+     * Whether the summary of the problems has been printed.
+     */
     private static boolean summarized = false;
+
+    /**
+     * Number of the commands of the current store, by which they are sent in batches.
+     */
     private static int count;
+
+    /**
+     * Debugging switch: when set, the queries and the commands are only printed, not run.
+     */
     private static final boolean dryRun = false;
 
 
+    /**
+     * Creates the updater.
+     */
+    protected Updater()
+    {
+    }
+
+
+    /**
+     * Adds the values that a query returns to a set.
+     *
+     * @param <T> the type of the values
+     * @param query the query
+     * @param set the set
+     * @throws SQLException if a database error occurs
+     */
     public static <T> void load(String query, SqlSet<T> set) throws SQLException
     {
         long time = System.currentTimeMillis();
@@ -637,6 +1012,15 @@ public class Updater
     }
 
 
+    /**
+     * Puts the keys and the values that a query returns into a map.
+     *
+     * @param <K> the type of the keys
+     * @param <V> the type of the values
+     * @param query the query
+     * @param set the map
+     * @throws SQLException if a database error occurs
+     */
     public static <K, V> void load(String query, SqlMap<K, V> set) throws SQLException
     {
         long time = System.currentTimeMillis();
@@ -661,6 +1045,14 @@ public class Updater
     }
 
 
+    /**
+     * Runs a command for each value of a set, sent in batches.
+     *
+     * @param <T> the type of the values
+     * @param command the command
+     * @param set the set
+     * @throws SQLException if a database error occurs
+     */
     protected static <T> void store(String command, SqlSet<T> set) throws SQLException
     {
         System.out.println("  " + command + " -> count: " + set.size());
@@ -703,6 +1095,15 @@ public class Updater
     }
 
 
+    /**
+     * Runs a command for each key and value of a map, sent in batches.
+     *
+     * @param <K> the type of the keys
+     * @param <V> the type of the values
+     * @param command the command
+     * @param set the map
+     * @throws SQLException if a database error occurs
+     */
     protected static <K, V> void store(String command, SqlMap<K, V> set) throws SQLException
     {
         System.out.println("  " + command + " -> count: " + set.size());
@@ -745,9 +1146,13 @@ public class Updater
     }
 
 
-    /*
+    /**
      * Connects to the database given by datasource.properties. If the properties name a log directory (logs), the
-     * output of the loader is copied into a log file in its subdirectory named by the loader, see Log.
+     * output of the loader is copied into a log file in its subdirectory named by the loader, see {@link Log}.
+     *
+     * @param loader the name of the loader
+     * @throws SQLException if the connection fails
+     * @throws IOException if the properties cannot be read or the log file cannot be created
      */
     protected static void init(String loader) throws SQLException, IOException
     {
@@ -792,9 +1197,14 @@ public class Updater
     }
 
 
-    /*
-     * Opens a file of the data directory and records that the loader reads it, see checkFiles(). A missing file is
-     * reported as an error and null is returned, so that the load goes on without its data.
+    /**
+     * Opens a file of the data directory and records that the loader reads it, see
+     * {@link #checkFiles(String, String...)}. A missing file is reported as an error and null is returned, so that
+     * the load goes on without its data.
+     *
+     * @param file the path of the file in the data directory
+     * @return the stream of the file, or null if the file is missing
+     * @throws IOException if the file cannot be opened
      */
     protected static InputStream openFile(String file) throws IOException
     {
@@ -812,10 +1222,14 @@ public class Updater
     }
 
 
-    /*
+    /**
      * Reports the files of the given directory of the data directory, including its subdirectories, that the loader
      * has not read as errors, as their data would be left out, e.g. a new part of a release. The files whose paths
      * relative to the directory match one of the given patterns are known not to be data of the loader.
+     *
+     * @param directory the path of the directory in the data directory
+     * @param ignored the regular expressions of the relative paths of the files that are not data of the loader
+     * @throws IOException if the directory cannot be listed
      */
     protected static void checkFiles(String directory, String... ignored) throws IOException
     {
@@ -847,6 +1261,14 @@ public class Updater
     }
 
 
+    /**
+     * Opens a file of the data directory, such as a ZIP archive, as a buffered stream; a missing file, which is
+     * reported, gives an empty stream.
+     *
+     * @param file the path of the file in the data directory
+     * @return the stream of the file
+     * @throws IOException if the file cannot be opened
+     */
     protected static InputStream getZipStream(String file) throws IOException
     {
         System.out.println("  load " + file);
@@ -860,6 +1282,14 @@ public class Updater
     }
 
 
+    /**
+     * Opens a gzipped Turtle file of the data directory as a stream repaired by {@link InputStreamFixer}; a missing
+     * file, which is reported, gives an empty stream.
+     *
+     * @param file the path of the file in the data directory
+     * @return the stream of the uncompressed file
+     * @throws IOException if the file cannot be opened
+     */
     protected static InputStream getTtlStream(String file) throws IOException
     {
         System.out.println("  load " + file);
@@ -875,6 +1305,14 @@ public class Updater
     }
 
 
+    /**
+     * Opens a gzipped UTF-8 text file of the data directory as a reader; a missing file, which is reported, gives an
+     * empty reader.
+     *
+     * @param file the path of the file in the data directory
+     * @return the reader of the uncompressed file
+     * @throws IOException if the file cannot be opened
+     */
     protected static BufferedReader getReader(String file) throws IOException
     {
         System.out.println("  load " + file);
@@ -890,9 +1328,13 @@ public class Updater
     }
 
 
-    /*
+    /**
      * Returns the names of the files, not of the subdirectories, of the directory that match the pattern; null stands
      * for a missing directory.
+     *
+     * @param path the path of the directory in the data directory
+     * @param name the regular expression of the names of the files
+     * @return the names of the files, or null for a missing directory
      */
     private static String[] listFiles(String path, String name)
     {
@@ -900,9 +1342,15 @@ public class Updater
     }
 
 
-    /*
+    /**
      * Processes the files of the directory whose names match the pattern, several of them in parallel. No such file
      * is an error, as the data of the files would be missing.
+     *
+     * @param path the path of the directory in the data directory
+     * @param name the regular expression of the names of the files
+     * @param func the processing of a file
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
      */
     protected static void processFiles(String path, String name, FileNameSqlFunction func)
             throws IOException, SQLException
@@ -940,6 +1388,19 @@ public class Updater
     }
 
 
+    /**
+     * Processes the XML files of the directory whose names match the pattern, several of them in parallel. No such
+     * file is an error, as the data of the files would be missing.
+     *
+     * @param path the path of the directory in the data directory
+     * @param name the regular expression of the names of the files
+     * @param func the processing of a file
+     * @throws IOException if an I/O error occurs
+     * @throws XPathException if an XPath expression fails
+     * @throws ParserConfigurationException if the XML parser cannot be created
+     * @throws SAXException if the XML cannot be parsed
+     * @throws SQLException if a database error occurs
+     */
     protected static void processXmlFiles(String path, String name, FileNameXmlFunction func)
             throws IOException, XPathException, ParserConfigurationException, SAXException, SQLException
     {
@@ -980,9 +1441,13 @@ public class Updater
     }
 
 
-    /*
+    /**
      * Sets the number of the entities of the statistics of the given name. A database without the table of the
      * statistics is left as it is, a missing statistics in it is an error.
+     *
+     * @param name the name of the statistics
+     * @param count the number of the entities
+     * @throws SQLException if a database error occurs
      */
     protected static void setCount(String name, int count) throws SQLException
     {
@@ -1009,9 +1474,13 @@ public class Updater
     }
 
 
-    /*
+    /**
      * Sets the version of the given source; an unknown version is an error. A database without the table of the
      * sources is left as it is, a missing source in it is an error.
+     *
+     * @param name the name of the source
+     * @param version the version, or null or empty if it is unknown
+     * @throws SQLException if a database error occurs
      */
     protected static void setVersion(String name, String version) throws SQLException
     {
@@ -1041,6 +1510,13 @@ public class Updater
     }
 
 
+    /**
+     * Moves the date of the version of the database to the current time, unless it is later. A database without the
+     * table of the version is left as it is.
+     *
+     * @param connection the connection to the database
+     * @throws SQLException if a database error occurs
+     */
     public static void updateVersion(Connection connection) throws SQLException
     {
         if(dryRun)
@@ -1063,19 +1539,29 @@ public class Updater
     }
 
 
+    /**
+     * Moves the date of the version of the database to the current time, unless it is later, within the transaction
+     * of the load.
+     *
+     * @throws SQLException if a database error occurs
+     */
     public static void updateVersion() throws SQLException
     {
         updateVersion(connection);
     }
 
 
-    /*
+    /**
      * Updates the Sachem index of the given name according to the audited changes of its table: removes the stale
      * versions of the index and synchronises it. The cleanup has to precede the synchronisation, because after it the
      * cleanup would delete the previous version although the new one is not committed yet. Prints the size of the
      * index and reports the molecules that the indexer has rejected meanwhile as warnings. An index that is not
      * registered yet is left out: the first load fills its table without the audit trigger, and the index is
      * registered and built from the whole table after the load (sachem.sql of the dbfinish step).
+     *
+     * @param index the name of the index
+     * @param optimize whether the synchronisation optimizes the index
+     * @throws SQLException if a database error occurs
      */
     protected static void syncIndex(String index, boolean optimize) throws SQLException
     {
@@ -1167,8 +1653,10 @@ public class Updater
     }
 
 
-    /*
+    /**
      * Commits the loaded data; incomplete data, i.e. data with a reported error, are refused.
+     *
+     * @throws SQLException if a database error occurs
      */
     protected static void commit() throws SQLException
     {
@@ -1185,6 +1673,11 @@ public class Updater
     }
 
 
+    /**
+     * Rolls the loaded data back and closes the connection; without a connection, nothing is done.
+     *
+     * @throws SQLException if a database error occurs
+     */
     protected static void rollback() throws SQLException
     {
         if(dryRun || connection == null)
@@ -1197,7 +1690,7 @@ public class Updater
     }
 
 
-    /*
+    /**
      * Ends the reading of the data: prints the summary of the problems and, if the data are incomplete, fails the
      * load at once, so that they are neither indexed nor committed.
      */
@@ -1211,9 +1704,11 @@ public class Updater
     }
 
 
-    /*
+    /**
      * Fails the load: prints the exception, if any, with the summary of the problems reported before it, rolls the
      * data back and exits with a non-zero status, so that the scripts running the loaders can tell the failure.
+     *
+     * @param exception the exception that has failed the load, or null
      */
     protected static void fail(Throwable exception)
     {
@@ -1239,6 +1734,13 @@ public class Updater
     }
 
 
+    /**
+     * Obtains the exclusive lock of a file, released when the virtual machine exits, so that no other loader holding
+     * the same lock runs at the same time.
+     *
+     * @param lockName the path of the lock file
+     * @throws IOException if the lock is held by another process or the file cannot be opened
+     */
     public static void lock(String lockName) throws IOException
     {
         File file = new File(lockName);

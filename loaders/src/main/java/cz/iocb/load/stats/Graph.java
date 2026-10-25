@@ -51,30 +51,80 @@ import cz.iocb.sparql.engine.translator.VariableBinding;
 
 
 
+/**
+ * Quad mappings of one graph of the endpoint sorted into the datasets the VoID statistics count: the triples with IRI
+ * and with literal objects, the triples of each property (and each datatype of its literal objects), and the type
+ * triples of each group of classes assigned by the same mappings.
+ */
 public class Graph
 {
+    /**
+     * Literal class of the {@code xsd:long} hashes standing for strings, so that the distinct strings are counted by
+     * their hashes.
+     */
     public static class HashString extends SubsetLiteralClass
     {
+        /**
+         * Creates the hash class of a string class.
+         *
+         * @param name the name of the hashed string class
+         */
         public HashString(String name)
         {
             super(name + "-hash", xsdLong);
         }
     }
 
+    /**
+     * Variable bound to the objects of the type triples.
+     */
     private static final Variable varO = new Variable("O");
 
+    /**
+     * Hash class of the strings of the class {@code string-others}, which are all the strings but the molfiles.
+     */
     private final HashString hashString = new HashString("string");
+
+    /**
+     * Hash class of the English language-tagged strings.
+     */
     private final HashString hashEnString = new HashString("tagstring");
 
 
+    /**
+     * Mappings of the triples with literal objects.
+     */
     private final Dataset litDataset;
+
+    /**
+     * Mappings of the triples with IRI objects.
+     */
     private final Dataset iriDataset;
+
+    /**
+     * Mappings of the triples with IRI objects by their property.
+     */
     private final Map<Resource, Dataset> iriPredicates;
+
+    /**
+     * Mappings of the triples with literal objects by their property.
+     */
     private final Map<Resource, Dataset> litPredicates;
+
+    /**
+     * Mappings of the triples with literal objects by their property and the datatype of the objects.
+     */
     private final Map<Resource, Map<Resource, Dataset>> datatypePredicates;
+
+    /**
+     * Mappings of the type triples by the classes they may assign; mappings sharing a class are merged into one entry.
+     */
     private final Map<Set<Resource>, Dataset> classes;
 
 
+    /**
+     * Creates the graph without any mapping.
+     */
     public Graph()
     {
         this.iriDataset = new Dataset();
@@ -86,6 +136,18 @@ public class Graph
     }
 
 
+    /**
+     * Adds a quad mapping of the graph to the datasets it belongs to; a mapping whose property is not an ontology
+     * resource is skipped, and the string objects of the class {@code string-others} and the English language-tagged
+     * string objects are replaced by their hashes.
+     *
+     * @param request the current request
+     * @param map the quad mapping
+     * @param datatypes the resources of the datatypes by their IRIs
+     * @param excluded the units excluded from the statistics
+     * @throws SQLException if a database error occurs
+     * @throws UnsupportedOperationException if the mapping maps blank nodes
+     */
     void add(Request request, QuadMapping map, Map<Iri, Resource> datatypes, List<Short> excluded) throws SQLException
     {
         if(map.getSubject() instanceof ConstantBlankNodeMapping
@@ -182,6 +244,13 @@ public class Graph
     }
 
 
+    /**
+     * Replaces the term mappings of ontology unit classes in a quad mapping by mappings of the whole ontology class.
+     *
+     * @param map the quad mapping
+     * @return the generalized quad mapping, or the mapping itself when nothing changes
+     * @throws IllegalArgumentException if the mapping is of an unknown kind
+     */
     private static QuadMapping generalize(QuadMapping map)
     {
         TermMapping subject = generalize(map.getSubject());
@@ -210,6 +279,13 @@ public class Graph
     }
 
 
+    /**
+     * Replaces a term mapping of an ontology unit class (or of a union of them) by a mapping of the whole ontology
+     * class, so that all the resources are counted in the same columns.
+     *
+     * @param map the term mapping
+     * @return the generalized term mapping, or the mapping itself when it is of another class
+     */
     private static TermMapping generalize(TermMapping map)
     {
         if(map instanceof ConstantIriMapping m && m.getResourceClass() instanceof OntologyUnitResource c)
@@ -240,6 +316,16 @@ public class Graph
     }
 
 
+    /**
+     * Replaces the object mapping of a quad mapping by the hashes of its strings.
+     *
+     * @param request the current request
+     * @param map the quad mapping
+     * @param hashClass the hash class of the strings
+     * @return the quad mapping with the hashed objects
+     * @throws SQLException if a database error occurs
+     * @throws IllegalArgumentException if the mapping is of an unknown kind
+     */
     private QuadMapping hashObject(Request request, QuadMapping map, HashString hashClass) throws SQLException
     {
         if(map instanceof SingleTableQuadMapping m)
@@ -268,6 +354,18 @@ public class Graph
     }
 
 
+    /**
+     * Replaces a literal object mapping by the hashes of its strings: a constant is hashed at once, a column is
+     * replaced by an expression hashing it.
+     *
+     * @param request the current request
+     * @param table the table of the object mapping
+     * @param map the literal object mapping
+     * @param hashClass the hash class of the strings
+     * @return the hashed object mapping with the condition it needs
+     * @throws SQLException if a database error occurs
+     * @throws IllegalArgumentException if the mapping is not a literal mapping
+     */
     private HashedObject hashObject(Request request, SourceTable table, TermMapping map, HashString hashClass)
             throws SQLException
     {
@@ -305,6 +403,16 @@ public class Graph
     }
 
 
+    /**
+     * Restricts a type quad mapping whose objects are ontology resources to the classes of the units not excluded from
+     * the statistics.
+     *
+     * @param request the current request
+     * @param map the quad mapping
+     * @param excluded the units excluded from the statistics
+     * @return the restricted quad mapping, or the mapping itself when it maps no ontology classes
+     * @throws IllegalArgumentException if the mapping is of an unknown kind
+     */
     private static QuadMapping addClassFilter(Request request, QuadMapping map, List<Short> excluded)
     {
         ConstantIriMapping predicateMapping = (ConstantIriMapping) map.getPredicate();
@@ -360,6 +468,15 @@ public class Graph
     }
 
 
+    /**
+     * Reads from the database the classes a type quad mapping assigns; classes that are not ontology resources are
+     * skipped.
+     *
+     * @param request the current request
+     * @param map the type quad mapping
+     * @return the classes, empty when there are none or they are skipped
+     * @throws SQLException if a database error occurs
+     */
     private static Set<Resource> getClasses(Request request, QuadMapping map) throws SQLException
     {
         SqlIntercode ic = (new Dataset(map)).translate(request, null, varO);
@@ -402,6 +519,13 @@ public class Graph
     }
 
 
+    /**
+     * Returns the only resource class of a variable binding.
+     *
+     * @param binding the variable binding
+     * @return the resource class
+     * @throws IllegalArgumentException if the binding has more than one class
+     */
     static ResourceClass getResourceClass(VariableBinding binding)
     {
         Set<ResourceClass> classes = binding.getClasses();
@@ -413,6 +537,13 @@ public class Graph
     }
 
 
+    /**
+     * Adds a quad mapping to the dataset of a resource.
+     *
+     * @param map the datasets by their resources
+     * @param iri the resource
+     * @param mapping the quad mapping
+     */
     private static void addMapping(Map<Resource, Dataset> map, Resource iri, QuadMapping mapping)
     {
         Dataset set = map.get(iri);
@@ -427,6 +558,14 @@ public class Graph
     }
 
 
+    /**
+     * Adds a quad mapping to the dataset of a pair of resources.
+     *
+     * @param map the datasets by their pairs of resources
+     * @param major the first resource of the pair
+     * @param minor the second resource of the pair
+     * @param mapping the quad mapping
+     */
     private static void addMapping(Map<Resource, Map<Resource, Dataset>> map, Resource major, Resource minor,
             QuadMapping mapping)
     {
@@ -442,36 +581,66 @@ public class Graph
     }
 
 
+    /**
+     * Returns the mappings of the triples with IRI objects.
+     *
+     * @return the mappings of the triples with IRI objects
+     */
     protected Dataset getIriDataset()
     {
         return iriDataset;
     }
 
 
+    /**
+     * Returns the mappings of the triples with literal objects.
+     *
+     * @return the mappings of the triples with literal objects
+     */
     protected Dataset getLitDataset()
     {
         return litDataset;
     }
 
 
+    /**
+     * Returns the mappings of the triples with IRI objects by their property.
+     *
+     * @return the mappings by their property
+     */
     protected Map<Resource, Dataset> getIriPredicates()
     {
         return iriPredicates;
     }
 
 
+    /**
+     * Returns the mappings of the triples with literal objects by their property.
+     *
+     * @return the mappings by their property
+     */
     protected Map<Resource, Dataset> getLitPredicates()
     {
         return litPredicates;
     }
 
 
+    /**
+     * Returns the mappings of the triples with literal objects by their property and the datatype of the objects.
+     *
+     * @return the mappings by their property and datatype
+     */
     protected Map<Resource, Map<Resource, Dataset>> getDatatypePredicates()
     {
         return datatypePredicates;
     }
 
 
+    /**
+     * Returns the mappings of the type triples by the groups of classes they may assign.
+     *
+     * @return the mappings by their classes
+     */
     protected Map<Set<Resource>, Dataset> getClasses()
     {
         return classes;

@@ -10,8 +10,24 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the Wikidata compounds (graph {@code wikidata:}), of which only the SMILES are held.
+ */
 public class Wikidata
 {
+    /**
+     * Not instantiable.
+     */
+    private Wikidata()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the Wikidata compounds and their SMILES to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("wikidata:entity", INT4, "http://www.wikidata.org/entity/Q"));
@@ -21,6 +37,11 @@ public class Wikidata
     }
 
 
+    /**
+     * Adds the quad mappings of the Wikidata SMILES to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("wikidata:");

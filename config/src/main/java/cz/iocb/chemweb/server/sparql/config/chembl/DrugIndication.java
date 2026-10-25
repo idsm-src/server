@@ -23,12 +23,31 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the ChEMBL drug indications (graph {@code ebi:chembl}).
+ */
 public class DrugIndication
 {
+    /**
+     * Ontology units of the EFO terms of the drug indications ({@code cco:hasEFO}).
+     */
     public static final short[] efoUnits = { unitHP, unitEFOCHEBI, unitEFODOID, unitEFO, unitEFOGO, unitEFOMONDO,
             unitEFONCBITaxon, unitEFOUberon, unitOLSMP, unitOrphanet };
 
 
+    /**
+     * Not instantiable.
+     */
+    private DrugIndication()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the ChEMBL drug indications to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("chembl:drug_indication", INT4,
@@ -36,6 +55,11 @@ public class DrugIndication
     }
 
 
+    /**
+     * Adds the quad mappings of the ChEMBL drug indications to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");

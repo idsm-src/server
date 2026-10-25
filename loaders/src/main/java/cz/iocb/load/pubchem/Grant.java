@@ -20,18 +20,56 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem grants ({@code pubchem/RDF/grant}) into the table {@code pubchem.grants}.
+ */
 public class Grant extends Updater
 {
+    /**
+     * IRI prefix of the grants.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/grant/";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Table of the grants.
+     */
     private static final EntityTable<Integer> grants = new EntityTable<>("pubchem.grants", intKey("id"), null,
             uniqueVarchar("iri").determinedByKey(), varchar("number"), integer("organization"));
+
+    /**
+     * Grants referenced but not described by the data.
+     */
     private static final MissingEntities<String> missingGrants = new MissingEntities<>("grant", true);
+
+    /**
+     * Ids of the grants by their IRIs without the prefix.
+     */
     private static final StringIntMap grantIDs = new StringIntMap();
+
+    /**
+     * Id of the next new grant.
+     */
     private static int nextGrantID;
 
 
+    /**
+     * Not instantiable.
+     */
+    private Grant()
+    {
+    }
+
+
+    /**
+     * Registers the checks of the predicates and types of the grant files.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), rdf + "type", frapo + "hasGrantNumber", frapo + "hasFundingAgency");
@@ -39,6 +77,13 @@ public class Grant extends Updater
     }
 
 
+    /**
+     * Loads the ids of the stored grants and registers the handler that adds the grants described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         load("select iri,id from pubchem.grants", grantIDs);
@@ -54,6 +99,13 @@ public class Grant extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the numbers of the grants.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadNumbers(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(frapo + "hasGrantNumber", (subject, object) -> {
@@ -65,6 +117,13 @@ public class Grant extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the funding agencies of the grants.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadOrganizations(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(frapo + "hasFundingAgency", (subject, object) -> {
@@ -76,6 +135,12 @@ public class Grant extends Updater
     }
 
 
+    /**
+     * Loads the grants from the PubChemRDF files and flushes their table.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load grants ...");
@@ -97,6 +162,13 @@ public class Grant extends Updater
     }
 
 
+    /**
+     * Stores the grants, including those referenced by the parts loaded later, and deletes the stored grants that are
+     * neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish grants ...");
@@ -107,6 +179,14 @@ public class Grant extends Updater
     }
 
 
+    /**
+     * Returns the id of the grant with the given IRI; a grant not described by the data gets a row and is counted as
+     * missing.
+     *
+     * @param value the IRI of the grant
+     * @return the id of the grant
+     * @throws IOException if the IRI is not an IRI of a grant
+     */
     static Integer getGrantID(String value) throws IOException
     {
         if(!value.startsWith(prefix))
@@ -128,8 +208,12 @@ public class Grant extends Updater
     }
 
 
-    /*
+    /**
      * Adds the row of a grant, which keeps its id if it has one.
+     *
+     * @param grant the IRI of the grant without the prefix
+     * @return the id of the grant
+     * @throws IOException if the row of the grant conflicts with the data
      */
     private static Integer addGrant(String grant) throws IOException
     {

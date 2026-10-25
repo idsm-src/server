@@ -21,15 +21,40 @@ import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 
 
 
+/**
+ * Mapping of the PubChem compounds and their molfiles (graph {@code pubchem:compound}).
+ */
 public class Compound
 {
+    /**
+     * Ontology units of the types of the compounds ({@code rdf:type}).
+     */
     public static final short[] typeUnits = { unitCHEBI, unitThesaurus, unitNDFRT, unitSNOMEDCT };
 
+    /**
+     * Ontology units of the drugs the compounds are active ingredients of ({@code vocab:is_active_ingredient_of}).
+     */
     public static final short[] ingredientUnits = { unitNDFRT, unitSNOMEDCT };
 
+    /**
+     * Ontology units of the matches of the compounds ({@code rdfs:seeAlso}).
+     */
     public static final short[] matchUnits = { unitIdentifiersNCIT, unitThesaurus };
 
 
+    /**
+     * Not instantiable.
+     */
+    private Compound()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem compounds to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID";
@@ -39,6 +64,11 @@ public class Compound
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem compounds to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:compound");

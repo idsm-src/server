@@ -19,11 +19,31 @@ import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 
 
 
+/**
+ * Mapping of the ChEBI ontology (graph {@code ebi:chebi}): its classes with their restrictions, axioms and annotations,
+ * and the molfiles of the ChEBI entities.
+ */
 public class Chebi
 {
+    /**
+     * Ontology units of the properties of the ChEBI restrictions ({@code owl:onProperty}).
+     */
     public static final short[] restrictionPropertyUnits = { unitBFO, unitRO };
 
 
+    /**
+     * Not instantiable.
+     */
+    private Chebi()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the ChEBI restrictions, axioms and molfiles to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("chebi:restriction", INT4, "http://blank/ID_R"));
@@ -33,6 +53,11 @@ public class Chebi
     }
 
 
+    /**
+     * Adds the quad mappings of the ChEBI ontology to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chebi");

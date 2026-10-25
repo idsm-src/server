@@ -11,8 +11,24 @@ import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 
 
 
+/**
+ * Mapping of the ChEMBL binding sites (graph {@code ebi:chembl}).
+ */
 public class BindingSite
 {
+    /**
+     * Not instantiable.
+     */
+    private BindingSite()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the ChEMBL binding sites to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("chembl:binding_site", INT4,
@@ -20,6 +36,11 @@ public class BindingSite
     }
 
 
+    /**
+     * Adds the quad mappings of the ChEMBL binding sites to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("ebi:chembl");

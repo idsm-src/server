@@ -15,8 +15,24 @@ import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem patents with their inventors and applicants (graph {@code pubchem:patent}).
+ */
 public class Patent
 {
+    /**
+     * Not instantiable.
+     */
+    private Patent()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem patents, inventors and applicants to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new MapUserIriClass("pubchem:patent", INT4, new DatabaseTable(schema, "patents"),
@@ -29,6 +45,11 @@ public class Patent
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem patents, inventors and applicants to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:patent");

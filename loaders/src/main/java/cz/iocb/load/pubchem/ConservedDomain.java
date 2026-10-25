@@ -22,16 +22,47 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem conserved domains from {@code pubchem/RDF/conserveddomain/pc_conserveddomain.ttl.gz} into the
+ * table {@code pubchem.conserveddomains} and the table of their references.
+ */
 class ConservedDomain extends Updater
 {
+    /**
+     * IRI prefix of the conserved domains.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/conserveddomain/PSSMID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Table of the conserved domains.
+     */
     private static final EntityTable<Integer> domains = new EntityTable<>("pubchem.conserveddomains", intKey("id"),
             null, uniqueVarchar("title"), uniqueVarchar("abstract"));
+
+    /**
+     * Conserved domains referenced but not described by the data.
+     */
     private static final MissingEntities<Integer> missingDomains = new MissingEntities<>("conserved domain", true);
 
 
+    /**
+     * Not instantiable.
+     */
+    private ConservedDomain()
+    {
+    }
+
+
+    /**
+     * Registers the checks of the predicates, types and values of the conserved domain file.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), dcterms + "abstract", dcterms + "title", rdf + "type", rdfs + "seeAlso",
@@ -43,6 +74,13 @@ class ConservedDomain extends Updater
     }
 
 
+    /**
+     * Registers the handler that adds the conserved domains described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.onType(obo + "SO_0000417", (subject, object) -> {
@@ -54,6 +92,13 @@ class ConservedDomain extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the titles of the conserved domains.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(dcterms + "title", (subject, object) -> {
@@ -65,6 +110,13 @@ class ConservedDomain extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the abstracts of the conserved domains.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAbstracts(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(dcterms + "abstract", (subject, object) -> {
@@ -76,6 +128,14 @@ class ConservedDomain extends Updater
     }
 
 
+    /**
+     * Registers the handler of the references discussing the conserved domains and the action that stores their changes
+     * in {@code pubchem.conserveddomain_references}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadReferences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepReferences = new IntPairSet();
@@ -105,6 +165,13 @@ class ConservedDomain extends Updater
     }
 
 
+    /**
+     * Loads the conserved domains from {@code pubchem/RDF/conserveddomain/pc_conserveddomain.ttl.gz} into the tables
+     * and flushes the table of the conserved domains.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load conserved domains ...");
@@ -127,6 +194,13 @@ class ConservedDomain extends Updater
     }
 
 
+    /**
+     * Stores the conserved domains, including those referenced by the parts loaded later, and deletes the stored
+     * conserved domains that are neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish conserved domains ...");
@@ -137,6 +211,14 @@ class ConservedDomain extends Updater
     }
 
 
+    /**
+     * Returns the id of the conserved domain with the given IRI; a conserved domain not described by the data gets a
+     * row and is counted as missing.
+     *
+     * @param value the IRI of the conserved domain
+     * @return the id of the conserved domain
+     * @throws IOException if the IRI is not an IRI of a conserved domain
+     */
     static Integer getDomainID(String value) throws IOException
     {
         if(!value.startsWith(prefix))

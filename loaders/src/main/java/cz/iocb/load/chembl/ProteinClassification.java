@@ -25,21 +25,53 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the ChEMBL protein classification from the protein classification file of the release into the table
+ * {@code chembl.protein_classes}, together with the target components and targets descending from the classes.
+ */
 class ProteinClassification extends Updater
 {
+    /**
+     * IRI prefix of the protein classes.
+     */
     static final String prefix = ChEMBL.chembl + "protclass/CHEMBL_PC_";
 
+    /**
+     * Table of the protein classes.
+     */
     private static final EntityTable<Integer> classes = new EntityTable<>("chembl.protein_classes", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), varchar("label"), varchar("level"), varchar("path"),
             integer("parent"));
 
+    /**
+     * Table of the target components descending from the protein classes.
+     */
     private static final ValueTable componentDescendants = new ValueTable("chembl.protein_class_component_descendants",
             column("protein_class"), column("component"));
 
+    /**
+     * Table of the targets descending from the protein classes.
+     */
     private static final ValueTable targetDescendants = new ValueTable("chembl.protein_class_target_descendants",
             column("protein_class"), column("target"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private ProteinClassification()
+    {
+    }
+
+
+    /**
+     * Loads the protein classes from the protein classification file of the release, checks the inverse triples of
+     * their links, and checks the {@code skos:prefLabel} and {@code skos:broader} values, which the mapping produces
+     * from {@code rdfs:label} and {@code rdfs:subClassOf}.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load protein classifications ...");
@@ -148,6 +180,12 @@ class ProteinClassification extends Updater
     }
 
 
+    /**
+     * Stores the collected protein classes, reporting the referenced ones that the file does not describe, and their
+     * descending target components and targets.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish protein classifications ...");
@@ -160,6 +198,13 @@ class ProteinClassification extends Updater
     }
 
 
+    /**
+     * Returns the id of a protein class and marks the protein class as referenced.
+     *
+     * @param node the IRI of the protein class
+     * @return the id of the protein class
+     * @throws IOException if the node is not an IRI of a protein class
+     */
     static int getClassID(Node node) throws IOException
     {
         int id = TripleStreamProcessor.getIntID(node, prefix);

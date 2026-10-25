@@ -29,20 +29,58 @@ import cz.iocb.sparql.engine.rdf.Iri;
 
 
 
+/**
+ * Mapping of the SACHEM chemical structure search: the IRI classes of the search options, the procedures of the exact,
+ * substructure and similarity searches and the similarity function.
+ */
 public abstract class Sachem
 {
+    /**
+     * Node of the {@code xsd:string} datatype of the default values of the parameters.
+     */
     private static final IriNode xsdStringTypeNode = new IriNode(xsdStringIri.getValue());
+
+    /**
+     * Node of the {@code xsd:integer} datatype of the default values of the parameters.
+     */
     private static final IriNode xsdIntegerTypeNode = new IriNode(xsdIntegerIri.getValue());
+
+    /**
+     * Node of the {@code xsd:boolean} datatype of the default values of the parameters.
+     */
     private static final IriNode xsdBooleanTypeNode = new IriNode(xsdBooleanIri.getValue());
+
+    /**
+     * Node of the {@code xsd:double} datatype of the default values of the parameters.
+     */
     private static final IriNode xsdDoubleTypeNode = new IriNode(xsdDoubleIri.getValue());
 
 
+    /**
+     * Not instantiable.
+     */
+    protected Sachem()
+    {
+    }
+
+
+    /**
+     * Adds the prefixes of SACHEM to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addPrefixes(SparqlDatabaseConfiguration config)
     {
         config.addPrefix("sachem", "http://bioinfo.uochb.cas.cz/rdf/v1.0/sachem#");
     }
 
 
+    /**
+     * Adds the IRI classes of the search options (query format, search, charge, isotope, radical, stereo, aromaticity
+     * and tautomer modes) to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         String sachem = config.getPrefixes().get("sachem");
@@ -126,6 +164,15 @@ public abstract class Sachem
     }
 
 
+    /**
+     * Adds the search procedures over an index to the configuration, evaluated by the stub functions of the
+     * {@code idsm} schema.
+     *
+     * @param config the configuration
+     * @param index the name of the SACHEM index
+     * @param compoundClass the name of the IRI class of the compounds
+     * @param compoundFields the result columns of the compounds
+     */
     public static void addProcedures(SparqlDatabaseConfiguration config, String index, String compoundClass,
             List<Column> compoundFields)
     {
@@ -133,6 +180,15 @@ public abstract class Sachem
     }
 
 
+    /**
+     * Adds the search procedures over an index to the configuration.
+     *
+     * @param config the configuration
+     * @param index the name of the SACHEM index
+     * @param schema the schema of the stub functions evaluating the searches
+     * @param compoundClass the name of the IRI class of the compounds
+     * @param compoundFields the result columns of the compounds
+     */
     public static void addProcedures(SparqlDatabaseConfiguration config, String index, String schema,
             String compoundClass, List<Column> compoundFields)
     {
@@ -295,6 +351,13 @@ public abstract class Sachem
     }
 
 
+    /**
+     * Adds the search procedures over the indexes of all datasets to the configuration.
+     *
+     * @param config the configuration
+     * @param schema the schema of the functions evaluating the searches
+     * @param compoundMapping the result columns of the found compounds by the IRI classes of their datasets
+     */
     public static void addProcedures(SparqlDatabaseConfiguration config, String schema,
             Map<ResourceClass, List<Column>> compoundMapping)
     {
@@ -448,6 +511,11 @@ public abstract class Sachem
     }
 
 
+    /**
+     * Adds the similarity function to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addFunctions(SparqlDatabaseConfiguration config)
     {
         String sachem = config.getPrefixes().get("sachem");

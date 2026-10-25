@@ -15,8 +15,20 @@ import cz.iocb.sparql.engine.rdf.Literal;
 
 
 
+/**
+ * Velocity line directive {@code #escapeHTML(value)} writing a value (the lexical form of a literal, the text form of
+ * anything else) escaped for HTML, with the replacement characters greyed out.
+ */
 public class EscapeHtmlDirective extends Directive
 {
+    /**
+     * Creates the directive.
+     */
+    public EscapeHtmlDirective()
+    {
+    }
+
+
     @Override
     public String getName()
     {
@@ -60,6 +72,12 @@ public class EscapeHtmlDirective extends Directive
     }
 
 
+    /**
+     * Escapes a text for HTML and greys out its replacement characters.
+     *
+     * @param value the text
+     * @return the HTML of the text
+     */
     private static String escape(String value)
     {
         return StringEscapeUtils.escapeHtml4(value).replaceAll("\uFFFD",

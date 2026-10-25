@@ -16,9 +16,24 @@ import org.xml.sax.SAXException;
 
 
 
+/**
+ * Servlet generating the script {@code chemweb/js/examples-data.js} of the user interface: the example queries read
+ * from the file {@code examples.xml} of the web application.
+ */
 public class GenerateExamples extends HttpServlet
 {
+    /**
+     * Serialization version.
+     */
     private static final long serialVersionUID = 1L;
+
+
+    /**
+     * Creates the servlet.
+     */
+    public GenerateExamples()
+    {
+    }
 
 
 
@@ -36,6 +51,14 @@ public class GenerateExamples extends HttpServlet
     }
 
 
+    /**
+     * Writes the script as the response.
+     *
+     * @param req the request
+     * @param res the response
+     * @throws ServletException if the file of the examples cannot be parsed
+     * @throws IOException if an I/O error occurs
+     */
     protected void processRequest(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
     {
         ServletOutputStream out = res.getOutputStream();
@@ -97,6 +120,13 @@ public class GenerateExamples extends HttpServlet
     }
 
 
+    /**
+     * Returns the text of the first descendant element of a name, trimmed and escaped for a JavaScript string literal.
+     *
+     * @param ele the element of the example
+     * @param tagName the name of the descendant element
+     * @return the escaped text, empty if the element has no content
+     */
     private String getTextValue(Element ele, String tagName)
     {
         String textVal = null;

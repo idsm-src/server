@@ -24,11 +24,30 @@ import cz.iocb.sparql.engine.translator.ServiceException;
 
 
 
+/**
+ * Velocity block directive {@code #sparql($variable) query #end} evaluating the SPARQL query of its content against the
+ * configuration given by the application attribute {@link #SPARQL_CONFIG}; the result is put into the variable as a
+ * {@link SparqlResult}, or null if the query fails.
+ */
 public class SparqlDirective extends Directive
 {
+    /**
+     * Name of the application attribute holding the configuration.
+     */
     public static final String SPARQL_CONFIG = "SPARQL_CONFIG";
 
+    /**
+     * Engine evaluating the queries.
+     */
     private Engine engine;
+
+
+    /**
+     * Creates the directive.
+     */
+    public SparqlDirective()
+    {
+    }
 
 
     @Override

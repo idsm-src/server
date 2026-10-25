@@ -33,11 +33,28 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of MoNA, the MassBank of North America, from its JSON export of all spectra into the tables of the schema
+ * {@code mona}: the spectra with their libraries, submitters, annotations, tags and metadata, and the compounds of the
+ * spectra with their structures, names, identifiers and ClassyFire classes, mapped to ChEBI and MeSH by the ChemOnt
+ * ontology.
+ */
 public class MoNA extends Updater
 {
+    /**
+     * A map of the submitters to their ids, read from and written to the table {@code mona.submitters}.
+     */
     @SuppressWarnings("serial")
     private static class SubmitterIntMap extends SqlMap<Submitter, Integer>
     {
+        /**
+         * Creates an empty map.
+         */
+        private SubmitterIntMap()
+        {
+        }
+
+
         @Override
         public Submitter getKey(ResultSet result) throws SQLException
         {
@@ -67,9 +84,21 @@ public class MoNA extends Updater
     }
 
 
+    /**
+     * A map of the pairs of a spectrum id and a peak annotation to the ids of the annotations, read from and written to
+     * the table {@code mona.spectrum_annotations}.
+     */
     @SuppressWarnings("serial")
     private static class IntAnnotationPairIntMap extends SqlMap<Pair<Integer, Annotation>, Integer>
     {
+        /**
+         * Creates an empty map.
+         */
+        private IntAnnotationPairIntMap()
+        {
+        }
+
+
         @Override
         public Pair<Integer, Annotation> getKey(ResultSet result) throws SQLException
         {
@@ -97,10 +126,24 @@ public class MoNA extends Updater
     }
 
 
+    /**
+     * The time zone of the dates of the spectra.
+     */
     private static final TimeZone tz = TimeZone.getTimeZone("UTC");
+
+    /**
+     * The format of the stored dates of the spectra.
+     */
     private static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
+    /**
+     * The regular expression of a decimal number of a peak.
+     */
     private static final String decimalPattern = "(([0-9]*\\.)?[0-9]+([eE][+-]?[0-9]+)?)";
+
+    /**
+     * The regular expression of a peak of a spectrum, its m/z and its intensity.
+     */
     private static final String peakPattern = decimalPattern + ":" + decimalPattern;
 
 
@@ -110,8 +153,21 @@ public class MoNA extends Updater
     }
 
 
-    /*
+    /**
+     * Not instantiable.
+     */
+    private MoNA()
+    {
+    }
+
+
+    /**
      * Returns the value of a number of a metadata item; a malformed number refuses the spectrum.
+     *
+     * @param item the metadata item
+     * @param number the text of the number
+     * @return the value of the number
+     * @throws DataException if the number is malformed
      */
     private static float getFloat(MetaData item, String number) throws DataException
     {
@@ -126,8 +182,13 @@ public class MoNA extends Updater
     }
 
 
-    /*
+    /**
      * Returns the value of an integer of a metadata item; a malformed integer refuses the spectrum.
+     *
+     * @param item the metadata item
+     * @param number the text of the integer
+     * @return the value of the integer
+     * @throws DataException if the integer is malformed
      */
     private static int getInt(MetaData item, String number) throws DataException
     {
@@ -142,8 +203,12 @@ public class MoNA extends Updater
     }
 
 
-    /*
+    /**
      * Refuses a spectrum without the given item, as an export of another format would miss it.
+     *
+     * @param value the value of the item, null when it is missing
+     * @param name the name of the item, used in the reported error
+     * @throws DataException if the item is missing
      */
     private static void require(Object value, String name) throws DataException
     {
@@ -152,8 +217,11 @@ public class MoNA extends Updater
     }
 
 
-    /*
+    /**
      * Checks that a spectrum has the items that the loader reads.
+     *
+     * @param spectrum the spectrum
+     * @throws DataException if an item is missing
      */
     private static void checkItems(Spectrum spectrum) throws DataException
     {
@@ -193,9 +261,13 @@ public class MoNA extends Updater
     }
 
 
-    /*
+    /**
      * Reports a value of a metadata item of a spectrum that the loader leaves out, e.g. a malformed identifier, as a
      * warning; an empty value, which carries no data, is left out silently.
+     *
+     * @param spectrum the spectrum
+     * @param item the metadata item
+     * @param value the value left out
      */
     private static void ignoreValue(Spectrum spectrum, MetaData item, String value)
     {
@@ -204,6 +276,14 @@ public class MoNA extends Updater
     }
 
 
+    /**
+     * Reads the classes of the ChemOnt ontology of ClassyFire with their ChEBI and MeSH synonyms.
+     *
+     * @param stream the stream of the ontology in the OBO format
+     * @return the classes by their names
+     * @throws FileNotFoundException never, the caller opens the stream
+     * @throws IOException if the stream cannot be read
+     */
     private static Map<String, ClassyFire> loadClassyFires(InputStream stream) throws FileNotFoundException, IOException
     {
         Map<String, ClassyFire> classyFires = new HashMap<>();
@@ -243,6 +323,13 @@ public class MoNA extends Updater
     }
 
 
+    /**
+     * Loads the spectra from the JSON export of MoNA and the ClassyFire classes from the ChemOnt ontology, stores them
+     * and records the version and the count of the spectra.
+     *
+     * @throws IOException if a file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     private static void load() throws IOException, SQLException
     {
         EntityTable<Integer> compounds = new EntityTable<>("mona.spectra", intKey("id"), null, date("created"),
@@ -1460,6 +1547,11 @@ public class MoNA extends Updater
     }
 
 
+    /**
+     * Runs the loader.
+     *
+     * @param args the command-line arguments (ignored)
+     */
     public static void main(String[] args)
     {
         try

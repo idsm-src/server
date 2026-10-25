@@ -8,8 +8,20 @@ import cz.iocb.sparql.engine.database.DatabaseSchema;
 
 
 
+/**
+ * Configuration of the integrated SACHEM endpoint, which offers the SACHEM endpoints of the datasets as federated
+ * services under their IDSM service IRIs.
+ */
 public class IntegratedSachemConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
+    /**
+     * Creates the configuration.
+     *
+     * @param service the service IRI
+     * @param connectionPool the connection pool of the database
+     * @param schema the database schema
+     * @throws SQLException if a database error occurs
+     */
     public IntegratedSachemConfiguration(String service, DataSource connectionPool, DatabaseSchema schema)
             throws SQLException
     {

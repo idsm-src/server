@@ -19,13 +19,32 @@ import org.apache.commons.io.IOUtils;
 
 
 
+/**
+ * Proxy forwarding a posted SPARQL request to the endpoint given by its {@code endpoint} parameter, by the method given
+ * by its {@code method} (or {@code requestMethod}) parameter, and returning the response of the endpoint with the CORS
+ * headers allowing the origin given by the {@code origin} init parameter.
+ */
 @SuppressWarnings("serial")
 public class CorsProxyServlet extends HttpServlet
 {
+    /**
+     * Parameters controlling the proxy, which are not forwarded to the endpoint.
+     */
     private static final List<String> specialParameters = new ArrayList<>(
             List.of("endpoint", "requestMethod", "method"));
 
+    /**
+     * Origin allowed to read the responses, null if no CORS headers are sent.
+     */
     private String origin = null;
+
+
+    /**
+     * Creates the servlet.
+     */
+    public CorsProxyServlet()
+    {
+    }
 
 
     @Override
@@ -122,6 +141,11 @@ public class CorsProxyServlet extends HttpServlet
     }
 
 
+    /**
+     * Adds the CORS headers allowing the configured origin to a response, if an origin is configured.
+     *
+     * @param res the response
+     */
     private void setCrossOriginResourceSharingHeaders(HttpServletResponse res)
     {
         if(origin != null)
@@ -133,6 +157,12 @@ public class CorsProxyServlet extends HttpServlet
     }
 
 
+    /**
+     * Returns the stream of the body of the response of the endpoint, which is the error stream for an error response.
+     *
+     * @param http the connection to the endpoint
+     * @return the stream of the body, null if the response has none
+     */
     private InputStream dispatchStream(HttpURLConnection http)
     {
         try

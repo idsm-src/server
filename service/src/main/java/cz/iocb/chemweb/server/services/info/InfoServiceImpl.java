@@ -20,11 +20,30 @@ import cz.iocb.chemweb.shared.services.info.SourceItem;
 
 
 
+/**
+ * Implementation of the {@link InfoService}: reads the statistics and the data sources from the tables
+ * {@code idsm.stats} and {@code idsm.sources} of the data source named by the {@code resource} init parameter (a JNDI
+ * resource).
+ */
 public class InfoServiceImpl extends GWTRemoteServiceServlet implements InfoService
 {
+    /**
+     * Serialization version.
+     */
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Data source of the database.
+     */
     private DataSource connectionPool;
+
+
+    /**
+     * Creates the servlet.
+     */
+    public InfoServiceImpl()
+    {
+    }
 
 
     @Override

@@ -9,40 +9,111 @@ import cz.iocb.chemweb.shared.services.query.QueryServiceAsync;
 
 
 
+/**
+ * Client side of the query service: submits a query, waits for its result and cancels it on the server when the query
+ * is cancelled or its result cannot be received.
+ */
 public class QueryServiceStub
 {
+    /**
+     * Asynchronous proxy of the query service.
+     */
     private static QueryServiceAsync queryService = (QueryServiceAsync) GWT.create(QueryService.class);
 
 
+    /**
+     * State of a submitted query.
+     */
     static enum QueryState
     {
-        SUBMITTED, RUNNING, FINISHED, CANCELED,
+        /**
+         * Sent to the server, which has not yet returned its id.
+         */
+        SUBMITTED,
+
+        /**
+         * Running on the server under its id.
+         */
+        RUNNING,
+
+        /**
+         * Completed successfully or with an error.
+         */
+        FINISHED,
+
+        /**
+         * Cancelled by the user.
+         */
+        CANCELED,
     }
 
 
+    /**
+     * Handle of a submitted query, used to cancel it.
+     */
     static public class Query
     {
+        /**
+         * Creates the handle of a submitted query.
+         */
         private Query()
         {
         }
 
+        /**
+         * State of the query.
+         */
         private QueryState state;
+
+        /**
+         * Id of the query on the server, known once the query runs.
+         */
         private Long queryID;
     }
 
 
+    /**
+     * Not instantiable.
+     */
+    private QueryServiceStub()
+    {
+    }
+
+
+    /**
+     * Counts the properties of a resource, i.e. the triples having it as their subject.
+     *
+     * @param iri the IRI of the resource
+     * @param callback the callback receiving the count
+     */
     static public void countOfProperties(String iri, AsyncCallback<Integer> callback)
     {
         queryService.countOfProperties(iri, callback);
     }
 
 
+    /**
+     * Submits a query asking for all its results.
+     *
+     * @param code the SPARQL query
+     * @param callback the callback receiving the result
+     * @return the handle of the query
+     */
     static public Query query(String code, AsyncCallback<QueryResult> callback)
     {
         return query(code, 0, -1, callback);
     }
 
 
+    /**
+     * Submits a query asking for a range of its results.
+     *
+     * @param code the SPARQL query
+     * @param offset the number of the leading results to skip
+     * @param limit the maximum number of results, or -1 for no limit
+     * @param callback the callback receiving the result
+     * @return the handle of the query
+     */
     static public Query query(final String code, final int offset, final int limit,
             final AsyncCallback<QueryResult> callback)
     {
@@ -98,6 +169,12 @@ public class QueryServiceStub
     }
 
 
+    /**
+     * Cancels a query that has not finished yet; a query still waiting for its id is cancelled as soon as the id
+     * arrives.
+     *
+     * @param query the handle of the query
+     */
     static public void cancel(Query query)
     {
         if(query.state == QueryState.FINISHED)
@@ -110,6 +187,11 @@ public class QueryServiceStub
     }
 
 
+    /**
+     * Asks the server to cancel a query, repeating the request every minute (at most ten times) while it fails.
+     *
+     * @param queryID the id of the query on the server
+     */
     static private void cancelQuery(final long queryID)
     {
         Timer timer = new Timer()

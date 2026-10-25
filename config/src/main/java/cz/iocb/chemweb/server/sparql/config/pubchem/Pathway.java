@@ -12,8 +12,24 @@ import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
 
 
 
+/**
+ * Mapping of the PubChem pathways (graph {@code pubchem:pathway}).
+ */
 public class Pathway
 {
+    /**
+     * Not instantiable.
+     */
+    private Pathway()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem pathways and reactions to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(
@@ -22,6 +38,11 @@ public class Pathway
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem pathways to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:pathway");

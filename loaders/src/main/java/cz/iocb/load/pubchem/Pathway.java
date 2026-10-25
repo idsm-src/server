@@ -34,14 +34,39 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the PubChem pathways ({@code pubchem/RDF/pathway}) into the table {@code pubchem.pathways} and the tables
+ * of their participants, components, references, related pathways and GlyCosmos matches.
+ */
 class Pathway extends Updater
 {
+    /**
+     * External database a pathway is taken from, as its reference IRI tells.
+     */
     private static class Description
     {
+        /**
+         * Name of the database, a value of the reference type.
+         */
         final String name;
+
+        /**
+         * IRI prefix of the pathways of the database.
+         */
         final String prefix;
+
+        /**
+         * Regular expression of the IRIs of the pathways of the database.
+         */
         final String pattern;
 
+        /**
+         * Creates the description of a database.
+         *
+         * @param name the name of the database
+         * @param prefix the IRI prefix of the pathways of the database
+         * @param suffix the regular expression of the rest of their IRIs
+         */
         Description(String name, String prefix, String suffix)
         {
             this.name = name;
@@ -51,6 +76,9 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Descriptions of the external databases of the pathways.
+     */
     private static ArrayList<Description> descriptions = new ArrayList<>();
 
 
@@ -75,16 +103,47 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * IRI prefix of the pathways.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
+
+    /**
+     * IRI prefix of the GlyCosmos pathways.
+     */
     static final String glycosmosPrefix = "https://glycosmos.org/pathways/";
 
+    /**
+     * Table of the pathways.
+     */
     private static final EntityTable<Integer> pathways = new EntityTable<>("pubchem.pathways", intKey("id"), null,
             integer("source"), uniqueVarchar("title"), typed("reference_type", "pubchem.pathway_reference_type"),
             varchar("reference"), integer("organism"));
+
+    /**
+     * Pathways referenced but not described by the data.
+     */
     private static final MissingEntities<Integer> missingPathways = new MissingEntities<>("pathway", true);
 
 
+    /**
+     * Not instantiable.
+     */
+    private Pathway()
+    {
+    }
+
+
+    /**
+     * Registers the checks of the predicates, types and values of the pathway file.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), dcterms + "title", dcterms + "source", up + "organism",
@@ -97,6 +156,13 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Registers the handler that adds the pathways described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.onType(vocab + "Pathway", (subject, object) -> {
@@ -108,6 +174,13 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the titles of the pathways.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(dcterms + "title", (subject, object) -> {
@@ -119,6 +192,13 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the sources of the pathways.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSources(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(dcterms + "source", (subject, object) -> {
@@ -130,6 +210,14 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the external databases and ids of the pathways from their references other than
+     * GlyCosmos.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSameAsReferences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(rdfs + "seeAlso", (subject, object) -> {
@@ -153,6 +241,14 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Registers the handler of the GlyCosmos pathways matching the pathways and the action that stores their changes in
+     * {@code pubchem.pathway_glycosmos_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadGlycosmosMatches(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -186,6 +282,13 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the organisms of the pathways.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadOrganisms(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(up + "organism", (subject, object) -> {
@@ -204,6 +307,14 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Registers the handler of the compounds participating in the pathways and the action that stores their changes in
+     * {@code pubchem.pathway_compounds}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCompounds(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepCompounds = new IntPairSet();
@@ -234,6 +345,14 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Registers the handler of the proteins participating in the pathways and the action that stores their changes in
+     * {@code pubchem.pathway_proteins}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadProteins(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepProteins = new IntPairSet();
@@ -264,6 +383,14 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Registers the handler of the genes participating in the pathways and the action that stores their changes in
+     * {@code pubchem.pathway_genes}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadGenes(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepGenes = new IntPairSet();
@@ -294,6 +421,14 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Registers the handler of the component pathways of the pathways and the action that stores their changes in
+     * {@code pubchem.pathway_components}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadComponents(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepComponents = new IntPairSet();
@@ -321,6 +456,14 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Registers the handler of the references discussing the pathways and the action that stores their changes in
+     * {@code pubchem.pathway_references}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadReferences(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepReferences = new IntPairSet();
@@ -348,6 +491,14 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Registers the handler of the related pathways of the pathways and the action that stores their changes in
+     * {@code pubchem.pathway_related_pathways}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadRelatedPathways(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         IntPairSet keepRelations = new IntPairSet();
@@ -375,6 +526,12 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Loads the pathways from the PubChemRDF file and flushes their table.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load pathways ...");
@@ -405,6 +562,13 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Stores the pathways, including those referenced by the parts loaded later, and deletes the stored pathways that
+     * are neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish pathways ...");
@@ -415,6 +579,14 @@ class Pathway extends Updater
     }
 
 
+    /**
+     * Returns the id of the pathway with the given IRI; a pathway not described by the data gets a row and is counted
+     * as missing.
+     *
+     * @param value the IRI of the pathway
+     * @return the id of the pathway
+     * @throws IOException if the IRI is not an IRI of a pathway
+     */
     static Integer getPathwayID(String value) throws IOException
     {
         if(!value.startsWith(prefix))

@@ -202,6 +202,13 @@
           </compilerArgs>
         </configuration>
       </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <!-- the copies of GWT classes are kept close to their originals and not documented -->
+          <excludePackageNames>com.google.gwt.*</excludePackageNames>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>

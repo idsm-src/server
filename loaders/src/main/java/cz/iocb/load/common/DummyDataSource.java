@@ -25,12 +25,29 @@ import javax.sql.DataSource;
 
 
 
+/**
+ * Data source that hands out one existing connection, at most once at a time. The connection is wrapped so that
+ * closing it only returns it to the data source and that the transaction control (commit, rollback, auto-commit,
+ * abort) is refused, so that the users of the data source work within the transaction of the owner of the connection.
+ */
 public class DummyDataSource implements DataSource
 {
+    /**
+     * Wrapper of the connection handed out by the data source.
+     */
     private final Connection conn;
+
+    /**
+     * Whether the connection has been returned, i.e. whether it can be handed out.
+     */
     private boolean isClosed = true;
 
 
+    /**
+     * Creates the data source of a connection.
+     *
+     * @param connection the connection to hand out
+     */
     public DummyDataSource(Connection connection)
     {
         conn = new Connection()

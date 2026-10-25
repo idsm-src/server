@@ -27,23 +27,60 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the Cooperative Patent Classification of PubChem ({@code pubchem/RDF/patent/cpc}) into the table
+ * {@code pubchem.patentcpcs} and the tables of their modification dates and broader entries.
+ */
 class PatentCpc extends Updater
 {
+    /**
+     * IRI prefix of the CPC entries.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/patentcpc/";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Namespace of the CPC vocabulary of the European Patent Office.
+     */
     private static final String cpc = "http://data.epo.org/linked-data/def/cpc/";
 
+    /**
+     * Values of the type column by the CPC types they stand for.
+     */
     private static final Map<String, String> types = Map.of(cpc + "Section", "SECTION", cpc + "SubSection",
             "SUBSECTION", cpc + "Class", "CLASS", cpc + "SubClass", "SUBCLASS", cpc + "MainGroup", "MAINGROUP",
             cpc + "SubGroup", "SUBGROUP");
 
+    /**
+     * Table of the CPC entries.
+     */
     private static final EntityTable<String> cpcs = new EntityTable<>("pubchem.patentcpcs", stringKey("id"), null,
             typed("type", "pubchem.patentcpc_type_type"), integer("level"), uniqueVarchar("symbol"), varchar("title"),
             varchar("concordant_ipc"));
+
+    /**
+     * CPC entries referenced but not described by the data.
+     */
     private static final MissingEntities<String> missingCpcs = new MissingEntities<>("patent CPC", true);
 
 
+    /**
+     * Not instantiable.
+     */
+    private PatentCpc()
+    {
+    }
+
+
+    /**
+     * Registers the checks of the predicates and types of the CPC file.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), rdf + "type", cpc + "level", cpc + "symbol", dcterms + "title",
@@ -53,6 +90,13 @@ class PatentCpc extends Updater
     }
 
 
+    /**
+     * Registers the handler that adds the CPC entries described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBases(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.onType(vocab + "PatentCPC", (subject, object) -> {
@@ -64,6 +108,13 @@ class PatentCpc extends Updater
     }
 
 
+    /**
+     * Registers the handlers that set the types (section, class, group, ...) of the CPC entries.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTypes(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         for(Entry<String, String> type : types.entrySet())
@@ -77,6 +128,13 @@ class PatentCpc extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the levels of the CPC entries.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadLevels(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(cpc + "level", (subject, object) -> {
@@ -88,6 +146,13 @@ class PatentCpc extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the symbols of the CPC entries.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadSymbols(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(cpc + "symbol", (subject, object) -> {
@@ -99,6 +164,13 @@ class PatentCpc extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the titles of the CPC entries.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTitles(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(dcterms + "title", (subject, object) -> {
@@ -110,6 +182,14 @@ class PatentCpc extends Updater
     }
 
 
+    /**
+     * Registers the handler of the modification dates of the CPC entries and the action that stores their changes in
+     * {@code pubchem.patentcpc_modified_dates}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadModifiedDates(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         StringPairSet keepDates = new StringPairSet();
@@ -137,6 +217,14 @@ class PatentCpc extends Updater
     }
 
 
+    /**
+     * Registers the handler of the broader entries of the CPC entries and the action that stores their changes in
+     * {@code pubchem.patentcpc_broaders}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadBroaders(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         StringPairSet keepBroaders = new StringPairSet();
@@ -164,6 +252,13 @@ class PatentCpc extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the concordant IPC entries of the CPC entries.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     private static void loadConcordantIpcs(TripleDispatcher dispatcher) throws IOException, SQLException
     {
         dispatcher.on(cpc + "concordantIPC", (subject, object) -> {
@@ -175,6 +270,12 @@ class PatentCpc extends Updater
     }
 
 
+    /**
+     * Loads the CPC entries from the PubChemRDF file and flushes their table.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load patent CPCs ...");
@@ -201,6 +302,13 @@ class PatentCpc extends Updater
     }
 
 
+    /**
+     * Stores the CPC entries, including those referenced by the parts loaded later, and deletes the stored entries that
+     * are neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish patent CPCs ...");
@@ -211,6 +319,14 @@ class PatentCpc extends Updater
     }
 
 
+    /**
+     * Returns the id of the CPC entry with the given IRI; an entry not described by the data gets a row and is counted
+     * as missing.
+     *
+     * @param value the IRI of the CPC entry
+     * @return the id (the CPC code) of the entry
+     * @throws IOException if the IRI is not an IRI of a CPC entry
+     */
     static String getCpcID(String value) throws IOException
     {
         if(!value.startsWith(prefix))

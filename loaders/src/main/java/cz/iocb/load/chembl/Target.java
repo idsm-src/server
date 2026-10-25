@@ -28,11 +28,21 @@ import cz.iocb.load.common.Updater;
 
 
 
+/**
+ * Loader of the ChEMBL targets from the target file of the release into the table {@code chembl.targets}, together
+ * with their components, the target component matches of the linksets and the relations between the targets.
+ */
 class Target extends Updater
 {
+    /**
+     * IRI prefix of the targets.
+     */
     static final String prefix = ChEMBL.chembl + "target/CHEMBL";
 
-    // rdf:type of a target is determined by its cco:targetType
+    /**
+     * Local names of the {@code cco} classes of the targets by their {@code cco:targetType}, which determines the
+     * {@code rdf:type} of a target.
+     */
     private static final Map<String, String> types = new HashMap<>();
 
     static
@@ -64,23 +74,54 @@ class Target extends Updater
         types.put("NO TARGET", "UnclassifiedTarget");
     }
 
+    /**
+     * Table of the targets.
+     */
     private static final EntityTable<Integer> targets = new EntityTable<>("chembl.targets", intKey("id"), "chembl_id",
             uniqueVarchar("chembl_id"), varchar("type"), varchar("label"), varchar("organism"), integer("taxonomy"),
             integer("cell_line"), bool("species_group"));
 
+    /**
+     * Table of the components of the targets.
+     */
     private static final ValueTable components = new ValueTable("chembl.target_components", column("target"),
             column("component"));
 
+    /**
+     * Table of the {@code skos:exactMatch} links of the single protein targets to their components.
+     */
     private static final ValueTable exactMatches = new ValueTable("chembl.target_exact_matches", column("target"),
             column("component"));
 
+    /**
+     * Table of the {@code skos:relatedMatch} links of the complex and group targets to their components.
+     */
     private static final ValueTable relatedMatches = new ValueTable("chembl.target_related_matches", column("target"),
             column("component"));
 
+    /**
+     * Table of the relations between the targets.
+     */
     private static final ValueTable relations = new ValueTable("chembl.target_relations", column("target"),
             enumeration("relationship", "chembl.target_relationship_type"), column("related"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private Target()
+    {
+    }
+
+
+    /**
+     * Loads the targets and their components from the target file of the release and checks the triples of the target
+     * components and cell lines linking them to the targets against the links of the targets, and the {@code rdf:type}
+     * and {@code dcterms:title} values, which the mapping produces from {@code cco:targetType} and {@code rdfs:label}.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     private static void loadTargets() throws IOException, SQLException
     {
         Taxonomy.Forms taxonomies = new Taxonomy.Forms("target");
@@ -182,6 +223,15 @@ class Target extends Updater
     }
 
 
+    /**
+     * Loads the links of the targets to their components from a linkset file of the release.
+     *
+     * @param part the name of the part of the linkset
+     * @param property the IRI of the linking property
+     * @param table the table of the links
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     private static void loadLinkset(String part, String property, ValueTable table) throws IOException, SQLException
     {
         try(InputStream stream = getTtlStream(ChEMBL.file(part)))
@@ -204,6 +254,12 @@ class Target extends Updater
     }
 
 
+    /**
+     * Loads the relations between the targets from the target relation file of the release.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     private static void loadRelations() throws IOException, SQLException
     {
         try(InputStream stream = getTtlStream(ChEMBL.file("targetrel")))
@@ -232,6 +288,13 @@ class Target extends Updater
     }
 
 
+    /**
+     * Loads the targets, their components, the linksets of the target components and the relations between the
+     * targets from the files of the release.
+     *
+     * @throws IOException if a file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load targets ...");
@@ -246,6 +309,12 @@ class Target extends Updater
     }
 
 
+    /**
+     * Stores the collected targets, reporting the referenced ones that the files do not describe, their components,
+     * the linksets and the relations.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish targets ...");
@@ -260,6 +329,13 @@ class Target extends Updater
     }
 
 
+    /**
+     * Returns the id of a target and marks the target as referenced.
+     *
+     * @param node the IRI of the target
+     * @return the id of the target
+     * @throws IOException if the node is not an IRI of a target
+     */
     static int getTargetID(Node node) throws IOException
     {
         int id = TripleStreamProcessor.getIntID(node, prefix);

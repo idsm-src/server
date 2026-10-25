@@ -16,4 +16,31 @@
   <properties>
     <maven.version.ignore>(?i).*-(alpha|beta|rc|b|m)([-.]?[0-9.]+)?</maven.version.ignore>
   </properties>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.12.0</version>
+          <configuration>
+            <!-- equivalent of "javadoc -private -Xdoclint:all"; any warning fails the build -->
+            <show>private</show>
+            <doclint>all</doclint>
+            <failOnWarnings>true</failOnWarnings>
+            <quiet>true</quiet>
+          </configuration>
+          <executions>
+            <execution>
+              <id>javadoc</id>
+              <phase>package</phase>
+              <goals>
+                <goal>javadoc</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>

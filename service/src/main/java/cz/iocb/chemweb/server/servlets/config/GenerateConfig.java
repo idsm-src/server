@@ -15,11 +15,29 @@ import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 
 
 
+/**
+ * Servlet generating the script {@code chemweb/js/config.js} of the user interface: the prefixes of the configuration
+ * named by the {@code resource} init parameter (a JNDI resource) and the IRI shown first.
+ */
 public class GenerateConfig extends HttpServlet
 {
+    /**
+     * Serialization version.
+     */
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Configuration whose prefixes are generated.
+     */
     private SparqlDatabaseConfiguration dbConfig;
+
+
+    /**
+     * Creates the servlet.
+     */
+    public GenerateConfig()
+    {
+    }
 
 
     @Override
@@ -56,6 +74,13 @@ public class GenerateConfig extends HttpServlet
     }
 
 
+    /**
+     * Writes the script as the response.
+     *
+     * @param req the request
+     * @param res the response
+     * @throws IOException if an I/O error occurs
+     */
     protected void processRequest(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
         ServletOutputStream out = res.getOutputStream();

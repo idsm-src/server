@@ -13,13 +13,32 @@ import jakarta.servlet.ServletResponse;
 
 
 
+/**
+ * Filter limiting the number of the requests of one client IP address served at the same time to the value of the
+ * {@code max-concurrent-per-ip} init parameter; the further requests wait for a free slot in their order.
+ */
 public class ConcurrencyFilter implements Filter
 {
+    /**
+     * Slots of the concurrent requests of one IP address.
+     */
     private static class IpLimiter
     {
+        /**
+         * Permits of the requests served at the same time.
+         */
         final Semaphore semaphore;
+
+        /**
+         * Number of the requests holding or waiting for a permit; the limiter is dropped when it falls to zero.
+         */
         final AtomicInteger references;
 
+        /**
+         * Creates the limiter.
+         *
+         * @param limit the maximum number of the requests served at the same time
+         */
         public IpLimiter(int limit)
         {
             semaphore = new Semaphore(limit, true);
@@ -28,8 +47,23 @@ public class ConcurrencyFilter implements Filter
     }
 
 
+    /**
+     * Maximum number of the requests of one IP address served at the same time.
+     */
     private int limit = 10;
+
+    /**
+     * Limiters of the IP addresses with requests in progress.
+     */
     private final ConcurrentHashMap<String, IpLimiter> limiters = new ConcurrentHashMap<>();
+
+
+    /**
+     * Creates the filter.
+     */
+    public ConcurrencyFilter()
+    {
+    }
 
 
     @Override

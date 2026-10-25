@@ -9,14 +9,42 @@ import cz.iocb.sparql.engine.mapping.classes.LiteralClass;
 
 
 
+/**
+ * Mapping of the molfiles of the compounds of a SACHEM endpoint as SIO attributes of the compounds.
+ */
 public class MolFiles
 {
+    /**
+     * Not instantiable.
+     */
+    private MolFiles()
+    {
+    }
+
+
+    /**
+     * Adds the prefixes of the molfile mappings to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addPrefixes(SparqlDatabaseConfiguration config)
     {
         config.addPrefix("sio", "http://semanticscience.org/resource/");
     }
 
 
+    /**
+     * Adds the quad mappings of the molfiles of the compounds to the configuration.
+     *
+     * @param config the configuration
+     * @param compoundClass the name of the IRI class of the compounds
+     * @param molfileClass the name of the IRI class of the molfiles
+     * @param table the table of the molfiles
+     * @param compoundFields the columns of the compounds in the table
+     * @param id the column of the molfile ids
+     * @param molfile the column of the molfiles
+     * @param molfileLiteralClass the literal class of the molfiles
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config, String compoundClass, String molfileClass,
             DatabaseTable table, List<Column> compoundFields, String id, String molfile,
             LiteralClass molfileLiteralClass)

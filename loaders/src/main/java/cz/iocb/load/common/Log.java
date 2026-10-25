@@ -13,26 +13,42 @@ import java.time.format.DateTimeFormatter;
 
 
 
-/*
+/**
  * Copies the standard and the error output of a loader into a log file while they still go to the console. The file
  * is named by the start time of the loader, e.g. 2026-10-10_15-30-00.log, and it gets the output as it is written,
  * so that it can be followed during the load and it is complete even if the loader exits abruptly.
  */
 public class Log
 {
+    /**
+     * Format of the names of the log files, given by the start time of the loader.
+     */
     private static final DateTimeFormatter nameFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss", ROOT);
 
 
-    /*
+    /**
      * Writes the output to the console and to the log, which the standard and the error output share; the log is
      * locked for each write, so that it gets the output in the order in which it is written.
      */
     private static class Tee extends OutputStream
     {
+        /**
+         * Original console stream.
+         */
         private final OutputStream console;
+
+        /**
+         * Stream of the log file, shared by the standard and the error output.
+         */
         private final OutputStream log;
 
 
+        /**
+         * Creates the stream.
+         *
+         * @param console the original console stream
+         * @param log the stream of the log file
+         */
         Tee(OutputStream console, OutputStream log)
         {
             this.console = console;
@@ -77,8 +93,19 @@ public class Log
     }
 
 
-    /*
+    /**
+     * Not instantiable.
+     */
+    private Log()
+    {
+    }
+
+
+    /**
      * Starts to copy the output into a new log file in the directory, which is created if it does not exist.
+     *
+     * @param directory the directory of the log files
+     * @throws IOException if the directory or the log file cannot be created
      */
     public static void start(Path directory) throws IOException
     {

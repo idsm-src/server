@@ -25,8 +25,27 @@ import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
 
 
 
+/**
+ * Mapping of the ontologies: the resource classes of the ontology resources and the quad mappings of their classes,
+ * properties, individuals, annotations and OWL axioms stored in the {@code ontology} schema.
+ */
 public class Ontology
 {
+    /**
+     * Not instantiable.
+     */
+    private Ontology()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the ontology resources to the configuration: the classes of the units that have one,
+     * then the class of all ontology resources.
+     *
+     * @param config the configuration
+     * @throws SQLException if a database error occurs
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config) throws SQLException
     {
         OntologyResource resource = OntologyResource.get(config);
@@ -39,9 +58,16 @@ public class Ontology
     }
 
 
-    /*
+    /**
      * Returns the mapping of a pair of unit and id columns holding resources of the given units only, as the union of
      * their resource classes; a single unit is mapped by its class over the id column alone, so two or more are needed.
+     *
+     * @param config the configuration
+     * @param unitColumn the unit column
+     * @param idColumn the id column
+     * @param units the units of the resources
+     * @return the mapping of the columns
+     * @throws IllegalArgumentException if fewer than two units are given
      */
     public static TermMapping createResourceMapping(SparqlDatabaseConfiguration config, String unitColumn,
             String idColumn, short... units)
@@ -58,8 +84,14 @@ public class Ontology
     }
 
 
-    /*
+    /**
      * Returns the mapping of a pair of unit and id columns holding resources of all units except the given ones.
+     *
+     * @param config the configuration
+     * @param unitColumn the unit column
+     * @param idColumn the id column
+     * @param units the units the resources never belong to
+     * @return the mapping of the columns
      */
     public static TermMapping createResourceMappingWithout(SparqlDatabaseConfiguration config, String unitColumn,
             String idColumn, short... units)
@@ -73,6 +105,11 @@ public class Ontology
     }
 
 
+    /**
+     * Adds the quad mappings of the ontologies to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("dataset:ontology");

@@ -28,17 +28,56 @@ import cz.iocb.sparql.engine.request.Request;
 
 
 
+/**
+ * IRI class of the ISDB resources of a compound in one ionization mode,
+ * {@code <prefix><first block of the InChIKey>-<N|P><suffix>}. An IRI is stored as the id of the compound, found by its
+ * accession in {@code isdb.compounds}, and the character of the ionization mode.
+ */
 public class IsdbUserIriClass extends UserIriClass
 {
+    /**
+     * Compiled {@link #regexp}.
+     */
     private final Pattern pattern;
+
+    /**
+     * Regular expression of the IRIs of the class.
+     */
     private final String regexp;
+
+    /**
+     * Prefix of the IRIs.
+     */
     private final String prefix;
+
+    /**
+     * Suffix of the IRIs, or null if they have none.
+     */
     private final String suffix;
+
+    /**
+     * Query of the id of a compound by its accession, with {@code ?} standing for the accession.
+     */
     private final String sqlQuery;
+
+    /**
+     * Length of the prefix.
+     */
     private final int prefixLen;
+
+    /**
+     * Length of the suffix, 0 if there is none.
+     */
     private final int suffixLen;
 
 
+    /**
+     * Creates the class.
+     *
+     * @param name the name of the class
+     * @param prefix the prefix of the IRIs
+     * @param suffix the suffix of the IRIs, or null if they have none
+     */
     public IsdbUserIriClass(String name, String prefix, String suffix)
     {
         super(name, List.of(INT4, CHAR), Set.of(iri, box));
@@ -55,6 +94,12 @@ public class IsdbUserIriClass extends UserIriClass
     }
 
 
+    /**
+     * Creates the class of IRIs without a suffix.
+     *
+     * @param name the name of the class
+     * @param prefix the prefix of the IRIs
+     */
     public IsdbUserIriClass(String name, String prefix)
     {
         this(name, prefix, null);
@@ -121,6 +166,12 @@ public class IsdbUserIriClass extends UserIriClass
     }
 
 
+    /**
+     * Returns the SQL code of the IRI of the columns.
+     *
+     * @param columns the compound id and ionization mode columns
+     * @return the column of the IRI
+     */
     protected Column generateFunction(List<Column> columns)
     {
         String access = "(SELECT id as \"@from\", accession as \"@to\" FROM isdb.compounds) as \"@rctab\"";
@@ -136,6 +187,13 @@ public class IsdbUserIriClass extends UserIriClass
     }
 
 
+    /**
+     * Returns the SQL code of the compound id and ionization mode columns of an IRI.
+     *
+     * @param parameter the column of the IRI
+     * @param check whether an IRI that does not belong to the class gives nulls
+     * @return the compound id and ionization mode columns
+     */
     protected List<Column> generateInverseFunctions(Column parameter, boolean check)
     {
         String access = "(SELECT id as \"@from\", accession as \"@to\" FROM isdb.compounds) as \"@rctab\"";

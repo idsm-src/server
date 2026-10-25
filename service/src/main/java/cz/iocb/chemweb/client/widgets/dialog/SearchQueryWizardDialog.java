@@ -23,90 +23,242 @@ import com.google.gwt.user.client.ui.Widget;
 
 
 
+/**
+ * Wizard generating a SPARQL query that combines a Sachem structure search of compounds, a full-text search of
+ * bioassays and a full-text search of the bioassay participants (proteins and genes).
+ */
 public class SearchQueryWizardDialog extends DialogBox
 {
+    /**
+     * Binder of the dialog template.
+     */
     private static SearchQueryWizardDialogUiBinder uiBinder = GWT.create(SearchQueryWizardDialogUiBinder.class);
 
+    /**
+     * Receiver of the query generated in the open dialog.
+     */
     private Callback callback;
 
+    /**
+     * Binder of the dialog template {@code SearchQueryWizardDialog.ui.xml}.
+     */
     interface SearchQueryWizardDialogUiBinder extends UiBinder<Widget, SearchQueryWizardDialog>
     {
     }
 
+    /**
+     * Receiver of the generated query.
+     */
     public static abstract class Callback
     {
+        /**
+         * Creates the receiver.
+         */
+        protected Callback()
+        {
+        }
+
+
+        /**
+         * Called with the generated query.
+         *
+         * @param code the SPARQL query
+         */
         abstract public void onSelection(String code);
     }
 
+    /**
+     * Methods of the structure search.
+     */
     private static enum Methods
     {
-        SUBSEARCH, SIMSEARCH, EXACTSEARCH;
+        /**
+         * Substructure search.
+         */
+        SUBSEARCH,
+
+        /**
+         * Similarity search.
+         */
+        SIMSEARCH,
+
+        /**
+         * Exact search.
+         */
+        EXACTSEARCH;
     }
 
 
+    /**
+     * Check box enabling the structure search of compounds.
+     */
     @UiField
     CheckBox searchCompoundsCheckBox;
+
+    /**
+     * Check box enabling the full-text search of bioassays.
+     */
     @UiField
     CheckBox searchBioassaysCheckBox;
+
+    /**
+     * Check box enabling the full-text search of the bioassay participants.
+     */
     @UiField
     CheckBox searchParticipantsCheckBox;
 
+    /**
+     * List of the methods of the structure search.
+     */
     @UiField
     ListBox queryMethodListBox;
+
+    /**
+     * Text area with the query structure.
+     */
     @UiField
     TextArea queryTextArea;
+
+    /**
+     * File input loading the query structure from a file.
+     */
     @UiField
     FileUpload queryFileUpload;
+
+    /**
+     * Text box with the maximum number of the found compounds.
+     */
     @UiField
     TextBox resultLimitTextBox;
+
+    /**
+     * Label of the similarity threshold, shown for the similarity search.
+     */
     @UiField
     Label resultThresholdLabel;
+
+    /**
+     * Text box with the similarity threshold, shown for the similarity search.
+     */
     @UiField
     TextBox resultThresholdTextBox;
+
+    /**
+     * Label of the tautomer mode, shown for the substructure and exact searches.
+     */
     @UiField
     Label useTautomersLabel;
+
+    /**
+     * List of the tautomer modes, shown for the substructure and exact searches.
+     */
     @UiField
     ListBox useTautomersListBox;
 
+    /**
+     * Text area with the full-text query of the bioassays.
+     */
     @UiField
     TextArea keywordsTextArea;
+
+    /**
+     * Check box admitting the active outcomes of the compounds in the bioassays.
+     */
     @UiField
     CheckBox activeStatusCheckBox;
+
+    /**
+     * Check box admitting the inactive outcomes of the compounds in the bioassays.
+     */
     @UiField
     CheckBox inactiveStatusCheckBox;
+
+    /**
+     * Check box admitting the inconclusive outcomes of the compounds in the bioassays.
+     */
     @UiField
     CheckBox inconclusiveStatusCheckBox;
+
+    /**
+     * Check box admitting the probe outcomes of the compounds in the bioassays.
+     */
     @UiField
     CheckBox probeStatusCheckBox;
+
+    /**
+     * Check box admitting the unspecified outcomes of the compounds in the bioassays.
+     */
     @UiField
     CheckBox unspecifiedStatusCheckBox;
 
+    /**
+     * Text box with the full-text query of the names of the participants.
+     */
     @UiField
     TextBox participantTextBox;
+
+    /**
+     * Check box admitting the proteins as the participants.
+     */
     @UiField
     CheckBox proteinCheckBox;
+
+    /**
+     * Check box admitting the genes as the participants.
+     */
     @UiField
     CheckBox geneCheckBox;
 
+    /**
+     * Check box selecting the compounds into the result.
+     */
     @UiField
     CheckBox compoundCheckBox;
+
+    /**
+     * Check box selecting the similarity scores into the result.
+     */
     @UiField
     CheckBox scoreCheckBox;
+
+    /**
+     * Check box selecting the bioassays into the result.
+     */
     @UiField
     CheckBox bioassayCheckBox;
+
+    /**
+     * Check box selecting the outcomes into the result.
+     */
     @UiField
     CheckBox statusCheckBox;
+
+    /**
+     * Check box selecting the participants into the result.
+     */
     @UiField
     CheckBox participantCheckBox;
 
+    /**
+     * List of the variables the result can be ordered by.
+     */
     @UiField
     ListBox orderByListBox;
 
+    /**
+     * Button generating the query, enabled only when the values are valid.
+     */
     @UiField
     Button finishButton;
 
 
 
+    /**
+     * Enables the controls of the structure search, and the outcome statuses when the bioassays are searched too,
+     * according to the check box.
+     *
+     * @param event the value change event
+     */
     @UiHandler("searchCompoundsCheckBox")
     void searchCompoundsCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
@@ -134,6 +286,12 @@ public class SearchQueryWizardDialog extends DialogBox
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Enables the controls of the bioassay search, and the outcome statuses when the compounds are searched too,
+     * according to the check box.
+     *
+     * @param event the value change event
+     */
     @UiHandler("searchBioassaysCheckBox")
     void searchBioassaysCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
@@ -155,6 +313,11 @@ public class SearchQueryWizardDialog extends DialogBox
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Enables the controls of the participant search according to the check box.
+     *
+     * @param event the value change event
+     */
     @UiHandler("searchParticipantsCheckBox")
     void searchParticipantsCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
@@ -166,6 +329,11 @@ public class SearchQueryWizardDialog extends DialogBox
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Shows the similarity threshold for the similarity search and the tautomer mode for the other methods.
+     *
+     * @param e the change event
+     */
     @UiHandler("queryMethodListBox")
     void queryMethodListBoxChange(ChangeEvent e)
     {
@@ -197,6 +365,11 @@ public class SearchQueryWizardDialog extends DialogBox
     }
 
 
+    /**
+     * Marks an invalid result limit in red as it is typed.
+     *
+     * @param e the key up event
+     */
     @UiHandler("resultLimitTextBox")
     void resultLimitTextBoxKeyUp(KeyUpEvent e)
     {
@@ -206,6 +379,11 @@ public class SearchQueryWizardDialog extends DialogBox
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Marks an invalid result limit in red when it changes.
+     *
+     * @param e the value change event
+     */
     @UiHandler("resultLimitTextBox")
     void resultLimitTextBoxValueChange(ValueChangeEvent<String> e)
     {
@@ -215,6 +393,11 @@ public class SearchQueryWizardDialog extends DialogBox
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Marks an invalid similarity threshold in red as it is typed.
+     *
+     * @param e the key up event
+     */
     @UiHandler("resultThresholdTextBox")
     void resultThresholdTextBoxKeyUp(KeyUpEvent e)
     {
@@ -224,6 +407,11 @@ public class SearchQueryWizardDialog extends DialogBox
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Marks an invalid similarity threshold in red when it changes.
+     *
+     * @param e the value change event
+     */
     @UiHandler("resultThresholdTextBox")
     void resultThresholdTextBoxValueChange(ValueChangeEvent<String> e)
     {
@@ -233,108 +421,198 @@ public class SearchQueryWizardDialog extends DialogBox
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button as the query structure is typed.
+     *
+     * @param e the key up event
+     */
     @UiHandler("queryTextArea")
     void queryTextAreaKeyUp(KeyUpEvent e)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the query structure changes.
+     *
+     * @param e the value change event
+     */
     @UiHandler("queryTextArea")
     void queryTextAreaValueChange(ValueChangeEvent<String> e)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button as the bioassay query is typed.
+     *
+     * @param e the key up event
+     */
     @UiHandler("keywordsTextArea")
     void keywordsTextAreaKeyUp(KeyUpEvent e)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the bioassay query changes.
+     *
+     * @param e the value change event
+     */
     @UiHandler("keywordsTextArea")
     void keywordsTextAreaValueChange(ValueChangeEvent<String> e)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the active outcomes are admitted or excluded.
+     *
+     * @param event the value change event
+     */
     @UiHandler("activeStatusCheckBox")
     void activeStatusCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the inactive outcomes are admitted or excluded.
+     *
+     * @param event the value change event
+     */
     @UiHandler("inactiveStatusCheckBox")
     void inactiveStatusCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the inconclusive outcomes are admitted or excluded.
+     *
+     * @param event the value change event
+     */
     @UiHandler("inconclusiveStatusCheckBox")
     void pinconclusiveStatusCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the probe outcomes are admitted or excluded.
+     *
+     * @param event the value change event
+     */
     @UiHandler("probeStatusCheckBox")
     void probeStatusCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the unspecified outcomes are admitted or excluded.
+     *
+     * @param event the value change event
+     */
     @UiHandler("unspecifiedStatusCheckBox")
     void unspecifiedStatusCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button as the participant query is typed.
+     *
+     * @param e the key up event
+     */
     @UiHandler("participantTextBox")
     void participantTextBoxKeyUp(KeyUpEvent e)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the participant query changes.
+     *
+     * @param e the value change event
+     */
     @UiHandler("participantTextBox")
     void participantTextBoxValueChange(ValueChangeEvent<String> e)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the proteins are admitted or excluded.
+     *
+     * @param event the value change event
+     */
     @UiHandler("proteinCheckBox")
     void proteinCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the genes are admitted or excluded.
+     *
+     * @param event the value change event
+     */
     @UiHandler("geneCheckBox")
     void geneCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the selection of the compounds changes.
+     *
+     * @param event the value change event
+     */
     @UiHandler("compoundCheckBox")
     void compoundCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the selection of the scores changes.
+     *
+     * @param event the value change event
+     */
     @UiHandler("scoreCheckBox")
     void scoreCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the selection of the bioassays changes.
+     *
+     * @param event the value change event
+     */
     @UiHandler("bioassayCheckBox")
     void bioassayCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the selection of the outcomes changes.
+     *
+     * @param event the value change event
+     */
     @UiHandler("statusCheckBox")
     void statusCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
         finishButton.setEnabled(areValuesValid());
     }
 
+    /**
+     * Updates the finish button when the selection of the participants changes.
+     *
+     * @param event the value change event
+     */
     @UiHandler("participantCheckBox")
     void participantCheckBoxValueChange(ValueChangeEvent<Boolean> event)
     {
@@ -343,6 +621,11 @@ public class SearchQueryWizardDialog extends DialogBox
 
 
 
+    /**
+     * Closes the dialog and passes the generated query to the callback if the values are valid.
+     *
+     * @param e the click event
+     */
     @UiHandler("finishButton")
     void finishButtonClick(ClickEvent e)
     {
@@ -353,18 +636,34 @@ public class SearchQueryWizardDialog extends DialogBox
         callback.onSelection(generateQuery());
     }
 
+    /**
+     * Closes the dialog without generating a query.
+     *
+     * @param e the click event
+     */
     @UiHandler("cancelButton")
     void cancelButtonClick(ClickEvent e)
     {
         hide();
     }
 
+    /**
+     * Opens the dialog in the centre of the page.
+     *
+     * @param callback the receiver of the generated query
+     */
     public void open(Callback callback)
     {
         this.callback = callback;
         center();
     }
 
+    /**
+     * Checks that at least one search is enabled and that the limit and the threshold of the structure search are
+     * valid.
+     *
+     * @return true if the query can be generated
+     */
     private boolean areValuesValid()
     {
         boolean searchCompounds = searchCompoundsCheckBox.getValue();
@@ -380,16 +679,16 @@ public class SearchQueryWizardDialog extends DialogBox
         // at least one search have to be restricted
         {
             int restricted = 0;
-        
+
             if(searchCompounds && !queryTextArea.getValue().trim().isEmpty())
                 restricted++;
-        
+
             if(searchBioassays && !keywordsTextArea.getValue().trim().isEmpty())
                 restricted++;
-        
+
             if(searchParticipants && !participantTextBox.getValue().trim().isEmpty())
                 restricted++;
-        
+
             if(restricted == 0)
                 return false;
         }
@@ -413,12 +712,12 @@ public class SearchQueryWizardDialog extends DialogBox
             /*
             // at least one assay status have to be selected
             int selected = 0;
-            
+
             for(CheckBox s : new CheckBox[] { activeStatusCheckBox, inactiveStatusCheckBox, inconclusiveStatusCheckBox,
                     probeStatusCheckBox, unspecifiedStatusCheckBox })
                 if(s.getValue())
                     selected++;
-            
+
             if(selected == 0)
                 return false;
             */
@@ -439,23 +738,23 @@ public class SearchQueryWizardDialog extends DialogBox
         /*
         // check selection
         int selections = 0;
-        
+
         if(compoundCheckBox.getValue() && searchCompounds)
             selections++;
-        
+
         if(scoreCheckBox.getValue() && searchCompounds
                 && Methods.valueOf(queryMethodListBox.getSelectedValue()) == Methods.SIMSEARCH)
             selections++;
-        
+
         if(bioassayCheckBox.getValue() && searchBioassays)
             selections++;
-        
+
         if(statusCheckBox.getValue() && searchCompounds && searchBioassays)
             selections++;
-        
+
         if(participantCheckBox.getValue() && searchParticipants)
             selections++;
-        
+
         if(selections == 0)
             return false;
         */
@@ -464,6 +763,11 @@ public class SearchQueryWizardDialog extends DialogBox
     }
 
 
+    /**
+     * Checks the similarity threshold: empty or a number between 0 and 1.
+     *
+     * @return true if the threshold is valid
+     */
     private boolean isResultThresholdTextBoxValid()
     {
         try
@@ -486,6 +790,11 @@ public class SearchQueryWizardDialog extends DialogBox
         return false;
     }
 
+    /**
+     * Checks the result limit: empty or a positive integer.
+     *
+     * @return true if the limit is valid
+     */
     private boolean isResultLimitTextBoxValid()
     {
         try
@@ -508,6 +817,13 @@ public class SearchQueryWizardDialog extends DialogBox
         return false;
     }
 
+    /**
+     * Generates the query of the enabled searches: the compounds found by the structure search, the bioassays found by
+     * the full-text search and the participants found by their names, joined through the substances, endpoints and
+     * measure groups of PubChem, restricted to the admitted outcomes and ordered as chosen.
+     *
+     * @return the SPARQL query
+     */
     private String generateQuery()
     {
         Methods method = Methods.valueOf(queryMethodListBox.getSelectedValue());
@@ -815,6 +1131,9 @@ public class SearchQueryWizardDialog extends DialogBox
     }
 
 
+    /**
+     * Creates the dialog and fills its lists.
+     */
     public SearchQueryWizardDialog()
     {
         uiBinder.createAndBindUi(this);
@@ -846,34 +1165,49 @@ public class SearchQueryWizardDialog extends DialogBox
         });
     }
 
+    /**
+     * Reads the file selected in the file input and passes its content to {@link #handleLoadedFile(String)}.
+     *
+     * @param evt the file input element
+     */
     private native void handleFileSelect(@SuppressWarnings("deprecation") com.google.gwt.user.client.Element evt)
     /*-{
         var file = evt.files[0];
-    
+
         //if (!file.type.match('text.*'))
         //  return;
-    
+
         if (!$wnd.File || !$wnd.FileReader || !$wnd.FileList || !$wnd.Blob)
             $wnd.alert("The File APIs are not fully supported by your browser.");
-    
+
         var reader = new $wnd.FileReader();
         var that = this;
-    
+
         reader.onload = (function(theFile) {
             return function(e) {
                 that.@cz.iocb.chemweb.client.widgets.dialog.SearchQueryWizardDialog::handleLoadedFile(Ljava/lang/String;)(e.target.result);
             };
         })(file);
-    
+
         reader.readAsText(file);
     }-*/;
 
+    /**
+     * Puts the content of a loaded file into the query text area.
+     *
+     * @param data the content of the file
+     */
     public void handleLoadedFile(String data)
     {
         queryTextArea.setValue(data);
     }
 
 
+    /**
+     * Provides the dialog itself as the root of the template.
+     *
+     * @return the dialog
+     */
     @UiFactory
     DialogBox instance()
     {

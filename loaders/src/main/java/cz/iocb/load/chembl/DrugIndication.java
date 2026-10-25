@@ -21,16 +21,45 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the ChEMBL drug indications, the diseases the molecules are developed for, from the indication file of the
+ * release into the table {@code chembl.drug_indications}.
+ */
 class DrugIndication extends Updater
 {
+    /**
+     * IRI prefix of the drug indications.
+     */
     static final String prefix = ChEMBL.chembl + "drug_indication/CHEMBL_IND_";
+
+    /**
+     * IRI prefix of the MeSH identifiers of the indications.
+     */
     static final String meshPrefix = "http://identifiers.org/mesh/";
 
+    /**
+     * Table of the drug indications.
+     */
     private static final EntityTable<Integer> indications = new EntityTable<>("chembl.drug_indications", intKey("id"),
             "chembl_id", uniqueVarchar("chembl_id"), integer("molecule"), varchar("mesh"), varchar("mesh_heading"),
             integer("efo_unit"), integer("efo_id"), varchar("efo_name"), integer("phase"));
 
 
+    /**
+     * Not instantiable.
+     */
+    private DrugIndication()
+    {
+    }
+
+
+    /**
+     * Loads the drug indications from the indication file of the release and checks the {@code cco:hasDrugIndication}
+     * triples of the molecules against the links of the indications.
+     *
+     * @throws IOException if the file cannot be read
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load drug indications ...");
@@ -90,6 +119,11 @@ class DrugIndication extends Updater
     }
 
 
+    /**
+     * Stores the collected drug indications and reports the referenced ones that the file does not describe.
+     *
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws SQLException
     {
         System.out.println("finish drug indications ...");
@@ -100,6 +134,13 @@ class DrugIndication extends Updater
     }
 
 
+    /**
+     * Returns the id of a drug indication and marks the drug indication as referenced.
+     *
+     * @param node the IRI of the drug indication
+     * @return the id of the drug indication
+     * @throws IOException if the node is not an IRI of a drug indication
+     */
     static int getIndicationID(Node node) throws IOException
     {
         int id = TripleStreamProcessor.getIntID(node, prefix);

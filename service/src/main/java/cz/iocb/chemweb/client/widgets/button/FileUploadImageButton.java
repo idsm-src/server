@@ -9,11 +9,23 @@ import com.google.gwt.user.client.ui.FormPanel;
 
 
 
+/**
+ * Image button that opens the file chooser of the browser: a file input is laid over the button.
+ */
 public class FileUploadImageButton extends ImageButton
 {
+    /**
+     * File input laid over the button.
+     */
     private final FileUpload upload;
 
 
+    /**
+     * Creates the button with an image.
+     *
+     * @param src the URI of the image
+     * @param position the CSS background position of the image
+     */
     @UiConstructor
     public FileUploadImageButton(SafeUri src, String position)
     {
@@ -36,6 +48,11 @@ public class FileUploadImageButton extends ImageButton
     }
 
 
+    /**
+     * Returns the file input of the button.
+     *
+     * @return the file input
+     */
     public FileUpload getUploadFile()
     {
         return upload;

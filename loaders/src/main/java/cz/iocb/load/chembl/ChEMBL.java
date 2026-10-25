@@ -17,30 +17,108 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of ChEMBL from the RDF files of its release into the tables of the schema {@code chembl}. It reads the
+ * version of the release from its VoID description, loads the entities in the order of their references, stores them
+ * and records the version and the counts of the substances and assays.
+ */
 public class ChEMBL extends Updater
 {
+    /**
+     * Namespace of RDF.
+     */
     static final String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+
+    /**
+     * Namespace of RDF Schema.
+     */
     static final String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
+
+    /**
+     * Namespace of the DCMI Metadata Terms.
+     */
     static final String dcterms = "http://purl.org/dc/terms/";
+
+    /**
+     * Namespace of the Bibliographic Ontology.
+     */
     static final String bibo = "http://purl.org/ontology/bibo/";
+
+    /**
+     * Namespace of SKOS.
+     */
     static final String skos = "http://www.w3.org/2004/02/skos/core#";
+
+    /**
+     * Namespace of FOAF.
+     */
     static final String foaf = "http://xmlns.com/foaf/0.1/";
+
+    /**
+     * Namespace of the Semanticscience Integrated Ontology.
+     */
     static final String sio = "http://semanticscience.org/resource/";
+
+    /**
+     * Namespace of the BioAssay Ontology.
+     */
     static final String bao = "http://www.bioassayontology.org/bao#";
+
+    /**
+     * Namespace of the ChEMBL core ontology.
+     */
     static final String cco = "http://rdf.ebi.ac.uk/terms/chembl#";
+
+    /**
+     * Namespace of the ChEMBL resources.
+     */
     static final String chembl = "http://rdf.ebi.ac.uk/resource/chembl/";
+
+    /**
+     * Namespace of the Provenance, Authoring and Versioning ontology.
+     */
     static final String pav = "http://purl.org/pav/";
 
+    /**
+     * IRI of {@code rdf:type}.
+     */
     static final String rdfType = rdf + "type";
+
+    /**
+     * IRI of {@code rdfs:label}.
+     */
     static final String rdfsLabel = rdfs + "label";
+
+    /**
+     * IRI of {@code cco:chemblId}.
+     */
     static final String chemblId = cco + "chemblId";
+
+    /**
+     * IRI of {@code void:inDataset}.
+     */
     static final String voidInDataset = "http://rdfs.org/ns/void#inDataset";
 
+    /**
+     * The version of the loaded release.
+     */
     private static String version;
 
 
-    /*
+    /**
+     * Not instantiable.
+     */
+    private ChEMBL()
+    {
+    }
+
+
+    /**
      * Returns the current version of the dataset, as its VoID description states it.
+     *
+     * @return the current version of the dataset
+     * @throws IOException if the VoID file cannot be read or does not state exactly one current version
+     * @throws SQLException if a database error occurs
      */
     private static String getVersion() throws IOException, SQLException
     {
@@ -76,8 +154,11 @@ public class ChEMBL extends Updater
     }
 
 
-    /*
+    /**
      * Returns the path of an RDF file of the release.
+     *
+     * @param name the name of the file
+     * @return the path of the file
      */
     private static String rdfFile(String name)
     {
@@ -85,12 +166,27 @@ public class ChEMBL extends Updater
     }
 
 
+    /**
+     * Returns the path of the RDF file of a part of the release, whose name carries the version.
+     *
+     * @param part the name of the part, such as {@code molecule}
+     * @return the path of the file
+     */
     static String file(String part)
     {
         return rdfFile("chembl_" + version + "_" + part + ".ttl.gz");
     }
 
 
+    /**
+     * Reports an error if the string value of a triple is not the expected one.
+     *
+     * @param subject the subject of the triple
+     * @param predicate the predicate of the triple
+     * @param object the object of the triple
+     * @param value the expected value
+     * @throws IOException if the object is not a string literal
+     */
     static void checkValue(Node subject, Node predicate, Node object, String value) throws IOException
     {
         if(!TripleStreamProcessor.getString(object).equals(value))
@@ -99,6 +195,17 @@ public class ChEMBL extends Updater
     }
 
 
+    /**
+     * Returns the ChEMBL id of a {@code cco:chemblId} triple and reports an error if it is not the id the IRI of the
+     * subject implies.
+     *
+     * @param subject the subject of the triple
+     * @param predicate the predicate of the triple
+     * @param object the object of the triple
+     * @param value the expected id
+     * @return the ChEMBL id
+     * @throws IOException if the object is not a string literal
+     */
     static String getChemblId(Node subject, Node predicate, Node object, String value) throws IOException
     {
         checkValue(subject, predicate, object, value);
@@ -106,6 +213,13 @@ public class ChEMBL extends Updater
     }
 
 
+    /**
+     * Runs the loader.
+     *
+     * @param args the command-line arguments (ignored)
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     public static void main(String[] args) throws IOException, SQLException
     {
         try

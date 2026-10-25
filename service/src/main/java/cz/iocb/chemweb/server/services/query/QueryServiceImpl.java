@@ -54,29 +54,106 @@ import cz.iocb.sparql.engine.translator.ServiceException;
 
 
 
+/**
+ * Implementation of the {@link QueryService}: evaluates the queries by the engine of the configuration named by the
+ * {@code resource} init parameter (a JNDI resource), each in a thread of its own, and renders every term of the result
+ * by the Velocity template ({@code templates/item/*.vm}) registered for its kind or for the pattern its IRI matches.
+ * The renderings are cached per configuration.
+ */
 public class QueryServiceImpl extends GWTRemoteServiceServlet implements QueryService
 {
+    /**
+     * State of a submitted query kept in the session until its result is taken.
+     */
     private static class QueryState
     {
+        /**
+         * Thread evaluating the query.
+         */
         Thread thread;
+
+        /**
+         * Request evaluating the query, used to cancel it.
+         */
         Request request;
+
+        /**
+         * Result of the query, null until the query succeeds.
+         */
         QueryResult result;
+
+        /**
+         * Failure of the query, null unless the query fails.
+         */
         Throwable exception;
+
+        /**
+         * Creates the state of a query that has not started yet.
+         */
+        private QueryState()
+        {
+        }
     }
 
 
+    /**
+     * Serialization version.
+     */
     private static final long serialVersionUID = 1L;
+
+    /**
+     * Timeout of the evaluation of a query in nanoseconds.
+     */
     private static final long timeout = 15 * 60 * 1000000000l; // 15 minutes
+
+    /**
+     * Storage of the states of the submitted queries in the sessions.
+     */
     private static final SessionData<QueryState> sessionData = new SessionData<>("QuerySessionStorage");
+
+    /**
+     * Logger of the submitted queries.
+     */
     private static final Logger logger = LoggerFactory.getLogger(QueryServiceImpl.class);
+
+    /**
+     * Maximum number of the cached renderings of terms per configuration.
+     */
     private static final int cacheSize = 1000000;
+
+    /**
+     * Caches of the renderings of terms by the names of the configurations, shared by the servlets of a configuration.
+     */
     private static final Map<String, Map<RdfTerm, String>> nodeHashMaps = new HashMap<>();
+
+    /**
+     * Template files by the patterns of the IRIs they render.
+     */
     private static final Map<Pattern, String> templates = new HashMap<>();
 
+    /**
+     * Cache of the renderings of terms of the configuration, least recently used renderings being evicted first.
+     */
     private Map<RdfTerm, String> nodeHashMap;
+
+    /**
+     * Configuration the queries are evaluated against.
+     */
     private SparqlDatabaseConfiguration sparqlConfig;
+
+    /**
+     * Engine evaluating the queries.
+     */
     private Engine engine;
+
+    /**
+     * Velocity engine rendering the terms.
+     */
     private VelocityEngine ve;
+
+    /**
+     * Executor rendering the rows of the results.
+     */
     private ExecutorService executorService;
 
 
@@ -217,6 +294,14 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
         addTemplate(wikidata + "entity/Q([0-9]+)", "wikidata/Compound.vm");
 
         addTemplate(obolibrary + "obo/CHEBI_([0-9]+)", "chebi/Class.vm");
+    }
+
+
+    /**
+     * Creates the servlet.
+     */
+    public QueryServiceImpl()
+    {
     }
 
 
@@ -511,12 +596,25 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
     }
 
 
+    /**
+     * Registers the template rendering the IRIs matching a pattern in the result table.
+     *
+     * @param regexp the regular expression the IRIs match
+     * @param file the template file relative to the directory {@code templates/item}
+     */
     private static void addTemplate(String regexp, String file)
     {
         templates.put(Pattern.compile(regexp), "item/" + file);
     }
 
 
+    /**
+     * Returns the template rendering a term in the result table.
+     *
+     * @param node the term, null for an unbound value
+     * @return the template file of the first pattern matching an IRI ({@code item/unknown.vm} if none matches), the
+     *         template of literals or of blank nodes, or null for an unbound value
+     */
     private static String getTempleteFileName(RdfTerm node)
     {
         switch(node)

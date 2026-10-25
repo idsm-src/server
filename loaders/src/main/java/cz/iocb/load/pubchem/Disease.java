@@ -26,19 +26,48 @@ import cz.iocb.load.ontology.Ontology;
 
 
 
+/**
+ * Loader of the PubChem diseases from {@code pubchem/RDF/disease/pc_disease.ttl.gz} into the table
+ * {@code pubchem.diseases} and the tables of their alternative labels and matches.
+ */
 public class Disease extends Updater
 {
+    /**
+     * IRI prefix of the diseases.
+     */
     static final String prefix = "http://rdf.ncbi.nlm.nih.gov/pubchem/disease/DZID";
+
+    /**
+     * Length of {@link #prefix}.
+     */
     static final int prefixLength = prefix.length();
 
+    /**
+     * Table of the diseases.
+     */
     private static final EntityTable<Integer> diseases = new EntityTable<>("pubchem.diseases", intKey("id"), null,
             varchar("label"));
+
+    /**
+     * Diseases referenced but not described by the data.
+     */
     private static final MissingEntities<Integer> missingDiseases = new MissingEntities<>("disease", true);
 
 
-    /*
+    /**
+     * Not instantiable.
+     */
+    private Disease()
+    {
+    }
+
+
+    /**
      * Tests whether the node is an incorrect match of a disease, an obo IRI without the prefix of an ontology, which is
      * ignored.
+     *
+     * @param node the matching node
+     * @return whether the match is incorrect
      */
     private static boolean isIncorrect(Node node)
     {
@@ -46,6 +75,11 @@ public class Disease extends Updater
     }
 
 
+    /**
+     * Registers the checks of the predicates, types and values of the disease file.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void check(TripleDispatcher dispatcher)
     {
         dispatcher.checkPredicates(all(), rdf + "type", skos + "prefLabel", skos + "altLabel", skos + "closeMatch",
@@ -87,6 +121,11 @@ public class Disease extends Updater
     }
 
 
+    /**
+     * Registers the handler that adds the diseases described by the data.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void loadBases(TripleDispatcher dispatcher)
     {
         dispatcher.onType(sio + "SIO_010299", (subject, object) -> {
@@ -98,6 +137,11 @@ public class Disease extends Updater
     }
 
 
+    /**
+     * Registers the handler that sets the labels of the diseases.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
     private static void loadLabels(TripleDispatcher dispatcher)
     {
         dispatcher.on(skos + "prefLabel", (subject, object) -> {
@@ -106,6 +150,13 @@ public class Disease extends Updater
     }
 
 
+    /**
+     * Registers the handler of the alternative labels of the diseases and the action that stores their changes in
+     * {@code pubchem.disease_alternatives}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws SQLException if a database error occurs
+     */
     private static void loadAlternatives(TripleDispatcher dispatcher) throws SQLException
     {
         IntStringSet keepAlternatives = new IntStringSet();
@@ -133,6 +184,14 @@ public class Disease extends Updater
     }
 
 
+    /**
+     * Registers the handler of the resources linked to the diseases by {@code skos:closeMatch} (except the MeSH
+     * descriptors) and the action that stores their changes in {@code pubchem.disease_matches}; an incorrect match is
+     * skipped and a Genetic and Rare Diseases IRI with leading zeros is repaired, both with a warning.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws SQLException if a database error occurs
+     */
     private static void loadCloseMatches(TripleDispatcher dispatcher) throws SQLException
     {
         IntIntPairSet keepMatches = new IntIntPairSet();
@@ -179,6 +238,13 @@ public class Disease extends Updater
     }
 
 
+    /**
+     * Registers the handler of the MeSH descriptors linked to the diseases by {@code skos:closeMatch} and the action
+     * that stores their changes in {@code pubchem.disease_mesh_matches}.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws SQLException if a database error occurs
+     */
     private static void loadMeshCloseMatches(TripleDispatcher dispatcher) throws SQLException
     {
         IntStringSet keepMatches = new IntStringSet();
@@ -209,6 +275,13 @@ public class Disease extends Updater
     }
 
 
+    /**
+     * Registers the handler of the resources linked to the diseases by {@code skos:relatedMatch} and the action that
+     * stores their changes in {@code pubchem.disease_related_matches}; an incorrect match is skipped with a warning.
+     *
+     * @param dispatcher the dispatcher of the triples
+     * @throws SQLException if a database error occurs
+     */
     private static void loadRelatedMatches(TripleDispatcher dispatcher) throws SQLException
     {
         IntIntPairSet keepMatches = new IntIntPairSet();
@@ -244,6 +317,13 @@ public class Disease extends Updater
     }
 
 
+    /**
+     * Loads the diseases from {@code pubchem/RDF/disease/pc_disease.ttl.gz} into the tables and flushes the table of
+     * the diseases.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void load() throws IOException, SQLException
     {
         System.out.println("load diseases ...");
@@ -268,6 +348,13 @@ public class Disease extends Updater
     }
 
 
+    /**
+     * Stores the diseases, including those referenced by the parts loaded later, and deletes the stored diseases that
+     * are neither described nor referenced.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws SQLException if a database error occurs
+     */
     static void finish() throws IOException, SQLException
     {
         System.out.println("finish diseases ...");
@@ -278,6 +365,14 @@ public class Disease extends Updater
     }
 
 
+    /**
+     * Returns the id of the disease with the given IRI; a disease not described by the data gets a row and is counted
+     * as missing.
+     *
+     * @param value the IRI of the disease
+     * @return the id of the disease
+     * @throws IOException if the IRI is not an IRI of a disease
+     */
     static Integer getDiseaseID(String value) throws IOException
     {
         if(!value.startsWith(prefix))

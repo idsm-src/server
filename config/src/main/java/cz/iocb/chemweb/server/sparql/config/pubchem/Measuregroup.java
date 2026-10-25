@@ -12,8 +12,24 @@ import cz.iocb.sparql.engine.mapping.classes.GenericUserIriClass;
 
 
 
+/**
+ * Mapping of the measure groups of the PubChem bioassays (graph {@code pubchem:measuregroup}).
+ */
 public class Measuregroup
 {
+    /**
+     * Not instantiable.
+     */
+    private Measuregroup()
+    {
+    }
+
+
+    /**
+     * Adds the resource classes of the PubChem measure groups to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config)
     {
         config.addIriClass(new GenericUserIriClass("pubchem:measuregroup", schema, "measuregroup", List.of(INT4, INT4),
@@ -21,6 +37,11 @@ public class Measuregroup
     }
 
 
+    /**
+     * Adds the quad mappings of the PubChem measure groups to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("pubchem:measuregroup");

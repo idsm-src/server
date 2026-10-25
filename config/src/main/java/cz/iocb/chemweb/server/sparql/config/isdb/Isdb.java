@@ -20,13 +20,40 @@ import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 
 
 
+/**
+ * Mapping of the In Silico DataBase (ISDB): its compounds, their predicted mass spectra and the spectral library.
+ */
 public class Isdb
 {
+    /**
+     * Prefix of the IRIs of the ISDB resources.
+     */
     public static final String isdb = "https://idsm.elixir-czech.cz/rdf/isdb/";
+
+    /**
+     * Prefix of the IRIs standing for the blank nodes of the ISDB data.
+     */
     public static final String bnisdb = "https://idsm.elixir-czech.cz/rdf/isdb/bn";
+
+    /**
+     * IRI of the ISDB spectral library, as a constant IRI mapping.
+     */
     public static final String isdbLibrary = "<https://idsm.elixir-czech.cz/rdf/isdb/library/isdb>";
 
 
+    /**
+     * Not instantiable.
+     */
+    private Isdb()
+    {
+    }
+
+
+    /**
+     * Adds the prefixes of ISDB to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addPrefixes(SparqlDatabaseConfiguration config)
     {
         Common.addPrefixes(config);
@@ -44,6 +71,12 @@ public class Isdb
     }
 
 
+    /**
+     * Adds the resource classes of the ISDB compounds and spectra to the configuration.
+     *
+     * @param config the configuration
+     * @throws SQLException if a database error occurs
+     */
     public static void addResourceClasses(SparqlDatabaseConfiguration config) throws SQLException
     {
         Compound.addResourceClasses(config);
@@ -84,6 +117,11 @@ public class Isdb
     }
 
 
+    /**
+     * Adds the quad mappings of the ISDB compounds and spectra to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addQuadMappings(SparqlDatabaseConfiguration config)
     {
         ConstantIriMapping graph = config.createIriMapping("isdb:");
@@ -399,6 +437,11 @@ public class Isdb
     }
 
 
+    /**
+     * Adds the functions of the spectrum similarities to the configuration.
+     *
+     * @param config the configuration
+     */
     public static void addFunctions(SparqlDatabaseConfiguration config)
     {
         Matchms.addFunctions(config);
