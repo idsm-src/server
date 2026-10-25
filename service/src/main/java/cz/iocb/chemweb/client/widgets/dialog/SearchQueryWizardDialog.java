@@ -126,6 +126,12 @@ public class SearchQueryWizardDialog extends DialogBox
     FileUpload queryFileUpload;
 
     /**
+     * Button lying under the transparent file input, so that the file input looks like a button.
+     */
+    @UiField
+    Button queryUploadButton;
+
+    /**
      * Text box with the maximum number of the found compounds.
      */
     @UiField
@@ -264,7 +270,8 @@ public class SearchQueryWizardDialog extends DialogBox
     {
         queryMethodListBox.setEnabled(event.getValue());
         queryTextArea.setEnabled(event.getValue());
-        queryTextArea.setEnabled(event.getValue());
+        queryFileUpload.setEnabled(event.getValue());
+        queryUploadButton.setEnabled(event.getValue());
         resultLimitTextBox.setEnabled(event.getValue());
         resultThresholdTextBox.setEnabled(event.getValue());
         useTautomersListBox.setEnabled(event.getValue());

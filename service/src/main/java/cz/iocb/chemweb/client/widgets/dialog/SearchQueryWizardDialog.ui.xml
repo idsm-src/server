@@ -45,6 +45,10 @@
       opacity: 0;
       filter: literal("alpha(opacity = 0)");
     }
+
+    .upload[disabled] {
+      cursor: default;
+    }
   </ui:style>
 
   <g:DialogBox autoHide="true" modal="true">
