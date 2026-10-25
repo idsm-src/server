@@ -7,7 +7,6 @@ import static cz.iocb.load.common.EntityTable.uniqueVarchar;
 import static cz.iocb.load.common.EntityTable.varchar;
 import static java.util.Locale.ROOT;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -282,10 +281,9 @@ public class MoNA extends Updater
      *
      * @param stream the stream of the ontology in the OBO format
      * @return the classes by their names
-     * @throws FileNotFoundException never, the caller opens the stream
      * @throws IOException if the stream cannot be read
      */
-    private static Map<String, ClassyFire> loadClassyFires(InputStream stream) throws FileNotFoundException, IOException
+    private static Map<String, ClassyFire> loadClassyFires(InputStream stream) throws IOException
     {
         Map<String, ClassyFire> classyFires = new HashMap<>();
 

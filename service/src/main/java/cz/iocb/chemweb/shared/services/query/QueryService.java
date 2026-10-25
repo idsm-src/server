@@ -20,10 +20,9 @@ public interface QueryService extends RemoteService
      * @param code the text of the query
      * @return the id of the query in the server session
      * @throws SessionException if the server session cannot be used
-     * @throws QueryException if the query cannot be submitted
      * @throws DatabaseException if a database error occurs
      */
-    long query(String code) throws SessionException, QueryException, DatabaseException;
+    long query(String code) throws SessionException, DatabaseException;
 
     /**
      * Submits a query for a range of its results.
@@ -33,10 +32,9 @@ public interface QueryService extends RemoteService
      * @param limit the maximum number of results, negative for no limit
      * @return the id of the query in the server session
      * @throws SessionException if the server session cannot be used
-     * @throws QueryException if the query cannot be submitted
      * @throws DatabaseException if a database error occurs
      */
-    long query(String code, int offset, int limit) throws SessionException, QueryException, DatabaseException;
+    long query(String code, int offset, int limit) throws SessionException, DatabaseException;
 
     /**
      * Waits for a submitted query to finish and returns its result; the query is removed from the session.

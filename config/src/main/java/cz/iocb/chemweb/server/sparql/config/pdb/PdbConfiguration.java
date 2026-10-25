@@ -48,10 +48,8 @@ public class PdbConfiguration extends SparqlDatabaseOptimisedConfiguration
 
     /**
      * Adds the resource classes of the PDB compounds to the configuration.
-     *
-     * @throws SQLException if a database error occurs
      */
-    private void addResourceClasses() throws SQLException
+    private void addResourceClasses()
     {
         Pdb.addResourceClasses(this);
     }

@@ -1,6 +1,5 @@
 package cz.iocb.chemweb.server.servlets.download;
 
-import java.rmi.RemoteException;
 import java.util.Base64;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
@@ -66,13 +65,9 @@ public class DownloadServlet extends HttpServlet
      *
      * @param req the request
      * @param res the response
-     * @throws ServletException not thrown by this implementation
      * @throws java.io.IOException if an I/O error occurs
-     * @throws NumberFormatException not thrown by this implementation
-     * @throws RemoteException not thrown by this implementation
      */
-    protected void processRequest(HttpServletRequest req, HttpServletResponse res)
-            throws ServletException, java.io.IOException, NumberFormatException, RemoteException
+    protected void processRequest(HttpServletRequest req, HttpServletResponse res) throws java.io.IOException
     {
         ServletOutputStream out = res.getOutputStream();
 

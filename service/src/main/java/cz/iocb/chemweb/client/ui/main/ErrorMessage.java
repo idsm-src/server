@@ -25,11 +25,6 @@ public class ErrorMessage
         QUERY,
 
         /**
-         * Cancellation of a query.
-         */
-        CANCEL,
-
-        /**
          * Loading of the details of a resource.
          */
         DETAILS,
@@ -61,7 +56,6 @@ public class ErrorMessage
         String caption = switch(context)
         {
             case QUERY -> "Query Evaluation Error";
-            case CANCEL -> "Query Cancellation Error";
             case DETAILS -> "Details Loading Error";
             case PROPERTIES -> "Properties Loading Error";
         };

@@ -55,10 +55,8 @@ public class ExamplesConfiguration extends SparqlDatabaseOptimisedConfiguration
 
     /**
      * Adds the resource classes of the examples and of the endpoints they target to the configuration.
-     *
-     * @throws SQLException if a database error occurs
      */
-    private void addResourceClasses() throws SQLException
+    private void addResourceClasses()
     {
         addIriClass(new ListUserIriClass("idsm:endpoint", new DatabaseTable(schema, "sparql_endpoints"),
                 new TableColumn("iri", VARCHAR)));

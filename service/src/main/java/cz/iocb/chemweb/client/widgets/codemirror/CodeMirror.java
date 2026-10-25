@@ -373,23 +373,20 @@ public class CodeMirror
      * Replaces the code of the editor.
      *
      * @param val the new code
-     * @return the value returned by CodeMirror, which is undefined
      */
-    public native String setValue(String val)
+    public native void setValue(String val)
     /*-{
         var editor = this.@cz.iocb.chemweb.client.widgets.codemirror.CodeMirror::codemirror;
-        return editor.setValue(val);
+        editor.setValue(val);
     }-*/;
 
 
     /**
      * Redraws the editor, needed after its size or visibility changed.
-     *
-     * @return the value returned by CodeMirror, which is undefined
      */
-    public native String refresh()
+    public native void refresh()
     /*-{
         var editor = this.@cz.iocb.chemweb.client.widgets.codemirror.CodeMirror::codemirror;
-        return editor.refresh();
+        editor.refresh();
     }-*/;
 }

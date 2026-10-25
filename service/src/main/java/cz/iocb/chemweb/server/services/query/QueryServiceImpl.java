@@ -36,7 +36,6 @@ import cz.iocb.chemweb.server.velocity.UrlDirective;
 import cz.iocb.chemweb.shared.services.DatabaseException;
 import cz.iocb.chemweb.shared.services.SessionException;
 import cz.iocb.chemweb.shared.services.query.DataGridNode;
-import cz.iocb.chemweb.shared.services.query.QueryException;
 import cz.iocb.chemweb.shared.services.query.QueryResult;
 import cz.iocb.chemweb.shared.services.query.QueryService;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
@@ -378,14 +377,14 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
 
 
     @Override
-    public long query(String query) throws QueryException, DatabaseException
+    public long query(String query) throws DatabaseException
     {
         return query(query, 0, -1);
     }
 
 
     @Override
-    public long query(String query, int offset, int limit) throws QueryException, DatabaseException
+    public long query(String query, int offset, int limit) throws DatabaseException
     {
         final HttpSession httpSession = this.getThreadLocalRequest().getSession(true);
         final QueryState queryState = new QueryState();

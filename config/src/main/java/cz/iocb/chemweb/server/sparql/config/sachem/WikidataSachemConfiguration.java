@@ -53,10 +53,8 @@ public class WikidataSachemConfiguration extends SparqlDatabaseOptimisedConfigur
 
     /**
      * Adds the resource classes of the configuration.
-     *
-     * @throws SQLException if a database error occurs
      */
-    private void addResourceClasses() throws SQLException
+    private void addResourceClasses()
     {
         Sachem.addResourceClasses(this);
 

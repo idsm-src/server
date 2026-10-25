@@ -8,7 +8,6 @@ import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
-import cz.iocb.sparql.engine.mapping.classes.StringUserIriClass;
 
 
 
@@ -26,7 +25,7 @@ public class Pathway
 
 
     /**
-     * Adds the resource classes of the PubChem pathways and reactions to the configuration.
+     * Adds the resource classes of the PubChem pathways to the configuration.
      *
      * @param config the configuration
      */
@@ -34,7 +33,6 @@ public class Pathway
     {
         config.addIriClass(
                 new IntegerUserIriClass("pubchem:pathway", INT4, "http://rdf.ncbi.nlm.nih.gov/pubchem/pathway/PWID"));
-        config.addIriClass(new StringUserIriClass("pubchem:reaction", "http://rdf.ncbi.nlm.nih.gov/pubchem/reaction/"));
     }
 
 

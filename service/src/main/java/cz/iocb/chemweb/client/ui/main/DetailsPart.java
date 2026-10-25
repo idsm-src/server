@@ -1,7 +1,6 @@
 package cz.iocb.chemweb.client.ui.main;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyPressEvent;
@@ -14,7 +13,6 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.ResizeComposite;
@@ -26,7 +24,6 @@ import cz.iocb.chemweb.client.resources.icons.IconsClientBundleFactory;
 import cz.iocb.chemweb.client.widgets.button.ImageButton;
 import cz.iocb.chemweb.shared.services.details.DetailsPageService;
 import cz.iocb.chemweb.shared.services.details.DetailsPageServiceAsync;
-import cz.iocb.chemweb.shared.utils.Encode;
 
 
 
@@ -312,12 +309,6 @@ public class DetailsPart extends ResizeComposite implements HasSelectionHandlers
 
                 pageHTML.setHTML(result);
                 pageScrollPanel.scrollToTop();
-
-                String elementId = "SEL-NODE_" + Encode.base32m(iri);
-                Element element = DOM.getElementById(elementId);
-
-                if(element != null)
-                    element.scrollIntoView();
 
                 showedDetails = iri;
                 stopButton.setVisible(false);

@@ -47,10 +47,8 @@ public class WikidataConfiguration extends SparqlDatabaseOptimisedConfiguration
 
     /**
      * Adds the resource classes of the Wikidata compounds to the configuration.
-     *
-     * @throws SQLException if a database error occurs
      */
-    private void addResourceClasses() throws SQLException
+    private void addResourceClasses()
     {
         Wikidata.addResourceClasses(this);
     }

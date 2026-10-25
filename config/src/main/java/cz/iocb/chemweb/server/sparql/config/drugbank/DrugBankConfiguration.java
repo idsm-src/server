@@ -47,10 +47,8 @@ public class DrugBankConfiguration extends SparqlDatabaseOptimisedConfiguration
 
     /**
      * Adds the resource classes of DrugBank to the configuration.
-     *
-     * @throws SQLException if a database error occurs
      */
-    private void addResourceClasses() throws SQLException
+    private void addResourceClasses()
     {
         DrugBank.addResourceClasses(this);
     }
