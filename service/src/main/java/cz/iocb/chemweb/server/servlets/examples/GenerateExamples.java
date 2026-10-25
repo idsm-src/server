@@ -1,11 +1,11 @@
 package cz.iocb.chemweb.server.servlets.examples;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -52,7 +52,7 @@ public class GenerateExamples extends HttpServlet
 
 
     /**
-     * Writes the script as the response.
+     * Writes the script as the response, encoded in UTF-8.
      *
      * @param req the request
      * @param res the response
@@ -61,7 +61,8 @@ public class GenerateExamples extends HttpServlet
      */
     protected void processRequest(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
     {
-        ServletOutputStream out = res.getOutputStream();
+        res.setContentType("text/javascript; charset=UTF-8");
+        PrintWriter out = res.getWriter();
 
         //out.print("var examples = [{\"description\": \"ABC\",\"code\": \"codeABC\"},{\"description\": \"DEF\",\"code\": \"codeDEF\"},{\"description\": \"GHI\",\"code\": \"codeGHI\"}];");
 
