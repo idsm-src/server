@@ -32,7 +32,6 @@ import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathException;
-import javax.xml.xpath.XPathExpressionException;
 import org.xml.sax.SAXException;
 
 
@@ -1378,12 +1377,12 @@ public class Updater
         }
         catch(RuntimeException e)
         {
-            if(e.getCause() instanceof SQLException)
-                throw(SQLException) e.getCause();
-            else if(e.getCause() instanceof IOException)
-                throw(IOException) e.getCause();
-            else
-                throw e;
+            switch(unwrap(e))
+            {
+                case SQLException ex -> throw ex;
+                case IOException ex -> throw ex;
+                default -> throw e;
+            }
         }
     }
 
@@ -1427,17 +1426,35 @@ public class Updater
         }
         catch(RuntimeException e)
         {
-            if(e.getCause() instanceof IOException)
-                throw(IOException) e.getCause();
-            else if(e.getCause() instanceof XPathExpressionException)
-                throw(XPathExpressionException) e.getCause();
-            else if(e.getCause() instanceof ParserConfigurationException)
-                throw(ParserConfigurationException) e.getCause();
-            else if(e.getCause() instanceof SAXException)
-                throw(SAXException) e.getCause();
-            else
-                throw e;
+            switch(unwrap(e))
+            {
+                case IOException ex -> throw ex;
+                case XPathException ex -> throw ex;
+                case ParserConfigurationException ex -> throw ex;
+                case SAXException ex -> throw ex;
+                case SQLException ex -> throw ex;
+                default -> throw e;
+            }
         }
+    }
+
+
+    /**
+     * Returns the exception that the processing of a file has thrown wrapped in a {@link RuntimeException}, so that it
+     * can pass the parallel stream. When another thread has processed the file, the fork/join framework wraps the
+     * wrapper once more, so all the plain {@link RuntimeException} wrappers are removed.
+     *
+     * @param e the exception thrown by the parallel stream
+     * @return the innermost exception that is not a plain {@link RuntimeException} wrapper
+     */
+    private static Throwable unwrap(RuntimeException e)
+    {
+        Throwable cause = e;
+
+        while(cause.getClass() == RuntimeException.class && cause.getCause() != null)
+            cause = cause.getCause();
+
+        return cause;
     }
 
 
