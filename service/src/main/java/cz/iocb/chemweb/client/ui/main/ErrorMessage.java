@@ -49,13 +49,21 @@ public class ErrorMessage
 
 
     /**
-     * Shows a message describing the failure of a call of the server.
+     * Shows a message describing the failure of a call of the server, with the action that failed in the caption.
      *
-     * @param context the action that failed (not distinguished in the message yet)
+     * @param context the action that failed
      * @param error the failure
      */
     public static void show(Context context, Throwable error)
     {
+        String caption = switch(context)
+        {
+            case QUERY -> "Query Evaluation Error";
+            case CANCEL -> "Query Cancellation Error";
+            case DETAILS -> "Details Loading Error";
+            case PROPERTIES -> "Properties Loading Error";
+        };
+
         String message = null;
 
         if(error instanceof StatusCodeException)
@@ -72,11 +80,11 @@ public class ErrorMessage
         }
         else
         {
-            message = "The unexpected exception \"" + error.getClass().getSimpleName() + "\" has been catched: "
+            message = "The unexpected exception \"" + error.getClass().getSimpleName() + "\" has been caught: "
                     + error.getMessage();
         }
 
-        final MessageDialog dialog = new MessageDialog("Error Message", message);
+        final MessageDialog dialog = new MessageDialog(caption, message);
 
         Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand()
         {
