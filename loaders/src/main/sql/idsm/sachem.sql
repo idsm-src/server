@@ -110,3 +110,89 @@ $$
 $$
 language sql immutable strict;
 
+
+create function idsm.substructure_search_all(varchar[], varchar, sachem.search_mode = 'SUBSTRUCTURE', sachem.charge_mode = 'DEFAULT_AS_ANY', sachem.isotope_mode = 'IGNORE', sachem.radical_mode = 'DEFAULT_AS_ANY', sachem.stereo_mode = 'IGNORE', sachem.aromaticity_mode = 'AUTO', sachem.tautomer_mode = 'IGNORE', varchar = 'UNSPECIFIED', numeric = -1, boolean = false, numeric = 0) returns table (score float8, pubchem integer, chembl integer, chebi integer, wikidata integer, molmedb integer, pdb integer, mona integer, isdb integer, drugbank integer) language plpgsql as
+$$
+  declare
+    indexes varchar[] = '{"pubchem","chembl","chebi","wikidata","molmedb","pdb","mona","isdb","drugbank"}';
+    col varchar;
+    index varchar;
+    query varchar;
+  begin
+    query = '';
+
+    foreach index in array $1
+    loop
+        if query != '' then
+          query = query || ' union all ';
+        end if;
+
+        query = query || 'select score::float8';
+
+        foreach col in array indexes
+        loop
+          if col = index then
+              query = query || ', compound as ' || index;
+          else
+              query = query || ', NULL::integer';
+          end if;
+        end loop;
+
+        query = query || '  from sachem.substructure_search(''' || index || ''', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)';
+    end loop;
+
+    if query = '' then
+      return;
+    end if;
+
+    return query execute query using $2, $3, $4, $5, $6, $7, $8, $9, $11::int, $12, $13::int;
+  end
+$$
+immutable parallel safe strict;
+
+
+create function idsm.similarity_search_all(varchar[], varchar, float8 = 0.85, numeric = 1, sachem.aromaticity_mode = 'AUTO', sachem.tautomer_mode = 'IGNORE', varchar = 'UNSPECIFIED', numeric = -1, boolean = false) returns table (score float8, pubchem integer, chembl integer, chebi integer, wikidata integer, molmedb integer, pdb integer, mona integer, isdb integer, drugbank integer) language plpgsql as
+$$
+  declare
+    indexes varchar[] = '{"pubchem","chembl","chebi","wikidata","molmedb","pdb","mona","isdb","drugbank"}';
+    col varchar;
+    index varchar;
+    query varchar;
+  begin
+    query = '';
+
+    foreach index in array $1
+    loop
+        if query != '' then
+          query = query || ' union all ';
+        end if;
+
+        query = query || 'select score::float8';
+
+        foreach col in array indexes
+        loop
+          if col = index then
+              query = query || ', compound as ' || index;
+          else
+              query = query || ', NULL::integer';
+          end if;
+        end loop;
+
+        query = query || '  from sachem.similarity_search(''' || index || ''', $1, $2, $3, $4, $5, $6, $7)';
+    end loop;
+
+    if query = '' then
+      return;
+    end if;
+
+    if $8 != -1 then
+      query = 'select * from (' || query || ') tab order by score desc limit $6';
+    elsif $9 = true then
+      query = 'select * from (' || query || ') tab order by score desc';
+    end if;
+
+    return query execute query using $2, $3::float4, $4::int, $5, $6, $8::int, $9;
+  end
+$$
+immutable parallel safe strict;
+

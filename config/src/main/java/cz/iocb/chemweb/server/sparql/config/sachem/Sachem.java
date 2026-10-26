@@ -9,9 +9,12 @@ import static cz.iocb.sparql.engine.mapping.datatypes.BuiltinDatatypes.xsdBoolea
 import static cz.iocb.sparql.engine.mapping.datatypes.BuiltinDatatypes.xsdDoubleIri;
 import static cz.iocb.sparql.engine.mapping.datatypes.BuiltinDatatypes.xsdIntegerIri;
 import static cz.iocb.sparql.engine.mapping.datatypes.BuiltinDatatypes.xsdStringIri;
+import static java.util.stream.Collectors.joining;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.Function;
@@ -22,6 +25,8 @@ import cz.iocb.sparql.engine.mapping.classes.UserIriClass;
 import cz.iocb.sparql.engine.mapping.extension.FunctionDefinition;
 import cz.iocb.sparql.engine.mapping.extension.ParameterDefinition;
 import cz.iocb.sparql.engine.mapping.extension.ProcedureDefinition;
+import cz.iocb.sparql.engine.mapping.extension.ProcedureSpecialization;
+import cz.iocb.sparql.engine.mapping.extension.ProcedureSpecializer;
 import cz.iocb.sparql.engine.mapping.extension.ResultDefinition;
 import cz.iocb.sparql.engine.model.IriNode;
 import cz.iocb.sparql.engine.model.expression.LiteralNode;
@@ -352,7 +357,42 @@ public abstract class Sachem
 
 
     /**
-     * Adds the search procedures over the indexes of all datasets to the configuration.
+     * Specialiser of a search over the indexes of all datasets (see {@link ProcedureDefinition#setSpecializer}): the
+     * function takes the names of the result columns of the datasets whose compounds the query can use as its first
+     * parameter, and searches the indexes of these datasets only; all of them when the query does not take the
+     * compounds.
+     *
+     * @param result the result delivering the compounds
+     * @param compoundMapping the result columns of the found compounds by the IRI classes of their datasets
+     * @return the specialiser
+     */
+    private static ProcedureSpecializer searchIndexesOf(ResultDefinition result,
+            Map<ResourceClass, List<Column>> compoundMapping)
+    {
+        return classes -> {
+            Set<ResourceClass> usable = classes.getOrDefault(result, compoundMapping.keySet());
+            String indexes = usable.stream().map(c -> "\"" + compoundMapping.get(c).get(0).getName() + "\"").sorted()
+                    .collect(joining(",", "'{", "}'::varchar[]"));
+
+            return new ProcedureSpecialization()
+            {
+                @Override
+                public List<String> getArguments(List<String> declared)
+                {
+                    List<String> arguments = new ArrayList<>();
+                    arguments.add(indexes);
+                    arguments.addAll(declared);
+                    return arguments;
+                }
+            };
+        };
+    }
+
+
+    /**
+     * Adds the search procedures over the indexes of all datasets to the configuration. The functions take the names of
+     * the result columns of the datasets whose compounds a query can use as their first parameter and search the
+     * indexes of these datasets only (see {@link #searchIndexesOf}).
      *
      * @param config the configuration
      * @param schema the schema of the functions evaluating the searches
@@ -393,6 +433,7 @@ public abstract class Sachem
                 new LiteralNode("0", xsdIntegerTypeNode)));
 
         exactsearch.addResult(new ResultDefinition(null, compoundMapping));
+        exactsearch.setSpecializer(searchIndexesOf(exactsearch.getResult(null), compoundMapping));
         config.addProcedure(exactsearch);
 
 
@@ -425,6 +466,7 @@ public abstract class Sachem
                 new LiteralNode("0", xsdIntegerTypeNode)));
 
         subsearch.addResult(new ResultDefinition(null, compoundMapping));
+        subsearch.setSpecializer(searchIndexesOf(subsearch.getResult(null), compoundMapping));
         config.addProcedure(subsearch);
 
 
@@ -457,6 +499,8 @@ public abstract class Sachem
                 new LiteralNode("0", xsdIntegerTypeNode)));
 
         scoredsubsearch.addResult(new ResultDefinition(sachem + "compound", compoundMapping));
+        scoredsubsearch
+                .setSpecializer(searchIndexesOf(scoredsubsearch.getResult(sachem + "compound"), compoundMapping));
         scoredsubsearch.addResult(new ResultDefinition(sachem + "score", xsdDouble, "score"));
         config.addProcedure(scoredsubsearch);
 
@@ -482,6 +526,7 @@ public abstract class Sachem
                 new ParameterDefinition("#sort", xsdBoolean, new LiteralNode("false", xsdBooleanTypeNode)));
 
         simsearch.addResult(new ResultDefinition(sachem + "compound", compoundMapping));
+        simsearch.setSpecializer(searchIndexesOf(simsearch.getResult(sachem + "compound"), compoundMapping));
         simsearch.addResult(new ResultDefinition(sachem + "score", xsdDouble, "score"));
         config.addProcedure(simsearch);
 
@@ -507,6 +552,7 @@ public abstract class Sachem
                 new ParameterDefinition("#sort", xsdBoolean, new LiteralNode("false", xsdBooleanTypeNode)));
 
         simcmpsearch.addResult(new ResultDefinition(null, compoundMapping));
+        simcmpsearch.setSpecializer(searchIndexesOf(simcmpsearch.getResult(null), compoundMapping));
         config.addProcedure(simcmpsearch);
     }
 
