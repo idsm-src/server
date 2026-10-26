@@ -2,6 +2,9 @@ create index endpoints__substance on pubchem.endpoints(substance);
 create index endpoints__bioassay on pubchem.endpoints(bioassay);
 create index endpoints__bioassay_measuregroup on pubchem.endpoints(bioassay, measuregroup);
 create index endpoints__outcome_id on pubchem.endpoints(outcome_id);
+-- the outcome is part of the index: the planner estimates one endpoint per measure group whereas the groups of screening
+-- assays have tens of thousands, nearly all of which a condition on the outcome would otherwise drop after the heap fetch
+create index endpoints__bioassay_measuregroup_outcome_id on pubchem.endpoints(bioassay, measuregroup, outcome_id);
 grant select on pubchem.endpoints to sparql;
 
 --------------------------------------------------------------------------------
