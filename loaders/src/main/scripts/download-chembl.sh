@@ -4,7 +4,14 @@ set -ueo pipefail
 
 source datasource.properties
 
-release=$(echo -e "open ftp.ebi.ac.uk\nuser anonymous\npassive\ncd /pub/databases/chembl/ChEMBL-RDF\nls -l\nbye\n" | ftp -inv | sed -n '/latest -> /s/.*latest -> //p')
+# the greatest release directory, not the latest symlink, which EBI does not always move to a new release
+release=$(wget -q -O - "https://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBL-RDF/" | sed -n 's|.*href="\([0-9][0-9.]*\)/".*|\1|p' | sort -V | tail -n 1)
+
+if [ -z "$release" ]; then
+    echo "the latest release of ChEMBL cannot be determined" >&2
+    exit 1
+fi
+
 version="$release"
 
 if [ -e "$base/chembl-$version" ]; then

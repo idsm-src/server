@@ -4,6 +4,14 @@ set -ueo pipefail
 
 source datasource.properties
 
+# the greatest release directory, not the latest symlink, which EBI does not always move to a new release
+chembl=$(wget -q -O - "https://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBL-RDF/" | sed -n 's|.*href="\([0-9][0-9.]*\)/".*|\1|p' | sort -V | tail -n 1)
+
+if [ -z "$chembl" ]; then
+    echo "the latest release of ChEMBL cannot be determined" >&2
+    exit 1
+fi
+
 version=$(date '+%Y-%m-%d')
 
 if [ -e "$base/ontology-$version" ]; then
@@ -25,7 +33,7 @@ sources=(
 https://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary.owl
 
 # ChEMBL Ontology
-ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBL-RDF/latest/cco.ttl.gz
+ftp://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBL-RDF/$chembl/cco.ttl.gz
 
 # ChEBI Ontology
 ftp://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi.owl
