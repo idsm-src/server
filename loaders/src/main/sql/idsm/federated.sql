@@ -1782,11 +1782,9 @@ WHERE {
     WHERE {
       # Sachem similarity search over ChEMBL structures. The query structure is
       # imatinib (PubChem CID 5291, ChEMBL941) - replace the SMILES to profile a
-      # different compound.
-      # NOTE: results are limited with sachem:topn only. sachem:cutoff is accepted
-      # by the endpoint but returns zero rows at any threshold (verified for
-      # 0.5 and 0.8 even though the top scores here are 0.95-1.0), so ranking is
-      # done with ORDER BY DESC(?similarity) instead.
+      # different compound. The results are limited with sachem:topn and ranked
+      # by ORDER BY DESC(?similarity) below; sachem:cutoff would drop the less
+      # similar ones.
       SERVICE <https://idsm.elixir-czech.cz/sparql/endpoint/chembl> {
         [
           sachem:compound ?compound ;
