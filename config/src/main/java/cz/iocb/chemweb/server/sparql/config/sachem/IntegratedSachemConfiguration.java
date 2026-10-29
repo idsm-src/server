@@ -37,6 +37,13 @@ public class IntegratedSachemConfiguration extends SparqlDatabaseOptimisedConfig
         addService(new MolmedbConfiguration("https://idsm.elixir-czech.cz/sachem/endpoint/molmedb", connectionPool,
                 schema), false);
 
+        addService(
+                new PdbSachemConfiguration("https://idsm.elixir-czech.cz/sparql/endpoint/pdb", connectionPool, schema),
+                false);
+        addService(
+                new PdbSachemConfiguration("https://idsm.elixir-czech.cz/sachem/endpoint/pdb", connectionPool, schema),
+                false);
+
         addService(new WikidataSachemConfiguration("https://idsm.elixir-czech.cz/sparql/endpoint/wikidata",
                 connectionPool, schema), false);
         addService(new WikidataSachemConfiguration("https://idsm.elixir-czech.cz/sachem/endpoint/wikidata",
