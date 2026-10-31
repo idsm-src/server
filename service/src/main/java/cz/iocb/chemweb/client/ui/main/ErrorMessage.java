@@ -2,6 +2,7 @@ package cz.iocb.chemweb.client.ui.main;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.StatusCodeException;
 import cz.iocb.chemweb.client.widgets.dialog.MessageDialog;
 import cz.iocb.chemweb.shared.services.DatabaseException;
@@ -65,6 +66,10 @@ public class ErrorMessage
         if(error instanceof StatusCodeException)
         {
             message = "The connection with the server has failed.";
+        }
+        else if(error instanceof IncompatibleRemoteServiceException)
+        {
+            message = "The application on the server has been updated. Please reload the page.";
         }
         else if(error instanceof SessionException)
         {
