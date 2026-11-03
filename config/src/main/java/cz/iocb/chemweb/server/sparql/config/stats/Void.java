@@ -28,6 +28,7 @@ import cz.iocb.sparql.engine.database.TableColumn;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.DateTimeInZoneClass;
+import cz.iocb.sparql.engine.mapping.classes.LangStringWithTagClass;
 import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 import cz.iocb.sparql.engine.rdf.Iri;
 
@@ -35,8 +36,8 @@ import cz.iocb.sparql.engine.rdf.Iri;
 
 /**
  * Mapping of the VoID statistics of the IDSM endpoint (schema {@code void}, graph
- * {@code https://idsm.elixir-czech.cz/.well-known/void}): the service with its default dataset and named graphs, and
- * the class, property, class-property and datatype partitions and the linksets of the graphs.
+ * {@code https://idsm.elixir-czech.cz/.well-known/void}): the service with its default dataset and named graphs with
+ * their names, and the class, property, class-property and datatype partitions and the linksets of the graphs.
  */
 public class Void
 {
@@ -179,6 +180,11 @@ public class Void
 
             config.addQuadMapping(table, graph, named, config.createIriMapping("sd:graph"),
                     config.createIriMapping("void:graph", "id"), condition);
+
+            // the names of the graphs, which the generator of the statistics stores
+            config.addQuadMapping(table, graph, named, config.createIriMapping("rdfs:label"),
+                    config.createLiteralMapping(LangStringWithTagClass.get("en"), "label"),
+                    config.createIsNotNullCondition(table, "label"));
         }
 
         {

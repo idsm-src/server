@@ -36,6 +36,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.postgresql.ds.PGSimpleDataSource;
 import cz.iocb.chemweb.server.sparql.config.idsm.IdsmConfiguration;
+import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.Updater;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
@@ -392,6 +393,41 @@ public class GenerateVoid extends Updater
 
 
     /**
+     * Names of the graphs by their ids as stored in the column {@code label} of the table {@code void.graphs}, null for
+     * a graph without a name.
+     */
+    @SuppressWarnings("serial")
+    private static final class GraphLabels extends SqlMap<Integer, String>
+    {
+        /**
+         * Creates an empty map.
+         */
+        private GraphLabels()
+        {
+        }
+
+        @Override
+        public Integer getKey(ResultSet result) throws SQLException
+        {
+            return result.getInt(1);
+        }
+
+        @Override
+        public String getValue(ResultSet result) throws SQLException
+        {
+            return result.getString(2);
+        }
+
+        @Override
+        public void set(PreparedStatement statement, Integer key, String value) throws SQLException
+        {
+            statement.setInt(1, key);
+            statement.setString(2, value);
+        }
+    }
+
+
+    /**
      * Statistics of the class partitions as stored in the table {@code void.class_partitions}.
      */
     @SuppressWarnings("serial")
@@ -679,6 +715,12 @@ public class GenerateVoid extends Updater
                     new DatabaseTable("drugbank", "compounds"), new DatabaseTable("pubchem", "compound_molfiles")));
 
     /**
+     * Names of the named graphs by their IRIs, stored in the column {@code label} of the table {@code void.graphs},
+     * which the service description gives as the English labels of the graphs; a graph not named here has none.
+     */
+    private static final Map<String, String> graphLabels = new LinkedHashMap<>();
+
+    /**
      * Variable of the subjects.
      */
     private static final Variable varS = new Variable("S");
@@ -732,6 +774,59 @@ public class GenerateVoid extends Updater
      * Number of the executed count queries.
      */
     private static int executed = 0;
+
+
+    static
+    {
+        String pubchem = "http://rdf.ncbi.nlm.nih.gov/pubchem/";
+        graphLabels.put(pubchem + "compound", "PubChem compounds");
+        graphLabels.put(pubchem + "substance", "PubChem substances");
+        graphLabels.put(pubchem + "bioassay", "PubChem bioassays");
+        graphLabels.put(pubchem + "measuregroup", "PubChem measure groups");
+        graphLabels.put(pubchem + "endpoint", "PubChem bioassay endpoints");
+        graphLabels.put(pubchem + "descriptor/compound", "PubChem compound descriptors");
+        graphLabels.put(pubchem + "descriptor/substance", "PubChem substance descriptors");
+        graphLabels.put(pubchem + "synonym", "PubChem synonyms");
+        graphLabels.put(pubchem + "inchikey", "PubChem InChIKeys");
+        graphLabels.put(pubchem + "protein", "PubChem proteins");
+        graphLabels.put(pubchem + "gene", "PubChem genes");
+        graphLabels.put(pubchem + "pathway", "PubChem pathways");
+        graphLabels.put(pubchem + "taxonomy", "PubChem taxonomy");
+        graphLabels.put(pubchem + "cell", "PubChem cell lines");
+        graphLabels.put(pubchem + "anatomy", "PubChem anatomy");
+        graphLabels.put(pubchem + "disease", "PubChem diseases");
+        graphLabels.put(pubchem + "conserveddomain", "PubChem conserved domains");
+        graphLabels.put(pubchem + "cooccurrence", "PubChem literature co-occurrences");
+        graphLabels.put(pubchem + "reference", "PubChem references");
+        graphLabels.put(pubchem + "author", "PubChem authors");
+        graphLabels.put(pubchem + "journal", "PubChem journals");
+        graphLabels.put(pubchem + "book", "PubChem books");
+        graphLabels.put(pubchem + "patent", "PubChem patents");
+        graphLabels.put(pubchem + "patentcpc", "PubChem CPC classification");
+        graphLabels.put(pubchem + "patentipc", "PubChem IPC classification");
+        graphLabels.put(pubchem + "grant", "PubChem grants");
+        graphLabels.put(pubchem + "organization", "PubChem organizations");
+        graphLabels.put(pubchem + "source", "PubChem data sources");
+        graphLabels.put(pubchem + "concept", "PubChem concepts");
+
+        graphLabels.put("http://rdf.ebi.ac.uk/dataset/chembl", "ChEMBL");
+        graphLabels.put("http://rdf.ebi.ac.uk/dataset/chebi", "ChEBI");
+        graphLabels.put("http://id.nlm.nih.gov/mesh/heading", "MeSH");
+        graphLabels.put("https://idsm.elixir-czech.cz/rdf/mona/", "MoNA");
+        graphLabels.put("https://idsm.elixir-czech.cz/rdf/isdb/", "ISDB");
+        graphLabels.put("https://rdf.molmedb.upol.cz", "MolMeDB");
+        graphLabels.put("http://bioinfo.iocb.cz/dataset/ontology", "Ontologies");
+
+        // the graphs giving the structures of the compounds of other sources
+        graphLabels.put("http://wifo5-04.informatik.uni-mannheim.de/drugbank/resource/drugs/", "DrugBank structures");
+        graphLabels.put("http://www.wikidata.org/entity/", "Wikidata structures");
+        graphLabels.put("https://identifiers.org/pdb-ccd/", "PDB-CCD structures");
+
+        graphLabels.put("https://idsm.elixir-czech.cz/.well-known/sparql-examples", "SPARQL examples");
+        graphLabels.put("https://idsm.elixir-czech.cz/.well-known/federated-sparql-examples",
+                "Federated SPARQL examples");
+        graphLabels.put("https://idsm.elixir-czech.cz/.well-known/void", "VoID description");
+    }
 
 
     /**
@@ -851,6 +946,10 @@ public class GenerateVoid extends Updater
                     "iri_objects", "literal_objects");
 
             load(getLoadSql("graphs", graphKeyCols, graphValueCols), oldGraphStats);
+
+            GraphLabels oldGraphLabels = new GraphLabels();
+
+            load(getLoadSql("graphs", graphKeyCols, List.of("label")), oldGraphLabels);
 
 
 
@@ -1353,6 +1452,12 @@ public class GenerateVoid extends Updater
             store(getDeleteSql("graphs", graphKeyCols, graphValueCols), oldGraphStats);
             store(getUpdateSql("graphs", graphKeyCols, graphValueCols), newGraphStats);
 
+            // the names of the graphs, after their rows: the row of a new graph is stored with no name
+            GraphLabels newGraphLabels = getGraphLabels(graphs);
+            processMap(oldGraphLabels, newGraphLabels);
+            store("update void.graphs as graphs set label = labels.label from (values (?::integer, ?::varchar)) "
+                    + "as labels(id, label) where graphs.id = labels.id", newGraphLabels);
+
             processMap(oldClassPartitionStats, newClassPartitionStats);
             store(getDeleteSql("class_partitions", classPartitionsKeyCols, classPartitionsValueCols),
                     oldClassPartitionStats);
@@ -1397,7 +1502,8 @@ public class GenerateVoid extends Updater
 
     /**
      * Compares the stored and the new statistics: the stored statistics are left with the entries to delete, whose keys
-     * have no new statistics, and the new ones with the entries to store, which differ from the stored ones.
+     * have no new statistics, and the new ones with the entries to store, which differ from the stored ones. A null
+     * value, such as the name of a graph without one, equals a missing stored value.
      *
      * @param <K> the type of the keys
      * @param <V> the type of the statistics
@@ -1414,9 +1520,39 @@ public class GenerateVoid extends Updater
 
             V old = oldMap.remove(e.getKey());
 
-            if(e.getValue().equals(old))
+            if(Objects.equals(e.getValue(), old))
                 it.remove();
         }
+    }
+
+
+    /**
+     * Returns the names of the graphs of the statistics, see {@link #graphLabels}, and reports the graphs without a
+     * name and the names of the graphs the configuration does not map.
+     *
+     * @param graphs the IRIs of the graphs by their ids, null for the default graph
+     * @return the names of the graphs by their ids, null for a graph without a name
+     */
+    private static GraphLabels getGraphLabels(Map<Integer, Iri> graphs)
+    {
+        GraphLabels labels = new GraphLabels();
+        Set<String> mapped = new HashSet<>();
+
+        for(Entry<Integer, Iri> graph : graphs.entrySet())
+        {
+            String iri = graph.getValue() == null ? null : graph.getValue().getValue();
+            labels.put(graph.getKey(), iri == null ? null : graphLabels.get(iri));
+            mapped.add(iri);
+
+            if(iri != null && !graphLabels.containsKey(iri))
+                Problems.warning("graph without a name", iri);
+        }
+
+        for(String iri : graphLabels.keySet())
+            if(!mapped.contains(iri))
+                Problems.warning("name of a graph that is not mapped", iri);
+
+        return labels;
     }
 
 

@@ -2,6 +2,7 @@ create table void.graphs
 (
     id              integer not null,
     iri             varchar unique not null,
+    label           varchar,
     classes         bigint not null,
     properties      bigint not null,
     triples         bigint not null,

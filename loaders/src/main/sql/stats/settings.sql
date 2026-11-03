@@ -1,3 +1,4 @@
+create index graphs__label on void.graphs(label);
 create index graphs__classes on void.graphs(classes);
 create index graphs__properties on void.graphs(properties);
 create index graphs__triples on void.graphs(triples);
