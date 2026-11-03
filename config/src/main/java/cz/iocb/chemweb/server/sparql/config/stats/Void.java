@@ -245,6 +245,10 @@ public class Void
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("void:properties"),
                     config.createLiteralMapping(xsdLong, "properties"));
 
+            // the subjects of the partition are the instances of the class, each having its type triple in the graph
+            config.addQuadMapping(table, graph, dataset, config.createIriMapping("void:entities"),
+                    config.createLiteralMapping(xsdLong, "subjects"));
+
             config.addQuadMapping(table, graph, dataset, config.createIriMapping("void:distinctSubjects"),
                     config.createLiteralMapping(xsdLong, "subjects"));
 

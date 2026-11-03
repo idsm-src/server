@@ -1273,6 +1273,7 @@ public class Ontology extends Updater
         builtinResources.put("http://www.w3.org/ns/sparql-service-description#supportedVersion", 2441);
         builtinResources.put("https://purl.expasy.org/sparql-examples/ontology#federatesWith", 2442);
         builtinResources.put("https://schema.org/target", 2443);
+        builtinResources.put("http://rdfs.org/ns/void#entities", 2444);
 
 
 
