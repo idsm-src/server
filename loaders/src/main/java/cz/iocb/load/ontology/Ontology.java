@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.jena.graph.Node;
@@ -3464,6 +3465,76 @@ public class Ontology extends Updater
 
 
     /**
+     * Reports the IRIs of the RDF, RDFS, OWL and XSD namespaces that are not terms of these vocabularies as errors,
+     * such as a misspelt class or a namespace in place of a datatype, which would be loaded as resources without a
+     * label: the subjects and the objects of the triples of their predicates other than the annotations, see
+     * isStructural(), as the predicates are checked by checkPredicates. An IRI counts as a term when the data give it a
+     * label, as the files of the vocabularies, xsd.owl for the XSD datatypes, do for all their terms; the ontologies
+     * are left out. Each such IRI is reported once, with the first triple it occurs in.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
+    private static void checkTerms(TripleDispatcher dispatcher)
+    {
+        Map<String, String> iris = new TreeMap<>();
+        Set<String> known = new HashSet<>();
+
+        dispatcher.onEvery((subject, predicate, object) -> {
+            if(isStructural(predicate, object))
+                for(Node node : new Node[] { subject, object })
+                    if(isVocabularyIRI(node))
+                        iris.computeIfAbsent(node.getURI(), k -> TripleStreamProcessor.text(subject) + " "
+                                + TripleStreamProcessor.text(predicate) + " " + TripleStreamProcessor.text(object));
+
+            if(isVocabularyIRI(subject)
+                    && (is(predicate, rdfs + "label") || is(predicate, rdf + "type") && is(object, owl + "Ontology")))
+                known.add(subject.getURI());
+        });
+
+        dispatcher.after(() -> {
+            for(Entry<String, String> iri : iris.entrySet())
+                if(!known.contains(iri.getKey()))
+                    Problems.error("undefined term " + iri.getKey(), iri.getValue());
+        });
+    }
+
+
+    /**
+     * Reports the IRIs of the OBO namespace with a colon after the namespace as errors, such as
+     * {@code obo:FOODON:03415183} in place of {@code obo:FOODON_03415183}: the IRI of an OBO term joins its ID space
+     * and its local ID by an underscore, so such an IRI is a prefixed name written after the namespace by mistake.
+     *
+     * @param dispatcher the dispatcher of the triples
+     */
+    private static void checkOboIRIs(TripleDispatcher dispatcher)
+    {
+        dispatcher.onEvery((subject, predicate, object) -> {
+            for(Node node : new Node[] { subject, predicate, object })
+                if(node.isURI() && node.getURI().startsWith(obo) && node.getURI().indexOf(':', obo.length()) >= 0)
+                    Problems.error("malformed OBO IRI " + node.getURI(), TripleStreamProcessor.text(subject) + " "
+                            + TripleStreamProcessor.text(predicate) + " " + TripleStreamProcessor.text(object));
+        });
+    }
+
+
+    /**
+     * Tests whether the node is an IRI in the namespace of RDF, RDFS, OWL or XSD.
+     *
+     * @param node the node
+     * @return true if the node is an IRI in the namespace of RDF, RDFS, OWL or XSD
+     */
+    private static boolean isVocabularyIRI(Node node)
+    {
+        if(!node.isURI())
+            return false;
+
+        String iri = node.getURI();
+
+        return iri.startsWith(rdf) || iri.startsWith(rdfs) || iri.startsWith(owl) || iri.startsWith(xsd);
+    }
+
+
+    /**
      * Returns the canonical value of a literal of one of the allowed kinds, see literalKinds. A non-canonical lexical
      * form is converted, so that the database keeps only the value; a float is read as a double where only doubles are
      * allowed, a language tag is written in lower case, and the literals of the other string kinds are read as strings:
@@ -3623,6 +3694,8 @@ public class Ontology extends Updater
             loadVersions(dispatcher);
             loadTypes(dispatcher);
             checkPredicates(dispatcher);
+            checkTerms(dispatcher);
+            checkOboIRIs(dispatcher);
             checkForeignResources(dispatcher);
 
             loadBases();

@@ -20,6 +20,10 @@
   <rdfs:label>language-tagged literal values</rdfs:label>
 </rdfs:Class>
 
+<rdfs:Class rdf:about="&xsd;anyType">
+  <rdfs:label>any values</rdfs:label>
+</rdfs:Class>
+
 <rdfs:Class rdf:about="&xsd;anySimpleType">
   <rdfs:subClassOf rdf:resource="&rdfs;Literal"/>
   <rdfs:label>literal values</rdfs:label>
@@ -175,6 +179,11 @@
   <rdfs:label>date and time values</rdfs:label>
 </rdfs:Class>
 
+<rdfs:Class rdf:about="&xsd;dateTimeStamp">
+  <rdfs:subClassOf rdf:resource="#dateTime"/>
+  <rdfs:label>date and time values with a time zone</rdfs:label>
+</rdfs:Class>
+
 <rdfs:Class rdf:about="&xsd;gYear">
   <rdfs:subClassOf rdf:resource="#anySimpleType"/>
   <rdfs:label>specific year values</rdfs:label>
@@ -198,6 +207,31 @@
 <rdfs:Class rdf:about="&xsd;gDay">
   <rdfs:subClassOf rdf:resource="#anySimpleType"/>
   <rdfs:label>specific day of a month values</rdfs:label>
+</rdfs:Class>
+
+<rdfs:Class rdf:about="&xsd;duration">
+  <rdfs:subClassOf rdf:resource="#anySimpleType"/>
+  <rdfs:label>duration values</rdfs:label>
+</rdfs:Class>
+
+<rdfs:Class rdf:about="&xsd;yearMonthDuration">
+  <rdfs:subClassOf rdf:resource="#duration"/>
+  <rdfs:label>year and month duration values</rdfs:label>
+</rdfs:Class>
+
+<rdfs:Class rdf:about="&xsd;dayTimeDuration">
+  <rdfs:subClassOf rdf:resource="#duration"/>
+  <rdfs:label>day and time duration values</rdfs:label>
+</rdfs:Class>
+
+<rdfs:Class rdf:about="&owl;real">
+  <rdfs:subClassOf rdf:resource="&rdfs;Literal"/>
+  <rdfs:label>real number values</rdfs:label>
+</rdfs:Class>
+
+<rdfs:Class rdf:about="&owl;rational">
+  <rdfs:subClassOf rdf:resource="&owl;real"/>
+  <rdfs:label>rational number values</rdfs:label>
 </rdfs:Class>
 
 </rdf:RDF>

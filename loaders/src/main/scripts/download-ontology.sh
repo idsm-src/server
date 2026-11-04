@@ -407,6 +407,12 @@ download()
     case "$iri" in
         http://www.loc.gov/standards/mads/rdf/v1.rdf)
             sed -i 's|<rdf:Description rdf:resource=|<rdf:Description rdf:about=|g' "$output/$filename"
+            sed -i 's|owl:DataTypeProperty|owl:DatatypeProperty|g' "$output/$filename"
+            ;;
+
+        http://purl.obolibrary.org/obo/foodon.owl)
+            sed -i 's|https://www\.w3\.org/TR/owl-time/#time:|http://www.w3.org/2006/time#|g' "$output/$filename"
+            sed -i 's|http://purl\.obolibrary\.org/obo/FOODON:|http://purl.obolibrary.org/obo/FOODON_|g' "$output/$filename"
             ;;
 
         http://purl.obolibrary.org/obo/caro.owl)
@@ -440,6 +446,7 @@ download()
 
 # PDBx ontology 4.0
 cp "$data/pdbx-v40.owl" "$output"
+sed -i '\|<rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#"/>|d' "$output/pdbx-v40.owl"
 
 # Eagle-i Resource Ontology (ERO)
 cp "$data/ero.owl" "$output"
