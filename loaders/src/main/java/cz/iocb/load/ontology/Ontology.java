@@ -1120,7 +1120,10 @@ public class Ontology extends Updater
         sources.add(new OwlSource("Funding, Research Administration and Projects Ontology (FRAPO)",
                 "http://purl.org/cerif/frapo"));
         sources.add(new OwlSource("Patent Ontology (EPO)", "http://data.epo.org/linked-data/def/patent/"));
+        sources.add(new StaticSource("Linked Data API Vocabulary", "2010-02-19"));
         sources.add(new OwlSource("W3C PROVenance Interchange", "http://www.w3.org/ns/prov#"));
+        sources.add(new OwlSource("REPRODUCE-ME Ontology", "https://w3id.org/reproduceme"));
+        sources.add(new OwlSource("Ontology for Provenance and Plans (P-Plan)", "http://purl.org/net/p-plan#"));
         sources.add(new OwlSource("Metadata Authority Description Schema in RDF (MADS/RDF)",
                 "http://www.loc.gov/mads/rdf/v1"));
         sources.add(new OwlSource("Citation Typing Ontology (CiTO)", "http://purl.org/spar/cito"));
@@ -1136,11 +1139,15 @@ public class Ontology extends Updater
         sources.add(new OwlSource("Provenance, Authoring and Versioning (PAV)", "http://purl.org/pav/"));
         sources.add(new StaticSource("SemWeb Vocab Status Ontology", "2011-12-12"));
         sources.add(new StaticSource("Vocabulary of Interlinked Datasets (VoID)", "2011-03-06"));
+        sources.add(new StaticSource("Extensions to the Vocabulary of Interlinked Datasets (void-ext)", "2014-02-17"));
+        sources.add(new StaticSource("SPARQL 1.1 Service Description (SD)", "2013-03-21"));
+        sources.add(new OwlSource("SPARQL Examples Ontology", "https://purl.expasy.org/sparql-examples/ontology#"));
         sources.add(new StaticSource("Situation Ontology", "1.1"));
         sources.add(new OwlSource("Mass Spectrometry Ontology (MS)", "http://purl.obolibrary.org/obo/ms.owl"));
         sources.add(new OwlSource("ClassyFire Ontology", "http://purl.obolibrary.org/obo/ChemOnt.owl"));
         sources.add(new StaticSource("Chemical Entity Materials and Reactions Ontological Framework (ChEMROF)",
                 "2026-10-03"));
+        sources.add(new OwlSource("MolMeDB RDF Vocabulary", "https://rdf.molmedb.upol.cz/vocabulary.owl"));
         sources.add(new StaticSource("OWL 2 Schema (OWL 2)", "2009-10-16"));
         sources.add(new StaticSource("RDF Schema (RDFS)", "1.1"));
         sources.add(new StaticSource("RDF Vocabulary Terms", "1.1"));

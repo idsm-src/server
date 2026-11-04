@@ -1,0 +1,24 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix cco: <http://rdf.ebi.ac.uk/terms/chembl#>.
+
+cco:FRACClassification rdf:type owl:DatatypeProperty; rdfs:label "FRAC Classification".
+cco:HRACClassification rdf:type owl:DatatypeProperty; rdfs:label "HRAC Classification".
+cco:IRACClassification rdf:type owl:DatatypeProperty; rdfs:label "IRAC Classification".
+
+cco:BindingDbRef rdf:type owl:Class; rdfs:subClassOf cco:MoleculeDbRef; rdfs:label "BindingDB Cross Reference".
+cco:BrendaRef rdf:type owl:Class; rdfs:subClassOf cco:MoleculeDbRef; rdfs:label "BRENDA Cross Reference".
+cco:CcdcRef rdf:type owl:Class; rdfs:subClassOf cco:MoleculeDbRef; rdfs:label "CCDC Cross Reference".
+cco:ClinicalTrialsRef rdf:type owl:Class; rdfs:subClassOf cco:MoleculeDbRef; rdfs:label "ClinicalTrials.gov Cross Reference".
+cco:CompToxRef rdf:type owl:Class; rdfs:subClassOf cco:MoleculeDbRef; rdfs:label "CompTox Cross Reference".
+cco:DrugCentralRef rdf:type owl:Class; rdfs:subClassOf cco:MoleculeDbRef; rdfs:label "DrugCentral Cross Reference".
+cco:DrugbankRef rdf:type owl:Class; rdfs:subClassOf cco:MoleculeDbRef; rdfs:label "DrugBank Cross Reference".
+cco:FooDbRef rdf:type owl:Class; rdfs:subClassOf cco:MoleculeDbRef; rdfs:label "FooDB Cross Reference".
+cco:LipidMapsRef rdf:type owl:Class; rdfs:subClassOf cco:MoleculeDbRef; rdfs:label "LIPID MAPS Cross Reference".
+cco:ProbesAndDrugsRef rdf:type owl:Class; rdfs:subClassOf cco:MoleculeDbRef; rdfs:label "Probes & Drugs Cross Reference".
+cco:RcsbPdbRef rdf:type owl:Class; rdfs:subClassOf cco:MoleculeDbRef; rdfs:label "RCSB PDB Cross Reference".
+cco:RheaRef rdf:type owl:Class; rdfs:subClassOf cco:MoleculeDbRef; rdfs:label "Rhea Cross Reference".
+cco:SwissLipidsRef rdf:type owl:Class; rdfs:subClassOf cco:MoleculeDbRef; rdfs:label "SwissLipids Cross Reference".
+
+cco:UnclassifiedMolecule rdf:type owl:Class; rdfs:subClassOf cco:Substance; rdfs:label "ChEMBL UnclassifiedMolecule Class".

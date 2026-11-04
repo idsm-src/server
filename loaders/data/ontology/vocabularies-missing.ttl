@@ -1,0 +1,52 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix obo: <http://purl.obolibrary.org/obo/>.
+@prefix oboInOwl: <http://www.geneontology.org/formats/oboInOwl#>.
+@prefix bibo: <http://purl.org/ontology/bibo/>.
+@prefix bp: <http://www.biopax.org/release/biopax-level3.owl#>.
+@prefix pdbo: <http://rdf.wwpdb.org/schema/pdbx-v50.owl#>.
+@prefix prism: <http://prismstandard.org/namespaces/basic/3.0/>.
+@prefix swrl: <http://www.w3.org/2003/11/swrl#>.
+@prefix adms: <http://www.w3.org/ns/adms#>.
+@prefix schema: <https://schema.org/>.
+
+# labels of the terms that their vocabularies define without one
+bibo:doi rdfs:label "DOI".
+bibo:eissn rdfs:label "eISSN".
+bibo:issn rdfs:label "ISSN".
+bibo:pmid rdfs:label "PubMed ID".
+
+bp:Gene rdfs:label "gene".
+bp:Pathway rdfs:label "pathway".
+bp:Protein rdfs:label "protein".
+bp:organism rdfs:label "organism".
+bp:pathwayComponent rdfs:label "pathway component".
+
+pdbo:link_to_pdb rdfs:label "link to PDB".
+
+oboInOwl:source rdfs:label "source".
+
+swrl:Variable rdfs:label "variable".
+
+obo:PCL_0010001 rdfs:label "Cluster".
+
+# PRISM 3.0, which has no RDF schema
+prism:contentType rdf:type rdf:Property; rdfs:label "content type".
+prism:eissn rdf:type rdf:Property; rdfs:label "eISSN".
+prism:endingPage rdf:type rdf:Property; rdfs:label "ending page".
+prism:isbn rdf:type rdf:Property; rdfs:label "ISBN".
+prism:issn rdf:type rdf:Property; rdfs:label "ISSN".
+prism:issueIdentifier rdf:type rdf:Property; rdfs:label "issue identifier".
+prism:location rdf:type rdf:Property; rdfs:label "location".
+prism:pageRange rdf:type rdf:Property; rdfs:label "page range".
+prism:publicationName rdf:type rdf:Property; rdfs:label "publication name".
+prism:startingPage rdf:type rdf:Property; rdfs:label "starting page".
+prism:subtitle rdf:type rdf:Property; rdfs:label "subtitle".
+
+# ADMS 1.0 classes used by the VoID vocabulary, which ADMS no longer defines
+adms:SemanticAsset rdf:type owl:Class; rdfs:label "semantic asset".
+adms:SemanticDistribution rdf:type owl:Class; rdfs:label "semantic distribution".
+
+# the only term of schema.org that IDSM uses
+schema:target rdf:type rdf:Property; rdfs:label "target".

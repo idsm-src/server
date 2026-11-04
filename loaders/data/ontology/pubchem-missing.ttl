@@ -6,11 +6,12 @@
 @prefix obo: <http://purl.obolibrary.org/obo/>.
 @prefix vocab: <http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#>.
 
-dcterms:Dataset rdf:type owl:Class.
+dcterms:Dataset rdf:type owl:Class; rdfs:label "Dataset".
 sio:is-attribute-of rdf:type rdf:Property; rdfs:label "is attribute of".
 sio:has-value rdf:type rdf:Property; rdfs:label "has value".
 sio:has-attribute rdf:type rdf:Property; rdfs:label "has attribute".
 sio:has-unit rdf:type rdf:Property; rdfs:label "has unit".
+sio:gene-symbol rdf:type rdf:Property; rdfs:label "gene symbol".
 obo:has-role rdf:type rdf:Property; rdfs:label "has role".
 
 vocab:connectivity_smiles rdf:type rdf:Property; rdfs:label "connectivity smiles".
@@ -80,10 +81,13 @@ vocab:NonHydrogenAtomCount rdf:type owl:Class; rdfs:label "Non-Hydrogen Atom Cou
 vocab:Organization rdf:type owl:Class; rdfs:label "Organization".
 vocab:Patent rdf:type owl:Class; rdfs:label "Patent".
 vocab:PatentAssignee rdf:type owl:Class; rdfs:label "Patent Assignee".
+vocab:PatentCPC rdf:type owl:Class; rdfs:label "Patent CPC".
+vocab:PatentIPC rdf:type owl:Class; rdfs:label "Patent IPC".
 vocab:PatentInventor rdf:type owl:Class; rdfs:label "Patent Inventor".
 vocab:Pathway rdf:type owl:Class; rdfs:label "Pathway".
 vocab:PreferredIUPACName rdf:type owl:Class; rdfs:label "Preferred IUPAC Name".
 vocab:Protein rdf:type owl:Class; rdfs:label "Protein".
+vocab:PubChemBioAssayOutcomeCategory rdf:type owl:Class; rdfs:label "PubChem BioAssay Outcome Category".
 vocab:Reference rdf:type owl:Class; rdfs:label "Reference".
 vocab:RotatableBondCount rdf:type owl:Class; rdfs:label "Rotatable Bond Count".
 vocab:SMILES rdf:type owl:Class; rdfs:label "SMILES".

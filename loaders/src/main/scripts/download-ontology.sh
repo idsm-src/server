@@ -194,6 +194,9 @@ https://data.epo.org/linked-data/api/datasets/download?path=vocabularies\&fileNa
 https://data.epo.org/linked-data/api/datasets/download?path=vocabularies\&fileName=st3Ont.ttl
 https://data.epo.org/linked-data/api/datasets/download?path=vocabularies\&fileName=st3Ref.ttl
 
+# Linked Data API Vocabulary
+https://raw.githubusercontent.com/UKGovLD/linked-data-api/master/vocab/api.ttl
+
 # W3C PROVenance Interchange
 http://www.w3.org/ns/prov.ttl
 http://www.w3.org/ns/prov-aq.ttl
@@ -202,6 +205,9 @@ http://www.w3.org/ns/prov-dictionary.ttl
 http://www.w3.org/ns/prov-links.ttl
 http://www.w3.org/ns/prov-o.ttl
 http://www.w3.org/ns/prov-o-inverses.ttl
+
+# REPRODUCE-ME Ontology
+https://sheeba-samuel.github.io/REPRODUCE-ME/doc/reproduce-me.xml
 
 # Metadata Authority Description Schema in RDF (MADS/RDF)
 http://www.loc.gov/standards/mads/rdf/v1.rdf
@@ -248,6 +254,15 @@ http://www.w3.org/2003/06/sw-vocab-status/ns.rdf
 # Vocabulary of Interlinked Datasets (VoID)
 https://raw.githubusercontent.com/cygri/void/master/rdfs/void.ttl
 
+# Extensions to the Vocabulary of Interlinked Datasets (void-ext)
+http://ldf.fi/schema/get?graph=http%3A%2F%2Fldf.fi%2Fvoid-ext
+
+# SPARQL 1.1 Service Description (SD)
+http://www.w3.org/ns/sparql-service-description.ttl
+
+# SPARQL Examples Ontology
+https://raw.githubusercontent.com/sib-swiss/sparql-examples/refs/heads/master/examples/sparql-examples-ontology.ttl
+
 # Situation Ontology
 http://www.ontologydesignpatterns.org/cp/owl/situation.owl
 
@@ -256,6 +271,9 @@ https://purl.obolibrary.org/obo/ms.owl
 
 # Chemical Entity Materials and Reactions Ontological Framework (ChEMROF)
 https://raw.githubusercontent.com/chemkg/chemrof/main/schema/owl/chemrof.owl.ttl
+
+# MolMeDB RDF Vocabulary
+https://raw.githubusercontent.com/DominikMartinat/rdf-mmdb/refs/heads/master/vocabulary.owl
 
 # OWL 2 Schema (OWL 2)
 http://www.w3.org/2002/07/owl.ttl
@@ -277,6 +295,9 @@ declare -A rewrite=(
 [http://qudt.org/vocab/unit]=$jqudt/unit
 [http://qudt.org/vocab/quantity]=$jqudt/qudt-quantity
 [http://www.w3.org/2004/02/skos/core]=http://www.w3.org/TR/skos-reference/skos.rdf
+[http://rdfs.org/ns/void]=https://raw.githubusercontent.com/cygri/void/master/rdfs/void.ttl
+[http://purl.org/net/p-plan#]=https://vocab.linkeddata.es/p-plan/p-plan.owl
+[http://www.w3.org/ns/prov-o-20130430]=http://www.w3.org/ns/prov-o.ttl
 [http://bioassayontology.org/bao/external/BAO_CHEBI_import.owl]=skip
 [http://www.bioassayontology.org/bao/external/BAO_NCBITaxon_import.owl]=skip
 [http://www.bioassayontology.org/bao/external/BAO_NCIT_import.owl]=skip
@@ -326,6 +347,8 @@ get_name()
 
     if [[ "$iri" = "https://data.bioontology.org/ontologies/NDF-RT/submissions/1/download?apikey=8b5b7825-538d-40e0-9e9e-5ab9274a9aeb" ]]; then
         filename=NDF-RT.owl
+    elif [[ "$iri" = "http://ldf.fi/schema/get?graph=http%3A%2F%2Fldf.fi%2Fvoid-ext" ]]; then
+        filename=void-ext.ttl
     elif [[ "$filename" =~ \.(gz|zip)$ ]]; then
         filename="${filename%.*}"
     elif [[ "$filename" =~ fileName= ]]; then
@@ -455,6 +478,8 @@ cp "$data/ero.owl" "$output"
 cp "$data/base.owl" "$output"
 cp "$data/mesh-missing.ttl" "$output"
 cp "$data/pubchem-missing.ttl" "$output"
+cp "$data/chembl-missing.ttl" "$output"
+cp "$data/vocabularies-missing.ttl" "$output"
 cp "$data/xsd.owl" "$output"
 cp "$data/ChemOnt_2_1.owl" "$output"
 
@@ -491,6 +516,9 @@ ea21388ea72fb98aaecec48b8f8a5765  $output/${downloaded[http://www.w3.org/TR/skos
 4eda1eb9c5e33f0e31e5130b03112e6e  $output/${downloaded[http://www.w3.org/2003/06/sw-vocab-status/ns.rdf]}
 e505717212e838566383ecc5317cbdc2  $output/${downloaded[http://www.w3.org/2006/vcard/ns.ttl]}
 9698109cfb8ae31c9c096e494efa524d  $output/${downloaded[https://raw.githubusercontent.com/cygri/void/master/rdfs/void.ttl]}
+849fe835f1276f40ec59bea4f003e73f  $output/${downloaded[http://ldf.fi/schema/get?graph=http%3A%2F%2Fldf.fi%2Fvoid-ext]}
+b77247b6b9009feec97f282d8cefb744  $output/${downloaded[http://www.w3.org/ns/sparql-service-description.ttl]}
+6ffc590eaf854b94af9d69a879ca07fe  $output/${downloaded[https://raw.githubusercontent.com/UKGovLD/linked-data-api/master/vocab/api.ttl]}
 8ab3a314969cd6ab4094a9bb4213ebdb  $output/${downloaded[https://data.bioontology.org/ontologies/NDF-RT/submissions/1/download?apikey=8b5b7825-538d-40e0-9e9e-5ab9274a9aeb]}
 1a8af4f4399e08c3c4729a8cc337fd52  $output/${downloaded[https://raw.githubusercontent.com/chemkg/chemrof/main/schema/owl/chemrof.owl.ttl]}
 EOF

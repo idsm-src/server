@@ -5,3 +5,5 @@
 
 meshv:dateIntroduced rdf:type owl:DatatypeProperty; rdfs:label "dateIntroduced".
 meshv:lastUpdated rdf:type owl:DatatypeProperty; rdfs:label "lastUpdated".
+meshv:SCR_Anatomy rdf:type owl:Class; rdfs:subClassOf meshv:SupplementaryConceptRecord; rdfs:label "MeSH SCR Anatomy".
+meshv:SCR_Population rdf:type owl:Class; rdfs:subClassOf meshv:SupplementaryConceptRecord; rdfs:label "MeSH SCR Population".
