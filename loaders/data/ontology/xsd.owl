@@ -234,4 +234,48 @@
   <rdfs:label>rational number values</rdfs:label>
 </rdfs:Class>
 
+<rdf:Property rdf:about="&xsd;length">
+  <rdfs:label>length</rdfs:label>
+</rdf:Property>
+
+<rdf:Property rdf:about="&xsd;minLength">
+  <rdfs:label>minimum length</rdfs:label>
+</rdf:Property>
+
+<rdf:Property rdf:about="&xsd;maxLength">
+  <rdfs:label>maximum length</rdfs:label>
+</rdf:Property>
+
+<rdf:Property rdf:about="&xsd;pattern">
+  <rdfs:label>pattern</rdfs:label>
+</rdf:Property>
+
+<rdf:Property rdf:about="&rdf;langRange">
+  <rdfs:label>language range</rdfs:label>
+</rdf:Property>
+
+<rdf:Property rdf:about="&xsd;minInclusive">
+  <rdfs:label>inclusive lower bound</rdfs:label>
+</rdf:Property>
+
+<rdf:Property rdf:about="&xsd;maxInclusive">
+  <rdfs:label>inclusive upper bound</rdfs:label>
+</rdf:Property>
+
+<rdf:Property rdf:about="&xsd;minExclusive">
+  <rdfs:label>exclusive lower bound</rdfs:label>
+</rdf:Property>
+
+<rdf:Property rdf:about="&xsd;maxExclusive">
+  <rdfs:label>exclusive upper bound</rdfs:label>
+</rdf:Property>
+
+<rdf:Property rdf:about="&xsd;totalDigits">
+  <rdfs:label>maximum number of digits</rdfs:label>
+</rdf:Property>
+
+<rdf:Property rdf:about="&xsd;fractionDigits">
+  <rdfs:label>maximum number of fraction digits</rdfs:label>
+</rdf:Property>
+
 </rdf:RDF>
