@@ -1097,8 +1097,8 @@ public class Ontology extends Updater
         sources.add(new StaticSource("Biological Pathway Exchange (BioPAX)", "1.0"));
         sources.add(new OwlSource("UniProt RDF schema ontology", "http://purl.uniprot.org/core/"));
         sources.add(new OwlSource("PDBx ontology", "http://rdf.wwpdb.org/schema/pdbx-v50.owl"));
-        sources.add(new OwlSource("Quantities, Units, Dimensions and Types Ontology (QUDT)",
-                "http://qudt.org/2.1/schema/qudt"));
+        // QUDT 1.1, whose units ChEMBL refers to; its owl:versionInfo is a revision keyword, not a version
+        sources.add(new StaticSource("Quantities, Units, Dimensions and Types Ontology (QUDT)", "1.1"));
         sources.add(new StaticSource("Open PHACTS Units extending QUDT", "2013-09-18"));
         sources.add(new StaticSource("Shapes Constraint Language (SHACL)", "2017-07-20"));
         sources.add(new OwlSource("Linked Models: Datatype Ontology (DTYPE)",

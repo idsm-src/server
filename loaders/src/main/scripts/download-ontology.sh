@@ -27,6 +27,9 @@ mkdir "$output"
 
 data="${data:-data/ontology}"
 
+# QUDT 1.1 and the Open PHACTS units extending it, in jqudt; the files of QUDT 1.1 there are RDF/XML without extensions
+jqudt=https://github.com/openphacts/jqudt/raw/master/src/main/resources/onto
+
 sources=(
 
 # PubChem Ontology
@@ -143,19 +146,16 @@ https://ftp.uniprot.org/pub/databases/uniprot/current_release/rdf/core.owl
 # PDBx ontology
 http://rdf.wwpdb.org/schema/pdbx-v50.owl
 
-# Quantities, Units, Dimensions and Types Ontology (QUDT)
-http://qudt.org/2.1/schema/qudt.ttl
-http://qudt.org/2.1/schema/datatype.ttl
-http://qudt.org/2.1/vocab/constant.ttl
-http://qudt.org/2.1/vocab/prefix.ttl
-http://qudt.org/2.1/vocab/dimensionvector.ttl
-http://qudt.org/2.1/vocab/quantitykind.ttl
-http://qudt.org/2.1/vocab/soqk.ttl
-http://qudt.org/2.1/vocab/sou.ttl
-http://qudt.org/2.1/vocab/unit.ttl
+# Quantities, Units, Dimensions and Types Ontology (QUDT) 1.1, the version whose units ChEMBL and the Open PHACTS units
+# refer to
+$jqudt/qudt
+$jqudt/quantity
+$jqudt/dimension
+$jqudt/unit
+$jqudt/qudt-quantity
 
 # Open PHACTS Units extending QUDT
-https://github.com/openphacts/jqudt/raw/master/src/main/resources/onto/ops.ttl
+$jqudt/ops.ttl
 
 # Shapes Constraint Language (SHACL)
 http://www.w3.org/ns/shacl.ttl
@@ -271,7 +271,11 @@ http://www.w3.org/1999/02/22-rdf-syntax-ns.ttl
 declare -A rewrite=(
 [http://www.bioassayontology.org/bao]=http://www.bioassayontology.org/bao/bao_complete.owl
 [http://xmlns.com/foaf/0.1/]=https://w3id.org/spar/foaf.ttl
-[http://qudt.org/2.1/schema/facade/qudt]=http://qudt.org/2.1/schema/qudt.ttl
+[http://qudt.org/schema/qudt]=$jqudt/qudt
+[http://qudt.org/schema/quantity]=$jqudt/quantity
+[http://qudt.org/schema/dimension]=$jqudt/dimension
+[http://qudt.org/vocab/unit]=$jqudt/unit
+[http://qudt.org/vocab/quantity]=$jqudt/qudt-quantity
 [http://www.w3.org/2004/02/skos/core]=http://www.w3.org/TR/skos-reference/skos.rdf
 [http://bioassayontology.org/bao/external/BAO_CHEBI_import.owl]=skip
 [http://www.bioassayontology.org/bao/external/BAO_NCBITaxon_import.owl]=skip
@@ -326,6 +330,8 @@ get_name()
         filename="${filename%.*}"
     elif [[ "$filename" =~ fileName= ]]; then
         filename="${filename#*fileName=}"
+    elif [[ "$iri" == "$jqudt"/* && "$filename" != *.* ]]; then
+        filename="qudt-1.1-$filename.rdf"
     fi
 
     if [[ -e "$output/$filename" ]]; then
@@ -366,7 +372,8 @@ download()
         iri="${iri%#}"
     fi
 
-    if [[ "$iri" =~ /[^/.?]+$ ]]; then
+    # an IRI without an extension stands for a Turtle file, except a file of QUDT 1.1 in jqudt
+    if [[ "$iri" =~ /[^/.?]+$ && "$iri" != "$jqudt"/* ]]; then
         iri="$iri.ttl"
     fi
 
@@ -461,6 +468,11 @@ eecf96b8bf61fa82d6825b948f7dedad  $output/${downloaded[https://www.dublincore.or
 680d65b279cb55d86f292ab6ecd31124  $output/${downloaded[https://github.com/ewilderj/doap/raw/master/schema/doap.rdf]}
 f6575d8f9f50e5355506e1d87e9d11ef  $output/${downloaded[http://biohackathon.org/resource/faldo.ttl]}
 3a5d4778240b986a35566dd0f0619ce8  $output/${downloaded[http://xmlns.com/foaf/0.1/index.rdf]}
+c6e2540a9ac7f3a686208072b066c507  $output/${downloaded[$jqudt/qudt]}
+b1e1e66821c8d6a390370c3804b22274  $output/${downloaded[$jqudt/quantity]}
+947298e0c08730c25f4b28c9ea5ce106  $output/${downloaded[$jqudt/dimension]}
+7d84bd979dffbf05c9de253d399c9797  $output/${downloaded[$jqudt/unit]}
+c29e04c56f8b67af485514e943c9d124  $output/${downloaded[$jqudt/qudt-quantity]}
 549f93606e3c1ffb60164305065841d1  $output/${downloaded[https://github.com/openphacts/jqudt/raw/master/src/main/resources/onto/ops.ttl]}
 a6340a448fc6b84f33badab46913ffc6  $output/${downloaded[http://www.w3.org/2002/07/owl.ttl]}
 a1622ae5bd5e23c4bda44c70f3781071  $output/${downloaded[http://www.w3.org/2000/01/rdf-schema.ttl]}
