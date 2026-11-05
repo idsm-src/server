@@ -7,11 +7,11 @@
 @prefix vocab: <http://rdf.ncbi.nlm.nih.gov/pubchem/vocabulary#>.
 
 dcterms:Dataset rdf:type owl:Class; rdfs:label "Dataset".
-sio:is-attribute-of rdf:type rdf:Property; rdfs:label "is attribute of".
-sio:has-value rdf:type rdf:Property; rdfs:label "has value".
-sio:has-attribute rdf:type rdf:Property; rdfs:label "has attribute".
-sio:has-unit rdf:type rdf:Property; rdfs:label "has unit".
-sio:gene-symbol rdf:type rdf:Property; rdfs:label "gene symbol".
+sio:is-attribute-of rdf:type rdf:Property; rdfs:label "is attribute of"; owl:deprecated true; obo:IAO_0100001 sio:SIO_000011.
+sio:has-value rdf:type rdf:Property; rdfs:label "has value"; owl:deprecated true; obo:IAO_0100001 sio:SIO_000300.
+sio:has-attribute rdf:type rdf:Property; rdfs:label "has attribute"; owl:deprecated true; obo:IAO_0100001 sio:SIO_000008.
+sio:has-unit rdf:type rdf:Property; rdfs:label "has unit"; owl:deprecated true; obo:IAO_0100001 sio:SIO_000221.
+sio:gene-symbol rdf:type rdf:Property; rdfs:label "gene symbol"; owl:deprecated true.
 obo:has-role rdf:type rdf:Property; rdfs:label "has role".
 
 vocab:connectivity_smiles rdf:type rdf:Property; rdfs:label "connectivity smiles".
