@@ -135,14 +135,20 @@ insert into idsm.sources values (69, 'Description of a Project Vocabulary (DOAP)
 insert into idsm.sources values (70, 'FOAF Vocabulary', 'http://xmlns.com/foaf/0.1/', '');
 insert into idsm.sources values (71, 'Provenance, Authoring and Versioning (PAV)', 'http://pav-ontology.github.io/pav/', '');
 insert into idsm.sources values (72, 'SemWeb Vocab Status Ontology', 'https://www.w3.org/2003/06/sw-vocab-status/note.html', '');
-insert into idsm.sources values (73, 'Vocabulary of Interlinked Datasets (VoID)', 'http://vocab.deri.ie/void.html', '');
-insert into idsm.sources values (74, 'Situation Ontology', 'http://ontologydesignpatterns.org/wiki/Submissions:Situation', '');
-insert into idsm.sources values (75, 'Mass Spectrometry Ontology (MS)', 'http://www.psidev.info/groups/controlled-vocabularies', '');
-insert into idsm.sources values (76, 'ClassyFire Ontology', 'http://classyfire.wishartlab.com/', '');
-insert into idsm.sources values (77, 'Chemical Entity Materials and Reactions Ontological Framework (ChEMROF)', 'https://chemkg.github.io/chemrof/home/', '');
-insert into idsm.sources values (78, 'OWL 2 Schema (OWL 2)', 'https://www.w3.org/TR/owl2-overview/', '');
-insert into idsm.sources values (79, 'RDF Schema (RDFS)', 'https://www.w3.org/TR/rdf-schema/', '');
-insert into idsm.sources values (80, 'RDF Vocabulary Terms', 'https://www.w3.org/TR/rdf11-concepts/', '');
+insert into idsm.sources values (73, 'Situation Ontology', 'http://ontologydesignpatterns.org/wiki/Submissions:Situation', '');
+insert into idsm.sources values (74, 'Mass Spectrometry Ontology (MS)', 'http://www.psidev.info/groups/controlled-vocabularies', '');
+insert into idsm.sources values (75, 'ClassyFire Ontology', 'http://classyfire.wishartlab.com/', '');
+insert into idsm.sources values (76, 'Chemical Entity Materials and Reactions Ontological Framework (ChEMROF)', 'https://chemkg.github.io/chemrof/home/', '');
+insert into idsm.sources values (77, 'REPRODUCE-ME Ontology', 'https://w3id.org/reproduceme', '');
+insert into idsm.sources values (78, 'Ontology for Provenance and Plans (P-Plan)', 'http://purl.org/net/p-plan', '');
+insert into idsm.sources values (79, 'Linked Data API Vocabulary', 'https://github.com/UKGovLD/linked-data-api', '');
+insert into idsm.sources values (80, 'SPARQL Examples Ontology', 'https://github.com/sib-swiss/sparql-examples', '');
+insert into idsm.sources values (81, 'Vocabulary of Interlinked Datasets (VoID)', 'http://vocab.deri.ie/void.html', '');
+insert into idsm.sources values (82, 'Extensions to the Vocabulary of Interlinked Datasets (void-ext)', 'http://ldf.fi/void-ext', '');
+insert into idsm.sources values (83, 'SPARQL 1.1 Service Description (SD)', 'https://www.w3.org/TR/sparql11-service-description/', '');
+insert into idsm.sources values (84, 'OWL 2 Schema (OWL 2)', 'https://www.w3.org/TR/owl2-overview/', '');
+insert into idsm.sources values (85, 'RDF Schema (RDFS)', 'https://www.w3.org/TR/rdf-schema/', '');
+insert into idsm.sources values (86, 'RDF Vocabulary Terms', 'https://www.w3.org/TR/rdf11-concepts/', '');
 
 
 insert into idsm.stats values ( 0, 'PubChem Substances', 0);
