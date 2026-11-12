@@ -51,6 +51,25 @@ public class OntologyConfiguration extends SparqlDatabaseOptimisedConfiguration
         addPrefix("obo", "http://purl.obolibrary.org/obo/");
         addPrefix("oboInOwl", "http://www.geneontology.org/formats/oboInOwl#");
         addPrefix("skos", "http://www.w3.org/2004/02/skos/core#");
+
+        // the vocabularies of classes the VoID description or the class hierarchy show; the QUDT schema gets its own
+        // prefix, as qudt: is the one of the units (from ChEMBL)
+        addPrefix("qudt-schema", "http://qudt.org/schema/qudt#");
+        addPrefix("vaem", "http://www.linkedmodel.org/schema/vaem#");
+        addPrefix("dtype", "http://www.linkedmodel.org/schema/dtype#");
+        addPrefix("api", "http://purl.org/linked-data/api/vocab#");
+        addPrefix("scoro", "http://purl.org/spar/scoro/");
+        addPrefix("pso", "http://purl.org/spar/pso/");
+        addPrefix("adms", "http://www.w3.org/ns/adms#");
+        addPrefix("st3", "http://data.epo.org/linked-data/def/st3/");
+        addPrefix("dcam", "http://purl.org/dc/dcam/");
+        addPrefix("swrl", "http://www.w3.org/2003/11/swrl#");
+        addPrefix("time", "http://www.w3.org/2006/time#");
+        addPrefix("p-plan", "http://purl.org/net/p-plan#");
+        addPrefix("doid", "http://purl.obolibrary.org/obo/doid#");
+        addPrefix("frbr", "http://purl.org/vocab/frbr/core#");
+        addPrefix("geo", "http://www.w3.org/2003/01/geo/wgs84_pos#");
+        addPrefix("contact", "http://www.w3.org/2000/10/swap/pim/contact#");
     }
 
 

@@ -246,6 +246,8 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
 
         addPrefix("dcterms", "http://purl.org/dc/terms/");
         addPrefix("idsm", "https://idsm.elixir-czech.cz/sparql/endpoint/");
+        // the graphs of the VoID description and of the examples
+        addPrefix("well-known", "https://idsm.elixir-czech.cz/.well-known/");
     }
 
 

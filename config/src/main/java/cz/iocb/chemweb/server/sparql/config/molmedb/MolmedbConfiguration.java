@@ -53,6 +53,8 @@ public class MolmedbConfiguration extends SparqlDatabaseConfiguration
 
         addPrefix("molmedb", "https://identifiers.org/molmedb/");
         addPrefix("mmdbvoc", "https://rdf.molmedb.upol.cz/vocabulary#");
+        // the graph of MolMeDB, whose IRI has no slash at the end, so that it is mmdb:
+        addPrefix("mmdb", "https://rdf.molmedb.upol.cz");
 
         addPrefix("bao", "http://www.bioassayontology.org/bao#");
         addPrefix("sio", "http://semanticscience.org/resource/");
