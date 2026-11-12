@@ -10,6 +10,7 @@ import cz.iocb.sparql.engine.database.Condition;
 import cz.iocb.sparql.engine.database.Conditions;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
 import cz.iocb.sparql.engine.database.SourceTable;
+import cz.iocb.sparql.engine.imcode.Scope;
 import cz.iocb.sparql.engine.imcode.SqlEmptySolution;
 import cz.iocb.sparql.engine.imcode.SqlIntercode;
 import cz.iocb.sparql.engine.imcode.SqlIntercode.Restrictions;
@@ -244,6 +245,6 @@ public class Dataset
         if(object != null)
             restrictions.add(object);
 
-        return SqlUnion.union(request, branches).optimize(request, restrictions, false, false);
+        return SqlUnion.union(request, branches).optimize(request, Scope.TOP, restrictions, false, false);
     }
 }

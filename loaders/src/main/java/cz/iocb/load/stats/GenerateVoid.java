@@ -42,6 +42,7 @@ import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.SourceTable;
+import cz.iocb.sparql.engine.imcode.Scope;
 import cz.iocb.sparql.engine.imcode.SqlAggregation;
 import cz.iocb.sparql.engine.imcode.SqlIntercode;
 import cz.iocb.sparql.engine.imcode.SqlIntercode.Restrictions;
@@ -1319,8 +1320,8 @@ public class GenerateVoid extends Updater
                 {
                     for(SqlIntercode sx : s.getValue())
                     {
-                        SqlIntercode sp = SqlJoin.join(request, sx, p.getValue()).optimize(request, restrictions, false,
-                                false);
+                        SqlIntercode sp = SqlJoin.join(request, sx, p.getValue()).optimize(request, Scope.TOP,
+                                restrictions, false, false);
 
                         if(sp == SqlNoSolution.get())
                             continue;
@@ -1347,8 +1348,8 @@ public class GenerateVoid extends Updater
             {
                 for(Entry<ClassInGraph, SqlIntercode> s : subjectClasses.entrySet())
                 {
-                    SqlIntercode sp = SqlJoin.join(request, s.getValue(), p.getValue()).optimize(request, restrictions,
-                            false, false);
+                    SqlIntercode sp = SqlJoin.join(request, s.getValue(), p.getValue()).optimize(request, Scope.TOP,
+                            restrictions, false, false);
 
                     if(sp == SqlNoSolution.get())
                         continue;
@@ -1377,8 +1378,8 @@ public class GenerateVoid extends Updater
                 {
                     for(SqlIntercode sx : s.getValue())
                     {
-                        SqlIntercode sp = SqlJoin.join(request, sx, p.getValue()).optimize(request, restrictions, false,
-                                false);
+                        SqlIntercode sp = SqlJoin.join(request, sx, p.getValue()).optimize(request, Scope.TOP,
+                                restrictions, false, false);
 
                         if(sp == SqlNoSolution.get())
                             continue;
@@ -1401,8 +1402,8 @@ public class GenerateVoid extends Updater
             {
                 for(Entry<ClassInGraph, SqlIntercode> s : subjectClasses.entrySet())
                 {
-                    SqlIntercode sp = SqlJoin.join(request, s.getValue(), p.getValue()).optimize(request, restrictions,
-                            false, false);
+                    SqlIntercode sp = SqlJoin.join(request, s.getValue(), p.getValue()).optimize(request, Scope.TOP,
+                            restrictions, false, false);
 
                     if(sp == SqlNoSolution.get())
                         continue;
@@ -1723,7 +1724,7 @@ public class GenerateVoid extends Updater
         vars.add(varCount);
         vars.addAll(v);
 
-        imcode = imcode.optimize(request, new Restrictions(groupBy), false, false);
+        imcode = imcode.optimize(request, Scope.TOP, new Restrictions(groupBy), false, false);
 
         if(imcode == SqlNoSolution.get())
             return () -> new HashMap<>();
@@ -1802,7 +1803,7 @@ public class GenerateVoid extends Updater
         Restrictions restrictions = new Restrictions(v);
         restrictions.add(what);
 
-        imcode = imcode.optimize(request, restrictions, true, false);
+        imcode = imcode.optimize(request, Scope.TOP, restrictions, true, false);
 
         if(imcode == SqlNoSolution.get())
             return (() -> new HashMap<>());
@@ -2001,7 +2002,7 @@ public class GenerateVoid extends Updater
         Restrictions restriction = new Restrictions(gvars);
         restriction.add(varCount);
 
-        SqlIntercode result = agg.optimize(request, restriction, false, false);
+        SqlIntercode result = agg.optimize(request, Scope.TOP, restriction, false, false);
 
         if(result == SqlNoSolution.get())
             return null;
@@ -2009,7 +2010,7 @@ public class GenerateVoid extends Updater
         VariableBindings vars = result.getVariableBindings();
 
         return "SELECT " + select.stream().flatMap(n -> getMapping(vars.get(n)).stream()).map(e -> e.toString())
-                .collect(Collectors.joining(", ")) + " FROM (" + result.translate(request) + ") as tab";
+                .collect(Collectors.joining(", ")) + " FROM (" + result.translate(request, Scope.TOP) + ") as tab";
     }
 
 
