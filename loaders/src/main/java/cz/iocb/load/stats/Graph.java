@@ -25,9 +25,11 @@ import cz.iocb.sparql.engine.database.Condition;
 import cz.iocb.sparql.engine.database.Conditions;
 import cz.iocb.sparql.engine.database.ExpressionColumn;
 import cz.iocb.sparql.engine.database.SourceTable;
+import cz.iocb.sparql.engine.database.SqlCode;
 import cz.iocb.sparql.engine.database.ValueColumn;
 import cz.iocb.sparql.engine.imcode.Scope;
 import cz.iocb.sparql.engine.imcode.SqlIntercode;
+import cz.iocb.sparql.engine.imcode.SqlSelect;
 import cz.iocb.sparql.engine.mapping.ConstantBlankNodeMapping;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.ConstantLiteralMapping;
@@ -500,8 +502,10 @@ public class Graph
             return Set.of();
         }
 
-        String sql = "SELECT DISTINCT " + o.get(0) + ", " + o.get(1) + " FROM (" + ic.translate(request, Scope.TOP)
-                + ") as t";
+        SqlCode code = ic.translate(request, Scope.TOP);
+
+        String sql = SqlSelect.translateWithClause(request, code) + "SELECT DISTINCT " + o.get(0) + ", " + o.get(1)
+                + " FROM (" + code.getText() + ") as t";
 
         Set<Resource> result = new HashSet<>();
 

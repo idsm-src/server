@@ -42,12 +42,14 @@ import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.SourceTable;
+import cz.iocb.sparql.engine.database.SqlCode;
 import cz.iocb.sparql.engine.imcode.Scope;
 import cz.iocb.sparql.engine.imcode.SqlAggregation;
 import cz.iocb.sparql.engine.imcode.SqlIntercode;
 import cz.iocb.sparql.engine.imcode.SqlIntercode.Restrictions;
 import cz.iocb.sparql.engine.imcode.SqlJoin;
 import cz.iocb.sparql.engine.imcode.SqlNoSolution;
+import cz.iocb.sparql.engine.imcode.SqlSelect;
 import cz.iocb.sparql.engine.imcode.SqlTableAccess;
 import cz.iocb.sparql.engine.imcode.SqlUnion;
 import cz.iocb.sparql.engine.imcode.expression.SqlBuiltinCall;
@@ -2008,9 +2010,13 @@ public class GenerateVoid extends Updater
             return null;
 
         VariableBindings vars = result.getVariableBindings();
+        SqlCode code = result.translate(request, Scope.TOP);
 
-        return "SELECT " + select.stream().flatMap(n -> getMapping(vars.get(n)).stream()).map(e -> e.toString())
-                .collect(Collectors.joining(", ")) + " FROM (" + result.translate(request, Scope.TOP) + ") as tab";
+        String columns = select.stream().flatMap(n -> getMapping(vars.get(n)).stream()).map(e -> e.toString())
+                .collect(Collectors.joining(", "));
+
+        return SqlSelect.translateWithClause(request, code) + "SELECT " + columns + " FROM (" + code.getText()
+                + ") as tab";
     }
 
 
