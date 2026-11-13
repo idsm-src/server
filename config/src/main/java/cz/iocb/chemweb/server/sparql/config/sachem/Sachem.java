@@ -18,6 +18,7 @@ import java.util.Set;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.Function;
+import cz.iocb.sparql.engine.database.SqlCode;
 import cz.iocb.sparql.engine.database.SqlType;
 import cz.iocb.sparql.engine.mapping.classes.EnumUserIriClass;
 import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
@@ -377,10 +378,10 @@ public abstract class Sachem
             return new ProcedureSpecialization()
             {
                 @Override
-                public List<String> getArguments(List<String> declared)
+                public List<SqlCode> getArguments(List<SqlCode> declared)
                 {
-                    List<String> arguments = new ArrayList<>();
-                    arguments.add(indexes);
+                    List<SqlCode> arguments = new ArrayList<>();
+                    arguments.add(new SqlCode(indexes));
                     arguments.addAll(declared);
                     return arguments;
                 }

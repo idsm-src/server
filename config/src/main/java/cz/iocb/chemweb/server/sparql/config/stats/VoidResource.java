@@ -16,6 +16,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.ExpressionColumn;
+import cz.iocb.sparql.engine.database.SqlBuilder;
+import cz.iocb.sparql.engine.database.SqlCode;
 import cz.iocb.sparql.engine.database.SqlType;
 import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
 import cz.iocb.sparql.engine.mapping.classes.UserIriClass;
@@ -146,7 +148,7 @@ public class VoidResource extends UserIriClass
      */
     protected Column generateFunction(List<Column> columns)
     {
-        StringBuilder builder = new StringBuilder();
+        SqlBuilder builder = new SqlBuilder();
 
         builder.append("'");
         builder.append(prefix.replaceAll("'", "''"));
@@ -155,12 +157,12 @@ public class VoidResource extends UserIriClass
         for(int i = 0; i < getColumnCount(); i++)
         {
             if(sqlTypes.get(i) == INT2)
-                builder.append(" || lpad(to_hex(" + columns.get(i) + "::int), 4, '0')");
+                builder.append(SqlCode.of(" || lpad(to_hex(", columns.get(i), "::int), 4, '0')"));
             else if(sqlTypes.get(i) == INT4)
-                builder.append(" || lpad(to_hex(" + columns.get(i) + "), 8, '0')");
+                builder.append(SqlCode.of(" || lpad(to_hex(", columns.get(i), "), 8, '0')"));
         }
 
-        return new ExpressionColumn(builder.toString(), VARCHAR);
+        return new ExpressionColumn(builder.toCode(), VARCHAR);
     }
 
 
@@ -179,21 +181,12 @@ public class VoidResource extends UserIriClass
         {
             String cast = sqlTypes.get(i) == INT2 ? "::bit(16)::integer" : sqlTypes.get(i) == INT4 ? "::bit(32)" : null;
 
-            String code = "('x' || substring(" + parameter + ", " + offsets.get(i) + ", " + lengths.get(i) + "))" + cast
-                    + "::" + sqlTypes.get(i);
+            SqlCode code = SqlCode.of("('x' || substring(", parameter, ", ", offsets.get(i), ", ", lengths.get(i), "))",
+                    cast, "::", sqlTypes.get(i));
 
             if(check)
-            {
-                StringBuilder builder = new StringBuilder();
-
-                builder.append("CASE WHEN sparql.regex_string(");
-                builder.append(parameter);
-                builder.append(", '^(");
-                builder.append(regexp.replaceAll("'", "''"));
-                builder.append(")$', '') THEN ");
-
-                code = builder.toString() + code + " END";
-            }
+                code = SqlCode.of("CASE WHEN sparql.regex_string(", parameter, ", '^(", regexp.replaceAll("'", "''"),
+                        ")$', '') THEN ", code, " END");
 
             result.add(new ExpressionColumn(code, sqlTypes.get(i)));
         }

@@ -395,8 +395,8 @@ public class Graph
             if(request.getConfiguration().getDatabaseSchema().isNullableColumn(table, col))
                 condition.addIsNotNull(col);
 
-            List<Column> cols = List
-                    .of((Column) new ExpressionColumn("(hashtextextended(" + col + ",0)::int8)", INT8, false));
+            List<Column> cols = List.of(
+                    (Column) new ExpressionColumn(SqlCode.of("(hashtextextended(", col, ",0)::int8)"), INT8, false));
             return new HashedObject(new ParametrisedLiteralMapping(hashClass, cols), condition);
         }
         else

@@ -21,6 +21,8 @@ import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.ExpressionColumn;
 import cz.iocb.sparql.engine.database.SQLRuntimeException;
+import cz.iocb.sparql.engine.database.SqlBuilder;
+import cz.iocb.sparql.engine.database.SqlCode;
 import cz.iocb.sparql.engine.database.TableColumn;
 import cz.iocb.sparql.engine.database.ValueColumn;
 import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
@@ -111,8 +113,8 @@ public class SubstanceIdentifierIriClass extends UserIriClass
         String delim = delimiter.replaceAll("'", "''");
 
         String access = String.format("(SELECT %s as \"@from\", %s as \"@to\" FROM %s) as \"@rctab\"", from, to, table);
-        String code = String.format("'%s' || \"@to\" || '%s' || (%s)", pref, delim, cols.get(1));
-        String expr = String.format("(SELECT (%s)::varchar FROM %s WHERE \"@from\" = %s)", code, access, cols.get(0));
+        SqlCode code = SqlCode.format("'%s' || \"@to\" || '%s' || (%s)", pref, delim, cols.get(1));
+        SqlCode expr = SqlCode.format("(SELECT (%s)::varchar FROM %s WHERE \"@from\" = %s)", code, access, cols.get(0));
 
         return new ExpressionColumn(expr, VARCHAR);
     }
@@ -127,7 +129,7 @@ public class SubstanceIdentifierIriClass extends UserIriClass
      */
     public Column generateInverseFunction1(Column parameter, boolean check)
     {
-        StringBuilder builder = new StringBuilder();
+        SqlBuilder builder = new SqlBuilder();
 
         if(check)
         {
@@ -142,14 +144,14 @@ public class SubstanceIdentifierIriClass extends UserIriClass
         builder.append(String.format("(SELECT \"@from\"::%s FROM %s WHERE \"@to\" = ", sqlTypes.get(0), access));
 
         String delim = delimiter.replaceAll("'", "''");
-        builder.append(String.format(ROOT, "right(split_part(%s, '%s', 1), -%d)", parameter, delim, prefix.length()));
+        builder.append(SqlCode.format("right(split_part(%s, '%s', 1), -%d)", parameter, delim, prefix.length()));
 
         builder.append(")");
 
         if(check)
             builder.append(" END");
 
-        return new ExpressionColumn(builder.toString(), sqlTypes.get(0));
+        return new ExpressionColumn(builder.toCode(), sqlTypes.get(0));
     }
 
 
@@ -162,7 +164,7 @@ public class SubstanceIdentifierIriClass extends UserIriClass
      */
     public Column generateInverseFunction2(Column parameter, boolean check)
     {
-        StringBuilder builder = new StringBuilder();
+        SqlBuilder builder = new SqlBuilder();
 
         if(check)
         {
@@ -177,19 +179,18 @@ public class SubstanceIdentifierIriClass extends UserIriClass
             builder.append(String.format("SELECT \"@from\"::%s FROM %s WHERE \"@to\" = ", sqlTypes.get(0), access));
 
             String delim = delimiter.replaceAll("'", "''");
-            builder.append(
-                    String.format(ROOT, "right(split_part(%s, '%s', 1), -%d)", parameter, delim, prefix.length()));
+            builder.append(SqlCode.format("right(split_part(%s, '%s', 1), -%d)", parameter, delim, prefix.length()));
 
             builder.append(") IS NOT NULL THEN ");
         }
 
         String delim = delimiter.replaceAll("'", "''");
-        builder.append(String.format("split_part(%s, '%s', 2)", parameter, delim));
+        builder.append(SqlCode.format("split_part(%s, '%s', 2)", parameter, delim));
 
         if(check)
             builder.append(" END");
 
-        return new ExpressionColumn(builder.toString(), VARCHAR);
+        return new ExpressionColumn(builder.toCode(), VARCHAR);
     }
 
 

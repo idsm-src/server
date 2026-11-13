@@ -13,6 +13,8 @@ import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.Conditions;
 import cz.iocb.sparql.engine.database.DatabaseTable;
 import cz.iocb.sparql.engine.database.ExpressionColumn;
+import cz.iocb.sparql.engine.database.SqlBuilder;
+import cz.iocb.sparql.engine.database.SqlCode;
 import cz.iocb.sparql.engine.database.TableColumn;
 import cz.iocb.sparql.engine.database.ValueColumn;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
@@ -100,16 +102,16 @@ public class Substance
             @Override
             protected Column generateFunction(Column parameter)
             {
-                String par = parameter.toString();
-                String code = String.format("'http://rdf.wwpdb.org/cc/' || %s || '/chem_comp/' || %s", par, par);
+                SqlCode code = SqlCode.format("'http://rdf.wwpdb.org/cc/' || %s || '/chem_comp/' || %s", parameter,
+                        parameter);
 
-                return new ExpressionColumn("(" + code + ")::varchar", VARCHAR);
+                return new ExpressionColumn(SqlCode.of("(", code, ")::varchar"), VARCHAR);
             }
 
             @Override
             protected Column generateInverseFunction(Column parameter, boolean check)
             {
-                StringBuilder builder = new StringBuilder();
+                SqlBuilder builder = new SqlBuilder();
 
                 if(check)
                 {
@@ -120,12 +122,12 @@ public class Substance
                     builder.append(")$', '') THEN ");
                 }
 
-                builder.append(String.format("substring(%s, 39, 3)::varchar", parameter));
+                builder.append(SqlCode.format("substring(%s, 39, 3)::varchar", parameter));
 
                 if(check)
                     builder.append(" END");
 
-                return new ExpressionColumn(builder.toString(), VARCHAR);
+                return new ExpressionColumn(builder.toCode(), VARCHAR);
             }
 
             @Override

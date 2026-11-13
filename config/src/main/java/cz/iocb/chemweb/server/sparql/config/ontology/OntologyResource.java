@@ -22,6 +22,8 @@ import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.ExpressionColumn;
 import cz.iocb.sparql.engine.database.SQLRuntimeException;
+import cz.iocb.sparql.engine.database.SqlBuilder;
+import cz.iocb.sparql.engine.database.SqlCode;
 import cz.iocb.sparql.engine.database.ValueColumn;
 import cz.iocb.sparql.engine.mapping.classes.GenericUserIriClass;
 import cz.iocb.sparql.engine.mapping.classes.ResourceClass;
@@ -810,10 +812,10 @@ public class OntologyResource extends GenericUserIriClass
         if(targetClass.equals(this))
             return columns;
 
-        String code = getInverseCode(columns);
+        SqlCode code = getInverseCode(columns);
 
         if(targetClass.equals(box))
-            return List.of(new ExpressionColumn("sparql.rdfbox_create_from_iri(" + code + ")", RDFBOX));
+            return List.of(new ExpressionColumn(SqlCode.of("sparql.rdfbox_create_from_iri(", code, ")"), RDFBOX));
 
         if(targetClass.equals(iri))
             return List.of(new ExpressionColumn(code, VARCHAR));
@@ -833,18 +835,18 @@ public class OntologyResource extends GenericUserIriClass
         }
         else if(unit.valueLength == 0)
         {
-            StringBuilder builder = new StringBuilder();
+            SqlBuilder builder = new SqlBuilder();
 
             builder.append("(");
             builder.append(columns.get(1));
             builder.append(")::varchar");
             appendSuffix(builder, unit);
 
-            return List.of(new ExpressionColumn(builder.toString(), VARCHAR));
+            return List.of(new ExpressionColumn(builder.toCode(), VARCHAR));
         }
         else
         {
-            StringBuilder builder = new StringBuilder();
+            SqlBuilder builder = new SqlBuilder();
 
             builder.append("lpad((");
             builder.append(columns.get(1));
@@ -853,7 +855,7 @@ public class OntologyResource extends GenericUserIriClass
             builder.append(", '0')::varchar");
             appendSuffix(builder, unit);
 
-            return List.of(new ExpressionColumn(builder.toString(), VARCHAR));
+            return List.of(new ExpressionColumn(builder.toCode(), VARCHAR));
         }
     }
 
@@ -968,9 +970,9 @@ public class OntologyResource extends GenericUserIriClass
      * @param columns the unit and id columns
      * @return the SQL expression of the IRI
      */
-    private String getInverseCode(List<Column> columns)
+    private SqlCode getInverseCode(List<Column> columns)
     {
-        StringBuilder builder = new StringBuilder();
+        SqlBuilder builder = new SqlBuilder();
         Unit unit = unitMap.get(columns.get(0));
 
         if(unit == null || unit.valueLength < 0)
@@ -1011,7 +1013,7 @@ public class OntologyResource extends GenericUserIriClass
             builder.append(")");
         }
 
-        return builder.toString();
+        return builder.toCode();
     }
 
 
@@ -1021,7 +1023,7 @@ public class OntologyResource extends GenericUserIriClass
      * @param builder the builder of the code
      * @param unit the unit
      */
-    private static void appendSuffix(StringBuilder builder, Unit unit)
+    private static void appendSuffix(SqlBuilder builder, Unit unit)
     {
         if(unit.suffix.isEmpty())
             return;
