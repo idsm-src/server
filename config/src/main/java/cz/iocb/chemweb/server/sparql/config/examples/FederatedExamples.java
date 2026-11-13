@@ -40,14 +40,15 @@ public class FederatedExamples
 
 
     /**
-     * Adds the resource class of the federated examples to the configuration.
+     * Adds the resource class of the federated examples to the configuration, whose IRIs end with the seven digits of
+     * their identifiers, as in the repository federated-sparql-examples.
      *
      * @param config the configuration
      */
     public static void addResourceClasses(ExamplesConfiguration config)
     {
         config.addIriClass(new IntegerUserIriClass("idsm:federated_example", INT4,
-                "https://idsm.elixir-czech.cz/.well-known/federated-sparql-examples/", 6));
+                "https://idsm.elixir-czech.cz/.well-known/federated-sparql-examples/", 7));
     }
 
 

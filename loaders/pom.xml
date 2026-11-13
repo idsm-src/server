@@ -61,6 +61,15 @@
 
           <!-- idsm -->
           <execution>
+            <id>idsm-download</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/download-idsm.sh</executable>
+            </configuration>
+          </execution>
+          <execution>
             <id>idsm-dbinit</id>
             <goals>
               <goal>exec</goal>
@@ -73,7 +82,26 @@
                 <argument>src/main/sql/idsm/functions.sql</argument>
                 <argument>src/main/sql/idsm/sachem.sql</argument>
                 <argument>src/main/sql/idsm/examples.sql</argument>
-                <argument>src/main/sql/idsm/federated.sql</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>idsm-load</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>cz.iocb.load.idsm.FederatedExamples</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>idsm-dbfinish</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>src/main/scripts/run_psql.sh</executable>
+              <arguments>
                 <argument>src/main/sql/idsm/settings.sql</argument>
                 <argument>src/main/sql/idsm/foreignkey.sql</argument>
               </arguments>
