@@ -70,7 +70,8 @@ public class SubstanceIdentifierIriClass extends UserIriClass
     protected final String sqlQuery;
 
     /**
-     * Regular expression of the IRIs of the class.
+     * Regular expression of the IRIs of the class, anchored to the whole IRI (see {@link #wholeIriRegexp}); Java
+     * evaluates it in {@link #match} and PCRE2 in the conversions with the representability check.
      */
     protected final String regexp;
 
@@ -96,7 +97,8 @@ public class SubstanceIdentifierIriClass extends UserIriClass
 
         this.sqlQuery = String.format("(SELECT %s::varchar FROM %s WHERE %s = %s)", from, table, to, code);
         this.delimiter = delimiter;
-        this.regexp = String.format("%sMM[0-9.]+%s%s", Pattern.quote(prefix), Pattern.quote(delimiter), pattern);
+        this.regexp = wholeIriRegexp(
+                String.format("%sMM[0-9.]+%s(?:%s)", Pattern.quote(prefix), Pattern.quote(delimiter), pattern));
         this.pattern = Pattern.compile(regexp);
     }
 
@@ -135,9 +137,9 @@ public class SubstanceIdentifierIriClass extends UserIriClass
         {
             builder.append("CASE WHEN sparql.regex_string(");
             builder.append(parameter);
-            builder.append(", '^(");
-            builder.append(regexp.replaceAll("'", "''"));
-            builder.append(")$', '') THEN ");
+            builder.append(", ");
+            builder.append(string(regexp));
+            builder.append(", '') THEN ");
         }
 
         String access = String.format("(SELECT %s as \"@from\", %s as \"@to\" FROM %s) as \"@rctab\"", from, to, table);
@@ -170,9 +172,9 @@ public class SubstanceIdentifierIriClass extends UserIriClass
         {
             builder.append("CASE WHEN sparql.regex_string(");
             builder.append(parameter);
-            builder.append(", '^(");
-            builder.append(regexp.replaceAll("'", "''"));
-            builder.append(")$', '') AND ( ");
+            builder.append(", ");
+            builder.append(string(regexp));
+            builder.append(", '') AND ( ");
 
             String access = String.format("(SELECT %s as \"@from\", %s as \"@to\" FROM %s) as \"@rctab\"", from, to,
                     table);
@@ -260,6 +262,13 @@ public class SubstanceIdentifierIriClass extends UserIriClass
     public String getPrefix(List<Column> columns)
     {
         return prefix;
+    }
+
+
+    @Override
+    public List<String> getSqlRegexps()
+    {
+        return List.of(regexp);
     }
 
 

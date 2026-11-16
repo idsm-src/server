@@ -8,6 +8,7 @@ import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.box;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.iri;
 import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.constant;
 import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.expression;
+import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.string;
 import static cz.iocb.sparql.engine.mapping.classes.DerivedClass.subtract;
 import static cz.iocb.sparql.engine.mapping.classes.DerivedClass.unionize;
 import java.util.ArrayList;
@@ -38,7 +39,8 @@ public class VoidResource extends UserIriClass
     private final Pattern pattern;
 
     /**
-     * Regular expression of the IRIs of the class.
+     * Regular expression of the IRIs of the class, anchored to the whole IRI (see {@link #wholeIriRegexp}); Java
+     * evaluates it in {@link #match} and PCRE2 in the conversions with the representability check.
      */
     private final String regexp;
 
@@ -101,8 +103,7 @@ public class VoidResource extends UserIriClass
             }
         }
 
-        //FIXME: check whether the pattern is valid also in pcre2
-        this.regexp = builder.toString();
+        this.regexp = wholeIriRegexp(builder.toString());
         this.pattern = Pattern.compile(regexp);
     }
 
@@ -185,8 +186,8 @@ public class VoidResource extends UserIriClass
                     cast, "::", sqlTypes.get(i));
 
             if(check)
-                code = SqlCode.of("CASE WHEN sparql.regex_string(", parameter, ", '^(", regexp.replaceAll("'", "''"),
-                        ")$', '') THEN ", code, " END");
+                code = SqlCode.of("CASE WHEN sparql.regex_string(", parameter, ", ", string(regexp), ", '') THEN ",
+                        code, " END");
 
             result.add(new ExpressionColumn(code, sqlTypes.get(i)));
         }
@@ -249,6 +250,13 @@ public class VoidResource extends UserIriClass
     public String getPrefix(List<Column> columns)
     {
         return prefix;
+    }
+
+
+    @Override
+    public List<String> getSqlRegexps()
+    {
+        return List.of(regexp);
     }
 
 

@@ -42,7 +42,8 @@ public class IsdbUserIriClass extends UserIriClass
     private final Pattern pattern;
 
     /**
-     * Regular expression of the IRIs of the class.
+     * Regular expression of the IRIs of the class, anchored to the whole IRI (see {@link #wholeIriRegexp}); Java
+     * evaluates it in {@link #match} and PCRE2 in the conversions with the representability check.
      */
     private final String regexp;
 
@@ -89,8 +90,8 @@ public class IsdbUserIriClass extends UserIriClass
         this.suffixLen = suffix != null ? suffix.length() : 0;
         this.sqlQuery = "select id::varchar from isdb.compounds where accession = ?";
 
-        //FIXME: check whether the pattern is valid also in pcre2
-        this.regexp = Pattern.quote(prefix) + "([A-Z]{14}-[NP])" + (suffix != null ? Pattern.quote(suffix) : "");
+        this.regexp = wholeIriRegexp(
+                Pattern.quote(prefix) + "([A-Z]{14}-[NP])" + (suffix != null ? Pattern.quote(suffix) : ""));
         this.pattern = Pattern.compile(regexp);
     }
 
@@ -205,8 +206,7 @@ public class IsdbUserIriClass extends UserIriClass
 
         if(check)
         {
-            SqlCode test = SqlCode.of("CASE WHEN sparql.regex_string(", parameter, ", '^(",
-                    regexp.replaceAll("'", "''"), ")$', '') THEN ");
+            SqlCode test = SqlCode.of("CASE WHEN sparql.regex_string(", parameter, ", ", string(regexp), ", '') THEN ");
 
             col1 = SqlCode.of(test, col1, " END");
             col2 = SqlCode.of(test, col2, " END");
@@ -278,6 +278,13 @@ public class IsdbUserIriClass extends UserIriClass
     public String getPrefix(List<Column> columns)
     {
         return prefix;
+    }
+
+
+    @Override
+    public List<String> getSqlRegexps()
+    {
+        return List.of(regexp);
     }
 
 

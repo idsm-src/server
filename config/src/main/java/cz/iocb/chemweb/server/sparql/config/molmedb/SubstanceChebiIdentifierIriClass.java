@@ -56,9 +56,9 @@ public class SubstanceChebiIdentifierIriClass extends SubstanceIdentifierIriClas
         {
             builder.append("CASE WHEN sparql.regex_string(");
             builder.append(parameter);
-            builder.append(", '^(");
-            builder.append(regexp.replaceAll("'", "''"));
-            builder.append(")$', '') AND ( ");
+            builder.append(", ");
+            builder.append(string(regexp));
+            builder.append(", '') AND ( ");
 
             String access = String.format("(SELECT %s as \"@from\", %s as \"@to\" FROM %s) as \"@rctab\"", from, to,
                     table);

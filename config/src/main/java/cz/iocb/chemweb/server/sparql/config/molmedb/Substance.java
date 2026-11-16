@@ -6,8 +6,10 @@ import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdFloat;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInteger;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
+import static cz.iocb.sparql.engine.mapping.classes.CodeHelper.string;
 import static java.util.Arrays.asList;
 import java.util.List;
+import java.util.regex.Pattern;
 import cz.iocb.sparql.engine.config.SparqlDatabaseConfiguration;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.Conditions;
@@ -87,6 +89,18 @@ public class Substance
 
         config.addIriClass(new SimpleUserIriClass("pdb:chem_comp", VARCHAR)
         {
+            /**
+             * Regular expression of the IRIs, anchored to the whole IRI, which Java evaluates when the class matches an
+             * IRI and PCRE2 in the conversions with the representability check; the code of the component occurs twice
+             * in an IRI, so the expression refers to its group.
+             */
+            private final String regexp = wholeIriRegexp("http://rdf\\.wwpdb\\.org/cc/([A-Z0-9]{3})/chem_comp/\\1");
+
+            /**
+             * Compiled regular expression of the IRIs.
+             */
+            private final Pattern pattern = Pattern.compile(regexp);
+
             @Override
             public int getCheckCost()
             {
@@ -96,7 +110,7 @@ public class Substance
             @Override
             public boolean match(Request request, Iri iri)
             {
-                return iri.getValue().matches("http://rdf\\.wwpdb\\.org/cc/([A-Z0-9]{3})/chem_comp/\\1");
+                return pattern.matcher(iri.getValue()).matches();
             }
 
             @Override
@@ -117,9 +131,9 @@ public class Substance
                 {
                     builder.append("CASE WHEN sparql.regex_string(");
                     builder.append(parameter);
-                    builder.append(", '^(");
-                    builder.append("http://rdf\\.wwpdb\\.org/cc/([A-Z0-9]{3})/chem_comp/\\1");
-                    builder.append(")$', '') THEN ");
+                    builder.append(", ");
+                    builder.append(string(regexp));
+                    builder.append(", '') THEN ");
                 }
 
                 builder.append(SqlCode.format("substring(%s, 39, 3)::varchar", parameter));
@@ -151,6 +165,12 @@ public class Substance
             public String getPrefix(List<Column> columns)
             {
                 return "http://rdf.wwpdb.org/cc/";
+            }
+
+            @Override
+            public List<String> getSqlRegexps()
+            {
+                return List.of(regexp);
             }
         });
     }
