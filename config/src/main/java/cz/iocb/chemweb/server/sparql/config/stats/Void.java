@@ -16,7 +16,10 @@ import static cz.iocb.chemweb.server.sparql.config.stats.VoidConfiguration.schem
 import static cz.iocb.sparql.engine.database.SqlType.INT2;
 import static cz.iocb.sparql.engine.database.SqlType.INT4;
 import static cz.iocb.sparql.engine.database.SqlType.VARCHAR;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.iri;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdInt;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdLong;
+import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdString;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -28,6 +31,7 @@ import cz.iocb.sparql.engine.database.TableColumn;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.TermMapping;
 import cz.iocb.sparql.engine.mapping.classes.DateTimeInZoneClass;
+import cz.iocb.sparql.engine.mapping.classes.IntegerUserIriClass;
 import cz.iocb.sparql.engine.mapping.classes.LangStringWithTagClass;
 import cz.iocb.sparql.engine.mapping.classes.MapUserIriClass;
 import cz.iocb.sparql.engine.rdf.Iri;
@@ -37,10 +41,23 @@ import cz.iocb.sparql.engine.rdf.Iri;
 /**
  * Mapping of the VoID statistics of the IDSM endpoint (schema {@code void}, graph
  * {@code https://idsm.elixir-czech.cz/.well-known/void}): the service with its default dataset and named graphs with
- * their names, and the class, property, class-property and datatype partitions and the linksets of the graphs.
+ * their names, and the class, property, class-property and datatype partitions and the linksets of the graphs; the
+ * default dataset has the version of the data, the sources of the data with their homepages and versions, and the
+ * subsets counted by the loaders (tables {@code idsm.version}, {@code idsm.sources} and {@code idsm.stats}).
  */
 public class Void
 {
+    /**
+     * IRI of the IDSM endpoint, whose fragments name the nodes of its description.
+     */
+    private static final String endpoint = "https://idsm.elixir-czech.cz/sparql/endpoint/idsm";
+
+    /**
+     * Width of the numbers of the sources and of the counted subsets in their IRIs, so that the IRIs are ordered as the
+     * rows of their tables.
+     */
+    private static final int numberWidth = 3;
+
     /**
      * Units of the classes the statistics leave out: the blank nodes, whose classes are anonymous, and the proteins,
      * ChEBI, ClassyFire, Uberon, the taxonomy, the NCI Thesaurus, NDF-RT and SNOMED CT, whose classes are too numerous
@@ -61,7 +78,7 @@ public class Void
 
 
     /**
-     * Adds the prefixes of the VoID vocabularies and of the Dublin Core terms to the configuration.
+     * Adds the prefixes of the VoID vocabularies, of the Dublin Core terms, of FOAF and of PAV to the configuration.
      *
      * @param config the configuration
      */
@@ -70,17 +87,22 @@ public class Void
         config.addPrefix("void", "http://rdfs.org/ns/void#");
         config.addPrefix("dcterms", "http://purl.org/dc/terms/");
         config.addPrefix("void_ext", "http://ldf.fi/void-ext#");
+        config.addPrefix("foaf", "http://xmlns.com/foaf/0.1/");
+        config.addPrefix("pav", "http://purl.org/pav/");
     }
 
 
     /**
-     * Adds the resource classes of the graphs and of the partitions and linksets of the statistics to the
-     * configuration.
+     * Adds the resource classes of the graphs, of the partitions and linksets of the statistics, and of the sources and
+     * the counted subsets of the default dataset to the configuration.
      *
      * @param config the configuration
      */
     public static void addResourceClasses(VoidConfiguration config)
     {
+        config.addIriClass(new IntegerUserIriClass("idsm:source", INT4, endpoint + "#source-", numberWidth));
+        config.addIriClass(new IntegerUserIriClass("idsm:stat", INT4, endpoint + "#stat-", numberWidth));
+
         config.addIriClass(new MapUserIriClass("sd:graph", INT4, new DatabaseTable(schema, "graphs"),
                 new TableColumn("id", INT4), new TableColumn("iri", VARCHAR), null));
 
@@ -127,7 +149,6 @@ public class Void
      */
     public static void addQuadMappings(VoidConfiguration config)
     {
-        String endpoint = "https://idsm.elixir-czech.cz/sparql/endpoint/idsm";
         ConstantIriMapping service = config.createIriMapping(new Iri(endpoint));
         ConstantIriMapping graph = config.createIriMapping(new Iri("https://idsm.elixir-czech.cz/.well-known/void"));
         ConstantIriMapping defaultDataset = config.createIriMapping(new Iri(endpoint + "#default-dataset"));
@@ -158,6 +179,37 @@ public class Void
 
             config.addQuadMapping(table, graph, defaultGraph, config.createIriMapping("dcterms:issued"),
                     config.createLiteralMapping(xsdDateTimeM0, version));
+        }
+
+        {
+            // the sources of the data, whose versions the loaders store; an empty version is unknown
+            DatabaseTable table = new DatabaseTable("idsm", "sources");
+            TermMapping source = config.createIriMapping("idsm:source", "id");
+
+            config.addQuadMapping(table, graph, defaultDataset, config.createIriMapping("dcterms:source"), source);
+            config.addQuadMapping(table, graph, source, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("void:Dataset"));
+            config.addQuadMapping(table, graph, source, config.createIriMapping("dcterms:title"),
+                    config.createLiteralMapping(xsdString, "name"));
+            config.addQuadMapping(table, graph, source, config.createIriMapping("foaf:homepage"),
+                    config.createIriMapping(iri, "url"));
+            config.addQuadMapping(table, graph, source, config.createIriMapping("pav:version"),
+                    config.createLiteralMapping(xsdString, "version"),
+                    config.createAreNotEqualCondition("version", "''::varchar"));
+        }
+
+        {
+            // the subsets of the data whose entities the loaders count
+            DatabaseTable table = new DatabaseTable("idsm", "stats");
+            TermMapping subset = config.createIriMapping("idsm:stat", "id");
+
+            config.addQuadMapping(table, graph, defaultDataset, config.createIriMapping("void:subset"), subset);
+            config.addQuadMapping(table, graph, subset, config.createIriMapping("rdf:type"),
+                    config.createIriMapping("void:Dataset"));
+            config.addQuadMapping(table, graph, subset, config.createIriMapping("dcterms:title"),
+                    config.createLiteralMapping(xsdString, "name"));
+            config.addQuadMapping(table, graph, subset, config.createIriMapping("void:entities"),
+                    config.createLiteralMapping(xsdInt, "count"));
         }
 
         {
