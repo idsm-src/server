@@ -664,6 +664,17 @@
             </configuration>
           </execution>
 
+          <!-- check of the SPARQL examples of an endpoint -->
+          <execution>
+            <id>check-examples</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>cz.iocb.load.examples.CheckExamples</mainClass>
+            </configuration>
+          </execution>
+
         </executions>
       </plugin>
       <plugin>
