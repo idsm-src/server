@@ -653,6 +653,17 @@
             </configuration>
           </execution>
 
+          <!-- extended statistics of the database for the idsm mapping -->
+          <execution>
+            <id>extended-statistics</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>cz.iocb.load.stats.GenerateExtendedStatistics</mainClass>
+            </configuration>
+          </execution>
+
         </executions>
       </plugin>
       <plugin>

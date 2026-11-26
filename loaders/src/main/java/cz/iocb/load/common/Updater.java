@@ -30,8 +30,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
+import javax.sql.DataSource;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathException;
+import org.postgresql.ds.PGSimpleDataSource;
 import org.xml.sax.SAXException;
 
 
@@ -1193,6 +1195,34 @@ public class Updater
 
         connection = DriverManager.getConnection(url, properties);
         connection.setAutoCommit(false);
+    }
+
+
+    /**
+     * A data source of the database given by datasource.properties (its host, port, dbname, user and password), for the
+     * code that opens connections of its own, like a configuration of the SPARQL engine. It is no pool: the code using
+     * it holds a connection for long, so a pool would save only the setup of a connection.
+     *
+     * @return a data source of the database given by datasource.properties
+     * @throws IOException if the properties cannot be read
+     */
+    protected static DataSource getDataSource() throws IOException
+    {
+        Properties properties = new Properties();
+
+        try(FileInputStream in = new FileInputStream("datasource.properties"))
+        {
+            properties.load(in);
+        }
+
+        PGSimpleDataSource dataSource = new PGSimpleDataSource();
+        dataSource.setServerNames(new String[] { properties.getProperty("host") });
+        dataSource.setPortNumbers(new int[] { Integer.parseInt(properties.getProperty("port")) });
+        dataSource.setDatabaseName(properties.getProperty("dbname"));
+        dataSource.setUser(properties.getProperty("user"));
+        dataSource.setPassword(properties.getProperty("password"));
+
+        return dataSource;
     }
 
 

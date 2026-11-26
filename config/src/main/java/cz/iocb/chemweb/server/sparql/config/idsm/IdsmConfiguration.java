@@ -48,8 +48,10 @@ import cz.iocb.sparql.engine.request.Request;
 /**
  * Configuration of the IDSM endpoint, which merges the configurations of all datasets into one service and adds the
  * Sachem structure search over their compounds, the Sachem endpoints of the single datasets as further services, and
- * the SHACL declarations of its prefixes. The endpoint obtains it through JNDI; the export and the generator of the
- * VoID statistics create it directly.
+ * the SHACL declarations of its prefixes. The endpoint obtains it through JNDI; the export, the generator of the VoID
+ * statistics and the generator of the extended statistics of the database create it directly. The join optimizer of the
+ * engine reads the extended statistics through the function {@code idsm.extended_statistics}, which the generator of
+ * the extended statistics makes, as the role of the endpoint does not own the tables.
  */
 public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
 {
@@ -90,6 +92,8 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
         super(service != null ? service : "https://idsm.elixir-czech.cz/sparql/endpoint/idsm",
                 service != null ? null : "https://idsm.elixir-czech.cz/.well-known/void", connectionPool,
                 new ExtendedDatabaseSchema(schema));
+
+        setExtendedStatisticsFunction("idsm", "extended_statistics");
 
         addPrefixes();
         addServices();

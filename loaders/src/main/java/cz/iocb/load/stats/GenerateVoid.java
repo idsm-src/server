@@ -6,7 +6,6 @@ import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDate;
 import static cz.iocb.sparql.engine.mapping.classes.BuiltinClasses.xsdDateTime;
 import static cz.iocb.sparql.engine.mapping.datatypes.BuiltinDatatypes.rdfLangStringIri;
 import static java.util.stream.Collectors.joining;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -34,7 +32,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.postgresql.ds.PGSimpleDataSource;
+import javax.sql.DataSource;
 import cz.iocb.chemweb.server.sparql.config.idsm.IdsmConfiguration;
 import cz.iocb.load.common.Problems;
 import cz.iocb.load.common.Updater;
@@ -857,22 +855,8 @@ public class GenerateVoid extends Updater
              */
             init("stats");
 
-            Properties properties = new Properties();
-
-            try(FileInputStream in = new FileInputStream("datasource.properties"))
-            {
-                properties.load(in);
-            }
-
-
             // a connection serves a whole statistics query, so a pool would save only its setup of a few milliseconds
-            PGSimpleDataSource dataSource = new PGSimpleDataSource();
-            dataSource.setServerNames(new String[] { properties.getProperty("host") });
-            dataSource.setPortNumbers(new int[] { Integer.parseInt(properties.getProperty("port")) });
-            dataSource.setDatabaseName(properties.getProperty("dbname"));
-            dataSource.setUser(properties.getProperty("user"));
-            dataSource.setPassword(properties.getProperty("password"));
-
+            DataSource dataSource = getDataSource();
             DatabaseSchema schema = new DatabaseSchema(dataSource);
 
             IdsmConfiguration config = new IdsmConfiguration(null, dataSource, schema);
