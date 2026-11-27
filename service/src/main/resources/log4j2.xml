@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration name="Config" status="error" monitorInterval="60" shutdownHook="disable">
+  <Properties>
+    <!-- directory of the logs of the failed, timed out and slow SPARQL queries -->
+    <Property name="queryLogs">${sys:catalina.base:-.}/logs/queries</Property>
+  </Properties>
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
       <PatternLayout pattern="%highlight{%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36}}%msg%n"/>
@@ -11,6 +15,33 @@
       </MarkerPatternSelector>
     </PatternLayout>
     </Console>
+    <RollingFile name="QueryErrors" fileName="${queryLogs}/errors.log"
+        filePattern="${queryLogs}/errors-%d{yyyy-MM}-%i.log.gz" createOnDemand="true">
+      <PatternLayout pattern="%m%n%n" charset="UTF-8"/>
+      <Policies>
+        <TimeBasedTriggeringPolicy/>
+        <SizeBasedTriggeringPolicy size="100 MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="20"/>
+    </RollingFile>
+    <RollingFile name="QueryTimeouts" fileName="${queryLogs}/timeouts.log"
+        filePattern="${queryLogs}/timeouts-%d{yyyy-MM}-%i.log.gz" createOnDemand="true">
+      <PatternLayout pattern="%m%n%n" charset="UTF-8"/>
+      <Policies>
+        <TimeBasedTriggeringPolicy/>
+        <SizeBasedTriggeringPolicy size="100 MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="20"/>
+    </RollingFile>
+    <RollingFile name="QuerySlow" fileName="${queryLogs}/slow.log"
+        filePattern="${queryLogs}/slow-%d{yyyy-MM}-%i.log.gz" createOnDemand="true">
+      <PatternLayout pattern="%m%n%n" charset="UTF-8"/>
+      <Policies>
+        <TimeBasedTriggeringPolicy/>
+        <SizeBasedTriggeringPolicy size="100 MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="20"/>
+    </RollingFile>
   </Appenders>
   <Loggers>
     <Root level="error">
@@ -18,6 +49,15 @@
     </Root>
     <Logger name="cz.iocb.sparql.engine.request.Request" level="info" additivity="false">
       <AppenderRef ref="SparqlQueryConsole"/>
+    </Logger>
+    <Logger name="cz.iocb.chemweb.server.filters.log.QueryLog.errors" level="info" additivity="false">
+      <AppenderRef ref="QueryErrors"/>
+    </Logger>
+    <Logger name="cz.iocb.chemweb.server.filters.log.QueryLog.timeouts" level="info" additivity="false">
+      <AppenderRef ref="QueryTimeouts"/>
+    </Logger>
+    <Logger name="cz.iocb.chemweb.server.filters.log.QueryLog.slow" level="info" additivity="false">
+      <AppenderRef ref="QuerySlow"/>
     </Logger>
   </Loggers>
 </Configuration>

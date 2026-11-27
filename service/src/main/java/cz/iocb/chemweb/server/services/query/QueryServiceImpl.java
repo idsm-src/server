@@ -22,12 +22,14 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import cz.iocb.chemweb.server.filters.log.QueryLog;
 import cz.iocb.chemweb.server.services.GWTRemoteServiceServlet;
 import cz.iocb.chemweb.server.services.SessionData;
 import cz.iocb.chemweb.server.velocity.EscapeIriDirective;
@@ -154,6 +156,11 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
      * Executor rendering the rows of the results.
      */
     private ExecutorService executorService;
+
+    /**
+     * Log of the failed, timed out and slow queries.
+     */
+    private QueryLog queryLog;
 
 
     static
@@ -362,6 +369,7 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
 
 
         executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        queryLog = new QueryLog(config.getServletContext());
 
         super.init(config);
     }
@@ -386,8 +394,13 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
     @Override
     public long query(String query, int offset, int limit)
     {
-        final HttpSession httpSession = this.getThreadLocalRequest().getSession(true);
+        final HttpServletRequest httpRequest = this.getThreadLocalRequest();
+        final HttpSession httpSession = httpRequest.getSession(true);
         final QueryState queryState = new QueryState();
+
+        // the request is reused by the container once the call has been answered
+        final QueryLog.Origin origin = QueryLog.Origin.of(httpRequest, httpRequest.getMethod() + " "
+                + httpRequest.getRequestURI() + " (offset " + offset + ", limit " + limit + ")");
 
 
         logger.info(query.replaceAll("\n", "\\\\n"));
@@ -402,6 +415,8 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
             @Override
             public void run()
             {
+                long begin = System.nanoTime();
+
                 try(Result result = queryState.request.execute(query, offset, limit + 1, timeout))
                 {
                     List<Future<DataGridNode[]>> futures = new ArrayList<>(limit + 1);
@@ -489,6 +504,9 @@ public class QueryServiceImpl extends GWTRemoteServiceServlet implements QuerySe
                 }
                 finally
                 {
+                    queryLog.log(origin, query, System.nanoTime() - begin, null, queryState.exception,
+                            queryState.request.isCanceled());
+
                     try
                     {
                         queryState.request.close();

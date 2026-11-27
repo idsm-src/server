@@ -10,6 +10,14 @@
   </welcome-file-list>
 
 
+  <!-- Query Log: the time (in seconds) after which a query is logged as slow -->
+
+  <context-param>
+    <param-name>slow-query-time</param-name>
+    <param-value>120</param-value>
+  </context-param>
+
+
   <!-- ChemWeb Servlets -->
 
   <servlet>
@@ -618,6 +626,19 @@
     <filter-name>MolmedbSachemEndpointMatomoFilter</filter-name>
     <url-pattern>/sachem/endpoint/molmedb</url-pattern>
     <url-pattern>/sparql/endpoint/molmedb</url-pattern>
+  </filter-mapping>
+
+
+  <!-- Query Log Filter (mapped last, so that it measures the endpoints alone) -->
+
+  <filter>
+    <filter-name>QueryLogFilter</filter-name>
+    <filter-class>cz.iocb.chemweb.server.filters.log.QueryLogFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>QueryLogFilter</filter-name>
+    <url-pattern>/sparql/endpoint/*</url-pattern>
+    <url-pattern>/sachem/endpoint/*</url-pattern>
   </filter-mapping>
 
 </web-app>
