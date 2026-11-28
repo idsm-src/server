@@ -33,6 +33,7 @@ import cz.iocb.chemweb.server.sparql.config.wikidata.WikidataConfiguration;
 import cz.iocb.sparql.engine.database.Column;
 import cz.iocb.sparql.engine.database.DatabaseSchema;
 import cz.iocb.sparql.engine.database.DatabaseTable;
+import cz.iocb.sparql.engine.database.Function;
 import cz.iocb.sparql.engine.database.ValueColumn;
 import cz.iocb.sparql.engine.mapping.ConstantIriMapping;
 import cz.iocb.sparql.engine.mapping.JoinTableQuadMapping;
@@ -93,7 +94,7 @@ public class IdsmConfiguration extends SparqlDatabaseOptimisedConfiguration
                 service != null ? null : "https://idsm.elixir-czech.cz/.well-known/void", connectionPool,
                 new ExtendedDatabaseSchema(schema));
 
-        setExtendedStatisticsFunction("idsm", "extended_statistics");
+        setEngineSettings(getEngineSettings().withStatisticsFunction(new Function("idsm", "extended_statistics")));
 
         addPrefixes();
         addServices();
