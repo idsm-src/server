@@ -326,8 +326,8 @@ public class Export
 
             for(SqlSelect select : selects)
             {
-                try(Result result = new Result(ResultType.SELECT, select.getResultDescription(),
-                        request.getStatement(10000).executeQuery(select.translate(request)), 0, 0))
+                try(Result result = new Result(request, ResultType.SELECT, select.getResultDescription(),
+                        request.getStatement(10000).executeQuery(select.translate(request))))
                 {
                     while(result.next())
                     {
